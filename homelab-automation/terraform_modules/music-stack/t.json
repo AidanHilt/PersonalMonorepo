@@ -1,0 +1,29 @@
+{
+    "kind": "Pod",
+    "apiVersion": "v1",
+    "metadata": {
+      "name": "permissionsFix"
+    },
+    "spec": {
+      "containers": [
+      {
+        "name": "ubuntu",
+        "image": "ubuntu:22.04",
+        "args": ["bash"],
+        "stdin": true,
+        "stdinOnce": true,
+        "tty": true,
+        "volumeMounts": [{
+          "mountPath": "/config",
+          "name": "store"
+        }]
+      }
+      ],
+      "volumes": [{
+        "name":"store",
+        "persistentVolumeClaim": {
+          "claimName": "lidarr-config"
+        }
+      }]
+    }
+  }

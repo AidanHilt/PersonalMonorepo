@@ -1,0 +1,27 @@
+metrics:
+  enabled: false
+
+env:
+- name: LIDARR__URL_BASE
+  value: /lidarr
+
+persistence:
+  config:
+    enabled: true
+    type: pvc
+
+    mountPath: /config
+    readOnly: false
+
+    storageClass: longhorn
+    size: 2Gi
+
+    accessMode: ReadWriteOnce
+    retain: true
+
+service:
+  main:
+    ports:
+      http:
+        port: 8686
+        targetPort: 8686

@@ -1,0 +1,57 @@
+{
+    "apiVersion": "v1",
+    "kind": "Namespace",
+    "metadata": {
+        "creationTimestamp": "2022-08-07T16:35:52Z",
+        "deletionTimestamp": "2022-08-07T16:59:08Z",
+        "labels": {
+            "kubernetes.io/metadata.name": "longhorn-system"
+        },
+        "name": "longhorn-system",
+        "resourceVersion": "6047",
+        "uid": "a8d7ad53-4822-41ae-8294-67a944674432"
+    },
+    "spec": {
+        "finalizers": []
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastTransitionTime": "2022-08-07T16:59:35Z",
+                "message": "All resources successfully discovered",
+                "reason": "ResourcesDiscovered",
+                "status": "False",
+                "type": "NamespaceDeletionDiscoveryFailure"
+            },
+            {
+                "lastTransitionTime": "2022-08-07T16:59:35Z",
+                "message": "All legacy kube types successfully parsed",
+                "reason": "ParsedGroupVersions",
+                "status": "False",
+                "type": "NamespaceDeletionGroupVersionParsingFailure"
+            },
+            {
+                "lastTransitionTime": "2022-08-07T16:59:57Z",
+                "message": "All content successfully deleted, may be waiting on finalization",
+                "reason": "ContentDeleted",
+                "status": "False",
+                "type": "NamespaceDeletionContentFailure"
+            },
+            {
+                "lastTransitionTime": "2022-08-07T16:59:35Z",
+                "message": "Some resources are remaining: engineimages.longhorn.io has 1 resource instances, nodes.longhorn.io has 2 resource instances",
+                "reason": "SomeResourcesRemain",
+                "status": "True",
+                "type": "NamespaceContentRemaining"
+            },
+            {
+                "lastTransitionTime": "2022-08-07T16:59:35Z",
+                "message": "Some content in the namespace has finalizers remaining: longhorn.io in 3 resource instances",
+                "reason": "SomeFinalizersRemain",
+                "status": "True",
+                "type": "NamespaceFinalizersRemaining"
+            }
+        ],
+        "phase": "Terminating"
+    }
+}

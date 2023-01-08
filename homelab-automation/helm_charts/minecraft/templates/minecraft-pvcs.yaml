@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata: 
+  name: minecraft-volume
+spec: 
+  storageClassName: manual
+  capacity: 
+    storage: 20Gi
+  accessModes: 
+  - ReadWriteMany
+  hostPath:
+    path: "{{ .Values.minecraftPath }}"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minecraft-pvc
+spec: 
+  storageClassName: manual
+  volumeName: minecraft-volume
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+
+{{ if .Values.backups.enabled }}
+apiVersion: v1
+kind: PersistentVolume
+metadata: 
+  name: backup-volume
+spec: 
+  storageClassName: manual
+  capacity: 
+    storage: 20Gi
+  accessModes: 
+  - ReadWriteMany
+  hostPath:
+    path: "{{ .Values.backups.backupPath }}"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+spec: 
+  storageClassName: manual
+  volumeName: backup-volume
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+{{ end }}

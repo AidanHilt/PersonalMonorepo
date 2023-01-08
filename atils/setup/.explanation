@@ -1,0 +1,1 @@
+These scripts are used to set up computing resources. There will be one for server nodes, one for a MacBook, (and possibly a Linux laptop as well), as well as a Windows gaming PC. The idea is that these setup scripts and/or playbooks will mostly or entirely automate the process of setting up compute resources.

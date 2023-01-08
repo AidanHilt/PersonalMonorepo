@@ -1,0 +1,20 @@
+---
+- hosts: "masters, workers"
+  remote_user: aidan
+  become: yes
+  become_method: sudo
+  become_user: root
+  gather_facts: yes
+  connection: ssh
+
+  tasks: 
+    - name: Install pre-reqs for longhorn
+      dnf:
+        name: [iscsi-initiator-utils, nfs-utils]
+        state: present
+
+    - name: Enable iscsid
+      systemd:
+        name: iscsid
+        enabled: True
+        state: started

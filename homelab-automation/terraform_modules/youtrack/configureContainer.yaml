@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: youtrack-configure
+  namespace: youtrack
+
+spec:
+  containers:
+  - name: youtrack-configure
+    image: jetbrains/youtrack:2022.2.53354
+    args: ['configure', '-J-Djetbrains.youtrack.admin.restore=true']
+    volumeMounts:
+      - name: pvc-youtrack-conf
+        mountPath: /opt/youtrack/conf
+      
+      - name: pvc-youtrack-logs
+        mountPath: /opt/youtrack/logs
+
+  volumes:
+    - name: pvc-youtrack-conf
+      persistentVolumeClaim:
+        claimName: pvc-youtrack-conf
+    
+    - name: pvc-youtrack-logs
+      persistentVolumeClaim:
+        claimName: pvc-youtrack-logs

@@ -1,0 +1,32 @@
+persistence:
+  config:
+    enabled: true
+    type: pvc
+
+    mountPath: /config
+    readOnly: false
+
+    existingClaim: pvc-calibre
+    accessMode: ReadWriteOnce
+    retain: true
+
+  library:
+    enabled: true
+    type: pvc
+
+    mountPath: /books
+
+    existingClaim: library-pvc
+
+service:
+  main:
+    ports:
+      http:
+        port: 80
+        targetPort: 8083
+
+nodeSelector:
+  videos: "true"
+
+env:
+  DOCKER_MODS: linuxserver/mods:universal-calibre
