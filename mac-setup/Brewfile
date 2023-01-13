@@ -1,0 +1,37 @@
+#=============
+#Desktop usage
+#=============
+cask 'firefox'
+cask 'chromium'
+cask 'discord'
+cask 'steam'
+cask 'vlc'
+cask 'parsec'
+cask 'keepassxc'
+cask 'spotify'
+cask 'flux'
+cask 'gitkraken'
+cask 'rectangle'
+cask 'authy'
+cask 'commander-one'
+cask 'flycut'
+cask 'iterm2'
+cask 'duet'
+
+
+brew 'sevenzip'
+brew 'syncthing'
+
+#=================
+#Development usage
+#=================
+cask 'visual-studio-code'
+cask 'utm'
+cask 'docker'
+
+brew 'python3'
+brew 'git'
+brew 'kubernetes-cli'
+brew 'minikube'
+brew 'bazel'
+brew 'pre-commit'
