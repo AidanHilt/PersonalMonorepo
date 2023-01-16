@@ -54,30 +54,30 @@ resource "kubernetes_deployment" "foundry_service" {
             container {
                 name = "foundry"
                 image = "felddy/foundryvtt:${var.foundry-version}"
-                
+
                 env {
                     name = "FOUNDRY_USERNAME"
-                    value = "${var.foundry-username}" 
+                    value = "${var.foundry-username}"
                 }
 
                 env {
                     name = "FOUNDRY_PASSWORD"
-                    value = "${var.foundry-password}" 
+                    value = "${var.foundry-password}"
                 }
 
                 env {
                     name = "CONTAINER_CACHE"
-                    value = "/containerCache" 
+                    value = "/containerCache"
                 }
 
                 env {
                     name = "FOUNDRY_MINIFY_STATIC_FILES"
-                    value = true 
+                    value = true
                 }
 
                 env {
                     name = "FOUNDRY_VESRION"
-                    value = "${var.foundry-version}" 
+                    value = "${var.foundry-version}"
                 }
 
                 env {
@@ -141,7 +141,7 @@ resource "kubernetes_ingress_v1" "foundry_ingress" {
     }
   }
 
-  spec {            
+  spec {
     ingress_class_name = "nginx"
 
     rule{
@@ -149,7 +149,7 @@ resource "kubernetes_ingress_v1" "foundry_ingress" {
             path{
                 path = "/foundry(/|$)(.*)"
                 path_type = "Prefix"
-                
+
                 backend {
                     service{
                         name = "${var.environment-name}-frontend"

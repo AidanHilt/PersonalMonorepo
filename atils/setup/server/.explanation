@@ -1,1 +1,1 @@
-This playbook will be run to set up a node in my local network. Lower-powered machines may require a different subset. We'll also see about using this to install RKE. 
+This playbook will be run to set up a node in my local network. Lower-powered machines may require a different subset. We'll also see about using this to install RKE.

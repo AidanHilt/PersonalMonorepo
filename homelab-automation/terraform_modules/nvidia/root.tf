@@ -37,7 +37,7 @@ resource "kubernetes_config_map_v1" "gpu-share-config" {
 resource "helm_release" "nvidia-operator" {
     name = "nvidia-operator"
     repository = "https://nvidia.github.io/k8s-device-plugin"
-    chart = "nvidia-device-plugin"   
+    chart = "nvidia-device-plugin"
 
 
     namespace = var.namespace

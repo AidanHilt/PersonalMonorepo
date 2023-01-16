@@ -47,7 +47,7 @@ resource "kubernetes_persistent_volume_claim" "data-pvc" {
     storage_class_name = "manual"
 
     volume_name = var.volumeName
-  
+
   }
 }
 
@@ -60,7 +60,7 @@ resource "kubernetes_stateful_set" "mc-stateful-set" {
     }
 
     annotations {
-      
+
     }
   }
 
@@ -84,7 +84,7 @@ resource "kubernetes_stateful_set" "mc-stateful-set" {
         container {
           name = mc
           image = "itzg/minecraft-server:java8-jdk"
-        
+
 
           env {
             name = "EULA"

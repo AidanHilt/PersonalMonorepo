@@ -24,8 +24,8 @@ resource "kubernetes_pod" "longhorn-transfer-pod" {
             mount_path = "/mnt/inspect"
             name = "inspected-volume"
         }
-      } 
-     
+      }
+
       volume {
         name = "inspected-volume"
         persistent_volume_claim {
