@@ -49,7 +49,7 @@ auth
 #Terraform
 .terraform.lock.hcl
 
-#RKE 
+#RKE
 cluster.rkestate
 kube_config_cluster.yml
 
@@ -248,3 +248,5 @@ hosts.yml
 /.clwb/
 
 Brewfile.lock.json
+
+values.yaml
