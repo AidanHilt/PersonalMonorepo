@@ -1,0 +1,35 @@
+# This playbook is used to set up Docker, Docker Compose, and containerd for an Ubuntu machine
+- name: Set up docker on Ubuntu
+  hosts: all
+
+  tasks:
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker apt repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu jammy stable
+        state: present
+
+    - name: Instal Docker and related components
+      apt:
+        pkg:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-compose-plugin
+        update_cache: yes
+
+    - name: Install pip so that we can install the docker Python library, so we can use docker-compose in ansible
+      apt:
+        pkg:
+        - python3-pip
+        update_cache: yes
+
+    - name: Install python docker and docker-compose libraries
+      pip:
+        name:
+        - docker
+        - docker-compose

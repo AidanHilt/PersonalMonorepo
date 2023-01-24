@@ -1,9 +1,6 @@
-# TODO Enable UFW. Lock it down, and enable ONLY port 22. (That's all that we need to start)
-
 ---
 - name: Set up firewall for servers
   hosts: all
-
 
   tasks:
     - name: Enable UFW and lock it down

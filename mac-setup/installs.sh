@@ -10,7 +10,7 @@ echo 'alias k=kubectl' >>~/.zshrc
 echo 'complete -F __start_kubectl ks' >>~/.zshrc
 
 
-
+#TODO Add automation for using fingerprint for sudo
 
 
 

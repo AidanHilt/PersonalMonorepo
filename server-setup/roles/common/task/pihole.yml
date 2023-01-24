@@ -1,1 +1,40 @@
-#TODO Do this
+# Playbook to set up a PiHole cluster using
+---
+- name: Include the docker setup playbook
+  import_playbook: ../library/docker-setup.yml
+
+- name: Set up a high-availablity PiHole cluster
+  hosts: all
+  tasks:
+    - name: Install docker library
+      pip:
+        name: docker
+
+    - name: Disable systemd-resolved
+      systemd:
+        name: systemd-resolved
+        state: stopped
+
+    - name: Get PiHole running on the machine with Docker Compose
+      community.docker.docker_compose:
+        project_name: pihole
+        definition:
+          version: "3"
+          services:
+            pihole:
+              container_name: pihole
+              image: pihole/pihole:latest
+              ports:
+                - "53:53/tcp"
+                - "53:53/udp"
+                - "67:67/udp"
+                - "9080:80/tcp"
+              environment:
+                TZ: 'America/New York'
+                # WEBPASSWORD: 'set a secure password here or it will be random'
+              volumes:
+                - '/dockerVolumes/pihole/etc/pihole:/etc/pihole'
+                - '/dockerVolumes/pihole/etc/pihole:/etc/dnsmasq.d'
+              cap_add:
+                - NET_ADMIN
+              restart: unless-stopped
