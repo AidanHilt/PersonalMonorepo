@@ -58,29 +58,29 @@ resource "kubernetes_deployment" "muse_deployment"{
         container {
           name = "muse"
           image = "codetheweb/muse"
-          
+
           env {
-            name = "DISCORD_CLIENT_ID"  
+            name = "DISCORD_CLIENT_ID"
             value = var.DISCORD_CLIENT_ID
           }
 
           env {
-            name = "DISCORD_TOKEN" 
+            name = "DISCORD_TOKEN"
             value = var.DISCORD_TOKEN
           }
 
           env {
-            name = "SPOTIFY_CLIENT_ID" 
+            name = "SPOTIFY_CLIENT_ID"
             value = var.SPOTIFY_CLIENT_ID
           }
 
           env {
-            name = "SPOTIFY_CLIENT_SECRET" 
+            name = "SPOTIFY_CLIENT_SECRET"
             value = var.SPOTIFY_CLIENT_SECRET
           }
 
           env {
-            name = "YOUTUBE_API_KEY" 
+            name = "YOUTUBE_API_KEY"
             value = var.YOUTUBE_API_KEY
           }
 

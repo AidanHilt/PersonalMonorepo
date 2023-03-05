@@ -1,0 +1,14 @@
+---
+- name: Set up firewall for servers
+  hosts: all
+
+  tasks:
+    - name: Enable UFW and lock it down
+      community.general.ufw:
+        state: enabled
+        default: deny
+
+    - name: Enable port 22 for SSH connections
+      community.general.ufw:
+        rule: allow
+        port: 22

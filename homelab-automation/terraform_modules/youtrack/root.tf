@@ -116,7 +116,7 @@ resource "kubernetes_deployment" "youtrack_deployment" {
                 container {
                     name = "youtrack"
                     image = "jetbrains/youtrack:2022.2.53354"
-                    
+
 
                     volume_mount {
                         name = "pvc-youtrack"
@@ -204,7 +204,7 @@ resource "kubernetes_ingress_v1" "youtrack-ingress" {
     }
   }
 
-  spec {            
+  spec {
     ingress_class_name = "nginx"
 
     rule{
@@ -212,7 +212,7 @@ resource "kubernetes_ingress_v1" "youtrack-ingress" {
             path{
                 path = "/youtrack(/|$)(.*)"
                 path_type = "Prefix"
-                
+
                 backend {
                     service{
                         name = "youtrack-frontend"

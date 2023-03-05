@@ -1,11 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
-metadata: 
+metadata:
   labels:
     app: rcon-web-admin
   name: rcon-web-admin
 spec:
-  selector: 
+  selector:
     matchLabels:
       app: rcon-web-admin
   template:
@@ -18,26 +18,26 @@ spec:
         image: itzg/rcon
         env:
         - name: RWA_USERNAME
-          value: admin 
+          value: admin
 
         - name: RWA_PASSWORD
           value: {{ .Values.rconWebPassword }}
-  
+
         - name: RWA_ADMIN
           value: "TRUE"
-     
+
         - name: RWA_RCON_HOST
           value: {{ template "minecraft.fullname" . }}
-      
+
         - name: RWA_RCON_PASSWORD
           value: {{ .Values.rconPassword }}
 
-        - name: RWA_WEBSOCKET_URL_SSL 
+        - name: RWA_WEBSOCKET_URL_SSL
           value: wss://192.168.86.3:31001
 
         - name: RWA_WEBSOCKET_URL
           value: ws://192.168.86.3:31001
-        
+
         ports:
         - containerPort: 4326
         - containerPort: 4327
@@ -71,7 +71,7 @@ spec:
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
-metadata: 
+metadata:
   name: rcon-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
@@ -82,8 +82,8 @@ spec:
       paths:
       - path: /{{ template "minecraft.fullname" . }}(/|$)(.*)
         pathType: Prefix
-        backend: 
+        backend:
           service:
             name: rcon-web
-            port: 
+            port:
               number: 4326

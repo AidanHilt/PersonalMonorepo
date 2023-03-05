@@ -18,11 +18,11 @@ resource "kubernetes_namespace" "namespace" {
 resource "helm_release" "lidarr" {
   name = "lidarr"
   repository = "https://k8s-at-home.com/charts/"
-  chart = "lidarr"   
+  chart = "lidarr"
 
   values = [
     "${file("values/lidarr-values.yaml")}"
-  ]  
+  ]
 
   namespace = var.namespace
 }
@@ -34,7 +34,7 @@ resource "kubernetes_ingress_v1"  "lidarr_ingress" {
     annotations = {}
   }
 
-  spec {      
+  spec {
   ingress_class_name = "nginx"
 
   rule{
@@ -42,7 +42,7 @@ resource "kubernetes_ingress_v1"  "lidarr_ingress" {
       path{
         path = "/lidarr(/|$)(.*)"
         path_type = "Prefix"
-        
+
         backend {
           service{
             name = "lidarr"

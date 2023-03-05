@@ -7,7 +7,7 @@
   gather_facts: yes
   connection: ssh
 
-  tasks: 
+  tasks:
     - name: Install pre-reqs for longhorn
       dnf:
         name: [iscsi-initiator-utils, nfs-utils]

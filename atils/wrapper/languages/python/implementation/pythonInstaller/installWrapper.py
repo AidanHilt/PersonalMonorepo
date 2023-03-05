@@ -5,8 +5,8 @@
 import subprocess
 
 '''
-Note: This one will need to be simple. This is the script that walks so our 
-opinionated Python setup can run. It's a bootstrap, and this script should be the 
+Note: This one will need to be simple. This is the script that walks so our
+opinionated Python setup can run. It's a bootstrap, and this script should be the
 bottom of that ladder.
 '''
 
@@ -27,7 +27,7 @@ def buildAndReturnBoundaryString(message, input=False):
 
         if boundaryStringLength > 93:
             boundaryStringLength = 93
-        
+
         for i in range(0, boundaryStringLength):
             boundaryString += "="
 
@@ -42,7 +42,7 @@ def printBlockedMessage(message):
     print(boundaryString)
     print(message)
     print(boundaryString + "\n")
-    
+
 
 def waitForEnterKey(message):
     boundaryString = buildAndReturnBoundaryString(message, True)
@@ -54,9 +54,9 @@ def waitForEnterKey(message):
 def runCommand(command):
     commandResult = subprocess.run(["sh", "-c", command], capture_output=True, text=True)
     printBlockedMessage(commandResult.stdout)
-    if(commandResult.stderr): 
+    if(commandResult.stderr):
         printBlockedMessage(commandResult.stderr)
-    
+
 #TODO This is a good base to pick up on automating the install process... we'll call
 #the steps "install" and "verify"
 def installPoetry():

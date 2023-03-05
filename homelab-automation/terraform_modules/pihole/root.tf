@@ -64,14 +64,14 @@ resource "kubernetes_deployment" "pihole_deployment"{
           name = "pihole"
           image = "pihole/pihole"
           image_pull_policy = "IfNotPresent"
-          
+
           env {
-            name = "TZ"  
+            name = "TZ"
             value = var.timezone
           }
 
           env {
-            name = "WEBPASSWORD" 
+            name = "WEBPASSWORD"
             value = var.web_password
           }
 
@@ -115,7 +115,7 @@ resource "kubernetes_deployment" "pihole_deployment"{
           name = "pvc-dnsmasq"
           persistent_volume_claim {
             claim_name = "pvc-dnsmasq"
-          } 
+          }
         }
       }
     }
@@ -151,7 +151,7 @@ resource "kubernetes_ingress_v1" "pihole_ingress" {
   }
   }
 
-  spec {      
+  spec {
   ingress_class_name = "nginx"
 
   rule{
@@ -159,7 +159,7 @@ resource "kubernetes_ingress_v1" "pihole_ingress" {
       path{
         path = "/pihole(/|$)(.*)"
         path_type = "Prefix"
-        
+
         backend {
           service{
             name = "pihole-frontend"

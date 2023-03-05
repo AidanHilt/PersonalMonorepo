@@ -66,7 +66,7 @@ resource "kubernetes_persistent_volume_claim" "library-pvc" {
     storage_class_name = "manual"
 
     volume_name = "library-volume"
-  
+
   }
 }
 
@@ -78,12 +78,12 @@ resource "kubernetes_ingress_v1" "calibre-web_ingress" {
   annotations = {
     "nginx.ingress.kubernetes.io/proxy-body-size" = "50m"
     "nginx.ingress.kubernetes.io/configuration-snippet" = <<EOT
-    proxy_set_header    X-Script-Name   /calibre-web;  
+    proxy_set_header    X-Script-Name   /calibre-web;
     EOT
   }
 }
 
-  spec {      
+  spec {
   ingress_class_name = "nginx"
 
   rule{
@@ -91,7 +91,7 @@ resource "kubernetes_ingress_v1" "calibre-web_ingress" {
       path{
         path = "/calibre-web(/|$)(.*)"
         path_type = "Prefix"
-        
+
         backend {
           service{
             name = "calibre-web"
@@ -110,11 +110,11 @@ resource "kubernetes_ingress_v1" "calibre-web_ingress" {
 resource "helm_release" "calibre-web" {
   name = "calibre-web"
   repository = "https://k8s-at-home.com/charts/"
-  chart = "calibre-web"   
+  chart = "calibre-web"
 
   values = [
     "${file("calibre-values.yaml")}"
-  ]   
+  ]
 
   namespace = var.namespace
 }

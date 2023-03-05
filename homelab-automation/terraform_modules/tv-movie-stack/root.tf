@@ -12,7 +12,7 @@ provider "helm" {
 resource "helm_release" "prometheus-operator" {
   name = "prometheus-operator"
   repository = "https://prometheus-community.github.io/helm-charts"
-  chart = "kube-prometheus-stack"   
+  chart = "kube-prometheus-stack"
 
 
   namespace = var.namespace
@@ -57,7 +57,7 @@ resource "kubernetes_persistent_volume_claim" "data-pvc" {
     storage_class_name = "manual"
 
     volume_name = "data-volume"
-  
+
   }
 
 }
@@ -69,7 +69,7 @@ resource "helm_release" "prowlarr"{
 
   values = [
     "${file("values/prowlarr-values.yaml")}"
-  ]   
+  ]
 
   timeout = 60
 
@@ -84,7 +84,7 @@ resource "kubernetes_ingress_v1" "prowlarr_ingress" {
   }
   }
 
-  spec {      
+  spec {
   ingress_class_name = "nginx"
 
   rule{
@@ -92,7 +92,7 @@ resource "kubernetes_ingress_v1" "prowlarr_ingress" {
       path{
         path = "/prowlarr(/|$)(.*)"
         path_type = "Prefix"
-        
+
         backend {
           service{
             name = "prowlarr"
@@ -114,7 +114,7 @@ resource "helm_release" "sonarr"{
 
   values = [
     "${file("values/sonarr-values.yaml")}"
-  ]   
+  ]
 
   timeout = 60
 
@@ -129,7 +129,7 @@ resource "kubernetes_ingress_v1"  "sonarr_ingress" {
   }
   }
 
-  spec {      
+  spec {
   ingress_class_name = "nginx"
 
   rule{
@@ -137,7 +137,7 @@ resource "kubernetes_ingress_v1"  "sonarr_ingress" {
       path{
         path = "/sonarr(/|$)(.*)"
         path_type = "Prefix"
-        
+
         backend {
           service{
             name = "sonarr"
@@ -159,7 +159,7 @@ resource "helm_release" "radarr"{
 
   values = [
     "${file("values/radarr-values.yaml")}"
-  ]   
+  ]
 
   timeout = 60
 
@@ -174,7 +174,7 @@ resource "kubernetes_ingress_v1"  "radarr_ingress" {
   }
   }
 
-  spec {      
+  spec {
   ingress_class_name = "nginx"
 
   rule{
@@ -182,7 +182,7 @@ resource "kubernetes_ingress_v1"  "radarr_ingress" {
       path{
         path = "/radarr(/|$)(.*)"
         path_type = "Prefix"
-        
+
         backend {
           service{
             name = "radarr"
@@ -204,7 +204,7 @@ resource "helm_release" "flaresolverr" {
 
   values = [
     "${file("values/flaresolverr-values.yaml")}"
-  ]   
+  ]
 
   timeout = 60
 
@@ -218,7 +218,7 @@ resource "helm_release" "jellyfin"{
 
   values = [
     "${file("values/jellyfin-values.yaml")}"
-  ]   
+  ]
 
   timeout = 60
 
@@ -233,7 +233,7 @@ resource "kubernetes_ingress_v1"  "jellyfin_ingress" {
   }
   }
 
-  spec {      
+  spec {
   ingress_class_name = "nginx"
 
   rule{
@@ -241,7 +241,7 @@ resource "kubernetes_ingress_v1"  "jellyfin_ingress" {
       path{
         path = "/emby(/|$)(.*)"
         path_type = "Prefix"
-        
+
         backend {
           service{
             name = "jellyfin"
@@ -263,7 +263,7 @@ resource "helm_release" "qbittorrent"{
 
   values = [
     "${file("values/qbittorrent-values.yaml")}"
-  ]   
+  ]
 
   namespace = var.namespace
 
@@ -276,7 +276,7 @@ resource "kubernetes_ingress_v1"  "qbittorrent_ingress" {
   name = "qbittorrent-ingress"
   annotations = {
     "nginx.ingress.kubernetes.io/rewrite-target" = "/$2"
-    
+
     "nginx.ingress.kubernetes.io/proxy-http-version" = "1.1"
     "nginx.ingress.kubernetes.io/http2-push-preload" = "on"
 
@@ -289,7 +289,7 @@ resource "kubernetes_ingress_v1"  "qbittorrent_ingress" {
     }
   }
 
-  spec {      
+  spec {
     ingress_class_name = "nginx"
 
     rule{
@@ -297,7 +297,7 @@ resource "kubernetes_ingress_v1"  "qbittorrent_ingress" {
         path{
           path = "/qbt(/|$)(.*)"
           path_type = "Prefix"
-          
+
           backend {
             service{
               name = "qbittorrent"
@@ -337,7 +337,7 @@ resource "helm_release" "ombi"{
 
   values = [
     "${file("values/ombi-values.yaml")}"
-  ]   
+  ]
 
   timeout = 60
 
@@ -352,7 +352,7 @@ resource "kubernetes_ingress_v1"  "ombi_ingress" {
   }
   }
 
-  spec {      
+  spec {
   ingress_class_name = "nginx"
 
   rule{
@@ -360,7 +360,7 @@ resource "kubernetes_ingress_v1"  "ombi_ingress" {
       path{
         path = "/ombi(/|$)(.*)"
         path_type = "Prefix"
-        
+
         backend {
           service{
             name = "ombi"

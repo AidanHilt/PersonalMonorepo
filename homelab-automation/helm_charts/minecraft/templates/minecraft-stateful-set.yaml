@@ -26,16 +26,16 @@ spec:
 
         - name: TYPE
           value: "FORGE"
-        
+
         - name: VERSION
           value: {{ .Values.minecraftVersion }}
 
         - name: ENABLE_RCON
           value: "true"
-        
+
         - name: RCON_PASSWORD
           value: {{ .Values.rconPassword }}
-        
+
         - name: SNOOPER_ENABLED
           value:  "false"
 
@@ -44,11 +44,11 @@ spec:
 
         - name: INIT_MEMORY
           value: 1G
-        
+
         ports:
         - containerPort: 25565
         - containerPort: 25575
-        
+
         volumeMounts:
         - mountPath: /data
           name: data
@@ -113,7 +113,7 @@ spec:
   - name: minecraft
     port: 25565
     targetPort: 25565
-  
+
   - name: rcon
     port: 25575
     targetPort: 25575

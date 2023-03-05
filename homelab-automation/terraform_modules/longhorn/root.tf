@@ -61,7 +61,7 @@ resource "kubernetes_ingress_v1" "longhorn_ingress" {
             path{
                 path = "/longhorn(/|$)(.*)"
                 path_type = "Prefix"
-                
+
                 backend {
                     service{
                         name = "longhorn-frontend"

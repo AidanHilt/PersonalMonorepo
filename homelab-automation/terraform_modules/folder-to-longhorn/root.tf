@@ -54,7 +54,7 @@ resource "kubernetes_pod" "longhorn-transfer-pod" {
                 mount_path = "/mnt/new"
                 name = "new-volume"
             }
-        } 
+        }
 
         volume {
             name = "old-volume"
