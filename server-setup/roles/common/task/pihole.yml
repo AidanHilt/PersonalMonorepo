@@ -2,6 +2,11 @@
 ---
 - name: Include the docker setup playbook
   import_playbook: ../library/docker-setup.yml
+- name: Include ssh key exchange playbook
+  import_playbook: ../library/ssh-key-exchange.yml
+  vars:
+        private_key_path: "/etc/gravity-sync/gravity-sync.rsa"
+        public_key_path: "/etc/gravity-sync/gravity-sync.rsa.pub"
 
 - name: Get a PiHole instance running with Docker Compose
   hosts: all
@@ -25,7 +30,7 @@
     - name: Create symlink to /run/systemd/resolve/resolv.conf
       file:
         src: /run/systemd/resolve/resolv.conf
-        dest: /etc/systemd/resolv.conf
+        dest: /etc/resolv.conf
         state: link
 
     - name: Restart systemd-resolved to apply our changes
@@ -50,7 +55,7 @@
               environment:
                 TZ: 'America/New York'
                 PIHOLE_UID: 1000
-                # WEBPASSWORD: 'set a secure password here or it will be random'
+                WEBPASSWORD: {{ pihole.webPassword }}
               volumes:
                 - '/dockerVolumes/pihole/etc/pihole:/etc/pihole'
                 - '/dockerVolumes/pihole/etc/dnsmasq.d:/etc/dnsmasq.d'
@@ -80,11 +85,30 @@
         piholeDirectory: "{{ pihole.piholeDirectory }}"
         DNSMasqDirectory: "{{ pihole.DNSMasqDirectory }}"
         dockerContainer: "{{ pihole.dockerContainer }}"
-  #TODO set up SSH access between the machines
 
   #TODO put in a check to see if Gravity Sync is installed. Lets us imitate real idempotency.
 
     - name: Run install script
       shell: curl -sSL https://raw.githubusercontent.com/vmstan/gs-install/main/gs-install.sh | bash
 
-  #TODO clean up the permissions nightmare left behind by an installation of gravity sync
+  #TODO If I have to do this manually, fine, but this script is failing because the machines don't recognize each other. Keep an eye on that, and maybe force
+  #them to recognize each other. On to OpenVPN
+    - name: Set Gravity Sync to run every fifteen minutes
+      shell: sudo gravity-sync auto quad
+
+    - name: Clear out the passwordless sudo
+      file:
+        path: /etc/sudoers.d/gs-nopasswd
+        state: absent
+
+    - name: Give the aidan user passwordless sudo for the docker command
+      community.general.sudoers:
+        name: passwordless-docker
+        state: present
+        user: aidan
+        nopassword: true
+        commands:
+            - /usr/bin/docker
+
+    #TODO remove pip packages that we aren't going to use anymore
+    #TODO setup keepalived so that we have only one IP. For now, we can just set primary and secondary servers

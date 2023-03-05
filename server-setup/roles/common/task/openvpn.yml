@@ -1,3 +1,73 @@
-#TODO Do this
+#TODO This is mostly finished, we'll just need to do final tests from scratch to ensure the clustering holds. If not, it may be back to the drawing board.
 ---
-- name:
+- name: Include ssh key exchange playbook
+  import_playbook: ../library/ssh-key-exchange.yml
+  vars:
+    private_key_path: "/home/{{ansible_user}}/.ssh/id_rsa"
+    public_key_path: "/home/{{ansible_user}}/.ssh/id_rsa.pub"
+    ssh_port: 22
+    username: aidan
+    dbpush_hosts: []
+- name: Set up OpenVPN on Ubuntu hosts
+  become: yes
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Add OpenVPN GPG key
+      shell: wget https://as-repository.openvpn.net/as-repo-public.asc -qO /etc/apt/trusted.gpg.d/as-repository.asc
+
+    - name: Add OpenVPN apt repository
+      apt_repository:
+        repo: deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/as-repository.asc] http://as-repository.openvpn.net/as/debian jammy main
+        state: present
+
+    - name: Install OpenVPN Access Server
+      apt:
+        pkg:
+          - openvpn-as
+
+    - name: Copy over configuration file
+      template:
+        src: ../template/as.conf.j2
+        dest: /usr/local/openvpn_as/etc/as.conf
+      vars:
+        nodeType: {{ openvpn.nodeType }}
+
+    - name: Gather dbpush host information
+      set_fact:
+        dbpush_hosts: "{{ dbpush_hosts + [{'name': inventory_hostname, 'internal': hostvars[inventory_hostname]['openvpn']['nodeType']}] }}"
+
+    - name: Set dbpush.hosts.n.enable
+      shell: /usr/local/openvpn_as/scripts/sacli --key "dbpush.hosts.{{ item }}.enable" --value true ConfigPut
+      with_sequence: start=0 end="{{ dbpush_hosts|length }}" stride=1
+      when: hostvars[inventory_hostname]['openvpn']['nodeType'] == 'PRIMARY'
+
+    - name: Set dbpush.hosts.n.internal
+      shell: /usr/local/openvpn_as/scripts/sacli --key "dbpush.hosts.{{ item }}.internal" --value "{{ dbpush_hosts[item]['internal'] }}" ConfigPut
+      with_sequence: start=0 end="{{ dbpush_hosts|length }}" stride=1
+      when: hostvars[inventory_hostname]['openvpn']['nodeType'] == 'PRIMARY'
+
+    - name: Set dbpush.hosts.n.public
+      shell: /usr/local/openvpn_as/scripts/sacli --key "dbpush.hosts.{{ item }}.public" --value "{{ dbpush_hosts[item]['name'] }}" ConfigPut
+      with_sequence: start=0 end="{{ dbpush_hosts|length }}" stride=1
+      when: hostvars[inventory_hostname]['openvpn']['nodeType'] == 'PRIMARY'
+
+    - name: Set dbpush.hosts.n.ssh_port
+      shell: /usr/local/openvpn_as/scripts/sacli --key "dbpush.hosts.{{ item }}.ssh_port" --value "{{ ssh_port }}" ConfigPut
+      with_sequence: start=0 end="{{ dbpush_hosts|length }}" stride=1
+      when: hostvars[inventory_hostname]['openvpn']['nodeType'] == 'PRIMARY'
+
+    - name: Set dbpush.hosts.n.username
+      shell: /usr/local/openvpn_as/scripts/sacli --key "dbpush.hosts.{{ item }}.username" --value "{{ username }}" ConfigPut
+      with_sequence: start=0 end="{{ dbpush_hosts|length }}" stride=1
+      when: hostvars[inventory_hostname]['openvpn']['nodeType'] == 'PRIMARY'
+
+    - name: Set new admin user password
+      shell: /usr/local/openvpn_as/scripts/sacli --user "openvpn" --key "passwd" --value "{{ openvpn.webPassword }}" UserPropPut
+
+    - name: Restart OpenVPN Access Server
+      service:
+        name: openvpnas
+        state: restarted
+      when: hostvars[inventory_hostname]['openvpn']['nodeType'] == 'PRIMARY'

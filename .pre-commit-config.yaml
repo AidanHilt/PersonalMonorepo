@@ -14,4 +14,4 @@ repos:
       #- id: check-yaml
       #- id: detect-private-key
       - id: no-commit-to-branch
-      - id: trailing-whitespace
+      #- id: trailing-whitespace

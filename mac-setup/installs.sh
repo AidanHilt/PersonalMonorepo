@@ -1,17 +1,21 @@
 #!/bin/zsh
-# sh -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-# sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+# This covers auto complete for kubectl, along with setting the 'k' alias
+# echo 'source <(kubectl completion zsh)' >>~/.zshrc
+# echo 'alias k=kubectl' >>~/.zshrc
+# echo 'complete -F __start_kubectl ks' >>~/.zshrc
 
+# TODO add setup for Syncthing, and automatically update wallpapers
 
-#TODO add setup for Syncthing, and automatically update wallpapers
+# TODO Add automation for using fingerprint for sudo
 
-echo 'source <(kubectl completion zsh)' >>~/.zshrc
-echo 'alias k=kubectl' >>~/.zshrc
-echo 'complete -F __start_kubectl ks' >>~/.zshrc
+# TODO pare down applications allowed to run in the background to the bare minimum
 
+# This covers installing a command line wrapper for ChatGPT
+pip3 install setuptools pytest-playwright
+playwright install firefox
 
-#TODO Add automation for using fingerprint for sudo
-
+pip3 install git+https://github.com/mmabrouk/chatgpt-wrapper
+chatgpt install
 
 
 source ~/.zshrc

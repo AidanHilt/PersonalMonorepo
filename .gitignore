@@ -250,3 +250,5 @@ hosts.yml
 Brewfile.lock.json
 
 values.yaml
+
+server-setup/roles/common/library/buffer/*

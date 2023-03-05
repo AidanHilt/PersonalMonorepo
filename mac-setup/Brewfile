@@ -17,6 +17,9 @@ cask 'flycut'
 cask 'iterm2'
 cask 'duet'
 cask 'keka'
+cask 'microsoft-office'
+cask 'tor-browser'
+cask 'rancher'
 
 
 brew 'sevenzip'
