@@ -1,0 +1,18 @@
+#TODO Parameterize this, and move the range so that dev and prod can coexist
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: local
+  namespace: metallb-system
+spec:
+  addresses:
+  - 192.168.86.100-192.168.86.120
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: level2-advertisement
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - local

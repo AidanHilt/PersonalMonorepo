@@ -1,0 +1,14 @@
+project: default
+source:
+  repoURL: 'https://metallb.github.io/metallb'
+  targetRevision: 0.13.9
+  chart: metallb
+destination:
+  server: 'https://kubernetes.default.svc'
+  namespace: metallb-system
+syncPolicy:
+  automated:
+    prune: true
+    selfHeal: true
+  syncOptions:
+    - CreateNamespace=true
