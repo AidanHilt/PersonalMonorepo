@@ -1,4 +1,5 @@
 # This playbook is used to set up Docker, Docker Compose, and containerd for an Ubuntu machine
+#TODO Add the user "aidan" to the docker group
 - name: Set up docker on Ubuntu
   hosts: all
   gather_facts: false
@@ -17,8 +18,8 @@
     - name: Install Docker and related components
       apt:
         pkg:
-        - docker-ce
-        - docker-ce-cli
+        - docker-ce=5:20.10.23~3-0~ubuntu-jammy
+        - docker-ce-cli=5:20.10.23~3-0~ubuntu-jammy
         - containerd.io
         - docker-compose-plugin
 
