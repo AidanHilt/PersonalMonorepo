@@ -33,3 +33,9 @@
         name:
         - docker
         - docker-compose
+
+    - name: Add user to group
+      user:
+        name: aidan
+        groups: docker
+        append: yes

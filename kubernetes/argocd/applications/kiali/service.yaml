@@ -9,6 +9,7 @@ spec:
     repoURL: 'https://kiali.org/helm-charts'
     targetRevision: 1.64.0
     helm:
+      releaseName: kiali
       parameters:
         - name: cr.create
           value: 'true'
