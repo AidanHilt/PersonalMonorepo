@@ -11,6 +11,23 @@ spec:
   source:
     helm:
       releaseName: grafana-loki
+      parameters:
+        - name: backend.persistence.storageClass
+          value: longhorn
+        - name: write.persistence.storageClass
+          value: longhorn
+        - name: read.persistence.storageClass
+          value: longhorn
+        - name: minio.enabled
+          value: "true"
+        - name: backend.replicas
+          value: '2'
+        - name: gateway.autoscaling.maxReplicas
+          value: '2'
+        - name: write.replicas
+          value: '2'
+        - name: read.replicas
+          value: '2'
     chart: loki
     repoURL: https://grafana.github.io/helm-charts
     targetRevision: 4.8.0

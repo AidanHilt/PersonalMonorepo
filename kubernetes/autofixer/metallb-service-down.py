@@ -1,0 +1,1 @@
+#TODO Make a script to check metallb services, and make sure they're all up. If we get an access denied 

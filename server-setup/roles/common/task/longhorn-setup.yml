@@ -1,0 +1,19 @@
+- name: Install open-iscsi and enable iscsid
+  hosts: all
+  become: true
+  
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install open-iscsi package
+      apt:
+        name: open-iscsi
+        state: present
+
+    - name: Ensure iscsid is enabled and running
+      systemd:
+        name: iscsid
+        state: started
+        enabled: yes

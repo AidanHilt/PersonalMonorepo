@@ -16,7 +16,7 @@ spec:
   project: default
   source:
     repoURL: 'https://prometheus-community.github.io/helm-charts'
-    targetRevision: 45.6.0
+    targetRevision: 45.8.1
     helm:
       parameters:
         - name: grafana.env.GF_SERVER_ROOT_URL
