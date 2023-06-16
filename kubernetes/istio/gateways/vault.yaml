@@ -1,23 +1,19 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: grafana
+  name: hashi-vault
   namespace: istio-system
 spec:
   hosts:
-  - "*"
+  - vault.dev.local
   gateways:
   - internal-gateway
   http:
   - match:
-    - uri:
-        prefix: /grafana/
-    - uri:
-        prefix: /grafana
-    rewrite: 
+    rewrite:
       uri: /
     route:
     - destination:
-        host: prometheus-grafana.monitoring.svc.cluster.local
+        host: hashi-vault.vault.svc.cluster.local
         port:
-          number: 80
+          number: 8200

@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: "2023-03-23T02:47:48Z"
+  labels:
+    kubernetes.io/metadata.name: monitoring
+  name: monitoring
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/prometheus-community/helm-charts.git'
+    path: charts/kube-prometheus-stack
+    targetRevision: e58a02bf1f7bc99b0c155c1b301b94534ed49b90
+    plugin:
+      name: argocd-vault-plugin-helm
+      env:
+        - name: APP_NAME
+          value: kube-prometheus-stack
+        - name: APP_NAMESPACE
+          value: $ARGOCD_APP_NAMESPACE
+        - name: HELM_VALUES
+          value: |
+            grafana:
+              env:
+                GF_SERVER_ROOT_URL: %(protocol)s://%(domain)s:%(http_port)s/grafana/
+                GF_SERVE_FROM_SUB_PATH: <path:kv-v2/test/prometheus#subPath>
+            prometheus:
+              prometheusSpec:
+                serviceMonitorSelectorNilUsesHelmValues: false
+          #value: "grafana:\n  env:\n    GF_SERVER_ROOT_URL: %(protocol)s://%(domain)s:%(http_port)s/grafana/\n    GF_SERVE_FROM_SUB_PATH: <path:kv-v2/test/prometheus#subPath>\n prometheus:\n   prometheusSpec:\n     serviceMonitorSelectorNilUsesHelmValues: false"
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

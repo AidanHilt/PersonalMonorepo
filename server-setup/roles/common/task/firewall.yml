@@ -1,3 +1,4 @@
+#TODO enable promiscuous mode for network interfaces that are on the main network
 ---
 - name: Set up firewall for servers
   hosts: all

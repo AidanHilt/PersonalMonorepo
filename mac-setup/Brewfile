@@ -27,7 +27,6 @@ brew 'syncthing'
 #Development usage
 #=================
 cask 'visual-studio-code'
-cask 'utm'
 cask 'rancher'
 
 brew 'python3'
@@ -42,5 +41,5 @@ brew 'k9s'
 brew 'kubectx'
 brew 'helm'
 brew 'rke'
-brew 'qemu'
 brew 'yq'
+brew 'vault'

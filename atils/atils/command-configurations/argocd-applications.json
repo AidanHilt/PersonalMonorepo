@@ -1,0 +1,98 @@
+[
+  {
+    "application-yaml": [
+      "longhorn.yaml"
+    ],
+    "description": "Distributed filesystem provider",
+    "url": "https://longhorn.io/",
+    "name": "longhorn",
+    "namespace": "longhorn-system",
+    "gateway": "longhorn.yaml"
+  },
+  {
+    "application-yaml": [
+      "prometheus.yaml",
+      "grafana-loki.yaml",
+      "grafana-promtail.yaml"
+    ],
+    "description": "Monitoring and observability tools",
+    "url": "https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack",
+    "name": "monitoring",
+    "namespace": "monitoring",
+    "gateway": [
+      "grafana.yaml",
+      "prometheus.yaml"
+    ],
+    "prometheus": [
+      "istio.yaml"
+    ],
+    "grafana": [
+      {
+        "id": "7639",
+        "version": "1.17.2"
+      },
+      {
+        "id": "11829",
+        "version": "1.17.2"
+      },
+      {
+        "id": "7636",
+        "version": "1.17.2"
+      },
+      {
+        "id": "7630",
+        "version": "1.17.2"
+      },
+      {
+        "id": "7645",
+        "version": "1.17.2"
+      }
+    ],
+
+    "post-install-yaml": "monitoring.yaml"
+  },
+  {
+    "application-yaml": [
+      "istio.yaml",
+      "istio-base.yaml",
+      "istio-gateway.yaml",
+      "kiali.yaml"
+    ],
+    "description": "Service mesh provider",
+    "url": "https://istio.io/",
+    "name": "istio",
+    "namespace": "istio-system",
+    "gateway": ["kiali.yaml"],
+    "post-install-yaml": "internal-gateway.yaml"
+  },
+  {
+    "application-yaml": [
+      "metallb.yaml"
+    ],
+    "description": "Load balancer provider",
+    "url": "https://metallb.universe.tf/",
+    "name": "metallb",
+    "namespace": "metallb-system",
+    "post-install-yaml": "metallb-ip-pool.yaml"
+  },
+  {
+    "application-yaml": [
+      "hashi-vault.yaml"
+    ],
+    "description": "Hashicorp Vault secret manager",
+    "url": "https://www.vaultproject.io/",
+    "name": "vault",
+    "namespace": "vault",
+    "gateway": ["vault.yaml"]
+  },
+  {
+    "application-yaml": [
+      "prowlarr.yaml"
+    ],
+    "description": "Indexer management for the -arrs",
+    "url": "https://wiki.servarr.com/prowlarr",
+    "name": "videos",
+    "namespace": "videos",
+    "gateway": ["prowlarr.yaml"]
+  }
+]
