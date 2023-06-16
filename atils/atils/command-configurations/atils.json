@@ -1,0 +1,17 @@
+[
+  {
+    "command-name": "python",
+    "command-executor": "poetry run python3 ${config.SCRIPT_INSTALL_DIRECTORY}/atils/python.py",
+    "description": "Manage python projects according to a standard interface"
+  },
+  {
+    "command-name": "kubernetes",
+    "command-executor": "poetry run python3 ${config.SCRIPT_INSTALL_DIRECTORY}/atils/atils_kubernetes.py",
+    "description": "Orchestration for our orchestration for our orchestration. This contains automation to set up an RKE cluster, from initial install on."
+  },
+  {
+    "command-name": "vault",
+    "command-executor": "poetry run python3 ${config.SCRIPT_INSTALL_DIRECTORY}/atils/vault.py",
+    "description": "Management of HashiCorp vault. Mostly used for setup in all likelihood"
+  }
+]

@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hashi-vault
+  namespace: argocd
+spec:
+  destination:
+    namespace: vault
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    helm:
+      releaseName: hashi-vault
+
+      values: |
+        server:
+          standalone:
+            config: | 
+              ui = true
+              listener "tcp" {
+                tls_disable = 1
+                address = "[::]:8200"
+                cluster_address = "[::]:8201"
+                # Enable unauthenticated metrics access (necessary for Prometheus Operator)
+                telemetry {
+                unauthenticated_metrics_access = "true"
+                }
+              }
+              storage "file" {
+                path = "/vault/data"
+              }
+
+    chart: vault
+    repoURL: https://helm.releases.hashicorp.com
+    targetRevision: 0.24.1
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
