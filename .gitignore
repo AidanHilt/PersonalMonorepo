@@ -256,3 +256,6 @@ server-setup/roles/common/library/buffer/*
 *.rkestate
 
 kube_config*
+
+monkeytype.sqlite3
+poetry.lock
