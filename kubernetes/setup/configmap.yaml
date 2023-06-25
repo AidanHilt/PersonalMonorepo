@@ -28,5 +28,4 @@ data:
           - bash
           - "-c"
           - |
-            env > /home/argocd/vars.env && helm template $ARGOCD_ENV_APP_NAME -n $ARGOCD_APP_NAMESPACE -f <(echo "$ARGOCD_ENV_HELM_VALUES") . 
-#| argocd-vault-plugin generate -s argocd:argocd-vault-plugin-credentials -
+            helm template $ARGOCD_ENV_APP_NAME -n $ARGOCD_APP_NAMESPACE -f <(echo "$ARGOCD_ENV_HELM_VALUES") . | argocd-vault-plugin generate -s argocd:argocd-vault-plugin-credentials -

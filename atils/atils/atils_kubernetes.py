@@ -5,9 +5,9 @@ import sys
 import shutil
 import json
 
-import config
-from common import yaml_utils
-from common import grafana_utils
+from atils import config
+from atils import yaml_utils
+from atils import grafana_utils
 
 from kubernetes import config as kubernetes_config
 from kubernetes import client, utils
@@ -18,7 +18,7 @@ kubernetes_config.load_kube_config()  # type: ignore
 logging.basicConfig(level=logging.DEBUG)  # type: ignore
 
 
-def main():
+def main(args: str):
   parser: argparse.ArgumentParser = argparse.ArgumentParser()
   subparsers = parser.add_subparsers(
     help="Select a subcommand", dest="subparser_name"
@@ -59,7 +59,7 @@ def main():
     parser.print_help(sys.stderr)
     sys.exit(1)
 
-  args = parser.parse_args()
+  args = parser.parse_args(args)
 
   if args.subparser_name == "rke-setup":
     if vars(args).get("replace_kubeconfig"):
@@ -234,6 +234,7 @@ def setup_rke_cluster(cluster_name: str, force: bool = False):
       )
       exit(1)
 
+
 def check_namespace_exists(namespace_name: str) -> bool:
   # Create Kubernetes API client
   v1 = client.CoreV1Api()
@@ -246,5 +247,3 @@ def check_namespace_exists(namespace_name: str) -> bool:
       return True
   else:
       return False
-
-main()

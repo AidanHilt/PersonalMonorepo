@@ -17,7 +17,7 @@ def call_mypy(path: str):
     os.system(f"python3 -m mypy {path}")
 
 
-def main():
+def main(args: str):
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
         help="Select a subcommand", dest="subparser_name"
@@ -42,7 +42,7 @@ def main():
         parser.print_help(sys.stderr)
         sys.exit(1)
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     if args.subparser_name == "lint":
         call_linter(args.python_dir)
