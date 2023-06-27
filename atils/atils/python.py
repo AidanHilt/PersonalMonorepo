@@ -2,9 +2,9 @@ import os
 import sys
 import argparse
 
-import config
+from atils import config
 
-
+#TODO Figure out how to do this correctly
 def call_linter(path: str):
     os.system(f"python3 -m black {path}")
 
@@ -38,7 +38,7 @@ def main(args: str):
         "python_dir", nargs="?", default=f"{config.SCRIPT_INSTALL_DIRECTORY}/atils"
     )
 
-    if len(sys.argv) == 1:
+    if len(args) == 0:
         parser.print_help(sys.stderr)
         sys.exit(1)
 
@@ -50,6 +50,3 @@ def main(args: str):
         call_pytest(args.python_dir)
     elif args.subparser_name == "type-check":
         call_mypy(args.python_dir)
-
-
-main()

@@ -12,7 +12,7 @@ data:
       allowConcurrency: true
       discover:
         find:
-          command: [sh, -c, find . -name Chart.yaml]
+          command: [sh, -c, find $ARGOCD_APP_SOURCE_PATH -name Chart.yaml]
       init:
        command:
           - bash

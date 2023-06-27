@@ -50,12 +50,12 @@ def main(args: str):
   )
   argocd_parser.add_argument(
     "command",
-    choices=["install", "application-install"],
+    choices=["install"],
     help="ArgoCD command to use",
   )
   argocd_parser.add_argument("application_name", nargs="?")
 
-  if len(sys.argv) == 1:
+  if len(args) == 0:
     parser.print_help(sys.stderr)
     sys.exit(1)
 
@@ -72,8 +72,8 @@ def main(args: str):
     args_dict = vars(args)
     if args_dict["command"] == "install":
       setup_argocd()
-    elif args_dict["command"] == "application-install":
-      install_argocd_application(args_dict["application_name"])
+    #elif args_dict["command"] == "application-install":
+      #install_argocd_application(args_dict["application_name"])
 
 
 def install_argocd_application(application_name: str):
@@ -152,9 +152,12 @@ def setup_argocd():
   )
 
   os.system(
-    f"kubectl apply -f {config.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/istio/gateways/argocd.yaml"
+    f"kubectl apply -f {config.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/argocd/master-app.yaml"
   )
 
+  os.system(
+    f"kubectl apply -f {config.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/argocd/setup/cluster-role-binding.yaml -f {config.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/argocd/setup/cmp-plugin.yaml -f {config.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/argocd/setup/vault-authorization-secret.yaml"
+  )
 
 def merge_and_replace_kubeconfig(cluster_name):
   shutil.copy(
