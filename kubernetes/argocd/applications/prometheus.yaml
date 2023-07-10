@@ -28,8 +28,8 @@ spec:
           value: |
             grafana:
               env:
-                GF_SERVER_ROOT_URL: %(protocol)s://%(domain)s:%(http_port)s/grafana/
-                GF_SERVE_FROM_SUB_PATH: <path:kv-v2/test/prometheus#subPath>
+                GF_SERVER_ROOT_URL: '%(protocol)s://%(domain)s:%(http_port)s/grafana/'
+                GF_SERVE_FROM_SUB_PATH: <path:kv/data/prometheus#subPath>
             prometheus:
               prometheusSpec:
                 serviceMonitorSelectorNilUsesHelmValues: false

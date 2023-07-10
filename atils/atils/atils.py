@@ -1,17 +1,22 @@
 import os
 import sys
 
-from atils import config
+from atils import atils_kubernetes as kubernetes
+from atils import python
+from atils import kustomize
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Atils requires at least one subcommand argument.")
-        sys.exit(1)
+def main():
+  if len(sys.argv) < 2:
+    print("Atils requires at least one subcommand argument.")
+    sys.exit(1)
 
-    script_name: str = sys.argv[1]
-    command_executor = config.get_command_executor("atils", script_name)
+  script_name: str = sys.argv[1]
 
-    # TODO Let's make the error handling on this cleaner, right now we don't actually check that
-    # the command to run can run
-    subprocess_args: str = " ".join([command_executor] + sys.argv[2:])
-    os.system(subprocess_args)
+  #TODO Make this use argparse. We'll get a proper help page up, and error handling for incorrect arguments
+
+  if script_name == 'kubernetes':
+    kubernetes.main(sys.argv[2:])
+  elif script_name == 'python':
+    python.main(sys.argv[2:])
+  elif script_name == 'kustomize':
+    kustomize.main(sys.argv[2:])
