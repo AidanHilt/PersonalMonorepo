@@ -55,6 +55,16 @@ def main(args: str):
   )
   argocd_parser.add_argument("application_name", nargs="?")
 
+  
+  kustomize_parser = subparsers.add_parser(
+    "kustomize", help="Commands to aid creation and management of Kustomize templates"
+  )
+  kustomize_parser.add_argument(
+    "command",
+    choices=["init"],
+    help="Operations to perform on Kustomize templates",
+  )
+
   if len(args) == 0:
     parser.print_help(sys.stderr)
     sys.exit(1)
@@ -68,74 +78,31 @@ def main(args: str):
       setup_rke_cluster(
         args.cluster_name,
       )
+
   elif args.subparser_name == "argocd":
     args_dict = vars(args)
     if args_dict["command"] == "install":
       setup_argocd()
-    #elif args_dict["command"] == "application-install":
-      #install_argocd_application(args_dict["application_name"])
+  
 
-
-def install_argocd_application(application_name: str):
-  with open(f"{config.SCRIPT_INSTALL_DIRECTORY}/atils/command-configurations/argocd-applications.json") as f:
-    data = json.load(f)
-
-  if not application_name:
-    for item in data:
-      name = item['name']
-      description = item['description']
-      url = item['url']
-      print(f'{name} - {description} - {url}')
-  else:
-    for item in data:
-      if item['name'] == application_name:
-        k8s_client = client.ApiClient()
-        v1 = client.CoreV1Api()
-
-        try:
-          namespace = item["namespace"]
-          v1.read_namespace(name=namespace)
-          print(f"The {namespace} namespace exists, skipping namespace creation.")
-        except client.exceptions.ApiException as e:
-          if e.status == 404:
-              logging.info(f"The {application_name} namespace does not exist. Creating namespace")
-              utils.create_from_yaml(
-                k8s_client,
-                f"{config.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/argocd/namespaces/{application_name}.yaml",
-              )
-          else:
-            logging.error("Unexpected error:", e)
-            exit(1)
-
-          if "pre-install-yaml" in item:
-            pre = item["pre-install-yaml"]
-            os.system(
-              f"kubectl apply -f {config.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/argocd/post-install/{pre}"
-            )
-
-        for application in item["application-yaml"]:
-          os.system(
-            f"kubectl apply -f {config.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/argocd/applications/{application}",
-          )
-
-        if "gateway" in item:
-          for gateway in item["gateway"]:
-            os.system(f"kubectl apply -f {config.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/istio/gateways/{gateway}")
-
-        if "prometheus" in item:
-          for gateway in item["prometheus"]:
-            os.system(f"kubectl apply -f {config.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/argocd/prometheus/{gateway}")
-
-        if "grafana" in item:
-          grafana_utils.install_dashboards(item["grafana"])
-
-        if "post-install-yaml" in item:
-          post = item["post-install-yaml"]
-          os.system(
-            f"kubectl apply -f {config.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/argocd/post-install/{post}"
-          )
-
-        ''''''
+def initialize_kustomize_template():
+  template_name = input("Enter the name of the template: ")
+  
+  os.makedirs(template_name)
+  
+  base_dir = os.path.join(template_name, 'base')
+  overlays_dir = os.path.join(template_name, 'overlays')
+  os.makedirs(base_dir)
+  os.makedirs(overlays_dir)
+  
+  prod_dir = os.path.join(overlays_dir, 'prod')
+  dev_vms_dir = os.path.join(overlays_dir, 'dev-vms')
+  dev_laptop_dir = os.path.join(overlays_dir, 'dev-laptop')
+  os.makedirs(prod_dir)
+  os.makedirs(dev_vms_dir)
+  os.makedirs(dev_laptop_dir)
+  
+  print("Kustomize template initialized successfully.")
 
 
 def setup_argocd():
@@ -212,7 +179,6 @@ def check_cluster_availability() -> bool:
       logging.error(e)
       return False
 
-
 def setup_rke_cluster(cluster_name: str, force: bool = False):
   cluster_availability = check_cluster_availability()
 
@@ -236,7 +202,6 @@ def setup_rke_cluster(cluster_name: str, force: bool = False):
         f"Could not find an rke file named {cluster_name}.yaml. Aborting"
       )
       exit(1)
-
 
 def check_namespace_exists(namespace_name: str) -> bool:
   # Create Kubernetes API client

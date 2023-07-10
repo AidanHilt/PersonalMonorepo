@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "atils"
-version = "0.1.0"
+version = "0.0.1"
 description = "A series of scripts to make my life easier, and automate away tedious homelab tasks."
 authors = ["Aidan Hilt <aidanhilt2@gmail.com>"]
 readme = "README.md"
@@ -17,6 +17,8 @@ shutils = "^0.1.0"
 requests = "^2.29.0"
 hvac = "^1.1.0"
 dynaconf = "^3.1.12"
+jinja2 = "^3.1.2"
+importlib = "^1.0.4"
 
 [tool.poetry.group.dev.dependencies]
 MonkeyType = "22.2.0"

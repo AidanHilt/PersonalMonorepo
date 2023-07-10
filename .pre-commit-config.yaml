@@ -11,7 +11,7 @@ repos:
         args: ['--maxkb=1000']
       - id: check-executables-have-shebangs
       - id: check-json
-      #- id: check-yaml
-      #- id: detect-private-key
+      - id: check-yaml
+      - id: detect-private-key
       - id: no-commit-to-branch
       #- id: trailing-whitespace

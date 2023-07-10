@@ -3,6 +3,7 @@ import sys
 
 from atils import atils_kubernetes as kubernetes
 from atils import python
+from atils import kustomize
 
 def main():
   if len(sys.argv) < 2:
@@ -17,3 +18,5 @@ def main():
     kubernetes.main(sys.argv[2:])
   elif script_name == 'python':
     python.main(sys.argv[2:])
+  elif script_name == 'kustomize':
+    kustomize.main(sys.argv[2:])
