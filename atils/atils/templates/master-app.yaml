@@ -9,8 +9,10 @@ spec:
     repoURL: https://github.com/AidanHilt/PersonalMonorepo
     path: kubernetes/argocd/applications
     targetRevision: master
-    directory:
-      exclude: 'master-app.yaml'
+    helm:
+      parameters:
+        - name: env
+          value: {{ environment }}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: argocd

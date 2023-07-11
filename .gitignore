@@ -249,7 +249,7 @@ hosts.yml
 
 Brewfile.lock.json
 
-values.yaml
+kubernetes/argocd/values.yaml
 
 server-setup/roles/common/library/buffer/*
 

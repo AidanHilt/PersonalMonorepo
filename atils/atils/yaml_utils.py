@@ -5,6 +5,7 @@ from deepdiff import DeepDiff
 
 logging.basicConfig(level=logging.DEBUG)
 
+#TODO I think the yaml library has a function to perform this operation. Maybe we need it for the comparison?
 def convert_yaml_to_dict(yaml_file: str) -> dict:
   yaml_dict = {}
   with open(yaml_file, "r") as fp:
