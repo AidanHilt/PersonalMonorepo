@@ -128,7 +128,7 @@ def initialize_kustomize_template():
 
   create_directory_structure(template_name)
 
-  template.template_file('../templates/kustomization-base.yaml', os.path.join(template_name, 'base/kustomization.yaml'))
+  template.template_file_and_output('../templates/kustomization-base.yaml', os.path.join(template_name, 'base/kustomization.yaml'))
   overlays_dir = os.path.join(template_name, 'overlays')
   for subdir in os.listdir(overlays_dir):
     subdir_path = os.path.join(overlays_dir, subdir)

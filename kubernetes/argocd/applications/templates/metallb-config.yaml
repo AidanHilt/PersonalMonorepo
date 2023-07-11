@@ -7,10 +7,8 @@ spec:
   project: default
   source:
     repoURL: https://github.com/AidanHilt/PersonalMonorepo
-    path: kubernetes/metallb/configuration/overlays/dev-laptop
+    path: kubernetes/metallb/configuration/overlays/{{ .Values.env }}
     targetRevision: master
-    kustomize:
-      forceCommonAnnotations: false
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: argocd

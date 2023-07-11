@@ -11,8 +11,5 @@ subjects:
     name: hashi-vault
     namespace: vault
   - kind: ServiceAccount
-    name: default
-    namespace: argocd
-  - kind: ServiceAccount
     name: argocd-repo-server
     namespace: argocd
