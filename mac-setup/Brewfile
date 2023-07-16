@@ -2,7 +2,7 @@
 #Desktop usage
 #=============
 cask 'firefox'
-cask 'google-chrome'
+cask 'chromium'
 cask 'discord'
 cask 'steam'
 cask 'vlc'
