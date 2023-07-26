@@ -5,9 +5,7 @@ metadata:
   labels:
     {{- include "prowlarr.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
-  {{- end }}
   selector:
     matchLabels:
       {{- include "prowlarr.selectorLabels" . | nindent 6 }}
@@ -27,26 +25,105 @@ spec:
       serviceAccountName: {{ include "prowlarr.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{ if .Values.prowlarr.postgres.enabled }}
+      initContainers:
+        - name: init-container
+          image: postgres:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              # Verify that dbs <mainDb> and <logDb> exist
+              (PGPASSWORD=$POSTGRES_USER_PASS psql -h {{ .Values.prowlarr.postgres.host }} -p {{ .Values.prowlarr.postgres.port }} \
+              -U {{ .Values.prowlarr.postgres.username }} -d {{ .Values.prowlarr.postgres.mainDb }} -c "SELECT 1" &&
+              
+              PGPASSWORD=$POSTGRES_USER_PASS psql -h {{ .Values.prowlarr.postgres.host }} -p {{ .Values.prowlarr.postgres.port }} \
+              -U {{ .Values.prowlarr.postgres.username }} -d {{ .Values.prowlarr.postgres.logDb }} -c "SELECT 1" ) ||
+
+              # If the above checks failed, execute the setup script
+              psql -h {{ .Values.prowlarr.postgres.host }} -p {{ .Values.prowlarr.postgres.port }} -U postgres \
+              -f /pg_init/setup.sql -v v1="'$POSTGRES_USER_PASS'" -v "ON_ERROR_STOP=1" || exit 1              
+          env:
+            - name: POSTGRES_USER_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: prowlarr-secret-config
+                  key: postgresPassword
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: prowlarr-secret-config
+                  key: postgresMasterPassword
+          volumeMounts:
+            - name: pg-init-volume
+              mountPath: /pg_init
+      {{ end }}
       containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: http
-              containerPort: {{ .Values.service.port }}
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+      - name: {{ .Chart.Name }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+          - name: http
+            containerPort: {{ .Values.service.port }}
+            protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.prowlarr.baseUrl }}
+            port: http
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.prowlarr.baseUrl }}
+            port: http
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        env:
+          - name: PROWLARR__API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: prowlarr-secret-config 
+                key: apiKey
+          - name: PROWLARR__URL_BASE
+            value: {{ .Values.prowlarr.urlBase }}
+          {{ if .Values.prowlarr.postgres.enabled }}
+          - name: PROWLARR__POSTGRES_HOST
+            value: {{ .Values.prowlarr.postgres.host }}
+          - name: PROWLARR__POSTGRES_MAIN_DB 
+            value: {{ .Values.prowlarr.postgres.mainDb }}
+          - name: PROWLARR__POSTGRES_LOG_DB
+            value: {{ .Values.prowlarr.postgres.logDb }}
+          - name: PROWLARR__POSTGRES_PORT
+            value: {{ .Values.prowlarr.postgres.port | quote }}
+          - name: PROWLARR__POSTGRES_USER
+            value: {{ .Values.prowlarr.postgres.username }}
+          - name: PROWLARR__POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: prowlarr-secret-config
+                key: postgresPassword
+          {{ end }}
+        {{ if .Values.persistence.enabled }}
+        volumeMounts:
+          - name: config-volume
+            mountPath: /config
+            {{ if .Values.persistence.subPath }}
+            subPath: {{ .Values.persistence.subpath }}
+            {{ end }}
+        {{ end }}
+      volumes:
+        - name: pg-secrets-volume
+          secret:
+            secretName: prowlarr-secret-config
+        {{ if .Values.persistence.enabled }}
+        - name: config-volume
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (printf "%s-%s" (include "prowlarr.fullname" .) "config") }}
+        {{ end }}
+        {{ if .Values.prowlarr.postgres.enabled }}
+        - name: pg-init-volume
+          configMap:
+            name: prowlarr-postgres-init
+        {{ end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
