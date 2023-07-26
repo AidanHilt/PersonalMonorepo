@@ -6,15 +6,16 @@ import shutil
 import yaml
 import subprocess
 import webbrowser
+import base64
 
 from atils import config
 from atils import yaml_utils
 from atils import template_utils
 
-from kubernetes import config as kubernetes_config
+from kubernetes import config as k8s_config
 from kubernetes import client
 
-kubernetes_config.load_kube_config()  # type: ignore
+k8s_config.load_kube_config()  # type: ignore
 client.rest.logger.setLevel(logging.WARNING)
 
 # TODO make it so that logging is set up using config stored in config.py
@@ -25,6 +26,23 @@ def main(args: str):
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
         help="Select a subcommand", dest="subparser_name"
+    )
+
+    # Options for managing kubernetes secrets. This is different from Vault secrets management
+    secrets_parser = subparsers.add_parser(
+        "secrets", help="Commands to manage kubernetes secrets"
+    )
+
+    secrets_parser.add_argument(
+        "command", choices=["decode"], help="Which command to use to operate on secrets"
+    )
+
+    secrets_parser.add_argument(
+        "secret_name", help="The name of the secret to operate on"
+    )
+
+    secrets_parser.add_argument(
+        "-n", "--namespace", help="The namespace of the secret to operate on"
     )
 
     # Options for RKE cluster setup
@@ -83,12 +101,21 @@ def main(args: str):
         if args_dict["command"] == "install":
             # call setup_argocd with the environment as an argument, using the --environment argument. If --environment was not provided, fail
             if args_dict["environment"] is None:
-                print("Please provide an environment")
+                logging.error("Please provide an environment")
                 sys.exit(1)
             else:
                 setup_argocd(args_dict["environment"])
         elif args_dict["command"] == "port-forward":
             open_argocd_port_forward()
+
+    elif args.subparser_name == "secrets":
+        args_dict = vars(args)
+        if args_dict["command"] == "decode":
+            if args_dict["secret_name"] is None:
+                logging.error("Error: A secret name must be provided ")
+                sys.exit(1)
+            else:
+                get_and_decode_secret(args_dict["secret_name"], args_dict["namespace"])
 
 
 def setup_argocd(environment: str):
@@ -107,9 +134,12 @@ def setup_argocd(environment: str):
     )
 
     if result.returncode == 0:
-        print("ArgoCD Helm chart successfully installed")
+        logging.info("ArgoCD Helm chart successfully installed")
     else:
-        print(result.stdout)
+        logging.warning(result.stdout)
+        logging.warning(
+            "ArgoCD Helm chart failed to install. This may simply be because it is already installed, which we don't check"
+        )
 
     master_app_string = template_utils.template_file(
         "master-app.yaml", {"environment": environment}
@@ -127,7 +157,7 @@ def setup_argocd(environment: str):
         )
     except client.exceptions.ApiException as e:
         if e.status == 404:
-            print("No application named 'master-stack' exists, creating it")
+            logging.info("No application named 'master-stack' exists, creating it")
             custom_objects_api.create_namespaced_custom_object(
                 group="argoproj.io",
                 version="v1alpha1",
@@ -137,7 +167,7 @@ def setup_argocd(environment: str):
                 pretty=True,
             )
         else:
-            print(
+            logging.info(
                 "Master-stack already exists. If you want to force a recreation, use --force-master-reconfiguration[Not yet working]"
             )
 
@@ -162,7 +192,7 @@ def merge_and_replace_kubeconfig(cluster_name):
 
 def check_cluster_availability() -> bool:
     try:
-        contexts, active_context = kubernetes_config.list_kube_config_contexts()
+        contexts, active_context = k8s_config.list_kube_config_contexts()
         cluster_name: str = active_context["context"]["cluster"]
         logging.debug(f"Checking cluster availability for cluster: {cluster_name}")
         # Create a CoreV1Api instance
@@ -209,7 +239,6 @@ def setup_rke_cluster(cluster_name: str, force: bool = False):
         cluster_config_location: str = os.path.join(
             config.SCRIPT_INSTALL_DIRECTORY, f"../kubernetes/rke/{cluster_name}.yaml"
         )
-        print(cluster_config_location)
         if os.path.isfile(cluster_config_location):
             # TODO we should add our own error checking here, rather than relying on RKE's.
             os.system(f"rke up --config {cluster_config_location}")
@@ -254,3 +283,42 @@ def open_argocd_port_forward():
         "kubectl -n argocd port-forward svc/argocd-server -n argocd 8080:443",
         shell=True,
     )
+
+
+def get_and_decode_secret(secret_name, secret_namespace):
+    try:
+        # Create a Kubernetes API client
+        api = client.CoreV1Api()
+
+        if secret_namespace is None:
+            current_context = k8s_config.list_kube_config_contexts()[1]
+            # Check if current_context["context"]["namespace"] is None
+            secret_namespace = current_context.get("context").get(
+                "namespace", "default"
+            )
+
+        # Get the Secret from the specified namespace
+        secret = api.read_namespaced_secret(
+            name=secret_name, namespace=secret_namespace
+        )
+
+        terminal_width = shutil.get_terminal_size().columns
+
+        print("=" * int(terminal_width / 2))
+        print(secret.metadata.name.center(int(terminal_width / 2)))
+        print("=" * int(terminal_width / 2))
+
+        # Decode and pretty print the data items
+        for key, value in secret.data.items():
+            decoded_value = base64.b64decode(value).decode("utf-8")
+            # If decoded_value is more than one line, print on a new line
+            if "\n" in decoded_value:
+                print(f"{key}:")
+                print(decoded_value)
+            else:
+                print(f"{key}: {decoded_value}")
+
+            print("=" * int(terminal_width / 2))
+
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")

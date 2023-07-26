@@ -21,3 +21,7 @@ def main():
         python.main(sys.argv[2:])
     elif script_name == "kustomize":
         kustomize.main(sys.argv[2:])
+    else:
+        print(f"Unrecognized subcommand: {script_name}")
+        print("Valid subcommands are: kubernetes, python, kustomize")
+        sys.exit(1)
