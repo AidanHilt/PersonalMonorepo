@@ -29,7 +29,7 @@ spec:
               storage "file" {
                 path = "/vault/data"
               }
-          {{ if eq .Values.env "dev-laptop" }}
+          {{ if or (eq .Values.env "dev-laptop") (eq .Values.env "dev-cluster") }}
           dev:
             enabled: true
           {{ end }}

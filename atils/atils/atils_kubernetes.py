@@ -78,7 +78,7 @@ def main(args: list[str]):
     argocd_parser.add_argument(
         "--environment",
         "-e",
-        choices=["dev-laptop", "dev-vms", "prod"],
+        choices=["dev-laptop", "dev-cluster", "prod"],
         help="Environment to install applications in",
     )
 
