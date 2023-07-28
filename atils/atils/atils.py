@@ -21,6 +21,11 @@ def main():
         python.main(sys.argv[2:])
     elif script_name == "kustomize":
         kustomize.main(sys.argv[2:])
+    # Doing it this way because there's no reason to pull it all out of atils_kubernetes
+    elif script_name == "argocd":
+        full_args = sys.argv[2:]
+        full_args.insert(0, "argocd")
+        kubernetes.main(full_args)
     else:
         print(f"Unrecognized subcommand: {script_name}")
         print("Valid subcommands are: kubernetes, python, kustomize")

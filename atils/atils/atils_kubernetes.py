@@ -22,7 +22,7 @@ client.rest.logger.setLevel(logging.WARNING)
 logging.basicConfig(level=logging.DEBUG)  # type: ignore
 
 
-def main(args: str):
+def main(args: list[str]):
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
         help="Select a subcommand", dest="subparser_name"
