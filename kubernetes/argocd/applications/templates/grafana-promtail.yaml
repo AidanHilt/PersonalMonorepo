@@ -1,4 +1,4 @@
-{{ if .Values.grafana-promtail.enabled }}
+{{ if index .Values "grafana-promtail.enabled" }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

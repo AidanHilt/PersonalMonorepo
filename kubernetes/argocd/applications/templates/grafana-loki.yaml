@@ -1,4 +1,4 @@
-{{ if .Values.grafana-loki.enabled }}
+{{ if index .Values "grafana-loki.enabled" }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
