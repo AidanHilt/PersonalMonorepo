@@ -99,7 +99,6 @@ def main(args: str):
     elif args.subparser_name == "argocd":
         args_dict = vars(args)
         if args_dict["command"] == "install":
-            # call setup_argocd with the environment as an argument, using the --environment argument. If --environment was not provided, fail
             if args_dict["environment"] is None:
                 logging.error("Please provide an environment")
                 sys.exit(1)
