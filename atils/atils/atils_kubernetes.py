@@ -22,7 +22,7 @@ client.rest.logger.setLevel(logging.WARNING)
 logging.basicConfig(level=logging.DEBUG)  # type: ignore
 
 
-def main(args: str):
+def main(args: list[str]):
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
         help="Select a subcommand", dest="subparser_name"
@@ -78,7 +78,7 @@ def main(args: str):
     argocd_parser.add_argument(
         "--environment",
         "-e",
-        choices=["dev-laptop", "dev-vms", "prod"],
+        choices=["dev-laptop", "dev-cluster", "prod"],
         help="Environment to install applications in",
     )
 

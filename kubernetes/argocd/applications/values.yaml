@@ -1,1 +1,28 @@
 env: "dev-vms"
+
+gateways:
+  enabled: true
+grafana-loki:
+  enabled: true
+grafana-promtail:
+  enabled: true
+hashi-vault:
+  enabled: true
+istio-base:
+  enabled: true
+istio-gateway:
+  enabled: true
+istio:
+  enabled: true
+kiali:
+  enabled: true
+longhorn:
+  enabled: true
+metallb-config:
+  enabled: true
+metallb:
+  enabled: true
+prometheus:
+  enabled: true
+prowlarr:
+  enabled: true
