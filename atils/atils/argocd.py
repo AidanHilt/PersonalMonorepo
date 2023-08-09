@@ -1,12 +1,10 @@
 import logging
-import os
 import argparse
 import sys
-import shutil
 import yaml
 import subprocess
 import webbrowser
-import base64
+import json
 
 from atils import atils_kubernetes as k8s_utils
 
@@ -18,7 +16,7 @@ from kubernetes import config as k8s_config
 from kubernetes import client
 
 k8s_config.load_kube_config()  # type: ignore
-client.rest.logger.setLevel(logging.WARNING)
+client.rest.logger.setLevel(logging.ERROR)
 
 # TODO make it so that logging is set up using config stored in config.py
 logging.basicConfig(level=logging.DEBUG)  # type: ignore
@@ -113,38 +111,44 @@ def disable_application(application: str) -> None:
         source = api_response.get("spec").get("source")
         if "helm" in source:
             if "parameters" in source.get("helm"):
-                print(source.get("helm").get("parameters"))
                 for variable in source.get("helm").get("parameters"):
                     if variable.get("name") in application:
                         is_disabled = True
                         break
 
         if is_disabled:
-            logging.info(f"Application ${application} already disabled")
+            logging.info(f"Application {application} already disabled")
             exit(0)
         elif is_active and not is_disabled:
-            helm_params = []
-
-            # TODO technically this could
-            params = (
-                api_response.get("spec").get("source").get("helm").get("parameters")
+            # Check if field source.helm.parameters exists
+            source_helm_params = (
+                api_response.get("spec", {})
+                .get("source", {})
+                .get("helm", {})
+                .get("parameters", [])
             )
+            if not source_helm_params:
+                logging.error(
+                    "Error: Field source.helm.parameters does not exist in the application."
+                )
+                sys.exit(1)
 
-            if "helm" in resource:
-                helm_params = yaml.safe_load(resource["helm"]["parameters"])
-            else:
-                helm_params = []
-                resource["helm"] = {"parameters": helm_params}
+            # Create a new helm parameter with the given application name and value
+            new_helm_param = {"name": f"{application}.enabled", "value": "false"}
+            edited_parameters = source_helm_params + [new_helm_param]
 
-            helm_params.append({"name": f"{application}.enabled", "value": "false"})
+            # Create JSON merge patch to update the helm parameters
+            json_patch = {
+                "spec": {"source": {"helm": {"parameters": edited_parameters}}}
+            }
 
-            # Update the Application with the new helm parameter
+            # Use patch_namespaced_custom_object to update the application with the new helm parameter
             api_response = api_instance.patch_namespaced_custom_object(
-                group, version, namespace, plural, name, api_response
+                group, version, namespace, plural, name, json_patch
             )
 
-            print(f"{application} has been disabled")
-            return
+            logging.info(f"{application} successfully disabled")
+
         else:
             logging.error(
                 f"Error: Application '{application}' not found in the master-stack"
