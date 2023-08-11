@@ -160,6 +160,7 @@ def disable_application(application: str) -> None:
         sys.exit(1)
 
 
+# TODO Just read the name of our current context to get the environment
 def setup_argocd(environment: str):
     custom_objects_api = client.CustomObjectsApi()
     if not k8s_utils.check_namespace_exists("argocd"):
@@ -214,6 +215,7 @@ def setup_argocd(environment: str):
             )
 
 
+# TODO Make it wait until argocd is ready to install the application
 def open_argocd_port_forward():
     result = subprocess.run(
         "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath={{.data.password}} | base64 -d".format(),
