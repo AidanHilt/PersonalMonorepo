@@ -1,3 +1,4 @@
+{{ if .Values.gateways.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -8,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/AidanHilt/PersonalMonorepo
     path: kubernetes/istio/virtualservices
-    targetRevision: master
+    targetRevision: {{ .Values.env }}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: argocd
@@ -16,3 +17,4 @@ spec:
     automated:
       prune: true
       selfHeal: true
+{{end}}

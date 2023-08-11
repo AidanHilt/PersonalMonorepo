@@ -8,9 +8,9 @@ import subprocess
 import webbrowser
 import base64
 
-from atils import config
-from atils import yaml_utils
-from atils import template_utils
+from atils.common import config
+from atils.common import yaml_utils
+from atils.common import template_utils
 
 from kubernetes import config as k8s_config
 from kubernetes import client
@@ -22,7 +22,7 @@ client.rest.logger.setLevel(logging.WARNING)
 logging.basicConfig(level=logging.DEBUG)  # type: ignore
 
 
-def main(args: str):
+def main(args: list[str]):
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
         help="Select a subcommand", dest="subparser_name"
@@ -66,22 +66,6 @@ def main(args: str):
         help="the name of the cluster to set up. This should match an rke file",
     )
 
-    argocd_parser = subparsers.add_parser(
-        "argocd", help="Commands to manage argocd and install applications"
-    )
-    argocd_parser.add_argument(
-        "command",
-        choices=["install", "port-forward"],
-        help="ArgoCD command to use",
-    )
-    # using argparse, add an optional argument named "enviornment" that can either be 'dev-laptop', 'dev-vms', or 'prod'
-    argocd_parser.add_argument(
-        "--environment",
-        "-e",
-        choices=["dev-laptop", "dev-vms", "prod"],
-        help="Environment to install applications in",
-    )
-
     if len(args) == 0:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -96,17 +80,6 @@ def main(args: str):
                 args.cluster_name,
             )
 
-    elif args.subparser_name == "argocd":
-        args_dict = vars(args)
-        if args_dict["command"] == "install":
-            if args_dict["environment"] is None:
-                logging.error("Please provide an environment")
-                sys.exit(1)
-            else:
-                setup_argocd(args_dict["environment"])
-        elif args_dict["command"] == "port-forward":
-            open_argocd_port_forward()
-
     elif args.subparser_name == "secrets":
         args_dict = vars(args)
         if args_dict["command"] == "decode":
@@ -115,60 +88,6 @@ def main(args: str):
                 sys.exit(1)
             else:
                 get_and_decode_secret(args_dict["secret_name"], args_dict["namespace"])
-
-
-def setup_argocd(environment: str):
-    custom_objects_api = client.CustomObjectsApi()
-    if not check_namespace_exists("argocd"):
-        api = client.CoreV1Api()
-
-        # Create the namespace
-        namespace_body = client.V1Namespace(metadata=client.V1ObjectMeta(name="argocd"))
-        api.create_namespace(namespace_body)
-
-    result = subprocess.run(
-        f"""helm repo add argo https://argoproj.github.io/argo-helm && helm -n argocd upgrade --install argocd -f {config.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/argocd/values.yaml argo/argo-cd""",
-        shell=True,
-        capture_output=True,
-    )
-
-    if result.returncode == 0:
-        logging.info("ArgoCD Helm chart successfully installed")
-    else:
-        logging.warning(result.stdout)
-        logging.warning(
-            "ArgoCD Helm chart failed to install. This may simply be because it is already installed, which we don't check"
-        )
-
-    master_app_string = template_utils.template_file(
-        "master-app.yaml", {"environment": environment}
-    )
-    master_app_dict = yaml.safe_load(master_app_string)
-
-    # Check whether an argocd application named 'master-stack' exists
-    try:
-        custom_objects_api.get_namespaced_custom_object(
-            group="argoproj.io",
-            version="v1alpha1",
-            namespace="argocd",
-            plural="applications",
-            name="master-stack",
-        )
-    except client.exceptions.ApiException as e:
-        if e.status == 404:
-            logging.info("No application named 'master-stack' exists, creating it")
-            custom_objects_api.create_namespaced_custom_object(
-                group="argoproj.io",
-                version="v1alpha1",
-                namespace="argocd",
-                plural="applications",
-                body=master_app_dict,
-                pretty=True,
-            )
-        else:
-            logging.info(
-                "Master-stack already exists. If you want to force a recreation, use --force-master-reconfiguration[Not yet working]"
-            )
 
 
 def merge_and_replace_kubeconfig(cluster_name):
@@ -261,27 +180,6 @@ def check_namespace_exists(namespace_name: str) -> bool:
         return True
     else:
         return False
-
-
-def open_argocd_port_forward():
-    result = subprocess.run(
-        "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath={{.data.password}} | base64 -d".format(),
-        shell=True,
-        capture_output=True,
-    )
-    subprocess.run(
-        f"echo {result.stdout.decode('utf-8')} | pbcopy",
-        shell=True,
-        capture_output=True,
-    )
-    # Open a new tab in the default browser to localhost:8080 with webbrowser
-    webbrowser.open_new_tab("http://localhost:8080/argocd")
-
-    # Port forward to the ArgoCD UI
-    subprocess.run(
-        "kubectl -n argocd port-forward svc/argocd-server -n argocd 8080:443",
-        shell=True,
-    )
 
 
 def get_and_decode_secret(secret_name, secret_namespace):
