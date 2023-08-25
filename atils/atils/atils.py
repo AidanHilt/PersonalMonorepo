@@ -3,6 +3,8 @@ import sys
 from atils import atils_kubernetes as kubernetes
 from atils import python
 from atils import kustomize
+from atils import argocd
+from atils import test
 
 
 def main():
@@ -23,9 +25,9 @@ def main():
         kustomize.main(sys.argv[2:])
     # Doing it this way because there's no reason to pull it all out of atils_kubernetes
     elif script_name == "argocd":
-        full_args = sys.argv[2:]
-        full_args.insert(0, "argocd")
-        kubernetes.main(full_args)
+        argocd.main(sys.argv[2:])
+    elif script_name == "test-env":
+        test.main(sys.argv[2:])
     else:
         print(f"Unrecognized subcommand: {script_name}")
         print("Valid subcommands are: kubernetes, python, kustomize")

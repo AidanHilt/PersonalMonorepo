@@ -10,7 +10,7 @@ data:
     -- Create user if not exists
     DO $$ BEGIN
       IF NOT EXISTS (SELECT FROM pg_catalog.pg_user WHERE usename = '{{ .Values.prowlarr.postgres.username }}') THEN
-        CREATE USER {{ .Values.prowlarr.postgres.username }} WITH PASSWORD 'vars.password';
+        CREATE USER {{ .Values.prowlarr.postgres.username }};
       END IF;
     END $$;
 

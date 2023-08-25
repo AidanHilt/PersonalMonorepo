@@ -7,13 +7,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://bjw-s.github.io/helm-charts/'
-    targetRevision: 1.7.0
-    chart: prowlarr
-    helm:
-      parameters: 
-      - name: image.repository
-        value: lscr.io/linuxserver/prowlarr
+    repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
+    targetRevision: {{ .Values.env }}
+    path: kubernetes/helm-charts/prowlarr
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: videos

@@ -1,0 +1,6 @@
+[
+    {
+        "testname": "flemmarr",
+        "command": "docker run -v ./flemmarr:config pierremesure/flemmarr:latest"
+    }
+]
