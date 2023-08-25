@@ -13,12 +13,6 @@ spec:
     helm:
       releaseName: grafana-loki
       parameters:
-        - name: backend.persistence.storageClass
-          value: longhorn
-        - name: write.persistence.storageClass
-          value: longhorn
-        - name: read.persistence.storageClass
-          value: longhorn
         - name: minio.enabled
           value: "true"
         - name: backend.replicas
