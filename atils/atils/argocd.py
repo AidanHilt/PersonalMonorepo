@@ -4,7 +4,8 @@ import sys
 import yaml
 import subprocess
 import webbrowser
-import json
+import itertools
+import time
 
 from atils import atils_kubernetes as k8s_utils
 
@@ -12,6 +13,7 @@ from atils.common import config
 from atils.common import yaml_utils
 from atils.common import template_utils
 
+from termcolor import colored
 from kubernetes import config as k8s_config
 from kubernetes import client
 
@@ -44,6 +46,8 @@ def main(args: list[str]):
         "get-password", help="Get the admin password using the default secret."
     )
 
+    print_apps_parser = subparsers.add_parser("test")
+
     disable_parser = subparsers.add_parser(
         "disable",
         help="Disables an application from the master stack",
@@ -74,9 +78,15 @@ def main(args: list[str]):
             disable_application(args_dict["application"])
     elif args.subparser_name == "get-password":
         get_argocd_password()
+    elif args.subparser_name == "test":
+        print_application_status(["grafana-loki", "gateways"], True)
     else:
         logging.error(f"Invalid command: ${args.subparser_name}")
         exit(1)
+
+
+def get_argocd_password():
+    return
 
 
 def disable_application(application: str) -> None:
@@ -184,6 +194,29 @@ def setup_argocd(environment: str):
             "ArgoCD Helm chart failed to install. This may simply be because it is already installed, which we don't check"
         )
 
+    v1 = client.CoreV1Api()
+    timeout = time.time() + 60 * 5  # 5 minutes from now
+    spinner = itertools.cycle(["-", "\\", "|", "/"])
+
+    while True:
+        pods = v1.list_namespaced_pod("argocd")
+        all_healthy = True
+        for pod in pods.items:
+            if pod.status.phase != "Running":
+                all_healthy = False
+                break
+        if all_healthy:
+            logging.info("Argocd pods are ready, installing master-stack")
+            break
+        if time.time() > timeout:
+            logging.error(
+                "Timeout reached, exiting. Check kubernetes to figure out what happened."
+            )
+            exit(1)
+
+        print("Waiting for argocd pods to come up healthy " + next(spinner), end="\r")
+        time.sleep(0.25)
+
     master_app_string = template_utils.template_file(
         "master-app.yaml", {"environment": environment}
     )
@@ -214,8 +247,16 @@ def setup_argocd(environment: str):
                 "Master-stack already exists. If you want to force a recreation, use --force-master-reconfiguration[Not yet working]"
             )
 
+    applications = get_tracked_applications()
+    LINE_UP = f"\033[{len(applications)}A"
+    LINE_CLEAR = "\x1b[2K"
 
-# TODO Make it wait until argocd is ready to install the application
+    while True:
+        print_application_status(applications, True, next(spinner))
+        time.sleep(0.25)
+        print(LINE_UP, end=LINE_CLEAR)
+
+
 def open_argocd_port_forward():
     result = subprocess.run(
         "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath={{.data.password}} | base64 -d".format(),
@@ -235,3 +276,58 @@ def open_argocd_port_forward():
         "kubectl -n argocd port-forward svc/argocd-server -n argocd 8080:443",
         shell=True,
     )
+
+
+def print_application_status(applications, show_updates=False, spin_char="-"):
+    v1 = client.CustomObjectsApi()
+
+    for app in applications:
+        app = v1.get_namespaced_custom_object(
+            group="argoproj.io",
+            version="v1alpha1",
+            name=app,
+            namespace="argocd",
+            plural="applications",
+        )
+
+        if "operationState" in app["status"]:
+            phase = app["status"]["operationState"]["phase"]
+        else:
+            phase = "Failed"
+        status = app["status"]["health"]["status"]
+
+        if phase == "Failed":
+            print(colored(app["metadata"]["name"], "red"), end=" ")
+        elif status != "Healthy":
+            print(colored(app["metadata"]["name"], "yellow"), end=" ")
+        else:
+            print(colored(app["metadata"]["name"], "green"), end=" ")
+
+        if show_updates:
+            if phase == "Failed" or status != "Healthy":
+                print(spin_char)
+            else:
+                print("✔")
+        else:
+            print()
+
+
+def get_tracked_applications():
+    api = client.CustomObjectsApi()
+
+    master = api.get_namespaced_custom_object(
+        group="argoproj.io",
+        version="v1alpha1",
+        name="master-stack",
+        namespace="argocd",
+        plural="applications",
+    )
+
+    resources = master["status"]["resources"]
+
+    application_names = []
+    for resource in resources:
+        if resource["kind"] == "Application":
+            application_names.append(resource["name"])
+
+    return application_names
