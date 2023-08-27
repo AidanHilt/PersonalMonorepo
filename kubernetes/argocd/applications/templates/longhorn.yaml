@@ -1,4 +1,4 @@
-{{ if or (.Values.longhorn.enabled) (ne (.Values.env "dev-laptop")) }}
+{{ if or (.Values.longhorn.enabled) (eq (.Values.env "dev-laptop")) }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
