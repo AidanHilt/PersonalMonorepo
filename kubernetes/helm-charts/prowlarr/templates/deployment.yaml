@@ -99,7 +99,7 @@ spec:
           - name: PROWLARR__POSTGRES_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: prowlarr-secret-config
+                name: prowlarr-config-secret
                 key: postgresPassword
           {{ end }}
         {{ if .Values.persistence.enabled }}
