@@ -81,7 +81,7 @@ spec:
           - name: PROWLARR__API_KEY
             valueFrom:
               secretKeyRef:
-                name: prowlarr-secret-config 
+                name: prowlarr-config-secret
                 key: apiKey
           - name: PROWLARR__URL_BASE
             value: {{ .Values.prowlarr.urlBase }}
@@ -113,7 +113,7 @@ spec:
       volumes:
         - name: pg-secrets-volume
           secret:
-            secretName: prowlarr-secret-config
+            secretName: prowlarr-config-secret
         {{ if .Values.persistence.enabled }}
         - name: config-volume
           persistentVolumeClaim:
