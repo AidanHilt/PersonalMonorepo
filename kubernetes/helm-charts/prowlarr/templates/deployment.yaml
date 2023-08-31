@@ -46,12 +46,12 @@ spec:
             - name: POSTGRES_USER_PASS
               valueFrom:
                 secretKeyRef:
-                  name: prowlarr-secret-config
+                  name: prowlarr-config-secret
                   key: postgresPassword
             - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: prowlarr-secret-config
+                  name: prowlarr-config-secret
                   key: postgresMasterPassword
           volumeMounts:
             - name: pg-init-volume
