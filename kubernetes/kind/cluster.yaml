@@ -19,6 +19,8 @@ nodes:
       - containerPort: 443
         hostPort: 443
         protocol: TCP
+  - role: worker
+  - role: worker
 networking:
   serviceSubnet: 10.96.0.0/12
   podSubnet: 192.168.0.0/16

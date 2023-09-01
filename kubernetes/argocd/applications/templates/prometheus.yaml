@@ -18,23 +18,15 @@ spec:
     repoURL: 'https://github.com/prometheus-community/helm-charts.git'
     path: charts/kube-prometheus-stack
     targetRevision: e58a02bf1f7bc99b0c155c1b301b94534ed49b90
-    plugin:
-      name: argocd-vault-plugin-helm
-      env:
-        - name: APP_NAME
-          value: kube-prometheus-stack
-        - name: APP_NAMESPACE
-          value: $ARGOCD_APP_NAMESPACE
-        - name: HELM_VALUES
-          value: |
-            grafana:
-              env:
-                GF_SERVER_ROOT_URL: '%(protocol)s://%(domain)s:%(http_port)s/grafana/'
-                GF_SERVE_FROM_SUB_PATH: false
-            prometheus:
-              prometheusSpec:
-                serviceMonitorSelectorNilUsesHelmValues: false
-          #value: "grafana:\n  env:\n    GF_SERVER_ROOT_URL: %(protocol)s://%(domain)s:%(http_port)s/grafana/\n    GF_SERVE_FROM_SUB_PATH: <path:kv-v2/test/prometheus#subPath>\n prometheus:\n   prometheusSpec:\n     serviceMonitorSelectorNilUsesHelmValues: false"
+    helm:
+      values: |
+        grafana:
+          env:
+            GF_SERVER_ROOT_URL: '%(protocol)s://%(domain)s:%(http_port)s/grafana/'
+            GF_SERVE_FROM_SUB_PATH: false
+        prometheus:
+          prometheusSpec:
+            serviceMonitorSelectorNilUsesHelmValues: false
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: monitoring

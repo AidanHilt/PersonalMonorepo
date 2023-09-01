@@ -46,12 +46,12 @@ spec:
             - name: POSTGRES_USER_PASS
               valueFrom:
                 secretKeyRef:
-                  name: prowlarr-secret-config
+                  name: prowlarr-config-secret
                   key: postgresPassword
             - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: prowlarr-secret-config
+                  name: prowlarr-config-secret
                   key: postgresMasterPassword
           volumeMounts:
             - name: pg-init-volume
@@ -81,7 +81,7 @@ spec:
           - name: PROWLARR__API_KEY
             valueFrom:
               secretKeyRef:
-                name: prowlarr-secret-config 
+                name: prowlarr-config-secret
                 key: apiKey
           - name: PROWLARR__URL_BASE
             value: {{ .Values.prowlarr.urlBase }}
@@ -99,7 +99,7 @@ spec:
           - name: PROWLARR__POSTGRES_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: prowlarr-secret-config
+                name: prowlarr-config-secret
                 key: postgresPassword
           {{ end }}
         {{ if .Values.persistence.enabled }}
@@ -113,7 +113,7 @@ spec:
       volumes:
         - name: pg-secrets-volume
           secret:
-            secretName: prowlarr-secret-config
+            secretName: prowlarr-config-secret
         {{ if .Values.persistence.enabled }}
         - name: config-volume
           persistentVolumeClaim:
