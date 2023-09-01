@@ -1,4 +1,4 @@
-env: "dev-vms"
+env: dev-vms
 
 gateways:
   enabled: true

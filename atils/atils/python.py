@@ -20,6 +20,7 @@ def main(args: str):
         help="Select a subcommand", dest="subparser_name"
     )
 
+    # TODO Let's set a standard for how optional arguments are handled
     test_parser = subparsers.add_parser("test", help="Run pytest against the project")
     test_parser.add_argument(
         "python_dir", nargs="?", default=f"{config.SCRIPT_INSTALL_DIRECTORY}/tests"

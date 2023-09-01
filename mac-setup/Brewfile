@@ -28,6 +28,7 @@ brew 'syncthing'
 #=================
 cask 'visual-studio-code'
 cask 'orbstack'
+cask 'postman'
 
 brew 'python3'
 brew 'git'

@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: configure-prowlarr
+  namespace: videos
+spec:
+  template:
+    spec:
+      containers:
+        - name: configure-prowlarr
+          image: pierremesure/flemmarr
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+      restartPolicy: Never
+      volumes:
+        - name: config-volume
+          configMap:
+            name: prowlarr-config
+  backoffLimit: 4
