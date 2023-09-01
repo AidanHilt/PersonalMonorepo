@@ -19,7 +19,7 @@ spec:
     path: charts/kube-prometheus-stack
     targetRevision: e58a02bf1f7bc99b0c155c1b301b94534ed49b90
     helm:
-      valuesObject:
+      values: |
         grafana:
           env:
             GF_SERVER_ROOT_URL: '%(protocol)s://%(domain)s:%(http_port)s/grafana/'
