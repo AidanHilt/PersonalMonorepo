@@ -14,7 +14,7 @@ spec:
       releaseName: grafana-loki
       parameters:
         - name: loki.auth_enabled
-          value: false
+          value: "false"
         - name: minio.enabled
           value: "true"
         - name: backend.replicas
