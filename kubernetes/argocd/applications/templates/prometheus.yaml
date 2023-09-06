@@ -22,7 +22,7 @@ spec:
       values: |
         grafana:
           env:
-            {{ if ne .Values.env "dev-laptop"}}
+            {{ if ne .Values.env "dev-laptop" }}
             GF_SERVER_ROOT_URL: '%(protocol)s://%(domain)s:%(http_port)s/grafana/'
             GF_SERVE_FROM_SUB_PATH: false
             {{ end }}
