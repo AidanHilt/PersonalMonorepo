@@ -21,13 +21,6 @@ spec:
     helm:
       values: |
         grafana:
-          sidecar:
-            dashboards:
-              annotations:
-                grafana-dashboard: true
-            datasources:
-              annotations:
-                grafana-datasource: true
           env:
             {{ if ne .Values.env "dev-laptop" }}
             GF_SERVER_ROOT_URL: '%(protocol)s://%(domain)s:%(http_port)s/grafana/'
