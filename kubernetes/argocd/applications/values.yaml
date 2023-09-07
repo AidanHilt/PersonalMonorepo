@@ -26,3 +26,5 @@ prometheus:
   enabled: true
 prowlarr:
   enabled: true
+grafana_datasources:
+  enabled: true
