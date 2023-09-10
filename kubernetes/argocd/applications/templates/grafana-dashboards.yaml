@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: grafana-datasources
+  name: grafana-dashboards
   namespace: argocd
 spec:
   project: default
