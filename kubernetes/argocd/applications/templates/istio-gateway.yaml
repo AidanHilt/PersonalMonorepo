@@ -34,12 +34,6 @@ spec:
               port: 443
               protocol: TCP
               targetPort: 443
-            annotations: {}
-            loadBalancerIP: ""
-            loadBalancerSourceRanges: []
-            externalTrafficPolicy: ""
-            externalIPs: []
-            ipFamilyPolicy: ""
        ipFamilies: []
   destination:
     server: 'https://kubernetes.default.svc'
