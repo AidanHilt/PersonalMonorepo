@@ -7,7 +7,7 @@ data:
     prowlarr:
       server:
         address: prowlarr
-        port: 9696
+        port: 80
       indexer:
         - indexerUrls:
             - https://1337x.to/

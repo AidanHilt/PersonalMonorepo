@@ -1,0 +1,106 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "prowlarr.harcodedValues" -}}
+env:
+  - name: PROWLARR__API_KEY
+    valueFrom:
+      secretKeyRef:
+        {{ $defaultSecretName := printf "%v-%v" .Release.Name "config-secret"}}
+        name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName}}
+        key: apiKey
+  - name: PROWLARR__URL_BASE
+    value: {{ .Values.prowlarr.urlBase }}
+  {{ if .Values.prowlarr.postgres.enabled }}
+  - name: PROWLARR__POSTGRES_HOST
+    value: {{ .Values.prowlarr.postgres.host }}
+  - name: PROWLARR__POSTGRES_MAIN_DB 
+    value: {{ .Values.prowlarr.postgres.mainDb }}
+  - name: PROWLARR__POSTGRES_LOG_DB
+    value: {{ .Values.prowlarr.postgres.logDb }}
+  - name: PROWLARR__POSTGRES_PORT
+    value: {{ .Values.prowlarr.postgres.port | quote }}
+  - name: PROWLARR__POSTGRES_USER
+    value: {{ .Values.prowlarr.postgres.username }}
+  - name: PROWLARR__POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: prowlarr-config-secret
+        key: postgresPassword
+  {{ end }}
+
+{{- if eq .Values.prowlarr.configSecret.existingSecret "" }}
+secrets:
+  config-secret:
+    enabled: true
+    stringData:
+      {{- if .Values.prowlarr.postgres.enabled }}
+      postgresPassword: {{ .Values.prowlarr.postgres.password | quote }}
+      postgresMasterPassword: {{ index (lookup "v1" "Secret" "postgres" "postgres-postgresql") "data" "postgres-password" | b64dec | quote }}
+      {{- end }}
+      apiKey: {{ .Values.prowlarr.apiKey | default (randAlphaNum 32 | lower) | quote }}
+{{- end }}
+
+{{ if not .Values.persistence.config.enabled }}
+persistence:
+  config:
+    enabled: true
+    mountPath: /config
+    type: emptyDir
+{{ end }}
+
+{{ if .Values.prowlarr.metrics.enabled }}
+additionalContainers:
+  exporter:
+    name: exporter
+    image: "{{ .Values.prowlarr.metrics.exporter.image.repository }}:{{ .Values.prowlarr.metrics.exporter.image.tag }}"
+    imagePullPolicy: {{ .Values.prowlarr.metrics.exporter.image.pullPolicy }}
+    args: ["prowlarr"]
+    env:
+      - name: URL
+        value: "http://localhost"
+      - name: CONFIG
+        value: "/config/config.xml"
+      - name: PORT
+        value: "{{ .Values.prowlarr.metrics.exporter.env.port }}"
+      - name: ENABLE_ADDITIONAL_METRICS
+        value: "{{ .Values.prowlarr.metrics.exporter.env.additionalMetrics }}"
+      - name: ENABLE_UNKNOWN_QUEUE_ITEMS
+        value: "{{ .Values.prowlarr.metrics.exporter.env.unknownQueueItems }}"
+    ports:
+      - name: metrics
+        containerPort: {{ .Values.prowlarr.metrics.exporter.env.port }}
+    volumeMounts:
+      - name: config
+        mountPath: /config
+        readOnly: true
+        {{ if .Values.persistence.config.subPath }}
+        subPath: {{ .Values.persistence.config.subPath }}
+        {{ end }}
+
+service:
+  metrics:
+    enabled: true
+    ports:
+      metrics:
+        enabled: true
+        protocol: TCP
+        port: 80
+        targetPort: {{ .Values.prowlarr.metrics.exporter.env.port }}
+        name: http
+
+serviceMonitor:
+  main:
+    enabled: true
+    serviceName: '{{ include "bjw-s.common.lib.chart.names.fullname" $ }}-metrics'
+    endpoints:
+    - port: http
+      scheme: http
+      path: /metrics
+      interval: {{ .Values.prowlarr.metrics.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.prowlarr.metrics.serviceMonitor.scrapeTimeout }}
+{{ end }}
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "prowlarr.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}
