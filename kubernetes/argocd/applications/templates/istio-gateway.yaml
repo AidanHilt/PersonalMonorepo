@@ -18,7 +18,6 @@ spec:
       values:
           values: |
             service:
-              # Type of service. Set to "None" to disable the service entirely
               type: LoadBalancer
               ports:
               - name: status-port
