@@ -33,7 +33,6 @@ spec:
                 port: 443
                 protocol: TCP
                 targetPort: 443
-       ipFamilies: []
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: istio-system
