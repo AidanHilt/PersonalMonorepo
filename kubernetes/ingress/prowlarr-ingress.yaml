@@ -1,17 +1,17 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: argocd
-  namespace: argocd
+  name: prowlarr
+  namespace: videos
 spec:
   ingressClassName: nginx
   rules:
     - http:
         paths:
-          - path: /argocd
+          - path: /prowlarr
             pathType: Prefix
             backend:
               service:
-                name: argocd-server
+                name: prowlarr
                 port:
                   number: 80

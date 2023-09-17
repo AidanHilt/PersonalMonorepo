@@ -20,12 +20,10 @@ spec:
     targetRevision: main
     helm:
       values: |
-        {{ if ne .Values.env "dev-laptop" }}
         grafana:
           env:
             GF_SERVER_ROOT_URL: '%(protocol)s://%(domain)s:%(http_port)s/grafana/'
             GF_SERVE_FROM_SUB_PATH: false
-        {{ end }}
         prometheus:
           prometheusSpec:
             serviceMonitorSelectorNilUsesHelmValues: false
