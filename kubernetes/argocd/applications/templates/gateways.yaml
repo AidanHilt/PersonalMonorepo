@@ -1,4 +1,4 @@
-{{ if .Values.gateways.enabled }}
+{{ if and (.Values.gateways.enabled) (ne .Values.env "dev-laptop") }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

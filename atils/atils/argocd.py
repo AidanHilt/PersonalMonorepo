@@ -247,14 +247,14 @@ def setup_argocd(environment: str):
                 "Master-stack already exists. If you want to force a recreation, use --force-master-reconfiguration[Not yet working]"
             )
 
-    applications = get_tracked_applications()
-    LINE_UP = f"\033[{len(applications)}A"
-    LINE_CLEAR = "\x1b[2K"
+    # applications = get_tracked_applications()
+    # LINE_UP = f"\033[{len(applications)}A"
+    # LINE_CLEAR = "\x1b[2K"
 
-    while True:
-        print_application_status(applications, True, next(spinner))
-        time.sleep(0.25)
-        print(LINE_UP, end=LINE_CLEAR)
+    # while True:
+    #     print_application_status(applications, True, next(spinner))
+    #     time.sleep(0.25)
+    #     print(LINE_UP, end=LINE_CLEAR)
 
 
 def open_argocd_port_forward():
