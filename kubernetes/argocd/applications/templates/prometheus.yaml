@@ -23,7 +23,7 @@ spec:
         grafana:
           env:
             GF_SERVER_ROOT_URL: '%(protocol)s://%(domain)s:%(http_port)s/grafana/'
-            GF_SERVE_FROM_SUB_PATH: false
+            #GF_SERVE_FROM_SUB_PATH: false
         prometheus:
           prometheusSpec:
             serviceMonitorSelectorNilUsesHelmValues: false
