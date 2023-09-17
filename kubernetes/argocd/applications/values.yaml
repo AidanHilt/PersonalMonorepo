@@ -26,5 +26,9 @@ prometheus:
   enabled: true
 prowlarr:
   enabled: true
-grafana_datasources:
+grafana-datasources:
+  enabled: true
+grafana-dashboards:
+  enabled: true
+ingress:
   enabled: true
