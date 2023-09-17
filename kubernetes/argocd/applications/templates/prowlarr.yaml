@@ -10,6 +10,10 @@ spec:
     repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
     targetRevision: {{ .Values.env }}
     path: kubernetes/helm-charts/prowlarr
+    helm:
+      values: |
+        prowlarr:
+          urlBase: prowlarr
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: videos
