@@ -94,7 +94,7 @@ serviceMonitor:
     enabled: true
     serviceName: '{{ include "bjw-s.common.lib.chart.names.fullname" $ }}-metrics'
     endpoints:
-    - port: http
+    - port: metrics
       scheme: http
       path: /metrics
       interval: {{ .Values.prowlarr.metrics.serviceMonitor.interval }}
