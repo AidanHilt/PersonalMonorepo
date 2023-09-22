@@ -87,7 +87,6 @@ service:
         protocol: TCP
         port: 80
         targetPort: {{ .Values.prowlarr.metrics.exporter.env.port }}
-        name: http
 
 serviceMonitor:
   main:
