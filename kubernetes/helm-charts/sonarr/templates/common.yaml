@@ -1,0 +1,105 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "sonarr.harcodedValues" -}}
+env:
+  - name: SONARR__API_KEY
+    valueFrom:
+      secretKeyRef:
+        {{ $defaultSecretName := printf "%v-%v" .Release.Name "config-secret"}}
+        name: {{ .Values.sonarr.configSecret.existingSecret | default $defaultSecretName}}
+        key: apiKey
+  - name: SONARR__URL_BASE
+    value: {{ .Values.sonarr.urlBase }}
+  {{ if .Values.sonarr.postgres.enabled }}
+  - name: SONARR__POSTGRES_HOST
+    value: {{ .Values.sonarr.postgres.host }}
+  - name: SONARR__POSTGRES_MAIN_DB 
+    value: {{ .Values.sonarr.postgres.mainDb }}
+  - name: SONARR__POSTGRES_LOG_DB
+    value: {{ .Values.sonarr.postgres.logDb }}
+  - name: SONARR__POSTGRES_PORT
+    value: {{ .Values.sonarr.postgres.port | quote }}
+  - name: SONARR__POSTGRES_USER
+    value: {{ .Values.sonarr.postgres.username }}
+  - name: SONARR__POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: sonarr-config-secret
+        key: postgresPassword
+  {{ end }}
+
+{{- if eq .Values.sonarr.configSecret.existingSecret "" }}
+secrets:
+  config-secret:
+    enabled: true
+    stringData:
+      {{- if .Values.sonarr.postgres.enabled }}
+      postgresPassword: {{ .Values.sonarr.postgres.password | quote }}
+      postgresMasterPassword: {{ index (lookup "v1" "Secret" "postgres" "postgres-postgresql") "data" "postgres-password" | b64dec | quote }}
+      {{- end }}
+      apiKey: {{ .Values.sonarr.apiKey | default (randAlphaNum 32 | lower) | quote }}
+{{- end }}
+
+{{ if not .Values.persistence.config.enabled }}
+persistence:
+  config:
+    enabled: true
+    mountPath: /config
+    type: emptyDir
+{{ end }}
+
+{{ if .Values.sonarr.metrics.enabled }}
+additionalContainers:
+  exporter:
+    name: exporter
+    image: "{{ .Values.sonarr.metrics.exporter.image.repository }}:{{ .Values.sonarr.metrics.exporter.image.tag }}"
+    imagePullPolicy: {{ .Values.sonarr.metrics.exporter.image.pullPolicy }}
+    args: ["sonarr"]
+    env:
+      - name: URL
+        value: "http://localhost"
+      - name: CONFIG
+        value: "/config/config.xml"
+      - name: PORT
+        value: "{{ .Values.sonarr.metrics.exporter.env.port }}"
+      - name: ENABLE_ADDITIONAL_METRICS
+        value: "{{ .Values.sonarr.metrics.exporter.env.additionalMetrics }}"
+      - name: ENABLE_UNKNOWN_QUEUE_ITEMS
+        value: "{{ .Values.sonarr.metrics.exporter.env.unknownQueueItems }}"
+    ports:
+      - name: metrics
+        containerPort: {{ .Values.sonarr.metrics.exporter.env.port }}
+    volumeMounts:
+      - name: config
+        mountPath: /config
+        readOnly: true
+        {{ if .Values.persistence.config.subPath }}
+        subPath: {{ .Values.persistence.config.subPath }}
+        {{ end }}
+
+service:
+  metrics:
+    enabled: true
+    ports:
+      metrics:
+        enabled: true
+        protocol: TCP
+        port: 80
+        targetPort: {{ .Values.sonarr.metrics.exporter.env.port }}
+
+serviceMonitor:
+  main:
+    enabled: true
+    serviceName: '{{ include "bjw-s.common.lib.chart.names.fullname" $ }}-metrics'
+    endpoints:
+    - port: metrics
+      scheme: http
+      path: /metrics
+      interval: {{ .Values.sonarr.metrics.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.sonarr.metrics.serviceMonitor.scrapeTimeout }}
+{{ end }}
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "sonarr.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}

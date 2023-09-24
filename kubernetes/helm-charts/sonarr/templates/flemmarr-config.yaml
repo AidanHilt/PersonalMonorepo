@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: prowlarr-config
+  name: sonarr-config
 data:
   config.yml: |
-    prowlarr:
+    sonarr:
       server:
-        address: prowlarr
+        address: sonarr
         port: 80
       indexer:
         - indexerUrls:
@@ -434,7 +434,7 @@ data:
             - order: 1
               name: baseUrl
               label: Base Url
-              helpText: Select which baseurl Prowlarr will use for requests to the site
+              helpText: Select which baseurl sonarr will use for requests to the site
               type: select
               advanced: false
               selectOptionsProviderAction: getUrls
@@ -442,7 +442,7 @@ data:
               name: baseSettings.queryLimit
               label: Query Limit
               helpText:
-                The number of queries within a rolling 24 hour period Prowlarr will
+                The number of queries within a rolling 24 hour period sonarr will
                 allow to the site
               type: number
               advanced: true
@@ -450,7 +450,7 @@ data:
               name: baseSettings.grabLimit
               label: Grab Limit
               helpText:
-                The number of grabs within a rolling 24 hour period Prowlarr will allow
+                The number of grabs within a rolling 24 hour period sonarr will allow
                 to the site
               type: number
               advanced: true
@@ -490,7 +490,7 @@ data:
               name: flaresolverr
               label: FlareSolverr
               value:
-                This site may use Cloudflare DDoS Protection, therefore Prowlarr requires
+                This site may use Cloudflare DDoS Protection, therefore sonarr requires
                 FlareSolverr to access it.
               type: info
               advanced: false
@@ -562,8 +562,9 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
-          infoLink: https://wiki.servarr.com/prowlarr/supported-indexers#1337x
+          infoLink: https://wiki.servarr.com/sonarr/supported-indexers#1337x
           tags: []
+          id: 0
         - indexerUrls:
             - https://badasstorrents.com/
             - https://badasstorrents.mrunblock.bond/
@@ -653,7 +654,7 @@ data:
             - order: 1
               name: baseUrl
               label: Base Url
-              helpText: Select which baseurl Prowlarr will use for requests to the site
+              helpText: Select which baseurl sonarr will use for requests to the site
               type: select
               advanced: false
               selectOptionsProviderAction: getUrls
@@ -661,7 +662,7 @@ data:
               name: baseSettings.queryLimit
               label: Query Limit
               helpText:
-                The number of queries within a rolling 24 hour period Prowlarr will
+                The number of queries within a rolling 24 hour period sonarr will
                 allow to the site
               type: number
               advanced: true
@@ -669,7 +670,7 @@ data:
               name: baseSettings.grabLimit
               label: Grab Limit
               helpText:
-                The number of grabs within a rolling 24 hour period Prowlarr will allow
+                The number of grabs within a rolling 24 hour period sonarr will allow
                 to the site
               type: number
               advanced: true
@@ -774,7 +775,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
-          infoLink: https://wiki.servarr.com/prowlarr/supported-indexers#badasstorrents
+          infoLink: https://wiki.servarr.com/sonarr/supported-indexers#badasstorrents
           tags: []
           id: 0
         - indexerUrls:
@@ -1095,7 +1096,7 @@ data:
             - order: 1
               name: baseUrl
               label: Base Url
-              helpText: Select which baseurl Prowlarr will use for requests to the site
+              helpText: Select which baseurl sonarr will use for requests to the site
               type: select
               advanced: false
               selectOptionsProviderAction: getUrls
@@ -1103,7 +1104,7 @@ data:
               name: baseSettings.queryLimit
               label: Query Limit
               helpText:
-                The number of queries within a rolling 24 hour period Prowlarr will
+                The number of queries within a rolling 24 hour period sonarr will
                 allow to the site
               type: number
               advanced: true
@@ -1111,7 +1112,7 @@ data:
               name: baseSettings.grabLimit
               label: Grab Limit
               helpText:
-                The number of grabs within a rolling 24 hour period Prowlarr will allow
+                The number of grabs within a rolling 24 hour period sonarr will allow
                 to the site
               type: number
               advanced: true
@@ -1180,14 +1181,14 @@ data:
               name: flaresolverr
               label: FlareSolverr
               value:
-                This site may use Cloudflare DDoS Protection, therefore Prowlarr requires
+                This site may use Cloudflare DDoS Protection, therefore sonarr requires
                 FlareSolverr to access it.
               type: info
               advanced: false
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
-          infoLink: https://wiki.servarr.com/prowlarr/supported-indexers#exttorrents
+          infoLink: https://wiki.servarr.com/sonarr/supported-indexers#exttorrents
           tags: []
           id: 0
         - indexerUrls:
@@ -1274,7 +1275,7 @@ data:
             - order: 1
               name: baseUrl
               label: Base Url
-              helpText: Select which baseurl Prowlarr will use for requests to the site
+              helpText: Select which baseurl sonarr will use for requests to the site
               type: select
               advanced: false
               selectOptionsProviderAction: getUrls
@@ -1282,7 +1283,7 @@ data:
               name: baseSettings.queryLimit
               label: Query Limit
               helpText:
-                The number of queries within a rolling 24 hour period Prowlarr will
+                The number of queries within a rolling 24 hour period sonarr will
                 allow to the site
               type: number
               advanced: true
@@ -1290,7 +1291,7 @@ data:
               name: baseSettings.grabLimit
               label: Grab Limit
               helpText:
-                The number of grabs within a rolling 24 hour period Prowlarr will allow
+                The number of grabs within a rolling 24 hour period sonarr will allow
                 to the site
               type: number
               advanced: true
@@ -1329,7 +1330,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
-          infoLink: https://wiki.servarr.com/prowlarr/supported-indexers#eztv
+          infoLink: https://wiki.servarr.com/sonarr/supported-indexers#eztv
           tags: []
           id: 0
         - indexerUrls:
@@ -1523,7 +1524,7 @@ data:
             - order: 1
               name: baseUrl
               label: Base Url
-              helpText: Select which baseurl Prowlarr will use for requests to the site
+              helpText: Select which baseurl sonarr will use for requests to the site
               type: select
               advanced: false
               selectOptionsProviderAction: getUrls
@@ -1531,7 +1532,7 @@ data:
               name: baseSettings.queryLimit
               label: Query Limit
               helpText:
-                The number of queries within a rolling 24 hour period Prowlarr will
+                The number of queries within a rolling 24 hour period sonarr will
                 allow to the site
               type: number
               advanced: true
@@ -1539,7 +1540,7 @@ data:
               name: baseSettings.grabLimit
               label: Grab Limit
               helpText:
-                The number of grabs within a rolling 24 hour period Prowlarr will allow
+                The number of grabs within a rolling 24 hour period sonarr will allow
                 to the site
               type: number
               advanced: true
@@ -1610,7 +1611,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
-          infoLink: https://wiki.servarr.com/prowlarr/supported-indexers#glodls
+          infoLink: https://wiki.servarr.com/sonarr/supported-indexers#glodls
           tags: []
           id: 0
         - indexerUrls:
@@ -1721,7 +1722,7 @@ data:
             - order: 1
               name: baseUrl
               label: Base Url
-              helpText: Select which baseurl Prowlarr will use for requests to the site
+              helpText: Select which baseurl sonarr will use for requests to the site
               type: select
               advanced: false
               selectOptionsProviderAction: getUrls
@@ -1729,7 +1730,7 @@ data:
               name: baseSettings.queryLimit
               label: Query Limit
               helpText:
-                The number of queries within a rolling 24 hour period Prowlarr will
+                The number of queries within a rolling 24 hour period sonarr will
                 allow to the site
               type: number
               advanced: true
@@ -1737,7 +1738,7 @@ data:
               name: baseSettings.grabLimit
               label: Grab Limit
               helpText:
-                The number of grabs within a rolling 24 hour period Prowlarr will allow
+                The number of grabs within a rolling 24 hour period sonarr will allow
                 to the site
               type: number
               advanced: true
@@ -1817,7 +1818,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
-          infoLink: https://wiki.servarr.com/prowlarr/supported-indexers#internetarchive
+          infoLink: https://wiki.servarr.com/sonarr/supported-indexers#internetarchive
           tags: []
           id: 0
         - indexerUrls:
@@ -1935,7 +1936,7 @@ data:
             - order: 1
               name: baseUrl
               label: Base Url
-              helpText: Select which baseurl Prowlarr will use for requests to the site
+              helpText: Select which baseurl sonarr will use for requests to the site
               type: select
               advanced: false
               selectOptionsProviderAction: getUrls
@@ -1943,7 +1944,7 @@ data:
               name: baseSettings.queryLimit
               label: Query Limit
               helpText:
-                The number of queries within a rolling 24 hour period Prowlarr will
+                The number of queries within a rolling 24 hour period sonarr will
                 allow to the site
               type: number
               advanced: true
@@ -1951,7 +1952,7 @@ data:
               name: baseSettings.grabLimit
               label: Grab Limit
               helpText:
-                The number of grabs within a rolling 24 hour period Prowlarr will allow
+                The number of grabs within a rolling 24 hour period sonarr will allow
                 to the site
               type: number
               advanced: true
@@ -2019,7 +2020,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
-          infoLink: https://wiki.servarr.com/prowlarr/supported-indexers#kickasstorrents-to
+          infoLink: https://wiki.servarr.com/sonarr/supported-indexers#kickasstorrents-to
           tags: []
           id: 0
         - indexerUrls:
@@ -2160,7 +2161,7 @@ data:
             - order: 1
               name: baseUrl
               label: Base Url
-              helpText: Select which baseurl Prowlarr will use for requests to the site
+              helpText: Select which baseurl sonarr will use for requests to the site
               type: select
               advanced: false
               selectOptionsProviderAction: getUrls
@@ -2168,7 +2169,7 @@ data:
               name: baseSettings.queryLimit
               label: Query Limit
               helpText:
-                The number of queries within a rolling 24 hour period Prowlarr will
+                The number of queries within a rolling 24 hour period sonarr will
                 allow to the site
               type: number
               advanced: true
@@ -2176,7 +2177,7 @@ data:
               name: baseSettings.grabLimit
               label: Grab Limit
               helpText:
-                The number of grabs within a rolling 24 hour period Prowlarr will allow
+                The number of grabs within a rolling 24 hour period sonarr will allow
                 to the site
               type: number
               advanced: true
@@ -2274,7 +2275,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
-          infoLink: https://wiki.servarr.com/prowlarr/supported-indexers#limetorrents
+          infoLink: https://wiki.servarr.com/sonarr/supported-indexers#limetorrents
           tags: []
           id: 0
         - indexerUrls:
@@ -3217,7 +3218,7 @@ data:
             - order: 1
               name: baseUrl
               label: Base Url
-              helpText: Select which baseurl Prowlarr will use for requests to the site
+              helpText: Select which baseurl sonarr will use for requests to the site
               type: select
               advanced: false
               selectOptionsProviderAction: getUrls
@@ -3225,7 +3226,7 @@ data:
               name: baseSettings.queryLimit
               label: Query Limit
               helpText:
-                The number of queries within a rolling 24 hour period Prowlarr will
+                The number of queries within a rolling 24 hour period sonarr will
                 allow to the site
               type: number
               advanced: true
@@ -3233,7 +3234,7 @@ data:
               name: baseSettings.grabLimit
               label: Grab Limit
               helpText:
-                The number of grabs within a rolling 24 hour period Prowlarr will allow
+                The number of grabs within a rolling 24 hour period sonarr will allow
                 to the site
               type: number
               advanced: true
@@ -3304,7 +3305,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
-          infoLink: https://wiki.servarr.com/prowlarr/supported-indexers#linuxtracker
+          infoLink: https://wiki.servarr.com/sonarr/supported-indexers#linuxtracker
           tags: []
           id: 0
         - indexerUrls:
@@ -3684,7 +3685,7 @@ data:
             - order: 1
               name: baseUrl
               label: Base Url
-              helpText: Select which baseurl Prowlarr will use for requests to the site
+              helpText: Select which baseurl sonarr will use for requests to the site
               type: select
               advanced: false
               selectOptionsProviderAction: getUrls
@@ -3692,7 +3693,7 @@ data:
               name: baseSettings.queryLimit
               label: Query Limit
               helpText:
-                The number of queries within a rolling 24 hour period Prowlarr will
+                The number of queries within a rolling 24 hour period sonarr will
                 allow to the site
               type: number
               advanced: true
@@ -3700,7 +3701,7 @@ data:
               name: baseSettings.grabLimit
               label: Grab Limit
               helpText:
-                The number of grabs within a rolling 24 hour period Prowlarr will allow
+                The number of grabs within a rolling 24 hour period sonarr will allow
                 to the site
               type: number
               advanced: true
@@ -3739,7 +3740,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
-          infoLink: https://wiki.servarr.com/prowlarr/supported-indexers#thepiratebay
+          infoLink: https://wiki.servarr.com/sonarr/supported-indexers#thepiratebay
           tags: []
           id: 0
         - indexerUrls:
@@ -3841,7 +3842,7 @@ data:
             - order: 1
               name: baseUrl
               label: Base Url
-              helpText: Select which baseurl Prowlarr will use for requests to the site
+              helpText: Select which baseurl sonarr will use for requests to the site
               type: select
               advanced: false
               selectOptionsProviderAction: getUrls
@@ -3849,7 +3850,7 @@ data:
               name: baseSettings.queryLimit
               label: Query Limit
               helpText:
-                The number of queries within a rolling 24 hour period Prowlarr will
+                The number of queries within a rolling 24 hour period sonarr will
                 allow to the site
               type: number
               advanced: true
@@ -3857,7 +3858,7 @@ data:
               name: baseSettings.grabLimit
               label: Grab Limit
               helpText:
-                The number of grabs within a rolling 24 hour period Prowlarr will allow
+                The number of grabs within a rolling 24 hour period sonarr will allow
                 to the site
               type: number
               advanced: true
@@ -3896,7 +3897,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
-          infoLink: https://wiki.servarr.com/prowlarr/supported-indexers#yts
+          infoLink: https://wiki.servarr.com/sonarr/supported-indexers#yts
           tags: []
           id: 0
 
@@ -3924,6 +3925,6 @@ data:
           implementationName: FlareSolverr
           implementation: FlareSolverr
           configContract: FlareSolverrSettings
-          infoLink: https://wiki.servarr.com/prowlarr/supported#flaresolverr
+          infoLink: https://wiki.servarr.com/sonarr/supported#flaresolverr
           tags: []
 
