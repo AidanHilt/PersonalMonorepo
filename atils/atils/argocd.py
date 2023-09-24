@@ -86,7 +86,16 @@ def main(args: list[str]):
 
 
 def get_argocd_password():
-    return
+    result = subprocess.run(
+        "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath={{.data.password}} | base64 -d".format(),
+        shell=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        f"echo {result.stdout.decode('utf-8')} | pbcopy",
+        shell=True,
+        capture_output=True,
+    )
 
 
 def disable_application(application: str) -> None:
