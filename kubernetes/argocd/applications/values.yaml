@@ -32,3 +32,5 @@ grafana-dashboards:
   enabled: true
 ingress:
   enabled: true
+sonarr:
+  enabled: true
