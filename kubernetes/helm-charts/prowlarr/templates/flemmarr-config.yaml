@@ -10,7 +10,7 @@ data:
         port: 80
       applications:
       - name: Sonarr
-        syncLevel: addOnly
+        syncLevel: fullSync
         implementation: Sonarr
         configContract: SonarrSettings
         fields:
