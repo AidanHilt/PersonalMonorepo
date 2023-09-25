@@ -20,7 +20,7 @@ data:
           - name: baseUrl
             value: http://sonarr/sonarr
           - name: apiKey
-            value: {{ (lookup "v1" "Secret" "videos" "sonarr-config-secret").data.apiKey | base64decode }}
+            value: {{ (lookup "v1" "Secret" "videos" "sonarr-config-secret").data.apiKey | b64dec }}
         {{ end }}
       indexer:
         - indexerUrls:
