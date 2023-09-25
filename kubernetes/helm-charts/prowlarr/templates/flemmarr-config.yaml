@@ -8,7 +8,7 @@ data:
       server:
         address: prowlarr
         port: 80
-      {{ - $sonarr-secret := (lookup "v1" "Secret" ".Release.Namespace" "sonarr-config-secret") }}
+      {{- $sonarr-secret := (lookup "v1" "Secret" ".Release.Namespace" "sonarr-config-secret") }}
       {{- if $sonarr-secret }}
       applications:
       - name: Sonarr
