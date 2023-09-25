@@ -15,9 +15,9 @@ data:
         configContract: SonarrSettings
         fields:
           - name: prowlarrUrl
-            value: http://prowlarr/prowlarr:80
+            value: http://prowlarr/prowlarr
           - name: baseUrl
-            value: http://sonarr/sonarr:80
+            value: http://sonarr/sonarr
           - name: apiKey
             value: wpsnoaer061tc8euob6rop4p6kcnvii9
       indexer:
