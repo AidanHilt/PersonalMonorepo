@@ -8,7 +8,7 @@ data:
       server:
         address: prowlarr
         port: 80
-      {{ if lookup("v1" "Secret" "videos" "sonarr-config-secret") }}
+      {{ if (lookup "v1" "Secret" "videos" "sonarr-config-secret") }}
       applications:
       - name: Sonarr
         syncLevel: fullSync
@@ -20,7 +20,7 @@ data:
           - name: baseUrl
             value: http://sonarr/sonarr
           - name: apiKey
-            value: {{ lookup("v1" "Secret" "videos" "sonarr-config-secret").data.apiKey | base64decode }}
+            value: {{ (lookup "v1" "Secret" "videos" "sonarr-config-secret").data.apiKey | base64decode }}
         {{ end }}
       indexer:
         - indexerUrls:
