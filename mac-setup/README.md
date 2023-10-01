@@ -1,0 +1,2 @@
+To get any of your dotfiles setup, run "stow \<service\>." In order to set Stow up, since by default it'll pull from your current directory, just cp
+the .stowrc in here under stow/, so that it will pull from this repo and go to your (my) home directory

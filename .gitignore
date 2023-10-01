@@ -53,11 +53,6 @@ auth
 cluster.rkestate
 kube_config_cluster.yml
 
-#Values for the TV/Movie stack Helm releases. Excluding these for now because they directly have sensitive fields.
-#TODO Update QBittorrent to use secrets for VPN creds, to allow the value yaml files to be posted publicly
-homelab-automation/terraform_modules/tv-movie-stack/values/*
-
-
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
@@ -259,3 +254,25 @@ kube_config*
 
 monkeytype.sqlite3
 poetry.lock
+
+
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
+
+.vscode

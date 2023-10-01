@@ -86,7 +86,16 @@ def main(args: list[str]):
 
 
 def get_argocd_password():
-    return
+    result = subprocess.run(
+        "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath={{.data.password}} | base64 -d".format(),
+        shell=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        f"echo {result.stdout.decode('utf-8')} | pbcopy",
+        shell=True,
+        capture_output=True,
+    )
 
 
 def disable_application(application: str) -> None:
@@ -247,14 +256,14 @@ def setup_argocd(environment: str):
                 "Master-stack already exists. If you want to force a recreation, use --force-master-reconfiguration[Not yet working]"
             )
 
-    applications = get_tracked_applications()
-    LINE_UP = f"\033[{len(applications)}A"
-    LINE_CLEAR = "\x1b[2K"
+    # applications = get_tracked_applications()
+    # LINE_UP = f"\033[{len(applications)}A"
+    # LINE_CLEAR = "\x1b[2K"
 
-    while True:
-        print_application_status(applications, True, next(spinner))
-        time.sleep(0.25)
-        print(LINE_UP, end=LINE_CLEAR)
+    # while True:
+    #     print_application_status(applications, True, next(spinner))
+    #     time.sleep(0.25)
+    #     print(LINE_UP, end=LINE_CLEAR)
 
 
 def open_argocd_port_forward():

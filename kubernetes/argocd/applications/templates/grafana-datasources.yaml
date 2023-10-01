@@ -1,4 +1,4 @@
-{{ if .Values.grafana_datasources.enabled }}
+{{ if index .Values "grafana-datasources" "enabled" }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

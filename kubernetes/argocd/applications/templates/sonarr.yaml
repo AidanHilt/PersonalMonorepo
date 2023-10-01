@@ -1,19 +1,19 @@
-{{ if .Values.prowlarr.enabled }}
+{{ if .Values.sonarr.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: prowlarr
+  name: sonarr
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
     targetRevision: {{ .Values.env }}
-    path: kubernetes/helm-charts/prowlarr
+    path: kubernetes/helm-charts/sonarr
     helm:
       values: |
-        prowlarr:
-          urlBase: prowlarr
+        sonarr:
+          urlBase: sonarr
           metrics:
             enabled: true
   destination:

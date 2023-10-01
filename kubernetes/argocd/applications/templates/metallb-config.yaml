@@ -1,4 +1,4 @@
-{{ if index .Values "metallb-config" "enabled" }}
+{{ if and (index .Values "metallb-config" "enabled") (ne .Values.env "dev-laptop") }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -12,7 +12,6 @@ spec:
     targetRevision: {{ .Values.env }}
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: argocd
   syncPolicy:
     automated:
       prune: true
