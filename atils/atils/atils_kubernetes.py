@@ -3,14 +3,10 @@ import os
 import argparse
 import sys
 import shutil
-import yaml
-import subprocess
-import webbrowser
 import base64
 
-from atils.common import config
+from atils.common.config import settings
 from atils.common import yaml_utils
-from atils.common import template_utils
 
 from kubernetes import config as k8s_config
 from kubernetes import client
@@ -19,7 +15,7 @@ k8s_config.load_kube_config()  # type: ignore
 client.rest.logger.setLevel(logging.WARNING)
 
 # TODO make it so that logging is set up using config stored in config.py
-logging.basicConfig(level=logging.DEBUG)  # type: ignore
+logging.basicConfig(config.get_logging_level())  # type: ignore
 
 
 def main(args: list[str]):
@@ -92,18 +88,18 @@ def main(args: list[str]):
 
 def merge_and_replace_kubeconfig(cluster_name):
     shutil.copy(
-        f"{config.KUBECONFIG_LOCATION}/config",
-        f"{config.KUBECONFIG_LOCATION}/config.bak",
+        f"{settings.KUBECONFIG_LOCATION}/config",
+        f"{settings.KUBECONFIG_LOCATION}/config.bak",
     )
     merged_kubeconfig = yaml_utils.merge_kubeconfigs(
-        f"{config.KUBECONFIG_LOCATION}/config",
+        f"{settings.KUBECONFIG_LOCATION}/config",
         os.path.join(
-            config.SCRIPT_INSTALL_DIRECTORY,
+            settings.SCRIPT_INSTALL_DIRECTORY,
             f"../kubernetes/rke/kube_config_{cluster_name}.yaml",
         ),
     )
 
-    with open(f"{config.KUBECONFIG_LOCATION}/config", "w") as kfile:
+    with open(f"{settings.KUBECONFIG_LOCATION}/config", "w") as kfile:
         kfile.truncate(0)
         kfile.write(merged_kubeconfig)
 
@@ -155,7 +151,7 @@ def setup_rke_cluster(cluster_name: str, force: bool = False):
     elif not (cluster_availability) or force:
         # TODO Make this take config, and try to move these configuration files
         cluster_config_location: str = os.path.join(
-            config.SCRIPT_INSTALL_DIRECTORY, f"../kubernetes/rke/{cluster_name}.yaml"
+            settings.SCRIPT_INSTALL_DIRECTORY, f"../kubernetes/rke/{cluster_name}.yaml"
         )
         if os.path.isfile(cluster_config_location):
             # TODO we should add our own error checking here, rather than relying on RKE's.
