@@ -1,0 +1,4 @@
+INSTALL_DIR: "@jinja {{env.HOME}}/PersonalMonorepo"
+KUBECONFIG_LOCATION: "@jinja {{env.HOME}}/.kube/"
+SCRIPT_INSTALL_DIRECTORY: "@jinja {{this.installDir}}/atils"
+LOG_LEVEL: INFO

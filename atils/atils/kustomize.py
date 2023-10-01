@@ -6,8 +6,11 @@ import tempfile
 import subprocess
 import yaml
 
+from atils.common import config
 from atils.common import template_utils as template
 from atils.common import yaml_utils
+
+logging.basicConfig(config.get_logging_level())  # type: ignore
 
 
 def main(args: str):
