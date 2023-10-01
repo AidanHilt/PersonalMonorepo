@@ -6,7 +6,7 @@ data:
   config.yml: |
     prowlarr:
       server:
-        address: prowlarr
+        address: prowlarr/prowlarr
         port: 80
       {{- $sonarrSecret := (lookup "v1" "Secret" .Release.Namespace "sonarr-config-secret") | default dict }}
       {{- if $sonarrSecret }}
@@ -17,13 +17,13 @@ data:
         fields:
         - order: 0
           name: prowlarrUrl
-          value: http://prowlarr
+          value: http://prowlarr/prowlarr
         - order: 1
           name: baseUrl
           value: http://sonarr/sonarr
         - order: 2
           name: apiKey
-          value: f6tdlvwwhnjl2igrtdacmllqkvnoe7cf
+          value: {{ $sonarData.apiKey | b64dec }}
         implementationName: Sonarr
         implementation: Sonarr
         configContract: SonarrSettings
