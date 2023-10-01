@@ -1,8 +1,12 @@
 import os
 import sys
 import argparse
+import logging
 
 from atils.common import config
+from atils.common.config import settings
+
+logging.basicConfig(config.get_logging_level())  # type: ignore
 
 
 # TODO Figure out how to do this correctly
@@ -23,12 +27,12 @@ def main(args: str):
     # TODO Let's set a standard for how optional arguments are handled
     test_parser = subparsers.add_parser("test", help="Run pytest against the project")
     test_parser.add_argument(
-        "python_dir", nargs="?", default=f"{config.SCRIPT_INSTALL_DIRECTORY}/tests"
+        "python_dir", nargs="?", default=f"{settings.SCRIPT_INSTALL_DIRECTORY}/tests"
     )
 
     type_parser = subparsers.add_parser("type-check", help="Run the mypy type checker")
     type_parser.add_argument(
-        "python_dir", nargs="?", default=f"{config.SCRIPT_INSTALL_DIRECTORY}/atils"
+        "python_dir", nargs="?", default=f"{settings.SCRIPT_INSTALL_DIRECTORY}/atils"
     )
 
     if len(args) == 0:

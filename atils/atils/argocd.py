@@ -10,7 +10,7 @@ import time
 from atils import atils_kubernetes as k8s_utils
 
 from atils.common import config
-from atils.common import yaml_utils
+from atils.common.config import settings
 from atils.common import template_utils
 
 from termcolor import colored
@@ -18,10 +18,10 @@ from kubernetes import config as k8s_config
 from kubernetes import client
 
 k8s_config.load_kube_config()  # type: ignore
-client.rest.logger.setLevel(logging.ERROR)
+client.rest.logger.setLevel(logging.WARNING)
 
 # TODO make it so that logging is set up using config stored in config.py
-logging.basicConfig(level=logging.DEBUG)  # type: ignore
+logging.basicConfig(config.get_logging_level())  # type: ignore
 
 
 def main(args: list[str]):
@@ -54,6 +54,12 @@ def main(args: list[str]):
     )
     disable_parser.add_argument("application", help="Which application to disable")
 
+    enable_parser = subparsers.add_parser(
+        "enable",
+        help="Ensables an application from the master stack",
+    )
+    enable_parser.add_argument("application", help="Which application to ensable")
+
     if len(args) == 0:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -76,6 +82,13 @@ def main(args: list[str]):
             sys.exit(1)
         else:
             disable_application(args_dict["application"])
+    elif args.subparser_name == "enable":
+        args_dict = vars(args)
+        if args_dict["application"] is None:
+            logging.error("Please provide an application name")
+            sys.exit(1)
+        else:
+            enable_application(args_dict["application"])
     elif args.subparser_name == "get-password":
         get_argocd_password()
     elif args.subparser_name == "test":
@@ -96,6 +109,91 @@ def get_argocd_password():
         shell=True,
         capture_output=True,
     )
+
+
+def enable_application(application: str) -> None:
+    try:
+        api_instance = client.CustomObjectsApi()
+
+        # Get the argocd Application master-stack in the namespace argocd
+        namespace = "argocd"
+        name = "master-stack"
+        group = "argoproj.io"
+        version = "v1alpha1"
+        plural = "applications"
+        api_response = api_instance.get_namespaced_custom_object(
+            group, version, namespace, plural, name
+        )
+
+        resources = api_response.get("status").get("resources")
+
+        is_active = False
+        is_disabled = False
+
+        # Iterate over the resources and check for the specified application
+        for resource in resources:
+            if (
+                resource.get("kind") == "Application"
+                and resource.get("name") == application
+            ):
+                is_active = True
+                break
+
+        # If only step 2 is true, add a helm parameter application.enabled=false
+        source = api_response.get("spec").get("source")
+        if "helm" in source:
+            if "parameters" in source.get("helm"):
+                for variable in source.get("helm").get("parameters"):
+                    if application in variable.get("name"):
+                        is_disabled = True
+                        break
+
+        if not is_disabled:
+            logging.info(f"Application {application} already enabled")
+            exit(0)
+        elif not is_active and is_disabled:
+            # Check if field source.helm.parameters exists
+            source_helm_params = (
+                api_response.get("spec", {})
+                .get("source", {})
+                .get("helm", {})
+                .get("parameters", [])
+            )
+            if not source_helm_params:
+                logging.error(
+                    "Error: Field source.helm.parameters does not exist in the application."
+                )
+                sys.exit(1)
+
+            edited_parameters = source_helm_params
+
+            for i in range(len(edited_parameters)):
+                if application == edited_parameters[i].get("name").split(".")[0]:
+                    del edited_parameters[i]
+
+            print(edited_parameters)
+
+            # Create JSON merge patch to update the helm parameters
+            json_patch = {
+                "spec": {"source": {"helm": {"parameters": edited_parameters}}}
+            }
+
+            # Use patch_namespaced_custom_object to update the application with the new helm parameter
+            api_response = api_instance.patch_namespaced_custom_object(
+                group, version, namespace, plural, name, json_patch
+            )
+
+            logging.info(f"{application} successfully enabled")
+
+        else:
+            logging.error(
+                f"Error: Application '{application}' not found in the master-stack"
+            )
+            sys.exit(1)
+
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
 
 
 def disable_application(application: str) -> None:
