@@ -23,7 +23,7 @@ data:
           value: http://sonarr/sonarr
         - order: 2
           name: apiKey
-          value: {{ $sonarData.apiKey | b64dec }}
+          value: {{ $sonarrData.apiKey | b64dec }}
         implementationName: Sonarr
         implementation: Sonarr
         configContract: SonarrSettings
