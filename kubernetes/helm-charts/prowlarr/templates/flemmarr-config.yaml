@@ -6,7 +6,7 @@ data:
   config.yml: |
     prowlarr:
       server:
-        address: prowlarr/prowlarr
+        address: prowlarr
         port: 80
       {{- $sonarrSecret := (lookup "v1" "Secret" .Release.Namespace "sonarr-config-secret") | default dict }}
       {{- if $sonarrSecret }}
