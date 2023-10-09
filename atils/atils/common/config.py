@@ -1,10 +1,11 @@
-from dynaconf import Dynaconf
 import logging
+import os
 
-settings = Dynaconf(
-    envvar_prefix="ATILS",
-    settings_files=["settings.yaml", ".secrets.yaml"],
-)
+from atils.common.settings import settings
+
+
+def get_full_atils_dir(dir_name: str) -> str:
+    return os.path.join(settings.INSTALL_DIR, settings[dir_name])
 
 
 def get_logging_level():
@@ -21,7 +22,3 @@ def get_logging_level():
     else:
         logging.warning("Could not find a proper log level, defaulting to INFO")
         return logging.INFO
-
-
-# `envvar_prefix` = export envvars with `export DYNACONF_FOO=bar`.
-# `settings_files` = Load these files in the order.
