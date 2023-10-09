@@ -276,3 +276,6 @@ poetry.lock
 .ionide
 
 .vscode
+
+# Ignore dynaconf secret files
+.secrets.*

@@ -1,27 +1,25 @@
-import logging
 import argparse
-import sys
-import yaml
-import subprocess
-import webbrowser
 import itertools
+import logging
+import subprocess
+import sys
 import time
+import webbrowser
+
+import yaml
+from termcolor import colored
 
 from atils import atils_kubernetes as k8s_utils
-
-from atils.common import config
-from atils.common.config import settings
-from atils.common import template_utils
-
-from termcolor import colored
-from kubernetes import config as k8s_config
+from atils.common import config, settings, template_utils
+from atils.common.settings import settings
 from kubernetes import client
+from kubernetes import config as k8s_config
 
 k8s_config.load_kube_config()  # type: ignore
 client.rest.logger.setLevel(logging.WARNING)
 
 # TODO make it so that logging is set up using config stored in config.py
-logging.basicConfig(config.get_logging_level())  # type: ignore
+logging.basicConfig(level=config.get_logging_level())  # type: ignore
 
 
 def main(args: list[str]):
@@ -288,7 +286,7 @@ def setup_argocd(environment: str):
         api.create_namespace(namespace_body)
 
     result = subprocess.run(
-        f"""helm repo add argo https://argoproj.github.io/argo-helm && helm -n argocd upgrade --install argocd -f {config.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/argocd/values.yaml argo/argo-cd""",
+        f"""helm repo add argo https://argoproj.github.io/argo-helm && helm -n argocd upgrade --install argocd -f {settings.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/argocd/values.yaml argo/argo-cd""",
         shell=True,
         capture_output=True,
     )
