@@ -1,12 +1,12 @@
-import os
-import sys
 import argparse
 import logging
+import os
+import sys
 
 from atils.common import config
 from atils.common.config import settings
 
-logging.basicConfig(config.get_logging_level())  # type: ignore
+logging.basicConfig(level=config.get_logging_level())  # type: ignore
 
 
 # TODO Figure out how to do this correctly
