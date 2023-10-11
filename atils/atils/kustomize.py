@@ -7,7 +7,7 @@ import tempfile
 
 import yaml
 
-from atils.common import config
+from atils.common import config, settings
 from atils.common import template_utils as template
 from atils.common import yaml_utils
 

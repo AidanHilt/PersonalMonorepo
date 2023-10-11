@@ -6,7 +6,7 @@ import shutil
 import sys
 
 from atils.common import config, yaml_utils
-from atils.common.config import settings
+from atils.common.settings import settings
 from kubernetes import client
 from kubernetes import config as k8s_config
 

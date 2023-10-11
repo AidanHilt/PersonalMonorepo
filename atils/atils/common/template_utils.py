@@ -1,5 +1,6 @@
 import os
-from jinja2 import Environment, FunctionLoader
+
+from jinja2 import Environment, FileSystemLoader, FunctionLoader
 from pkg_resources import resource_string
 
 
@@ -9,9 +10,15 @@ def load_from_self(filename: str):
 
 def template_file(template_path: str, args_dict: dict):
     env = Environment(loader=FunctionLoader(load_from_self))
-
     template = env.get_template(os.path.basename(template_path))
+    substituted_content = template.render(args_dict)
 
+    return substituted_content
+
+
+def template_external_file(template_path: str, args_dict: dict):
+    env = Environment(loader=FileSystemLoader(os.path.dirname(template_path)))
+    template = env.get_template(os.path.basename(template_path))
     substituted_content = template.render(args_dict)
 
     return substituted_content

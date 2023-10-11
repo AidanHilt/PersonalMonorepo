@@ -3,8 +3,8 @@ import logging
 import os
 import sys
 
-from atils.common import config
-from atils.common.config import settings
+from atils.common import config, settings
+from atils.common.settings import settings
 
 logging.basicConfig(level=config.get_logging_level())  # type: ignore
 

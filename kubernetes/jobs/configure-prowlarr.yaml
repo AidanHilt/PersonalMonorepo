@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
         - name: configure-prowlarr
-          image: aidanhilt/flemmarr
+          image: aidanhilt/flemmarr:{{ image_tag }}
           volumeMounts:
             - name: config-volume
               mountPath: /config
