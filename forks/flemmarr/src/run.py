@@ -1,5 +1,6 @@
-import yaml
 import os
+
+import yaml
 from api import Api
 
 config_path = "./config/config.yml"
@@ -15,11 +16,13 @@ for key in configs:
     config.pop("server")
 
     baseUrl = ""
-    if server["baseUrl"]:
-        baseUrl = server["baseUrl"]
+    if "baseUrl" in server:
+        if server["baseUrl"]:
+            baseUrl = server["baseUrl"]
 
-    if baseUrl[0] != "/":
-        baseUrl = "/" + baseUrl
+    if baseUrl:
+        if baseUrl[0] != "/":
+            baseUrl = "/" + baseUrl
 
     api = Api(server["address"], server["port"], baseUrl)
 

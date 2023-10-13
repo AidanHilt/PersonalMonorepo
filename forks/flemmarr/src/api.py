@@ -1,6 +1,7 @@
+import json
+
 import requests
 from urllib3.util import Retry
-import json
 
 
 class Api(object):
@@ -104,6 +105,7 @@ class Api(object):
             response = self.r.get("{}/initialize.json".format(self.__url()))
 
             bits = json.loads(response.text)
+            print(bits)
             api_root = bits["apiRoot"]
             api_key = bits["apiKey"]
 
