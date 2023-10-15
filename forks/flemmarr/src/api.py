@@ -1,6 +1,7 @@
+import json
+
 import requests
 from urllib3.util import Retry
-import json
 
 
 class Api(object):
@@ -43,6 +44,7 @@ class Api(object):
     def __create(self, resource, body):
         response = self.r.post(self.__url(resource), json=body)
         status_code = response.status_code
+        print(response.json())
 
         if status_code < 300:
             print(
@@ -88,8 +90,6 @@ class Api(object):
     def initialize(self):
         print("Trying to connect to the server with the v3 method")
         response = self.r.get("{}/initialize.js".format(self.__url()), timeout=5)
-
-        print(json.dumps(response.json(), indent=2))
 
         if response.status_code == 200:
             print("Successfully connected to the server with the v3 method")

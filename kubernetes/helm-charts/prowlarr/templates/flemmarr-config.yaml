@@ -37,11 +37,9 @@ data:
           sortName: 1337x
           name: 1337x
           fields:
-            - order: 0
-              name: definitionFile
+            - name: definitionFile
               value: 1337x
-            - order: 1
-              name: baseUrl
+              type: textbox
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings

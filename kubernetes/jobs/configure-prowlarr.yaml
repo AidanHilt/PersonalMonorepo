@@ -8,6 +8,7 @@ spec:
     spec:
       containers:
         - name: configure-prowlarr
+          imagePullPolicy: Always
           image: aidanhilt/flemmarr:{{ image_tag }}
           volumeMounts:
             - name: config-volume
