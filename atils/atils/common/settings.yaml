@@ -3,3 +3,6 @@ KUBECONFIG_LOCATION: "@jinja {{env.HOME}}/.kube/"
 SCRIPT_INSTALL_DIRECTORY: "@jinja {{this.INSTALL_DIR}}/atils"
 LOG_LEVEL: INFO
 JOBS_DIR: kubernetes/jobs
+ARGOCD_URL: http://localhost/argocd
+ARGOCD_USERNAME: ""
+ARGOCD_PASSWORD: ""
