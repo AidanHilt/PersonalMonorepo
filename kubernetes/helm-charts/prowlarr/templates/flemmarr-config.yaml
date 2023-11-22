@@ -37,17 +37,17 @@ data:
           sortName: 1337x
           name: 1337x
           fields:
-            - order: 0
-              name: definitionFile
+            - name: definitionFile
               value: 1337x
-            - order: 1
-              name: baseUrl
+              type: textbox
+              isFloat: false
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
           infoLink: https://wiki.servarr.com/prowlarr/supported-indexers#1337x
           tags: []
-          id: 0
+          appProfileId: 1
+          id: 1
         - definitionName: badasstorrents
           enable: true
           sortName: badass torrents

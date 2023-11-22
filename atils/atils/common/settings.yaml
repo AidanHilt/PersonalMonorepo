@@ -1,5 +1,10 @@
 INSTALL_DIR: "@jinja {{env.HOME}}/PersonalMonorepo"
 KUBECONFIG_LOCATION: "@jinja {{env.HOME}}/.kube/"
 SCRIPT_INSTALL_DIRECTORY: "@jinja {{this.INSTALL_DIR}}/atils"
+HELM_CHARTS_DIR: kubernetes/helm-charts
 LOG_LEVEL: INFO
 JOBS_DIR: kubernetes/jobs
+ARGOCD_URL: http://localhost/argocd
+ARGOCD_USERNAME: ""
+ARGOCD_PASSWORD: ""
+CONFIG_DIRECTORY: /Users/ahilt/.atils

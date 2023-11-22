@@ -70,8 +70,8 @@ def run_job(job_name: str, args: list[str] = None):
         # Check if a job with a name matching the given job name already exists, and delete if so
         v1 = client.BatchV1Api()
         for job in v1.list_namespaced_job(namespace).items:
-            print(job.metadata.name)
             if job.metadata.name == name_field:
+                # TODO Let's also delete all pods associated with the job
                 v1.delete_namespaced_job(name=name_field, namespace=namespace)
                 # Wait until the job is deleted
                 dots = itertools.cycle([".  ", ".. ", "..."])
