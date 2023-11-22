@@ -43,6 +43,7 @@ class Api(object):
 
     def __create(self, resource, body):
         response = self.r.post(self.__url(resource), json=body)
+        print(body)
         status_code = response.status_code
         print(response.json())
 
