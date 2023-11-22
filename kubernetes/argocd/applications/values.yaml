@@ -34,3 +34,5 @@ ingress:
   enabled: true
 sonarr:
   enabled: true
+radarr:
+  enabled: true
