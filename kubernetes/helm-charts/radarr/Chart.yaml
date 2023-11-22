@@ -1,0 +1,14 @@
+apiVersion: v2
+name: radarr
+description: A Helm chart for installing and managing radarr. Based on the bjw-s library chart
+
+type: application
+
+version: 0.0.1
+
+appVersion: "3.0.10.1567"
+
+dependencies:
+  - name: common
+    repository: https://bjw-s.github.io/helm-charts/
+    version: 1.5.1

@@ -1,0 +1,85 @@
+#================================================================================================================================================
+# You should be able to use any of the values you can find here: https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
+#================================================================================================================================================
+image:
+  repository: ghcr.io/onedr0p/radarr
+  pullPolicy: IfNotPresent
+
+service:
+  main:
+    ports:
+      http:
+        port: 80
+        targetPort: 8989
+
+probes:
+  liveness:
+    enabled: true
+    ## Set this to true if you wish to specify your own livenessProbe
+    custom: true
+    ## The spec field contains the values for the default livenessProbe.
+    ## If you selected custom: true, this field holds the definition of the livenessProbe.
+    spec:
+      exec:
+        command:
+          - /usr/bin/env
+          - bash
+          - -c
+          - curl --fail localhost:7878/api/v1/system/status?apiKey=`IFS=\> && while
+            read -d \< E C; do if [[ $E = "ApiKey" ]]; then echo $C; fi; done < /config/config.xml`
+      failureThreshold: 5
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 10
+
+persistence:
+  config:
+    enabled: false
+
+#================================
+# radarr specific configuration
+#================================
+radarr:
+  apiKey: ""
+  urlBase: /
+  timezone: "Etc/UTC"
+
+  # Note: If this is set, the field apiKey won't have any effect
+  configSecret:
+    existingSecret: ""
+
+  # Settings to control using an external Postgres DB
+  postgres:
+    enabled: false
+
+    username: radarr
+    password: ""
+
+    port: 5432
+    host: postgres-postgresql.postgres.svc.cluster.local
+
+    mainDb: radarr_main
+    logDb: radarr_logs
+
+  metrics:
+    enabled: false
+    serviceMonitor:
+      interval: 3m
+      scrapeTimeout: 1m
+      labels: {}
+    exporter:
+      image:
+        # -- image repository
+        repository: ghcr.io/onedr0p/exportarr
+        # -- image tag
+        tag: v1.5.3
+        # -- image pull policy
+        pullPolicy: IfNotPresent
+      env:
+        # -- metrics port
+        port: 9794
+        # -- Set to true to enable gathering of additional metrics (slow)
+        additionalMetrics: false
+        # -- Set to true to enable gathering unknown queue items
+        unknownQueueItems: false

@@ -1,0 +1,105 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "radarr.harcodedValues" -}}
+env:
+  - name: RADARR__API_KEY
+    valueFrom:
+      secretKeyRef:
+        {{ $defaultSecretName := printf "%v-%v" .Release.Name "config-secret"}}
+        name: {{ .Values.radarr.configSecret.existingSecret | default $defaultSecretName}}
+        key: apiKey
+  - name: RADARR__URL_BASE
+    value: {{ .Values.radarr.urlBase }}
+  {{ if .Values.radarr.postgres.enabled }}
+  - name: RADARR__POSTGRES_HOST
+    value: {{ .Values.radarr.postgres.host }}
+  - name: RADARR__POSTGRES_MAIN_DB
+    value: {{ .Values.radarr.postgres.mainDb }}
+  - name: RADARR__POSTGRES_LOG_DB
+    value: {{ .Values.radarr.postgres.logDb }}
+  - name: RADARR__POSTGRES_PORT
+    value: {{ .Values.radarr.postgres.port | quote }}
+  - name: RADARR__POSTGRES_USER
+    value: {{ .Values.radarr.postgres.username }}
+  - name: RADARR__POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: radarr-config-secret
+        key: postgresPassword
+  {{ end }}
+
+{{- if eq .Values.radarr.configSecret.existingSecret "" }}
+secrets:
+  config-secret:
+    enabled: true
+    stringData:
+      {{- if .Values.radarr.postgres.enabled }}
+      postgresPassword: {{ .Values.radarr.postgres.password | quote }}
+      postgresMasterPassword: {{ index (lookup "v1" "Secret" "postgres" "postgres-postgresql") "data" "postgres-password" | b64dec | quote }}
+      {{- end }}
+      apiKey: {{ .Values.radarr.apiKey | default (randAlphaNum 32 | lower) | quote }}
+{{- end }}
+
+{{ if not .Values.persistence.config.enabled }}
+persistence:
+  config:
+    enabled: true
+    mountPath: /config
+    type: emptyDir
+{{ end }}
+
+{{ if .Values.radarr.metrics.enabled }}
+additionalContainers:
+  exporter:
+    name: exporter
+    image: "{{ .Values.radarr.metrics.exporter.image.repository }}:{{ .Values.radarr.metrics.exporter.image.tag }}"
+    imagePullPolicy: {{ .Values.radarr.metrics.exporter.image.pullPolicy }}
+    args: ["radarr"]
+    env:
+      - name: URL
+        value: "http://localhost"
+      - name: CONFIG
+        value: "/config/config.xml"
+      - name: PORT
+        value: "{{ .Values.radarr.metrics.exporter.env.port }}"
+      - name: ENABLE_ADDITIONAL_METRICS
+        value: "{{ .Values.radarr.metrics.exporter.env.additionalMetrics }}"
+      - name: ENABLE_UNKNOWN_QUEUE_ITEMS
+        value: "{{ .Values.radarr.metrics.exporter.env.unknownQueueItems }}"
+    ports:
+      - name: metrics
+        containerPort: {{ .Values.radarr.metrics.exporter.env.port }}
+    volumeMounts:
+      - name: config
+        mountPath: /config
+        readOnly: true
+        {{ if .Values.persistence.config.subPath }}
+        subPath: {{ .Values.persistence.config.subPath }}
+        {{ end }}
+
+service:
+  metrics:
+    enabled: true
+    ports:
+      metrics:
+        enabled: true
+        protocol: TCP
+        port: 80
+        targetPort: {{ .Values.radarr.metrics.exporter.env.port }}
+
+serviceMonitor:
+  main:
+    enabled: true
+    serviceName: '{{ include "bjw-s.common.lib.chart.names.fullname" $ }}-metrics'
+    endpoints:
+    - port: metrics
+      scheme: http
+      path: /metrics
+      interval: {{ .Values.radarr.metrics.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.radarr.metrics.serviceMonitor.scrapeTimeout }}
+{{ end }}
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "radarr.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}
