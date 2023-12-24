@@ -279,3 +279,7 @@ poetry.lock
 
 # Ignore dynaconf secret files
 .secrets.*
+
+
+**/charts/*.tgz
+.DS_Store
