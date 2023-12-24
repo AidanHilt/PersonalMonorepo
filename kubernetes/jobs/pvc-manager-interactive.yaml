@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pvc-manager-{{ pvc_name }}
+spec:
+  template:
+    spec:
+      containers:
+        - name: busybox
+          image: busybox
+          command: ["sleep", "3600"]
+          volumeMounts:
+            - name: vol
+              mountPath: /pvc
+          securityContext:
+            runAsUser: 1000
+      restartPolicy: Never
+      volumes:
+        - name: vol
+          persistentVolumeClaim:
+            claimName: "{{ pvc_name }}"

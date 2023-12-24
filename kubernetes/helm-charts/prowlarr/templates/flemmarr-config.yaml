@@ -47,7 +47,7 @@ data:
           infoLink: https://wiki.servarr.com/prowlarr/supported-indexers#1337x
           tags: []
           appProfileId: 1
-          id: 1
+          id: 0
         - definitionName: badasstorrents
           enable: true
           sortName: badass torrents
@@ -59,6 +59,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
+          appProfileId: 1
           id: 0
         - definitionName: eztv
           enable: true
@@ -71,6 +72,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
+          appProfileId: 1
           id: 0
         - definitionName: glodls
           enable: true
@@ -83,6 +85,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
+          appProfileId: 1
           id: 0
         - enable: true
           sortName: internet archive
@@ -94,6 +97,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
+          appProfileId: 1
           id: 0
         - sortName: kickasstorrents to
           name: kickasstorrents.to
@@ -104,7 +108,9 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
+          appProfileId: 1
           id: 0
+          enable: true
         - definitionName: limetorrents
           enable: true
           sortName: limetorrents
@@ -116,6 +122,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
+          appProfileId: 1
           id: 0
         - definitionName: linuxtracker
           enable: true
@@ -128,6 +135,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
+          appProfileId: 1
           id: 0
         - definitionName: thepiratebay
           sortName: pirate bay
@@ -139,7 +147,9 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
+          appProfileId: 1
           id: 0
+          enable: true
         - definitionName: yts
           enable: true
           sortName: yts
@@ -151,6 +161,7 @@ data:
           implementationName: Cardigann
           implementation: Cardigann
           configContract: CardigannSettings
+          appProfileId: 1
           id: 0
       indexerproxy:
         - id: 0

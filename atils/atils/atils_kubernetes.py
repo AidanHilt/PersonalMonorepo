@@ -214,3 +214,12 @@ def get_and_decode_secret(secret_name, secret_namespace):
 
     except Exception as e:
         logging.error(f"An error occurred: {e}")
+
+
+def get_current_namespace() -> str:
+    contexts, active_context = k8s_config.list_kube_config_contexts()
+
+    if "namespace" in active_context["context"].keys():
+        return active_context["context"]["namespace"]
+    else:
+        return "default"
