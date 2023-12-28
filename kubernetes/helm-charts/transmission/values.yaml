@@ -86,7 +86,7 @@ vpn:
   enabled: false
   image:
     # -- Specify the openvpn client image
-    repository: dperson/openvpn-client
+    repository: ghcr.io/utkuozdemir/dperson-openvpn-client
     # -- Specify the openvpn client image tag
     tag: latest
     # -- Specify the openvpn client image pull policy
