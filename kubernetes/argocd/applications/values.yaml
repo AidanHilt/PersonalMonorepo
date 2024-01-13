@@ -38,3 +38,5 @@ radarr:
   enabled: true
 transmission:
   enabled: true
+flaresolverr:
+  enabled: true
