@@ -36,3 +36,5 @@ sonarr:
   enabled: true
 radarr:
   enabled: true
+transmission:
+  enabled: true

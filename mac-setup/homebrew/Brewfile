@@ -16,10 +16,11 @@ cask 'flycut'
 cask 'iterm2'
 cask 'duet'
 cask 'keka'
-cask 'microsoft-office'
 cask 'tor-browser'
 cask 'prismlauncher'
+cask 'paintbrush'
 
+brew 'mas'
 brew 'sevenzip'
 brew 'syncthing'
 

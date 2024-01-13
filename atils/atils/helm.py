@@ -4,6 +4,7 @@ import logging
 import os
 import subprocess
 import sys
+import time
 
 import watchfiles
 
@@ -83,9 +84,13 @@ async def watch_values_path(chart_name: str):
     values_file = os.path.join(
         settings.config_directory, "helm-values", f"{chart_name}.yaml"
     )
-
-    async for change in watchfiles.awatch(values_file):
-        install_helm_chart(chart_name, helm_chart_dir)
+    # This is ugly, but makes sense. This will be called by a looping function anyway
+    while True:
+        if os.path.isfile(values_file):
+            async for change in watchfiles.awatch(values_file):
+                install_helm_chart(chart_name, helm_chart_dir)
+        else:
+            time.sleep(5)
 
 
 async def auto_deploy_helm_chart(chart_name: str):
