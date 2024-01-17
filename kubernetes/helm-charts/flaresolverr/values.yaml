@@ -21,4 +21,5 @@ service:
   main:
     ports:
       http:
-        port: 8191
+        port: 80
+        targetPort: 8191

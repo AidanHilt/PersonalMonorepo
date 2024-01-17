@@ -13,7 +13,7 @@ spec:
     volumeMounts:
       - name: pvc-youtrack-conf
         mountPath: /opt/youtrack/conf
-      
+
       - name: pvc-youtrack-logs
         mountPath: /opt/youtrack/logs
 
@@ -21,7 +21,7 @@ spec:
     - name: pvc-youtrack-conf
       persistentVolumeClaim:
         claimName: pvc-youtrack-conf
-    
+
     - name: pvc-youtrack-logs
       persistentVolumeClaim:
         claimName: pvc-youtrack-logs

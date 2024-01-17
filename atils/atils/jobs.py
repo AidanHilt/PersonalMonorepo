@@ -47,6 +47,8 @@ def main(args: str):
         help="The namespace the PVC is located in. Defaults to current namespace",
     )
 
+    list_parser = subparsers.add_parser("list")
+
     args = parser.parse_args(args)
 
     if args.subparser_name == "run":
@@ -70,6 +72,27 @@ def main(args: str):
                 launch_pvc_manager(args_dict["pvc_name"], current_namespace)
         else:
             launch_pvc_manager(args_dict["pvc_name"], current_namespace)
+    elif args.subparser_name == "list":
+        list_available_jobs()
+    else:
+        logging.error(f"Unrecognized command {args.subparser_name}")
+        exit(1)
+
+
+def list_available_jobs():
+    jobs_dir = config.get_full_atils_dir("JOBS_DIR")
+
+    root, dirs, files = next(os.walk(jobs_dir))
+    for job in dirs:
+        description = "No description provided"
+        description_location = os.path.join(jobs_dir, job, "description.txt")
+        if os.path.exists(description_location):
+            with open(description_location) as file:
+                description = file.read()
+                if len(description) > 250:
+                    description = description[0:251] + "..."
+
+        print(f"{job}:      {description}")
 
 
 def get_controller_from_pvc(pvc_name: str, namespace: str = ""):
@@ -204,7 +227,6 @@ def launch_pvc_manager(pvc_name: str, namespace: str):
             )
 
         with client.ApiClient() as api_client:
-            core_api_client = client.CoreV1Api(api_client)
             # Launch the pod, probably with a kubectl command
             rendered_job = render_job("pvc-manager-interactive", {"pvc_name": pvc_name})
             launch_job(rendered_job)
@@ -215,6 +237,7 @@ def launch_pvc_manager(pvc_name: str, namespace: str):
             api_instance = client.CoreV1Api(api_client)
             pods = api_instance.list_namespaced_pod(
                 namespace,
+                # TODO This is hardcoded
                 label_selector="job-name=pvc-manager-pvc-jellyfin",
                 field_selector="status.phase!=Succeeded",
             )
@@ -232,7 +255,7 @@ def launch_pvc_manager(pvc_name: str, namespace: str):
                 )
                 print("Copied kubectl exec command to clipboard")
 
-            # I'd like to have this automatically open the pod, but that's a pain right now
+            # TODO I'd like to have this automatically open the pod, but that's a pain right now
             # response = stream(
             #     core_api_client.connect_get_namespaced_pod_exec(
             #         "qbittorrent-68cf455bb9-nzpvb",
@@ -272,9 +295,9 @@ def launch_pvc_manager(pvc_name: str, namespace: str):
 def render_job(job_name: str, args=None):
     # Check if a file in settings.JOBS_DIR exists with the given job name
     jobs_dir = config.get_full_atils_dir("JOBS_DIR")
-    if os.path.exists(os.path.join(jobs_dir, job_name + ".yaml")):
+    if os.path.exists(os.path.join(jobs_dir, job_name, "job.yaml")):
         rendered_job = template_utils.template_external_file(
-            os.path.join(jobs_dir, job_name + ".yaml"), args
+            os.path.join(jobs_dir, job_name, "job.yaml"), args
         )
         return yaml.safe_load(rendered_job)
 
