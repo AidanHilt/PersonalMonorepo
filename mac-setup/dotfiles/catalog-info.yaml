@@ -11,5 +11,5 @@ metadata:
 spec:
   type: configuration-storage
   lifecycle: production
-  owner: artist-relations-team
-  system: public-websites
+  owner: mac-maintainers
+  system: mac-setup
