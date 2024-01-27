@@ -40,3 +40,5 @@ transmission:
   enabled: true
 flaresolverr:
   enabled: true
+video-stack-configuration:
+  enabled: true
