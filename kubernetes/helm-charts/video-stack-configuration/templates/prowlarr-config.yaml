@@ -1,8 +1,8 @@
-hostname: prowlarr
+hostname: {{ .Values.prowlarr.url }}
 port: 80
 protocol: http
-url_base: prowlarr
-api_key: {{ .Values.prowlarrApiKey }}
+url_base: {{ .Values.prowlarr.urlBase }}
+api_key: {{ .Values.prowlarr.apiKey }}
 settings:
   indexers:
     indexers:
@@ -199,43 +199,46 @@ settings:
     applications:
       delete_unmanaged: false
       definitions:
+        {{- $prowlarrUrl := printf "http://%s%s" .Values.prowlarr.url .Values.prowlarr.baseUrl -}}
+        {{- $sonarrUrl := printf "http://%s%s" .Values.sonarr.url .Values.sonarr.baseUrl -}}
+        {{- $radarrUrl := printf "http://%s%s" .Values.radarr.url .Values.radarr.baseUrl -}}
         Radarr:
           type: radarr
-          prowlarr_url: http://prowlarr/prowlarr
-          base_url: http://radarr/radarr
+          prowlarr_url: {{ $prowlarrUrl }}
+          base_url: {{ $radarrUrl }}
           sync_level: full-sync
           sync_categories:
-          - movies/foreign
+          - movies/bluray
           - movies/dvd
-          - movies/web-dl
-          - movies/hd
+          - movies/foreign
           - movies/3d
           - movies/sd
+          - movies/web-dl
+          - movies/hd
           - movies/x265
-          - movies/uhd
           - movies/other
           - movies
-          - movies/bluray
+          - movies/uhd
           tags: []
           instance_name: null
-          api_key: {{ .Values.radarrApiKey }}
+          api_key: {{ .Values.radarr.apiKey }}
         Sonarr:
           type: sonarr
-          prowlarr_url: http://prowlarr/prowlarr
-          base_url: http://sonarr/sonarr
+          prowlarr_url: {{ $prowlarrUrl }}
+          base_url: {{ $radarrUrl }}
           sync_level: full-sync
           sync_categories:
-          - tv/other
           - tv/x265
-          - tv/hd
           - tv/uhd
-          - tv/foreign
-          - tv/sd
           - tv/web-dl
+          - tv/sd
           - tv
+          - tv/other
+          - tv/foreign
+          - tv/hd
           tags: []
           instance_name: null
-          api_key: {{ .Values.sonarrApiKey }}
+          api_key: {{ .Values.sonarr.apiKey }}
           anime_sync_categories:
           - tv/anime
           sync_anime_standard_format_search: false
@@ -258,9 +261,9 @@ settings:
         port: 80
         use_ssl: false
         url_base: /transmission/
-        username: {{ .Values.transmissionUsername }}
-        password: {{ .Values.transmissionPassword }}
-        category: null
+        username: {{ .Values.transmission.username }}
+        password: {{ .Values.transmission.password }}
+        category: prowlarr-random
         directory: null
         client_priority: last
         add_paused: false
@@ -286,8 +289,17 @@ settings:
       username: null
       password: null
       certificate_validation: enabled
+    proxy:
+      enable: false
+      proxy_type: http
+      hostname: null
+      port: 8080
+      username: null
+      password: null
+      ignored_addresses: []
+      bypass_proxy_for_local_addresses: true
     logging:
-      log_level: {{ .Values.prowlarrLoggingLevel }}
+      log_level: {{ .Values.prowlarr.loggingLevel }}
     analytics:
       send_anonymous_usage_data: false
     updates:
@@ -309,3 +321,4 @@ settings:
     enable_color_impaired_mode: false
     theme: auto
     ui_language: en
+

@@ -13,7 +13,7 @@ env:
   # -- Password to access the Web UI
   TRANSMISSION_RPC_PASSWORD: ""
   # -- Torrent download directory
-  TRANSMISSION_DOWNLOAD_DIR: /downloads/complete
+  TRANSMISSION_DOWNLOAD_DIR: /downloads/
   # -- Enable incomplete download directory
   TRANSMISSION_INCOMPLETE_DIR_ENABLED: false
   # -- Incomplete download directory

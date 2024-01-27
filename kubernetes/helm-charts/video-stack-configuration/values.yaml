@@ -1,11 +1,24 @@
-prowlarrApiKey: "aaaaaaaabbbbbbbbccccccccddddddddd"
-prowlarrLoggingLevel: INFO
+prowlarr:
+  url: prowlarr
+  urlBase: /prowlarr
+  enabled: true
+  apiKey: "aaaaaaaabbbbbbbbccccccccddddddddd"
+  loggingLevel: INFO
 
-sonarrarrApiKey: "aaaaaaaabbbbbbbbccccccccddddddddd"
-sonarrLoggingLevel: INFO
+radarr:
+  url: radarr
+  urlBase: /radarr
+  enabled: true
+  apiKey: "aaaaaaaabbbbbbbbccccccccddddddddd"
+  loggingLevel: INFO
 
-radarrApiKey: "aaaaaaaabbbbbbbbccccccccddddddddd"
-radarrLoggingLevel: INFO
+sonarr:
+  url: sonarr
+  urlBase: /sonarr
+  enabled: true
+  apiKey: "aaaaaaaabbbbbbbbccccccccddddddddd"
+  loggingLevel: INFO
 
-transmissionUsername: ""
-transmissionPassword: ""
+transmission:
+  username: username
+  password: password
