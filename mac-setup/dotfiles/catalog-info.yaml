@@ -1,7 +1,8 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: Mac dotfiles
+  name: mac-dotfiles
+  title: Mac Dotfiles
   description: The dotfiles used to configure my Mac terminal
   tags:
     - mac
