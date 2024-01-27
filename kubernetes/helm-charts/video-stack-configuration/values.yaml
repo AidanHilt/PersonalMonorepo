@@ -1,0 +1,26 @@
+prowlarr:
+  url: prowlarr
+  urlBase: /prowlarr
+  enabled: true
+  apiKey: "aaaaaaaabbbbbbbbccccccccddddddddd"
+  loggingLevel: INFO
+
+radarr:
+  url: radarr
+  urlBase: /radarr
+  enabled: true
+  apiKey: "aaaaaaaabbbbbbbbccccccccddddddddd"
+  loggingLevel: INFO
+
+sonarr:
+  url: sonarr
+  urlBase: /sonarr
+  enabled: true
+  apiKey: "aaaaaaaabbbbbbbbccccccccddddddddd"
+  loggingLevel: INFO
+
+transmission:
+  username: username
+  password: password
+
+namespace: videos

@@ -1,0 +1,147 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "transmission.hardcodedValues" -}}
+
+{{- if .Values.transmission.alternateUi.enabled }}
+initContainers:
+  custom-webui:
+    image: curlimages/curl:latest
+    command:
+      - "/bin/sh"
+      - "-c"
+      - "curl -o- -sL {{.Values.transmission.alternateUi.uiLocation}} | tar xzf - -C /custom"
+    volumeMounts:
+      - name: custom
+        mountPath: /custom
+{{- end }}
+
+{{- if .Values.vpn.enabled }}
+additionalContainers:
+  openvpn:
+    image: "{{ .Values.vpn.image.repository }}:{{ .Values.vpn.image.tag }}"
+    imagePullPolicy: {{ .Values.vpn.image.pullPolicy }}
+    {{- with .Values.vpn.securityContext }}
+    securityContext:
+      {{- toYaml . | nindent 5 -}}
+    {{- end }}
+    {{- with .Values.vpn.env }}
+    env:
+      {{- . | toYaml | nindent 5 }}
+    {{- end }}
+    {{- with .Values.vpn.envFrom }}
+    envFrom:
+      {{- . | toYaml | nindent 5 }}
+    {{- end }}
+    {{- with .Values.vpn.args }}
+    args:
+      {{- . | toYaml | nindent 5 }}
+    {{- end }}
+    {{- if or .Values.vpn.openvpn.auth .Values.vpn.openvpn.authSecret }}
+    envFrom:
+      - secretRef:
+        {{- if .Values.vpn.authSecret }}
+          name: {{ .Values.vpn.authSecret }}
+        {{- else }}
+          name: {{ include "bjw-s.common.lib.chart.names.fullname" . }}-openvpn
+        {{- end }}
+    {{- end }}
+    {{- if or .Values.vpn.configFile .Values.vpn.configFileSecret .Values.vpn.scripts.up .Values.vpn.scripts.down .Values.vpn.additionalVolumeMounts .Values.persistence.shared.enabled }}
+    volumeMounts:
+    {{- if or .Values.vpn.configFile .Values.vpn.configFileSecret }}
+      {{- if .Values.vpn.vpnConfigFileSecret }}
+      - name: {{ .Values.vpn.vpnConfigFileSecret }}
+      {{- else }}
+      - name: vpnconfig
+      {{- end }}
+        mountPath: /vpn/vpn.conf
+        subPath: vpnConfig
+    {{- end }}
+    {{- if .Values.vpn.scripts.up }}
+      - name: vpnscript
+        mountPath: /vpn/up.sh
+        subPath: up.sh
+    {{- end }}
+    {{- if .Values.vpn.scripts.down }}
+      - name: vpnscript
+        mountPath: /vpn/down.sh
+        subPath: down.sh
+    {{- end }}
+    {{- if .Values.persistence.shared.enabled }}
+      - mountPath: {{ .Values.persistence.shared.mountPath }}
+        name: shared
+    {{- end }}
+    {{- with .Values.vpn.additionalVolumeMounts }}
+      {{- toYaml . | nindent 5 }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.vpn.livenessProbe }}
+    livenessProbe:
+      {{- toYaml . | nindent 5 }}
+    {{- end -}}
+    {{- with .Values.vpn.resources }}
+    resources:
+      {{- toYaml . | nindent 5 }}
+    {{- end }}
+
+{{- if or .Values.vpn.scripts.up .Values.vpn.scripts.down }}
+configMaps:
+  scripts-config:
+    enabled: true
+    data:
+    {{- if .Values.vpn.scripts.up }}
+      up: {{ toYaml .Values.vpn.scripts.up | indent 5 }}
+    {{- end }}
+    {{- if .Values.vpn.scripts.down }}
+      down: {{ toYaml .Values.vpn.scripts.down | indent 5 }}
+    {{- end }}
+{{- end }}
+
+{{- end }}
+
+persistence:
+  {{- if .Values.transmission.alternateUi.enabled }}
+  custom:
+    enabled: true
+    type: emptyDir
+  {{- end }}
+  {{- if .Values.vpn.enabled }}
+  vpnauth:
+    enabled: true
+    type: secret
+    name: {{ include "bjw-s.common.lib.chart.names.fullname" $ }}-openvpn
+  {{- if or .Values.vpn.scripts.up .Values.vpn.scripts.down }}
+  vpnscript:
+    type: configMap
+    enabled: true
+    name: transmission-scripts-config
+    items:
+    {{- if .Values.vpn.scripts.up }}
+      - key: up
+        path: up.sh
+        mode: 0777
+    {{- end }}
+    {{- if .Values.vpn.scripts.down }}
+      - key: down
+        path: down.sh
+        mode: 0777
+    {{- end }}
+  {{- end }}
+  {{- if or .Values.vpn.configFile .Values.vpn.configFileSecret }}
+  vpnconfig:
+    enabled: true
+    type: secret
+    {{- if .Values.vpn.configFileSecret }}
+    name: {{ .Values.vpn.configFileSecret }}
+    {{- else }}
+    name: {{ include "bjw-s.common.lib.chart.names.fullname" . }}-vpnconfig
+    {{- end }}
+    items:
+    - key: vpnConfig
+      path: vpnConfig
+  {{- end }}
+  {{- end }}
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "transmission.hardcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}

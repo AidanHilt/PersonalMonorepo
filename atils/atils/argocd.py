@@ -7,7 +7,6 @@ import time
 import webbrowser
 
 import yaml
-from termcolor import colored
 
 from atils import atils_kubernetes as k8s_utils
 from atils.common import config, settings, template_utils
@@ -109,6 +108,43 @@ def get_argocd_password():
     )
 
 
+def sync_master_stack_application(application):
+    auth_response = requests.post(
+        f"{settings.argocd_url}/api/v1/session",
+        data=json.dumps(
+            {"username": settings.argocd_username, "password": settings.argocd_password}
+        ),
+        verify=False,
+    )
+
+    token = auth_response.json()["token"]
+
+    response = requests.post(
+        f"{settings.argocd_url}/api/v1/applications/master-stack/sync",
+        data=json.dumps(
+            {
+                "resources": [
+                    {
+                        "kind": "Application",
+                        "name": application,
+                        "namespace": "argocd",
+                        "group": "argoproj.io",
+                    }
+                ]
+            }
+        ),
+        verify=False,
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    if response.status_code == 200:
+        logging.info(f"Synced {application} successfully")
+    else:
+        logging.error(f"Failed to sync {application}")
+        logging.error(response.text)
+
+
+# TODO sync so that the app recreates when we run this
 def enable_application(application: str) -> None:
     try:
         api_instance = client.CustomObjectsApi()
@@ -169,8 +205,6 @@ def enable_application(application: str) -> None:
                 if application == edited_parameters[i].get("name").split(".")[0]:
                     del edited_parameters[i]
 
-            print(edited_parameters)
-
             # Create JSON merge patch to update the helm parameters
             json_patch = {
                 "spec": {"source": {"helm": {"parameters": edited_parameters}}}
@@ -181,7 +215,11 @@ def enable_application(application: str) -> None:
                 group, version, namespace, plural, name, json_patch
             )
 
-            logging.info(f"{application} successfully enabled")
+            logging.debug(
+                f"{application} enabled in master-stack. We now need to sync it"
+            )
+
+            sync_master_stack_application(application)
 
         else:
             logging.error(
@@ -194,6 +232,7 @@ def enable_application(application: str) -> None:
         sys.exit(1)
 
 
+# Sync so that the app deletes when we run this
 def disable_application(application: str) -> None:
     try:
         api_instance = client.CustomObjectsApi()
@@ -262,11 +301,38 @@ def disable_application(application: str) -> None:
                 group, version, namespace, plural, name, json_patch
             )
 
-            logging.info(f"{application} successfully disabled")
+            logging.info(
+                f"{application} disabled in master-stack, now we need to delete it"
+            )
+
+            api = client.CustomObjectsApi()
+
+            response = api.get_namespaced_custom_object(
+                group="argoproj.io",
+                version="v1alpha1",
+                namespace="argocd",
+                plural="applications",
+                name=application,
+            )
+
+            # Delete application
+            if response:
+                logging.debug(
+                    f"We detected that {application} remained, so we'll delete it"
+                )
+                api.delete_namespaced_custom_object(
+                    group="argoproj.io",
+                    version="v1alpha1",
+                    namespace="argocd",
+                    plural="applications",
+                    name=application,
+                )
+
+            logging.info("Application deleted")
 
         else:
             logging.error(
-                f"Error: Application '{application}' not found in the master-stack"
+                f"Error: Application '{application}' not found in master-stack"
             )
             sys.exit(1)
 

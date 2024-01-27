@@ -1,0 +1,14 @@
+apiVersion: v2
+name: transmission
+description: A Helm chart to deploy the Transmission BitTorrent client, with options for a VPN sidecar, and alternate UIs
+
+type: application
+
+version: 0.1.0
+
+appVersion: "4.0.4"
+
+dependencies:
+  - name: common
+    repository: https://bjw-s.github.io/helm-charts/
+    version: 1.5.1

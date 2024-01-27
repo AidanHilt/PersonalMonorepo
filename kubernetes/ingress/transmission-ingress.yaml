@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: transmission
+  namespace: videos
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /transmission
+            pathType: Prefix
+            backend:
+              service:
+                name: transmission
+                port:
+                  number: 80

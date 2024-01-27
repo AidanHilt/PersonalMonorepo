@@ -1,7 +1,7 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "sonarr.harcodedValues" -}}
+{{- define "sonarr.hardcodedValues" -}}
 env:
   - name: SONARR__API_KEY
     valueFrom:
@@ -14,7 +14,7 @@ env:
   {{ if .Values.sonarr.postgres.enabled }}
   - name: SONARR__POSTGRES_HOST
     value: {{ .Values.sonarr.postgres.host }}
-  - name: SONARR__POSTGRES_MAIN_DB 
+  - name: SONARR__POSTGRES_MAIN_DB
     value: {{ .Values.sonarr.postgres.mainDb }}
   - name: SONARR__POSTGRES_LOG_DB
     value: {{ .Values.sonarr.postgres.logDb }}
@@ -101,5 +101,5 @@ serviceMonitor:
 {{ end }}
 
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "sonarr.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "sonarr.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

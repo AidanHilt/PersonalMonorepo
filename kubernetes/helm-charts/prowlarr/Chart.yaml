@@ -4,9 +4,9 @@ description: A Helm chart for installing and managing Prowlarr. Based on the bjw
 
 type: application
 
-version: 0.0.1
+version: 0.0.3
 
-appVersion: "1.8.6.3946"
+appVersion: "1.10.5"
 
 dependencies:
   - name: common

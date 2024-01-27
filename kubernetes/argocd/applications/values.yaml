@@ -34,3 +34,11 @@ ingress:
   enabled: true
 sonarr:
   enabled: true
+radarr:
+  enabled: true
+transmission:
+  enabled: true
+flaresolverr:
+  enabled: true
+video-stack-configuration:
+  enabled: true

@@ -1,0 +1,25 @@
+{{- if .Values.radarr.postgres.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: radarr-postgres-init
+data:
+  setup.sql: |-
+    SET vars.password TO :'v1';
+
+    -- Create user if not exists
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT FROM pg_catalog.pg_user WHERE usename = '{{ .Values.radarr.postgres.username }}') THEN
+        CREATE USER {{ .Values.radarr.postgres.username }};
+      END IF;
+    END $$;
+
+    -- Grant user superuser permissions
+    ALTER USER {{ .Values.radarr.postgres.username }} WITH SUPERUSER;
+    ALTER USER {{ .Values.radarr.postgres.username }} WITH PASSWORD :v1;
+
+    -- Create databases if not exists
+    CREATE DATABASE {{ .Values.radarr.postgres.mainDb }};
+
+    CREATE DATABASE {{ .Values.radarr.postgres.logDb }};
+{{- end }}

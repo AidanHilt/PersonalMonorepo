@@ -1,0 +1,22 @@
+{{ if .Values.video-stack-application.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: video-stack-application
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
+    targetRevision: {{ .Values.env }}
+    path: kubernetes/helm-charts/video-stack-application
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: videos
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+{{end}}
