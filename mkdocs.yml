@@ -1,0 +1,4 @@
+site_name: aidan-hilt-stack
+
+nav:
+  - Home: index.md
