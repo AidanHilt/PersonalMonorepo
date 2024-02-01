@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: aidan-hilt-personal-monorepo
+spec:
+  type: url
+  targets:
+    - ./mac-setup/dotfiles/catalog-info.yaml
+    - ./mac-setup/homebrew/catalog-info.yaml
+    - ./mac-setup/scripts/catalog-info.yaml

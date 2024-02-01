@@ -98,7 +98,7 @@ catalog:
 
     - type: url
       # TODO have this point to the master branch
-      target: https://github.com/AidanHilt/PersonalMonorepo/blob/toolshed-idp/mac-setup/dotfiles/catalog-info.yaml
+      target: https://github.com/AidanHilt/PersonalMonorepo/blob/toolshed-idp/catalog-info.yaml
 
     ## Uncomment these lines to add more example data
     # - type: url
