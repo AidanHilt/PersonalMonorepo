@@ -1,0 +1,18 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  name: mac-configuration-scripts
+  title: Mac Configuration Scripts
+  description: These are scripts that we run to install, or enable different features in a repeatable way.
+  tags:
+    - mac
+    - shell-config
+    - zsh
+    - shell-scripts
+spec:
+  type: configuration-storage
+  lifecycle: production
+  owner: mac-maintainers
+  system: mac-setup
