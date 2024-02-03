@@ -10,3 +10,5 @@ spec:
     - ./mac-setup/scripts/catalog-info.yaml
     - ./toolshed/static-configuration/entities.yaml
     - ./toolshed/static-configuration/org.yaml
+  rules:
+    - allow: [Template, User, Group]
