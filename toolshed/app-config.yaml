@@ -80,18 +80,6 @@ catalog:
   rules:
     - allow: [Component, System, API, Resource, Location]
   locations:
-    # Local example template
-    - type: file
-      target: ../../static-configuration/template/template.yaml
-      rules:
-        - allow: [Template]
-
-    # Local example organizational data
-    - type: file
-      target: ../../static-configuration/org.yaml
-      rules:
-        - allow: [User, Group]
-
     - type: url
       # TODO have this point to the master branch
       target: https://github.com/AidanHilt/PersonalMonorepo/blob/toolshed-idp/catalog-info.yaml

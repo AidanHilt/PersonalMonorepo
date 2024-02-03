@@ -9,3 +9,4 @@ spec:
     - ./mac-setup/homebrew/catalog-info.yaml
     - ./mac-setup/scripts/catalog-info.yaml
     - ./toolshed/static-configuration/entities.yaml
+    - ./toolshed/static-configuration/org.yaml
