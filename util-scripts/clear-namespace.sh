@@ -15,8 +15,10 @@ if ! kubectl get namespace "$NAMESPACE" > /dev/null 2>&1; then
   exit 1
 fi
 
-# Delete all resources in the namespace
-kubectl delete all --all -n "$NAMESPACE" --grace-period 0 --force
+# Get all resource types available on the cluster
+RESOURCE_TYPES=$(kubectl api-resources --verbs=delete --namespaced=true -o name | sort)
 
-# Delete any remaining resources in the namespace (e.g. ConfigMaps, Secrets, PersistentVolumeClaims, etc.)
-kubectl delete --all configmaps,secrets,persistentvolumeclaims,roles,rolebindings --namespace "$NAMESPACE"
+# Delete all resources in the namespace
+for RESOURCE_TYPE in $RESOURCE_TYPES; do
+  kubectl delete --all "$RESOURCE_TYPE" --namespace="$NAMESPACE"
+done

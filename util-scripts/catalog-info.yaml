@@ -3,14 +3,14 @@ kind: Component
 metadata:
   annotations:
     backstage.io/techdocs-ref: dir:.
-  name: mac-configuration-scripts
-  title: Mac Configuration Scripts
-  description: These are scripts used to install software that can't be installed with Homebrew, and enable some features.
+  name: util-scripts
+  title: Utility Scripts
+  description: Random little scripts that do random little things
   tags:
-    - mac
-    - shell-config
-    - zsh
     - shell-scripts
+    - kubernetes
+    - helm
+    - argocd
 spec:
   type: configuration-storage
   lifecycle: production

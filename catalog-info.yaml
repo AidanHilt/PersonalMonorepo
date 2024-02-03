@@ -8,3 +8,4 @@ spec:
     - ./mac-setup/dotfiles/catalog-info.yaml
     - ./mac-setup/homebrew/catalog-info.yaml
     - ./mac-setup/scripts/catalog-info.yaml
+    - ./toolshed/static-configuration/entities.yaml

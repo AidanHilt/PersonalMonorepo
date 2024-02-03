@@ -80,10 +80,6 @@ catalog:
   rules:
     - allow: [Component, System, API, Resource, Location]
   locations:
-    # Local example data, file locations are relative to the backend process, typically `packages/backend`
-    - type: file
-      target: ../../static-configuration/entities.yaml
-
     # Local example template
     - type: file
       target: ../../static-configuration/template/template.yaml
