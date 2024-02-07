@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  name: helm-charts
+  title: Helm Charts
+  description: All of the custom Helm charts developed as part of this project
+  tags:
+    - kubernetes deployment helm
+spec:
+  type: configuration-storage
+  lifecycle: production
+  owner: kubernetes-maintainers
+  system: kubernetes-deployment-management

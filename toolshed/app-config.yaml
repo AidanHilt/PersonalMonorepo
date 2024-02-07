@@ -78,12 +78,10 @@ catalog:
     entityFilename: catalog-info.yaml
     pullRequestBranchName: backstage-integration
   rules:
-    - allow: [Component, System, API, Resource, Location]
+    - allow: [Component, System, API, Resource, Location, User, Group, Domain]
   locations:
     - type: url
       # TODO have this point to the master branch
       target: https://github.com/AidanHilt/PersonalMonorepo/blob/toolshed-idp/catalog-info.yaml
-
-    ## Uncomment these lines to add more example data
-    # - type: url
-    #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all.yaml
+      rules:
+        - allow: [Template, User, Group, Domain]

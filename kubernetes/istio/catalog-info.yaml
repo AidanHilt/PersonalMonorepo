@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  name: istio
+  title: Istio Configuration
+  description: This stores any configuration files that allow Istio to run properly
+  tags:
+    - istio kubernetes networking
+spec:
+  type: configuration-storage
+  lifecycle: production
+  owner: kubernetes-maintainers
+  system: kubernetes-networking-management
