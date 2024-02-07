@@ -7,7 +7,9 @@ metadata:
   title: Helm Charts
   description: All of the custom Helm charts developed as part of this project
   tags:
-    - kubernetes deployment helm
+    - kubernetes
+    - deployment
+    - helm
 spec:
   type: configuration-storage
   lifecycle: production

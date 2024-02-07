@@ -7,7 +7,9 @@ metadata:
   title: MetalLB Configuration
   description: Contains confguration for MetalLB, which lets us have load balancers on our bare metal cluster
   tags:
-    - metallb kubernetes networking
+    - metallb
+    - kubernetes
+    - networking
 spec:
   type: configuration-storage
   lifecycle: production

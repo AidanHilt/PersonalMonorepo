@@ -7,7 +7,9 @@ metadata:
   title: Kind Configuration
   description: Stores the configuration for kind, which we use for local development without needing external VMs
   tags:
-    - kind kubernetes cluster-config
+    - kind
+    - kubernetes
+    - cluster-config
 spec:
   type: configuration-storage
   lifecycle: production

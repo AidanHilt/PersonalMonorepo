@@ -7,7 +7,10 @@ metadata:
   title: Jobs
   description: Contains jobs that we run on kubernetes, for various tasks
   tags:
-    - kubernetes management jobs atils
+    - kubernetes
+    - management
+    - jobs
+    - atils
 spec:
   type: configuration-storage
   lifecycle: production

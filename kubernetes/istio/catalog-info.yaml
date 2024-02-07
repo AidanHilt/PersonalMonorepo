@@ -7,7 +7,10 @@ metadata:
   title: Istio Configuration
   description: This stores any configuration files that allow Istio to run properly
   tags:
-    - istio kubernetes networking
+    - istio
+    - kubernetes
+    - networking
+
 spec:
   type: configuration-storage
   lifecycle: production

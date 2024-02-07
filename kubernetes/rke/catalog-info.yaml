@@ -7,7 +7,9 @@ metadata:
   title: RKE configuration
   description: Contains configurations for Rancher Kubernetes Engine, which is used in  prod and preprod
   tags:
-    - kuberentes cluster-config rke
+    - kuberentes
+    - cluster-config
+    - rke
 spec:
   type: configuration-storage
   lifecycle: production

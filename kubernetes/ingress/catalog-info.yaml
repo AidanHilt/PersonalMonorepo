@@ -7,7 +7,9 @@ metadata:
   title: Ingress Configuration
   description: This stores all of the ingresses we use, when we're developing without Istio
   tags:
-    - kubernetes networking ingress
+    - kubernetes
+    - networking
+    - ingress
 spec:
   type: configuration-storage
   lifecycle: production
