@@ -19,7 +19,7 @@
         dest: "buffer/{{inventory_hostname}}_rsa.pub"
         flat: yes
 
-    - name: Add to authorized_keys using Ansible module
+    - name: Add to authorized_keys using
       authorized_key:
         user: "{{ ansible_user }}"
         state: present

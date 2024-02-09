@@ -5,9 +5,8 @@ metadata:
 spec:
   type: url
   targets:
-    - ./mac-setup/dotfiles/catalog-info.yaml
-    - ./mac-setup/homebrew/catalog-info.yaml
-    - ./mac-setup/scripts/catalog-info.yaml
+    - ./mac-setup/catalog-info.yaml
     - ./toolshed/static-configuration/entities.yaml
     - ./toolshed/static-configuration/org.yaml
     - ./kubernetes/catalog-info.yaml
+    - ./server-setup/catalog-info.yaml

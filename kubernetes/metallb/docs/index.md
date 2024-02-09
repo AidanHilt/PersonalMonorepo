@@ -1,1 +1,2 @@
-#
+# MetalLB Configuration
+This kustomization setup adds an [IPAddressPool](https://metallb.universe.tf/configuration/_advanced_ipaddresspool_configuration/) and [L2Advertisement](https://metallb.universe.tf/configuration/_advanced_ipaddresspool_configuration/) to different environments.
