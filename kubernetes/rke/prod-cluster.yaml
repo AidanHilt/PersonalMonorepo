@@ -1,38 +1,38 @@
 # If you intended to deploy Kubernetes in an air-gapped environment,
 # please consult the documentation on how to configure custom RKE images.
 nodes:
-- address: 192.168.86.2
-  port: "22"
-  internal_address: ""
-  role:
-  - controlplane
-  - worker
-  - etcd
-  hostname_override: optiplex-node
-  user: aidan
-  docker_socket: /var/run/docker.sock
-  ssh_key: ""
-  ssh_key_path: ~/.ssh/id_rsa
-  ssh_cert: ""
-  ssh_cert_path: ""
-  labels: {}
-  taints: []
-- address: 192.168.86.3
-  port: "22"
-  internal_address: ""
-  role:
-  - controlplane
-  - worker
-  - etcd
-  hostname_override: gaming-pc-node
-  user: aidan
-  docker_socket: /var/run/docker.sock
-  ssh_key: ""
-  ssh_key_path: ~/.ssh/id_rsa
-  ssh_cert: ""
-  ssh_cert_path: ""
-  labels: {}
-  taints: []
+  - address: 192.168.86.2
+    port: "22"
+    internal_address: ""
+    role:
+      - controlplane
+      - worker
+      - etcd
+    hostname_override: optiplex-node
+    user: aidan
+    docker_socket: /var/run/docker.sock
+    ssh_key: ""
+    ssh_key_path: ~/.ssh/id_rsa
+    ssh_cert: ""
+    ssh_cert_path: ""
+    labels: {}
+    taints: []
+  - address: 192.168.86.3
+    port: "22"
+    internal_address: ""
+    role:
+      - controlplane
+      - worker
+      - etcd
+    hostname_override: gaming-pc-node
+    user: aidan
+    docker_socket: /var/run/docker.sock
+    ssh_key: ""
+    ssh_key_path: ~/.ssh/id_rsa
+    ssh_cert: ""
+    ssh_cert_path: ""
+    labels: {}
+    taints: []
 services:
   etcd:
     image: ""
@@ -183,7 +183,7 @@ authorization:
   options: {}
 ignore_docker_version: null
 enable_cri_dockerd: null
-kubernetes_version: ""
+kubernetes_version: "v1.23.14-rancher1-1"
 private_registries: []
 ingress:
   provider: ""

@@ -30,46 +30,6 @@ extraObjects:
               - "-c"
               - |
                 helm template $ARGOCD_ENV_APP_NAME -n $ARGOCD_APP_NAMESPACE -f <(echo "$ARGOCD_ENV_HELM_VALUES") . | argocd-vault-plugin generate -s argocd:argocd-vault-plugin-credentials -
-## Server
-server:
-  ## Server metrics service configuration
-  metrics:
-    # -- Deploy metrics service
-    enabled: false
-    service:
-      # -- Metrics service annotations
-      annotations: {}
-      # -- Metrics service labels
-      labels: {}
-      # -- Metrics service port
-      servicePort: 8083
-      # -- Metrics service port name
-      portName: http-metrics
-    serviceMonitor:
-      # -- Enable a prometheus ServiceMonitor
-      enabled: false
-      # -- Prometheus ServiceMonitor interval
-      interval: 30s
-      # -- Prometheus [RelabelConfigs] to apply to samples before scraping
-      relabelings: []
-      # -- Prometheus [MetricRelabelConfigs] to apply to samples before ingestion
-      metricRelabelings: []
-      # -- Prometheus ServiceMonitor selector
-      selector:
-        {}
-        # prometheus: kube-prometheus
-
-      # -- Prometheus ServiceMonitor scheme
-      scheme: ""
-      # -- Prometheus ServiceMonitor tlsConfig
-      tlsConfig: {}
-      # -- Prometheus ServiceMonitor namespace
-      namespace: "" # monitoring
-      # -- Prometheus ServiceMonitor labels
-      additionalLabels: {}
-      # -- Prometheus ServiceMonitor annotations
-      annotations: {}
-
 ## Repo Server
 repoServer:
   # -- Environment variables to pass to repo server
@@ -133,40 +93,7 @@ repoServer:
         - mountPath: /custom-tools
           name: custom-tools
 
-  ## Repo server metrics service configuration
-  metrics:
-    # -- Deploy metrics service
-    enabled: false
-    service:
-      # -- Metrics service annotations
-      annotations: {}
-      # -- Metrics service labels
-      labels: {}
-      # -- Metrics service port
-      servicePort: 8084
-      # -- Metrics service port name
-      portName: http-metrics
-    serviceMonitor:
-      # -- Enable a prometheus ServiceMonitor
-      enabled: false
-      # -- Prometheus ServiceMonitor interval
-      interval: 30s
-      # -- Prometheus [RelabelConfigs] to apply to samples before scraping
-      relabelings: []
-      # -- Prometheus [MetricRelabelConfigs] to apply to samples before ingestion
-      metricRelabelings: []
-      # -- Prometheus ServiceMonitor selector
-      selector:
-        {}
-        # prometheus: kube-prometheus
-
-      # -- Prometheus ServiceMonitor scheme
-      scheme: ""
-      # -- Prometheus ServiceMonitor tlsConfig
-      tlsConfig: {}
-      # -- Prometheus ServiceMonitor namespace
-      namespace: "" # "monitoring"
-      # -- Prometheus ServiceMonitor labels
-      additionalLabels: {}
-      # -- Prometheus ServiceMonitor annotations
-      annotations: {}
+configs:
+  params:
+    server.disable.auth: "true"
+    server.basehref: "/argocd"
