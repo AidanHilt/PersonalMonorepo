@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  name: mac-dotfiles
+  title: Mac Dotfiles
+  description: The dotfiles used to configure my Mac terminal
+  tags:
+    - mac
+    - shell-config
+    - dotfiles
+spec:
+  type: configuration-storage
+  lifecycle: production
+  owner: mac-maintainers
+  system: mac-setup

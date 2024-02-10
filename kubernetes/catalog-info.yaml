@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: kubernetes-domain
+spec:
+  type: url
+  targets:
+    - ./argocd/catalog-info.yaml
+    - ./grafana/catalog-info.yaml
+    - ./helm-charts/catalog-info.yaml
+    - ./ingress/catalog-info.yaml
+    - ./istio/catalog-info.yaml
+    - ./jobs/catalog-info.yaml
+    - ./kind/catalog-info.yaml
+    - ./metallb/catalog-info.yaml
+    - ./rke/catalog-info.yaml

@@ -12,9 +12,9 @@ Roles:
         Need swap disabled
         Need ports opened
 
-        GPU Plane:
-            Nvidia container toolkit
-            Nvidia K8s component
+    GPU Plane:
+        Nvidia container toolkit
+        Nvidia K8s component
 
 
     Storage Plane:

@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  name: metallb-configuration
+  title: MetalLB Configuration
+  description: Contains confguration for MetalLB, which lets us have load balancers on our bare metal cluster
+  tags:
+    - metallb
+    - kubernetes
+    - networking
+spec:
+  type: configuration-storage
+  lifecycle: production
+  owner: kubernetes-maintainers
+  system: kubernetes-networking-management

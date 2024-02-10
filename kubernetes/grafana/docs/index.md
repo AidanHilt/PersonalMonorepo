@@ -1,0 +1,2 @@
+# Grafana Configuration
+Pretty simple, this is where we store pre-configured dashboards and data sources. Ideally, everything should be configured this way, so we don't even need to store data in Grafana.

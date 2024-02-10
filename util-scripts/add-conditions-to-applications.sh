@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-#ZSH script to add conditions to all templates in a helm repo
+#ZSH script to add an if block to all templates in a helm repo, that only installs them if <template-name>.enabled is true
 
 # Step 1: Take a directory as the first argument
 directory=$1

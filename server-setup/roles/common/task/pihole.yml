@@ -5,8 +5,8 @@
 - name: Include ssh key exchange playbook
   import_playbook: ../library/ssh-key-exchange.yml
   vars:
-        private_key_path: "/etc/gravity-sync/gravity-sync.rsa"
-        public_key_path: "/etc/gravity-sync/gravity-sync.rsa.pub"
+    private_key_path: "/etc/gravity-sync/gravity-sync.rsa"
+    public_key_path: "/etc/gravity-sync/gravity-sync.rsa.pub"
 
 - name: Get a PiHole instance running with Docker Compose
   hosts: all
@@ -19,8 +19,8 @@
     - name: Change systemd-resolved config to free port 53
       replace:
         path: /etc/systemd/resolved.conf
-        regexp: '#DNSStubListener=yes'
-        replace: 'DNSStubListener=no'
+        regexp: "#DNSStubListener=yes"
+        replace: "DNSStubListener=no"
 
     - name: Rename resolv.conf so we can replace it
       copy:
@@ -53,12 +53,12 @@
                 - "67:67/udp"
                 - "9080:80/tcp"
               environment:
-                TZ: 'America/New York'
+                TZ: "America/New York"
                 PIHOLE_UID: 1000
-                WEBPASSWORD: {{ pihole.webPassword }}
+                WEBPASSWORD: { { pihole.webPassword } }
               volumes:
-                - '/dockerVolumes/pihole/etc/pihole:/etc/pihole'
-                - '/dockerVolumes/pihole/etc/dnsmasq.d:/etc/dnsmasq.d'
+                - "/dockerVolumes/pihole/etc/pihole:/etc/pihole"
+                - "/dockerVolumes/pihole/etc/dnsmasq.d:/etc/dnsmasq.d"
               cap_add:
                 - NET_ADMIN
                 - CAP_CHOWN
@@ -86,13 +86,13 @@
         DNSMasqDirectory: "{{ pihole.DNSMasqDirectory }}"
         dockerContainer: "{{ pihole.dockerContainer }}"
 
-  #TODO put in a check to see if Gravity Sync is installed. Lets us imitate real idempotency.
+    #TODO put in a check to see if Gravity Sync is installed. Lets us imitate real idempotency.
 
     - name: Run install script
       shell: curl -sSL https://raw.githubusercontent.com/vmstan/gs-install/main/gs-install.sh | bash
 
-  #TODO If I have to do this manually, fine, but this script is failing because the machines don't recognize each other. Keep an eye on that, and maybe force
-  #them to recognize each other. On to OpenVPN
+    #TODO If I have to do this manually, fine, but this script is failing because the machines don't recognize each other. Keep an eye on that, and maybe force
+    # them to recognize each other. On to OpenVPN
     - name: Set Gravity Sync to run every fifteen minutes
       shell: sudo gravity-sync auto quad
 
@@ -108,7 +108,7 @@
         user: aidan
         nopassword: true
         commands:
-            - /usr/bin/docker
+          - /usr/bin/docker
 
     #TODO remove pip packages that we aren't going to use anymore
     #TODO setup keepalived so that we have only one IP. For now, we can just set primary and secondary servers

@@ -1,15 +1,18 @@
 import argparse
 import itertools
+import json
 import logging
 import subprocess
 import sys
 import time
 import webbrowser
 
+import colored
+import requests
 import yaml
 
 from atils import atils_kubernetes as k8s_utils
-from atils.common import config, settings, template_utils
+from atils.common import config, template_utils
 from atils.common.settings import settings
 from kubernetes import client
 from kubernetes import config as k8s_config
@@ -55,7 +58,7 @@ def main(args: list[str]):
         "enable",
         help="Ensables an application from the master stack",
     )
-    enable_parser.add_argument("application", help="Which application to ensable")
+    enable_parser.add_argument("application", help="Which application to enable")
 
     if len(args) == 0:
         parser.print_help(sys.stderr)
@@ -96,6 +99,8 @@ def main(args: list[str]):
 
 
 def get_argocd_password():
+    # TODO once we've validated that ArgoCD doesn't do its own auth, delete this
+    # Use kubectl to get the ArgoCD
     result = subprocess.run(
         "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath={{.data.password}} | base64 -d".format(),
         shell=True,
@@ -109,6 +114,8 @@ def get_argocd_password():
 
 
 def sync_master_stack_application(application):
+    # Get an auth token, using a user-provided username and password
+    # TODO break out getting a token into its own separate, smaller function
     auth_response = requests.post(
         f"{settings.argocd_url}/api/v1/session",
         data=json.dumps(
@@ -149,7 +156,9 @@ def enable_application(application: str) -> None:
     try:
         api_instance = client.CustomObjectsApi()
 
-        # Get the argocd Application master-stack in the namespace argocd
+        # Get the master-stack application, located in the ArgoCD namespace. This is what should be creating all of
+        # our applications, so we want disable the target application in master-stacks parameters, so it doesn't
+        # recreate it
         namespace = "argocd"
         name = "master-stack"
         group = "argoproj.io"
@@ -164,7 +173,8 @@ def enable_application(application: str) -> None:
         is_active = False
         is_disabled = False
 
-        # Iterate over the resources and check for the specified application
+        # Iterate over the resources and check that the specified application exists. If it does, then that means that
+        # it's currently enabled, so we don't need to do anything
         for resource in resources:
             if (
                 resource.get("kind") == "Application"
@@ -173,7 +183,7 @@ def enable_application(application: str) -> None:
                 is_active = True
                 break
 
-        # If only step 2 is true, add a helm parameter application.enabled=false
+        #
         source = api_response.get("spec").get("source")
         if "helm" in source:
             if "parameters" in source.get("helm"):
