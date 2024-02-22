@@ -2,7 +2,7 @@ import sys
 
 from atils import argocd
 from atils import atils_kubernetes as kubernetes
-from atils import build, helm, jobs, kustomize, python
+from atils import build, helm, jobs
 
 
 def main():
@@ -17,11 +17,6 @@ def main():
 
     if script_name == "kubernetes":
         kubernetes.main(sys.argv[2:])
-    elif script_name == "python":
-        python.main(sys.argv[2:])
-    elif script_name == "kustomize":
-        kustomize.main(sys.argv[2:])
-    # Doing it this way because there's no reason to pull it all out of atils_kubernetes
     elif script_name == "argocd":
         argocd.main(sys.argv[2:])
     elif script_name == "build":
@@ -32,5 +27,5 @@ def main():
         helm.main(sys.argv[2:])
     else:
         print(f"Unrecognized subcommand: {script_name}")
-        print("Valid subcommands are: kubernetes, python, kustomize")
+        print("Valid subcommands are: kubernetes, argocd, build, job, helm")
         sys.exit(1)

@@ -16,6 +16,7 @@ spec:
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: argocd
+  # TODO parameterize this, so we can disable automatic sync for certain environments
   syncPolicy:
     automated:
       prune: true
