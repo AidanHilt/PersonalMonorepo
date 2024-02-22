@@ -83,6 +83,8 @@ def run_action(action: object) -> None:
 
 
 def run_build_actions(actions) -> None:
+    # TODO cd to a directory, if one is specified
+    # TODO allow us to mark if all build actions must pass
     """
     Run user-specified build actions, in the order specified by .atils_buildconfig.json.
     Args:

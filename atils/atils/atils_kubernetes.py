@@ -109,6 +109,13 @@ def merge_and_replace_kubeconfig(cluster_name: str) -> None:
             settings.SCRIPT_INSTALL_DIRECTORY,
             f"../kubernetes/rke/kube_config_{cluster_name}.yaml",
         ),
+        # TODO This is still hard coded
+        "kind-dev-laptop",
+        "local",
+        "kind-dev-laptop",
+        "kube-admin-local",
+        "kind-dev-laptop",
+        "local",
     )
 
     with open(f"{settings.KUBECONFIG_LOCATION}/config", "w") as kfile:
