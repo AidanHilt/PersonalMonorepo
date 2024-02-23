@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  name: atils
+  title: Atils
+  description: atils is the name of our custom CLI with any handy functionality we can think of
+  tags:
+    - python
+    - cli
+    - script
+    - utility
+spec:
+  type: cli
+  lifecycle: production
+  owner: atils-maintainers

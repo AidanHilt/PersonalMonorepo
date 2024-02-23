@@ -251,7 +251,6 @@ server-setup/roles/common/library/buffer/*
 kube_config*
 
 monkeytype.sqlite3
-poetry.lock
 
 
 ### VisualStudioCode ###

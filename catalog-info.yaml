@@ -10,3 +10,4 @@ spec:
     - ./toolshed/static-configuration/org.yaml
     - ./kubernetes/catalog-info.yaml
     - ./server-setup/catalog-info.yaml
+    - ./atils/catalog-info.yaml
