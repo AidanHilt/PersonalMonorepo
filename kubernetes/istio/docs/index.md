@@ -1,0 +1,2 @@
+# Istio Configuration
+For now, this just contains virtual services, which work kind of like ingresses, but for Istio. There's one for most of the apps we have configured, and all of them will install, even if not all the services are running.

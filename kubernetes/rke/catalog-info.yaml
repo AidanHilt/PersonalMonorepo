@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  name: rke-configuraiton
+  title: RKE configuration
+  description: Contains configurations for Rancher Kubernetes Engine, which is used in  prod and preprod
+  tags:
+    - kuberentes
+    - cluster-config
+    - rke
+spec:
+  type: configuration-storage
+  lifecycle: production
+  owner: kubernetes-maintainers
+  system: kubernetes-misc-management

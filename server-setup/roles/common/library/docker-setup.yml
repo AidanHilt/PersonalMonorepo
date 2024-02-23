@@ -1,5 +1,4 @@
 # This playbook is used to set up Docker, Docker Compose, and containerd for an Ubuntu machine
-#TODO Add the user "aidan" to the docker group
 - name: Set up docker on Ubuntu
   hosts: all
   gather_facts: false
@@ -18,21 +17,21 @@
     - name: Install Docker and related components
       apt:
         pkg:
-        - docker-ce=5:20.10.23~3-0~ubuntu-jammy
-        - docker-ce-cli=5:20.10.23~3-0~ubuntu-jammy
-        - containerd.io
-        - docker-compose-plugin
+          - docker-ce=5:20.10.23~3-0~ubuntu-jammy
+          - docker-ce-cli=5:20.10.23~3-0~ubuntu-jammy
+          - containerd.io
+          - docker-compose-plugin
 
     - name: Install pip so that we can install the docker Python library, so we can use docker-compose in ansible
       apt:
         pkg:
-        - python3-pip
+          - python3-pip
 
     - name: Install python docker and docker-compose libraries
       pip:
         name:
-        - docker
-        - docker-compose
+          - docker
+          - docker-compose
 
     - name: Add user to group
       user:

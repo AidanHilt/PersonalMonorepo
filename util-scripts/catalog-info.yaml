@@ -1,0 +1,18 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  name: util-scripts
+  title: Utility Scripts
+  description: Random little scripts that do random little things
+  tags:
+    - shell-scripts
+    - kubernetes
+    - helm
+    - argocd
+spec:
+  type: configuration-storage
+  lifecycle: production
+  owner: mac-maintainers
+  system: mac-setup

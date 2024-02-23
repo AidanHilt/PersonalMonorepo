@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  name: kind-configuration
+  title: Kind Configuration
+  description: Stores the configuration for kind, which we use for local development without needing external VMs
+  tags:
+    - kind
+    - kubernetes
+    - cluster-config
+spec:
+  type: configuration-storage
+  lifecycle: production
+  owner: kubernetes-maintainers
+  system: kubernetes-misc-management

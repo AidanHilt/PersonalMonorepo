@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  name: ingress-configuration
+  title: Ingress Configuration
+  description: This stores all of the ingresses we use, when we're developing without Istio
+  tags:
+    - kubernetes
+    - networking
+    - ingress
+spec:
+  type: configuration-storage
+  lifecycle: production
+  owner: kubernetes-maintainers
+  system: kubernetes-networking-management

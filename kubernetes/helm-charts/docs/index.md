@@ -1,0 +1,2 @@
+# Helm Charts
+This is where all of our custom Helm charts live. All of them should, and most of them do use the [bjw-s](https://github.com/bjw-s/helm-charts/tree/main/charts/library/common) library chart. In addition, there is our [common chart](https://github.com/AidanHilt/PersonalMonorepo/kubernetes/helm-charts/common) chart, which currently doesn't exist, but in the future will be used to provide templated notes. Rather than documenting the individual charts here, we'll document each one individually.

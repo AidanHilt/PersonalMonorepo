@@ -1,0 +1,18 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  name: kubernetes-jobs
+  title: Jobs
+  description: Contains jobs that we run on kubernetes, for various tasks
+  tags:
+    - kubernetes
+    - management
+    - jobs
+    - atils
+spec:
+  type: configuration-storage
+  lifecycle: production
+  owner: kubernetes-maintainers
+  system: kubernetes-misc-management

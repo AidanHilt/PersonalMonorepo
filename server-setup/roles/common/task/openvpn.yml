@@ -32,7 +32,7 @@
         src: ../template/as.conf.j2
         dest: /usr/local/openvpn_as/etc/as.conf
       vars:
-        nodeType: {{ openvpn.nodeType }}
+        nodeType: { { openvpn.nodeType } }
 
     - name: Gather dbpush host information
       set_fact:
@@ -58,6 +58,7 @@
       with_sequence: start=0 end="{{ dbpush_hosts|length }}" stride=1
       when: hostvars[inventory_hostname]['openvpn']['nodeType'] == 'PRIMARY'
 
+      # I think this HAS to be 'root', which may need to be fixed up in the ssh-key-exchange
     - name: Set dbpush.hosts.n.username
       shell: /usr/local/openvpn_as/scripts/sacli --key "dbpush.hosts.{{ item }}.username" --value "{{ username }}" ConfigPut
       with_sequence: start=0 end="{{ dbpush_hosts|length }}" stride=1

@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  name: grafana-configuration
+  title: Grafana Configuration
+  description: Stores the configuration for Grafana data sources and dashboards
+  tags:
+    - grafana
+    - observability
+    - kubernetes
+spec:
+  type: configuration-storage
+  lifecycle: production
+  owner: kubernetes-maintainers
+  system: kubernetes-observability-management

@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  name: server-common-role
+  title: Server Common Role
+  description: Contains all of the server
+  tags:
+    - ansible
+    - server-setup
+    - common
+spec:
+  type: configuration-storage
+  lifecycle: production
+  owner: kubernetes-maintainers
+  system: kubernetes-misc-management
