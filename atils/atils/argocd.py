@@ -168,6 +168,10 @@ def enable_application(application: str) -> None:
     """
     try:
         api_instance = client.CustomObjectsApi()
+
+        # Get the master-stack application, located in the ArgoCD namespace. This is what should be creating all of
+        # our applications, so we want disable the target application in master-stacks parameters, so it doesn't
+        # recreate it
         api_response = _get_master_stack_application()
 
         resources = api_response.get("status").get("resources")

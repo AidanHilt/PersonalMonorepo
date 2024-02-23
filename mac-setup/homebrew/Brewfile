@@ -20,7 +20,6 @@ cask 'tor-browser'
 cask 'audacity'
 cask 'microsoft-onenote'
 
-brew 'mas'
 brew 'sevenzip'
 brew 'syncthing'
 
