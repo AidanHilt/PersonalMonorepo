@@ -32,7 +32,7 @@ def main(args: str) -> None:
     run_parser.add_argument(
         "--set", help="Set values to fill in job template. WIP, not currently working"
     )
-    run_parser.add_argument("--image", help="Image tag to use for the job")
+    run_parser.add_argument("--tag", help="Image tag to use for the job")
 
     pvc_parser = subparsers.add_parser("manage-pvc")
     pvc_parser.add_argument(
@@ -52,8 +52,8 @@ def main(args: str) -> None:
         job_args = {}
 
         args_dict = vars(args)
-        if "image" in args_dict and args_dict["image"] is not None:
-            job_args["image_tag"] = args_dict["image"]
+        if "image" in args_dict and args_dict["tag"] is not None:
+            job_args["image_tag"] = args_dict["tag"]
         else:
             job_args["image_tag"] = "latest"
 
@@ -152,16 +152,17 @@ def launch_pvc_manager(pvc_name: str, namespace: str) -> None:
             #     break
 
         # Scale the controller back up
-        if controller_name is not None:
-            _modify_controller_replicas(
-                controller_name,
-                controller_namespace,
-                controller_kind,
-                previous_replicas,
-            )
+        # if controller_name is not None:
+        #     _modify_controller_replicas(
+        #         controller_name,
+        #         controller_namespace,
+        #         controller_kind,
+        #         previous_replicas,
+        #     )
 
 
 def list_available_jobs() -> None:
+    # TODO exclude the docs directory, include a list of valid arguments
     """
     Print all the jobs available to run in the jobs directory to the console
     """
