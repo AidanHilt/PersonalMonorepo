@@ -17,3 +17,9 @@ repos:
       - id: detect-private-key
       - id: no-commit-to-branch
       - id: trailing-whitespace
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.28.0
+    hooks:
+      - id: check-jsonschema
+        files: "'.atils_buildconfig.json'"
+        args: ["--schemafile", "json-schemas/atils_buildconfig.json"]
