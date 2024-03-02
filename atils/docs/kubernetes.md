@@ -7,9 +7,11 @@ DEPRECATED. Will be replaced with a system-agnostic setup, for our different met
 ## secrets
 Commands for interacting with Kubernetes secrets
 
-### decode
-Decodes and pretty prints all the keys in a given secret
+### action
+Which actions to use on a secret
+
+`decode`: Decodes and pretty prints all the keys in a given secret
 
 #### Arguments
-secret_name: The name of the secret to operate on
---namespace NAMESPACE, -n NAMESPACE: The namespace of the secret to operate on. Defaults to the current namespace
+`secret_name`: The name of the secret to operate on
+`--namespace NAMESPACE, -n NAMESPACE`: The namespace of the secret to operate on. Defaults to the current namespace

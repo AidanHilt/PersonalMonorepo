@@ -1,17 +1,40 @@
-[
-  {
-    "name": "test",
-    "command": "poetry run pytest",
-    "order": 0
-  },
-  {
-    "name": "build",
-    "command": "poetry build",
-    "order": 5
-  },
-  {
-    "name": "install",
-    "command": "pipx install dist/atils-0.0.1.tar.gz --force",
-    "order": 6
-  }
-]
+{
+  "actions": [
+    {
+      "name": "test",
+      "command": "poetry run pytest",
+      "order": 2
+    },
+    {
+      "name": "type-check",
+      "command": "poetry run mypy atils",
+      "order": 1
+    },
+    {
+      "name": "validate_buildconfig",
+      "command": "poetry run check-jsonschema .atils_buildconfig.json --schemafile ../json-schemas/atils_buildconfig.json",
+      "order": 0
+    },
+    {
+      "name": "build",
+      "command": "poetry build",
+      "order": 10
+    },
+    {
+      "name": "install",
+      "command": "pipx install dist/atils-0.0.1.tar.gz --force",
+      "order": 11
+    }
+  ],
+  "action_sets": [
+    {
+      "name": "validate",
+      "actions": [
+        "test",
+        "type-check",
+        "validate_buildconfig"
+      ],
+      "description": "Runs code quality checks and tests"
+    }
+  ]
+}

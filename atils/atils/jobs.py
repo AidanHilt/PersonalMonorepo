@@ -46,9 +46,9 @@ def main(args: str) -> None:
 
     list_parser = subparsers.add_parser("list")
 
-    args = parser.parse_args(args)
+    arguments: argparse.Namespace = parser.parse_args(args)
 
-    if args.subparser_name == "run":
+    if arguments.subparser_name == "run":
         job_args = {}
 
         args_dict = vars(args)
@@ -57,23 +57,22 @@ def main(args: str) -> None:
         else:
             job_args["image_tag"] = "latest"
 
-        run_job_cli(args.job_name, job_args)
-    elif args.subparser_name == "manage-pvc":
-        args_dict = vars(args)
+        run_job_cli(arguments.job_name, job_args)
+    elif arguments.subparser_name == "manage-pvc":
+        args_dict = vars(arguments)
         current_namespace = atils_kubernetes.get_current_namespace()
 
         if "namespace" in args_dict.keys():
             if args_dict.get("namespace") is not None:
-                print(args_dict)
                 launch_pvc_manager(args_dict["pvc_name"], args_dict["namespace"])
             else:
                 launch_pvc_manager(args_dict["pvc_name"], current_namespace)
         else:
             launch_pvc_manager(args_dict["pvc_name"], current_namespace)
-    elif args.subparser_name == "list":
+    elif arguments.subparser_name == "list":
         list_available_jobs()
     else:
-        logging.error(f"Unrecognized command {args.subparser_name}")
+        logging.error(f"Unrecognized command {arguments.subparser_name}")
         exit(1)
 
 
@@ -281,7 +280,7 @@ def _get_controller_from_pvc(
                         api_response.metadata.owner_references[0].kind,
                     )
                 else:
-                    return None, None, None
+                    return ("", "", "")
             except client.exceptions.ApiException:
                 logging.error(
                     f"Could not find pod {pod_info['used_by']} for pvc {pvc_name}"
@@ -291,7 +290,7 @@ def _get_controller_from_pvc(
             logging.info(
                 f"Could not find a pod for pvc {pvc_name}, going to assume its currently unattached"
             )
-            return None, None, None
+            return ("", "", "")
 
 
 def _get_information_from_description(description: str) -> dict:
@@ -359,7 +358,7 @@ def _launch_job(job_dict):
 
 def _modify_controller_replicas(
     controller_name: str, namespace: str, controller_type: str, num_replicas: int
-) -> None:
+) -> int:
     """
     Modify the number of replicas a controller is requesting
     Args:
@@ -386,7 +385,7 @@ def _modify_controller_replicas(
                 )
                 info = _get_information_from_description(result.stdout)
 
-                previous_replicas = api_instance.read_namespaced_deployment(
+                previous_replicas: int = api_instance.read_namespaced_deployment(
                     info["controlled_by"], namespace
                 ).spec.replicas
 
@@ -403,9 +402,11 @@ def _modify_controller_replicas(
         except client.exceptions.ApiException as e:
             logging.error(f"Failed to scale down {controller_name}")
             logging.debug(e)
+            return -1
+    return -1
 
 
-def _render_job(job_name: str, args: dict[str, str] = None) -> str:
+def _render_job(job_name: str, args: dict[str, str]) -> str:
     """
     Given the name of a job, that is the same as a directory in the JOBS_DIR directory,
     render the template with the arguments provided, and return it

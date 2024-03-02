@@ -43,7 +43,7 @@ def compare_yaml_files(yaml_file_1: str, yaml_file_2: str) -> bool:
     return _compare_yaml_dicts(yaml_dict_1, yaml_dict_2)
 
 
-def find_item_index(search_level: str, item_name: str, yaml_data: object) -> int:
+def find_item_index(search_level: str, item_name: str, yaml_data: dict) -> int:
     """
     Given a python object representing a kubeconfig file, a search level representing a resource type
     to search in, and an item name, return the index of the item in the yaml_data object.
@@ -86,8 +86,8 @@ def merge_kubeconfigs(
     """
     # Load the YAML data from both kubeconfig files
     with open(kubeconfig1, "r") as f1, open(kubeconfig2, "r") as f2:
-        kubeconfig_data1: object = yaml.safe_load(f1)
-        kubeconfig_data2: object = yaml.safe_load(f2)
+        kubeconfig_data1: dict = yaml.safe_load(f1)
+        kubeconfig_data2: dict = yaml.safe_load(f2)
 
     # Cluster copying section
     data_1_index = find_item_index(
