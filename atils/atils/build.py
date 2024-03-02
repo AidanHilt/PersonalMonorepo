@@ -41,35 +41,39 @@ def main(args: list[str]):
 
     parser.add_argument(
         "--action-set",
-        nargs="*",
         help="A single action set defined in .atils_buildconfig.json of current directory to run",
     )
 
-    args = parser.parse_args(args)
+    arguments: argparse.Namespace = parser.parse_args(args)
 
     directory: str = os.getcwd()
     show_actions: bool = True
     show_action_sets: bool = True
 
-    if args.actions_only:
+    if arguments.actions_only:
         show_actions = False
-    if args.action_sets_only:
+    if arguments.action_sets_only:
         show_action_sets = False
 
     if not show_actions and not show_action_sets:
         raise ValueError("You need to allow showing either actions or action sets")
 
-    if args.build_directory is not None:
-        directory = args.build_directory
+    if arguments.build_directory is not None:
+        directory = arguments.build_directory
 
-    if args.action == "list":
+    if arguments.action == "list":
         run_list_action(directory, show_actions, show_action_sets)
     else:
-        run_build_actions(args, directory)
+        if arguments.actions is not None:
+            run_build_actions(arguments.actions, directory)
+        elif arguments.action_set is not None:
+            run_build_action_set(arguments.action_set, directory)
+        else:
+            run_build_actions(["all"], directory)
 
 
 def validate_listed_actions(
-    available_actions: list[object], listed_actions: list[str]
+    available_actions: list[dict], listed_actions: list[str]
 ) -> None:
     """
     Takes a list of valid actions, a list of actions provided by a user, and ensures that all
@@ -86,15 +90,6 @@ def validate_listed_actions(
     for action in listed_actions:
         if action not in available_action_names and action != "all":
             raise ValueError(f"{action} is not a valid action")
-
-
-def run_action(action: object) -> None:
-    """
-    Run the command from an action, using subprocess.run
-    Args:
-        action (object): An object representing an action
-    """
-    subprocess.run(action["command"], shell=True)
 
 
 def run_list_action(directory: str, show_actions: bool, show_action_sets: bool) -> None:
@@ -123,38 +118,57 @@ def run_list_action(directory: str, show_actions: bool, show_action_sets: bool) 
         print("Action Sets")
         print("=======================================")
         for action_set in available_action_sets:
-            _print_action_set(action_set)
+            _print_action_set(action_set, available_actions)
 
 
-def run_build_actions(args: object, directory: str) -> None:
+def run_build_action_set(action_set_name: str, directory: str) -> None:
+    """
+    Runs all the actions defined in a given action_set
+    Args:
+        action_set (dict): A dictionary representing an action set
+        directory (str): The directory where our .atils_buildconfig.json file to list is located
+    """
+    available_actions: list[dict] = _get_available_actions(directory)
+    action_set: dict = _get_action_set(action_set_name, directory)
+
+    validate_listed_actions(available_actions, action_set["actions"])
+
+    if "strict" in action_set and not action_set["strict"]:
+        for action in available_actions:
+            if action["name"] in action_set["actions"]:
+                _run_action(action, directory)
+    else:
+        for action in available_actions:
+            if action["name"] in action_set["actions"]:
+                _run_action_strict(action, directory)
+
+
+def run_build_actions(listed_actions: list[str], directory: str) -> None:
     # TODO cd to a directory, if one is specified
     # TODO allow us to mark if all build actions must pass
     """
     Run user-specified build actions, in the order specified by .atils_buildconfig.json.
     Args:
-        actions (): The list of actions provided by the user. TODO figure out what the shape of the object is,
-        so we can document it here
+        listed_actions (list[str]): The list of actions provided by the user.
+        directory (str): The directory to use as the current working directory.
     """
-    listed_actions = args.actions
-    if listed_actions is None:
-        listed_actions = ["all"]
     available_actions = _get_available_actions(directory)
 
     validate_listed_actions(available_actions, listed_actions)
 
     if "all" in listed_actions:
         for action in available_actions:
-            run_action(action)
+            _run_action(action, directory)
     else:
         # Since I know you might ask... we do it this way to ensure that the actions are run in order.
         # The user can enter them arbitrarily, but available_actions is sorted, so we can use that as
         # our source of truth
         for action in available_actions:
             if action["name"] in listed_actions:
-                run_action(action)
+                _run_action(action, directory)
 
 
-def _get_available_actions(directory: str) -> list[object]:
+def _get_available_actions(directory: str) -> list[dict]:
     """
     List all actions available in a .atils_buildconfig.json file in the given directory.
     The file must be in the given directory and must be a valid JSON file.
@@ -180,7 +194,7 @@ def _get_available_actions(directory: str) -> list[object]:
         raise FileNotFoundError(f"{filename} does not exist")
 
 
-def _get_available_action_sets(directory: str) -> list[object]:
+def _get_available_action_sets(directory: str) -> list[dict]:
     """
     List all action sets available in a .atils_buildconfig.json file in the given directory.
     The file must be in the given directory and must be a valid JSON file.
@@ -201,12 +215,31 @@ def _get_available_action_sets(directory: str) -> list[object]:
             data = json.load(f)
             if "action_sets" not in data:
                 return []
-            return sorted(data.action_sets, key=lambda x: x["name"])
+            return sorted(data["action_sets"], key=lambda x: x["name"])
     else:
         raise FileNotFoundError(f"{filename} does not exist")
 
 
-def _print_action(action: object) -> None:
+def _get_action_set(action_set: str, directory: str) -> dict:
+    """
+    Get a given action set from an .atils_buildconfig.json file
+    Args:
+        action_set (str): The name of the action set to get
+        directory (str): The directory where the .atils_buildconfig.json file is located
+    Returns:
+        A dictionary representing the action set, or an empty dictionary if the action set is not found
+    """
+    available_action_sets = _get_available_action_sets(directory)
+
+    for action_set_obj in available_action_sets:
+        if action_set_obj["name"] == action_set:
+            return action_set_obj
+    raise ValueError(
+        f"Action set {action_set} not available in {os.path.join(directory, '.atils_buildconfig.json')}"
+    )
+
+
+def _print_action(action: dict) -> None:
     """
     Print the name and command of an action.
     Args:
@@ -219,19 +252,43 @@ def _print_action(action: object) -> None:
     print()
 
 
-def _print_action_set(action_set: object, actions: list[object]) -> None:
+def _print_action_set(action_set: dict, actions: list[dict]) -> None:
     """
     Print the name and actions of an action set.
     Args:
-        action_set (object): An object representing an action set from a .atils_buildconfig.json file.
-        actions (list[object]): A list of objects, representing all available actions
+        action_set (dict): An object representing an action set from a .atils_buildconfig.json file.
+        actions (list[dict]): A list of objects, representing all available actions
     """
     print(f"{action_set['name']}:")
     if "description" in action_set:
         print(f"  {action_set['description']}")
+    print(action_set)
     for action in action_set["actions"]:
         if "description" in actions[action]:
             print(f"  {action} | {actions[action]['description']}")
         else:
             print(f"  {action} | {actions[action]['command']}")
     print()
+
+
+def _run_action(action: dict, directory: str) -> None:
+    """
+    Run the command from an action, using subprocess.run
+    Args:
+        action (object): An object representing an action
+    """
+
+    subprocess.run(action["command"], shell=True, cwd=directory)
+
+
+def _run_action_strict(action: dict, directory: str) -> None:
+    """
+    Run the command from an action, using subprocess.run. Fails if the command fails
+    Args:
+        action (object): An object representing an action
+    """
+    try:
+        subprocess.run(action["command"], shell=True, cwd=directory, check=True)
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error running {action['name']}")
+        exit(1)

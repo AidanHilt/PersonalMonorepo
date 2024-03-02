@@ -65,11 +65,11 @@ def main(args: list[str]) -> None:
         parser.print_help(sys.stderr)
         sys.exit(1)
 
-    args = parser.parse_args(args)
+    arguments: argparse.Namespace = parser.parse_args(args)
 
     # Install ArgoCD using Helm
-    if args.subparser_name == "install":
-        args_dict = vars(args)
+    if arguments.subparser_name == "install":
+        args_dict = vars(arguments)
         # Check if we provided an environment argument, and install it if not
         if args_dict["environment"] is None:
             logging.error("Please provide an environment")
@@ -77,11 +77,11 @@ def main(args: list[str]) -> None:
         else:
             setup_argocd(args_dict["environment"])
     # Port forward ArgoCD and open a browser window
-    elif args.subparser_name == "port-forward":
+    elif arguments.subparser_name == "port-forward":
         open_argocd_port_forward()
     # Disable an application from the master stack
-    elif args.subparser_name == "disable":
-        args_dict = vars(args)
+    elif arguments.subparser_name == "disable":
+        args_dict = vars(arguments)
         # Check if we provided an application argument, and disable it if we did
         if args_dict["application"] is None:
             logging.error("Please provide an application name")
@@ -89,8 +89,8 @@ def main(args: list[str]) -> None:
         else:
             disable_application(args_dict["application"])
     # Enable an application from the master stack
-    elif args.subparser_name == "enable":
-        args_dict = vars(args)
+    elif arguments.subparser_name == "enable":
+        args_dict = vars(arguments)
         # Check if we provided an application argument, and enable it if we did
         if args_dict["application"] is None:
             logging.error("Please provide an application name")
@@ -99,17 +99,17 @@ def main(args: list[str]) -> None:
             enable_application(args_dict["application"])
     # Get the ArgoCD password from the default secret
     # TODO once we've validated that ArgoCD doesn't do its own auth, delete this
-    elif args.subparser_name == "get-password":
+    elif arguments.subparser_name == "get-password":
         get_argocd_password()
     # TODO Figure out what the hell was going on here
-    elif args.subparser_name == "test":
+    elif arguments.subparser_name == "test":
         print_application_status(["grafana-loki", "gateways"], True)
     else:
-        logging.error(f"Invalid command: ${args.subparser_name}")
+        logging.error(f"Invalid command: ${arguments.subparser_name}")
         exit(1)
 
 
-def get_argocd_password():
+def get_argocd_password() -> None:
     # TODO once we've validated that ArgoCD doesn't do its own auth, delete this
     # Use kubectl to get the ArgoCD password
     result = subprocess.run(
@@ -172,9 +172,9 @@ def enable_application(application: str) -> None:
         # Get the master-stack application, located in the ArgoCD namespace. This is what should be creating all of
         # our applications, so we want disable the target application in master-stacks parameters, so it doesn't
         # recreate it
-        api_response = _get_master_stack_application()
+        api_response: dict = _get_master_stack_application()
 
-        resources = api_response.get("status").get("resources")
+        resources = api_response.get("status").get("resources")  # type: ignore
 
         is_active = _is_application_active(application, resources)
         is_enabled = _is_application_enabled_in_master_stack(application, api_response)
@@ -196,7 +196,7 @@ def enable_application(application: str) -> None:
             edited_parameters = source_helm_params
 
             for i in range(len(edited_parameters)):
-                if application == edited_parameters[i].get("name").split(".")[0]:
+                if application == edited_parameters[i].get("name").split(".")[0]:  # type: ignore
                     del edited_parameters[i]
 
             # Create JSON merge patch to update the helm parameters
@@ -231,7 +231,7 @@ def disable_application(application: str) -> None:
         api_instance = client.CustomObjectsApi()
         api_response = _get_master_stack_application()
 
-        resources = api_response.get("status").get("resources")
+        resources = api_response.get("status").get("resources")  # type: ignore
 
         is_active = _is_application_active(application, resources)
         is_enabled = _is_application_enabled_in_master_stack(application, api_response)
@@ -457,7 +457,7 @@ def _get_argocd_bearer_token() -> str:
     return token
 
 
-def _get_master_stack_application() -> object:
+def _get_master_stack_application() -> dict:
     """
     Get an object representing the master-stack application, located in the ArgoCD namespace
     Return:
@@ -482,9 +482,10 @@ def _get_master_stack_application() -> object:
     except Exception as e:
         logging.error("Failed to get master-stack application, see error below")
         print(e)
+    return {}
 
 
-def _is_application_active(application: str, resources: object) -> bool:
+def _is_application_active(application: str, resources: dict) -> bool:
     """
     Check whether an application is active, i.e. whether or not it is in the list of resources created by master stack
     Args:
@@ -503,7 +504,7 @@ def _is_application_active(application: str, resources: object) -> bool:
 
 
 def _is_application_enabled_in_master_stack(
-    application: str, application_object: object
+    application: str, application_dict: dict
 ) -> bool:
     """
     Check if an application is enabled in master stack, i.e. the value 'application'.enabled is set.
@@ -514,14 +515,14 @@ def _is_application_enabled_in_master_stack(
     Return:
         bool: True if the application is enabled in master stack, and false otherwise.
     """
-    source_helm_params = _get_source_helm_params(application_object)
+    source_helm_params = _get_source_helm_params(application_dict)
     for variable in source_helm_params:
-        if application in variable.get("name"):
+        if application in variable.get("name"):  # type: ignore
             return False
     return True
 
 
-def _get_source_helm_params(api_response: object) -> object:
+def _get_source_helm_params(api_response: dict) -> list[dict[str, str]]:
     """
     Get the helm parameters from the api_response object. Will throw an error if no helm parameters are found.
     Args:

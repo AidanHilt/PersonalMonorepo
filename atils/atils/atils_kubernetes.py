@@ -65,18 +65,18 @@ def main(args: list[str]):
         parser.print_help(sys.stderr)
         sys.exit(1)
 
-    args = parser.parse_args(args)
+    arguments: argparse.Namespace = parser.parse_args(args)
 
-    if args.subparser_name == "rke-setup":
-        if vars(args).get("replace_kubeconfig"):
-            merge_and_replace_kubeconfig(args.cluster_name)
+    if arguments.subparser_name == "rke-setup":
+        if vars(arguments).get("replace_kubeconfig"):
+            merge_and_replace_kubeconfig(arguments.cluster_name)
         else:
             setup_rke_cluster(
-                args.cluster_name,
+                arguments.cluster_name,
             )
 
-    elif args.subparser_name == "secrets":
-        args_dict = vars(args)
+    elif arguments.subparser_name == "secrets":
+        args_dict: dict[str, str] = vars(arguments)
         if args_dict["command"] == "decode":
             if args_dict["secret_name"] is None:
                 logging.error("Error: A secret name must be provided ")

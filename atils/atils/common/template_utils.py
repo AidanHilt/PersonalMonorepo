@@ -4,7 +4,7 @@ from jinja2 import Environment, FileSystemLoader, FunctionLoader
 from pkg_resources import resource_string
 
 
-def load_from_self(filename: str) -> bytes:
+def load_from_self(filename: str) -> str:
     """
     Given the name of a template file in the atila/templates directory, load the
     contents of the file as a bytes object
@@ -57,7 +57,7 @@ def template_external_file(template_path: str, args_dict: dict) -> str:
 
 
 def template_file_and_output(
-    template_path: str, output_path: str, args_dict: dict = None
+    template_path: str, output_path: str, args_dict: dict
 ) -> None:
     """
     Given a path to a template file, and arguments, template the file and then output

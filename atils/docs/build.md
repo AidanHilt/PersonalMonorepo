@@ -27,24 +27,25 @@ In order to configure the `atils build` command for a given directory, we use a 
         {
             "name": "action_name",
             "command": "exec --command --bar-baz",
-            "order": "0",
+            "order": 0,
             "description": "Runs an action, to do something"
         },
         {
             "name": "action_name_2",
             "command": "exec --command --foo=bar",
-            "order": "1"
+            "order": 1
         }
 
     ],
     "action_sets": [
         {
-            "name" "action_set_name",
+            "name": "action_set_name",
             "actions": [
                 "action_name",
                 "action_name_2"
             ],
-            "description": "This is a set of actions"
+            "description": "This is a set of actions",
+            "strict": false
         }
     ]
 }
@@ -59,3 +60,11 @@ In order to configure the `atils build` command for a given directory, we use a 
 `name`: The name of the action set. This is how we refer to the action when using the `build` command, and what appears when using the `list` command.
 `actions`: A list of actions, defined in the `actions` section of the `.atils_buildconfig.json` file.
 `description` (optional): A description of the action set
+`strict` (optional): Whether or not to run the action set in strict mode (which means that each test must succeed before the next one runs)
+
+## Well-Known Action Set Names
+Since the purpose of this entire exercise is to allow us to use one common interface for all our building needs, we should define some action sets that are commonly used. What actually gets run between projects for these varies, but all of these action sets reflect common activities.
+
+`validate`: Runs code-quality checks, type checks, tests, and anything else that looks at the correctness and adherence to a standard of a project.
+`local-install`: Builds and installs the project locally. Skips any quality checks, as this is assumed to be used for development work
+`ci-build-publish`: Validate the correctness and standard adherence of the code, build the code, and then publish the results to a public repo, like pip or a container repository

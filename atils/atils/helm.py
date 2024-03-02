@@ -38,15 +38,15 @@ def main(args: str):
         parser.print_help(sys.stderr)
         sys.exit(1)
 
-    args = parser.parse_args(args)
+    arguments: argparse.Namespace = parser.parse_args(args)
 
     # Let's explain this a little bit. We run the auto_deploy_helm_chart async, so that when we get a
     # KeyboardInterrupt (i.e. Ctrl+C ), we can uninstall the chart automatically.
-    if args.subparser_name == "auto-deploy":
+    if arguments.subparser_name == "auto-deploy":
         try:
-            asyncio.run(auto_deploy_helm_chart(args.chart_name))
+            asyncio.run(auto_deploy_helm_chart(arguments.chart_name))
         except KeyboardInterrupt:
-            subprocess.run(["helm", "uninstall", args.chart_name])
+            subprocess.run(["helm", "uninstall", arguments.chart_name])
 
 
 async def auto_deploy_helm_chart(chart_name: str) -> None:
