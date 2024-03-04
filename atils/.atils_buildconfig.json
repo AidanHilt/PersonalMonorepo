@@ -1,9 +1,9 @@
 {
   "actions": [
     {
-      "name": "test",
-      "command": "poetry run pytest",
-      "order": 2
+      "name": "validate_buildconfig",
+      "command": "poetry run check-jsonschema .atils_buildconfig.json --schemafile ../json-schemas/atils_buildconfig.json",
+      "order": 0
     },
     {
       "name": "type-check",
@@ -11,9 +11,9 @@
       "order": 1
     },
     {
-      "name": "validate_buildconfig",
-      "command": "poetry run check-jsonschema .atils_buildconfig.json --schemafile ../json-schemas/atils_buildconfig.json",
-      "order": 0
+      "name": "test",
+      "command": "poetry run pytest",
+      "order": 2
     },
     {
       "name": "build",
@@ -22,7 +22,7 @@
     },
     {
       "name": "install",
-      "command": "pipx install dist/atils-0.0.1.tar.gz --force",
+      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); pipx install dist/atils-$VERSION.tar.gz --force",
       "order": 11
     }
   ],
@@ -34,7 +34,16 @@
         "type-check",
         "validate_buildconfig"
       ],
-      "description": "Runs code quality checks and tests"
+      "description": "Runs code quality checks and tests",
+      "default": true
+    },
+    {
+      "name": "local-install",
+      "actions": [
+        "build",
+        "install"
+      ],
+      "description": "Builds and installs atils locally, for testing purposes"
     }
   ]
 }

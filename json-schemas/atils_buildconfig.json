@@ -25,6 +25,9 @@
           },
           "description": {
             "type": "string"
+          },
+          "ci_only": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -51,6 +54,12 @@
           },
           "description": {
             "type": "string"
+          },
+          "strict": {
+            "type": "boolean"
+          },
+          "default": {
+            "type": "boolean"
           }
         },
         "required": [

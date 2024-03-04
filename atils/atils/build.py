@@ -69,7 +69,14 @@ def main(args: list[str]):
         elif arguments.action_set is not None:
             run_build_action_set(arguments.action_set, directory)
         else:
-            run_build_actions(["all"], directory)
+            default_action_set: str = _get_default_action_set(directory)
+            if default_action_set:
+                run_build_action_set(default_action_set, directory)
+            else:
+                logging.error(
+                    "No default action set defined. Either define one in"
+                    + f" {os.path.join(directory, '.atils_buildconfig.json')} or use an argument to specify what to do"
+                )
 
 
 def validate_listed_actions(
@@ -237,6 +244,21 @@ def _get_action_set(action_set: str, directory: str) -> dict:
     raise ValueError(
         f"Action set {action_set} not available in {os.path.join(directory, '.atils_buildconfig.json')}"
     )
+
+
+def _get_default_action_set(directory: str) -> str:
+    """
+    Given a directory with an .atils_buildconfig.json file, return the name of the default action set.
+    Args:
+        directory (str): The directory where the .atils_buildconfig.json file is located
+    Returns:
+        A string representing the name of the default action set, or an empty string if no default action set is found.
+    """
+    available_action_sets: list[dict] = _get_available_action_sets(directory)
+    for action_set in available_action_sets:
+        if "default" in action_set and action_set["default"]:
+            return action_set["name"]
+    return ""
 
 
 def _print_action(action: dict) -> None:
