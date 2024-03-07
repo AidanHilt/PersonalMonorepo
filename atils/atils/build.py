@@ -300,6 +300,7 @@ def _run_action(action: dict, directory: str) -> None:
         action (object): An object representing an action
     """
 
+    _validate_action_can_run(action)
     subprocess.run(action["command"], shell=True, cwd=directory)
 
 
@@ -309,8 +310,28 @@ def _run_action_strict(action: dict, directory: str) -> None:
     Args:
         action (object): An object representing an action
     """
+    _validate_action_can_run(action)
     try:
         subprocess.run(action["command"], shell=True, cwd=directory, check=True)
     except subprocess.CalledProcessError as e:
         logging.error(f"Error running {action['name']}")
+        exit(1)
+
+
+def _validate_action_can_run(action: dict):
+    """
+    Given an action, checks if it is a CI-only action. If it is, and we are not running in a CI environment,
+    exit the program.
+    Args:
+        action (dict): A dict representing an action from a .atils_buildconfig.json file.
+    Returns:
+        None.
+    Raises:
+        SystemExit: If we are not running in a CI environment and the action is a CI-only action.
+    """
+    if "ci_only" in action and action["ci_only"] and "ATILS_CI_ENV" not in os.environ():
+        logging.error(
+            f"Attempted to run a CI only-action in a non-CI environment. "
+            + f"If you know what you're doing, set ATILS_CI_ENV to true."
+        )
         exit(1)

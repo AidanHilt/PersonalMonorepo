@@ -1,0 +1,39 @@
+{
+  "actions": [
+    {
+      "name": "validate_buildconfig",
+      "command": "check-jsonschema .atils_buildconfig.json --schemafile ../../json-schemas/atils_buildconfig.json",
+      "order": 0
+    },
+    {
+      "name": "build",
+      "command": "source config.env; docker build . --tag $IMAGE_NAME:$IMAGE_TAG",
+      "order": 10,
+      "description": "Build the docker image"
+    },
+    {
+      "name": "push",
+      "command": "source config.env; docker image push $IMAGE_NAME:$IMAGE_TAG",
+      "order": 11,
+      "description": "Push the docker image",
+      "ci_only": true
+    }
+  ],
+  "action_sets": [
+    {
+      "name": "validate",
+      "actions": [
+        "validate_buildconfig"
+      ],
+      "default": true
+    },
+    {
+      "name": "ci-build-publish",
+      "actions": [
+        "validate_buildconfig",
+        "build",
+        "push"
+      ]
+    }
+  ]
+}

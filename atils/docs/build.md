@@ -69,6 +69,6 @@ In order to configure the `atils build` command for a given directory, we use a 
 ## Well-Known Action Set Names
 Since the purpose of this entire exercise is to allow us to use one common interface for all our building needs, we should define some action sets that are commonly used. What actually gets run between projects for these varies, but all of these action sets reflect common activities.
 
-`validate`: Runs code-quality checks, type checks, tests, and anything else that looks at the correctness and adherence to a standard of a project.
+`validate`: Runs code-quality checks, type checks, tests, and anything else that looks at the correctness and adherence to a standard of a project
 `local-install`: Builds and installs the project locally. Skips any quality checks, as this is assumed to be used for development work
 `ci-build-publish`: Validate the correctness and standard adherence of the code, build the code, and then publish the results to a public repo, like pip or a container repository
