@@ -42,9 +42,6 @@ atils = "atils.atils:main"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.mypy]
-ignore_missing_imports = true
-
 [project.urls]
 Homepage = "https://github.com/AidanHilt/PersonalMonorepo/tree/master/atils"
 
@@ -71,3 +68,5 @@ push = true
     "{pep440_version}",
 ]
 
+[tool.mypy]
+ignore_missing_imports = true
