@@ -329,9 +329,9 @@ def _validate_action_can_run(action: dict):
     Raises:
         SystemExit: If we are not running in a CI environment and the action is a CI-only action.
     """
-    if "ci_only" in action and action["ci_only"] and "ATILS_CI_ENV" not in os.environ():
+    if "ci_only" in action and action["ci_only"] and "ATILS_CI_ENV" not in os.environ:
         logging.error(
-            f"Attempted to run a CI only-action in a non-CI environment. "
+            f"Attempted to run a CI only-action ({action['name']}) in a non-CI environment. "
             + f"If you know what you're doing, set ATILS_CI_ENV to true."
         )
         exit(1)
