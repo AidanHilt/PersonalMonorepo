@@ -14,7 +14,7 @@ RUN echo \
     apt-get update && \
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-RUN pip3 install poetry setuptools
+RUN pip3 install poetry
 
 # Clone the repository
 RUN git clone https://github.com/AidanHilt/PersonalMonorepo.git
