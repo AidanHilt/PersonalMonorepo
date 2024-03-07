@@ -1,8 +1,20 @@
-FROM alpine:latest
+FROM ubuntu:22.04
 
-# Install necessary dependencies
-RUN apk update && \
-    apk add --no-cache git python3 py3-pip docker poetry
+RUN apt-get update && \
+    apt-get install -y git python3 python3-pip apt-transport-https ca-certificates curl gnupg-agent software-properties-common && \
+    apt-get install ca-certificates curl && \
+    install -m 0755 -d /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && \
+    chmod a+r /etc/apt/keyrings/docker.asc
+
+RUN echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+    tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
+    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+RUN pip3 install poetry setuptools
 
 # Clone the repository
 RUN git clone https://github.com/AidanHilt/PersonalMonorepo.git
@@ -17,5 +29,10 @@ RUN poetry install --no-interaction
 RUN poetry build && \
     pip3 install dist/*.whl
 
+<<<<<<< HEAD
+USER nobody
+
+=======
+>>>>>>> b6aeb220957caa23e70198bfd9df6b9773d9730e
 # Set the entrypoint to run "atils --version"
 ENTRYPOINT ["atils", "--version"]
