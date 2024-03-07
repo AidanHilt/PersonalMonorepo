@@ -1,0 +1,30 @@
+{
+  "actions": [
+    {
+      "name": "validate-buildconfig",
+      "command": "check-jsonschema .atils_buildconfig.json --schemafile ../json-schemas/atils_buildconfig.json",
+      "order": 0
+    },
+    {
+      "name": "install",
+      "command": "yarn install --frozen-lockfile",
+      "order": 10
+    },
+    {
+      "name": "type-definitions",
+      "command": "yarn tsc",
+      "order": 11
+    },
+    {
+      "name": "build-backend",
+      "command": "yarn build:backend --config ../../app-config.yaml",
+      "order": 12
+    },
+    {
+      "name": "docker-build",
+      "command": "docker build .",
+      "order": 13
+    }
+  ],
+  "action_sets": []
+}

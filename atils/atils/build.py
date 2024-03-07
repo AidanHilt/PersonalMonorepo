@@ -69,7 +69,14 @@ def main(args: list[str]):
         elif arguments.action_set is not None:
             run_build_action_set(arguments.action_set, directory)
         else:
-            run_build_actions(["all"], directory)
+            default_action_set: str = _get_default_action_set(directory)
+            if default_action_set:
+                run_build_action_set(default_action_set, directory)
+            else:
+                logging.error(
+                    "No default action set defined. Either define one in"
+                    + f" {os.path.join(directory, '.atils_buildconfig.json')} or use an argument to specify what to do"
+                )
 
 
 def validate_listed_actions(
@@ -239,6 +246,21 @@ def _get_action_set(action_set: str, directory: str) -> dict:
     )
 
 
+def _get_default_action_set(directory: str) -> str:
+    """
+    Given a directory with an .atils_buildconfig.json file, return the name of the default action set.
+    Args:
+        directory (str): The directory where the .atils_buildconfig.json file is located
+    Returns:
+        A string representing the name of the default action set, or an empty string if no default action set is found.
+    """
+    available_action_sets: list[dict] = _get_available_action_sets(directory)
+    for action_set in available_action_sets:
+        if "default" in action_set and action_set["default"]:
+            return action_set["name"]
+    return ""
+
+
 def _print_action(action: dict) -> None:
     """
     Print the name and command of an action.
@@ -278,6 +300,7 @@ def _run_action(action: dict, directory: str) -> None:
         action (object): An object representing an action
     """
 
+    _validate_action_can_run(action)
     subprocess.run(action["command"], shell=True, cwd=directory)
 
 
@@ -287,8 +310,28 @@ def _run_action_strict(action: dict, directory: str) -> None:
     Args:
         action (object): An object representing an action
     """
+    _validate_action_can_run(action)
     try:
         subprocess.run(action["command"], shell=True, cwd=directory, check=True)
     except subprocess.CalledProcessError as e:
         logging.error(f"Error running {action['name']}")
+        exit(1)
+
+
+def _validate_action_can_run(action: dict):
+    """
+    Given an action, checks if it is a CI-only action. If it is, and we are not running in a CI environment,
+    exit the program.
+    Args:
+        action (dict): A dict representing an action from a .atils_buildconfig.json file.
+    Returns:
+        None.
+    Raises:
+        SystemExit: If we are not running in a CI environment and the action is a CI-only action.
+    """
+    if "ci_only" in action and action["ci_only"] and "ATILS_CI_ENV" not in os.environ():
+        logging.error(
+            f"Attempted to run a CI only-action in a non-CI environment. "
+            + f"If you know what you're doing, set ATILS_CI_ENV to true."
+        )
         exit(1)

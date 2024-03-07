@@ -33,7 +33,8 @@ In order to configure the `atils build` command for a given directory, we use a 
         {
             "name": "action_name_2",
             "command": "exec --command --foo=bar",
-            "order": 1
+            "order": 1,
+            "ci_only": true
         }
 
     ],
@@ -46,6 +47,7 @@ In order to configure the `atils build` command for a given directory, we use a 
             ],
             "description": "This is a set of actions",
             "strict": false
+            "default": false
         }
     ]
 }
@@ -55,16 +57,18 @@ In order to configure the `atils build` command for a given directory, we use a 
 `command`: The command the actions aliases. This is literally just a shell command, so it can be whatever you want, but we don't bundle any command-line tools you might use
 `order`: The order that all these commands run in. Lower actions run first
 `description` (optional): A description of the action
+`ci_only` (optional): Whether or not this action is meant to only run in a CI environment. If this flag is set, the command will fail unless the environment variable ATILS_CI_ENV is set
 
 ### Action Sets (optional)
 `name`: The name of the action set. This is how we refer to the action when using the `build` command, and what appears when using the `list` command.
 `actions`: A list of actions, defined in the `actions` section of the `.atils_buildconfig.json` file.
 `description` (optional): A description of the action set
-`strict` (optional): Whether or not to run the action set in strict mode (which means that each test must succeed before the next one runs)
+`strict` (optional): Whether or not to run the action set in strict mode (which means that each test must succeed before the next one runs). Defaults to true
+`default` (optional): Whether or not this action set is marked as the default one, that runs when no arguments are supplied. Defaults to false
 
 ## Well-Known Action Set Names
 Since the purpose of this entire exercise is to allow us to use one common interface for all our building needs, we should define some action sets that are commonly used. What actually gets run between projects for these varies, but all of these action sets reflect common activities.
 
-`validate`: Runs code-quality checks, type checks, tests, and anything else that looks at the correctness and adherence to a standard of a project.
+`validate`: Runs code-quality checks, type checks, tests, and anything else that looks at the correctness and adherence to a standard of a project
 `local-install`: Builds and installs the project locally. Skips any quality checks, as this is assumed to be used for development work
 `ci-build-publish`: Validate the correctness and standard adherence of the code, build the code, and then publish the results to a public repo, like pip or a container repository
