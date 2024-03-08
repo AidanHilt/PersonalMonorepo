@@ -14,11 +14,9 @@ FROM python:3.12.2-alpine as final
 
 COPY --from=build ./dist/*.whl .
 
-# USER nobody
-
-# WORKDIR /home/nobody
-
 RUN pip install *.whl
+
+USER nobody
 
 ENV ATILS_LOG_LEVEL=INFO
 
