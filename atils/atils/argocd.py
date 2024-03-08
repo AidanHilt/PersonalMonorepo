@@ -25,7 +25,7 @@ logging.basicConfig(level=config.get_logging_level())  # type: ignore
 
 def main(args: list[str]) -> None:
     # This variable tracks whether or not we have configuration available to run kubernetes commands
-    CAN_RUN: bool = k8s_utils._load_config()
+    CAN_RUN: bool = k8s_utils.load_config()
 
     if not CAN_RUN:
         logging.error("No configuration available to run kubernetes commands")
