@@ -17,6 +17,13 @@ logging.basicConfig(level=config.get_logging_level())  # type: ignore
 
 
 def main(args: list[str]):
+    # This variable tracks whether or not we have configuration available to run kubernetes commands
+    CAN_RUN: bool = load_config()
+
+    if not CAN_RUN:
+        logging.error("No configuration available to run kubernetes commands")
+        exit(1)
+
     # TODO add autocomplete for secret names
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
@@ -83,6 +90,30 @@ def main(args: list[str]):
                 sys.exit(1)
             else:
                 get_and_decode_secret(args_dict["secret_name"], args_dict["namespace"])
+
+
+def load_config() -> bool:
+    """
+    Loads some kind of kubernetes configuration, either in-cluster or in kubeconfig,
+    and returns true if it is able to. If it cannot, it will return false, and the main
+    function is in charge of failing if it needs to
+
+    Returns:
+        (bool): True if a config could be loaded, false otherwise
+    """
+    # TODO also support running from a pod
+    if "KUBECONFIG" in os.environ:
+        k8s_config.load_kube_config(os.environ["KUBECONFIG"])
+        return True
+    # Check if ~/.kube/config exists
+    if os.path.exists(os.path.expanduser("~/.kube/config")):
+        k8s_config.load_kube_config()
+        return True
+    else:
+        logging.info(
+            "Could not find a kubeconfig. Any commands related to kubernetes have been disabled"
+        )
+        return False
 
 
 def merge_and_replace_kubeconfig(cluster_name: str) -> None:

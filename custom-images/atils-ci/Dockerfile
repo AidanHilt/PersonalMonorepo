@@ -29,15 +29,7 @@ RUN poetry install --no-interaction
 RUN poetry build && \
     pip3 install dist/*.whl
 
-<<<<<<< HEAD
 USER nobody
 
-=======
-<<<<<<< HEAD
-USER nobody
-
-=======
->>>>>>> b6aeb220957caa23e70198bfd9df6b9773d9730e
->>>>>>> 4e3f5e6879dab17d96018a9ce5f4b529967378e0
 # Set the entrypoint to run "atils --version"
 ENTRYPOINT ["atils", "--version"]

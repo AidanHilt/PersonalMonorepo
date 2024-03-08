@@ -24,6 +24,13 @@ logging.basicConfig(level=config.get_logging_level())  # type: ignore
 
 
 def main(args: list[str]) -> None:
+    # This variable tracks whether or not we have configuration available to run kubernetes commands
+    CAN_RUN: bool = k8s_utils.load_config()
+
+    if not CAN_RUN:
+        logging.error("No configuration available to run kubernetes commands")
+        exit(1)
+
     # TODO Add auto-complete for application names
     # TODO Add a command to list all apps and their status
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
