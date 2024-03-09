@@ -7,15 +7,22 @@
     },
     {
       "name": "build",
-      "command": "source config.env; docker build . --tag $IMAGE_NAME:$IMAGE_TAG",
+      "command": "source config.env; docker build . -t $IMAGE_NAME:$IMAGE_TAG -t $IMAGE_NAME:latest",
       "order": 10,
       "description": "Build the docker image"
     },
     {
       "name": "push",
-      "command": "source config.env; docker image push $IMAGE_NAME:$IMAGE_TAG",
+      "command": "source config.env; docker push $IMAGE_NAME:$IMAGE_TAG",
       "order": 11,
       "description": "Push the docker image",
+      "ci_only": true
+    },
+    {
+      "name": "push-latest",
+      "command": "source config.env; docker push $IMAGE_NAME:latest",
+      "order": 12,
+      "description": "Push the docker image with the latest tag",
       "ci_only": true
     }
   ],

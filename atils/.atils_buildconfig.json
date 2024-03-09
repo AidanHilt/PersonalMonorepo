@@ -24,6 +24,23 @@
       "name": "install",
       "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); pipx install dist/atils-$VERSION.tar.gz --force",
       "order": 11
+    },
+    {
+      "name": "docker-build",
+      "order": 12,
+      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker build -t \"aidanhilt/atils:$VERSION\" -t \"aidanhilt/atils:latest\" ."
+    },
+    {
+      "name": "docker-publish",
+      "order": 13,
+      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker push aidanhilt/atils:$VERSION",
+      "ci_only": true
+    },
+    {
+      "name": "docker-publish-latest",
+      "order": 14,
+      "command": "docker push aidanhilt/atils:latest",
+      "ci_only": true
     }
   ],
   "action_sets": [

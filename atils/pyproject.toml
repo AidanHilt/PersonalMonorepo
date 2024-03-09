@@ -4,6 +4,10 @@ version = "1.0.0"
 description = "A series of scripts to make my life easier, and automate away tedious homelab tasks."
 authors = ["Aidan Hilt <aidanhilt2@gmail.com>"]
 readme = "README.md"
+packages = [
+    { include = "atils" },
+    { include = "atils_bin" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -34,8 +38,9 @@ types-setuptools = "^69.1.0.20240302"
 types-requests = "^2.0.0"
 bumpver = "^2023.1129"
 
+
 [tool.poetry.scripts]
-atils = "atils.atils:main"
+atils = "atils_bin.atils:main"
 
 [build-system]
 requires = ["poetry-core"]

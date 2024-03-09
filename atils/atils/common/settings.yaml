@@ -1,3 +1,5 @@
+# This is just here as an example
+
 INSTALL_DIR: "@jinja {{env.HOME}}/PersonalMonorepo"
 KUBECONFIG_LOCATION: "@jinja {{env.HOME}}/.kube/"
 SCRIPT_INSTALL_DIRECTORY: "@jinja {{this.INSTALL_DIR}}/atils"

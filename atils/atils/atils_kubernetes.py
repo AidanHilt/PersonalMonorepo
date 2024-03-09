@@ -10,7 +10,6 @@ from atils.common.settings import settings
 from kubernetes import client
 from kubernetes import config as k8s_config
 
-k8s_config.load_kube_config()  # type: ignore
 client.rest.logger.setLevel(logging.WARNING)
 
 logging.basicConfig(level=config.get_logging_level())  # type: ignore

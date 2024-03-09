@@ -14,13 +14,19 @@ from kubernetes import client
 from kubernetes import config as k8s_config
 from kubernetes import utils
 
-k8s_config.load_kube_config()  # type: ignore
 client.rest.logger.setLevel(logging.ERROR)
 
 logging.basicConfig(level=config.get_logging_level())  # type: ignore
 
 
 def main(args: str) -> None:
+    # This variable tracks whether or not we have configuration available to run kubernetes commands
+    CAN_RUN: bool = atils_kubernetes.load_config()
+
+    if not CAN_RUN:
+        logging.error("No configuration available to run kubernetes commands")
+        exit(1)
+
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
         help="Commands to manage kubernetes jobs", dest="subparser_name"
