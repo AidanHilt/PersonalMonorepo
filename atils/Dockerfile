@@ -10,11 +10,11 @@ RUN poetry install --no-interaction --no-dev --no-root
 # Build and install the project
 RUN poetry build
 
-FROM python:3.12.2-alpine as final
+FROM python:3.12.2-slim as final
 
 COPY --from=build ./dist/*.whl .
 
-RUN pip install *.whl
+RUN pip install *.whl && rm *.whl
 
 USER nobody
 
