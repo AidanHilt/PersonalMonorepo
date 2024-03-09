@@ -1,0 +1,26 @@
+name: CI Build and Publish
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'atils/**'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    container:
+      image: aidanhilt/atils-ci:latest
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Build and publish
+      run: |
+        atils build --directory "atils" --action-set ci-build-publish
