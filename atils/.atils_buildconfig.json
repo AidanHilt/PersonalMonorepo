@@ -26,20 +26,9 @@
       "order": 11
     },
     {
-      "name": "docker-build",
+      "name": "docker-build-and-push",
       "order": 12,
-      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker build -t \"aidanhilt/atils:$VERSION\" -t \"aidanhilt/atils:latest\" ."
-    },
-    {
-      "name": "docker-publish",
-      "order": 13,
-      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker push aidanhilt/atils:$VERSION",
-      "ci_only": true
-    },
-    {
-      "name": "docker-publish-latest",
-      "order": 14,
-      "command": "docker push aidanhilt/atils:latest",
+      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker build --platform linux/arm64,linux/amd64 -t \"aidanhilt/atils:$VERSION\" -t \"aidanhilt/atils:latest\" --push .",
       "ci_only": true
     }
   ],
