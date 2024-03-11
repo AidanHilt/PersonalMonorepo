@@ -33,7 +33,7 @@
     {
       "name": "docker-build-and-push",
       "order": 12,
-      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker build --platform linux/arm64,linux/amd64 -t \"aidanhilt/atils:$VERSION\" -t \"aidanhilt/atils:latest\" --push .",
+      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker buildx --platform linux/arm64,linux/amd64 -t \"aidanhilt/atils:$VERSION\" -t \"aidanhilt/atils:latest\" --push .",
       "ci_only": true
     },
     {
