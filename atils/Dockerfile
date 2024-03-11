@@ -1,4 +1,4 @@
-FROM python:3.12.2-slim as build
+FROM python:3.12-slim as build
 
 RUN pip3 install poetry
 
@@ -10,7 +10,7 @@ RUN poetry install --no-interaction --no-dev --no-root
 # Build and install the project
 RUN poetry build
 
-FROM python:3.12.2-slim as final
+FROM python:3.12-slim as final
 
 COPY --from=build ./dist/*.whl .
 
