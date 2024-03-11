@@ -23,22 +23,22 @@
     {
       "name": "build",
       "command": "poetry build",
-      "order": 11
+      "order": 10
     },
     {
       "name": "local-install",
       "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); pipx install dist/atils-$VERSION.tar.gz --force",
-      "order": 12
+      "order": 11
     },
     {
       "name": "docker-build-and-push",
-      "order": 13,
+      "order": 12,
       "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker build --platform linux/arm64,linux/amd64 -t \"aidanhilt/atils:$VERSION\" -t \"aidanhilt/atils:latest\" --push .",
       "ci_only": true
     },
     {
       "name": "publish",
-      "order": 14,
+      "order": 13,
       "command": "poetry publish -u __token__ -p \"$PYPI_AUTH_TOKEN\"",
       "ci_only": true
     }
@@ -65,6 +65,7 @@
     {
       "name": "ci-build-publish",
       "actions": [
+        "install-dependencies",
         "test",
         "type-check",
         "validate_buildconfig",
