@@ -30,6 +30,12 @@
       "order": 12,
       "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker build --platform linux/arm64,linux/amd64 -t \"aidanhilt/atils:$VERSION\" -t \"aidanhilt/atils:latest\" --push .",
       "ci_only": true
+    },
+    {
+      "name": "publish",
+      "order": 13,
+      "command": "poetry publish -u __token__ -p \"$PYPI_AUTH_TOKEN\"",
+      "ci_only": true
     }
   ],
   "action_sets": [
@@ -50,6 +56,18 @@
         "install"
       ],
       "description": "Builds and installs atils locally, for testing purposes"
+    },
+    {
+      "name": "ci-build-publish",
+      "actions": [
+        "test",
+        "type-check",
+        "validate_buildconfig",
+        "build",
+        "docker-build-and-push",
+        "publish"
+      ],
+      "description": "Builds and publishes atils to Docker Hub, as well as PyPI"
     }
   ]
 }
