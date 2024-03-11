@@ -23,7 +23,7 @@ jobs:
           json: true
           quotepath: false
           dir_names_exclude_current_dir: true
-          files: custom-images
+          files: custom-images/**
 
       - name: 'Set output in the matrix format'
         id: set-output
