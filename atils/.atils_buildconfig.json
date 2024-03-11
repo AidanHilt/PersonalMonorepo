@@ -1,24 +1,24 @@
 {
   "actions": [
     {
+      "name": "install-dependencies",
+      "command": "poetry install",
+      "order": 0
+    },
+    {
       "name": "validate_buildconfig",
       "command": "poetry run check-jsonschema .atils_buildconfig.json --schemafile ../json-schemas/atils_buildconfig.json",
-      "order": 0
+      "order": 1
     },
     {
       "name": "type-check",
       "command": "poetry run mypy atils",
-      "order": 1
+      "order": 2
     },
     {
       "name": "test",
       "command": "poetry run pytest",
-      "order": 2
-    },
-    {
-      "name": "install-dependencies",
-      "command": "poetry install",
-      "order": 10
+      "order": 3
     },
     {
       "name": "build",
