@@ -60,4 +60,4 @@ jobs:
       - name: Build and publish custom image
         if: steps.check-buildconfig.outcome == 'success'
         run: |
-          atils build --directory "${{ matrix.dir }}" --action-set ci-build-publish
+          atils build --build-directory "${{ matrix.dir }}" --action-set ci-build-publish
