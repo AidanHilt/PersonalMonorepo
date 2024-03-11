@@ -28,4 +28,4 @@ jobs:
 
     - name: Build and publish
       run: |
-        atils build --directory "atils" --action-set ci-build-publish
+        atils build --build-directory "atils" --action-set ci-build-publish
