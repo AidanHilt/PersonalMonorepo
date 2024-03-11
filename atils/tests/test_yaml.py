@@ -6,22 +6,22 @@ from atils.common import yaml_utils
 
 @pytest.fixture
 def full_kubeconfig():
-    return "/Users/ahilt/PersonalMonorepo/atils/tests/files/yaml/full_kubeconfig_example.yaml"
+    return "tests/files/yaml/full_kubeconfig_example.yaml"
 
 
 @pytest.fixture
 def dev_kubeconfig():
-    return "/Users/ahilt/PersonalMonorepo/atils/tests/files/yaml/dev_kubeconfig_example.yaml"
+    return "tests/files/yaml/dev_kubeconfig_example.yaml"
 
 
 @pytest.fixture
 def combined_kubeconfig():
-    return "/Users/ahilt/PersonalMonorepo/atils/tests/files/yaml/merged_kubeconfig_example.yaml"
+    return "tests/files/yaml/merged_kubeconfig_example.yaml"
 
 
 @pytest.fixture
 def no_dev_kubeconfig():
-    return "/Users/ahilt/PersonalMonorepo/atils/tests/files/yaml/no_dev_kubeconfig_example.yaml"
+    return "tests/files/yaml/no_dev_kubeconfig_example.yaml"
 
 
 def test_comparison_function_equal(full_kubeconfig):
