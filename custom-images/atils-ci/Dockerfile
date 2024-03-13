@@ -3,7 +3,7 @@ FROM aidanhilt/atils:latest
 USER root
 
 RUN apt-get update && \
-    apt-get install -y python3 apt-transport-https ca-certificates curl gnupg-agent software-properties-common && \
+    apt-get install -y python3 pipx apt-transport-https ca-certificates curl gnupg-agent software-properties-common && \
     apt-get install ca-certificates curl && \
     install -m 0755 -d /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc && \
