@@ -6,17 +6,59 @@
       "order": 0
     },
     {
-      "name": "build",
-      "command": ". ./config.env; docker buildx build --platform linux/arm64 . -t $IMAGE_NAME:latest --load",
+      "name": "build-local-latest",
+      "command": ". ./config.env; docker build --platform linux/arm64 . -t $IMAGE_NAME:latest --load",
+      "order": 1,
+      "description": "Build a local copy tagged with latest, so we can do local testing easily"
+    },
+    {
+      "name": "build-arm",
+      "command": ". ./config.env; docker build --platform linux/arm64 . -t $IMAGE_NAME:$IMAGE_TAG-arm64 --load",
       "order": 10,
-      "description": "Build the docker image",
+      "description": "Build the docker image for Linux ARM"
+    },
+    {
+      "name": "build-x86",
+      "command": ". ./config.env; docker build --platform linux/amd64 . -t $IMAGE_NAME:$IMAGE_TAG-amd64 --load",
+      "order": 11,
+      "description": "Build the docker image for Linux AMD"
+    },
+    {
+      "name": "push-arm",
+      "command": ". ./config.env; docker push $IMAGE_NAME:$IMAGE_TAG-arm64",
+      "order": 12,
+      "description": "Push the docker image for Linux ARM"
+    },
+    {
+      "name": "push-x86",
+      "command": ". ./config.env; docker push $IMAGE_NAME:$IMAGE_TAG-amd64",
+      "order": 13,
+      "description": "Push the docker image for Linux AMD"
+    },
+    {
+      "name": "create-manifest-versioned",
+      "command": ". ./config.env; docker manifest create $IMAGE_NAME:$IMAGE_TAG -a $IMAGE_NAME:$IMAGE_TAG-arm64 -a $IMAGE_NAME:$IMAGE_TAG-amd64",
+      "order": 14,
+      "description": "Create the manifest for the multi-arch tagged release"
+    },
+    {
+      "name": "create-manifest-latest",
+      "command": ". ./config.env; docker manifest create $IMAGE_NAME:latest -a $IMAGE_NAME:$IMAGE_TAG-arm64 -a $IMAGE_NAME:$IMAGE_TAG-amd64",
+      "order": 15,
+      "description": "Create the manifest for the multi-arch tagged release"
+    },
+    {
+      "name": "push-manifest-versioned",
+      "command": ". ./config.env; docker manifest push $IMAGE_NAME:$IMAGE_TAG",
+      "order": 16,
+      "description": "Push the manifest for the multi-arch tagged release",
       "ci_only": true
     },
     {
-      "name": "build-and-push",
-      "command": ". ./config.env; docker buildx build --platform linux/arm64,linux/amd64 . -t $IMAGE_NAME:$IMAGE_TAG -t $IMAGE_NAME:latest --push",
-      "order": 10,
-      "description": "Build the docker image",
+      "name": "push-manifest-latest",
+      "command": ". ./config.env; docker manifest push $IMAGE_NAME:latest",
+      "order": 17,
+      "description": "Push the manifest for the multi-arch tagged release",
       "ci_only": true
     }
   ],
@@ -29,9 +71,20 @@
       "default": true
     },
     {
+      "name": "local-build",
+      "actions": [
+        "build-local-latest"
+      ]
+    },
+    {
       "name": "ci-build-publish",
       "actions": [
-        "build-and-push"
+        "build-arm",
+        "build-x86",
+        "create-manifest-versioned",
+        "create-manifest-latest",
+        "push-manifest-versioned",
+        "push-manifest-latest"
       ]
     }
   ]
