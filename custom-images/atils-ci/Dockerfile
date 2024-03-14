@@ -2,6 +2,8 @@ FROM aidanhilt/atils:latest
 
 USER root
 
+SHELL ["/bin/bash", "-c"]
+
 RUN apt-get update && \
     apt-get install -y python3 pipx apt-transport-https ca-certificates curl gnupg-agent software-properties-common && \
     apt-get install ca-certificates curl && \
