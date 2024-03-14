@@ -79,7 +79,12 @@
     {
       "name": "ci-build-publish",
       "actions": [
-        "build-and-push"
+        "build-arm",
+        "build-x86",
+        "create-manifest-versioned",
+        "create-manifest-latest",
+        "push-manifest-versioned",
+        "push-manifest-latest"
       ]
     }
   ]
