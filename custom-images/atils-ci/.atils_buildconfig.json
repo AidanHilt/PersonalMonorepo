@@ -81,6 +81,8 @@
       "actions": [
         "build-arm",
         "build-x86",
+        "push-arm",
+        "push-x86",
         "create-manifest-versioned",
         "create-manifest-latest",
         "push-manifest-versioned",
