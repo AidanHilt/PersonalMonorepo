@@ -7,14 +7,14 @@
     },
     {
       "name": "build",
-      "command": ". ./config.env; docker buildx build --platform linux/arm64 . -t $IMAGE_NAME:latest --load",
+      "command": ". config.env; docker buildx build --platform linux/arm64 . -t $IMAGE_NAME:latest --load",
       "order": 10,
       "description": "Build the docker image",
       "ci_only": true
     },
     {
       "name": "build-and-push",
-      "command": ". ./config.env; docker buildx build --platform linux/arm64,linux/amd64 . -t $IMAGE_NAME:$IMAGE_TAG -t $IMAGE_NAME:latest --push",
+      "command": ". config.env; docker buildx build --platform linux/arm64,linux/amd64 . -t $IMAGE_NAME:$IMAGE_TAG -t $IMAGE_NAME:latest --push",
       "order": 10,
       "description": "Build the docker image",
       "ci_only": true
