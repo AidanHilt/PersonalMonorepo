@@ -7,19 +7,19 @@
     },
     {
       "name": "build-local-latest",
-      "command": ". ./config.env; docker build --platform linux/arm64 . -t $IMAGE_NAME:latest --load",
+      "command": ". ./config.env; docker buildx build --platform linux/arm64 . -t $IMAGE_NAME:latest --load",
       "order": 1,
       "description": "Build a local copy tagged with latest, so we can do local testing easily"
     },
     {
       "name": "build-arm",
-      "command": ". ./config.env; docker build --platform linux/arm64 . -t $IMAGE_NAME:$IMAGE_TAG-arm64 --load",
+      "command": ". ./config.env; docker buildx build --platform linux/arm64 . -t $IMAGE_NAME:$IMAGE_TAG-arm64 --load",
       "order": 10,
       "description": "Build the docker image for Linux ARM"
     },
     {
       "name": "build-x86",
-      "command": ". ./config.env; docker build --platform linux/amd64 . -t $IMAGE_NAME:$IMAGE_TAG-amd64 --load",
+      "command": ". ./config.env; docker buildx build --platform linux/amd64 . -t $IMAGE_NAME:$IMAGE_TAG-amd64 --load",
       "order": 11,
       "description": "Build the docker image for Linux AMD"
     },
