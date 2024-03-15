@@ -32,12 +32,12 @@
     },
     {
       "name": "docker-build-arm64",
-      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker buildx build . --platform linux/arm64 -t aidanhilt/atils:$VERSION-arm64",
+      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker buildx build . --platform linux/arm64 -t aidanhilt/atils:$VERSION-arm64 --load",
       "order": 12
     },
     {
       "name": "docker-build-amd64",
-      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker buildx build . --platform linux/amd64 -t aidanhilt/atils:$VERSION-amd64",
+      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker buildx build . --platform linux/amd64 -t aidanhilt/atils:$VERSION-amd64 --load",
       "order": 13
     },
     {
