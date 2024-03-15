@@ -112,8 +112,15 @@
         "type-check",
         "validate_buildconfig",
         "build",
-        "docker-build-and-push",
-        "publish-py-pi"
+        "publish-py-pi",
+        "docker-build-arm64",
+        "docker-build-amd64",
+        "docker-push-arm64",
+        "docker-push-amd64",
+        "create-manifest-versioned",
+        "create-manifest-latest",
+        "push-manifest-versioned",
+        "push-manifest-latest"
       ],
       "description": "Builds and publishes atils to Docker Hub, as well as PyPI"
     }
