@@ -45,7 +45,7 @@
       "name": "create-manifest-latest",
       "command": ". ./config.env; docker manifest create $IMAGE_NAME:latest -a $IMAGE_NAME:$IMAGE_TAG-arm64 -a $IMAGE_NAME:$IMAGE_TAG-amd64",
       "order": 15,
-      "description": "Create the manifest for the multi-arch tagged release"
+      "description": "Create the manifest for the multi-arch latest release"
     },
     {
       "name": "push-manifest-versioned",
@@ -58,7 +58,7 @@
       "name": "push-manifest-latest",
       "command": ". ./config.env; docker manifest push $IMAGE_NAME:latest",
       "order": 17,
-      "description": "Push the manifest for the multi-arch tagged release",
+      "description": "Push the manifest for the multi-arch latest release",
       "ci_only": true
     }
   ],
