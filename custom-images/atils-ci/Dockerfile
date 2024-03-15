@@ -25,6 +25,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
     corepack enable
 
-RUN pip3 install poetry
+RUN pip3 install poetry check-jsonschema
 
 ENV ATILS_CI_ENV=true
