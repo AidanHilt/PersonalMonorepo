@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - 'custom-images/**'
+      - '.github/workflows/custom-containers-run-ci.yaml'
 
 jobs:
   find-out-changes:
