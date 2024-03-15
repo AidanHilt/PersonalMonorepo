@@ -5,8 +5,8 @@ on:
     branches:
       - master
     paths:
-      - 'atils/**'
-      - '.github/workflows/atils-run-ci.yaml'
+      - 'toolshed/**'
+      - '.github/workflows/toolshed-run-ci.yaml'
 
 jobs:
   build-and-publish:
@@ -34,6 +34,4 @@ jobs:
 
     - name: Build and publish
       run: |
-        atils build --build-directory "atils" --action-set ci-build-publish
-      env:
-        PYPI_AUTH_TOKEN: ${{ secrets.ATILS_PYPI_TOKEN }}
+        atils build --build-directory "toolshed" --action-set ci-build-publish
