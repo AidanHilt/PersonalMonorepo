@@ -66,14 +66,14 @@
     },
     {
       "name": "push-manifest-versioned",
-      "command": ". ./config.env; docker manifest push aidanhilt/atils:$VERSION",
+      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker manifest push aidanhilt/atils:$VERSION",
       "order": 18,
       "description": "Push the manifest for the multi-arch tagged release",
       "ci_only": true
     },
     {
       "name": "push-manifest-latest",
-      "command": ". ./config.env; docker manifest push aidanhilt/atils:latest",
+      "command": "docker manifest push aidanhilt/atils:latest",
       "order": 19,
       "description": "Push the manifest for the multi-arch tagged release",
       "ci_only": true
