@@ -32,13 +32,13 @@
     },
     {
       "name": "docker-build-and-push-arm64",
-      "command": "VERSION=$(cat backstage.json | jq -r '.version'); docker buildx build . --file packages/backend/Dockerfile -t aidanhilt/toolshed:$VERSION-arm64 --push",
+      "command": "VERSION=$(cat backstage.json | jq -r '.version'); docker buildx build . --file packages/backend/Dockerfile -t aidanhilt/toolshed:$VERSION-arm64 --push --provenance false",
       "order": 20,
       "ci_only": true
     },
     {
       "name": "docker-build-and-push-amd64",
-      "command": "VERSION=$(cat backstage.json | jq -r '.version'); docker buildx build . --file packages/backend/Dockerfile -t aidanhilt/toolshed:$VERSION-amd64 --push",
+      "command": "VERSION=$(cat backstage.json | jq -r '.version'); docker buildx build . --file packages/backend/Dockerfile -t aidanhilt/toolshed:$VERSION-amd64 --push --provenance false",
       "order": 21,
       "ci_only": true
     },
