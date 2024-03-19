@@ -6,7 +6,7 @@ SHELL ["/bin/bash", "-c"]
 
 # Install all the apt packages we'll need
 RUN apt-get update && \
-    apt-get install -y python3 pipx apt-transport-https ca-certificates curl gnupg-agent software-properties-common ca-certificates curl jq
+    apt-get install -y python3 pipx apt-transport-https ca-certificates curl gnupg-agent software-properties-common ca-certificates curl jq yq
 
 
 # Get us ready for, then install Docker and buildx. This image runs on GH action runners, so we don't need to set up or enable buildx here
