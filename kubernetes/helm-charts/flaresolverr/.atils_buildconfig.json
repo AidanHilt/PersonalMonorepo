@@ -28,5 +28,22 @@
       "ci_only": true
     }
   ],
-  "action-sets": []
+  "action-sets": [
+    {
+      "name": "validate",
+      "actions": [
+        "validate-buildconfig",
+        "lint"
+      ]
+    },
+    {
+      "name": "ci-build-publish",
+      "actions": [
+        "lint",
+        "update-dependencies",
+        "build",
+        "push"
+      ]
+    }
+  ]
 }
