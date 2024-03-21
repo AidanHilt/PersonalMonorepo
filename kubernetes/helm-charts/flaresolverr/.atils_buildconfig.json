@@ -2,7 +2,7 @@
   "actions": [
     {
       "name": "validate-buildconfig",
-      "command": "check-jsonschema .atils_buildconfig.json --schemafile ../json-schemas/atils_buildconfig.json",
+      "command": "check-jsonschema .atils_buildconfig.json --schemafile ../../../json-schemas/atils_buildconfig.json",
       "order": 0
     },
     {
@@ -28,7 +28,7 @@
       "ci_only": true
     }
   ],
-  "action-sets": [
+  "action_sets": [
     {
       "name": "validate",
       "actions": [
