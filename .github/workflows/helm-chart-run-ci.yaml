@@ -5,9 +5,9 @@ on:
     branches:
       - master
     paths:
-      - 'custom-images/**'
+      - 'kubernetes/helm-charts/**'
       - '.github/workflows/custom-containers-run-ci.yaml'
-      - '!custom-images/docs/**'
+      - '!kubernetes/helm-charts/docs/**'
 
 jobs:
   find-out-changes:
@@ -26,8 +26,8 @@ jobs:
           quotepath: false
           dir_names_exclude_current_dir: true
           files: |
-            custom-images/**
-            !custom-images/docs/**
+            kubernetes/helm-charts/**
+            !kubernetes/helm-charts/docs/**
 
       - name: 'Set output in the matrix format'
         id: set-output

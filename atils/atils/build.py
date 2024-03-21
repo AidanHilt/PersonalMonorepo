@@ -268,9 +268,9 @@ def _print_action(action: dict) -> None:
         action (object): An object representing an action from a .atils_buildconfig.json file.
     """
     if "description" in action:
-        print(f"{action['name']}: {action['command']} | {action['description']}")
+        print(f"{action['name']} | {action['description']}")
     else:
-        print(f"{action['name']}: {action['command']}")
+        print(f"{action['name']} | {action['command']}")
     print()
 
 
@@ -283,13 +283,16 @@ def _print_action_set(action_set: dict, actions: list[dict]) -> None:
     """
     print(f"{action_set['name']}:")
     if "description" in action_set:
-        print(f"  {action_set['description']}")
-    print(action_set)
+        print(f"{action_set['description']}")
     for action in action_set["actions"]:
-        if "description" in actions[action]:
-            print(f"  {action} | {actions[action]['description']}")
+        for a in actions:
+            if a["name"] == action:
+                action_dict = a
+                break
+        if "description" in action:
+            print(f"  {action} | {action_dict['description']}")
         else:
-            print(f"  {action} | {actions[action]['command']}")
+            print(f"  {action} | {action_dict['command']}")
     print()
 
 

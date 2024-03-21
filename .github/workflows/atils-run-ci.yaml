@@ -1,4 +1,4 @@
-name: CI Build and Publish
+name: Atils Build and Publish
 
 on:
   push:

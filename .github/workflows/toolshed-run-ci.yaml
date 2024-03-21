@@ -1,4 +1,4 @@
-name: CI Build and Publish
+name: Toolshed Build and Publish
 
 on:
   push:
