@@ -1,16 +1,8 @@
 import argparse
 import inspect
 import logging
-import sys
-import termios
-import tty
-from threading import Thread
-
-from kubernetes.stream import stream
 
 from atils.common import config
-from kubernetes import client
-from kubernetes import config as k8s_config
 
 logging.basicConfig(level=config.get_logging_level())  # type: ignore
 
@@ -67,59 +59,3 @@ def _get_function_list():
 # =======================
 # Functions being tested
 # =======================
-
-
-# redirect input
-def _read(resp):
-    # resp.write_stdin("stty rows 45 cols 130\n")
-    while resp.is_open():
-        char = sys.stdin.read(1)
-        resp.update()
-        if resp.is_open():
-            resp.write_stdin(char)
-
-
-def patch_pod_with_debug_container(name: str, namespace: str):
-    return
-
-
-def exec_shell_in_pod(
-    name: str = "argocd-application-controller-0", namespace="argocd"
-):
-    k8s_config.load_kube_config()
-    api_client = client.ApiClient()
-    api_instance = client.CoreV1Api(api_client)
-
-    exec_command = ["/bin/bash"]
-
-    resp = stream(
-        api_instance.connect_get_namespaced_pod_exec,
-        name,
-        namespace,
-        command=exec_command,
-        stderr=True,
-        stdin=True,
-        stdout=True,
-        tty=True,
-        _preload_content=False,
-    )
-
-    t = Thread(target=_read, args=[resp])
-
-    # change tty mode to be able to work with escape characters
-    stdin_fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(stdin_fd)
-    try:
-        tty.setraw(stdin_fd)
-        t.start()
-        while resp.is_open():
-            data = resp.read_stdout(10)
-            if resp.is_open():
-                if len(data or "") > 0:
-                    sys.stdout.write(data)
-                    sys.stdout.flush()
-    finally:
-        # reset tty
-        print("\033c")
-        termios.tcsetattr(stdin_fd, termios.TCSADRAIN, old_settings)
-        print("press enter")
