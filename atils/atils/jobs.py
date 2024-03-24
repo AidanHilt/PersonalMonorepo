@@ -1,12 +1,16 @@
 import argparse
 import itertools
-import json
 import logging
 import os
-import subprocess
+import sys
+import termios
 import time
+import tty
+from threading import Thread
+from typing import List
 
 import yaml
+from kubernetes.stream import stream
 
 from atils import atils_kubernetes
 from atils.common import config, template_utils
@@ -63,7 +67,7 @@ def main(args: str) -> None:
         else:
             job_args["image_tag"] = "latest"
 
-        run_job_cli(arguments.job_name, job_args)
+        run_job(arguments.job_name, job_args)
     elif arguments.subparser_name == "manage-pvc":
         args_dict = vars(arguments)
         current_namespace = atils_kubernetes.get_current_namespace()
@@ -84,86 +88,30 @@ def main(args: str) -> None:
 
 def launch_pvc_manager(pvc_name: str, namespace: str) -> None:
     """
-    Launch the PVC manager job for a pod. This pod just waits for an hour, so you can connect
-    to it
+    Given the name of a PVC, and the namespace it lives in, launch some kind of container that mounts it
+
     Args:
-        pvc_name (str): The name of the PVC to modify and manage
+        pvc_name (str): The name of the PVC to launch a management container for
         namespace (str): The namespace the PVC is located in
     """
-    if pvc_name is None:
-        logging.error("--pvc-name must be provided")
-        exit(1)
+    pod_name = _find_pod_by_pvc(pvc_name)
+
+    if pod_name != "" and pod_name != "pvc-manager":
+        volume_name = _find_volume_by_pvc_and_pod(pod_name, namespace, pvc_name)
+        _delete_pvc_manager_if_exists(pod_name, namespace)
+
+        time.sleep(6)
+
+        _patch_pod_with_debug_container(pod_name, namespace, volume_name)
     else:
-        _scale_down_controller_from_pvc(pvc_name)
+        _create_pvc_manager_pod(pvc_name, namespace)
 
-        # TODO split out the functionality of rendering the job, waiting, and launching our exec
-        with client.ApiClient() as api_client:
-            # Launch the pod, probably with a kubectl command
-            rendered_job = _render_job(
-                "pvc-manager-interactive", {"pvc_name": pvc_name}
-            )
-            _launch_job(rendered_job)
+        pod_name = "pvc-manager"
+        volume_name = pvc_name
 
-            logging.info("Waiting 5 seconds for the job pod to come up")
-            time.sleep(5)
+    time.sleep(5)
 
-            api_instance = client.CoreV1Api(api_client)
-            pods = api_instance.list_namespaced_pod(
-                namespace,
-                # TODO This is hardcoded
-                label_selector="job-name=pvc-manager-pvc-jellyfin",
-                field_selector="status.phase!=Succeeded",
-            )
-            if len(pods.items) < 1:
-                logging.error("Was not able to find any running pods for this job")
-                exit(1)
-            else:
-                pod_name = pods.items[0].metadata.name
-                exec_command = f"kubectl exec -it {pod_name} -- /bin/sh"
-
-                subprocess.run(
-                    f"echo {exec_command} | pbcopy",
-                    shell=True,
-                    capture_output=True,
-                )
-                print("Copied kubectl exec command to clipboard")
-
-            # TODO I'd like to have this automatically open the pod, but that's a pain right now
-            # I think we're going to want to use the CMD module
-            # response = stream(
-            #     core_api_client.connect_get_namespaced_pod_exec(
-            #         "qbittorrent-68cf455bb9-nzpvb",
-            #         namespace=namespace,
-            #         # container=rendered_job["spec"]["template"]["spec"]["containers"][0]["name"],
-            #         container="qbittorrent",
-            #         stdin=True,
-            #         stdout=True,
-            #         stderr=True,
-            #         command="/bin/sh",
-            #     )
-            # )
-
-            # while response.is_open():
-            #     response.update(timeout=1)
-            # if response.peek_stdout():
-            #     print(f"STDOUT: {response.read_stdout()}")
-            # if response.peek_stderr():
-            #     print(f"STDERR: {response.read_stderr()}")
-            # if commands:
-            #     c = commands.pop(0)
-            #     print(f"Running command... {c}\n")
-            #     response.write_stdin(c + "\n")
-            # else:
-            #     break
-
-        # Scale the controller back up
-        # if controller_name is not None:
-        #     _modify_controller_replicas(
-        #         controller_name,
-        #         controller_namespace,
-        #         controller_kind,
-        #         previous_replicas,
-        #     )
+    _exec_shell_in_pod(pod_name, "videos", "pvc-manager")
 
 
 def list_available_jobs() -> None:
@@ -186,7 +134,7 @@ def list_available_jobs() -> None:
         print(f"{job}:      {description}")
 
 
-def run_job_cli(job_name: str, args=None) -> None:
+def run_job(job_name: str, args=None) -> None:
     """
     Given a job name and list of args, render the job template, then run the job
     Args:
@@ -238,109 +186,237 @@ def _clear_job_name(job_name: str, namespace: str) -> None:
     logging.info(f"No job named {job_name} found in namespace {namespace}")
 
 
-def _get_controller_from_pvc(
-    pvc_name: str, namespace: str = ""
-) -> tuple[str, str, str]:
-    """
-    Given the name of a PVC, retrieve the pod it's attached to, and then from that, retrieve it's controller.
-    We can then scale down that controller, so our job pod can mount it
-    Args:
-        pvc_name (str): The name of the PVC whose pod's controller we want to find
-        namespace (str): The namespace the PVC is located. If no namespace is provided, then it uses the current
-        namespace
-    Returns:
-        tuple[str, str, str]: If a pod is found for the PVC, returns the pod controller's name, its namespace, and the
-        controller kind
-    """
-    # TODO Validate that the PVC exists, so we can use it on PVCs without a pod
-    description: str = _get_pvc_description(pvc_name, namespace)
+def _create_pvc_manager_pod(pvc_name: str, namespace: str) -> None:
+    try:
+        api_instance = client.CoreV1Api()
 
-    pod_namespace: str = ""
-    if namespace:
-        pod_namespace = namespace
-
-    pod_info = _get_information_from_description(description)
-
-    if "used_by" not in pod_info.keys():
-        logging.error(
-            f"Could not find a pod for {pvc_name}, try checking if it exists, or is attached"
-        )
-        exit(1)
-    with client.ApiClient() as api_client:
-        if pod_info["used_by"] != "<none>":
-            api_instance = client.CoreV1Api(api_client)
-            try:
-                # TODO This may come back to bite me in the ass. If it grabs the wrong object, it's because we
-                # assume there's only one owner reference
-                if namespace == "":
-                    if "namespace" in pod_info.keys():
-                        pod_namespace = pod_info["namespace"]
-
-                api_response = api_instance.read_namespaced_pod(
-                    pod_info["used_by"], pod_namespace
+        # Check if a pod named "pvc-manager" already exists in the namespace
+        try:
+            existing_pod = api_instance.read_namespaced_pod(
+                name="pvc-manager", namespace=namespace
+            )
+            if existing_pod:
+                # Delete the existing "pvc-manager" pod
+                api_instance.delete_namespaced_pod(
+                    name="pvc-manager", namespace=namespace, grace_period_seconds=0
                 )
-                if api_response.metadata.owner_references is not None:
-                    return (
-                        api_response.metadata.owner_references[0].name,
-                        pod_namespace,
-                        api_response.metadata.owner_references[0].kind,
+                logging.info(
+                    f"Deleted existing pod 'pvc-manager' in namespace '{namespace}'"
+                )
+                time.sleep(5)  # Wait for the pod to be deleted
+        except Exception as e:
+            if e.status != 404:
+                logging.error(
+                    f"Error checking/deleting existing pod 'pvc-manager': {str(e)}"
+                )
+
+        # Define the pod manifest
+        pod_manifest = {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "metadata": {"name": "pvc-manager"},
+            "spec": {
+                "containers": [
+                    {
+                        "name": "pvc-manager",
+                        "image": "aidanhilt/atils-debug",
+                        "command": ["/bin/sh"],
+                        "args": [
+                            "-c",
+                            "sleep 1800",
+                        ],  # Sleep for 30 minutes (1800 seconds)
+                        "volumeMounts": [
+                            {"name": "pvc", "mountPath": f"/root/{pvc_name}"}
+                        ],
+                    }
+                ],
+                "volumes": [
+                    {"name": "pvc", "persistentVolumeClaim": {"claimName": pvc_name}}
+                ],
+                "restartPolicy": "Never",
+            },
+        }
+
+        try:
+            # Create the pod
+            api_instance.create_namespaced_pod(namespace=namespace, body=pod_manifest)
+            logging.info(
+                f"Created pod 'pvc-manager' with PVC '{pvc_name}' mounted at '/root/{pvc_name}'"
+            )
+        except client.rest.ApiException as e:
+            logging.error(f"Error creating pod 'pvc-manager': {str(e)}")
+
+    except Exception as e:
+        logging.error(f"Error occurred while creating pod: {str(e)}")
+
+
+def _delete_pvc_manager_if_exists(pod_name: str, namespace: str) -> None:
+    try:
+
+        api_instance = client.CoreV1Api()
+
+        try:
+            # Get the pod details
+            pod = api_instance.read_namespaced_pod(name=pod_name, namespace=namespace)
+
+            # Check if the pod has ephemeral containers
+            if pod.spec.ephemeral_containers:
+                # Find the index of the "pvc-manager" ephemeral container
+                container_index = next(
+                    (
+                        index
+                        for index, container in enumerate(pod.spec.ephemeral_containers)
+                        if container.name == "pvc-manager"
+                    ),
+                    None,
+                )
+
+                if container_index is not None:
+                    # Remove the "pvc-manager" ephemeral container from the pod spec
+                    pod.spec.ephemeral_containers.pop(container_index)
+
+                    # Patch the pod to update the ephemeral containers
+                    api_instance.patch_namespaced_pod(
+                        name=pod_name, namespace=namespace, body=pod
+                    )
+                    logging.debug(
+                        f"Deleted ephemeral container 'pvc-manager' from pod '{pod_name}'"
                     )
                 else:
-                    return ("", "", "")
-            except client.exceptions.ApiException:
-                logging.error(
-                    f"Could not find pod {pod_info['used_by']} for pvc {pvc_name}"
+                    logging.debug(
+                        f"Ephemeral container 'pvc-manager' not found in pod '{pod_name}'"
+                    )
+            else:
+                logging.debug(f"No ephemeral containers found in pod '{pod_name}'")
+
+        except Exception as e:
+            if e.status == 404:
+                logging.warning(
+                    f"Pod '{pod_name}' not found in namespace '{namespace}'"
                 )
-                exit(1)
-        else:
-            logging.info(
-                f"Could not find a pod for pvc {pvc_name}, going to assume its currently unattached"
-            )
-            return ("", "", "")
+            else:
+                logging.error(
+                    f"Error deleting ephemeral container from pod '{pod_name}': {str(e)}"
+                )
+
+    except Exception as e:
+        logging.error(f"Error occurred while deleting ephemeral container: {str(e)}")
 
 
-def _get_information_from_description(description: str) -> dict:
+def _exec_shell_in_pod(pod_name: str, namespace: str, container_name: str) -> None:
     """
-    Given the printout of a kubernetes describe command for various Kubernetes objects, extract
-    key information and return it as a dictionary
+    Exec into a given container in a given pod, in a given namespace. This will assume
+    that the container has zsh installed
+
     Args:
-        description (str): The string containing the output of a kubernetes describe command
+        pod_name (str): The name of the pod to exec into
+        namespace (str): The namespace the pod is located in
+        container_name (str): The name of the container to exec into
+    """
+    api_client = client.ApiClient()
+    api_instance = client.CoreV1Api(api_client)
+
+    exec_command = ["/bin/zsh"]
+
+    resp = stream(
+        api_instance.connect_get_namespaced_pod_exec,
+        pod_name,
+        namespace,
+        command=exec_command,
+        container=container_name,
+        stderr=True,
+        stdin=True,
+        stdout=True,
+        tty=True,
+        _preload_content=False,
+    )
+
+    t = Thread(target=_read, args=[resp])
+
+    # change tty mode to be able to work with escape characters
+    stdin_fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(stdin_fd)
+    try:
+        tty.setraw(stdin_fd)
+        t.start()
+        while resp.is_open():
+            data = resp.read_stdout(10)
+            if resp.is_open():
+                if len(data or "") > 0:
+                    sys.stdout.write(data)
+                    sys.stdout.flush()
+    finally:
+        # reset tty
+        print("\033c")
+        termios.tcsetattr(stdin_fd, termios.TCSADRAIN, old_settings)
+        print("press enter")
+
+
+def _find_pod_by_pvc(pvc_name: str) -> str:
+    """
+    Given the name of a PVC, find the name of a pod it is attached to. If no pod is attached, return an empty string
+
+    Args:
+        pvc_name (str): The name of the PVC to search for
 
     Returns:
-        dict[str, str]: A dictionary that may contain the following keys:
-        used_by: What pod a PVC is used by
-        namespace: The namespace of the object
-        controlled_by: The Deployment or other controller that manages a ReplicaSet
+        str: The name of the pod the PVC is attached to, or an empty string if no pod is attached.
     """
-    return_dict = {}
-    # TODO error handle here if needed
-    for line in description.split("\n"):
-        if "Used By:" in line:
-            splitted = line.split(" ")
-            return_dict["used_by"] = splitted[len(splitted) - 1]
-        elif "Namespace:" in line:
-            splitted = line.split(" ")
-            return_dict["namespace"] = splitted[len(splitted) - 1]
-        elif "Controlled By:" in line:
-            splitted = line.split(" ")
-            raw_value = splitted[len(splitted) - 1]
-            return_dict["controlled_by"] = raw_value.split("/")[1]
-    return return_dict
+    try:
+
+        v1 = client.CoreV1Api()
+
+        # List all pods in all namespaces
+        pods: List[client.V1Pod] = v1.list_pod_for_all_namespaces().items
+
+        for pod in pods:
+            for volume in pod.spec.volumes:
+                if (
+                    volume.persistent_volume_claim
+                    and volume.persistent_volume_claim.claim_name == pvc_name
+                ):
+                    return pod.metadata.name
+
+        return ""
+
+    except Exception as e:
+        print(f"Error occurred while searching for pod: {str(e)}")
+        return ""
 
 
-def _get_pvc_description(pvc_name: str, namespace: str) -> str:
-    if not namespace:
-        result = subprocess.run(
-            ["kubectl", "describe", "pvc", pvc_name], capture_output=True, text=True
+def _find_volume_by_pvc_and_pod(pod_name: str, namespace: str, pvc_name: str) -> str:
+    """
+    Given a pvc name, and the name of a pod, find the name the volume was given, for mounting purposes.
+    We assume there's a volume here, so fail if nothing is found
+
+    Args:
+        pod_name (str): The name of the pod to search for
+        namespace (str): The namespace the pod is in
+        pvc_name (str): The name of the PVC to search for
+
+    Returns:
+        str: The name of the volume that mounts our pvc
+    """
+    try:
+
+        v1 = client.CoreV1Api()
+        pod = v1.read_namespaced_pod(name=pod_name, namespace=namespace)
+
+        for volume in pod.spec.volumes:
+            if (
+                volume.persistent_volume_claim
+                and volume.persistent_volume_claim.claim_name == pvc_name
+            ):
+                return volume.name
+
+        logging.error(
+            f"No volume found using PVC '{pvc_name}' in pod '{pod_name}' in namespace '{namespace}'"
         )
-    else:
-        result = subprocess.run(
-            ["kubectl", "describe", "pvc", pvc_name, "-n", namespace],
-            capture_output=True,
-            text=True,
-        )
+        sys.exit(1)
 
-    return result.stdout
+    except Exception as e:
+        logging.error(f"Error occurred while searching for volume: {str(e)}")
+        sys.exit(1)
 
 
 def _launch_job(job_dict):
@@ -362,54 +438,65 @@ def _launch_job(job_dict):
     utils.create_from_dict(k8s_client, job_dict)
 
 
-def _modify_controller_replicas(
-    controller_name: str, namespace: str, controller_type: str, num_replicas: int
-) -> int:
+def _patch_pod_with_debug_container(
+    pod_name: str, namespace: str, volume_name: str
+) -> None:
     """
-    Modify the number of replicas a controller is requesting
+    Patch a pod with an ephemeral container, running our debug image. This then mounts a PVC in the home directory,
+    to view and modify any files
+
     Args:
-        controller_name (str): The name of the controller
-        namespace (str): The namespace the controller lives in
-        controller_type (str): The kind (i.e. ReplicaSet, DaemonSet, etc) of the controller
-        num_replicas (int): The number of replicas we want to set for the controller
+        pod_name (str): The name of the pod to patch
+        namespace (str): The namespace the pod to patch lives in
+        volume_name (str): The name of the volume to mount in the pod
     """
-    with client.ApiClient() as api_client:
-        api_instance = client.AppsV1Api(api_client)
+    try:
+
+        api_instance = client.CoreV1Api()
+
+        # Define the ephemeral container
+        ephemeral_container = {
+            "name": "pvc-manager",
+            "image": "aidanhilt/atils-debug",
+            "command": ["/bin/sh"],
+            "args": ["-c", "sleep 1800"],  # Sleep for 30 minutes (1800 seconds)
+            "volumeMounts": [
+                {"name": volume_name, "mountPath": f"/root/{volume_name}"}
+            ],
+        }
+
+        body = {"spec": {"ephemeralContainers": [ephemeral_container]}}
+
         try:
-            if controller_type == "ReplicaSet":
-                result = subprocess.run(
-                    [
-                        "kubectl",
-                        "describe",
-                        "replicaset",
-                        controller_name,
-                        "-n",
-                        namespace,
-                    ],
-                    capture_output=True,
-                    text=True,
-                )
-                info = _get_information_from_description(result.stdout)
+            # Patch the pod with the ephemeral container
+            api_instance.patch_namespaced_pod_ephemeralcontainers(
+                name=pod_name, namespace=namespace, body=body
+            )
 
-                previous_replicas: int = api_instance.read_namespaced_deployment(
-                    info["controlled_by"], namespace
-                ).spec.replicas
+            logging.debug(
+                f"Successfully patched pod '{pod_name}' with ephemeral container"
+            )
+        except Exception as e:
+            logging.error(f"Error patching pod '{pod_name}': {str(e)}")
 
-                patch_body = (
-                    '[{"op": "replace", "path": "/spec/replicas", "value":'
-                    + str(num_replicas)
-                    + "}]"
-                )
-                api_response = api_instance.patch_namespaced_deployment(
-                    info["controlled_by"], namespace, json.loads(patch_body)
-                )
+    except Exception as e:
+        logging.error(f"Error occurred while patching pod: {str(e)}")
 
-                return previous_replicas
-        except client.exceptions.ApiException as e:
-            logging.error(f"Failed to scale down {controller_name}")
-            logging.debug(e)
-            return -1
-    return -1
+
+def _read(resp):
+    """
+    Redirect the terminal input to the stream, and read the response from the stream.
+    This is used to read the response from the stream when we are running a job.
+    Args:
+        resp (stream): The stream object to read from.
+    Returns:
+        str: The response from the stream.
+    """
+    while resp.is_open():
+        char = sys.stdin.read(1)
+        resp.update()
+        if resp.is_open():
+            resp.write_stdin(char)
 
 
 def _render_job(job_name: str, args: dict[str, str]) -> str:
@@ -433,33 +520,3 @@ def _render_job(job_name: str, args: dict[str, str]) -> str:
     else:
         logging.error(f'Job "{job_name}" was not found')
         exit(1)
-
-
-def _scale_down_controller_from_pvc(pvc_name: str) -> int:
-    """
-    Given the name of a pvc, identify any pod it is attached to, and from that pod, identify
-    a corresponding controller. After that, scale down the controller, and return how many
-    replicas it had previously. If no controller was found, return -1
-
-    Args:
-        pvc_name (str): The name of the pvc whose pod we want to disable
-
-    Returns:
-        int: -1 if no controller was found, and the number of replicas has the controller
-        set as desired if a controller was found
-    """
-    (
-        controller_name,
-        controller_namespace,
-        controller_kind,
-    ) = _get_controller_from_pvc(pvc_name)
-
-    # We'll assume by default that previous replicas was 1, unless we find
-    # something better
-    previous_replicas = -1
-    if controller_name is not None:
-        previous_replicas = _modify_controller_replicas(
-            controller_name, controller_namespace, controller_kind, 0
-        )
-
-    return previous_replicas
