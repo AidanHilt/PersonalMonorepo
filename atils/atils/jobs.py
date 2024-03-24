@@ -10,6 +10,7 @@ from threading import Thread
 from typing import List
 
 import yaml
+from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 
 from atils import atils_kubernetes
@@ -204,7 +205,7 @@ def _create_pvc_manager_pod(pvc_name: str, namespace: str) -> None:
                     f"Deleted existing pod 'pvc-manager' in namespace '{namespace}'"
                 )
                 time.sleep(5)  # Wait for the pod to be deleted
-        except Exception as e:
+        except ApiException as e:
             if e.status != 404:
                 logging.error(
                     f"Error checking/deleting existing pod 'pvc-manager': {str(e)}"
@@ -289,7 +290,7 @@ def _delete_pvc_manager_if_exists(pod_name: str, namespace: str) -> None:
             else:
                 logging.debug(f"No ephemeral containers found in pod '{pod_name}'")
 
-        except Exception as e:
+        except ApiException as e:
             if e.status == 404:
                 logging.warning(
                     f"Pod '{pod_name}' not found in namespace '{namespace}'"
