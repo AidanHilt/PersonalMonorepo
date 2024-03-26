@@ -8,7 +8,7 @@ configuration:
   configurationRevision: master
 
 flaresolverr:
-  enabled: false
+  enabled: true
   configuration:
     enabled: false
 
@@ -24,7 +24,7 @@ grafana-datasources:
 grafana-loki:
   enabled: false
   configuration:
-    enabled: false
+    enabled: true
   version: "5.47.1"
 
 grafana-promtail:
@@ -36,11 +36,11 @@ grafana-promtail:
 hashi-vault:
   enabled: false
   configuration:
-    enabled: false
+    enabled: true
   version: "0.27.0"
 
 ingress:
-  enabled: false
+  enabled: true
 
 istio:
   enabled: false
@@ -63,13 +63,13 @@ istio-gateway:
 kiali:
   enabled: false
   configuration:
-    enabled: false
+    enabled: true
   version: "1.81.0"
 
 longhorn:
   enabled: false
   configuration:
-    enabled: false
+    enabled: true
   version: "1.6.0"
 
 metallb:
@@ -84,29 +84,29 @@ metallb-config:
 prometheus:
   enabled: false
   configuration:
-    enabled: false
+    enabled: true
 
 prowlarr:
-  enabled: false
+  enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 radarr:
-  enabled: false
+  enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 sonarr:
-  enabled: false
+  enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 transmission:
-  enabled: false
+  enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 video-stack-configuration:
-  enabled: false
+  enabled: true
   configuration:
     enabled: false

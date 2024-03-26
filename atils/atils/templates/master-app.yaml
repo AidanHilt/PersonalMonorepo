@@ -5,19 +5,22 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://github.com/AidanHilt/PersonalMonorepo
-    path: kubernetes/argocd/applications
-    targetRevision: {{ environment }}
-    helm:
-      parameters:
-        - name: env
-          value: {{ environment }}
+  sources:
+    - repoURL: https://github.com/AidanHilt/PersonalMonorepo
+      path: kubernetes/argocd/applications
+      targetRevision: {{ git_revision }}
+      helm:
+        valueFiles:
+          - "$values/{{ configuration_directory }}/{{ environment }}/master-stack.yaml"
+    - repoURL: {{ configuration_repo }}
+      targetRevision: {{ configuration_revision }}
+      ref: values
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: argocd
-  # TODO parameterize this, so we can disable automatic sync for certain environments
+  {% if environment != "qa-cluster" %}
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+  {% endif %}

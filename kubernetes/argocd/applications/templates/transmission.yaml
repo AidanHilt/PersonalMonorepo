@@ -6,18 +6,19 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
-    targetRevision: {{ .Values.env }}
-    path: kubernetes/helm-charts/transmission
-    helm:
-      values: |
-        transmission:
-          alternateUi:
-            enabled: true
-
-        env:
-          TRANSMISSION_WEB_HOME: /custom/flood-for-transmission
+  sources:
+    - repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
+      targetRevision: {{ .Values.env }}
+      path: kubernetes/helm-charts/transmission
+      targetRevision: {{ .Values.gitRevision }}
+    {{- if index .Values "grafana-dashboards" "configuration" "enabled" }}
+      helm:
+        valueFiles:
+          - "$values/{{ .Values.configuration.configurationDirectory }}/grafana-dashboards"
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.configuration.configurationRevision }}
+      ref: values
+    {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: videos

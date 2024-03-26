@@ -1,4 +1,4 @@
-{{ if and (.Values.longhorn.enabled) (ne .Values.env "dev-laptop") }}
+{{ if .Values.longhorn.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -9,15 +9,19 @@ spec:
     namespace: longhorn-system
     server: https://kubernetes.default.svc
   project: default
-  source:
-    helm:
-      releaseName: longhorn
-      parameters:
-        - name: defaultSettings.defaultDataPath
-          value: /longhorn
-    chart: longhorn
-    repoURL: https://charts.longhorn.io
-    targetRevision: 1.4.1
+  sources:
+    - chart: longhorn
+      repoURL: https://charts.longhorn.io
+      targetRevision: {{ index .Values "longhorn" "version" }}
+      helm:
+        releaseName: longhorn
+    {{- if index .Values "grafana-dashboards" "configuration" "enabled" }}
+        valueFiles:
+          - "$values/{{ .Values.configuration.configurationDirectory }}/grafana-dashboards"
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.configuration.configurationRevision }}
+      ref: values
+    {{- end }}
   syncPolicy:
     automated:
       prune: true

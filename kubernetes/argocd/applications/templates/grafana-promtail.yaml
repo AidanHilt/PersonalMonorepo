@@ -10,11 +10,18 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    helm:
-      releaseName: grafana-promtail
-    chart: promtail
-    repoURL: https://grafana.github.io/helm-charts
-    targetRevision: 6.11.0
+    - chart: promtail
+      repoURL: https://grafana.github.io/helm-charts
+      targetRevision: {{ index .Values "grafana-promtail" "version" }}
+      helm:
+        releaseName: grafana-promtail
+    {{- if index .Values "grafana-promtail" "configuration" "enabled" }}
+        valueFiles:
+          - "$values/{{ .Values.configuration.configurationDirectory }}/grafana-promtail"
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.configuration.configurationRevision }}
+      ref: values
+    {{- end }}
   syncPolicy:
     automated:
       prune: true

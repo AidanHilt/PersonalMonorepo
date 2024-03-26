@@ -1,4 +1,4 @@
-{{ if .Values.flaresolverr.enabled }}
+{{- if .Values.flaresolverr.enabled -}}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -6,10 +6,10 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
-    targetRevision: {{ .Values.env }}
-    path: kubernetes/helm-charts/flaresolverr
+  sources:
+    - repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
+      targetRevision: {{ .Values.gitRevision }}
+      path: kubernetes/helm-charts/flaresolverr
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: videos
@@ -19,4 +19,4 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-{{end}}
+{{- end -}}

@@ -6,16 +6,18 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
-    targetRevision: {{ .Values.env }}
-    path: kubernetes/helm-charts/radarr
-    helm:
-      values: |
-        radarr:
-          urlBase: radarr
-          metrics:
-            enabled: true
+  sources:
+    - repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
+      path: kubernetes/helm-charts/radarr
+      targetRevision: {{ .Values.gitRevision }}
+    {{- if index .Values "radarr" "configuration" "enabled" }}
+      helm:
+        valueFiles:
+          - "$values/{{ .Values.configuration.configurationDirectory }}/radarr"
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.configuration.configurationRevision }}
+      ref: values
+    {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: videos

@@ -1,0 +1,4 @@
+radarr:
+  urlBase: radarr
+  metrics:
+    enabled: true

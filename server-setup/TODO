@@ -7,7 +7,6 @@ Roles:
         Dynamic DNS
         Need docker
 
-
     Kubernetes Plane:
         Need swap disabled
         Need ports opened
@@ -15,7 +14,6 @@ Roles:
     GPU Plane:
         Nvidia container toolkit
         Nvidia K8s component
-
 
     Storage Plane:
         ZFS

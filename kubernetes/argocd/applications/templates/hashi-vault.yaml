@@ -9,34 +9,19 @@ spec:
     namespace: vault
     server: https://kubernetes.default.svc
   project: default
-  source:
-    helm:
-      releaseName: hashi-vault
-      values: |
-        server:
-          standalone:
-            config: | 
-              ui = true
-              listener "tcp" {
-                tls_disable = 1
-                address = "[::]:8200"
-                cluster_address = "[::]:8201"
-                # Enable unauthenticated metrics access (necessary for Prometheus Operator)
-                telemetry {
-                unauthenticated_metrics_access = "true"
-                }
-              }
-              storage "file" {
-                path = "/vault/data"
-              }
-          {{ if or (eq .Values.env "dev-laptop") (eq .Values.env "dev-cluster") }}
-          dev:
-            enabled: true
-          {{ end }}
-
-    chart: vault
-    repoURL: https://helm.releases.hashicorp.com
-    targetRevision: 0.24.1
+  sources:
+    - chart: vault
+      repoURL: https://helm.releases.hashicorp.com
+      targetRevision: targetRevision: {{ index .Values "hashi-vault" "version" }}
+      helm:
+        releaseName: hashi-vault
+    {{- if index .Values "hashi-vault" "configuration" "enabled" }}
+        valueFiles:
+          - "$values/{{ .Values.configuration.configurationDirectory }}/hashi-vault"
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.configuration.configurationRevision }}
+      ref: values
+    {{- end }}
   syncPolicy:
     automated:
       prune: true

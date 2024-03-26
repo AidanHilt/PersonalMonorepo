@@ -1,4 +1,4 @@
-{{ if and (index .Values "istio-gateway" "enabled") (ne .Values.env "dev-laptop") }}
+{{ if index .Values "istio-gateway" "enabled" }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -9,12 +9,19 @@ spec:
     namespace: istio-system
     server: https://kubernetes.default.svc
   project: default
-  source:
-    repoURL: 'https://istio-release.storage.googleapis.com/charts'
-    targetRevision: 1.17.1
-    chart: gateway
-    helm:
-      releaseName: istio-gateway
+  sources:
+    - repoURL: 'https://istio-release.storage.googleapis.com/charts'
+      targetRevision: {{ index .Values "" "version" }}
+      chart: gateway
+      helm:
+        releaseName: istio-gateway
+    {{- if index .Values "istio-gateway" "configuration" "enabled" }}
+        valueFiles:
+          - "$values/{{ .Values.configuration.configurationDirectory }}/istio-gateway"
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.configuration.configurationRevision }}
+      ref: values
+    {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: istio-system

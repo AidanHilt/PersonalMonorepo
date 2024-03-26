@@ -9,25 +9,19 @@ spec:
     namespace: monitoring
     server: https://kubernetes.default.svc
   project: default
-  source:
-    helm:
-      releaseName: grafana-loki
-      parameters:
-        - name: loki.auth_enabled
-          value: "false"
-        - name: minio.enabled
-          value: "true"
-        - name: backend.replicas
-          value: '2'
-        - name: gateway.autoscaling.maxReplicas
-          value: '2'
-        - name: write.replicas
-          value: '2'
-        - name: read.replicas
-          value: '2'
-    chart: loki
-    repoURL: https://grafana.github.io/helm-charts
-    targetRevision: 4.8.0
+  sources:
+    - chart: loki
+      repoURL: https://grafana.github.io/helm-charts
+      targetRevision: {{ index .Values "grafana-loki" "version" }}
+      helm:
+        releaseName: grafana-loki
+    {{- if index .Values "grafana-loki" "configuration" "enabled" }}
+        valueFiles:
+          - "$values/{{ .Values.configuration.configurationDirectory }}/grafana-loki"
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.configuration.configurationRevision }}
+      ref: values
+    {{- end }}
   syncPolicy:
     automated:
       prune: true

@@ -1,4 +1,4 @@
-{{ if and (.Values.ingress.enabled) (eq .Values.env "dev-laptop") }}
+{{ if .Values.ingress.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -28,7 +28,7 @@ spec:
   source:
     repoURL: https://github.com/AidanHilt/PersonalMonorepo
     path: kubernetes/ingress
-    targetRevision: {{ .Values.env }}
+    targetRevision: {{ .Values.gitRevision }}
   destination:
     server: 'https://kubernetes.default.svc'
   syncPolicy:

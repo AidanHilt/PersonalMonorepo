@@ -1,0 +1,16 @@
+grafana:
+  grafana.ini:
+    server:
+      protocol: http
+      root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+      serve_from_sub_path: true
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+# It looks like we need a different setup if we're using istio vs ingress. Use this when
+# making values for the other envs
+# {{ if ne .Values.env "dev-laptop" }}
+# env:
+#   GF_SERVER_ROOT_URL: '%(protocol)s://%(domain)s:%(http_port)s/grafana/'
+#   GF_SERVE_FROM_SUB_PATH: false
+# {{ end }}
