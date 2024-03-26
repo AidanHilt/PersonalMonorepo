@@ -63,12 +63,6 @@ def main(args: list[str]) -> None:
         default="https://github.com/AidanHilt/PersonalMonorepo",
     )
     setup_parser.add_argument(
-        "--configuration-revision",
-        "-crv",
-        help="The revision for the configuration repo",
-        default="master",
-    )
-    setup_parser.add_argument(
         "--configuration-directory",
         "-cd",
         help="The directory in the configuration repo where the master-stack config lives",
@@ -101,12 +95,6 @@ def main(args: list[str]) -> None:
         "-crp",
         help="The repository where the configuration for master-stack is stored",
         default="https://github.com/AidanHilt/PersonalMonorepo",
-    )
-    master_stack_parser.add_argument(
-        "--configuration-revision",
-        "-crv",
-        help="The revision for the configuration repo",
-        default="master",
     )
     master_stack_parser.add_argument(
         "--configuration-directory",

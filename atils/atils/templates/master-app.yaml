@@ -13,7 +13,7 @@ spec:
         valueFiles:
           - "$values/{{ configuration_directory }}/{{ environment }}/master-stack.yaml"
     - repoURL: {{ configuration_repo }}
-      targetRevision: {{ configuration_revision }}
+      targetRevision: {{ git_revision }}
       ref: values
   destination:
     server: 'https://kubernetes.default.svc'

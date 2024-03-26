@@ -11,7 +11,7 @@ spec:
       targetRevision: {{ .Values.env }}
       path: kubernetes/helm-charts/transmission
       targetRevision: {{ .Values.gitRevision }}
-    {{- if index .Values "grafana-dashboards" "configuration" "enabled" }}
+    {{- if index .Values "transmission" "configuration" "enabled" }}
       helm:
         valueFiles:
           - "$values/{{ .Values.configuration.configurationDirectory }}/grafana-dashboards"
