@@ -17,7 +17,7 @@ spec:
         releaseName: istio-gateway
     {{- if index .Values "istio-gateway" "configuration" "enabled" }}
         valueFiles:
-          - "$values/{{ .Values.configuration.configurationDirectory }}/istio-gateway.yaml"
+          - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/istio-gateway.yaml"
     - repoURL: {{ .Values.configuration.configurationRepo }}
       targetRevision: {{ .Values.gitRevision }}
       ref: values

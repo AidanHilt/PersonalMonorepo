@@ -13,7 +13,7 @@ spec:
     {{- if index .Values "radarr" "configuration" "enabled" }}
       helm:
         valueFiles:
-          - "$values/{{ .Values.configuration.configurationDirectory }}/radarr.yaml"
+          - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/radarr.yaml"
     - repoURL: {{ .Values.configuration.configurationRepo }}
       targetRevision: {{ .Values.gitRevision }}
       ref: values

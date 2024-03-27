@@ -14,7 +14,7 @@ spec:
         releaseName: metallb
     {{- if index .Values "metallb" "configuration" "enabled" }}
         valueFiles:
-          - "$values/{{ .Values.configuration.configurationDirectory }}/metallb.yaml"
+          - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/metallb.yaml"
     - repoURL: {{ .Values.configuration.configurationRepo }}
       targetRevision: {{ .Values.gitRevision }}
       ref: values

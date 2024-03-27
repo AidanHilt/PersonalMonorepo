@@ -14,7 +14,7 @@ spec:
         releaseName: kiali
     {{- if index .Values "kiali" "configuration" "enabled" }}
         valueFiles:
-          - "$values/{{ .Values.configuration.configurationDirectory }}/kiali.yaml"
+          - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/kiali.yaml"
     - repoURL: {{ .Values.configuration.configurationRepo }}
       targetRevision: {{ .Values.gitRevision }}
       ref: values
