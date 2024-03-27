@@ -17,7 +17,7 @@ spec:
         releaseName: grafana-loki
     {{- if index .Values "grafana-loki" "configuration" "enabled" }}
         valueFiles:
-          - "$values/{{ .Values.configuration.configurationDirectory }}/grafana-loki"
+          - "$values/{{ .Values.configuration.configurationDirectory }}/grafana-loki.yaml"
     - repoURL: {{ .Values.configuration.configurationRepo }}
       targetRevision: {{ .Values.configuration.configurationRevision }}
       ref: values

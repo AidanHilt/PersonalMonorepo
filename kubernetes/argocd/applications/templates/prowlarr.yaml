@@ -13,7 +13,7 @@ spec:
     {{- if index .Values "prowlarr" "configuration" "enabled" }}
       helm:
         valueFiles:
-          - "$values/{{ .Values.configuration.configurationDirectory }}/prowlarr"
+          - "$values/{{ .Values.configuration.configurationDirectory }}/prowlarr.yaml"
     - repoURL: {{ .Values.configuration.configurationRepo }}
       targetRevision: {{ .Values.configuration.configurationRevision }}
       ref: values
