@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: master
+gitRevision: feat/better-env-management
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
