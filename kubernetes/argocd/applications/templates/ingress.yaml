@@ -30,7 +30,7 @@ spec:
     path: kubernetes/ingress
     targetRevision: {{ .Values.gitRevision }}
     directory:
-      exclude: '{mkdocs.yaml,docs/*}'
+      exclude: '{mkdocs.yaml,catalog-info.yaml,docs/*}'
   destination:
     server: 'https://kubernetes.default.svc'
   syncPolicy:
