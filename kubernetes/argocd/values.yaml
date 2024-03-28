@@ -98,3 +98,9 @@ configs:
     server.disable.auth: "true"
     server.basehref: "/argocd"
     server.rootpath: "/argocd"
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  pathType: Prefix
+  path: /argocd
