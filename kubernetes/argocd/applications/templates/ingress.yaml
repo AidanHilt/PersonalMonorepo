@@ -29,6 +29,8 @@ spec:
     repoURL: https://github.com/AidanHilt/PersonalMonorepo
     path: kubernetes/ingress
     targetRevision: {{ .Values.gitRevision }}
+    directory:
+      exclude: {mkdocs.yaml,docs/*}
   destination:
     server: 'https://kubernetes.default.svc'
   syncPolicy:
