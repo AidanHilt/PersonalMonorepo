@@ -10,7 +10,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-    - repoURL: 'https://istio-release.storage.googleapis.com/charts'
+    - repoURL: 'https://helm.releases.hashicorp.com'
       targetRevision: {{ index .Values "hashi-vault" "version" }}
       chart: vault
       helm:
