@@ -34,7 +34,7 @@ grafana-promtail:
   version: "6.15.5"
 
 hashi-vault:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
   version: "0.27.0"
