@@ -9,7 +9,7 @@ backend:
 
 gateway:
   autoscaling:
-    maxReplicas: 1
+    maxReplicas: 2
 
 write:
   replicas: 1
