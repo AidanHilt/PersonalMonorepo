@@ -4,3 +4,14 @@ metadata:
   name: vault
   namespace: vault
 spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hashi-vault
+                port:
+                  number: 8200
