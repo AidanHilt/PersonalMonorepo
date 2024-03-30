@@ -16,10 +16,10 @@ gateways:
   enabled: false
 
 grafana-dashboards:
-  enabled: true
+  enabled: false
 
 grafana-datasources:
-  enabled: true
+  enabled: false
 
 grafana-loki:
   enabled: true
