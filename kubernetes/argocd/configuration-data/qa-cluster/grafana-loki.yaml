@@ -5,14 +5,14 @@ minio:
   enabled: true
 
 backend:
-  replicas: 2
+  replicas: 1
 
 gateway:
   autoscaling:
-    maxReplicas: 2
+    maxReplicas: 1
 
 write:
-  replicas: 2
+  replicas: 1
 
 read:
-  replicas: 2
+  replicas: 1
