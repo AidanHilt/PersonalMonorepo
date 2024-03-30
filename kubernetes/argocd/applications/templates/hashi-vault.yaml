@@ -10,9 +10,9 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-    - repoURL: "https://helm.releases.hashicorp.com"
+    - repoURL: 'https://istio-release.storage.googleapis.com/charts'
+      targetRevision: {{ index .Values "hashi-vault" "version" }}
       chart: vault
-      targetRevision: targetRevision: {{ index .Values "hashi-vault" "version" }}
       helm:
         releaseName: hashi-vault
     {{- if index .Values "hashi-vault" "configuration" "enabled" }}
