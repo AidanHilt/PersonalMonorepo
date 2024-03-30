@@ -10,8 +10,8 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-    - chart: vault
-      repoURL: "https://helm.releases.hashicorp.com"
+    - repoURL: "https://helm.releases.hashicorp.com"
+      chart: vault
       targetRevision: targetRevision: {{ index .Values "hashi-vault" "version" }}
       helm:
         releaseName: hashi-vault
