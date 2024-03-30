@@ -1,4 +1,4 @@
-{{ if and (.Values.metallb.enabled) (ne .Values.env "dev-laptop") }}
+{{ if .Values.metallb.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -6,12 +6,19 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: 'https://metallb.github.io/metallb'
-    targetRevision: 0.13.9
-    chart: metallb
-    helm:
-      releaseName: metallb
+  sources:
+    - repoURL: 'https://metallb.github.io/metallb'
+      targetRevision: {{ index .Values "metallb" "version" }}
+      chart: metallb
+      helm:
+        releaseName: metallb
+    {{- if index .Values "metallb" "configuration" "enabled" }}
+        valueFiles:
+          - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/metallb.yaml"
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.gitRevision }}
+      ref: values
+    {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: metallb-system

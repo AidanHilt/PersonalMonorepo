@@ -1,4 +1,4 @@
-{{ if and (index .Values "metallb-config" "enabled") (ne .Values.env "dev-laptop") }}
+{{ if index .Values "metallb-config" "enabled" }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/AidanHilt/PersonalMonorepo
     path: kubernetes/metallb/configuration/overlays/{{ .Values.env }}
-    targetRevision: {{ .Values.env }}
+    targetRevision: {{ .Values.gitRevision }}
   destination:
     server: 'https://kubernetes.default.svc'
   syncPolicy:

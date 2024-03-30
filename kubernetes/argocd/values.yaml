@@ -97,3 +97,5 @@ configs:
   params:
     server.disable.auth: "true"
     server.basehref: "/argocd"
+    server.rootpath: "/argocd"
+    server.insecure: true

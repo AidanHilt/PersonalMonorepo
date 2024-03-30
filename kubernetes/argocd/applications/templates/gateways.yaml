@@ -1,4 +1,4 @@
-{{ if and (.Values.gateways.enabled) (ne .Values.env "dev-laptop") }}
+{{ if .Values.gateways.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -6,10 +6,10 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://github.com/AidanHilt/PersonalMonorepo
-    path: kubernetes/istio/virtualservices
-    targetRevision: {{ .Values.env }}
+  sources:
+    - repoURL: https://github.com/AidanHilt/PersonalMonorepo
+      path: kubernetes/istio/virtualservices
+      targetRevision: {{ .Values.gitRevision }}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: argocd

@@ -1,0 +1,4 @@
+prowlarr:
+  urlBase: prowlarr
+  metrics:
+    enabled: true

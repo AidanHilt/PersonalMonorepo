@@ -25,9 +25,9 @@ spec:
             rows: 5
     - title: Choose a location
       required:
-        - repoUrl
+        - repoURL
       properties:
-        repoUrl:
+        repoURL:
           title: Repository Location
           type: string
           ui:field: RepoUrlPicker
@@ -52,9 +52,9 @@ spec:
       name: Publish
       action: publish:github
       input:
-        allowedHosts: ['github.com']
+        allowedHosts: ["github.com"]
         description: This is ${{ parameters.name }}
-        repoUrl: ${{ parameters.repoUrl }}
+        repoURL: ${{ parameters.repoURL }}
 
     # The final step is to register our new component in the catalog.
     - id: register
@@ -62,7 +62,7 @@ spec:
       action: catalog:register
       input:
         repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
-        catalogInfoPath: '/catalog-info.yaml'
+        catalogInfoPath: "/catalog-info.yaml"
 
   # Outputs are displayed to the user after a successful execution of the template.
   output:

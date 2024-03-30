@@ -1,4 +1,4 @@
-{{ if and (.Values.kiali.enabled) (ne .Values.env "dev-laptop") }}
+{{ if .Values.kiali.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -7,20 +7,18 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://kiali.org/helm-charts'
-    targetRevision: 1.64.0
-    helm:
-      releaseName: kiali
-      parameters:
-        - name: cr.create
-          value: 'true'
-        - name: cr.namespace
-          value: istio-system
-        - name: cr.spec.deployment.server.web_root
-          value: /kiali
-        - name: cr.spec.external_services.prometheus.url
-          value: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
-    chart: kiali-operator
+    - chart: kiali-operator
+      repoURL: 'https://kiali.org/helm-charts'
+      targetRevision: {{ index .Values "kiali" "version" }}
+      helm:
+        releaseName: kiali
+    {{- if index .Values "kiali" "configuration" "enabled" }}
+        valueFiles:
+          - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/kiali.yaml"
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.gitRevision }}
+      ref: values
+    {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: istio-system

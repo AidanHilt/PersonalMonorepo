@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: buildarr-radarr-config-secret
-  namespace: {{ Values.namespace }}
+  namespace: {{ .Values.namespace }}
 stringData:
   buildarr.yml: |
     hostname: {{ .Values.radarr.url }}

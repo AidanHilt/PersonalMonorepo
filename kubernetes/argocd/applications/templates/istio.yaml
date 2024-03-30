@@ -1,4 +1,4 @@
-{{ if and (.Values.istio.enabled) (ne .Values.env "dev-laptop") }}
+{{ if .Values.istio.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -9,12 +9,19 @@ spec:
     namespace: istio-system
     server: https://kubernetes.default.svc
   project: default
-  source:
-    helm:
-      releaseName: istio
-    chart: istiod
-    repoURL: https://istio-release.storage.googleapis.com/charts
-    targetRevision: 1.17.1
+  sources:
+    - chart: istiod
+      repoURL: https://istio-release.storage.googleapis.com/charts
+      targetRevision: {{ index .Values "istio" "version" }}
+      helm:
+        releaseName: istio
+    {{- if index .Values "istio" "configuration" "enabled" }}
+        valueFiles:
+          - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/istio.yaml"
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.gitRevision }}
+      ref: values
+    {{- end }}
   syncPolicy:
     automated:
       prune: true

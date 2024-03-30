@@ -1,0 +1,6 @@
+transmission:
+  alternateUi:
+    enabled: true
+
+env:
+  TRANSMISSION_WEB_HOME: /custom/flood-for-transmission
