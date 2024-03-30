@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: feat/better-monitoring
+gitRevision: feat/vault-setup
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
