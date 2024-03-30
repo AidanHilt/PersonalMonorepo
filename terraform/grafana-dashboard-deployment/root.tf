@@ -21,5 +21,6 @@ resource "grafana_dashboard" "dashboards" {
   count    = length(var.dashboard_url_list)
   provider = grafana
 
-  config_json = data.http.dashboard_jsons[count.index].body
+  # I hate it too. If it gets bad enough, we'll make a provider, but let's grit through it
+  config_json = replace(replace(data.http.dashboard_jsons[count.index].body, "$${DS_LOKI}", "Loki"), "$${DS_PROMETHEUS}", "Prometheus")
 }

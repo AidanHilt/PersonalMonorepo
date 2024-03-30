@@ -2,7 +2,9 @@ variable "dashboard_url_list" {
   type        = list(string)
   description = "The list of dashboard download URLs"
   default     = [
-    "https://grafana.com/api/dashboards/13186/revisions/1/download"
+    "https://grafana.com/api/dashboards/13186/revisions/1/download",
+    "https://grafana.com/api/dashboards/12530/revisions/2/download",
+    "https://grafana.com/api/dashboards/12896/revisions/1/download",
   ]
 }
 
