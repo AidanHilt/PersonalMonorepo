@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: feat/better-env-management
+gitRevision: feat/better-monitoring
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
@@ -16,19 +16,19 @@ gateways:
   enabled: false
 
 grafana-dashboards:
-  enabled: false
+  enabled: true
 
 grafana-datasources:
-  enabled: false
+  enabled: true
 
 grafana-loki:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
   version: "5.47.1"
 
 grafana-promtail:
-  enabled: false
+  enabled: true
   configuration:
     enabled: false
   version: "6.15.5"
@@ -82,7 +82,7 @@ metallb-config:
   enabled: false
 
 prometheus:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
 
