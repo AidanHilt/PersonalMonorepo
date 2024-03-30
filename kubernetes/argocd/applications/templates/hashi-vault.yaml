@@ -11,7 +11,7 @@ spec:
   project: default
   sources:
     - chart: vault
-      repoURL: https://helm.releases.hashicorp.com
+      repoURL: "https://helm.releases.hashicorp.com"
       targetRevision: targetRevision: {{ index .Values "hashi-vault" "version" }}
       helm:
         releaseName: hashi-vault
