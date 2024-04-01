@@ -8,6 +8,6 @@ spec:
   mount: videos
   kubernetes:
     role: video-stack-reader
-    serviceAccount: vault-reader-videos
+    serviceAccount: default
     audiences:
       - vault
