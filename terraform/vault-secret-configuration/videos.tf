@@ -5,7 +5,7 @@ provider "vault" {
 
 # Enable the KV v2 secrets engine
 resource "vault_mount" "kv" {
-  path        = "video-stack"
+  path        = "videos"
   type        = "kv"
   options     = { version = "2" }
   description = "Mount for secrets used in the video stack"

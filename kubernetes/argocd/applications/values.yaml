@@ -39,6 +39,12 @@ hashi-vault:
     enabled: false
   version: "0.27.0"
 
+vault-secrets-operator:
+  # No enabled flag, because this is always deployed when Vault is enabled
+  configuration:
+    enabled: false
+  version: "0.5.2"
+
 ingress:
   enabled: false
 
