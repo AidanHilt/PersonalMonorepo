@@ -1,0 +1,13 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: videos-auth
+  namespace: videos
+spec:
+  method: kubernetes
+  mount: videos
+  kubernetes:
+    role: video-stack-reader
+    serviceAccount: vault-reader-videos
+    audiences:
+      - vault
