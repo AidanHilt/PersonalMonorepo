@@ -2,3 +2,10 @@ prowlarr:
   urlBase: prowlarr
   metrics:
     enabled: true
+
+  configSecret:
+    existingSecret: prowlarr-config-secret
+
+serviceAccount:
+  create: true
+  name: prowlarr

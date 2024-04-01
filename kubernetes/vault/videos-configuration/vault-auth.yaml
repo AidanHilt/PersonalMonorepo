@@ -8,6 +8,8 @@ spec:
   mount: videos
   kubernetes:
     role: video-stack-reader
-    serviceAccount: default
-    audiences:
-      - vault
+    serviceAccount: prowlarr
+# ===============================
+# For tomorrow
+# I think the pod needs the service account listed here, so we should just suck it up and make our principle of least privelige auths now
+# ===============================
