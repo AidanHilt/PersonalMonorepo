@@ -2,7 +2,7 @@ resource "vault_policy" "video_stack_reader" {
   name = "prowlarr"
 
   policy = <<EOT
-path "secret/data/videos/prowlarr" {
+path "videos/prowlarr" {
   capabilities = ["read", "list"]
 }
 EOT

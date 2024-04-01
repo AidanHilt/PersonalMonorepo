@@ -7,7 +7,7 @@ spec:
   method: kubernetes
   mount: videos
   kubernetes:
-    role: video-stack-reader
+    role: prowlarr
     serviceAccount: prowlarr
 # ===============================
 # For tomorrow
