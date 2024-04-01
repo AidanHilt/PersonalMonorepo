@@ -5,7 +5,7 @@ metadata:
   namespace: videos
 spec:
   method: kubernetes
-  mount: videos
+  mount: videos/prowlarr
   kubernetes:
     role: prowlarr
     serviceAccount: prowlarr
