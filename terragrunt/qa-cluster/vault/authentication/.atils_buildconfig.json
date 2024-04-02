@@ -1,0 +1,10 @@
+{
+  "actions": [
+    {
+      "name": "reset-state",
+      "description": "Clears out the terraform state",
+      "order": 0,
+      "command": "find .terragrunt-cache -name \"terraform.tfstate\" -delete"
+    }
+  ]
+}
