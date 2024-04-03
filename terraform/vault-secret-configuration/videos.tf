@@ -24,6 +24,12 @@ resource "random_password" "sonarr_api_key" {
   upper   = false
 }
 
+resource "random_password" "radarr_api_key" {
+  length  = 32
+  special = false
+  upper   = false
+}
+
 # Create a KV v2 secret to store the Prowlarr API key
 resource "vault_kv_secret_v2" "prowlarr_api_key" {
   mount = vault_mount.kv.path
@@ -39,6 +45,17 @@ resource "vault_kv_secret_v2" "prowlarr_api_key" {
 resource "vault_kv_secret_v2" "sonarr_api_key" {
   mount = vault_mount.kv.path
   name  = "sonarr/api-key"
+
+  data_json = jsonencode(
+    {
+      apiKey = random_password.prowlarr_api_key.result
+    }
+  )
+}
+
+resource "vault_kv_secret_v2" "radarr_api_key" {
+  mount = vault_mount.kv.path
+  name  = "radarr/api-key"
 
   data_json = jsonencode(
     {

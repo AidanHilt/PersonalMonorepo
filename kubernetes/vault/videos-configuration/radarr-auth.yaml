@@ -1,0 +1,13 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: radarr-auth
+  namespace: videos
+spec:
+  method: kubernetes
+  # This took me an embarassingly long time to figure out, but this needs to be the mount of the AUTH METHOD, not
+  # whatever secret you're trying to access
+  mount: kubernetes
+  kubernetes:
+    role: radarr
+    serviceAccount: radarr
