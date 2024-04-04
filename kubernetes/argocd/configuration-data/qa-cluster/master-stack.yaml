@@ -65,21 +65,21 @@ video-stack-configuration:
     enabled: false
 
 istio:
-  enabled: false
+  enabled: true
   configuration:
     enabled: false
 
 istio-base:
-  enabled: false
+  enabled: true
   configuration:
     enabled: false
 
 istio-gateway:
-  enabled: false
+  enabled: true
   configuration:
     enabled: false
 
 kiali:
-  enabled: false
+  enabled: true
   configuration:
     enabled: false
