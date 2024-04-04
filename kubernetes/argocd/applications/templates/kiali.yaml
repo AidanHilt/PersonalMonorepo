@@ -6,7 +6,7 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
+  sources:
     - chart: kiali-operator
       repoURL: 'https://kiali.org/helm-charts'
       targetRevision: {{ index .Values "kiali" "version" }}
