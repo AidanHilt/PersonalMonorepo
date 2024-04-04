@@ -48,7 +48,7 @@ resource "vault_kv_secret_v2" "sonarr_api_key" {
 
   data_json = jsonencode(
     {
-      apiKey = random_password.prowlarr_api_key.result
+      apiKey = random_password.sonarr_api_key.result
     }
   )
 }
@@ -59,7 +59,7 @@ resource "vault_kv_secret_v2" "radarr_api_key" {
 
   data_json = jsonencode(
     {
-      apiKey = random_password.prowlarr_api_key.result
+      apiKey = random_password.radarr_api_key.result
     }
   )
 }
