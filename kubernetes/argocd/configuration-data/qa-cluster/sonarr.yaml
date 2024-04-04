@@ -2,3 +2,9 @@ sonarr:
   urlBase: sonarr
   metrics:
     enabled: true
+  configSecret:
+    existingSecret: sonarr-config-secret
+
+serviceAccount:
+  create: true
+  name: sonarr

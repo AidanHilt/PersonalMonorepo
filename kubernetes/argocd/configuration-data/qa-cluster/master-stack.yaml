@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: feat/better-monitoring
+gitRevision: feat/vault-setup
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
@@ -12,74 +12,27 @@ flaresolverr:
   configuration:
     enabled: false
 
-gateways:
-  enabled: false
-
-grafana-dashboards:
-  enabled: false
-
-grafana-datasources:
-  enabled: false
-
 grafana-loki:
   enabled: true
   configuration:
     enabled: true
-  version: "5.47.1"
 
 grafana-promtail:
   enabled: true
   configuration:
     enabled: false
-  version: "6.15.5"
 
 hashi-vault:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
-  version: "0.27.0"
+
+vault-secrets-operator:
+  configuration:
+    enabled: true
 
 ingress:
   enabled: true
-
-istio:
-  enabled: false
-  configuration:
-    enabled: false
-  version: "1.21.0"
-
-istio-base:
-  enabled: false
-  configuration:
-    enabled: false
-  version: "1.21.0"
-
-istio-gateway:
-  enabled: false
-  configuration:
-    enabled: false
-  version: "1.21.0"
-
-kiali:
-  enabled: false
-  configuration:
-    enabled: true
-  version: "1.81.0"
-
-longhorn:
-  enabled: false
-  configuration:
-    enabled: true
-  version: "1.6.0"
-
-metallb:
-  enabled: false
-  configuration:
-    enabled: false
-  version: "0.14.3"
-
-metallb-config:
-  enabled: false
 
 prometheus:
   enabled: true

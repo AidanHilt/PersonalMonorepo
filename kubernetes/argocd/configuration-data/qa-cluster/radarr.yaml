@@ -2,3 +2,9 @@ radarr:
   urlBase: radarr
   metrics:
     enabled: true
+  configSecret:
+    existingSecret: radarr-config-secret
+
+serviceAccount:
+  create: true
+  name: radarr
