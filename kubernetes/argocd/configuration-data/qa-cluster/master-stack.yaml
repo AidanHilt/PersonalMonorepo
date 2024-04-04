@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: feat/vault-setup
+gitRevision: feat/istio-setup
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
@@ -13,17 +13,17 @@ flaresolverr:
     enabled: false
 
 grafana-loki:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 grafana-promtail:
-  enabled: true
+  enabled: false
   configuration:
     enabled: false
 
 hashi-vault:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
@@ -35,7 +35,7 @@ ingress:
   enabled: true
 
 prometheus:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
@@ -61,5 +61,25 @@ transmission:
 
 video-stack-configuration:
   enabled: true
+  configuration:
+    enabled: false
+
+istio:
+  enabled: false
+  configuration:
+    enabled: false
+
+istio-base:
+  enabled: false
+  configuration:
+    enabled: false
+
+istio-gateway:
+  enabled: false
+  configuration:
+    enabled: false
+
+kiali:
+  enabled: false
   configuration:
     enabled: false
