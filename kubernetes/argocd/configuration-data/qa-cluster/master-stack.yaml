@@ -35,7 +35,7 @@ ingress:
   enabled: true
 
 prometheus:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
 
