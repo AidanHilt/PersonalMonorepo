@@ -77,4 +77,4 @@ istio-base:
 kiali:
   enabled: true
   configuration:
-    enabled: false
+    enabled: true
