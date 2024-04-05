@@ -9,4 +9,4 @@ cr:
       prometheus:
         url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
     auth:
-      disable_rbac: true
+      strategy: anonymous
