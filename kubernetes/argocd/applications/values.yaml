@@ -102,6 +102,9 @@ radarr:
   configuration:
     enabled: false
 
+service-monitors:
+  enabled: false
+
 sonarr:
   enabled: false
   configuration:

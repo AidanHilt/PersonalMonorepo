@@ -1,4 +1,4 @@
-{{ if .Values.gateways.enabled }}
+{{ if index .Values "service-monitors" "enabled" }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
