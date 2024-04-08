@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kiali
+  namespace: monitoring
+  labels:
+    app: kiali
+spec:
+  namespaceSelector:
+    matchNames:
+      - istio-system
+  selector:
+    matchLabels:
+      app: kiali
+  endpoints:
+    - port: http-metrics
+      interval: 15s
