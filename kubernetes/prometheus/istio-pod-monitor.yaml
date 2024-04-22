@@ -6,6 +6,8 @@ metadata:
   labels:
     release: prometheus
 spec:
+  namespaceSelector:
+    all: true
   selector:
     matchLabels:
       security.istio.io/tlsMode: "istio"
