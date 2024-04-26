@@ -11,7 +11,7 @@ spec:
   project: default
   sources:
     - repoURL: 'https://istio-release.storage.googleapis.com/charts'
-      targetRevision: {{ index .Values "" "version" }}
+      targetRevision: {{ index .Values "istio-base" "version" }}
       chart: base
       helm:
         releaseName: istio-base
