@@ -12,7 +12,6 @@ spec:
   sources:
     - repoURL: oci://registry-1.docker.io/bitnamicharts
       path: postgres
-      chart: postgres
       targetRevision: {{ index .Values "postgres" "version" }}
       helm:
         releaseName: postgres
