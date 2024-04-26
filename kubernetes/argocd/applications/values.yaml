@@ -91,7 +91,7 @@ postgres:
   enabled: false
   configuration:
     enabled: false
-  version: "15.2.5"
+  version: "main"
 
 prometheus:
   enabled: false

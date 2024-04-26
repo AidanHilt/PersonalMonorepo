@@ -10,11 +10,9 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-    - repoURL: registry-1.docker.io/bitnamicharts
-      path: postgres
-      targetRevision: {{ index .Values "postgres" "version" }}
-      helm:
-        releaseName: postgres
+  - repoURL: https://github.com/bitnami/charts.git
+    path: bitnami/postgresql
+    targetRevision: {{ .Values.postgres.version }}
     {{- if index .Values "postgres" "configuration" "enabled" }}
         valueFiles:
           - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/postgres.yaml"
