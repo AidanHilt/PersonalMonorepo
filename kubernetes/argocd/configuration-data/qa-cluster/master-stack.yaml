@@ -79,5 +79,8 @@ kiali:
   configuration:
     enabled: true
 
+postgres:
+  enabled: true
+
 service-monitors:
   enabled: true
