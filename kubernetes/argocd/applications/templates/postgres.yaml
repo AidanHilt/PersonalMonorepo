@@ -10,8 +10,8 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-    - chart: loki
-      repoURL: oci://registry-1.docker.io/bitnamicharts/postgresql
+    - chart: postgres
+      repoURL: oci://registry-1.docker.io/bitnamicharts
       targetRevision: {{ index .Values "postgres" "version" }}
       helm:
         releaseName: postgres
