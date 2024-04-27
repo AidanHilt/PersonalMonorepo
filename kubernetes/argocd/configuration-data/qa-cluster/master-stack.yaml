@@ -23,7 +23,7 @@ grafana-promtail:
     enabled: false
 
 hashi-vault:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
 
