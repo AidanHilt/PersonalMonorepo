@@ -1,38 +1,14 @@
-provider "vault" {
-  address = var.vault_url
-  token   = var.vault_token
-}
-
 # Enable the KV v2 secrets engine
-resource "vault_mount" "kv" {
+resource "vault_mount" "kv-videos" {
   path        = "videos"
-  type        = "kv"
+  type        = "kv-videos"
   options     = { version = "2" }
   description = "Mount for secrets used in the video stack"
 }
 
-# Generate a random password for the Prowlarr API key
-resource "random_password" "prowlarr_api_key" {
-  length  = 32
-  special = false
-  upper   = false
-}
-
-resource "random_password" "sonarr_api_key" {
-  length  = 32
-  special = false
-  upper   = false
-}
-
-resource "random_password" "radarr_api_key" {
-  length  = 32
-  special = false
-  upper   = false
-}
-
 # Create a KV v2 secret to store the Prowlarr API key
 resource "vault_kv_secret_v2" "prowlarr_api_key" {
-  mount = vault_mount.kv.path
+  mount = vault_mount.kv-videos.path
   name  = "prowlarr/api-key"
 
   data_json = jsonencode(
@@ -43,7 +19,7 @@ resource "vault_kv_secret_v2" "prowlarr_api_key" {
 }
 
 resource "vault_kv_secret_v2" "sonarr_api_key" {
-  mount = vault_mount.kv.path
+  mount = vault_mount.kv-videos.path
   name  = "sonarr/api-key"
 
   data_json = jsonencode(
@@ -54,7 +30,7 @@ resource "vault_kv_secret_v2" "sonarr_api_key" {
 }
 
 resource "vault_kv_secret_v2" "radarr_api_key" {
-  mount = vault_mount.kv.path
+  mount = vault_mount.kv-videos.path
   name  = "radarr/api-key"
 
   data_json = jsonencode(

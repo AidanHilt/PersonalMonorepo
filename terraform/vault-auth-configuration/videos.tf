@@ -31,7 +31,7 @@ resource "vault_kubernetes_auth_backend_role" "prowlarr_reader" {
 #============================
 
 resource "vault_policy" "sonarr_reader" {
-  name = "sonarr"
+  name   = "sonarr"
 
   policy = <<EOT
 path "videos/data/sonarr/*" {
@@ -59,7 +59,7 @@ resource "vault_kubernetes_auth_backend_role" "sonarr_reader" {
 #============================
 
 resource "vault_policy" "radarr_reader" {
-  name = "radarr"
+  name   = "radarr"
 
   policy = <<EOT
 path "videos/data/radarr/*" {
