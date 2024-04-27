@@ -11,7 +11,7 @@ spec:
   project: default
   sources:
     - repoURL: registry-1.docker.io/bitnamicharts
-      chart: postgres
+      chart: postgresql
       targetRevision: {{ index .Values "postgres" "version" }}
       helm:
         releaseName: postgres
