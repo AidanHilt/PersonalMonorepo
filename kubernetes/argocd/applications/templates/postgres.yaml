@@ -6,7 +6,7 @@ metadata:
   namespace: argocd
 spec:
   destination:
-    namespace: monitoring
+    namespace: postgres
     server: https://kubernetes.default.svc
   project: default
   sources:
