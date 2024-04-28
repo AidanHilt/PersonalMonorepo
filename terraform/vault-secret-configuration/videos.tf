@@ -7,13 +7,15 @@ resource "vault_mount" "kv-videos" {
 }
 
 # Create a KV v2 secret to store the Prowlarr API key
-resource "vault_kv_secret_v2" "prowlarr_api_key" {
+resource "vault_kv_secret_v2" "prowlarr_config" {
   mount = vault_mount.kv-videos.path
-  name  = "prowlarr/api-key"
+  name  = "prowlarr/config"
 
   data_json = jsonencode(
     {
-      apiKey = random_password.prowlarr_api_key.result
+      apiKey           = random_password.prowlarr_api_key.result
+      postgresUsername = var.postgres_prowlarr_username
+      postgresPassword = random_password.postgres_prowlarr_password.result
     }
   )
 }
@@ -24,7 +26,9 @@ resource "vault_kv_secret_v2" "sonarr_api_key" {
 
   data_json = jsonencode(
     {
-      apiKey = random_password.sonarr_api_key.result
+      apiKey           = random_password.prowlarr_api_key.result
+      postgresUsername = var.postgres_prowlarr_username
+      postgresPassword = random_password.postgres_prowlarr_password.result
     }
   )
 }

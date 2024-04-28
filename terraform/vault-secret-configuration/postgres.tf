@@ -13,7 +13,7 @@ resource "vault_kv_secret_v2" "postgres_config" {
 
   data_json = jsonencode(
     {
-      adminPasswordKey = random_password.postgres_master_password.result
+      postgres-password = random_password.postgres_master_password.result
     }
   )
 }

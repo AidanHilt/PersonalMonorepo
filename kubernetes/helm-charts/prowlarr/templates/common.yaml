@@ -14,14 +14,17 @@ env:
   {{ if .Values.prowlarr.postgres.enabled }}
   - name: PROWLARR__POSTGRES_HOST
     value: {{ .Values.prowlarr.postgres.host }}
-  - name: PROWLARR__POSTGRES_MAIN_DB 
+  - name: PROWLARR__POSTGRES_MAIN_DB
     value: {{ .Values.prowlarr.postgres.mainDb }}
   - name: PROWLARR__POSTGRES_LOG_DB
     value: {{ .Values.prowlarr.postgres.logDb }}
   - name: PROWLARR__POSTGRES_PORT
     value: {{ .Values.prowlarr.postgres.port | quote }}
   - name: PROWLARR__POSTGRES_USER
-    value: {{ .Values.prowlarr.postgres.username }}
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.prowlarr.configSecret.existingSecret | default "prowlarr-config-secret"}}
+        key: postgresUsername
   - name: PROWLARR__POSTGRES_PASSWORD
     valueFrom:
       secretKeyRef:
@@ -36,7 +39,7 @@ secrets:
     stringData:
       {{- if .Values.prowlarr.postgres.enabled }}
       postgresPassword: {{ .Values.prowlarr.postgres.password | quote }}
-      postgresMasterPassword: {{ index (lookup "v1" "Secret" "postgres" "postgres-postgresql") "data" "postgres-password" | b64dec | quote }}
+      postgresUsername: {{ .Values.prowlarr.postgres.username | quote }}
       {{- end }}
       apiKey: {{ .Values.prowlarr.apiKey | default (randAlphaNum 32 | lower) | quote }}
 {{- end }}

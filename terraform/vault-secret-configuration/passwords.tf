@@ -20,3 +20,7 @@ resource "random_password" "radarr_api_key" {
 resource "random_password" "postgres_master_password" {
   length = 64
 }
+
+resource "random_password" "postgres_prowlarr_password" {
+  length = 64
+}
