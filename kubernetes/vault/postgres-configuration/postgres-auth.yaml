@@ -9,5 +9,5 @@ spec:
   # whatever secret you're trying to access
   mount: kubernetes
   kubernetes:
-    role: postgres-auth
+    role: postgres
     serviceAccount: postgres-postgresql
