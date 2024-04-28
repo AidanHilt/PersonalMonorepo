@@ -62,8 +62,6 @@ prowlarr:
     mainDb: prowlarr_main
     logDb: prowlarr_logs
 
-    postgresConfigSecret: ""
-
     postgresConfigSecretUsernameKey: postgresUsername
     postgresConfigSecretPasswordKey: postgresPassword
 

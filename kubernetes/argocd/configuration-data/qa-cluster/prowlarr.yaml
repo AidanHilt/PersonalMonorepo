@@ -3,6 +3,9 @@ prowlarr:
   metrics:
     enabled: true
 
+  postgres:
+    enabled: true
+
   configSecret:
     existingSecret: prowlarr-config-secret
 
