@@ -1,7 +1,7 @@
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultAuth
 metadata:
-  name: postres-auth
+  name: postgres-auth
   namespace: postgres
 spec:
   method: kubernetes
