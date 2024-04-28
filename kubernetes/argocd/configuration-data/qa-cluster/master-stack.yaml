@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: feat/istio-setup
+gitRevision: postgres-setup
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
