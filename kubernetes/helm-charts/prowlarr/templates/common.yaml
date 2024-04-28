@@ -3,11 +3,11 @@
 {{/* Append the hardcoded settings */}}
 {{- define "prowlarr.harcodedValues" -}}
 env:
+  {{ $defaultSecretName := printf "%v-%v" .Release.Name "config-secret"}}
   - name: PROWLARR__API_KEY
     valueFrom:
       secretKeyRef:
-        {{ $defaultSecretName := printf "%v-%v" .Release.Name "config-secret"}}
-        name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName}}
+        name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName }}
         key: apiKey
   - name: PROWLARR__URL_BASE
     value: {{ .Values.prowlarr.urlBase }}
@@ -23,12 +23,12 @@ env:
   - name: PROWLARR__POSTGRES_USER
     valueFrom:
       secretKeyRef:
-        name: {{ .Values.prowlarr.configSecret.existingSecret | default "prowlarr-config-secret"}}
+        name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName }}
         key: postgresUsername
   - name: PROWLARR__POSTGRES_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: prowlarr-config-secret
+        name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName}}
         key: postgresPassword
   {{ end }}
 
