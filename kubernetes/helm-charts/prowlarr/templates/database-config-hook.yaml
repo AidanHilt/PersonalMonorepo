@@ -33,6 +33,7 @@ spec:
             secretKeyRef:
               name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName}}
               key: {{ .Values.prowlarr.postgres.postgresConfigSecretPasswordKey }}
+        {{ end }}
         volumeMounts:
         - name: postgres-init-script
           mountPath: /mnt/setup.sql
@@ -40,6 +41,5 @@ spec:
       volumes:
       - name: postgres-init-script
         configMap:
-          name: prowlarr-postgres-ini
-
+          name: prowlarr-postgres-init
 {{- end }}
