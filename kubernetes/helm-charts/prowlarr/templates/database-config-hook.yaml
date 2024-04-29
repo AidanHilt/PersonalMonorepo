@@ -20,7 +20,10 @@ spec:
         # args:
         # - <
         # - /mnt/setup.sql
-        command: ["sleep 5000"]
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - sleep 5000
         env:
         {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
         {{ if .Values.prowlarr.postgres.enabled }}
