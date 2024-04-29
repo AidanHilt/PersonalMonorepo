@@ -23,5 +23,5 @@ data:
     GRANT ALL ON {{ .Values.prowlarr.postgres.logDb }} TO {{ .Values.prowlarr.postgres.username }};
 
     -- Setup login
-    ALTER USER {{ .Values.sonarr.postgres.username }} WITH PASSWORD :v1;
+    ALTER USER {{ .Values.prowlarr.postgres.username }} WITH PASSWORD :v1;
 {{- end }}
