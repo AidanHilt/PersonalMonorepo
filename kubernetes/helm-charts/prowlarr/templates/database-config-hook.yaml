@@ -16,10 +16,11 @@ spec:
       containers:
       - name: postgres-init
         image: "aidanhilt/atils-postgres-client"
-        command: [psql]
-        args:
-        - <
-        - /mnt/setup.sql
+        # command: [psql]
+        # args:
+        # - <
+        # - /mnt/setup.sql
+        command: ["sleep 5000"]
         env:
         {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
         {{ if .Values.prowlarr.postgres.enabled }}
