@@ -4,7 +4,8 @@ kind: Job
 metadata:
   name: "{{ .Release.Name }}-postgres-init"
   annotations:
-    "helm.sh/hook": post-install
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": 0
     "helm.sh/hook-delete-policy": hook-succeeded
 spec:
   template:
