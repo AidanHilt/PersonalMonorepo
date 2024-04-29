@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ .Release.Name }}"
+  name: "{{ .Release.Name }}-postgres-init"
   annotations:
     "helm.sh/hook": pre-install
     "helm.sh/hook-delete-policy": hook-succeeded
@@ -15,7 +15,10 @@ spec:
       containers:
       - name: postgres-init
         image: "aidanhilt/atils-postgres-client"
-        command: ["psql < /mnt/setup.sql"]
+        command: [psql]
+        args:
+        - <
+        - /mnt/setup.sql
         env:
         {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
         {{ if .Values.prowlarr.postgres.enabled }}
