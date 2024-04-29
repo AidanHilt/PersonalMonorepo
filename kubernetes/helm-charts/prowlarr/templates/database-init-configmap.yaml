@@ -14,12 +14,14 @@ data:
       END IF;
     END $$;
 
-    -- Grant user superuser permissions
-    ALTER USER {{ .Values.prowlarr.postgres.username }} WITH SUPERUSER;
-    ALTER USER {{ .Values.prowlarr.postgres.username }} WITH PASSWORD :v1;
-
     -- Create databases if not exists
     CREATE DATABASE {{ .Values.prowlarr.postgres.mainDb }};
-
     CREATE DATABASE {{ .Values.prowlarr.postgres.logDb }};
+
+    -- Grant user ownership permissions on the table
+    GRANT ALL ON {{ .Values.prowlarr.postgres.mainDb }} TO {{ .Values.prowlarr.postgres.username }};
+    GRANT ALL ON {{ .Values.prowlarr.postgres.logDb }} TO {{ .Values.prowlarr.postgres.username }};
+
+    -- Setup login
+    ALTER USER {{ .Values.sonarr.postgres.username }} WITH PASSWORD :v1;
 {{- end }}

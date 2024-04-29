@@ -3,7 +3,7 @@
 {{/* Append the hardcoded settings */}}
 {{- define "prowlarr.harcodedValues" -}}
 env:
-  {{ $defaultSecretName := printf "%v-%v" .Release.Name "config-secret"}}
+  {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
   - name: PROWLARR__API_KEY
     valueFrom:
       secretKeyRef:
