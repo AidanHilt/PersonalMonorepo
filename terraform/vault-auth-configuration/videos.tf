@@ -81,3 +81,31 @@ resource "vault_kubernetes_auth_backend_role" "radarr_reader" {
   token_policies                   = [vault_policy.radarr_reader.name]
   depends_on                       = [vault_auth_backend.kubernetes, vault_kubernetes_auth_backend_config.backend_config]
 }
+
+#============================
+# Setup Job Config
+#============================
+
+resource "vault_policy" "setup_job_reader" {
+  name   = "radarr"
+
+  policy = <<EOT
+path "videos/data/setup_job/*" {
+  capabilities = ["read", "list"]
+}
+
+path "videos/setup_job/*" {
+  capabilities = ["read", "list"]
+}
+EOT
+}
+
+resource "vault_kubernetes_auth_backend_role" "setup_job_reader" {
+  backend                          = "kubernetes"
+  role_name                        = "setup_job"
+  bound_service_account_names      = ["setup_job"]
+  bound_service_account_namespaces = ["videos"]
+  token_ttl                        = 3600
+  token_policies                   = [vault_policy.radarr_reader.name]
+  depends_on                       = [vault_auth_backend.kubernetes, vault_kubernetes_auth_backend_config.backend_config]
+}

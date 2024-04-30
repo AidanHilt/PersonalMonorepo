@@ -25,7 +25,6 @@ spec:
         - -c
         - sleep 5000
         env:
-        {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
         {{ if .Values.prowlarr.postgres.enabled }}
         - name: PGHOST
           value: {{ .Values.prowlarr.postgres.host }}
@@ -34,13 +33,13 @@ spec:
         - name: PGUSER
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName }}
-              key: {{ .Values.prowlarr.postgres.postgresConfigSecretUsernameKey }}
+              name: {{ .Values.prowlarr.postgres.setupJob.setupJobSecret }}
+              key: {{ .Values.prowlarr.postgres.setupJobSecretUsernameKey }}
         - name: PGPASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName}}
-              key: {{ .Values.prowlarr.postgres.postgresConfigSecretPasswordKey }}
+              name: {{ .Values.prowlarr.postgres.setupJob.setupJobSecret }}
+              key: {{ .Values.prowlarr.postgres.setupJobSecretPasswordKey }}
         {{ end }}
         volumeMounts:
         - name: postgres-init-script
