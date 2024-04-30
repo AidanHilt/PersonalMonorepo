@@ -16,10 +16,6 @@ spec:
       containers:
       - name: postgres-init
         image: "aidanhilt/atils-postgres-client"
-        # command: [psql]
-        # args:
-        # - <
-        # - /mnt/setup.sql
         command: ["/bin/sh"]
         args:
         - -c
