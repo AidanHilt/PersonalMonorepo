@@ -8,8 +8,6 @@ metadata:
     "helm.sh/hook-weight": "-1"
 data:
   setup.sql: |-
-    SET vars.password TO :'v1';
-
     -- Create user if not exists
     DO $$ BEGIN
       IF NOT EXISTS (SELECT FROM pg_catalog.pg_user WHERE usename = '{{ .Values.prowlarr.postgres.username }}') THEN
@@ -22,9 +20,9 @@ data:
     CREATE DATABASE {{ .Values.prowlarr.postgres.logDb }};
 
     -- Grant user ownership permissions on the table
-    GRANT ALL ON {{ .Values.prowlarr.postgres.mainDb }} TO {{ .Values.prowlarr.postgres.username }};
-    GRANT ALL ON {{ .Values.prowlarr.postgres.logDb }} TO {{ .Values.prowlarr.postgres.username }};
+    GRANT ALL ON DATABASE {{ .Values.prowlarr.postgres.mainDb }} TO {{ .Values.prowlarr.postgres.username }};
+    GRANT ALL ON DATABASE {{ .Values.prowlarr.postgres.logDb }} TO {{ .Values.prowlarr.postgres.username }};
 
     -- Setup login
-    ALTER USER {{ .Values.prowlarr.postgres.username }} WITH PASSWORD :v1;
+    ALTER USER {{ .Values.prowlarr.postgres.username }} WITH PASSWORD ':v1';
 {{- end }}

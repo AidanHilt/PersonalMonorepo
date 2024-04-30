@@ -62,9 +62,8 @@ resource "vault_kv_secret_v2" "setup_job_config" {
 
   data_json = jsonencode(
     {
-      prowlarrApiKey = random_password.prowlarr_api_key.result
-      masterUsername = var.postgres_prowlarr_username
-      masterPassword = random_password.postgres_prowlarr_password.result
+      masterUsername = var.postgres_master_username
+      masterPassword = random_password.postgres_master_password.result
     }
   )
 }
