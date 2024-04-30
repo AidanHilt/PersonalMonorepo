@@ -30,12 +30,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: {{ .Values.prowlarr.postgres.setupJob.setupJobSecret }}
-              key: {{ .Values.prowlarr.postgres.setupJobSecretUsernameKey }}
+              key: {{ .Values.prowlarr.postgres.setupJob.secretUsernameKey }}
         - name: PGPASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ .Values.prowlarr.postgres.setupJob.setupJobSecret }}
-              key: {{ .Values.prowlarr.postgres.setupJobSecretPasswordKey }}
+              key: {{ .Values.prowlarr.postgres.setupJob.secretPasswordKey }}
         {{ end }}
         volumeMounts:
         - name: postgres-init-script

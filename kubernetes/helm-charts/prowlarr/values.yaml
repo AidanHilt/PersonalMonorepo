@@ -75,8 +75,8 @@ prowlarr:
       # is set to true
       setupJobSecret: ""
 
-      setupJobSecretUsernameKey: masterUsername
-      setupJobSecretPasswordKey: masterPassword
+      secretUsernameKey: masterUsername
+      secretPasswordKey: masterPassword
 
   metrics:
     enabled: false
