@@ -3,9 +3,6 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prowlarr-postgres-init
-  annotations:
-    "helm.sh/hook": pre-install
-    "helm.sh/hook-weight": "-1"
 data:
   setup.sql: |-
     -- Create user if not exists
@@ -20,9 +17,9 @@ data:
     CREATE DATABASE {{ .Values.prowlarr.postgres.logDb }};
 
     -- Grant user ownership permissions on the table
-    GRANT ALL ON DATABASE {{ .Values.prowlarr.postgres.mainDb }} TO {{ .Values.prowlarr.postgres.username }};
-    GRANT ALL ON DATABASE {{ .Values.prowlarr.postgres.logDb }} TO {{ .Values.prowlarr.postgres.username }};
+    ALTER DATABASE {{ .Values.prowlarr.postgres.mainDb }} OWNER TO {{ .Values.prowlarr.postgres.username }};
+    ALTER DATABASE {{ .Values.prowlarr.postgres.logDb }} OWNER TO {{ .Values.prowlarr.postgres.username }};
 
     -- Setup login
-    ALTER USER {{ .Values.prowlarr.postgres.username }} WITH PASSWORD ':v1';
+    ALTER USER {{ .Values.prowlarr.postgres.username }} WITH PASSWORD :v1;
 {{- end }}
