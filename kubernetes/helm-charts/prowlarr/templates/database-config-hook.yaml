@@ -19,7 +19,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - -c
-        - psql -v v1=PROWLARR_USER_PASSWORD
+        - psql -v v1=$PROWLARR_USER_PASSWORD -f /mnt/setup.sql
         env:
         {{ if .Values.prowlarr.postgres.enabled }}
         {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
