@@ -24,7 +24,7 @@ env:
     valueFrom:
       secretKeyRef:
         name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName }}
-        key: {{ .Values.prowlarr.postgres.postgresConfigSecretUsernameKey }}
+        key: postgresUsername
   - name: PROWLARR__POSTGRES_PASSWORD
     valueFrom:
       secretKeyRef:
