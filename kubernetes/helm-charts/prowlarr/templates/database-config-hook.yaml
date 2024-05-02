@@ -19,9 +19,10 @@ spec:
         command: ["/bin/sh"]
         args:
         - -c
-        - sleep 5000
+        - psql -v v1=
         env:
         {{ if .Values.prowlarr.postgres.enabled }}
+        {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
         - name: PGHOST
           value: {{ .Values.prowlarr.postgres.host }}
         - name: PGPORT
@@ -36,6 +37,11 @@ spec:
             secretKeyRef:
               name: {{ .Values.prowlarr.postgres.setupJob.setupJobSecret }}
               key: {{ .Values.prowlarr.postgres.setupJob.secretPasswordKey }}
+        - name: PROWLARR_USER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName}}
+              key: {{ .Values.prowlarr.postgres.postgresConfigSecretPasswordKey }}
         {{ end }}
         volumeMounts:
         - name: postgres-init-script
