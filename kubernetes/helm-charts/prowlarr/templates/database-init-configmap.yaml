@@ -23,9 +23,7 @@ data:
     ALTER DATABASE {{ .Values.prowlarr.postgres.mainDb }} OWNER TO {{ .Values.prowlarr.postgres.username }};
     ALTER DATABASE {{ .Values.prowlarr.postgres.logDb }} OWNER TO {{ .Values.prowlarr.postgres.username }};
 
-    -- Grant user permissions on public schema
-    GRANT ALL ON SCHEMA TO {{ .Values.prowlarr.postgres.username }}
 
     -- Setup login
-    ALTER USER {{ .Values.prowlarr.postgres.username }} WITH PASSWORD :password;
+    ALTER USER {{ .Values.prowlarr.postgres.username }} WITH PASSWORD :'password';
 {{- end }}

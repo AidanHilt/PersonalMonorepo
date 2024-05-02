@@ -97,7 +97,7 @@ def launch_postgres_manager() -> None:
     """
     _create_postgres_manager_pod()
     time.sleep(5)
-    _exec_shell_in_pod("postgres-manager", "postgres", "postgres-manager", ["psql"])
+    _exec_shell_in_pod("postgres-manager", "postgres", "postgres-manager", ["/bin/sh"])
 
 
 def launch_pvc_manager(pvc_name: str, namespace: str) -> None:
