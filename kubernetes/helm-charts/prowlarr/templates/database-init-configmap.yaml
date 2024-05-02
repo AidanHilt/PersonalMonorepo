@@ -27,5 +27,5 @@ data:
     GRANT ALL ON SCHEMA TO {{ .Values.prowlarr.postgres.username }}
 
     -- Setup login
-    ALTER USER {{ .Values.prowlarr.postgres.username }} WITH PASSWORD :v1;
+    ALTER USER {{ .Values.prowlarr.postgres.username }} WITH PASSWORD :'v1';
 {{- end }}
