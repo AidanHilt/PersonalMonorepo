@@ -3,6 +3,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: radarr-postgres-init
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-1"
 data:
   setup.sql: |-
     SET vars.password TO :'v1';

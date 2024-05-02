@@ -26,15 +26,15 @@ resource "vault_kv_secret_v2" "prowlarr_config" {
 #===============
 # Sonarr
 #===============
-resource "vault_kv_secret_v2" "sonarr_api_key" {
+resource "vault_kv_secret_v2" "sonarr_config" {
   mount = vault_mount.kv-videos.path
-  name  = "sonarr/api-key"
+  name  = "sonarr/config"
 
   data_json = jsonencode(
     {
       apiKey           = random_password.prowlarr_api_key.result
-      postgresUsername = var.postgres_prowlarr_username
-      postgresPassword = random_password.postgres_prowlarr_password.result
+      postgresUsername = var.postgres_sonarr_username
+      postgresPassword = random_password.postgres_sonarr_password.result
     }
   )
 }
@@ -42,13 +42,15 @@ resource "vault_kv_secret_v2" "sonarr_api_key" {
 #===============
 # Radarr
 #===============
-resource "vault_kv_secret_v2" "radarr_api_key" {
+resource "vault_kv_secret_v2" "radarr_config" {
   mount = vault_mount.kv-videos.path
-  name  = "radarr/api-key"
+  name  = "radarr/config"
 
   data_json = jsonencode(
     {
-      apiKey = random_password.radarr_api_key.result
+      apiKey           = random_password.prowlarr_api_key.result
+      postgresUsername = var.postgres_radarr_username
+      postgresPassword = random_password.postgres_radarr_password.result
     }
   )
 }

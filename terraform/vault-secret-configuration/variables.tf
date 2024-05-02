@@ -14,6 +14,18 @@ variable "postgres_prowlarr_username" {
   default     = "prowlarr_user"
 }
 
+variable "postgres_sonarr_username" {
+  type        = string
+  description = "The username for the sonarr user"
+  default     = "radarr_user"
+}
+
+variable "postgres_radarr_username" {
+  type        = string
+  description = "The username for the radarr user"
+  default     = "radarr_user"
+}
+
 variable "postgres_master_username" {
   type        = string
   description = "The username for the postgres master user"

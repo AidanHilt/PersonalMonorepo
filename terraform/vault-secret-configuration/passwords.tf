@@ -24,3 +24,11 @@ resource "random_password" "postgres_master_password" {
 resource "random_password" "postgres_prowlarr_password" {
   length = 64
 }
+
+resource "random_password" "postgres_sonarr_password" {
+  length = 64
+}
+
+resource "random_password" "postgres_radarr_password" {
+  length = 64
+}
