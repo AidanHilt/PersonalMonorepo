@@ -53,7 +53,7 @@ prowlarr:
   postgres:
     enabled: false
 
-    username: prowlarr
+    username: prowlarr_user
     password: ""
 
     port: 5432
@@ -61,6 +61,22 @@ prowlarr:
 
     mainDb: prowlarr_main
     logDb: prowlarr_logs
+
+    # True if we want to run a hook after install to get the DB set up, false otherwise
+    setupJob:
+      enabled: true
+
+      # This probably doesn't matter in your setup, but you may need to change this if you're
+      # using some kind of external secrets operator that authenticates with service accounts
+      setupJobServiceAccount: default
+
+      # The name of a pre-existing secret containing the MASTER username and password for postgres
+      # This user needs to have access to set stuff up for the Prowlarr user. Required if setupJob.enabled
+      # is set to true
+      setupJobSecret: ""
+
+      secretUsernameKey: masterUsername
+      secretPasswordKey: masterPassword
 
   metrics:
     enabled: false

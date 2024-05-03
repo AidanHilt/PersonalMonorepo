@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: feat/istio-setup
+gitRevision: postgres-setup
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
@@ -23,7 +23,7 @@ grafana-promtail:
     enabled: false
 
 hashi-vault:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
 
@@ -65,16 +65,21 @@ video-stack-configuration:
     enabled: false
 
 istio:
-  enabled: true
+  enabled: false
   configuration:
     enabled: false
 
 istio-base:
-  enabled: true
+  enabled: false
   configuration:
     enabled: false
 
 kiali:
+  enabled: false
+  configuration:
+    enabled: true
+
+postgres:
   enabled: true
   configuration:
     enabled: true

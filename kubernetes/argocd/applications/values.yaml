@@ -87,6 +87,12 @@ metallb:
 metallb-config:
   enabled: false
 
+postgres:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "15.2.5"
+
 prometheus:
   enabled: false
   configuration:

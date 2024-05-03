@@ -22,5 +22,3 @@ sonarr:
 transmission:
   username: username
   password: password
-
-namespace: videos

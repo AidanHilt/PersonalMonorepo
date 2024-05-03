@@ -2,9 +2,19 @@ sonarr:
   urlBase: sonarr
   metrics:
     enabled: true
+
+  postgres:
+    enabled: true
+    setupJob:
+      enabled: true
+      setupJobSecret: setup-job-config-secret
+
   configSecret:
     existingSecret: sonarr-config-secret
 
 serviceAccount:
   create: true
   name: sonarr
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"

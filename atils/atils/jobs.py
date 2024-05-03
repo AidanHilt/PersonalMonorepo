@@ -55,6 +55,8 @@ def main(args: str) -> None:
         help="The namespace the PVC is located in. Defaults to current namespace",
     )
 
+    postgres_parser = subparsers.add_parser("postgres-manager")
+
     list_parser = subparsers.add_parser("list")
 
     arguments: argparse.Namespace = parser.parse_args(args)
@@ -80,11 +82,22 @@ def main(args: str) -> None:
                 launch_pvc_manager(args_dict["pvc_name"], current_namespace)
         else:
             launch_pvc_manager(args_dict["pvc_name"], current_namespace)
+    elif arguments.subparser_name == "postgres-manager":
+        launch_postgres_manager()
     elif arguments.subparser_name == "list":
         list_available_jobs()
     else:
         logging.error(f"Unrecognized command {arguments.subparser_name}")
         exit(1)
+
+
+def launch_postgres_manager() -> None:
+    """
+    Launch a postgres client pod, connected to the master user
+    """
+    _create_postgres_manager_pod()
+    time.sleep(5)
+    _exec_shell_in_pod("postgres-manager", "postgres", "postgres-manager", ["psql"])
 
 
 def launch_pvc_manager(pvc_name: str, namespace: str) -> None:
@@ -112,7 +125,7 @@ def launch_pvc_manager(pvc_name: str, namespace: str) -> None:
 
     time.sleep(5)
 
-    _exec_shell_in_pod(pod_name, "videos", "pvc-manager")
+    _exec_shell_in_pod(pod_name, namespace, "pvc-manager")
 
 
 def list_available_jobs() -> None:
@@ -185,6 +198,77 @@ def _clear_job_name(job_name: str, namespace: str) -> None:
             logging.info(f"Job {job_name} deleted")
             return
     logging.info(f"No job named {job_name} found in namespace {namespace}")
+
+
+def _create_postgres_manager_pod() -> None:
+    # TODO we can make this generic with a ton of arguments
+    """
+    Create a postgres client pod, connected to the master user
+    """
+    try:
+        api_instance = client.CoreV1Api()
+
+        try:
+            existing_pod = api_instance.read_namespaced_pod(
+                name="postgres-manager", namespace="postgres"
+            )
+
+            # TODO right now, we might get kicked out of our pod if it's close to expiring. That's probably
+            # not a big deal, but if so, fix it here
+            if existing_pod:
+                logging.info(
+                    "There's already a postgres-manager pod! We're just gonna leave it"
+                )
+                return
+        except ApiException as e:
+            if e.status != 404:
+                logging.error(
+                    f"Error checking for existing pod 'postgres-manager': {str(e)}"
+                )
+                exit(1)
+
+        pod_manifest = {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "metadata": {"name": "postgres-manager"},
+            "spec": {
+                "containers": [
+                    {
+                        "name": "postgres-manager",
+                        "image": "aidanhilt/atils-postgres-client",
+                        "command": ["sh", "-c", "sleep 1800"],
+                        "env": [
+                            {
+                                "name": "PGHOST",
+                                "value": "postgres-postgresql.postgres.svc.cluster.local",
+                            },
+                            {"name": "PGUSER", "value": "postgres"},
+                            {
+                                "name": "PGPASSWORD",
+                                "valueFrom": {
+                                    "secretKeyRef": {
+                                        "name": "postgres-config",
+                                        "key": "postgres-password",
+                                    }
+                                },
+                            },
+                            {"name": "PGDATABASE", "value": "postgres"},
+                        ],
+                    }
+                ],
+                "restartPolicy": "Never",
+            },
+        }
+
+        try:
+            # Create the pod
+            api_instance.create_namespaced_pod(namespace="postgres", body=pod_manifest)
+            logging.info("Created pod 'postgres-manager' in postgres namespace")
+        except client.rest.ApiException as e:
+            logging.error(f"Error creating pod 'postgres-manager': {str(e)}")
+
+    except Exception as e:
+        logging.error(f"Error occurred while creating pod 'postgres-manager': {str(e)}")
 
 
 def _create_pvc_manager_pod(pvc_name: str, namespace: str) -> None:
@@ -304,7 +388,12 @@ def _delete_pvc_manager_if_exists(pod_name: str, namespace: str) -> None:
         logging.error(f"Error occurred while deleting ephemeral container: {str(e)}")
 
 
-def _exec_shell_in_pod(pod_name: str, namespace: str, container_name: str) -> None:
+def _exec_shell_in_pod(
+    pod_name: str,
+    namespace: str,
+    container_name: str,
+    exec_command: list[str] = ["/bin/zsh"],
+) -> None:
     """
     Exec into a given container in a given pod, in a given namespace. This will assume
     that the container has zsh installed
@@ -316,8 +405,6 @@ def _exec_shell_in_pod(pod_name: str, namespace: str, container_name: str) -> No
     """
     api_client = client.ApiClient()
     api_instance = client.CoreV1Api(api_client)
-
-    exec_command = ["/bin/zsh"]
 
     resp = stream(
         api_instance.connect_get_namespaced_pod_exec,

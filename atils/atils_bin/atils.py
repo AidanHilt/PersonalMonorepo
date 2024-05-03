@@ -18,7 +18,7 @@ def main():
         argocd.main(sys.argv[2:])
     elif script_name == "build":
         build.main(sys.argv[2:])
-    elif script_name == "job":
+    elif script_name == "job" or script_name == "jobs":
         jobs.main(sys.argv[2:])
     elif script_name == "helm":
         helm.main(sys.argv[2:])
