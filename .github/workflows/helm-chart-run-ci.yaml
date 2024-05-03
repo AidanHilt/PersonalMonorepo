@@ -59,7 +59,7 @@ jobs:
             echo "No .atils_buildconfig.json found in ${{ matrix.dir }}. Here, this is probably not an issue."
           fi
 
-      - name: Build and publish custom image
+      - name: Build and publish Helm chart
         if: steps.check-buildconfig.outcome == 'success'
         run: |
           atils build --build-directory "${{ matrix.dir }}" --action-set ci-build-publish
