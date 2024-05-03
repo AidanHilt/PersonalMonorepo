@@ -17,7 +17,7 @@ data:
 
     -- Grant user superuser permissions
     ALTER USER {{ .Values.radarr.postgres.username }} WITH SUPERUSER;
-    ALTER USER {{ .Values.radarr.postgres.username }} WITH PASSWORD :password;
+    ALTER USER {{ .Values.radarr.postgres.username }} WITH PASSWORD :'password';
 
     -- Create databases if not exists
     CREATE DATABASE {{ .Values.radarr.postgres.mainDb }};
