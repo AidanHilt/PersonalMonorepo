@@ -87,7 +87,7 @@ resource "vault_kubernetes_auth_backend_role" "radarr_reader" {
 #============================
 
 resource "vault_policy" "setup_job_reader" {
-  name   = "radarr"
+  name   = "setup_job"
 
   policy = <<EOT
 path "videos/data/setup_job/*" {
