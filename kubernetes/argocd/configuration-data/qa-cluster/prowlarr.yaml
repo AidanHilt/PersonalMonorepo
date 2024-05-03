@@ -15,3 +15,6 @@ prowlarr:
 serviceAccount:
   create: true
   name: prowlarr
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"
