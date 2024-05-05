@@ -52,14 +52,32 @@ jobs:
             username: ${{ secrets.DOCKERHUB_USERNAME }}
             password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Check for .atils_buildconfig.json
+      - name: Find Chart.yaml directory
+        run: |
+          chart_dir=$(pwd)
+          while [[ $chart_dir != "/" ]]; do
+            if [[ -f "$chart_dir/Chart.yaml" ]]; then
+              echo "Found Chart.yaml in directory: $chart_dir"
+              echo "CHART_DIR=$chart_dir" >> $GITHUB_ENV
+              break
+            fi
+            chart_dir=$(dirname "$chart_dir")
+          done
+          if [[ $chart_dir == "/" ]]; then
+            echo "Chart.yaml not found in any parent directory starting from {{ matrix.dir }}"
+            exit 1
+          fi
+        working-directory: "{{ matrix.dir }}"
+
+      - name: Check for .atils_buildconfig.json in directory
         id: check-buildconfig
         run: |
-          if [ ! -f "${{ matrix.dir }}/.atils_buildconfig.json" ]; then
-            echo "No .atils_buildconfig.json found in ${{ matrix.dir }}. Here, this is probably not an issue."
+          if [ ! -f "$CHART_DIR/.atils_buildconfig.json" ]; then
+            echo "No .atils_buildconfig.json found in $CHART_DIR. Exiting with an error"
+            exit 1
           fi
 
-      - name: Build and publish Helm chart
+      - name: Build and publish Helm
         if: steps.check-buildconfig.outcome == 'success'
         run: |
-          atils build --build-directory "${{ matrix.dir }}" --action-set ci-build-publish
+          atils build --build-directory "$CHART_DIR" --action-set ci-build-publish
