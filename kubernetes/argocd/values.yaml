@@ -37,6 +37,16 @@ repoServer:
     - name: ARGOCD_EXEC_TIMEOUT
       value: "600"
 
+  rbac:
+    - apiGroups:
+        - ""
+      resources:
+        - secrets
+      verbs:
+        - get
+        - list
+        - watch
+
   # -- Additional containers to be added to the repo server pod
   ## Ref: https://argo-cd.readthedocs.io/en/stable/user-guide/config-management-plugins/
   extraContainers:

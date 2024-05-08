@@ -62,7 +62,7 @@ transmission:
 video-stack-configuration:
   enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 istio:
   enabled: false
