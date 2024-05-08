@@ -17,7 +17,7 @@ spec:
       - name: HELM_VALUES
         value: |
           prowlarr:
-            apiKey: <path:kv/argocd/data/video_stack_configuration#prowlarrApiKey>
+            apiKey: <path:argocd/data/video_stack_configuration#prowlarrApiKey>
       {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
