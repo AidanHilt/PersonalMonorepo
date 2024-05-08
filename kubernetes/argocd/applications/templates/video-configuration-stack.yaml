@@ -6,12 +6,20 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
-    targetRevision: {{ .Values.gitRevision }}
-    path: kubernetes/helm-charts/video-stack-configuration
-    plugin:
-      name: argocd-vault-plugin-helm
+  sources:
+   - repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
+     targetRevision: {{ .Values.gitRevision }}
+     path: kubernetes/helm-charts/video-stack-configuration
+     plugin:
+       name: argocd-vault-plugin-helm
+     {{- if index .Values "video-stack-configuration" "configuration" "enabled" }}
+     helm:
+      valueFiles:
+        - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/sonarr.yaml"
+   - repoURL: {{ .Values.configuration.configurationRepo }}
+     targetRevision: {{ .Values.gitRevision }}
+     ref: values
+     {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: videos
