@@ -205,9 +205,9 @@ stringData:
         applications:
           delete_unmanaged: false
           definitions:
-            {{- $prowlarrUrl := printf "http://%s%s" .Values.prowlarr.url .Values.prowlarr.baseUrl -}}
-            {{- $sonarrUrl := printf "http://%s%s" .Values.sonarr.url .Values.sonarr.baseUrl -}}
-            {{- $radarrUrl := printf "http://%s%s" .Values.radarr.url .Values.radarr.baseUrl -}}
+            {{- $prowlarrUrl := printf "http://%s%s" .Values.prowlarr.url .Values.prowlarr.baseUrl }}
+            {{- $sonarrUrl := printf "http://%s%s" .Values.sonarr.url .Values.sonarr.baseUrl }}
+            {{- $radarrUrl := printf "http://%s%s" .Values.radarr.url .Values.radarr.baseUrl }}
             Radarr:
               type: radarr
               prowlarr_url: {{ $prowlarrUrl }}
