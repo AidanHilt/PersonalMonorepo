@@ -4,90 +4,91 @@ metadata:
   name: buildarr-sonarr-config-secret
 stringData:
   buildarr.yml: |
-    hostname: sonarr
-    port: 80
-    protocol: http
-    url_base: /sonarr
-    api_key: {{ .Values.sonarr.apiKey }}
-    settings:
-      quality:
-        trash_id: "bef99584217af744e404ed44a33af589"
-      media_management:
-        rename_episodes: false
-        replace_illegal_characters: true
-        standard_episode_format: '{Series TitleYear} - S{season:00}E{episode:00} - {Episode CleanTitle} [{Custom Formats }{Quality Full}]{[MediaInfo VideoDynamicRangeType]}{[Mediainfo AudioCodec}{ Mediainfo AudioChannels]}{[MediaInfo VideoCodec]}{-Release Group}'
-        daily_episode_format: '{Series TitleYear} - {Air-Date} - {Episode CleanTitle} [{Custom Formats }{Quality Full}]{[MediaInfo VideoDynamicRangeType]}{[Mediainfo AudioCodec}{ Mediainfo AudioChannels]}{[MediaInfo VideoCodec]}{-Release Group}'
-        anime_episode_format: '{Series TitleYear} - S{season:00}E{episode:00} - {absolute:000} - {Episode CleanTitle} [{Custom Formats }{Quality Full}]{[MediaInfo VideoDynamicRangeType]}[{MediaInfo VideoBitDepth}bit]{[MediaInfo VideoCodec]}[{Mediainfo AudioCodec} { Mediainfo AudioChannels}]{MediaInfo AudioLanguages}{-Release Group}'
-        series_folder_format: '{Series TitleYear}'
-        season_folder_format: Season {season}
-        specials_folder_format: Specials
-        multiepisode_style: extend
-        create_empty_series_folders: false
-        delete_empty_folders: false
-        episode_title_required: always
-        skip_free_space_check: false
-        minimum_free_space: 100
-        use_hardlinks: true
-        import_extra_files: false
-        unmonitor_deleted_episodes: false
-        propers_and_repacks: prefer-and-upgrade
-        analyze_video_files: true
-        rescan_series_folder_after_refresh: always
-        change_file_date: none
-        recycling_bin: null
-        recycling_bin_cleanup: 7
-        set_permissions: false
-        chmod_folder: drwxr-xr-x
-        chown_group: null
-        root_folders: []
-      download_clients:
-        enable_completed_download_handling: true
-        redownload_failed: true
-        definitions:
-          Transmission:
-            type: "transmission"
-            host: "transmission"
-            port: 80
-            category: sonarr_tv
-            enable: true
-            directory: null
-        remote_path_mappings:
+    radarr:
+      hostname: sonarr
+      port: 80
+      protocol: http
+      url_base: /sonarr
+      api_key: {{ .Values.sonarr.apiKey }}
+      settings:
+        quality:
+          trash_id: "bef99584217af744e404ed44a33af589"
+        media_management:
+          rename_episodes: false
+          replace_illegal_characters: true
+          standard_episode_format: '{Series TitleYear} - S{season:00}E{episode:00} - {Episode CleanTitle} [{Custom Formats }{Quality Full}]{[MediaInfo VideoDynamicRangeType]}{[Mediainfo AudioCodec}{ Mediainfo AudioChannels]}{[MediaInfo VideoCodec]}{-Release Group}'
+          daily_episode_format: '{Series TitleYear} - {Air-Date} - {Episode CleanTitle} [{Custom Formats }{Quality Full}]{[MediaInfo VideoDynamicRangeType]}{[Mediainfo AudioCodec}{ Mediainfo AudioChannels]}{[MediaInfo VideoCodec]}{-Release Group}'
+          anime_episode_format: '{Series TitleYear} - S{season:00}E{episode:00} - {absolute:000} - {Episode CleanTitle} [{Custom Formats }{Quality Full}]{[MediaInfo VideoDynamicRangeType]}[{MediaInfo VideoBitDepth}bit]{[MediaInfo VideoCodec]}[{Mediainfo AudioCodec} { Mediainfo AudioChannels}]{MediaInfo AudioLanguages}{-Release Group}'
+          series_folder_format: '{Series TitleYear}'
+          season_folder_format: Season {season}
+          specials_folder_format: Specials
+          multiepisode_style: extend
+          create_empty_series_folders: false
+          delete_empty_folders: false
+          episode_title_required: always
+          skip_free_space_check: false
+          minimum_free_space: 100
+          use_hardlinks: true
+          import_extra_files: false
+          unmonitor_deleted_episodes: false
+          propers_and_repacks: prefer-and-upgrade
+          analyze_video_files: true
+          rescan_series_folder_after_refresh: always
+          change_file_date: none
+          recycling_bin: null
+          recycling_bin_cleanup: 7
+          set_permissions: false
+          chmod_folder: drwxr-xr-x
+          chown_group: null
+          root_folders: []
+        download_clients:
+          enable_completed_download_handling: true
+          redownload_failed: true
+          definitions:
+            Transmission:
+              type: "transmission"
+              host: "transmission"
+              port: 80
+              category: sonarr_tv
+              enable: true
+              directory: null
+          remote_path_mappings:
+            definitions: []
+        tags:
           definitions: []
-      tags:
-        definitions: []
-      general:
-        host:
-          bind_address: '*'
-          port: 8989
-          ssl_port: 6969
-          use_ssl: false
-          url_base: /sonarr
-          instance_name: Sonarr
-        security:
-          authentication: none
-          username:
-          password: null
-          certificate_validation: enabled
-        logging:
-          log_level: {{ .Values.sonarr.loggingLevel }}
-        analytics:
-          send_anonymous_usage_data: false
-        updates:
-          branch: main
-          automatic: false
-          mechanism: docker
-          script_path: null
-        backup:
-          folder: Backups
-          interval: 7
-          retention: 28
-      ui:
-        first_day_of_week: sunday
-        week_column_header: month-first
-        short_date_format: word-month-first
-        long_date_format: month-first
-        time_format: twelve-hour
-        show_relative_dates: true
-        enable_color_impaired_mode: false
+        general:
+          host:
+            bind_address: '*'
+            port: 8989
+            ssl_port: 6969
+            use_ssl: false
+            url_base: /sonarr
+            instance_name: Sonarr
+          security:
+            authentication: none
+            username:
+            password: null
+            certificate_validation: enabled
+          logging:
+            log_level: {{ .Values.sonarr.loggingLevel }}
+          analytics:
+            send_anonymous_usage_data: false
+          updates:
+            branch: main
+            automatic: false
+            mechanism: docker
+            script_path: null
+          backup:
+            folder: Backups
+            interval: 7
+            retention: 28
+        ui:
+          first_day_of_week: sunday
+          week_column_header: month-first
+          short_date_format: word-month-first
+          long_date_format: month-first
+          time_format: twelve-hour
+          show_relative_dates: true
+          enable_color_impaired_mode: false
 
 
