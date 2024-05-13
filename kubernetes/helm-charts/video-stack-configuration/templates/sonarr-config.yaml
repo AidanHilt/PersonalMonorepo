@@ -4,7 +4,7 @@ metadata:
   name: buildarr-sonarr-config-secret
 stringData:
   buildarr.yml: |
-    radarr:
+    sonarr:
       hostname: sonarr
       port: 80
       protocol: http
