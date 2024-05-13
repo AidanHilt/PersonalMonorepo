@@ -59,6 +59,7 @@ stringData:
               older_priority: last
               add_paused: false
               type: transmission
+              port: 80
         general:
           host:
             bind_address: '*'
