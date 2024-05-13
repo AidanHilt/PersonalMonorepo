@@ -43,7 +43,7 @@ stringData:
         download_clients:
           delete_unmanaged: false
           definitions:
-            Transmission:
+            transmission:
               enable: true
               remove_completed_downloads: true
               remove_failed_downloads: true

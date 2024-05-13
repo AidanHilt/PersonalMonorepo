@@ -45,7 +45,7 @@ stringData:
           enable_completed_download_handling: true
           redownload_failed: true
           definitions:
-            Transmission:
+            transmission:
               type: "transmission"
               host: "transmission"
               port: 80
