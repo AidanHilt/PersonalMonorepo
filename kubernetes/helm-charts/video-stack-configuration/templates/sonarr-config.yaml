@@ -46,12 +46,21 @@ stringData:
           redownload_failed: true
           definitions:
             Transmission:
-              type: "transmission"
-              host: "transmission"
-              port: 80
-              category: sonarr-tv
               enable: true
+              remove_completed_downloads: true
+              remove_failed_downloads: true
+              priority: 1
+              tags: []
+              hostname: transmission
+              url_base: /transmission/
+              username: {{ .Values.transmission.username }}
+              password: {{ .Values.transmission.password }}
+              category: radarr-movies
               directory: null
+              recent_priority: last
+              older_priority: last
+              add_paused: false
+              type: transmission
           remote_path_mappings:
             definitions: []
         tags:
