@@ -43,7 +43,7 @@ stringData:
         download_clients:
           delete_unmanaged: false
           definitions:
-            transmission:
+            Transmission:
               enable: true
               remove_completed_downloads: true
               remove_failed_downloads: true
@@ -53,7 +53,7 @@ stringData:
               url_base: /transmission/
               username: {{ .Values.transmission.username }}
               password: {{ .Values.transmission.password }}
-              category: radarr_movies
+              category: radarr-movies
               directory: null
               recent_priority: last
               older_priority: last

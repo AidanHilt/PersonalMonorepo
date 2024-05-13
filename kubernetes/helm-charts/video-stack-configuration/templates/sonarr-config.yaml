@@ -45,11 +45,11 @@ stringData:
           enable_completed_download_handling: true
           redownload_failed: true
           definitions:
-            transmission:
+            Transmission:
               type: "transmission"
               host: "transmission"
               port: 80
-              category: sonarr_tv
+              category: sonarr-tv
               enable: true
               directory: null
           remote_path_mappings:
