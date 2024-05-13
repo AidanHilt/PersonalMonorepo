@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: buildarr-{{ application_name }}
+spec:
+  template:
+    spec:
+      containers:
+      - name: buildarr-{{ application_name }}-configurator
+        image: callum027/buildarr:latest
+        command: [sh]
+        args:
+        - -c
+        - |
+          echo "Running buildarr for {{ application_name }}"
+          buildarr run /config/buildarr.yml
+        volumeMounts:
+        - name: config
+          mountPath: /config
+      volumes:
+      - name: config
+        secret:
+          {% if ('buildarr-{{ application_name }}-config-secret' != secret_name|string() ) %}
+          secretName: {{ secret_name }}
+          {% else %}
+          secretName: buildarr-{{ application_name }}-config-secret
+          {% endif %}
+      restartPolicy: Never
+  backoffLimit: 4

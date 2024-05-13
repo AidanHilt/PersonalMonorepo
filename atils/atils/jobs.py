@@ -1,5 +1,6 @@
 import argparse
 import itertools
+import json
 import logging
 import os
 import sys
@@ -14,7 +15,7 @@ from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 
 from atils import atils_kubernetes
-from atils.common import config, template_utils
+from atils.common import config, console_utils, template_utils
 from kubernetes import client
 from kubernetes import config as k8s_config
 from kubernetes import utils
@@ -41,9 +42,12 @@ def main(args: str) -> None:
     run_parser.add_argument("job_name", help="Name of the job to run")
     # TODO Add some values for jobs, if needed, so we can set them with this argument
     run_parser.add_argument(
-        "--set", help="Set values to fill in job template. WIP, not currently working"
+        "--set",
+        help="Set values to fill in job template. WIP, not currently working",
+        nargs=2,
+        action="append",
+        dest="values",
     )
-    run_parser.add_argument("--tag", help="Image tag to use for the job")
 
     pvc_parser = subparsers.add_parser("manage-pvc")
     pvc_parser.add_argument(
@@ -59,18 +63,33 @@ def main(args: str) -> None:
 
     list_parser = subparsers.add_parser("list")
 
+    describe_parser = subparsers.add_parser("describe")
+    describe_parser.add_argument("job_name", help="Then name of the job to describe")
+
     arguments: argparse.Namespace = parser.parse_args(args)
 
     if arguments.subparser_name == "run":
+        args_dict = vars(arguments)
         job_args = {}
 
-        args_dict = vars(args)
-        if "image" in args_dict and args_dict["tag"] is not None:
-            job_args["image_tag"] = args_dict["tag"]
-        else:
-            job_args["image_tag"] = "latest"
+        if args_dict["values"] is not None:
+            for arg in args_dict["values"]:
+                job_args[arg[0]] = arg[1]
 
-        run_job(arguments.job_name, job_args)
+        jobconfig_args = _get_arguments_from_jobconfig(args_dict["job_name"])
+
+        args_filled_from_command_lines = _fill_out_jobconfig_args_from_command_line(
+            jobconfig_args, job_args
+        )
+
+        if "" in args_filled_from_command_lines.values():
+            final_job_args = _get_missing_arguments_interactive(
+                args_filled_from_command_lines
+            )
+        else:
+            final_job_args = args_filled_from_command_lines
+
+        run_job(arguments.job_name, final_job_args)
     elif arguments.subparser_name == "manage-pvc":
         args_dict = vars(arguments)
         current_namespace = atils_kubernetes.get_current_namespace()
@@ -86,9 +105,41 @@ def main(args: str) -> None:
         launch_postgres_manager()
     elif arguments.subparser_name == "list":
         list_available_jobs()
+    elif arguments.subparser_name == "describe":
+        args_dict = vars(arguments)
+        describe_job(args_dict["job_name"])
     else:
         logging.error(f"Unrecognized command {arguments.subparser_name}")
         exit(1)
+
+
+def describe_job(job_name: str) -> None:
+    """
+    Using the .atils_jobconfig.json file, describe a job's purpose, as well as any arguments it takes.
+
+    Args:
+        job_name (str): The name of the job to describe
+    """
+    jobs_dir = config.get_full_atils_dir("JOBS_DIR")
+    dir_for_job = os.path.join(jobs_dir, job_name)
+
+    if os.path.exists(dir_for_job):
+        jobconfig_path = os.path.join(dir_for_job, ".atils_jobconfig.json")
+
+        if os.path.exists(jobconfig_path):
+            with open(jobconfig_path) as file:
+                jobconfig_data = json.load(file)
+                console_utils.print_jobconfig(jobconfig_data)
+        else:
+            logging.error(
+                f"Job {job_name} does not have a jobconfig. It probably will not run successfully"
+            )
+            exit(1)
+    else:
+        logging.error(f"Job {job_name} does not exist")
+        exit(1)
+
+    return
 
 
 def launch_postgres_manager() -> None:
@@ -137,15 +188,14 @@ def list_available_jobs() -> None:
 
     root, dirs, files = next(os.walk(jobs_dir))
     for job in dirs:
-        description = "No description provided"
-        description_location = os.path.join(jobs_dir, job, "description.txt")
-        if os.path.exists(description_location):
-            with open(description_location) as file:
-                description = file.read()
-                if len(description) > 250:
-                    description = description[0:251] + "..."
+        if job != "docs":
+            jobconfig_path = os.path.join(jobs_dir, job, ".atils_jobconfig.json")
+            if os.path.exists(jobconfig_path):
+                with open(jobconfig_path) as file:
+                    jobconfig_data = json.load(file)
+                    description = jobconfig_data["short_description"]
 
-        print(f"{job}:      {description}")
+                print(f"{job}:      {description}")
 
 
 def run_job(job_name: str, args=None) -> None:
@@ -440,6 +490,24 @@ def _exec_shell_in_pod(
         print("press enter")
 
 
+def _fill_out_jobconfig_args_from_command_line(
+    jobconfig_args: dict, command_line_args: dict
+) -> dict[str, str]:
+    """
+    Fill out the jobconfig_args dictionary with the c.
+
+    Args:
+        jobconfig_args (dict): The dictionary to fill out
+        command_line_args (dict): The dictionary containing the command line arguments
+
+    Returns:
+        dict: The updated jobconfig_args dictionary
+    """
+    for key, value in command_line_args.items():
+        jobconfig_args[key] = value
+    return jobconfig_args
+
+
 def _find_pod_by_pvc(pvc_name: str) -> str:
     """
     Given the name of a PVC, find the name of a pod it is attached to. If no pod is attached, return an empty string
@@ -504,6 +572,71 @@ def _find_volume_by_pvc_and_pod(pod_name: str, namespace: str, pvc_name: str) ->
 
     except Exception as e:
         logging.error(f"Error occurred while searching for volume: {str(e)}")
+        sys.exit(1)
+
+
+def _get_arguments_from_jobconfig(job_name: str) -> dict[str, str]:
+    """
+    Get the arguments from the jobconfig file.
+
+    Args:
+        job_name (str): The name of the job to get the arguments for
+
+    Returns:
+        dict[str, str]: A dictionary containing the arguments
+    """
+    try:
+        jobs_dir = config.get_full_atils_dir("JOBS_DIR")
+        if os.path.exists(os.path.join(jobs_dir, job_name, ".atils_jobconfig.json")):
+            jobconfig_file = os.path.join(jobs_dir, job_name, ".atils_jobconfig.json")
+        else:
+            logging.error(f"No jobconfig found for job {job_name}, exiting")
+            sys.exit(1)
+
+        jobconfig_args = {}
+
+        # Read the jobconfig file
+        with open(jobconfig_file, "r") as file:
+            jobconfig = json.load(file)
+
+            if "args" in jobconfig.keys():
+                for arg in jobconfig["args"]:
+                    if "default" in arg.keys():
+                        jobconfig_args[arg["name"]] = arg["default"]
+                    else:
+                        jobconfig_args[arg["name"]] = ""
+
+        return jobconfig_args
+
+    except Exception as e:
+        logging.error(
+            f"Error occurred while getting arguments from jobconfig: {str(e)}"
+        )
+        sys.exit(1)
+
+
+def _get_missing_arguments_interactive(
+    missing_args_dict: dict[str, str]
+) -> dict[str, str]:
+    """
+    Get missing job arguments from the user.
+
+    Args:
+        missing_args_dict (dict[str, str]): A dictionary containing the missing arguments
+
+    Returns:
+        dict[str, str]: A dictionary containing the updated missing arguments
+    """
+    try:
+        for arg_name, arg_value in missing_args_dict.items():
+            if arg_value == "":
+                arg_value = input(f"Enter value for {arg_name}: ")
+                missing_args_dict[arg_name] = arg_value
+
+        return missing_args_dict
+
+    except Exception as e:
+        logging.error(f"Error occurred while getting missing arguments: {str(e)}")
         sys.exit(1)
 
 

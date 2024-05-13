@@ -4,326 +4,327 @@ metadata:
   name: buildarr-prowlarr-config-secret
 stringData:
   buildarr.yml: |
-    hostname: {{ .Values.prowlarr.url }}
-    port: 80
-    protocol: http
-    url_base: {{ .Values.prowlarr.urlBase }}
-    api_key: {{ .Values.prowlarr.apiKey }}
-    settings:
-      indexers:
+    prowlarr:
+      hostname: {{ .Values.prowlarr.url }}
+      port: 80
+      protocol: http
+      url_base: {{ .Values.prowlarr.urlBase }}
+      api_key: {{ .Values.prowlarr.apiKey }}
+      settings:
         indexers:
+          indexers:
+            delete_unmanaged: false
+            definitions:
+              1337x:
+                type: 1337x
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags: []
+                fields:
+                  definitionFile: 1337x
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  downloadlink: iTorrents.org
+                  downloadlink2: magnet
+                  sort: created
+                  type: desc
+                secret_fields: {}
+              Badass Torrents:
+                type: badasstorrents
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags: []
+                fields:
+                  definitionFile: badasstorrents
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  downloadlink: magnet
+                  downloadlink2: .torrent
+                secret_fields: {}
+              EZTV:
+                type: eztv
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags: []
+                fields:
+                  definitionFile: eztv
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                secret_fields: {}
+              GloDLS:
+                type: glodls
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags: []
+                fields:
+                  definitionFile: glodls
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  sort: created
+                  type: desc
+                secret_fields: {}
+              Internet Archive:
+                type: internetarchive
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags: []
+                fields:
+                  definitionFile: internetarchive
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  titleOnly: true
+                  noMagnet: false
+                  sort: created
+                  type: desc
+                secret_fields: {}
+              LimeTorrents:
+                type: limetorrents
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags: []
+                fields:
+                  definitionFile: limetorrents
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  downloadlink: magnet
+                  downloadlink2: iTorrents.org
+                  sort: created
+                secret_fields: {}
+              LinuxTracker:
+                type: linuxtracker
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags: []
+                fields:
+                  definitionFile: linuxtracker
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  sort: created
+                  type: desc
+                secret_fields: {}
+              The Pirate Bay:
+                type: thepiratebay
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags: []
+                fields:
+                  definitionFile: thepiratebay
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                secret_fields: {}
+              YTS:
+                type: yts
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags: []
+                fields:
+                  definitionFile: yts
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                secret_fields: {}
+          proxies:
+            delete_unmanaged: false
+            definitions:
+              FlareSolverr:
+                type: flaresolverr
+                tags: []
+                host_url: http://flaresolverr:80
+                request_timeout: 60
+        apps:
+          applications:
+            delete_unmanaged: false
+            definitions:
+              {{- $prowlarrUrl := printf "http://%s%s" .Values.prowlarr.url .Values.prowlarr.urlBase }}
+              {{- $sonarrUrl := printf "http://%s%s" .Values.sonarr.url .Values.sonarr.urlBase }}
+              {{- $radarrUrl := printf "http://%s%s" .Values.radarr.url .Values.radarr.urlBase }}
+              Radarr:
+                type: radarr
+                prowlarr_url: {{ $prowlarrUrl }}
+                base_url: {{ $radarrUrl }}
+                sync_level: full-sync
+                sync_categories:
+                - movies/bluray
+                - movies/dvd
+                - movies/foreign
+                - movies/3d
+                - movies/sd
+                - movies/web-dl
+                - movies/hd
+                - movies/x265
+                - movies/other
+                - movies
+                - movies/uhd
+                tags: []
+                instance_name: null
+                api_key: {{ .Values.radarr.apiKey }}
+              Sonarr:
+                type: sonarr
+                prowlarr_url: {{ $prowlarrUrl }}
+                base_url: {{ $radarrUrl }}
+                sync_level: full-sync
+                sync_categories:
+                - tv/x265
+                - tv/uhd
+                - tv/web-dl
+                - tv/sd
+                - tv
+                - tv/other
+                - tv/foreign
+                - tv/hd
+                tags: []
+                instance_name: null
+                api_key: {{ .Values.sonarr.apiKey }}
+                anime_sync_categories:
+                - tv/anime
+                sync_anime_standard_format_search: false
+          sync_profiles:
+            delete_unmanaged: false
+            definitions:
+              Standard:
+                enable_rss: true
+                enable_interactive_search: true
+                enable_automatic_search: true
+                minimum_seeders: 1
+        download_clients:
           delete_unmanaged: false
           definitions:
-            1337x:
-              type: 1337x
+            Transmission:
               enable: true
-              sync_profile: Standard
-              redirect: false
-              priority: 25
-              query_limit: null
-              grab_limit: null
+              priority: 1
               tags: []
-              fields:
-                definitionFile: 1337x
-                baseUrl: null
-                baseSettings.limitsUnit: Day
-                torrentBaseSettings.appMinimumSeeders: null
-                torrentBaseSettings.seedRatio: null
-                torrentBaseSettings.seedTime: null
-                torrentBaseSettings.packSeedTime: null
-                downloadlink: iTorrents.org
-                downloadlink2: magnet
-                sort: created
-                type: desc
-              secret_fields: {}
-            Badass Torrents:
-              type: badasstorrents
-              enable: true
-              sync_profile: Standard
-              redirect: false
-              priority: 25
-              query_limit: null
-              grab_limit: null
-              tags: []
-              fields:
-                definitionFile: badasstorrents
-                baseUrl: null
-                baseSettings.limitsUnit: Day
-                torrentBaseSettings.appMinimumSeeders: null
-                torrentBaseSettings.seedRatio: null
-                torrentBaseSettings.seedTime: null
-                torrentBaseSettings.packSeedTime: null
-                downloadlink: magnet
-                downloadlink2: .torrent
-              secret_fields: {}
-            EZTV:
-              type: eztv
-              enable: true
-              sync_profile: Standard
-              redirect: false
-              priority: 25
-              query_limit: null
-              grab_limit: null
-              tags: []
-              fields:
-                definitionFile: eztv
-                baseUrl: null
-                baseSettings.limitsUnit: Day
-                torrentBaseSettings.appMinimumSeeders: null
-                torrentBaseSettings.seedRatio: null
-                torrentBaseSettings.seedTime: null
-                torrentBaseSettings.packSeedTime: null
-              secret_fields: {}
-            GloDLS:
-              type: glodls
-              enable: true
-              sync_profile: Standard
-              redirect: false
-              priority: 25
-              query_limit: null
-              grab_limit: null
-              tags: []
-              fields:
-                definitionFile: glodls
-                baseUrl: null
-                baseSettings.limitsUnit: Day
-                torrentBaseSettings.appMinimumSeeders: null
-                torrentBaseSettings.seedRatio: null
-                torrentBaseSettings.seedTime: null
-                torrentBaseSettings.packSeedTime: null
-                sort: created
-                type: desc
-              secret_fields: {}
-            Internet Archive:
-              type: internetarchive
-              enable: true
-              sync_profile: Standard
-              redirect: false
-              priority: 25
-              query_limit: null
-              grab_limit: null
-              tags: []
-              fields:
-                definitionFile: internetarchive
-                baseUrl: null
-                baseSettings.limitsUnit: Day
-                torrentBaseSettings.appMinimumSeeders: null
-                torrentBaseSettings.seedRatio: null
-                torrentBaseSettings.seedTime: null
-                torrentBaseSettings.packSeedTime: null
-                titleOnly: true
-                noMagnet: false
-                sort: created
-                type: desc
-              secret_fields: {}
-            LimeTorrents:
-              type: limetorrents
-              enable: true
-              sync_profile: Standard
-              redirect: false
-              priority: 25
-              query_limit: null
-              grab_limit: null
-              tags: []
-              fields:
-                definitionFile: limetorrents
-                baseUrl: null
-                baseSettings.limitsUnit: Day
-                torrentBaseSettings.appMinimumSeeders: null
-                torrentBaseSettings.seedRatio: null
-                torrentBaseSettings.seedTime: null
-                torrentBaseSettings.packSeedTime: null
-                downloadlink: magnet
-                downloadlink2: iTorrents.org
-                sort: created
-              secret_fields: {}
-            LinuxTracker:
-              type: linuxtracker
-              enable: true
-              sync_profile: Standard
-              redirect: false
-              priority: 25
-              query_limit: null
-              grab_limit: null
-              tags: []
-              fields:
-                definitionFile: linuxtracker
-                baseUrl: null
-                baseSettings.limitsUnit: Day
-                torrentBaseSettings.appMinimumSeeders: null
-                torrentBaseSettings.seedRatio: null
-                torrentBaseSettings.seedTime: null
-                torrentBaseSettings.packSeedTime: null
-                sort: created
-                type: desc
-              secret_fields: {}
-            The Pirate Bay:
-              type: thepiratebay
-              enable: true
-              sync_profile: Standard
-              redirect: false
-              priority: 25
-              query_limit: null
-              grab_limit: null
-              tags: []
-              fields:
-                definitionFile: thepiratebay
-                baseUrl: null
-                baseSettings.limitsUnit: Day
-                torrentBaseSettings.appMinimumSeeders: null
-                torrentBaseSettings.seedRatio: null
-                torrentBaseSettings.seedTime: null
-                torrentBaseSettings.packSeedTime: null
-              secret_fields: {}
-            YTS:
-              type: yts
-              enable: true
-              sync_profile: Standard
-              redirect: false
-              priority: 25
-              query_limit: null
-              grab_limit: null
-              tags: []
-              fields:
-                definitionFile: yts
-                baseUrl: null
-                baseSettings.limitsUnit: Day
-                torrentBaseSettings.appMinimumSeeders: null
-                torrentBaseSettings.seedRatio: null
-                torrentBaseSettings.seedTime: null
-                torrentBaseSettings.packSeedTime: null
-              secret_fields: {}
-        proxies:
+              host: transmission
+              port: 80
+              use_ssl: false
+              url_base: /transmission/
+              username: {{ .Values.transmission.username }}
+              password: {{ .Values.transmission.password }}
+              category: prowlarr-random
+              directory: null
+              client_priority: last
+              add_paused: false
+              type: transmission
+        notifications:
           delete_unmanaged: false
-          definitions:
-            FlareSolverr:
-              type: flaresolverr
-              tags: []
-              host_url: http://flaresolverr:80
-              request_timeout: 60
-      apps:
-        applications:
-          delete_unmanaged: false
-          definitions:
-            {{- $prowlarrUrl := printf "http://%s%s" .Values.prowlarr.url .Values.prowlarr.urlBase }}
-            {{- $sonarrUrl := printf "http://%s%s" .Values.sonarr.url .Values.sonarr.urlBase }}
-            {{- $radarrUrl := printf "http://%s%s" .Values.radarr.url .Values.radarr.urlBase }}
-            Radarr:
-              type: radarr
-              prowlarr_url: {{ $prowlarrUrl }}
-              base_url: {{ $radarrUrl }}
-              sync_level: full-sync
-              sync_categories:
-              - movies/bluray
-              - movies/dvd
-              - movies/foreign
-              - movies/3d
-              - movies/sd
-              - movies/web-dl
-              - movies/hd
-              - movies/x265
-              - movies/other
-              - movies
-              - movies/uhd
-              tags: []
-              instance_name: null
-              api_key: {{ .Values.radarr.apiKey }}
-            Sonarr:
-              type: sonarr
-              prowlarr_url: {{ $prowlarrUrl }}
-              base_url: {{ $radarrUrl }}
-              sync_level: full-sync
-              sync_categories:
-              - tv/x265
-              - tv/uhd
-              - tv/web-dl
-              - tv/sd
-              - tv
-              - tv/other
-              - tv/foreign
-              - tv/hd
-              tags: []
-              instance_name: null
-              api_key: {{ .Values.sonarr.apiKey }}
-              anime_sync_categories:
-              - tv/anime
-              sync_anime_standard_format_search: false
-        sync_profiles:
-          delete_unmanaged: false
-          definitions:
-            Standard:
-              enable_rss: true
-              enable_interactive_search: true
-              enable_automatic_search: true
-              minimum_seeders: 1
-      download_clients:
-        delete_unmanaged: false
-        definitions:
-          Transmission:
-            enable: true
-            priority: 1
-            tags: []
-            host: transmission
-            port: 80
+          definitions: {}
+        tags:
+          definitions: []
+        general:
+          host:
+            bind_address: '*'
+            port: 9696
+            ssl_port: 6969
             use_ssl: false
-            url_base: /transmission/
-            username: {{ .Values.transmission.username }}
-            password: {{ .Values.transmission.password }}
-            category: prowlarr-random
-            directory: null
-            client_priority: last
-            add_paused: false
-            type: transmission
-      notifications:
-        delete_unmanaged: false
-        definitions: {}
-      tags:
-        definitions: []
-      general:
-        host:
-          bind_address: '*'
-          port: 9696
-          ssl_port: 6969
-          use_ssl: false
-          ssl_cert_path: null
-          ssl_cert_password: null
-          url_base: /prowlarr
-          instance_name: Prowlarr
-        security:
-          authentication: external
-          authentication_required: enabled
-          username: null
-          password: null
-          certificate_validation: enabled
-        proxy:
-          enable: false
-          proxy_type: http
-          hostname: null
-          port: 8080
-          username: null
-          password: null
-          ignored_addresses: []
-          bypass_proxy_for_local_addresses: true
-        logging:
-          log_level: {{ .Values.prowlarr.loggingLevel }}
-        analytics:
-          send_anonymous_usage_data: false
-        updates:
-          branch: develop
-          automatic: false
-          mechanism: docker
-          script_path: null
-        backup:
-          folder: Backups
-          interval: 7
-          retention: 28
-      ui:
-        first_day_of_week: sunday
-        week_column_header: month-first
-        short_date_format: word-month-first
-        long_date_format: month-first
-        time_format: twelve-hour
-        show_relative_dates: true
-        enable_color_impaired_mode: false
-        theme: auto
-        ui_language: en
+            ssl_cert_path: null
+            ssl_cert_password: null
+            url_base: /prowlarr
+            instance_name: Prowlarr
+          security:
+            authentication: external
+            authentication_required: enabled
+            username: null
+            password: null
+            certificate_validation: enabled
+          proxy:
+            enable: false
+            proxy_type: http
+            hostname: null
+            port: 8080
+            username: null
+            password: null
+            ignored_addresses: []
+            bypass_proxy_for_local_addresses: true
+          logging:
+            log_level: {{ .Values.prowlarr.loggingLevel }}
+          analytics:
+            send_anonymous_usage_data: false
+          updates:
+            branch: develop
+            automatic: false
+            mechanism: docker
+            script_path: null
+          backup:
+            folder: Backups
+            interval: 7
+            retention: 28
+        ui:
+          first_day_of_week: sunday
+          week_column_header: month-first
+          short_date_format: word-month-first
+          long_date_format: month-first
+          time_format: twelve-hour
+          show_relative_dates: true
+          enable_color_impaired_mode: false
+          theme: auto
+          ui_language: en
