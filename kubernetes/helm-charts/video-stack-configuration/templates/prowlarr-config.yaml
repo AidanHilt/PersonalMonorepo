@@ -232,7 +232,7 @@ stringData:
               Sonarr:
                 type: sonarr
                 prowlarr_url: {{ $prowlarrUrl }}
-                base_url: {{ $radarrUrl }}
+                base_url: {{ $sonarrUrl }}
                 sync_level: full-sync
                 sync_categories:
                 - tv/x265
