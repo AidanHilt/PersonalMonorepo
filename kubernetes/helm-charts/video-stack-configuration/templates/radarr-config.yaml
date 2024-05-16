@@ -4,92 +4,94 @@ metadata:
   name: buildarr-radarr-config-secret
 stringData:
   buildarr.yml: |
-    hostname: {{ .Values.radarr.url }}
-    port: 80
-    protocol: http
-    url_base: {{ .Values.radarr.urlBase }}
-    api_key: {{ .Values.radarr.apiKey }}
-    settings:
-      media_management:
-        rename_movies: false
-        replace_illegal_characters: true
-        colon_replacement: delete
-        standard_movie_format: '{Movie Title} ({Release Year}) {Quality Full}'
-        movie_folder_format: '{Movie Title} ({Release Year})'
-        create_missing_movie_folders: false
-        delete_empty_folders: false
-        skip_free_space_check: false
-        minimum_free_space: 100
-        use_hardlinks: true
-        import_using_script: false
-        import_script_path: null
-        import_extra_files: false
-        unmonitor_deleted_movies: false
-        propers_and_repacks: prefer-and-upgrade
-        analyze_video_files: true
-        rescan_folder_after_refresh: always
-        change_file_date: none
-        recycling_bin: null
-        recycling_bin_cleanup: 7
-        set_permissions: false
-        chmod_folder: drwxr-xr-x
-        chown_group: null
-        root_folders:
+    radarr:
+      hostname: {{ .Values.radarr.url }}
+      port: 80
+      protocol: http
+      url_base: {{ .Values.radarr.urlBase }}
+      api_key: {{ .Values.radarr.apiKey }}
+      settings:
+        media_management:
+          rename_movies: false
+          replace_illegal_characters: true
+          colon_replacement: delete
+          standard_movie_format: '{Movie Title} ({Release Year}) {Quality Full}'
+          movie_folder_format: '{Movie Title} ({Release Year})'
+          create_missing_movie_folders: false
+          delete_empty_folders: false
+          skip_free_space_check: false
+          minimum_free_space: 100
+          use_hardlinks: true
+          import_using_script: false
+          import_script_path: null
+          import_extra_files: false
+          unmonitor_deleted_movies: false
+          propers_and_repacks: prefer-and-upgrade
+          analyze_video_files: true
+          rescan_folder_after_refresh: always
+          change_file_date: none
+          recycling_bin: null
+          recycling_bin_cleanup: 7
+          set_permissions: false
+          chmod_folder: drwxr-xr-x
+          chown_group: null
+          root_folders:
+            delete_unmanaged: false
+            definitions: []
+        quality:
+          trash_id: aed34b9f60ee115dfa7918b742336277
+        download_clients:
           delete_unmanaged: false
-          definitions: []
-      quality:
-        trash_id: aed34b9f60ee115dfa7918b742336277
-      download_clients:
-        delete_unmanaged: false
-        definitions:
-          Transmission:
-            enable: true
-            remove_completed_downloads: true
-            remove_failed_downloads: true
-            priority: 1
-            tags: []
-            hostname: transmission
-            url_base: /transmission/
-            username: {{ .Values.transmission.username }}
-            password: {{ .Values.transmission.password }}
-            category: radarr_movies
-            directory: null
-            recent_priority: last
-            older_priority: last
-            add_paused: false
-            type: transmission
-      general:
-        host:
-          bind_address: '*'
-          port: 7878
-          ssl_port: 6969
-          use_ssl: false
-          ssl_cert_path: null
-          ssl_cert_password: null
-          url_base: /radarr
-          instance_name: Radarr
-        security:
-          authentication: external
-          authentication_required: local-disabled
-          username: null
-          password: null
-          certificate_validation: enabled
-        logging:
-          log_level: {{ .Values.radarr.loggingLevel }}
-        backup:
-          folder: Backups
-          interval: 7
-          retention: 28
-      ui:
-        first_day_of_week: sunday
-        week_column_header: month-first
-        runtime_format: hours-minutes
-        short_date_format: word-month-first
-        long_date_format: month-first
-        time_format: twelve-hour
-        show_relative_dates: true
-        theme: auto
-        enable_color_impaired_mode: false
-        movie_info_language: english
-        ui_language: english
+          definitions:
+            Transmission:
+              enable: true
+              remove_completed_downloads: true
+              remove_failed_downloads: true
+              priority: 1
+              tags: []
+              hostname: transmission
+              url_base: /transmission/
+              username: {{ .Values.transmission.username }}
+              password: {{ .Values.transmission.password }}
+              category: radarr-movies
+              directory: null
+              recent_priority: last
+              older_priority: last
+              add_paused: false
+              type: transmission
+              port: 80
+        general:
+          host:
+            bind_address: '*'
+            port: 7878
+            ssl_port: 6969
+            use_ssl: false
+            ssl_cert_path: null
+            ssl_cert_password: null
+            url_base: /radarr
+            instance_name: Radarr
+          security:
+            authentication: external
+            authentication_required: local-disabled
+            username: null
+            password: null
+            certificate_validation: enabled
+          logging:
+            log_level: {{ .Values.radarr.loggingLevel }}
+          backup:
+            folder: Backups
+            interval: 7
+            retention: 28
+        ui:
+          first_day_of_week: sunday
+          week_column_header: month-first
+          runtime_format: hours-minutes
+          short_date_format: word-month-first
+          long_date_format: month-first
+          time_format: twelve-hour
+          show_relative_dates: true
+          theme: auto
+          enable_color_impaired_mode: false
+          movie_info_language: english
+          ui_language: english
 

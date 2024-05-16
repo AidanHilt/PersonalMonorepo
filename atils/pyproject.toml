@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "atils"
-version = "1.4.0"
+version = "1.4.1"
 description = "A series of scripts used to interact and work with this repository."
 authors = ["Aidan Hilt <aidanhilt2@gmail.com>"]
 readme = "README.md"
@@ -27,6 +27,7 @@ watchfiles = "^0.21.0"
 asyncio = "^3.4.3"
 setuptools = "^69.0.3"
 colored = "^2.2.4"
+rich = "^13.7.1"
 
 [tool.poetry.group.dev.dependencies]
 MonkeyType = "22.2.0"

@@ -15,7 +15,7 @@ def main(args: str):
 
     parser.add_argument(
         "action",
-        help="Select which action to perform. Defaults to build",
+        help="Select which action to perform. Defaults to run",
         default="run",
         nargs="?",
     )

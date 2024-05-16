@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: postgres-setup
+gitRevision: arr-stack-config-setup
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
@@ -62,7 +62,7 @@ transmission:
 video-stack-configuration:
   enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 istio:
   enabled: false

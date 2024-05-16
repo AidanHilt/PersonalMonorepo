@@ -32,7 +32,7 @@ resource "vault_kv_secret_v2" "sonarr_config" {
 
   data_json = jsonencode(
     {
-      apiKey           = random_password.prowlarr_api_key.result
+      apiKey           = random_password.sonarr_api_key.result
       postgresUsername = var.postgres_sonarr_username
       postgresPassword = random_password.postgres_sonarr_password.result
     }
@@ -48,7 +48,7 @@ resource "vault_kv_secret_v2" "radarr_config" {
 
   data_json = jsonencode(
     {
-      apiKey           = random_password.prowlarr_api_key.result
+      apiKey           = random_password.radarr_api_key.result
       postgresUsername = var.postgres_radarr_username
       postgresPassword = random_password.postgres_radarr_password.result
     }

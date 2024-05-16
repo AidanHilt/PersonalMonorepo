@@ -81,6 +81,7 @@ def main(args: list[str]):
         sys.exit(1)
 
     arguments: argparse.Namespace = parser.parse_args(args)
+    args_dict: dict[str, str] = vars(arguments)
 
     if arguments.subparser_name == "rke-setup":
         if vars(arguments).get("replace_kubeconfig"):
@@ -92,7 +93,6 @@ def main(args: list[str]):
             merge_and_replace_kubeconfig(arguments.cluster_name)
 
     elif arguments.subparser_name == "secrets":
-        args_dict: dict[str, str] = vars(arguments)
         if args_dict["command"] == "decode":
             if args_dict["secret_name"] is None:
                 logging.error("Error: A secret name must be provided ")
@@ -101,7 +101,6 @@ def main(args: list[str]):
                 get_and_decode_secret(args_dict["secret_name"], args_dict["namespace"])
 
     elif arguments.subparser_name == "istio":
-        args_dict: dict[str, str] = vars(arguments)
         if args_dict["command"] == "label-namespaces":
             _label_namespaces_for_istio_injection(
                 [
