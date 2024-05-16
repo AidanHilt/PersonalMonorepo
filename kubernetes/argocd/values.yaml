@@ -19,9 +19,6 @@ extraObjects:
               - bash
               - "-c"
               - |
-                helm repo add bitnami https://charts.bitnami.com/bitnami
-                helm repo add prometheus https://prometheus-community.github.io/helm-charts
-                helm repo add grafana https://grafana.github.io/helm-charts
                 helm dependency build
           lockRepo: false
           generate:
@@ -52,7 +49,8 @@ repoServer:
   extraContainers:
     - name: avp-helm
       command: [/var/run/argocd/argocd-cmp-server]
-      image: quay.io/argoproj/argocd:v2.6.10
+      image: aidanhilt/atils-avp:latest
+      imagePullPolicy: Always
       securityContext:
         runAsNonRoot: true
         runAsUser: 999
@@ -73,35 +71,13 @@ repoServer:
         - mountPath: /home/argocd/cmp-server/config/plugin.yaml
           name: cmp-plugin
           subPath: plugin.yaml
-        - name: custom-tools
-          subPath: argocd-vault-plugin
-          mountPath: /usr/local/bin/argocd-vault-plugin
 
   volumes:
     - configMap:
         name: cmp-plugin
       name: cmp-plugin
-    - name: custom-tools
-      emptyDir: {}
     - name: tmp-dir
       emptyDir: {}
-
-  # -- Init containers to add to the repo server pods
-  initContainers:
-    - name: download-tools
-      image: registry.access.redhat.com/ubi8
-      env:
-        - name: AVP_VERSION
-          value: 1.15.0
-      command: [sh, -c]
-      args:
-        - >-
-          curl -L https://github.com/argoproj-labs/argocd-vault-plugin/releases/download/v$(AVP_VERSION)/argocd-vault-plugin_$(AVP_VERSION)_linux_amd64 -o argocd-vault-plugin &&
-          chmod +x argocd-vault-plugin &&
-          mv argocd-vault-plugin /custom-tools/
-      volumeMounts:
-        - mountPath: /custom-tools
-          name: custom-tools
 
 configs:
   params:
@@ -109,3 +85,6 @@ configs:
     server.basehref: "/argocd"
     server.rootpath: "/argocd"
     server.insecure: true
+
+applicationSet:
+  enabled: false
