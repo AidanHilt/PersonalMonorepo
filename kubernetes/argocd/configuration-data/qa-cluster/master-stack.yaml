@@ -35,7 +35,7 @@ ingress:
   enabled: true
 
 postgres:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
