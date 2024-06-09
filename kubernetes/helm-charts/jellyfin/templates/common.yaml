@@ -27,7 +27,7 @@ env:
   {{- end }}
 
 
-{{- if eq .Values.prowlarr.configSecret.existingSecret "" }}
+{{- if eq .Values.jellyfin.configSecret.existingSecret "" }}
 secrets:
   config-secret:
     enabled: true
