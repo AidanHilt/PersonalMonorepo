@@ -5,7 +5,7 @@ gitRevision: master
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
   configurationDirectory: kubernetes/argocd/configuration-data
-  configurationRevision: master
+  configurationRevision: feat/arr-stack-istio
 
 flaresolverr:
   enabled: true
