@@ -1,0 +1,14 @@
+apiVersion: v2
+name: jellyfin
+description: A Helm chart for installing and managing jellyfin. Based on the bjw-s library chart
+
+type: application
+
+version: 0.0.1
+
+appVersion: "1.0.0"
+
+dependencies:
+  - name: common
+    repository: https://bjw-s.github.io/helm-charts/
+    version: 1.5.1

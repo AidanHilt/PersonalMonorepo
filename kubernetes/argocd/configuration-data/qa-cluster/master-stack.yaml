@@ -79,6 +79,11 @@ istio-base:
   configuration:
     enabled: false
 
+jellyfin:
+  enabled: true
+  configuration:
+    enabld: true
+
 kiali:
   enabled: true
   configuration:

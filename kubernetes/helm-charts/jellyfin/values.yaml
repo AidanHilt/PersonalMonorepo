@@ -1,0 +1,37 @@
+#================================================================================================================================================
+# You should be able to use any of the values you can find here: https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
+#================================================================================================================================================
+image:
+  repository: aidanhilt/jellyfin
+  pullPolicy: IfNotPresent
+
+service:
+  main:
+    ports:
+      http:
+        port: 80
+        targetPort: 8096
+
+persistence:
+  config:
+    enabled: false
+
+#================================
+# jellyfin specific configuration
+#================================
+jellyfin:
+  # A pre-installed API key for Jellyfin. If this is not provided, no API key will be set, and
+  # none of the other configuration options will work
+  apiKey: ""
+
+  # The username for an initial admin user
+  username: ""
+
+  # The password for an initial admin user
+  password: ""
+
+  urlBase: ""
+
+  # Note: If this is set, the apiKey, username, and password fields will be ignored
+  configSecret:
+    existingSecret: ""

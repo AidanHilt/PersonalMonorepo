@@ -1,0 +1,49 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "jellyfin.harcodedValues" -}}
+env:
+  {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
+  - name: JELLYFIN__BASE_URL
+    value: {{ .Values.jellyfin.urlBase }}
+  - name: JELLYFIN__API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.jellyfin.configSecret.existingSecret | default $defaultSecretName }}
+        key: apiKey
+  {{- if or (ne .Values.jellyfin.username "") (ne .Values.jellyfin.configSecret.existingSecret "") }}
+  - name: JELLYFIN__USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.jellyfin.configSecret.existingSecret | default $defaultSecretName }}
+        key: username
+  {{- end }}
+  {{- if or (ne .Values.jellyfin.password "") (ne .Values.jellyfin.configSecret.existingSecret "") }}
+  - name: JELLYFIN__PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.jellyfin.configSecret.existingSecret | default $defaultSecretName }}
+        key: password
+  {{- end }}
+
+
+{{- if eq .Values.prowlarr.configSecret.existingSecret "" }}
+secrets:
+  config-secret:
+    enabled: true
+    stringData:
+      apiKey: {{ .Values.jellyfin.apiKey | default (randAlphaNum 32 | lower) | quote }}
+
+      {{- if ne .Values.jellyfin.username "" }}
+      username: {{ .Values.jellyfin.username }}
+      {{ - end }}
+
+      {{- if ne Values.jellyfin.username "" }}
+      password: {{ .Values.jellyfin.password }}
+      {{- end }}
+
+{{- end }}
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "jellyfin.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}

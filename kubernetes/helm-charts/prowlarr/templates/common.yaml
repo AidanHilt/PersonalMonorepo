@@ -30,7 +30,8 @@ env:
       secretKeyRef:
         name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName}}
         key: postgresPassword
-  {{ end }}
+  {{- end }}
+
 
 {{- if eq .Values.prowlarr.configSecret.existingSecret "" }}
 secrets:
