@@ -82,7 +82,7 @@ istio-base:
 jellyfin:
   enabled: true
   configuration:
-    enabld: true
+    enabled: true
 
 kiali:
   enabled: false
