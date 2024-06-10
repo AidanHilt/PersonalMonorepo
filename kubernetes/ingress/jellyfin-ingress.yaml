@@ -8,7 +8,7 @@ spec:
   rules:
     - http:
         paths:
-          - path: /jellyfin
+          - path: /emby
             pathType: Prefix
             backend:
               service:

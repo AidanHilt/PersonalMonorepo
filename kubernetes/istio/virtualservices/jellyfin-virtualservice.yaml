@@ -11,7 +11,7 @@ spec:
   http:
     - match:
         - uri:
-            prefix: /jellyfin
+            prefix: /emby
       route:
         - destination:
             host: jellyfin.videos.svc.cluster.local
