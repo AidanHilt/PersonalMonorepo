@@ -30,7 +30,7 @@ jellyfin:
   # The password for an initial admin user
   password: ""
 
-  urlBase: ""
+  urlBase: /
 
   # Note: If this is set, the apiKey, username, and password fields will be ignored
   configSecret:
