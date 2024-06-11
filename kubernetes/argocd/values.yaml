@@ -88,3 +88,9 @@ configs:
 
 applicationSet:
   enabled: false
+
+dex:
+  enabled: false
+
+notifications:
+  enabled: false

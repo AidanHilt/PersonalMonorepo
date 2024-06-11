@@ -109,3 +109,31 @@ resource "vault_kubernetes_auth_backend_role" "setup_job_reader" {
   token_policies                   = [vault_policy.setup_job_reader.name]
   depends_on                       = [vault_auth_backend.kubernetes, vault_kubernetes_auth_backend_config.backend_config]
 }
+
+#============================
+# Jellyfin Config
+#============================
+
+resource "vault_policy" "jellyfin_reader" {
+  name   = "jellyfin"
+
+  policy = <<EOT
+path "videos/data/jellyfin/*" {
+  capabilities = ["read", "list"]
+}
+
+path "videos/jellyfin/*" {
+  capabilities = ["read", "list"]
+}
+EOT
+}
+
+resource "vault_kubernetes_auth_backend_role" "jellyfin_reader" {
+  backend                          = "kubernetes"
+  role_name                        = "jellyfin"
+  bound_service_account_names      = ["jellyfin"]
+  bound_service_account_namespaces = ["videos"]
+  token_ttl                        = 3600
+  token_policies                   = [vault_policy.jellyfin_reader.name]
+  depends_on                       = [vault_auth_backend.kubernetes, vault_kubernetes_auth_backend_config.backend_config]
+}

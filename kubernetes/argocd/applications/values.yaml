@@ -66,6 +66,11 @@ istio-gateway:
     enabled: false
   version: "1.21.0"
 
+jellyfin:
+  enabled: false
+  configuration:
+    enabled: false
+
 kiali:
   enabled: false
   configuration:

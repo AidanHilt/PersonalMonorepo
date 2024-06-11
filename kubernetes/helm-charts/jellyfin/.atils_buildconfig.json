@@ -1,0 +1,49 @@
+{
+  "actions": [
+    {
+      "name": "validate-buildconfig",
+      "command": "check-jsonschema .atils_buildconfig.json --schemafile ../../../json-schemas/atils_buildconfig.json",
+      "order": 0
+    },
+    {
+      "name": "lint",
+      "command": "helm lint",
+      "order": 2
+    },
+    {
+      "name": "update-dependencies",
+      "command": "helm dependency update",
+      "order": 1
+    },
+    {
+      "name": "build",
+      "command": "helm package .",
+      "order": 3,
+      "ci_only": true
+    },
+    {
+      "name": "push",
+      "command": "NAME=$(yq -r '.name' Chart.yaml) VERSION=$(yq -r '.version' Chart.yaml) && helm push ${NAME}-${VERSION}.tgz oci://registry-1.docker.io/aidanhilt",
+      "order": 4,
+      "ci_only": true
+    }
+  ],
+  "action_sets": [
+    {
+      "name": "validate",
+      "actions": [
+        "validate-buildconfig",
+        "lint"
+      ]
+    },
+    {
+      "name": "ci-build-publish",
+      "actions": [
+        "lint",
+        "update-dependencies",
+        "build",
+        "push"
+      ]
+    }
+  ]
+}

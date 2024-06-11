@@ -1,11 +1,11 @@
 env: qa-cluster
 
-gitRevision: arr-stack-config-setup
+gitRevision: fix/arr-stack-istio
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
   configurationDirectory: kubernetes/argocd/configuration-data
-  configurationRevision: master
+  configurationRevision: fix/arr-stack-istio
 
 flaresolverr:
   enabled: true
@@ -34,8 +34,13 @@ vault-secrets-operator:
 ingress:
   enabled: true
 
+postgres:
+  enabled: false
+  configuration:
+    enabled: true
+
 prometheus:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
@@ -60,7 +65,7 @@ transmission:
     enabled: true
 
 video-stack-configuration:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
@@ -74,13 +79,13 @@ istio-base:
   configuration:
     enabled: false
 
-kiali:
-  enabled: false
+jellyfin:
+  enabled: true
   configuration:
     enabled: true
 
-postgres:
-  enabled: true
+kiali:
+  enabled: false
   configuration:
     enabled: true
 

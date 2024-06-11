@@ -69,3 +69,19 @@ resource "vault_kv_secret_v2" "setup_job_config" {
     }
   )
 }
+
+#===============
+# Jellyfin
+#===============
+resource "vault_kv_secret_v2" "jellyfin_config" {
+  mount = vault_mount.kv-videos.path
+  name  = "jellyfin/config"
+
+  data_json = jsonencode(
+    {
+      apiKey   = random_password.jellyfin_api_key.result
+      username = var.jellyfin_username
+      password = random_password.postgres_radarr_password.result
+    }
+  )
+}

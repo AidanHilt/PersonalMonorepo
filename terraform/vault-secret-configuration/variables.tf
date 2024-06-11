@@ -31,3 +31,9 @@ variable "postgres_master_username" {
   description = "The username for the postgres master user"
   default     = "postgres"
 }
+
+variable "jellyfin_username" {
+  type        = string
+  description = "The username for a default admin user on Jellyfin"
+  default     = "admin"
+}

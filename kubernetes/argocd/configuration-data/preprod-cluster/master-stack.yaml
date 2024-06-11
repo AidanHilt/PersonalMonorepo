@@ -5,7 +5,7 @@ gitRevision: master
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
   configurationDirectory: kubernetes/argocd/configuration-data
-  configurationRevision: master
+  configurationRevision: feat/arr-stack-istio
 
 flaresolverr:
   enabled: true
@@ -34,7 +34,7 @@ grafana-promtail:
   version: "6.15.5"
 
 hashi-vault:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
   version: "0.27.0"
@@ -59,6 +59,11 @@ istio-gateway:
   configuration:
     enabled: false
   version: "1.21.0"
+
+jellyfin:
+  enabled: true
+  configuration:
+    enabld: true
 
 kiali:
   enabled: false
