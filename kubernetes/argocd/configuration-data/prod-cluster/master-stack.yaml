@@ -110,6 +110,6 @@ transmission:
     enabled: true
 
 video-stack-configuration:
-  enabled: true
+  enabled: false
   configuration:
     enabled: false

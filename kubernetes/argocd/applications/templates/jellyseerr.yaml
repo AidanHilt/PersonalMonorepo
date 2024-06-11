@@ -1,0 +1,30 @@
+{{ if .Values.jellyseerr.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jellyseerr
+  namespace: argocd
+spec:
+  project: default
+  sources:
+   - repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
+     path: kubernetes/helm-charts/jellyseerr
+     targetRevision: {{ .Values.gitRevision }}
+     {{- if index .Values "jellyseerr" "configuration" "enabled" }}
+     helm:
+       valueFiles:
+         - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/jellyseerr.yaml"
+   - repoURL: {{ .Values.configuration.configurationRepo }}
+     targetRevision: {{ .Values.gitRevision }}
+     ref: values
+     {{- end }}
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: videos
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+{{end}}
