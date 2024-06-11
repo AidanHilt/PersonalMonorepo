@@ -1,6 +1,6 @@
 env: prod-cluster
 
-gitRevision: master
+gitRevision: feat/jellyseerr
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
