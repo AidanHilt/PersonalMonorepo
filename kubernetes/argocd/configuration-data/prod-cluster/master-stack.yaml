@@ -1,4 +1,4 @@
-env: qa-cluster
+env: prod-cluster
 
 gitRevision: master
 
