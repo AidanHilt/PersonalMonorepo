@@ -115,7 +115,7 @@ resource "vault_kubernetes_auth_backend_role" "setup_job_reader" {
 #============================
 
 resource "vault_policy" "jellyfin_reader" {
-  name   = "radarr"
+  name   = "jellyfin"
 
   policy = <<EOT
 path "videos/data/jellyfin/*" {

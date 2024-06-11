@@ -1,0 +1,14 @@
+apiVersion: v2
+name: jellyseerr
+description: A Helm chart for installing and managing jellyseerr. Based on the bjw-s library chart
+
+type: application
+
+version: 0.0.1
+
+appVersion: "1.9.0"
+
+dependencies:
+  - name: common
+    repository: https://bjw-s.github.io/helm-charts/
+    version: 1.5.1

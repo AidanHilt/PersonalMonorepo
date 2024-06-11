@@ -1,0 +1,26 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "jellyseerr.harcodedValues" -}}
+
+
+{{- if eq .Values.jellyseerr.configSecret.existingSecret "" }}
+secrets:
+  config-secret:
+    enabled: true
+    stringData:
+      apiKey: {{ .Values.jellyseerr.apiKey | default (randAlphaNum 32 | lower) | quote }}
+
+      {{- if ne .Values.jellyseerr.username "" }}
+      username: {{ .Values.jellyseerr.username }}
+      {{- end }}
+
+      {{- if ne .Values.jellyseerr.username "" }}
+      password: {{ .Values.jellyseerr.password }}
+      {{- end }}
+
+{{- end }}
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "jellyseerr.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}
