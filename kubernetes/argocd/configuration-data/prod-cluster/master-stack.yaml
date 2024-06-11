@@ -88,6 +88,8 @@ prometheus:
 
 jellyseerr:
   enabled: true
+  configuration:
+    enabled: true
 
 prowlarr:
   enabled: false
