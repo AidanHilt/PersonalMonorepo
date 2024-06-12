@@ -1,6 +1,6 @@
 persistence:
   config:
     enabled: true
-    globalMounts:
-      - path: /app/config
-        readOnly: false
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    mountPath: /app/config

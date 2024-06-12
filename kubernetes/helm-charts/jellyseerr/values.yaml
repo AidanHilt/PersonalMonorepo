@@ -9,6 +9,7 @@ service:
   main:
     ports:
       http:
+        enabled: true
         port: 80
         targetPort: 5055
 
@@ -17,10 +18,10 @@ persistence:
     enabled: false
 
 #================================
-# jellyseerr specific configuration
+# Jellyseerr specific configuration
 #================================
 jellyseerr:
-  # A pre-installed API key for Jellyfin. If this is not provided, no API key will be set, and
+  # A pre-installed API key for Jellyseerr. If this is not provided, no API key will be set, and
   # none of the other configuration options will work
   apiKey: ""
 
