@@ -84,6 +84,9 @@ jellyfin:
   configuration:
     enabled: true
 
+jellyseerr:
+  enabled: true
+
 kiali:
   enabled: false
   configuration:
