@@ -6,7 +6,8 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - http:
+    - host: vault.localhost
+      http:
         paths:
           - path: /
             pathType: Prefix
