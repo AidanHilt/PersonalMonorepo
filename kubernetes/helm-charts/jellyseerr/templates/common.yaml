@@ -2,7 +2,13 @@
 
 {{/* Append the hardcoded settings */}}
 {{- define "jellyseerr.harcodedValues" -}}
-
+{{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
+env:
+  - name: JELLYSEERR__API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.jellyseerr.configSecret.existingSecret | default $defaultSecretName }}
+        key: apiKey
 
 {{- if eq .Values.jellyseerr.configSecret.existingSecret "" }}
 secrets:
@@ -10,15 +16,6 @@ secrets:
     enabled: true
     stringData:
       apiKey: {{ .Values.jellyseerr.apiKey | default (randAlphaNum 32 | lower) | quote }}
-
-      {{- if ne .Values.jellyseerr.username "" }}
-      username: {{ .Values.jellyseerr.username }}
-      {{- end }}
-
-      {{- if ne .Values.jellyseerr.username "" }}
-      password: {{ .Values.jellyseerr.password }}
-      {{- end }}
-
 {{- end }}
 
 {{- end -}}
