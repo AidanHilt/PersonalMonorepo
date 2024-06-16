@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: fix/arr-stack-istio
+gitRevision: feat/jellyseerr
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
