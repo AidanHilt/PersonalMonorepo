@@ -10,7 +10,8 @@
       "options": [
         "prowlarr",
         "radarr",
-        "sonarr"
+        "sonarr",
+        "jellyseerr"
       ]
     },
     {
