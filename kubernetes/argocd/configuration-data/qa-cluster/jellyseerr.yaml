@@ -1,3 +1,6 @@
 jellyseerr:
   configSecret:
     existingSecret: jellyseerr-config-secret
+
+image:
+  tag: develop
