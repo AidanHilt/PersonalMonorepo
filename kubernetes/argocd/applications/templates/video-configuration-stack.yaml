@@ -48,8 +48,6 @@ spec:
 
         transmission:
           urlBase: /transmission/
-
-
       {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
