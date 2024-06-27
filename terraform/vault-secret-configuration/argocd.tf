@@ -18,6 +18,7 @@ resource "vault_kv_secret_v2" "video_stack_configuration" {
       jellyseerrApiKey = random_password.jellyseerr_api_key.result
       jellyfinUsername = var.jellyfin_username
       jellyfinPassword = random_password.jellyfin_password.result
+      jellyfinEmail    = var.jellyfin_email
     }
   )
 }
