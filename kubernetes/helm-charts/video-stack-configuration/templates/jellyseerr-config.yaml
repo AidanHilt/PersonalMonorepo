@@ -34,7 +34,7 @@ stringData:
           email_address: {{ .Values.jellyseerr.jellyfin }}
           external_url: null
           libraries:
-          {{ toYaml .Values.jellyfin.libraries | indent 2 }}
+          {{ toYaml .Values.jellyseerr.jellyfin.libraries | indent 2 }}
         users:
           enable_local_signin: true
           enable_new_jellyfin_signin: true
