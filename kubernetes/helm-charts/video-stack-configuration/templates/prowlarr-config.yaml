@@ -1,3 +1,4 @@
+{{- if .Values.prowlarr.enabled }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -328,3 +329,4 @@ stringData:
           enable_color_impaired_mode: false
           theme: auto
           ui_language: en
+{{- end }}

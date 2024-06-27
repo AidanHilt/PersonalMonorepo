@@ -1,3 +1,4 @@
+{{- if .Values.radarr.enabled }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -94,4 +95,4 @@ stringData:
           enable_color_impaired_mode: false
           movie_info_language: english
           ui_language: english
-
+{{- end }}

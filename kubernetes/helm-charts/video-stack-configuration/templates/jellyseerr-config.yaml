@@ -1,3 +1,4 @@
+{{- if .Values.jellyseerr.enabled }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -170,3 +171,4 @@ stringData:
               }"
           webpush:
             enable: false
+{{- end }}

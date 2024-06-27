@@ -1,3 +1,4 @@
+{{- if .Values.sonarr.enabled }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -99,5 +100,4 @@ stringData:
           time_format: twelve-hour
           show_relative_dates: true
           enable_color_impaired_mode: false
-
-
+{{- end }}
