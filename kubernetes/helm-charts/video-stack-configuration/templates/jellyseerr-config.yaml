@@ -33,8 +33,10 @@ stringData:
           password: {{ .Values.jellyseerr.jellyfin.password }}
           email_address: {{ .Values.jellyseerr.jellyfin }}
           external_url: null
+          {{- with  .Values.jellyseerr.jellyfin.libraries }}
           libraries:
-          {{ toYaml .Values.jellyseerr.jellyfin.libraries | indent 2 }}
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
         users:
           enable_local_signin: true
           enable_new_jellyfin_signin: true
