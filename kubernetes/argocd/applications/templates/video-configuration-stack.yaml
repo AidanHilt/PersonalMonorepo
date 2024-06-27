@@ -17,11 +17,19 @@ spec:
       - name: HELM_VALUES
         value: |
           prowlarr:
-            apiKey: <path:argocd/data/video_stack_configuration#prowlarrApiKey>
+            port: 80
+            urlBase: /prowlarr
+            apiKey: <path:kv/data/argocd/video_stack_configuration#prowlarrApiKey>
+
           radarr:
-            apiKey: <path:argocd/data/video_stack_configuration#radarrApiKey>
+            port: 80
+            urlBase: /radarr
+            apiKey: <path:kv/data/argocd/video_stack_configuration#radarrApiKey>
+
           sonarr:
-            apiKey: <path:argocd/data/video_stack_configuration#sonarrApiKey>
+            port: 80
+            urlBase: /sonarr
+            apiKey: <path:kv/data/argocd/video_stack_configuration#sonarrApiKey>
       {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
