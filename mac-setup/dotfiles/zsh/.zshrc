@@ -104,7 +104,6 @@ alias kctx=kubectx
 
 alias ls=eza
 
-export VAULT_ADDR=http://vault.dev.local/
 
 # Created by `pipx` on 2023-06-20 04:14:17
 export PATH="$PATH:/Users/ahilt/.local/bin"

@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
       - name: buildarr-{{ application_name }}-configurator
-        image: callum027/buildarr:latest
+        image: {{ image }}
         command: [sh]
         args:
         - -c

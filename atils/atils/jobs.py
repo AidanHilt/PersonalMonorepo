@@ -8,7 +8,7 @@ import termios
 import time
 import tty
 from threading import Thread
-from typing import List
+from typing import Any, List
 
 import yaml
 from kubernetes.client.rest import ApiException
@@ -60,6 +60,13 @@ def main(args: str) -> None:
     )
 
     postgres_parser = subparsers.add_parser("postgres-manager")
+
+    devterm_parser = subparsers.add_parser("devterm")
+    devterm_parser.add_argument(
+        "--namespace",
+        "-n",
+        help="The namespace to launch the devterm in. Defaults to current namespace",
+    )
 
     list_parser = subparsers.add_parser("list")
 
@@ -146,9 +153,65 @@ def launch_postgres_manager() -> None:
     """
     Launch a postgres client pod, connected to the master user
     """
-    _create_postgres_manager_pod()
-    time.sleep(5)
-    _exec_shell_in_pod("postgres-manager", "postgres", "postgres-manager", ["psql"])
+    pod_manifest: dict[str, Any] = {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "metadata": {"name": "postgres-manager"},
+        "spec": {
+            "containers": [
+                {
+                    "name": "postgres-manager",
+                    "image": "aidanhilt/atils-postgres-client",
+                    "command": ["sh", "-c", "sleep 1800"],
+                    "env": [
+                        {
+                            "name": "PGHOST",
+                            "value": "postgres-postgresql.postgres.svc.cluster.local",
+                        },
+                        {"name": "PGUSER", "value": "postgres"},
+                        {
+                            "name": "PGPASSWORD",
+                            "valueFrom": {
+                                "secretKeyRef": {
+                                    "name": "postgres-config",
+                                    "key": "postgres-password",
+                                }
+                            },
+                        },
+                        {"name": "PGDATABASE", "value": "postgres"},
+                    ],
+                }
+            ],
+            "restartPolicy": "Never",
+        },
+    }
+    _create_pod_if_not_existent("postgres-manager", pod_manifest, "postgres")
+    _exec_shell_in_pod(
+        "postgres-manager", "postgres", "postgres-manager", ["psql"], True
+    )
+
+
+def launch_devterm_pod(namespace: str) -> None:
+    """
+    Launch a pod with assorted devterm utils
+    """
+    pod_manifest: dict[str, Any] = {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "metadata": {"name": "atils-devterm"},
+        "spec": {
+            "containers": [
+                {
+                    "name": "atils-devterm",
+                    "image": "aidanhilt/atils-debug",
+                    "command": ["sh", "-c", "sleep 1800"],
+                }
+            ],
+            "restartPolicy": "Never",
+        },
+    }
+    _create_pod_if_not_existent("atils-devterm", pod_manifest, namespace)
+    _exec_shell_in_pod("atils-devterm", namespace, "atils-devterm", delete=True)
 
 
 def launch_pvc_manager(pvc_name: str, namespace: str) -> None:
@@ -167,7 +230,7 @@ def launch_pvc_manager(pvc_name: str, namespace: str) -> None:
 
         time.sleep(6)
 
-        _patch_pod_with_debug_container(pod_name, namespace, volume_name)
+        _patch_pod_with_devterm_container(pod_name, namespace, volume_name)
     else:
         _create_pvc_manager_pod(pvc_name, namespace)
 
@@ -250,24 +313,32 @@ def _clear_job_name(job_name: str, namespace: str) -> None:
     logging.info(f"No job named {job_name} found in namespace {namespace}")
 
 
-def _create_postgres_manager_pod() -> None:
+def _create_pod_if_not_existent(
+    pod_name: str, pod_manifest: dict[str, Any], namespace: str = "default"
+) -> None:
     # TODO we can make this generic with a ton of arguments
     """
-    Create a postgres client pod, connected to the master user
+    Create a pod that we want to exec into (generally) if one doesn't exist. We're also going to wait for it
+    to be ready
+
+    Args:
+        pod_name (str): The name of the pod we will want to create
+        pod_manifest (dict[str, Any]): A dictionary representing a valid Kubernetes pod object
+        namespace: The namespace this pod will be launched in. Defaults to "default"
     """
     try:
         api_instance = client.CoreV1Api()
 
         try:
             existing_pod = api_instance.read_namespaced_pod(
-                name="postgres-manager", namespace="postgres"
+                name=pod_name, namespace=namespace
             )
 
             # TODO right now, we might get kicked out of our pod if it's close to expiring. That's probably
             # not a big deal, but if so, fix it here
             if existing_pod:
                 logging.info(
-                    "There's already a postgres-manager pod! We're just gonna leave it"
+                    f"There's already a {pod_name} pod! We're just gonna leave it"
                 )
                 return
         except ApiException as e:
@@ -277,45 +348,30 @@ def _create_postgres_manager_pod() -> None:
                 )
                 exit(1)
 
-        pod_manifest = {
-            "apiVersion": "v1",
-            "kind": "Pod",
-            "metadata": {"name": "postgres-manager"},
-            "spec": {
-                "containers": [
-                    {
-                        "name": "postgres-manager",
-                        "image": "aidanhilt/atils-postgres-client",
-                        "command": ["sh", "-c", "sleep 1800"],
-                        "env": [
-                            {
-                                "name": "PGHOST",
-                                "value": "postgres-postgresql.postgres.svc.cluster.local",
-                            },
-                            {"name": "PGUSER", "value": "postgres"},
-                            {
-                                "name": "PGPASSWORD",
-                                "valueFrom": {
-                                    "secretKeyRef": {
-                                        "name": "postgres-config",
-                                        "key": "postgres-password",
-                                    }
-                                },
-                            },
-                            {"name": "PGDATABASE", "value": "postgres"},
-                        ],
-                    }
-                ],
-                "restartPolicy": "Never",
-            },
-        }
-
         try:
             # Create the pod
-            api_instance.create_namespaced_pod(namespace="postgres", body=pod_manifest)
-            logging.info("Created pod 'postgres-manager' in postgres namespace")
+            api_instance.create_namespaced_pod(namespace=namespace, body=pod_manifest)
+            logging.info(f"Created pod '{pod_name}' in {namespace} namespace")
+
+            # Now, let's wait for it to be ready
+            pod_ready = False
+            while not pod_ready:
+                pod = api_instance.read_namespaced_pod(
+                    name=pod_name, namespace=namespace
+                )
+
+                if pod.status.phase == "Running":
+                    for container in pod.status.container_statuses:
+                        if not container.ready:
+                            break
+                    else:
+                        print(f"Pod {pod_name} is ready.")
+                        return
+
+                time.sleep(0.5)
+
         except client.rest.ApiException as e:
-            logging.error(f"Error creating pod 'postgres-manager': {str(e)}")
+            logging.error(f"Error creating pod '{pod_name}': {str(e)}")
 
     except Exception as e:
         logging.error(f"Error occurred while creating pod 'postgres-manager': {str(e)}")
@@ -354,7 +410,7 @@ def _create_pvc_manager_pod(pvc_name: str, namespace: str) -> None:
                 "containers": [
                     {
                         "name": "pvc-manager",
-                        "image": "aidanhilt/atils-debug",
+                        "image": "aidanhilt/atils-devterm",
                         "command": ["/bin/sh"],
                         "args": [
                             "-c",
@@ -414,15 +470,15 @@ def _delete_pvc_manager_if_exists(pod_name: str, namespace: str) -> None:
                     api_instance.patch_namespaced_pod(
                         name=pod_name, namespace=namespace, body=pod
                     )
-                    logging.debug(
+                    logging.devterm(
                         f"Deleted ephemeral container 'pvc-manager' from pod '{pod_name}'"
                     )
                 else:
-                    logging.debug(
+                    logging.devterm(
                         f"Ephemeral container 'pvc-manager' not found in pod '{pod_name}'"
                     )
             else:
-                logging.debug(f"No ephemeral containers found in pod '{pod_name}'")
+                logging.devterm(f"No ephemeral containers found in pod '{pod_name}'")
 
         except ApiException as e:
             if e.status == 404:
@@ -443,6 +499,7 @@ def _exec_shell_in_pod(
     namespace: str,
     container_name: str,
     exec_command: list[str] = ["/bin/zsh"],
+    delete: bool = False,
 ) -> None:
     """
     Exec into a given container in a given pod, in a given namespace. This will assume
@@ -485,6 +542,8 @@ def _exec_shell_in_pod(
                     sys.stdout.flush()
     finally:
         # reset tty
+        if delete:
+            api_instance.delete_namespaced_pod(pod_name, namespace)
         print("\033c")
         termios.tcsetattr(stdin_fd, termios.TCSADRAIN, old_settings)
         print("press enter")
@@ -659,11 +718,11 @@ def _launch_job(job_dict):
     utils.create_from_dict(k8s_client, job_dict)
 
 
-def _patch_pod_with_debug_container(
+def _patch_pod_with_devterm_container(
     pod_name: str, namespace: str, volume_name: str
 ) -> None:
     """
-    Patch a pod with an ephemeral container, running our debug image. This then mounts a PVC in the home directory,
+    Patch a pod with an ephemeral container, running our devterm image. This then mounts a PVC in the home directory,
     to view and modify any files
 
     Args:
@@ -678,7 +737,7 @@ def _patch_pod_with_debug_container(
         # Define the ephemeral container
         ephemeral_container = {
             "name": "pvc-manager",
-            "image": "aidanhilt/atils-debug",
+            "image": "aidanhilt/atils-devterm",
             "command": ["/bin/sh"],
             "args": ["-c", "sleep 1800"],  # Sleep for 30 minutes (1800 seconds)
             "volumeMounts": [
@@ -694,7 +753,7 @@ def _patch_pod_with_debug_container(
                 name=pod_name, namespace=namespace, body=body
             )
 
-            logging.debug(
+            logging.devterm(
                 f"Successfully patched pod '{pod_name}' with ephemeral container"
             )
         except Exception as e:

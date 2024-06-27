@@ -1,0 +1,172 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: buildarr-jellyseerr-config-secret
+stringData:
+  buildarr.yml: |
+    jellyseerr:
+      hostname: {{ .Values.jellyseerr.hostname }}
+      port: {{ .Values.jellyseerr.port }}
+      protocol: http
+      url_base: null
+      api_key: {{ .Values.jellyseerr.apiKey }}
+      image: {{ .Values.jellyseerr.image }}
+      version: {{ .Values.jellyseerr.version }}
+      settings:
+        general:
+          application_title: {{ .Values.jellyseerr.title }}
+          application_url: null
+          enable_proxy_support: false
+          enable_csrf_protection: false
+          enable_image_caching: false
+          display_language: en
+          discover_region: ''
+          discover_languages: []
+          hide_available_media: false
+          allow_partial_series_requests: true
+        jellyfin:
+          server_url: {{ .Values.jellyseerr.jellyfin.hostname }}
+          port: {{ .Values.jellyseerr.jellyfin.port }}
+          url_base: {{ .Values.jellyseerr.jellyfin.urlBase }}
+          username: {{ .Values.jellyseerr.jellyfin.username }}
+          password: {{ .Values.jellyseerr.jellyfin.password }}
+          email_address: {{ .Values.jellyseerr.jellyfin }}
+          external_url: null
+          libraries:
+          {{ toYaml .Values.jellyfin.libraries | indent 2 }}
+        users:
+          enable_local_signin: true
+          enable_new_jellyfin_signin: true
+          global_movie_request_limit: 0
+          global_movie_request_days: 7
+          global_series_request_limit: 0
+          global_series_request_days: 7
+          default_permissions:
+          - request
+          - request-4k
+        services:
+          radarr:
+            delete_unmanaged: false
+            definitions:
+              radarr:
+                is_default_server: true
+                is_4k_server: false
+                hostname: {{ .Values.radarr.hostname }}
+                port: {{ .Values.radarr.port }}
+                use_ssl: false
+                url_base: {{ .Values.radarr.urlBase }}
+                external_url: null
+                enable_scan: false
+                enable_automatic_search: true
+                instance_name: null
+                api_key: {{ .Values.radarr.apiKey }}
+                root_folder: {{ .Values.radarr.rootFolder }}
+                quality_profile: HD-1080p
+                minimum_availability: released
+                tags: []
+          sonarr:
+            delete_unmanaged: false
+            definitions:
+              sonarr:
+                is_default_server: true
+                is_4k_server: false
+                hostname: {{ .Values.sonarr.hostname }}
+                port: {{ .Values.sonarr.port }}
+                use_ssl: false
+                url_base: {{ .Values.sonarr.urlBase }}
+                external_url: null
+                enable_scan: false
+                enable_automatic_search: true
+                instance_name: null
+                api_key: {{ .Values.sonarr.apiKey }}
+                root_folder: {{ .Values.sonarr.rootFolder }}
+                quality_profile: HD-1080p
+                minimum_availability: released
+                tags: []
+                anime_root_folder: null
+                anime_quality_profile: null
+                anime_language_profile: null
+                anime_tags: []
+                enable_season_folders: false
+        notifications:
+          discord:
+            enable: false
+            notification_types: []
+            webhook_url: null
+            username: null
+            avatar_url: null
+            enable_mentions: true
+          email:
+            enable: false
+            require_user_email: false
+            sender_name: Jellyseerr
+            sender_address: null
+            smtp_host: null
+            encryption_method: starttls-prefer
+            smtp_port: 587
+            allow_selfsigned_certificates: false
+            smtp_username: null
+            smtp_password: null
+            pgp_private_key: null
+            pgp_password: null
+          gotify:
+            enable: false
+            notification_types: []
+            server_url: null
+            access_token: null
+          lunasea:
+            enable: false
+            notification_types: []
+            webhook_url: null
+            profile_name: null
+          pushbullet:
+            enable: false
+            notification_types: []
+            access_token: null
+            channel_tag: null
+          pushover:
+            enable: false
+            notification_types: []
+            api_key: null
+            user_key: null
+          slack:
+            enable: false
+            notification_types: []
+            webhook_url: null
+          telegram:
+            enable: false
+            notification_types: []
+            access_token: null
+            username: null
+            chat_id: null
+            send_silently: false
+          webhook:
+            enable: false
+            notification_types: []
+            webhook_url: null
+            authorization_header: null
+            payload_template: "{\n  \"notification_type\": \"{{notification_type}}\",\n\
+              \  \"event\": \"{{event}}\",\n  \"subject\": \"{{subject}}\",\n  \"message\"\
+              : \"{{message}}\",\n  \"image\": \"{{image}}\",\n  \"{{media}}\": {\n    \"\
+              media_type\": \"{{media_type}}\",\n    \"tmdbId\": \"{{media_tmdbid}}\",\n\
+              \    \"tvdbId\": \"{{media_tvdbid}}\",\n    \"status\": \"{{media_status}}\"\
+              ,\n    \"status4k\": \"{{media_status4k}}\"\n  },\n  \"{{request}}\": {\n\
+              \    \"request_id\": \"{{request_id}}\",\n    \"requestedBy_email\": \"{{requestedBy_email}}\"\
+              ,\n    \"requestedBy_username\": \"{{requestedBy_username}}\",\n    \"requestedBy_avatar\"\
+              : \"{{requestedBy_avatar}}\",\n    \"requestedBy_settings_discordId\": \"\
+              {{requestedBy_settings_discordId}}\",\n    \"requestedBy_settings_telegramChatId\"\
+              : \"{{requestedBy_settings_telegramChatId}}\"\n  },\n  \"{{issue}}\": {\n\
+              \    \"issue_id\": \"{{issue_id}}\",\n    \"issue_type\": \"{{issue_type}}\"\
+              ,\n    \"issue_status\": \"{{issue_status}}\",\n    \"reportedBy_email\":\
+              \ \"{{reportedBy_email}}\",\n    \"reportedBy_username\": \"{{reportedBy_username}}\"\
+              ,\n    \"reportedBy_avatar\": \"{{reportedBy_avatar}}\",\n    \"reportedBy_settings_discordId\"\
+              : \"{{reportedBy_settings_discordId}}\",\n    \"reportedBy_settings_telegramChatId\"\
+              : \"{{reportedBy_settings_telegramChatId}}\"\n  },\n  \"{{comment}}\": {\n\
+              \    \"comment_message\": \"{{comment_message}}\",\n    \"commentedBy_email\"\
+              : \"{{commentedBy_email}}\",\n    \"commentedBy_username\": \"{{commentedBy_username}}\"\
+              ,\n    \"commentedBy_avatar\": \"{{commentedBy_avatar}}\",\n    \"commentedBy_settings_discordId\"\
+              : \"{{commentedBy_settings_discordId}}\",\n    \"commentedBy_settings_telegramChatId\"\
+              : \"{{commentedBy_settings_telegramChatId}}\"\n  },\n  \"{{extra}}\": []\n\
+              }"
+          webpush:
+            enable: false

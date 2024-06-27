@@ -37,7 +37,7 @@ fi
 sleep 5
 
 if [[ ! -z "${JELLYFIN__USERNAME}" ]]; then
-  if [[ -z "$(curl 'http://localhost:8096/Users' -H 'Authorization: MediaBrowser Token="'"$JELLYFIN__API_KEY"'"' | jq '.[] | select(.Name | contains("'"$JELLYFIN__USERNAME"'")) | .Name')" ]]; then
+  if [[ -z "$(curl "http://localhost:8096/$baseUrl/Users" -H 'Authorization: MediaBrowser Token="'"$JELLYFIN__API_KEY"'"' | jq '.[] | select(.Name | contains("'"$JELLYFIN__USERNAME"'")) | .Name')" ]]; then
     if [[ ! -z "${JELLYFIN__PASSWORD}" ]]; then
       user_body=$(curl "http://localhost:8096$baseUrl/Users/New" -H 'accept: application/json' -H 'Content-Type: application/json' -H 'Authorization: MediaBrowser Token="'"$JELLYFIN__API_KEY"'"' -d '{ "Name": "'"$JELLYFIN__USERNAME"'", "Password": "'"$JELLYFIN__PASSWORD"'"}')
       user_id=$(echo $user_body | jq -r '.Id' | tr -d '"')
@@ -48,6 +48,7 @@ if [[ ! -z "${JELLYFIN__USERNAME}" ]]; then
     fi
   fi
 fi
+
 
 # This is how we push jellyfin back to the front
 fg %1

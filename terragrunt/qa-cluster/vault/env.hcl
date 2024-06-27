@@ -1,4 +1,4 @@
 inputs = {
-  vault_url   = "http://localhost"
+  vault_url   = "http://vault.localhost/"
   vault_token = "root"
 }

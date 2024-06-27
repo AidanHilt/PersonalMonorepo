@@ -1,24 +1,52 @@
+flaresolverr:
+  host_url: http://flaresolverr
+
+jellyseerr:
+  hostname: jellyseerr
+  port: 5055
+  apiKey: ""
+  image: fallenbagel/jellyseerr
+  version: 1.9.2
+  title: Jellyseerr
+  jellyfin:
+    hostname: jellyfin
+    port: 8096
+    urlBase: /
+    username: admin
+    password: ""
+    emailAddress: someone@somewhere.com
+    libraries:
+      - Movies
+      - TV Shows
+
 prowlarr:
-  url: prowlarr
-  urlBase: /prowlarr
+  hostname: prowlarr
+  port: 9696
+  urlBase: /
   enabled: true
-  apiKey: "aaaaaaaabbbbbbbbccccccccddddddddd"
+  apiKey: ""
   loggingLevel: INFO
 
 radarr:
-  url: radarr
-  urlBase: /radarr
+  hostname: radarr
+  port: 7878
+  urlBase: /
   enabled: true
-  apiKey: "aaaaaaaabbbbbbbbccccccccddddddddd"
+  apiKey: ""
   loggingLevel: INFO
+  rootFolder: /tmp
 
 sonarr:
-  url: sonarr
-  urlBase: /sonarr
+  hostname: sonarr
+  port: 8989
+  urlBase: /
   enabled: true
-  apiKey: "aaaaaaaabbbbbbbbccccccccddddddddd"
+  apiKey: ""
   loggingLevel: INFO
+  rootFolder: /tmp
 
 transmission:
+  hostname: transmission
+  urlBase: /
   username: username
   password: password

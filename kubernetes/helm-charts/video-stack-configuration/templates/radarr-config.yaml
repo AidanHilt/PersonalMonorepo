@@ -6,7 +6,7 @@ stringData:
   buildarr.yml: |
     radarr:
       hostname: {{ .Values.radarr.url }}
-      port: 80
+      port: {{ .Values.radarr.port }}
       protocol: http
       url_base: {{ .Values.radarr.urlBase }}
       api_key: {{ .Values.radarr.apiKey }}
@@ -49,8 +49,8 @@ stringData:
               remove_failed_downloads: true
               priority: 1
               tags: []
-              hostname: transmission
-              url_base: /transmission/
+              hostname: {{ .Values.transmission.hostname }}
+              url_base: {{ .Values.transmission.urlBase }}
               username: {{ .Values.transmission.username }}
               password: {{ .Values.transmission.password }}
               category: radarr-movies
@@ -68,7 +68,7 @@ stringData:
             use_ssl: false
             ssl_cert_path: null
             ssl_cert_password: null
-            url_base: /radarr
+            url_base: {{ .Values.radarr.urlBase }}
             instance_name: Radarr
           security:
             authentication: external

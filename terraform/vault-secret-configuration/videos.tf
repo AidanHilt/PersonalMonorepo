@@ -81,7 +81,7 @@ resource "vault_kv_secret_v2" "jellyfin_config" {
     {
       apiKey   = random_password.jellyfin_api_key.result
       username = var.jellyfin_username
-      password = random_password.postgres_radarr_password.result
+      password = random_password.jellyfin_password.result
     }
   )
 }

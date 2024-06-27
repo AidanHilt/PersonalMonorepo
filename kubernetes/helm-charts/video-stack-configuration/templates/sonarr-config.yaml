@@ -5,10 +5,10 @@ metadata:
 stringData:
   buildarr.yml: |
     sonarr:
-      hostname: sonarr
-      port: 80
+      hostname: {{ .Values.sonarr.hostname }}
+      port: {{ .Values.sonarr.port }}
       protocol: http
-      url_base: /sonarr
+      url_base: {{ .Values.sonarr.urlBase }}
       api_key: {{ .Values.sonarr.apiKey }}
       settings:
         quality:
@@ -51,8 +51,8 @@ stringData:
               remove_failed_downloads: true
               priority: 1
               tags: []
-              hostname: transmission
-              url_base: /transmission/
+              hostname: {{ .Values.transmission.hostname }}
+              url_base: {{ .Values.transmission.urlBase }}
               username: {{ .Values.transmission.username }}
               password: {{ .Values.transmission.password }}
               category: radarr-movies
@@ -71,7 +71,7 @@ stringData:
             port: 8989
             ssl_port: 6969
             use_ssl: false
-            url_base: /sonarr
+            url_base: {{ .Values.sonarr.urlBase }}
             instance_name: Sonarr
           security:
             authentication: none
