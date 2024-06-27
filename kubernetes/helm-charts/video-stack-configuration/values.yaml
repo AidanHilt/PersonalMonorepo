@@ -8,6 +8,7 @@ jellyseerr:
   image: fallenbagel/jellyseerr
   version: 1.9.2
   title: Jellyseerr
+  enabled: true
   jellyfin:
     hostname: jellyfin
     port: 8096
