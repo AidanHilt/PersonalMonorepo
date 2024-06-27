@@ -31,23 +31,7 @@ spec:
           urlBase: /sonarr
           apiKey: <path:kv/data/argocd/video_stack_configuration#sonarrApiKey>
 
-        jellyseerr:
-          hostname: jellyseerr
-          port: 80
-          apiKey: <path:kv/data/argocd/video_stack_configuration#jellyseerrApiKey>
-          image: aidanhilt/jellyseerr
-          version: develop
-          title: Jellyseerr
-          jellyfin:
-            hostname: jellyfin
-            port: 80
-            urlBase: /emby
-            username: admin
-            password: <path:kv/data/argocd/video_stack_configuration#jellyfinUsername>
-            emailAddress: <path:kv/data/argocd/video_stack_configuration#jellyfinEmail>
 
-        transmission:
-          urlBase: /transmission/
       {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
