@@ -85,3 +85,17 @@ resource "vault_kv_secret_v2" "jellyfin_config" {
     }
   )
 }
+
+#===============
+# Jellyseerr
+#===============
+resource "vault_kv_secret_v2" "jellyseerr_config" {
+  mount = vault_mount.kv-videos.path
+  name  = "jellyseerr/config"
+
+  data_json = jsonencode(
+    {
+      apiKey   = random_password.jellyseerr_api_key.result
+    }
+  )
+}
