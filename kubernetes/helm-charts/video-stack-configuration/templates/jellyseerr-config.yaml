@@ -30,7 +30,7 @@ stringData:
           port: {{ .Values.jellyseerr.jellyfin.port }}
           url_base: {{ .Values.jellyseerr.jellyfin.urlBase }}
           username: {{ .Values.jellyseerr.jellyfin.username }}
-          password: {{ .Values.jellyseerr.jellyfin.password }}
+          password: "{{ .Values.jellyseerr.jellyfin.password }}""
           email_address: {{ .Values.jellyseerr.jellyfin.emailAddress }}
           external_url: null
           {{- with  .Values.jellyseerr.jellyfin.libraries }}
