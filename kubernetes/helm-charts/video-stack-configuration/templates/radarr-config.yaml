@@ -6,7 +6,7 @@ metadata:
 stringData:
   buildarr.yml: |
     radarr:
-      hostname: {{ .Values.radarr.url }}
+      hostname: {{ .Values.radarr.hostname }}
       port: {{ .Values.radarr.port }}
       protocol: http
       url_base: {{ .Values.radarr.urlBase }}

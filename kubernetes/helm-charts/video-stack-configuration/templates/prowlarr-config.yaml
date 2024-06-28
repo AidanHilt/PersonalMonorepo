@@ -6,7 +6,7 @@ metadata:
 stringData:
   buildarr.yml: |
     prowlarr:
-      hostname: {{ .Values.prowlarr.url }}
+      hostname: {{ .Values.prowlarr.hostname }}
       port: {{ .Values.prowlarr.port }}
       protocol: http
       url_base: {{ .Values.prowlarr.urlBase }}
