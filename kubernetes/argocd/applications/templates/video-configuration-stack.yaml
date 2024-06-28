@@ -45,7 +45,6 @@ spec:
               emailAddress: <path:argocd/data/video_stack_configuration#jellyfinEmail>
 
           transmission:
-            urlBase: /transmission/
             port: 80
       {{- end }}
   destination:

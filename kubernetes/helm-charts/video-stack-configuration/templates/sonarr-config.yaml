@@ -54,6 +54,7 @@ stringData:
               tags: []
               host: {{ .Values.transmission.hostname }}
               url_base: {{ .Values.transmission.urlBase }}
+              port: {{ .Values.transmission.port }}
               username: {{ .Values.transmission.username }}
               password: {{ .Values.transmission.password }}
               category: sonarr-tv
