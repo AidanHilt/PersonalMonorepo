@@ -48,6 +48,6 @@ sonarr:
 
 transmission:
   hostname: transmission
-  urlBase: /
-  username: username
-  password: password
+  urlBase: /transmission/
+  username: ""
+  password: ""
