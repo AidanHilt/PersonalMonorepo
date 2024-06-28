@@ -52,11 +52,11 @@ stringData:
               remove_failed_downloads: true
               priority: 1
               tags: []
-              hostname: {{ .Values.transmission.hostname }}
+              host: {{ .Values.transmission.hostname }}
               url_base: {{ .Values.transmission.urlBase }}
               username: {{ .Values.transmission.username }}
               password: {{ .Values.transmission.password }}
-              category: radarr-movies
+              category: sonarr-tv
               directory: null
               recent_priority: last
               older_priority: last
