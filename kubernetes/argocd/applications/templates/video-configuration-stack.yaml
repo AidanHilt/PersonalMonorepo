@@ -46,6 +46,7 @@ spec:
 
           transmission:
             urlBase: /transmission/
+            port: 80
       {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
