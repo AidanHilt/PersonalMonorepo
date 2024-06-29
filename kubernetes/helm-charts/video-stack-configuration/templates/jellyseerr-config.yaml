@@ -63,7 +63,7 @@ stringData:
                 enable_automatic_search: true
                 instance_name: null
                 api_key: {{ .Values.radarr.apiKey }}
-                root_folder: {{ .Values.radarr.rootFolder }}
+                root_folder: {{ first .Values.radarr.rootFolders }}
                 quality_profile: HD-1080p
                 minimum_availability: released
                 language_profile: English
@@ -83,7 +83,7 @@ stringData:
                 enable_automatic_search: true
                 instance_name: null
                 api_key: {{ .Values.sonarr.apiKey }}
-                root_folder: {{ .Values.sonarr.rootFolder }}
+                root_folder: {{ first .Values.sonarr.rootFolders }}
                 quality_profile: HD-1080p
                 minimum_availability: released
                 language_profile: English

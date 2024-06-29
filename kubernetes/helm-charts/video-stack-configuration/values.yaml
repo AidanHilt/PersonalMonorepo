@@ -35,7 +35,8 @@ radarr:
   enabled: true
   apiKey: ""
   loggingLevel: INFO
-  rootFolder: /tmp
+  rootFolders:
+    - /tmp
 
 sonarr:
   hostname: sonarr
@@ -44,7 +45,8 @@ sonarr:
   enabled: true
   apiKey: ""
   loggingLevel: INFO
-  rootFolder: /tmp
+  rootFolders:
+    - /tmp
 
 transmission:
   hostname: transmission

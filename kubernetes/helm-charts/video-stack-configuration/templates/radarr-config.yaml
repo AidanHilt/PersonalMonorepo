@@ -38,7 +38,10 @@ stringData:
           chown_group: null
           root_folders:
             delete_unmanaged: false
-            definitions: []
+            {{- with .Values.radarr.rootFolders }}
+            definitions:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
         quality:
           trash_id: aed34b9f60ee115dfa7918b742336277
         download_clients:
