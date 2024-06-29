@@ -41,7 +41,7 @@ stringData:
           set_permissions: false
           chmod_folder: drwxr-xr-x
           chown_group: null
-          {{- with .Values.radarr.rootFolders }}
+          {{- with .Values.sonarr.rootFolders }}
           root_folders:
             {{- toYaml . | nindent 12 }}
           {{- end }}
