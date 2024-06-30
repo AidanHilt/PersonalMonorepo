@@ -12,6 +12,6 @@ COPY --from=download-tool /argocd-vault-plugin /usr/local/bin/argocd-vault-plugi
 
 USER root
 
-RUN chmod 777 /usr/local/bin/argocd-vault-plugin
+RUN chmod 775 /usr/local/bin/argocd-vault-plugin
 
 USER argocd
