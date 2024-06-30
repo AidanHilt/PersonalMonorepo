@@ -1,3 +1,4 @@
+{{- if .Values.sonarr.enabled }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -5,10 +6,10 @@ metadata:
 stringData:
   buildarr.yml: |
     sonarr:
-      hostname: sonarr
-      port: 80
+      hostname: {{ .Values.sonarr.hostname }}
+      port: {{ .Values.sonarr.port }}
       protocol: http
-      url_base: /sonarr
+      url_base: {{ .Values.sonarr.urlBase }}
       api_key: {{ .Values.sonarr.apiKey }}
       settings:
         quality:
@@ -40,7 +41,10 @@ stringData:
           set_permissions: false
           chmod_folder: drwxr-xr-x
           chown_group: null
-          root_folders: []
+          {{- with .Values.sonarr.rootFolders }}
+          root_folders:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
         download_clients:
           enable_completed_download_handling: true
           redownload_failed: true
@@ -51,11 +55,12 @@ stringData:
               remove_failed_downloads: true
               priority: 1
               tags: []
-              hostname: transmission
-              url_base: /transmission/
+              host: {{ .Values.transmission.hostname }}
+              url_base: {{ .Values.transmission.urlBase }}
+              port: {{ .Values.transmission.port }}
               username: {{ .Values.transmission.username }}
               password: {{ .Values.transmission.password }}
-              category: radarr-movies
+              category: sonarr-tv
               directory: null
               recent_priority: last
               older_priority: last
@@ -71,7 +76,7 @@ stringData:
             port: 8989
             ssl_port: 6969
             use_ssl: false
-            url_base: /sonarr
+            url_base: {{ .Values.sonarr.urlBase }}
             instance_name: Sonarr
           security:
             authentication: none
@@ -99,5 +104,4 @@ stringData:
           time_format: twelve-hour
           show_relative_dates: true
           enable_color_impaired_mode: false
-
-
+{{- end }}

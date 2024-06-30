@@ -17,11 +17,35 @@ spec:
       - name: HELM_VALUES
         value: |
           prowlarr:
+            port: 80
+            urlBase: /prowlarr
             apiKey: <path:argocd/data/video_stack_configuration#prowlarrApiKey>
+
           radarr:
+            port: 80
+            urlBase: /radarr
             apiKey: <path:argocd/data/video_stack_configuration#radarrApiKey>
+
           sonarr:
+            port: 80
+            urlBase: /sonarr
             apiKey: <path:argocd/data/video_stack_configuration#sonarrApiKey>
+
+          jellyseerr:
+            port: 80
+            apiKey: <path:argocd/data/video_stack_configuration#jellyseerrApiKey>
+            image: aidanhilt/jellyseerr
+            version: develop
+            jellyfin:
+              hostname: jellyfin
+              port: 80
+              urlBase: /emby
+              username: <path:argocd/data/video_stack_configuration#jellyfinUsername>
+              password: <path:argocd/data/video_stack_configuration#jellyfinPassword>
+              emailAddress: <path:argocd/data/video_stack_configuration#jellyfinEmail>
+
+          transmission:
+            port: 80
       {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'

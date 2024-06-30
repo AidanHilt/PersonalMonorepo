@@ -1,11 +1,11 @@
 env: qa-cluster
 
-gitRevision: fix/arr-stack-istio
+gitRevision: feat/jellyseerr
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
   configurationDirectory: kubernetes/argocd/configuration-data
-  configurationRevision: fix/arr-stack-istio
+  configurationRevision: feat/jellyseerr
 
 flaresolverr:
   enabled: true
@@ -65,7 +65,7 @@ transmission:
     enabled: true
 
 video-stack-configuration:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
 
@@ -80,6 +80,11 @@ istio-base:
     enabled: false
 
 jellyfin:
+  enabled: true
+  configuration:
+    enabled: true
+
+jellyseerr:
   enabled: true
   configuration:
     enabled: true

@@ -23,6 +23,12 @@ resource "random_password" "jellyfin_api_key" {
   upper   = false
 }
 
+resource "random_password" "jellyseerr_api_key" {
+  length  = 68
+  special = false
+  upper   = false
+}
+
 resource "random_password" "postgres_master_password" {
   length = 64
 }
@@ -40,4 +46,9 @@ resource "random_password" "postgres_sonarr_password" {
 resource "random_password" "postgres_radarr_password" {
   length = 64
   override_special = "!#$%*()-_=+[]{}:?"
+}
+
+resource "random_password" "jellyfin_password" {
+  length = 64
+  override_special = "!#$%*()-_=+[]{}?"
 }

@@ -1,3 +1,4 @@
+{{- if .Values.radarr.enabled }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -5,8 +6,8 @@ metadata:
 stringData:
   buildarr.yml: |
     radarr:
-      hostname: {{ .Values.radarr.url }}
-      port: 80
+      hostname: {{ .Values.radarr.hostname }}
+      port: {{ .Values.radarr.port }}
       protocol: http
       url_base: {{ .Values.radarr.urlBase }}
       api_key: {{ .Values.radarr.apiKey }}
@@ -37,7 +38,10 @@ stringData:
           chown_group: null
           root_folders:
             delete_unmanaged: false
-            definitions: []
+            {{- with .Values.radarr.rootFolders }}
+            definitions:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
         quality:
           trash_id: aed34b9f60ee115dfa7918b742336277
         download_clients:
@@ -49,8 +53,9 @@ stringData:
               remove_failed_downloads: true
               priority: 1
               tags: []
-              hostname: transmission
-              url_base: /transmission/
+              hostname: {{ .Values.transmission.hostname }}
+              url_base: {{ .Values.transmission.urlBase }}
+              port: {{ .Values.transmission.port }}
               username: {{ .Values.transmission.username }}
               password: {{ .Values.transmission.password }}
               category: radarr-movies
@@ -68,7 +73,7 @@ stringData:
             use_ssl: false
             ssl_cert_path: null
             ssl_cert_password: null
-            url_base: /radarr
+            url_base: {{ .Values.radarr.urlBase }}
             instance_name: Radarr
           security:
             authentication: external
@@ -94,4 +99,4 @@ stringData:
           enable_color_impaired_mode: false
           movie_info_language: english
           ui_language: english
-
+{{- end }}

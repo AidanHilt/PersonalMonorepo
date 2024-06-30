@@ -37,3 +37,8 @@ variable "jellyfin_username" {
   description = "The username for a default admin user on Jellyfin"
   default     = "admin"
 }
+
+variable "jellyfin_email" {
+  type        = string
+  description = "The email for a default admin user on Jellyfin"
+}

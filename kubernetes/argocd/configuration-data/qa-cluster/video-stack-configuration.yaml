@@ -1,2 +1,0 @@
-prowlarr:
-  apiKey: <path:kv/data/argocd/video_stack_configuration#prowlarrApiKey>

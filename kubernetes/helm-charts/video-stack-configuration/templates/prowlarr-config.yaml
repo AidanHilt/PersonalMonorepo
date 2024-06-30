@@ -1,3 +1,4 @@
+{{- if .Values.prowlarr.enabled }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -5,8 +6,8 @@ metadata:
 stringData:
   buildarr.yml: |
     prowlarr:
-      hostname: {{ .Values.prowlarr.url }}
-      port: 80
+      hostname: {{ .Values.prowlarr.hostname }}
+      port: {{ .Values.prowlarr.port }}
       protocol: http
       url_base: {{ .Values.prowlarr.urlBase }}
       api_key: {{ .Values.prowlarr.apiKey }}
@@ -200,15 +201,15 @@ stringData:
               FlareSolverr:
                 type: flaresolverr
                 tags: []
-                host_url: http://flaresolverr:80
+                host_url: {{ .Values.flaresolverr.host_url }}
                 request_timeout: 60
         apps:
           applications:
             delete_unmanaged: false
             definitions:
-              {{- $prowlarrUrl := printf "http://%s%s" .Values.prowlarr.url .Values.prowlarr.urlBase }}
-              {{- $sonarrUrl := printf "http://%s%s" .Values.sonarr.url .Values.sonarr.urlBase }}
-              {{- $radarrUrl := printf "http://%s%s" .Values.radarr.url .Values.radarr.urlBase }}
+              {{- $prowlarrUrl := printf "http://%s%s" .Values.prowlarr.hostname .Values.prowlarr.urlBase }}
+              {{- $sonarrUrl := printf "http://%s%s" .Values.sonarr.hostname .Values.sonarr.urlBase }}
+              {{- $radarrUrl := printf "http://%s%s" .Values.radarr.hostname .Values.radarr.urlBase }}
               Radarr:
                 type: radarr
                 prowlarr_url: {{ $prowlarrUrl }}
@@ -264,10 +265,10 @@ stringData:
               enable: true
               priority: 1
               tags: []
-              host: transmission
               port: 80
               use_ssl: false
-              url_base: /transmission/
+              host: {{ .Values.transmission.hostname }}
+              url_base: {{ .Values.transmission.urlBase }}
               username: {{ .Values.transmission.username }}
               password: {{ .Values.transmission.password }}
               category: prowlarr-random
@@ -288,7 +289,7 @@ stringData:
             use_ssl: false
             ssl_cert_path: null
             ssl_cert_password: null
-            url_base: /prowlarr
+            url_base: {{ .Values.prowlarr.urlBase }}
             instance_name: Prowlarr
           security:
             authentication: external
@@ -328,3 +329,4 @@ stringData:
           enable_color_impaired_mode: false
           theme: auto
           ui_language: en
+{{- end }}

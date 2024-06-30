@@ -1,6 +1,6 @@
-env: qa-cluster
+env: prod-cluster
 
-gitRevision: master
+gitRevision: feat/jellyseerr
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
@@ -8,7 +8,7 @@ configuration:
   configurationRevision: master
 
 flaresolverr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: false
 
@@ -40,7 +40,7 @@ hashi-vault:
   version: "0.27.0"
 
 ingress:
-  enabled: true
+  enabled: false
 
 istio:
   enabled: false
@@ -86,27 +86,32 @@ prometheus:
   configuration:
     enabled: true
 
-prowlarr:
+jellyseerr:
   enabled: true
+  configuration:
+    enabled: true
+
+prowlarr:
+  enabled: false
   configuration:
     enabled: true
 
 radarr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 sonarr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 transmission:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 video-stack-configuration:
-  enabled: true
+  enabled: false
   configuration:
     enabled: false

@@ -1,0 +1,6 @@
+persistence:
+  config:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    mountPath: /app/config

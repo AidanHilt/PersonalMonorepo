@@ -81,7 +81,21 @@ resource "vault_kv_secret_v2" "jellyfin_config" {
     {
       apiKey   = random_password.jellyfin_api_key.result
       username = var.jellyfin_username
-      password = random_password.postgres_radarr_password.result
+      password = random_password.jellyfin_password.result
+    }
+  )
+}
+
+#===============
+# Jellyseerr
+#===============
+resource "vault_kv_secret_v2" "jellyseerr_config" {
+  mount = vault_mount.kv-videos.path
+  name  = "jellyseerr/config"
+
+  data_json = jsonencode(
+    {
+      apiKey   = random_password.jellyseerr_api_key.result
     }
   )
 }

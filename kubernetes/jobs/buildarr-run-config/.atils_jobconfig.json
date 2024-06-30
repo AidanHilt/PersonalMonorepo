@@ -10,7 +10,8 @@
       "options": [
         "prowlarr",
         "radarr",
-        "sonarr"
+        "sonarr",
+        "jellyseerr"
       ]
     },
     {
@@ -20,6 +21,15 @@
       "default": "buildarr-{{ application_name }}-config-secret",
       "options": [
         "Any valid secret name"
+      ]
+    },
+    {
+      "name": "image",
+      "required": false,
+      "description": "The image to run the buildarr command with",
+      "default": "aidanhilt/buildarr",
+      "options": [
+        "Any valid buildarr image"
       ]
     }
   ]
