@@ -13,7 +13,8 @@ RUN apk update && apk add --no-cache \
     tcpdump \
     jq \
     yq \
-    postgresql-client
+    postgresql-client \
+    kubectl
 
 # Set Zsh as the default shell, install OhMyZsh, and install addons
 RUN sed -i -e "s/bin\/ash/bin\/zsh/" /etc/passwd && \

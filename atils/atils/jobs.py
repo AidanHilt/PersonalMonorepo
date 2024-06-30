@@ -110,6 +110,16 @@ def main(args: str) -> None:
             launch_pvc_manager(args_dict["pvc_name"], current_namespace)
     elif arguments.subparser_name == "postgres-manager":
         launch_postgres_manager()
+    elif arguments.subparser_name == "devterm":
+        namespace: str = ""
+        args_dict: dict = vars(arguments)
+
+        if args_dict["namespace"] is not None:
+            namespace = args_dict["namespace"]
+        else:
+            namespace = atils_kubernetes.get_current_namespace()
+
+        launch_devterm_pod(namespace)
     elif arguments.subparser_name == "list":
         list_available_jobs()
     elif arguments.subparser_name == "describe":
@@ -200,6 +210,7 @@ def launch_devterm_pod(namespace: str) -> None:
         "kind": "Pod",
         "metadata": {"name": "atils-devterm"},
         "spec": {
+            "serviceAccountName": "debug-job",
             "containers": [
                 {
                     "name": "atils-devterm",
@@ -210,6 +221,7 @@ def launch_devterm_pod(namespace: str) -> None:
             "restartPolicy": "Never",
         },
     }
+    _ensure_access_exists("debug-job", namespace, "admin", True)
     _create_pod_if_not_existent("atils-devterm", pod_manifest, namespace)
     _exec_shell_in_pod("atils-devterm", namespace, "atils-devterm", delete=True)
 
@@ -492,6 +504,123 @@ def _delete_pvc_manager_if_exists(pod_name: str, namespace: str) -> None:
 
     except Exception as e:
         logging.error(f"Error occurred while deleting ephemeral container: {str(e)}")
+
+
+def _ensure_access_exists(
+    service_account_name: str,
+    service_account_namespace: str,
+    role_name: str,
+    cluster_role: bool = False,
+) -> None:
+    """
+    Given a service account, ensure that it's bound to either a Role, or a ClusterRole based on the cluster_role arg
+
+    Args:
+        service_account_name (str): The name of the service account we want to use for our job
+        service_account_namespace (str): The namespace our chosen service account lives in
+        role_name (str): The name of the role our service account needs to be bound to. If cluster_role is set to True, this is a ClusterRole,
+        and it is a namespaced role otherwise
+    """
+
+    # Create API clients
+    v1 = client.CoreV1Api()
+    rbac_v1 = client.RbacAuthorizationV1Api()
+
+    # 1. Check if the service account exists
+    try:
+        v1.read_namespaced_service_account(
+            name=service_account_name, namespace=service_account_namespace
+        )
+    except ApiException as e:
+        if e.status == 404:
+            logging.error(
+                f"Service account {service_account_name} does not exist in namespace {service_account_namespace}."
+            )
+            exit(1)
+        else:
+            logging.error(f"Error checking service account: {e}")
+            exit(1)
+
+    # 2. Check if the role/cluster role exists
+    try:
+        if cluster_role:
+            rbac_v1.read_cluster_role(name=role_name)
+        else:
+            rbac_v1.read_namespaced_role(
+                name=role_name, namespace=service_account_namespace
+            )
+    except ApiException as e:
+        if e.status == 404:
+            logging.error(
+                f"{'ClusterRole' if cluster_role else 'Role'} {role_name} does not exist."
+            )
+            return
+        else:
+            logging.error(
+                f"Error checking {'cluster role' if cluster_role else 'role'}: {e}"
+            )
+            return
+
+    # 3. Check and create role binding if necessary
+    binding_name = f"{service_account_name}-{role_name}"
+    try:
+        if cluster_role:
+            rbac_v1.read_cluster_role_binding(name=binding_name)
+        else:
+            rbac_v1.read_namespaced_role_binding(
+                name=binding_name, namespace=service_account_namespace
+            )
+        print(
+            f"{'ClusterRoleBinding' if cluster_role else 'RoleBinding'} {binding_name} already exists."
+        )
+    except ApiException as e:
+        if e.status == 404:
+            # Create the binding
+            if cluster_role:
+                body = client.V1ClusterRoleBinding(
+                    metadata=client.V1ObjectMeta(name=binding_name),
+                    subjects=[
+                        client.V1Subject(
+                            kind="ServiceAccount",
+                            name=service_account_name,
+                            namespace=service_account_namespace,
+                        )
+                    ],
+                    role_ref=client.V1RoleRef(
+                        kind="ClusterRole",
+                        name=role_name,
+                        api_group="rbac.authorization.k8s.io",
+                    ),
+                )
+                rbac_v1.create_cluster_role_binding(body=body)
+            else:
+                body = client.V1RoleBinding(
+                    metadata=client.V1ObjectMeta(
+                        name=binding_name, namespace=service_account_namespace
+                    ),
+                    subjects=[
+                        client.V1Subject(
+                            kind="ServiceAccount",
+                            name=service_account_name,
+                            namespace=service_account_namespace,
+                        )
+                    ],
+                    role_ref=client.V1RoleRef(
+                        kind="Role",
+                        name=role_name,
+                        api_group="rbac.authorization.k8s.io",
+                    ),
+                )
+                rbac_v1.create_namespaced_role_binding(
+                    namespace=service_account_namespace, body=body
+                )
+            print(
+                f"Created {'ClusterRoleBinding' if cluster_role else 'RoleBinding'} {binding_name}"
+            )
+        else:
+            print(
+                f"Error checking {'cluster role binding' if cluster_role else 'role binding'}: {e}"
+            )
 
 
 def _exec_shell_in_pod(
