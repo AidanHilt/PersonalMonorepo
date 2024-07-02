@@ -30,6 +30,7 @@ cask 'visual-studio-code'
 cask 'orbstack'
 cask 'postman'
 
+brew 'act'
 brew 'python3'
 brew 'git'
 brew 'kubernetes-cli'
