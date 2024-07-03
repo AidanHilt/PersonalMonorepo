@@ -1,12 +1,6 @@
-name: Custom Images On Push
+name: Build Custom Images on Push to Branch
 
 on:
-  workflow_dispatch:
-    inputs:
-      images:
-        description: "An array of images to build"
-        default: ''
-        required: false
   push:
     branches:
       - '!master'
@@ -16,20 +10,8 @@ on:
       - '!custom-images/docs/**'
 
 jobs:
-  generate-matrix-from-input:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.images != '' }}
-    outputs:
-      changed_directories: ${{ steps.set-outputs.outputs.changed_directories }}
-    steps:
-      - name: 'Set output in the matrix format'
-        id: set-outputs
-        run: echo "changed_directories={\"dir\":${{ github.event.inputs.images }}}" >> "$GITHUB_OUTPUT"
-
-
   generate-matrix-from-changed-files:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.images == '' }}
     outputs:
       changed_directories: ${{ steps.set-output.outputs.changed_directories }}
     steps:
@@ -61,15 +43,3 @@ jobs:
       - generate-matrix-from-changed-files
     steps:
       - run: echo "${{ matrix.dir }}"
-
-  build-and-publish-on-dispatch:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.images != '' }}
-    strategy:
-      matrix: ${{ fromJson(needs.generate-matrix-from-input.outputs.changed_directories) }}
-    needs:
-      - generate-matrix-from-input
-    steps:
-      - run: |
-          echo ${{ needs.generate-matrix-from-input.outputs.changed_directories }}
-          echo ${{ matrix.dir }}
