@@ -33,7 +33,6 @@ jobs:
         id: set-output
         run: echo "changed_directories={\"dir\":${{ steps.changed-files.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
 
-
   build-and-publish:
     runs-on: ubuntu-latest
     if: ${{ needs.generate-matrix-from-changed-files.outputs.changed_directories != '' }}
@@ -42,4 +41,8 @@ jobs:
     needs:
       - generate-matrix-from-changed-files
     steps:
-      - run: echo "${{ matrix.dir }}"
+      - name: Get current branch
+        id: get-branch
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+      - name: Build and Publish
+        uses: AidanHilt/PersonalMonorepo/.github/workflows/custom-containers-base.yaml@feat/reworked-ci
