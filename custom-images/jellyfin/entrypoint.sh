@@ -49,6 +49,5 @@ if [[ ! -z "${JELLYFIN__USERNAME}" ]]; then
   fi
 fi
 
-
 # This is how we push jellyfin back to the front
 fg %1
