@@ -12,6 +12,4 @@ COPY config /config
 
 RUN chmod +x /entrypoint.sh
 
-USER NOBODY
-
 ENTRYPOINT ["bash", "/entrypoint.sh"]
