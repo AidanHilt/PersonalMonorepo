@@ -10,7 +10,7 @@ on:
       - '!custom-images/docs/**'
 
 jobs:
-  generate-matrix-from-changed-files:
+  generate-matrix:
     runs-on: ubuntu-latest
     outputs:
       changed_directories: ${{ steps.set-output.outputs.changed_directories }}
@@ -29,20 +29,31 @@ jobs:
             custom-images/**
             !custom-images/docs/**
 
-      - name: 'Set output in the matrix format'
+      - name: Set matrix-formatted output
         id: set-output
         run: echo "changed_directories={\"dir\":${{ steps.changed-files.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
 
   build-and-publish:
     runs-on: ubuntu-latest
-    if: ${{ needs.generate-matrix-from-changed-files.outputs.changed_directories != '' }}
+    if: ${{ needs.generate-matrix.outputs.changed_directories != '' }}
     strategy:
-      matrix: ${{fromJson(needs.generate-matrix-from-changed-files.outputs.changed_directories)}}
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.changed_directories) }}
     needs:
-      - generate-matrix-from-changed-files
+      - generate-matrix
     steps:
+      - uses: actions/checkout@v3
       - name: Get current branch
-        id: get-branch
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-      - name: Build and Publish
-        uses: AidanHilt/PersonalMonorepo/.github/workflows/custom-containers-base.yaml@feat/reworked-ci
+        run: echo "BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
+      - name: Get image tag
+        run: |
+          source ${{ matrix.dir }}/config.env
+          echo "TAG=$IMAGE_NAME" >> $GITHUB_ENV
+      - name: Get image directory basename
+        run: |
+          NAME=$(basename ${{ matrix.dir }})
+          echo "NAME=$NAME" >> $GITHUB_ENV
+      - name: Build and publish
+        uses: ./.github/workflows/custom-containers-base.yaml
+        with:
+          image: ${{ env.NAME }}
+          tags: "${{env.TAG}}:${{env.BRANCH}}"

@@ -16,6 +16,10 @@ jobs:
       changed_directories: ${{ steps.set-output.outputs.changed_directories }}
     steps:
       - uses: actions/checkout@v3
+      - name: Get image version
+      run: |
+        source ${{ matrix.dir }}/config.env
+        echo "VERSION=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Get changed files
         id: changed-files
