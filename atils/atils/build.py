@@ -27,10 +27,16 @@ def main(args: list[str]):
     )
 
     parser.add_argument(
-        "--actions-only", "-ao", help="Only show actions", action="store_true"
+        "--actions-only",
+        "-ao",
+        help="Only show actions",
+        action="store_true",
     )
     parser.add_argument(
-        "--action-sets-only", "-aso", help="Only show action sets", action="store_true"
+        "--action-sets-only",
+        "-aso",
+        help="Only show action sets",
+        action="store_true",
     )
 
     parser.add_argument(
@@ -63,35 +69,41 @@ def main(args: list[str]):
 
     if arguments.action == "list":
         run_list_action(directory, show_actions, show_action_sets)
+    elif arguments.actions is not None:
+        run_build_actions(arguments.actions, directory)
+    elif arguments.action_set is not None:
+        run_build_action_set(arguments.action_set, directory)
     else:
-        if arguments.actions is not None:
-            run_build_actions(arguments.actions, directory)
-        elif arguments.action_set is not None:
-            run_build_action_set(arguments.action_set, directory)
+        default_action_set: str = _get_default_action_set(directory)
+        if default_action_set:
+            run_build_action_set(default_action_set, directory)
         else:
-            default_action_set: str = _get_default_action_set(directory)
-            if default_action_set:
-                run_build_action_set(default_action_set, directory)
-            else:
-                logging.error(
-                    "No default action set defined. Either define one in"
-                    + f" {os.path.join(directory, '.atils_buildconfig.json')} or use an argument to specify what to do"
-                )
+            logging.error(
+                "No default action set defined. Either define one in"
+                + f" {os.path.join(directory, '.atils_buildconfig.json')} or use an argument to specify what to do",
+            )
 
 
 def validate_listed_actions(
-    available_actions: list[dict], listed_actions: list[str]
+    available_actions: list[dict],
+    listed_actions: list[str],
 ) -> None:
-    """
-    Takes a list of valid actions, a list of actions provided by a user, and ensures that all
+    """Take a list of valid actions, a list of actions provided by a user, and ensures that all
     actions provided by the user are valid.
+
     Args:
-        available_actions (list[object]): A list of objects representing available actions.
-        listed_actions (list[str]): A list of strings representing actions provided by the user.
+    ----
+      available_actions (list[object]): A list of objects representing available actions.
+      listed_actions (list[str]): A list of strings representing actions provided by the user.
+
     Raises:
-        ValueError: If any action provided by the user is not valid.
+    ------
+      ValueError: If any action provided by the user is not valid.
+
     Returns:
-        None.
+    -------
+      None.
+
     """
     available_action_names = [action["name"] for action in available_actions]
     for action in listed_actions:
@@ -100,16 +112,20 @@ def validate_listed_actions(
 
 
 def run_list_action(directory: str, show_actions: bool, show_action_sets: bool) -> None:
-    """
-    List all available build actions, or only actions or only action sets.
+    """List all available build actions, or only actions or only action sets.
+
     Args:
-        directory (str): The directory where our .atils_buildconfig.json file to list is located
-        show_actions (bool): Whether to show actions or not
-        show_action_sets (bool): Whether to show action sets or not
+    ----
+      directory (str): The directory where our .atils_buildconfig.json file to list is located
+      show_actions (bool): Whether to show actions or not
+      show_action_sets (bool): Whether to show action sets or not
     Raises:
-        ValueError: If both show_actions and show_action_sets are True.
+      ValueError: If both show_actions and show_action_sets are True.
+
     Returns:
-        None
+    -------
+      None
+
     """
     available_actions = _get_available_actions(directory)
     available_action_sets = _get_available_action_sets(directory)
@@ -129,11 +145,10 @@ def run_list_action(directory: str, show_actions: bool, show_action_sets: bool) 
 
 
 def run_build_action_set(action_set_name: str, directory: str) -> None:
-    """
-    Runs all the actions defined in a given action_set
+    """Runs all the actions defined in a given action_set
     Args:
-        action_set (dict): A dictionary representing an action set
-        directory (str): The directory where our .atils_buildconfig.json file to list is located
+      action_set (dict): A dictionary representing an action set
+      directory (str): The directory where our .atils_buildconfig.json file to list is located
     """
     available_actions: list[dict] = _get_available_actions(directory)
     action_set: dict = _get_action_set(action_set_name, directory)
@@ -151,13 +166,14 @@ def run_build_action_set(action_set_name: str, directory: str) -> None:
 
 
 def run_build_actions(listed_actions: list[str], directory: str) -> None:
-    # TODO cd to a directory, if one is specified
     # TODO allow us to mark if all build actions must pass
-    """
-    Run user-specified build actions, in the order specified by .atils_buildconfig.json.
+    """Run user-specified build actions, in the order specified by .atils_buildconfig.json.
+
     Args:
-        listed_actions (list[str]): The list of actions provided by the user.
-        directory (str): The directory to use as the current working directory.
+    ----
+      listed_actions (list[str]): The list of actions provided by the user.
+      directory (str): The directory to use as the current working directory.
+
     """
     available_actions = _get_available_actions(directory)
 
@@ -176,18 +192,22 @@ def run_build_actions(listed_actions: list[str], directory: str) -> None:
 
 
 def _get_available_actions(directory: str) -> list[dict]:
-    """
-    List all actions available in a .atils_buildconfig.json file in the given directory.
+    """List all actions available in a .atils_buildconfig.json file in the given directory.
     The file must be in the given directory and must be a valid JSON file.
     The file must contain a list of actions, each action must be an object with the following keys:
-        - name: The name of the action
-        - command: The command to run
-        - order: The order in which to run the action. Lower numbers are run first.
+      - name: The name of the action
+      - command: The command to run
+      - order: The order in which to run the action. Lower numbers are run first.
     The actions are returned sorted by their order.
+
     Arguments:
-        directory (str): The directory where the .atils_buildconfig.json file is located.
+    ---------
+      directory (str): The directory where the .atils_buildconfig.json file is located.
+
     Returns:
-        A list of objects representing actions available in the .atils_buildconfig.json file.
+    -------
+      A list of objects representing actions available in the .atils_buildconfig.json file.
+
     """
     filename: str = os.path.join(directory, ".atils_buildconfig.json")
 
@@ -202,18 +222,22 @@ def _get_available_actions(directory: str) -> list[dict]:
 
 
 def _get_available_action_sets(directory: str) -> list[dict]:
-    """
-    List all action sets available in a .atils_buildconfig.json file in the given directory.
+    """List all action sets available in a .atils_buildconfig.json file in the given directory.
     The file must be in the given directory and must be a valid JSON file.
     The file must contain a list of action sets, each action set must be an object with the following keys:
-        - name: The name of the action set
-        - actions: A list of actions in the action set
+      - name: The name of the action set
+      - actions: A list of actions in the action set
     The action sets are returned sorted by their name.
+
     Arguments:
-        directory (str): The directory where the .atils_buildconfig.json file is located.
+    ---------
+      directory (str): The directory where the .atils_buildconfig.json file is located.
+
     Returns:
-        A list of objects representing action sets available in the .atils_buildconfig.json file. Returns an empty
-        list if no such list is found
+    -------
+      A list of objects representing action sets available in the .atils_buildconfig.json file. Returns an empty
+      list if no such list is found
+
     """
     filename = os.path.join(directory, ".atils_buildconfig.json")
 
@@ -228,13 +252,12 @@ def _get_available_action_sets(directory: str) -> list[dict]:
 
 
 def _get_action_set(action_set: str, directory: str) -> dict:
-    """
-    Get a given action set from an .atils_buildconfig.json file
+    """Get a given action set from an .atils_buildconfig.json file
     Args:
-        action_set (str): The name of the action set to get
-        directory (str): The directory where the .atils_buildconfig.json file is located
+      action_set (str): The name of the action set to get
+      directory (str): The directory where the .atils_buildconfig.json file is located
     Returns:
-        A dictionary representing the action set, or an empty dictionary if the action set is not found
+      A dictionary representing the action set, or an empty dictionary if the action set is not found
     """
     available_action_sets = _get_available_action_sets(directory)
 
@@ -242,30 +265,34 @@ def _get_action_set(action_set: str, directory: str) -> dict:
         if action_set_obj["name"] == action_set:
             return action_set_obj
     raise ValueError(
-        f"Action set {action_set} not available in {os.path.join(directory, '.atils_buildconfig.json')}"
+        f"Action set {action_set} not available in {os.path.join(directory, '.atils_buildconfig.json')}",
     )
 
 
 def _get_default_action_set(directory: str) -> str:
-    """
-    Given a directory with an .atils_buildconfig.json file, return the name of the default action set.
+    """Given a directory with an .atils_buildconfig.json file, return the name of the default action set.
+
     Args:
-        directory (str): The directory where the .atils_buildconfig.json file is located
+    ----
+      directory (str): The directory where the .atils_buildconfig.json file is located
     Returns:
-        A string representing the name of the default action set, or an empty string if no default action set is found.
+      A string representing the name of the default action set, or an empty string if no default action set is found.
+
     """
     available_action_sets: list[dict] = _get_available_action_sets(directory)
     for action_set in available_action_sets:
-        if "default" in action_set and action_set["default"]:
+        if action_set.get("default"):
             return action_set["name"]
     return ""
 
 
 def _print_action(action: dict) -> None:
-    """
-    Print the name and command of an action.
+    """Print the name and command of an action.
+
     Args:
-        action (object): An object representing an action from a .atils_buildconfig.json file.
+    ----
+      action (object): An object representing an action from a .atils_buildconfig.json file.
+
     """
     if "description" in action:
         print(f"{action['name']} | {action['description']}")
@@ -275,11 +302,13 @@ def _print_action(action: dict) -> None:
 
 
 def _print_action_set(action_set: dict, actions: list[dict]) -> None:
-    """
-    Print the name and actions of an action set.
+    """Print the name and actions of an action set.
+
     Args:
-        action_set (dict): An object representing an action set from a .atils_buildconfig.json file.
-        actions (list[dict]): A list of objects, representing all available actions
+    ----
+      action_set (dict): An object representing an action set from a .atils_buildconfig.json file.
+      actions (list[dict]): A list of objects, representing all available actions
+
     """
     print(f"{action_set['name']}:")
     if "description" in action_set:
@@ -297,44 +326,53 @@ def _print_action_set(action_set: dict, actions: list[dict]) -> None:
 
 
 def _run_action(action: dict, directory: str) -> None:
-    """
-    Run the command from an action, using subprocess.run
+    """Run the command from an action, using subprocess.run
     Args:
-        action (object): An object representing an action
+      action (object): An object representing an action.
     """
-
     _validate_action_can_run(action)
-    subprocess.run(action["command"], shell=True, cwd=directory)
+    if action["command"] == "":
+        logging.error("An atils build command can't be blank")
+        exit(1)
+    subprocess.run(action["command"], shell=True, cwd=directory, check=False)
 
 
 def _run_action_strict(action: dict, directory: str) -> None:
-    """
-    Run the command from an action, using subprocess.run. Fails if the command fails
+    """Run the command from an action, using subprocess.run. Fails if the command fails
     Args:
-        action (object): An object representing an action
+      action (object): An object representing an action
     """
     _validate_action_can_run(action)
+    if action["command"] == "":
+        logging.error("An atils build command can't be blank")
+        exit(1)
     try:
         subprocess.run(action["command"], shell=True, cwd=directory, check=True)
-    except subprocess.CalledProcessError as e:
-        logging.error(f"Error running {action['name']}")
+    except subprocess.CalledProcessError:
+        logging.exception(f"Error running {action['name']}")
         exit(1)
 
 
 def _validate_action_can_run(action: dict):
-    """
-    Given an action, checks if it is a CI-only action. If it is, and we are not running in a CI environment,
+    """Given an action, checks if it is a CI-only action. If it is, and we are not running in a CI environment,
     exit the program.
+
     Args:
-        action (dict): A dict representing an action from a .atils_buildconfig.json file.
+    ----
+      action (dict): A dict representing an action from a .atils_buildconfig.json file.
+
     Returns:
-        None.
+    -------
+      None.
+
     Raises:
-        SystemExit: If we are not running in a CI environment and the action is a CI-only action.
-    """
+    ------
+      SystemExit: If we are not running in a CI environment and the action is a CI-only action.
+
+    """  # noqa: D205
     if "ci_only" in action and action["ci_only"] and "ATILS_CI_ENV" not in os.environ:
         logging.error(
             f"Attempted to run a CI only-action ({action['name']}) in a non-CI environment. "
-            + "If you know what you're doing, set ATILS_CI_ENV to true."
+            + "If you know what you're doing, set ATILS_CI_ENV to true.",
         )
         exit(1)

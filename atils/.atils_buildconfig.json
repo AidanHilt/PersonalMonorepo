@@ -29,60 +29,6 @@
       "name": "local-install",
       "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); pipx install dist/atils-$VERSION.tar.gz --force",
       "order": 11
-    },
-    {
-      "name": "docker-build-arm64",
-      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker buildx build . --platform linux/arm64 -t aidanhilt/atils:$VERSION-arm64 --load",
-      "order": 12
-    },
-    {
-      "name": "docker-build-amd64",
-      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker buildx build . --platform linux/amd64 -t aidanhilt/atils:$VERSION-amd64 --load",
-      "order": 13
-    },
-    {
-      "name": "docker-push-arm64",
-      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker push aidanhilt/atils:$VERSION-arm64",
-      "order": 14,
-      "ci_only": true
-    },
-    {
-      "name": "docker-push-amd64",
-      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker push aidanhilt/atils:$VERSION-amd64",
-      "order": 15,
-      "ci_only": true
-    },
-    {
-      "name": "create-manifest-versioned",
-      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker manifest create aidanhilt/atils:$VERSION -a aidanhilt/atils:$VERSION-arm64 -a aidanhilt/atils:$VERSION-amd64",
-      "order": 16,
-      "description": "Create the manifest for the multi-arch tagged release"
-    },
-    {
-      "name": "create-manifest-latest",
-      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker manifest create aidanhilt/atils:latest -a aidanhilt/atils:$VERSION-arm64 -a aidanhilt/atils:$VERSION-amd64",
-      "order": 17,
-      "description": "Create the manifest for the multi-arch tagged release"
-    },
-    {
-      "name": "push-manifest-versioned",
-      "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); docker manifest push aidanhilt/atils:$VERSION",
-      "order": 18,
-      "description": "Push the manifest for the multi-arch tagged release",
-      "ci_only": true
-    },
-    {
-      "name": "push-manifest-latest",
-      "command": "docker manifest push aidanhilt/atils:latest",
-      "order": 19,
-      "description": "Push the manifest for the multi-arch tagged release",
-      "ci_only": true
-    },
-    {
-      "name": "publish-py-pi",
-      "order": 20,
-      "command": "poetry publish -u __token__ -p \"$PYPI_AUTH_TOKEN\"",
-      "ci_only": true
     }
   ],
   "action_sets": [
@@ -103,26 +49,6 @@
         "local-install"
       ],
       "description": "Builds and installs atils locally, for testing purposes"
-    },
-    {
-      "name": "ci-build-publish",
-      "actions": [
-        "install-dependencies",
-        "test",
-        "type-check",
-        "validate_buildconfig",
-        "build",
-        "publish-py-pi",
-        "docker-build-arm64",
-        "docker-build-amd64",
-        "docker-push-arm64",
-        "docker-push-amd64",
-        "create-manifest-versioned",
-        "create-manifest-latest",
-        "push-manifest-versioned",
-        "push-manifest-latest"
-      ],
-      "description": "Builds and publishes atils to Docker Hub, as well as PyPI"
     }
   ]
 }

@@ -1,0 +1,53 @@
+name: Helm Chart CI
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'kubernetes/helm-charts/**'
+      - '.github/workflows/helm-charts-on-merge.yaml'
+      - '!kubernetes/helm-charts/docs/**'
+
+jobs:
+  find-out-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      changed_directories: ${{ steps.set-output.outputs.changed_directories }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v42.0.7
+        with:
+          dir_names: true
+          json: true
+          quotepath: false
+          files: |
+            kubernetes/helm-charts/**
+            !kubernetes/helm-charts/docs/**
+
+      - name: 'Set output in the matrix format'
+        id: set-output
+        run: echo "changed_directories={\"dir\":${{ steps.changed-files.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
+
+  build-and-publish:
+    runs-on: ubuntu-latest
+    if: ${{ needs.find-out-changes.outputs.changed_directories != '' }}
+    strategy:
+      matrix: ${{fromJson(needs.find-out-changes.outputs.changed_directories)}}
+    needs:
+      - find-out-changes
+    steps:
+      - run: echo "${{ needs.find-out-changes.outputs.changed_directories }}"
+      - uses: actions/checkout@v3
+      - name: Push modified Helm charts
+        uses: bsord/helm-push@v4.2.0
+        with:
+          useOCIRegistry: true
+          registry-url:  oci://registry-1.docker.io/aidanhilt
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          access-token: ${{ secrets.DOCKERHUB_TOKEN }}
+          force: true
+          chart-folder: ${{ matrix.dir }}

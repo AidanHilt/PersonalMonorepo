@@ -44,7 +44,7 @@ def main(args: str):
             print(function)
     else:
         logging.error(
-            "Invalid action. If you are trying to run a specific function, remember to use --function-name"
+            "Invalid action. If you are trying to run a specific function, remember to use --function-name",
         )
 
 

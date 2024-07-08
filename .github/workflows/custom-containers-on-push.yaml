@@ -1,16 +1,16 @@
-name: Custom Images CI
+name: Build Custom Images on Push to Branch
 
 on:
   push:
     branches:
-      - master
+      - '!master'
     paths:
       - 'custom-images/**'
       - '.github/workflows/custom-containers-run-ci.yaml'
       - '!custom-images/docs/**'
 
 jobs:
-  find-out-changes:
+  generate-matrix:
     runs-on: ubuntu-latest
     outputs:
       changed_directories: ${{ steps.set-output.outputs.changed_directories }}
@@ -29,45 +29,44 @@ jobs:
             custom-images/**
             !custom-images/docs/**
 
-      - name: 'Set output in the matrix format'
+      - name: Set matrix-formatted output
         id: set-output
         run: echo "changed_directories={\"dir\":${{ steps.changed-files.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
 
   build-and-publish:
     runs-on: ubuntu-latest
-    if: ${{ needs.find-out-changes.outputs.changed_directories != '' }}
+    if: ${{ needs.generate-matrix.outputs.changed_directories != '' }}
     strategy:
-      matrix: ${{fromJson(needs.find-out-changes.outputs.changed_directories)}}
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.changed_directories) }}
     needs:
-      - find-out-changes
-    container:
-      image: aidanhilt/atils-ci:latest
-      volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
+      - generate-matrix
     steps:
       - uses: actions/checkout@v3
+      - name: Get current branch
+        run: echo "BRANCH=$(echo ${GITHUB_REF#refs/*/} | tr / -)" >> $GITHUB_ENV
+      - name: Get image repo
+        run: |
+          source ${{ matrix.dir }}/config.env
+          echo "REPO=$IMAGE_NAME" >> $GITHUB_ENV
+      - name: Get image directory basename
+        run: |
+          NAME=$(basename ${{ matrix.dir }})
+          echo "NAME=$NAME" >> $GITHUB_ENV
 
-
-      - name: Set up QEMU
+      - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-            username: ${{ secrets.DOCKERHUB_USERNAME }}
-            password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-
-      - name: Check for .atils_buildconfig.json
-        id: check-buildconfig
-        run: |
-          if [ ! -f "${{ matrix.dir }}/.atils_buildconfig.json" ]; then
-            echo "No .atils_buildconfig.json found in ${{ matrix.dir }}. Exiting with failure."
-            exit 1
-          fi
-
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and publish custom image
-        if: steps.check-buildconfig.outcome == 'success'
-        run: |
-          atils build --build-directory "${{ matrix.dir }}" --action-set ci-build-publish
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          file: custom-images/${{ env.NAME }}/Dockerfile
+          context: custom-images/${{ env.NAME }}
+          tags: "${{ env.REPO }}:${{ env.BRANCH }}"
+          platforms: linux/amd64, linux/arm64

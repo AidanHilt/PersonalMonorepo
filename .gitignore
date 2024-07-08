@@ -652,3 +652,7 @@ terraform.rc
 # Terragrunt debug output file (when using `--terragrunt-debug` option)
 # See: https://terragrunt.gruntwork.io/docs/reference/cli-options/#terragrunt-debug
 terragrunt-debug.tfvars.json
+
+.github/workflows/.secrets
+
+.ruff_cache/
