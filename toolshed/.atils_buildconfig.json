@@ -29,44 +29,6 @@
       "name": "docker-build-local",
       "command": "docker build . --file packages/backend/Dockerfile -t aidanhilt/toolshed:latest --load",
       "order": 14
-    },
-    {
-      "name": "docker-build-and-push-arm64",
-      "command": "VERSION=$(cat backstage.json | jq -r '.version'); docker buildx build . --file packages/backend/Dockerfile -t aidanhilt/toolshed:$VERSION-arm64 --push --provenance false",
-      "order": 20,
-      "ci_only": true
-    },
-    {
-      "name": "docker-build-and-push-amd64",
-      "command": "VERSION=$(cat backstage.json | jq -r '.version'); docker buildx build . --file packages/backend/Dockerfile -t aidanhilt/toolshed:$VERSION-amd64 --push --provenance false",
-      "order": 21,
-      "ci_only": true
-    },
-    {
-      "name": "create-manifest-versioned",
-      "command": "VERSION=$(cat backstage.json | jq -r '.version'); docker manifest create aidanhilt/toolshed:$VERSION -a aidanhilt/toolshed:$VERSION-arm64 -a aidanhilt/toolshed:$VERSION-amd64",
-      "order": 22,
-      "description": "Create the manifest for the multi-arch tagged release"
-    },
-    {
-      "name": "create-manifest-latest",
-      "command": "VERSION=$(cat backstage.json | jq -r '.version'); docker manifest create aidanhilt/toolshed:latest -a aidanhilt/toolshed:$VERSION-arm64 -a aidanhilt/toolshed:$VERSION-amd64",
-      "order": 23,
-      "description": "Create the manifest for the multi-arch latest release"
-    },
-    {
-      "name": "push-manifest-versioned",
-      "command": "VERSION=$(cat backstage.json | jq -r '.version'); docker manifest push aidanhilt/toolshed:$VERSION",
-      "order": 24,
-      "description": "Push the manifest for the multi-arch tagged release",
-      "ci_only": true
-    },
-    {
-      "name": "push-manifest-latest",
-      "command": "VERSION=$(cat backstage.json | jq -r '.version'); docker manifest push aidanhilt/toolshed:latest",
-      "order": 25,
-      "description": "Push the manifest for the multi-arch latest release",
-      "ci_only": true
     }
   ],
   "action_sets": [
