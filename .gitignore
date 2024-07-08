@@ -654,3 +654,5 @@ terraform.rc
 terragrunt-debug.tfvars.json
 
 .github/workflows/.secrets
+
+.ruff_cache/

@@ -3,18 +3,14 @@ name: Toolshed Build and Publish
 on:
   push:
     branches:
-      - master
+      - '!master'
     paths:
       - 'toolshed/**'
-      - '.github/workflows/toolshed-run-ci.yaml'
+      - '.github/workflows/toolshed-on-push.yaml'
 
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-    container:
-      image: aidanhilt/atils-ci:latest
-      volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
 
     steps:
     - name: Login to Docker Hub
@@ -31,7 +27,13 @@ jobs:
     - name: Set up Docker Buildx
       id: buildx
       uses: docker/setup-buildx-action@v1
-
-    - name: Build and publish
-      run: |
-        atils build --build-directory "toolshed" --action-set ci-build-publish
+    - name: Get current branch
+      run: echo "BRANCH=$(echo ${GITHUB_REF#refs/*/} | tr / -)" >> $GITHUB_ENV
+    - name: Build and publish custom image
+      uses: docker/build-push-action@v6
+      with:
+        push: true
+        file: toolshed/packages/backend/Dockerfile
+        context: toolshed
+        tags: "aidanhilt/toolshed:${{ env.BRANCH }}"
+        platforms: linux/amd64, linux/arm64
