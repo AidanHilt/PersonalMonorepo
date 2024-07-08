@@ -1,9 +1,9 @@
-name: Build Custom Images on Push to Branch
+name: Custom Images CI
 
 on:
   push:
     branches:
-      - '!master'
+      - master
     paths:
       - 'custom-images/**'
       - '.github/workflows/custom-containers-run-ci.yaml'
@@ -29,7 +29,7 @@ jobs:
             custom-images/**
             !custom-images/docs/**
 
-      - name: Set matrix-formatted output
+      - name: 'Set output in the matrix format'
         id: set-output
         run: echo "changed_directories={\"dir\":${{ steps.changed-files.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
 
@@ -42,12 +42,14 @@ jobs:
       - generate-matrix
     steps:
       - uses: actions/checkout@v3
-      - name: Get current branch
-        run: echo "BRANCH=$(echo ${GITHUB_REF#refs/*/} | tr / -)" >> $GITHUB_ENV
       - name: Get image repo
         run: |
           source ${{ matrix.dir }}/config.env
           echo "REPO=$IMAGE_NAME" >> $GITHUB_ENV
+      - name: Get image tag
+        run: |
+          source ${{ matrix.dir }}/config.env
+          echo "TAG=$IMAGE_TAG" >> $GITHUB_ENV
       - name: Get image directory basename
         run: |
           NAME=$(basename ${{ matrix.dir }})
@@ -68,5 +70,7 @@ jobs:
           push: true
           file: custom-images/${{ env.NAME }}/Dockerfile
           context: custom-images/${{ env.NAME }}
-          tags: "${{ env.REPO }}:${{ env.BRANCH }}"
+          tags: |
+            ${{ env.REPO }}:${{ env.TAG }}
+            ${{ env.REPO }}:latest
           platforms: linux/amd64, linux/arm64

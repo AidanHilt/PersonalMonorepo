@@ -10,11 +10,11 @@ import webbrowser
 import colored
 import requests
 import yaml
+from kubernetes import client
 
 from atils import atils_kubernetes as k8s_utils
 from atils.common import config, template_utils
 from atils.common.settings import settings
-from kubernetes import client
 
 client.rest.logger.setLevel(logging.WARNING)
 
@@ -33,11 +33,13 @@ def main(args: list[str]) -> None:
     # TODO Add a command to list all apps and their status
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
-        help="Commands to manage argocd", dest="subparser_name"
+        help="Commands to manage argocd",
+        dest="subparser_name",
     )
 
     setup_parser = subparsers.add_parser(
-        "full-setup", help="Install ArgoCD, and install the master-stack application"
+        "full-setup",
+        help="Install ArgoCD, and install the master-stack application",
     )
     setup_parser.add_argument(
         "environment",
@@ -119,7 +121,8 @@ def main(args: list[str]) -> None:
     )
 
     get_password_parser = subparsers.add_parser(
-        "get-password", help="Get the admin password using the default secret."
+        "get-password",
+        help="Get the admin password using the default secret.",
     )
 
     disable_parser = subparsers.add_parser(
@@ -184,10 +187,9 @@ def main(args: list[str]) -> None:
 
 # Sync so that the app deletes when we run this
 def disable_application(application: str) -> None:
-    """
-    Disable the specified application. It must be a sub-application of the master stack
+    """Disable the specified application. It must be a sub-application of the master stack
     Args:
-        application (str): The name of the application to disable
+      application (str): The name of the application to disable
     """
     try:
         api_instance = client.CustomObjectsApi()
@@ -218,12 +220,17 @@ def disable_application(application: str) -> None:
 
             # Create JSON merge patch to update the helm parameters
             json_patch = {
-                "spec": {"source": {"helm": {"parameters": edited_parameters}}}
+                "spec": {"source": {"helm": {"parameters": edited_parameters}}},
             }
 
             # Use patch_namespaced_custom_object to update the application with the new helm parameter
             api_response = api_instance.patch_namespaced_custom_object(
-                group, version, namespace, plural, name, json_patch
+                group,
+                version,
+                namespace,
+                plural,
+                name,
+                json_patch,
             )
 
             logging.info(f"{application} disabled in master-stack")
@@ -239,9 +246,9 @@ def disable_application(application: str) -> None:
                         plural="applications",
                         name=application,
                     )
-                except Exception as e:
-                    logging.error(
-                        f"Unable to delete application {application}, although disabling was successful"
+                except Exception:
+                    logging.exception(
+                        f"Unable to delete application {application}, although disabling was successful",
                     )
                     exit(1)
 
@@ -251,10 +258,9 @@ def disable_application(application: str) -> None:
 
 
 def enable_application(application: str) -> None:
-    """
-    Enable the specified application. It must be a sub-application of the master stack
+    """Enable the specified application. It must be a sub-application of the master stack
     Args:
-        application (str): The name of the application to enable
+      application (str): The name of the application to enable
     """
     try:
         api_instance = client.CustomObjectsApi()
@@ -291,12 +297,17 @@ def enable_application(application: str) -> None:
 
             # Create JSON merge patch to update the helm parameters
             json_patch = {
-                "spec": {"source": {"helm": {"parameters": edited_parameters}}}
+                "spec": {"source": {"helm": {"parameters": edited_parameters}}},
             }
 
             # Use patch_namespaced_custom_object to update the application with the new helm parameter
             api_response = api_instance.patch_namespaced_custom_object(
-                group, version, namespace, plural, name, json_patch
+                group,
+                version,
+                namespace,
+                plural,
+                name,
+                json_patch,
             )
 
             logging.info(f"Application {application} enabled successfully")
@@ -317,17 +328,18 @@ def get_argocd_password() -> None:
         "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath={{.data.password}} | base64 -d".format(),
         shell=True,
         capture_output=True,
+        check=False,
     )
     subprocess.run(
         f"echo {result.stdout.decode('utf-8')} | pbcopy",
         shell=True,
         capture_output=True,
+        check=False,
     )
 
 
 def get_tracked_applications():
-    """
-    Get all applications under the master stack application. It loops over the resources field, picking out names
+    """Get all applications under the master stack application. It loops over the resources field, picking out names
     whose kind is Application
     """
     api = client.CustomObjectsApi()
@@ -351,14 +363,13 @@ def get_tracked_applications():
 
 
 def install_argocd(environment: str) -> None:
-    """
-    Create the ArgoCD namespace if it doesn't exist, install ArgoCD with Helm (we don't check if its installed
+    """Create the ArgoCD namespace if it doesn't exist, install ArgoCD with Helm (we don't check if its installed
     currently), then wait for the ArgoCD pods to be ready, then install the master stack
     Args:
-        environment (str): The name of the environment we want to install into.
-            qa-cluster: The kind cluster running on our laptop
-            preprod-cluster: The RKE cluster made out of VMs we use for testing in a working environment
-            prod-cluster: The RKE cluster made out of bare-metal instances used to run our actual services
+      environment (str): The name of the environment we want to install into.
+        qa-cluster: The kind cluster running on our laptop
+        preprod-cluster: The RKE cluster made out of VMs we use for testing in a working environment
+        prod-cluster: The RKE cluster made out of bare-metal instances used to run our actual services
     """
     # Check if the argocd namespace exists, and create it if it doesn't
     if not k8s_utils.check_namespace_exists("argocd"):
@@ -373,9 +384,10 @@ def install_argocd(environment: str) -> None:
     # TODO use environment-specific values files
     result = subprocess.run(
         f"""helm repo add argo https://argoproj.github.io/argo-helm && helm -n argocd upgrade --install argocd \
-            -f {settings.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/argocd/values.yaml argo/argo-cd""",
+      -f {settings.SCRIPT_INSTALL_DIRECTORY}/../kubernetes/argocd/values.yaml argo/argo-cd""",
         shell=True,
         capture_output=True,
+        check=False,
     )
 
     if result.returncode == 0:
@@ -389,12 +401,11 @@ def install_argocd(environment: str) -> None:
 
 
 def install_master_stack(args_dict: dict[str, str]) -> None:
-    """
-    Checks if an application named master-stack exists in the 'argocd' application, and if it doesn't,
+    """Checks if an application named master-stack exists in the 'argocd' application, and if it doesn't,
     fill out the master-stack application template, and install it to the ArgoCD namespace. If the force
     argument is set to true, it will delete and recreate it
     Args:
-        args_dict (dict[str, str]): The dictionary of arguments passed to the script
+      args_dict (dict[str, str]): The dictionary of arguments passed to the script
     """
     custom_objects_api = client.CustomObjectsApi()
     # Check whether an argocd application named 'master-stack' exists...
@@ -425,24 +436,24 @@ def install_master_stack(args_dict: dict[str, str]) -> None:
         else:
             logging.info(
                 "Master-stack already exists. If you want to force a recreation, use"
-                + " --force-master-reconfiguration[Not yet working]"
+                + " --force-master-reconfiguration[Not yet working]",
             )
 
 
 def open_argocd_port_forward():
-    """
-    Create an port forward to the ArgoCD server service, and open that page in a web browser
-    """
+    """Create an port forward to the ArgoCD server service, and open that page in a web browser"""
     # TODO remove the password stuff, since we can assume we're running on the network
     result = subprocess.run(
         "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath={{.data.password}} | base64 -d".format(),
         shell=True,
         capture_output=True,
+        check=False,
     )
     subprocess.run(
         f"echo {result.stdout.decode('utf-8')} | pbcopy",
         shell=True,
         capture_output=True,
+        check=False,
     )
     # Open a new tab in the default browser to localhost:8080 with webbrowser
     webbrowser.open_new_tab("http://localhost:8080/argocd")
@@ -451,19 +462,21 @@ def open_argocd_port_forward():
     subprocess.run(
         "kubectl -n argocd port-forward svc/argocd-server -n argocd 8080:443",
         shell=True,
+        check=False,
     )
 
 
 def print_application_status(applications, show_updates=False, spin_char="-") -> None:
-    """
-    Iterate over a list of applications, getting their status, and then printing the name. Green means the application
+    """Iterate over a list of applications, getting their status, and then printing the name. Green means the application
     is up fully, yellow means the application is not healthy, but hasn't failed, and red means the application has
     failed. Also can print a spinner if show_updates is True.
 
     Args:
-        applications (list): A list of application names
-        show_updates (bool): Whether to print a spinner for each application
-        spin_char (str): The character to use for the spinner
+    ----
+      applications (list): A list of application names
+      show_updates (bool): Whether to print a spinner for each application
+      spin_char (str): The character to use for the spinner
+
     """
     v1 = client.CustomObjectsApi()
 
@@ -505,12 +518,13 @@ def setup_argocd(args_dict: dict[str, str]) -> None:
 
 # TODO determine if this is going to be an internal-only function, or if we want to expost it
 def sync_master_stack_application(application: str) -> None:
-    """
-    Run a sync operation against the master stack application, only syncing the specified application
+    """Run a sync operation against the master stack application, only syncing the specified application
     application
 
     Args:
-        application (str): The name of the application to sync. It must be a sub-application of the master-stack
+    ----
+      application (str): The name of the application to sync. It must be a sub-application of the master-stack
+
     """
     token = _get_argocd_bearer_token()
 
@@ -524,9 +538,9 @@ def sync_master_stack_application(application: str) -> None:
                         "name": application,
                         "namespace": "argocd",
                         "group": "argoproj.io",
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         ),
         verify=False,
         headers={"Authorization": f"Bearer {token}"},
@@ -540,10 +554,9 @@ def sync_master_stack_application(application: str) -> None:
 
 
 def _apply_master_stack_object(args_dict: dict[str, str], custom_objects_api) -> None:
-    """
-    Apply the master-stack object to the ArgoCD cluster. This is the object that creates all of our applications
+    """Apply the master-stack object to the ArgoCD cluster. This is the object that creates all of our applications
     Args:
-        args_dict (dict[str, str]): The dictionary of arguments to fill out the master-stack template
+      args_dict (dict[str, str]): The dictionary of arguments to fill out the master-stack template
     """
     master_app_string = template_utils.template_file("master-app.yaml", args_dict)
     master_app_dict = yaml.safe_load(master_app_string)
@@ -558,17 +571,16 @@ def _apply_master_stack_object(args_dict: dict[str, str], custom_objects_api) ->
 
 
 def _get_argocd_bearer_token() -> str:
-    """
-    Get a bearer token for authenticating with the ArgoCD API. Takes no arguments, because we get a username and
+    """Get a bearer token for authenticating with the ArgoCD API. Takes no arguments, because we get a username and
     password for ArgoCD from environment variables
     Return:
-        token (str): A bearer token for authenticating with the ArgoCD API.
+      token (str): A bearer token for authenticating with the ArgoCD API.
     """
     # Get an auth token, using the configured
     auth_response = requests.post(
         f"{settings.argocd_url}/api/v1/session",
         data=json.dumps(
-            {"username": settings.argocd_username, "password": settings.argocd_password}
+            {"username": settings.argocd_username, "password": settings.argocd_password},
         ),
         verify=False,
     )
@@ -578,10 +590,9 @@ def _get_argocd_bearer_token() -> str:
 
 
 def _get_master_stack_application() -> dict:
-    """
-    Get an object representing the master-stack application, located in the ArgoCD namespace
+    """Get an object representing the master-stack application, located in the ArgoCD namespace
     Return:
-        api_response (object): An object representing the master-stack application, located in the ArgoCD namespace
+      api_response (object): An object representing the master-stack application, located in the ArgoCD namespace
     """
     try:
         api_instance = client.CustomObjectsApi()
@@ -595,30 +606,31 @@ def _get_master_stack_application() -> dict:
         version = "v1alpha1"
         plural = "applications"
         api_response = api_instance.get_namespaced_custom_object(
-            group, version, namespace, plural, name
+            group,
+            version,
+            namespace,
+            plural,
+            name,
         )
 
         return api_response
     except Exception as e:
-        logging.error("Failed to get master-stack application, see error below")
+        logging.exception("Failed to get master-stack application, see error below")
         print(e)
     return {}
 
 
 def _get_source_helm_params(api_response: dict) -> list[dict[str, str]]:
-    """
-    Get the helm parameters from the api_response object. Will throw an error if no helm parameters are found.
+    """Get the helm parameters from the api_response object. Will throw an error if no helm parameters are found.
+
     Args:
-        api_response (object): The object representing the application, like a YAML output
+    ----
+      api_response (object): The object representing the application, like a YAML output
     Return:
-        source_helm_params (object): The helm parameters from the api_response object.
+      source_helm_params (object): The helm parameters from the api_response object.
+
     """
-    source_helm_params = (
-        api_response.get("spec", {})
-        .get("source", {})
-        .get("helm", {})
-        .get("parameters", [])
-    )
+    source_helm_params = api_response.get("spec", {}).get("source", {}).get("helm", {}).get("parameters", [])
 
     if not source_helm_params:
         logging.error("No helm parameters found")
@@ -628,34 +640,33 @@ def _get_source_helm_params(api_response: dict) -> list[dict[str, str]]:
 
 
 def _is_application_active(application: str, resources: dict) -> bool:
-    """
-    Check whether an application is active, i.e. whether or not it is in the list of resources created by master stack
+    """Check whether an application is active, i.e. whether or not it is in the list of resources created by master stack
     Args:
-        application (str): The name of the application to check
-        resources (list): A list of resources created by the master stack
+      application (str): The name of the application to check
+      resources (list): A list of resources created by the master stack
     Return:
-        bool: True if an application with the name matching the 'application' argument exists, and false otherwise
+      bool: True if an application with the name matching the 'application' argument exists, and false otherwise
     """
     for resource in resources:
-        if (
-            resource.get("kind") == "Application"
-            and resource.get("name") == application
-        ):
+        if resource.get("kind") == "Application" and resource.get("name") == application:
             return True
     return False
 
 
 def _is_application_enabled_in_master_stack(
-    application: str, application_dict: dict
+    application: str,
+    application_dict: dict,
 ) -> bool:
-    """
-    Check if an application is enabled in master stack, i.e. the value 'application'.enabled is set.
+    """Check if an application is enabled in master stack, i.e. the value 'application'.enabled is set.
     By default, its true, so it should only exist if its set to false.
+
     Args:
-        application (str): The name of the application to check
-        application_oject (object): The object representing the application, as returned by the ArgoCD API
+    ----
+      application (str): The name of the application to check
+      application_oject (object): The object representing the application, as returned by the ArgoCD API
     Return:
-        bool: True if the application is enabled in master stack, and false otherwise.
+      bool: True if the application is enabled in master stack, and false otherwise.
+
     """
     source_helm_params = _get_source_helm_params(application_dict)
     for variable in source_helm_params:
@@ -665,8 +676,7 @@ def _is_application_enabled_in_master_stack(
 
 
 def _wait_for_argocd_pods_to_be_ready() -> None:
-    """
-    Wait for all the ArgoCD pods to be up and healthy. We'll also print them with a
+    """Wait for all the ArgoCD pods to be up and healthy. We'll also print them with a
     fun spinner
     """
     # TODO Make timeout configurable
@@ -691,7 +701,7 @@ def _wait_for_argocd_pods_to_be_ready() -> None:
         if time.time() > timeout:
             logging.error(
                 "Timeout reached, exiting. This is not an error with atils, there is likely something going"
-                + " on in the cluster"
+                + " on in the cluster",
             )
             exit(1)
 

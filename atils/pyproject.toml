@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "atils"
-version = "1.4.2"
+version = "1.4.3"
 description = "A series of scripts used to interact and work with this repository."
 authors = ["Aidan Hilt <aidanhilt2@gmail.com>"]
 readme = "README.md"
@@ -30,14 +30,11 @@ colored = "^2.2.4"
 rich = "^13.7.1"
 
 [tool.poetry.group.dev.dependencies]
-MonkeyType = "22.2.0"
-black = "22.12.0"
 pytest = "7.2.0"
-flake8 = "^7.0.0"
 check-jsonschema = "^0.28.0"
 types-setuptools = "^69.1.0.20240302"
 types-requests = "^2.0.0"
-bumpver = "^2023.1129"
+ruff = "^0.5.1"
 
 
 [tool.poetry.scripts]
@@ -75,3 +72,9 @@ push = true
 
 [tool.mypy]
 ignore_missing_imports = true
+
+[tool.ruff.lint]
+select = ["ALL"]
+
+[tool.ruff]
+line-length = 120

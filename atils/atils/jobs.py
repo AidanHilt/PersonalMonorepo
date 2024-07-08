@@ -11,14 +11,13 @@ from threading import Thread
 from typing import Any, List
 
 import yaml
+from kubernetes import client, utils
+from kubernetes import config as k8s_config
 from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 
 from atils import atils_kubernetes
 from atils.common import config, console_utils, template_utils
-from kubernetes import client
-from kubernetes import config as k8s_config
-from kubernetes import utils
 
 client.rest.logger.setLevel(logging.ERROR)
 
@@ -35,7 +34,8 @@ def main(args: str) -> None:
 
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
-        help="Commands to manage kubernetes jobs", dest="subparser_name"
+        help="Commands to manage kubernetes jobs",
+        dest="subparser_name",
     )
 
     run_parser = subparsers.add_parser("run")
@@ -51,7 +51,9 @@ def main(args: str) -> None:
 
     pvc_parser = subparsers.add_parser("manage-pvc")
     pvc_parser.add_argument(
-        "--pvc-name", "-pn", help="The name of the PVC to launch a management pod for"
+        "--pvc-name",
+        "-pn",
+        help="The name of the PVC to launch a management pod for",
     )
     pvc_parser.add_argument(
         "--namespace",
@@ -86,12 +88,13 @@ def main(args: str) -> None:
         jobconfig_args = _get_arguments_from_jobconfig(args_dict["job_name"])
 
         args_filled_from_command_lines = _fill_out_jobconfig_args_from_command_line(
-            jobconfig_args, job_args
+            jobconfig_args,
+            job_args,
         )
 
         if "" in args_filled_from_command_lines.values():
             final_job_args = _get_missing_arguments_interactive(
-                args_filled_from_command_lines
+                args_filled_from_command_lines,
             )
         else:
             final_job_args = args_filled_from_command_lines
@@ -131,11 +134,12 @@ def main(args: str) -> None:
 
 
 def describe_job(job_name: str) -> None:
-    """
-    Using the .atils_jobconfig.json file, describe a job's purpose, as well as any arguments it takes.
+    """Using the .atils_jobconfig.json file, describe a job's purpose, as well as any arguments it takes.
 
     Args:
-        job_name (str): The name of the job to describe
+    ----
+      job_name (str): The name of the job to describe
+
     """
     jobs_dir = config.get_full_atils_dir("JOBS_DIR")
     dir_for_job = os.path.join(jobs_dir, job_name)
@@ -149,20 +153,16 @@ def describe_job(job_name: str) -> None:
                 console_utils.print_jobconfig(jobconfig_data)
         else:
             logging.error(
-                f"Job {job_name} does not have a jobconfig. It probably will not run successfully"
+                f"Job {job_name} does not have a jobconfig. It probably will not run successfully",
             )
             exit(1)
     else:
         logging.error(f"Job {job_name} does not exist")
         exit(1)
 
-    return
-
 
 def launch_postgres_manager() -> None:
-    """
-    Launch a postgres client pod, connected to the master user
-    """
+    """Launch a postgres client pod, connected to the master user"""
     pod_manifest: dict[str, Any] = {
         "apiVersion": "v1",
         "kind": "Pod",
@@ -185,26 +185,28 @@ def launch_postgres_manager() -> None:
                                 "secretKeyRef": {
                                     "name": "postgres-config",
                                     "key": "postgres-password",
-                                }
+                                },
                             },
                         },
                         {"name": "PGDATABASE", "value": "postgres"},
                     ],
-                }
+                },
             ],
             "restartPolicy": "Never",
         },
     }
     _create_pod_if_not_existent("postgres-manager", pod_manifest, "postgres")
     _exec_shell_in_pod(
-        "postgres-manager", "postgres", "postgres-manager", ["psql"], True
+        "postgres-manager",
+        "postgres",
+        "postgres-manager",
+        ["psql"],
+        True,
     )
 
 
 def launch_devterm_pod(namespace: str) -> None:
-    """
-    Launch a pod with assorted devterm utils
-    """
+    """Launch a pod with assorted devterm utils"""
     pod_manifest: dict[str, Any] = {
         "apiVersion": "v1",
         "kind": "Pod",
@@ -216,7 +218,7 @@ def launch_devterm_pod(namespace: str) -> None:
                     "name": "atils-devterm",
                     "image": "aidanhilt/atils-debug",
                     "command": ["sh", "-c", "sleep 1800"],
-                }
+                },
             ],
             "restartPolicy": "Never",
         },
@@ -227,12 +229,13 @@ def launch_devterm_pod(namespace: str) -> None:
 
 
 def launch_pvc_manager(pvc_name: str, namespace: str) -> None:
-    """
-    Given the name of a PVC, and the namespace it lives in, launch some kind of container that mounts it
+    """Given the name of a PVC, and the namespace it lives in, launch some kind of container that mounts it
 
     Args:
-        pvc_name (str): The name of the PVC to launch a management container for
-        namespace (str): The namespace the PVC is located in
+    ----
+      pvc_name (str): The name of the PVC to launch a management container for
+      namespace (str): The namespace the PVC is located in
+
     """
     pod_name = _find_pod_by_pvc(pvc_name)
 
@@ -256,9 +259,7 @@ def launch_pvc_manager(pvc_name: str, namespace: str) -> None:
 
 def list_available_jobs() -> None:
     # TODO exclude the docs directory, include a list of valid arguments
-    """
-    Print all the jobs available to run in the jobs directory to the console
-    """
+    """Print all the jobs available to run in the jobs directory to the console"""
     jobs_dir = config.get_full_atils_dir("JOBS_DIR")
 
     root, dirs, files = next(os.walk(jobs_dir))
@@ -270,16 +271,15 @@ def list_available_jobs() -> None:
                     jobconfig_data = json.load(file)
                     description = jobconfig_data["short_description"]
 
-                print(f"{job}:      {description}")
+                print(f"{job}:    {description}")
 
 
 def run_job(job_name: str, args=None) -> None:
-    """
-    Given a job name and list of args, render the job template, then run the job
+    """Given a job name and list of args, render the job template, then run the job
     Args:
-        job_name (str): The name of the job to run. Must be a directory in the JOBS_DIR directory
-        args (dict[str, str]): A dictionary representing arguments. Each key should correspond to a
-        variable in a job template, with each value representing what should be filled in
+      job_name (str): The name of the job to run. Must be a directory in the JOBS_DIR directory
+      args (dict[str, str]): A dictionary representing arguments. Each key should correspond to a
+      variable in a job template, with each value representing what should be filled in
     """
     rendered_job = _render_job(job_name, args)
     _launch_job(rendered_job)
@@ -287,8 +287,7 @@ def run_job(job_name: str, args=None) -> None:
 
 
 def _clear_job_name(job_name: str, namespace: str) -> None:
-    """
-    We don't do a GenerateName for our jobs, so we need to make sure that the generated job name is available.
+    """We don't do a GenerateName for our jobs, so we need to make sure that the generated job name is available.
     So given a job name, and a namespace, delete the job, and then make sure it's deleted before letting us out
     """
     # Get all the jobs in the namespace, and then loop over them, looking for a matching name field
@@ -326,37 +325,41 @@ def _clear_job_name(job_name: str, namespace: str) -> None:
 
 
 def _create_pod_if_not_existent(
-    pod_name: str, pod_manifest: dict[str, Any], namespace: str = "default"
+    pod_name: str,
+    pod_manifest: dict[str, Any],
+    namespace: str = "default",
 ) -> None:
     # TODO we can make this generic with a ton of arguments
-    """
-    Create a pod that we want to exec into (generally) if one doesn't exist. We're also going to wait for it
+    """Create a pod that we want to exec into (generally) if one doesn't exist. We're also going to wait for it
     to be ready
 
     Args:
-        pod_name (str): The name of the pod we will want to create
-        pod_manifest (dict[str, Any]): A dictionary representing a valid Kubernetes pod object
-        namespace: The namespace this pod will be launched in. Defaults to "default"
+    ----
+      pod_name (str): The name of the pod we will want to create
+      pod_manifest (dict[str, Any]): A dictionary representing a valid Kubernetes pod object
+      namespace: The namespace this pod will be launched in. Defaults to "default"
+
     """
     try:
         api_instance = client.CoreV1Api()
 
         try:
             existing_pod = api_instance.read_namespaced_pod(
-                name=pod_name, namespace=namespace
+                name=pod_name,
+                namespace=namespace,
             )
 
             # TODO right now, we might get kicked out of our pod if it's close to expiring. That's probably
             # not a big deal, but if so, fix it here
             if existing_pod:
                 logging.info(
-                    f"There's already a {pod_name} pod! We're just gonna leave it"
+                    f"There's already a {pod_name} pod! We're just gonna leave it",
                 )
                 return
         except ApiException as e:
             if e.status != 404:
-                logging.error(
-                    f"Error checking for existing pod 'postgres-manager': {str(e)}"
+                logging.exception(
+                    f"Error checking for existing pod 'postgres-manager': {e!s}",
                 )
                 exit(1)
 
@@ -369,7 +372,8 @@ def _create_pod_if_not_existent(
             pod_ready = False
             while not pod_ready:
                 pod = api_instance.read_namespaced_pod(
-                    name=pod_name, namespace=namespace
+                    name=pod_name,
+                    namespace=namespace,
                 )
 
                 if pod.status.phase == "Running":
@@ -383,10 +387,10 @@ def _create_pod_if_not_existent(
                 time.sleep(0.5)
 
         except client.rest.ApiException as e:
-            logging.error(f"Error creating pod '{pod_name}': {str(e)}")
+            logging.exception(f"Error creating pod '{pod_name}': {e!s}")
 
     except Exception as e:
-        logging.error(f"Error occurred while creating pod 'postgres-manager': {str(e)}")
+        logging.exception(f"Error occurred while creating pod 'postgres-manager': {e!s}")
 
 
 def _create_pvc_manager_pod(pvc_name: str, namespace: str) -> None:
@@ -396,21 +400,24 @@ def _create_pvc_manager_pod(pvc_name: str, namespace: str) -> None:
         # Check if a pod named "pvc-manager" already exists in the namespace
         try:
             existing_pod = api_instance.read_namespaced_pod(
-                name="pvc-manager", namespace=namespace
+                name="pvc-manager",
+                namespace=namespace,
             )
             if existing_pod:
                 # Delete the existing "pvc-manager" pod
                 api_instance.delete_namespaced_pod(
-                    name="pvc-manager", namespace=namespace, grace_period_seconds=0
+                    name="pvc-manager",
+                    namespace=namespace,
+                    grace_period_seconds=0,
                 )
                 logging.info(
-                    f"Deleted existing pod 'pvc-manager' in namespace '{namespace}'"
+                    f"Deleted existing pod 'pvc-manager' in namespace '{namespace}'",
                 )
                 time.sleep(5)  # Wait for the pod to be deleted
         except ApiException as e:
             if e.status != 404:
-                logging.error(
-                    f"Error checking/deleting existing pod 'pvc-manager': {str(e)}"
+                logging.exception(
+                    f"Error checking/deleting existing pod 'pvc-manager': {e!s}",
                 )
 
         # Define the pod manifest
@@ -429,12 +436,12 @@ def _create_pvc_manager_pod(pvc_name: str, namespace: str) -> None:
                             "sleep 1800",
                         ],  # Sleep for 30 minutes (1800 seconds)
                         "volumeMounts": [
-                            {"name": "pvc", "mountPath": f"/root/{pvc_name}"}
+                            {"name": "pvc", "mountPath": f"/root/{pvc_name}"},
                         ],
-                    }
+                    },
                 ],
                 "volumes": [
-                    {"name": "pvc", "persistentVolumeClaim": {"claimName": pvc_name}}
+                    {"name": "pvc", "persistentVolumeClaim": {"claimName": pvc_name}},
                 ],
                 "restartPolicy": "Never",
             },
@@ -444,18 +451,17 @@ def _create_pvc_manager_pod(pvc_name: str, namespace: str) -> None:
             # Create the pod
             api_instance.create_namespaced_pod(namespace=namespace, body=pod_manifest)
             logging.info(
-                f"Created pod 'pvc-manager' with PVC '{pvc_name}' mounted at '/root/{pvc_name}'"
+                f"Created pod 'pvc-manager' with PVC '{pvc_name}' mounted at '/root/{pvc_name}'",
             )
         except client.rest.ApiException as e:
-            logging.error(f"Error creating pod 'pvc-manager': {str(e)}")
+            logging.exception(f"Error creating pod 'pvc-manager': {e!s}")
 
     except Exception as e:
-        logging.error(f"Error occurred while creating pod: {str(e)}")
+        logging.exception(f"Error occurred while creating pod: {e!s}")
 
 
 def _delete_pvc_manager_if_exists(pod_name: str, namespace: str) -> None:
     try:
-
         api_instance = client.CoreV1Api()
 
         try:
@@ -480,14 +486,16 @@ def _delete_pvc_manager_if_exists(pod_name: str, namespace: str) -> None:
 
                     # Patch the pod to update the ephemeral containers
                     api_instance.patch_namespaced_pod(
-                        name=pod_name, namespace=namespace, body=pod
+                        name=pod_name,
+                        namespace=namespace,
+                        body=pod,
                     )
                     logging.devterm(
-                        f"Deleted ephemeral container 'pvc-manager' from pod '{pod_name}'"
+                        f"Deleted ephemeral container 'pvc-manager' from pod '{pod_name}'",
                     )
                 else:
                     logging.devterm(
-                        f"Ephemeral container 'pvc-manager' not found in pod '{pod_name}'"
+                        f"Ephemeral container 'pvc-manager' not found in pod '{pod_name}'",
                     )
             else:
                 logging.devterm(f"No ephemeral containers found in pod '{pod_name}'")
@@ -495,15 +503,15 @@ def _delete_pvc_manager_if_exists(pod_name: str, namespace: str) -> None:
         except ApiException as e:
             if e.status == 404:
                 logging.warning(
-                    f"Pod '{pod_name}' not found in namespace '{namespace}'"
+                    f"Pod '{pod_name}' not found in namespace '{namespace}'",
                 )
             else:
-                logging.error(
-                    f"Error deleting ephemeral container from pod '{pod_name}': {str(e)}"
+                logging.exception(
+                    f"Error deleting ephemeral container from pod '{pod_name}': {e!s}",
                 )
 
     except Exception as e:
-        logging.error(f"Error occurred while deleting ephemeral container: {str(e)}")
+        logging.exception(f"Error occurred while deleting ephemeral container: {e!s}")
 
 
 def _ensure_access_exists(
@@ -512,16 +520,16 @@ def _ensure_access_exists(
     role_name: str,
     cluster_role: bool = False,
 ) -> None:
-    """
-    Given a service account, ensure that it's bound to either a Role, or a ClusterRole based on the cluster_role arg
+    """Given a service account, ensure that it's bound to either a Role, or a ClusterRole based on the cluster_role arg
 
     Args:
-        service_account_name (str): The name of the service account we want to use for our job
-        service_account_namespace (str): The namespace our chosen service account lives in
-        role_name (str): The name of the role our service account needs to be bound to. If cluster_role is set to True, this is a ClusterRole,
-        and it is a namespaced role otherwise
-    """
+    ----
+      service_account_name (str): The name of the service account we want to use for our job
+      service_account_namespace (str): The namespace our chosen service account lives in
+      role_name (str): The name of the role our service account needs to be bound to. If cluster_role is set to True, this is a ClusterRole,
+      and it is a namespaced role otherwise
 
+    """
     # Create API clients
     v1 = client.CoreV1Api()
     rbac_v1 = client.RbacAuthorizationV1Api()
@@ -529,16 +537,17 @@ def _ensure_access_exists(
     # 1. Check if the service account exists
     try:
         v1.read_namespaced_service_account(
-            name=service_account_name, namespace=service_account_namespace
+            name=service_account_name,
+            namespace=service_account_namespace,
         )
     except ApiException as e:
         if e.status == 404:
-            logging.error(
-                f"Service account {service_account_name} does not exist in namespace {service_account_namespace}."
+            logging.exception(
+                f"Service account {service_account_name} does not exist in namespace {service_account_namespace}.",
             )
             exit(1)
         else:
-            logging.error(f"Error checking service account: {e}")
+            logging.exception(f"Error checking service account: {e}")
             exit(1)
 
     # 2. Check if the role/cluster role exists
@@ -547,17 +556,18 @@ def _ensure_access_exists(
             rbac_v1.read_cluster_role(name=role_name)
         else:
             rbac_v1.read_namespaced_role(
-                name=role_name, namespace=service_account_namespace
+                name=role_name,
+                namespace=service_account_namespace,
             )
     except ApiException as e:
         if e.status == 404:
-            logging.error(
-                f"{'ClusterRole' if cluster_role else 'Role'} {role_name} does not exist."
+            logging.exception(
+                f"{'ClusterRole' if cluster_role else 'Role'} {role_name} does not exist.",
             )
             return
         else:
-            logging.error(
-                f"Error checking {'cluster role' if cluster_role else 'role'}: {e}"
+            logging.exception(
+                f"Error checking {'cluster role' if cluster_role else 'role'}: {e}",
             )
             return
 
@@ -568,10 +578,11 @@ def _ensure_access_exists(
             rbac_v1.read_cluster_role_binding(name=binding_name)
         else:
             rbac_v1.read_namespaced_role_binding(
-                name=binding_name, namespace=service_account_namespace
+                name=binding_name,
+                namespace=service_account_namespace,
             )
         print(
-            f"{'ClusterRoleBinding' if cluster_role else 'RoleBinding'} {binding_name} already exists."
+            f"{'ClusterRoleBinding' if cluster_role else 'RoleBinding'} {binding_name} already exists.",
         )
     except ApiException as e:
         if e.status == 404:
@@ -584,7 +595,7 @@ def _ensure_access_exists(
                             kind="ServiceAccount",
                             name=service_account_name,
                             namespace=service_account_namespace,
-                        )
+                        ),
                     ],
                     role_ref=client.V1RoleRef(
                         kind="ClusterRole",
@@ -596,14 +607,15 @@ def _ensure_access_exists(
             else:
                 body = client.V1RoleBinding(
                     metadata=client.V1ObjectMeta(
-                        name=binding_name, namespace=service_account_namespace
+                        name=binding_name,
+                        namespace=service_account_namespace,
                     ),
                     subjects=[
                         client.V1Subject(
                             kind="ServiceAccount",
                             name=service_account_name,
                             namespace=service_account_namespace,
-                        )
+                        ),
                     ],
                     role_ref=client.V1RoleRef(
                         kind="Role",
@@ -612,14 +624,15 @@ def _ensure_access_exists(
                     ),
                 )
                 rbac_v1.create_namespaced_role_binding(
-                    namespace=service_account_namespace, body=body
+                    namespace=service_account_namespace,
+                    body=body,
                 )
             print(
-                f"Created {'ClusterRoleBinding' if cluster_role else 'RoleBinding'} {binding_name}"
+                f"Created {'ClusterRoleBinding' if cluster_role else 'RoleBinding'} {binding_name}",
             )
         else:
             print(
-                f"Error checking {'cluster role binding' if cluster_role else 'role binding'}: {e}"
+                f"Error checking {'cluster role binding' if cluster_role else 'role binding'}: {e}",
             )
 
 
@@ -630,14 +643,15 @@ def _exec_shell_in_pod(
     exec_command: list[str] = ["/bin/zsh"],
     delete: bool = False,
 ) -> None:
-    """
-    Exec into a given container in a given pod, in a given namespace. This will assume
+    """Exec into a given container in a given pod, in a given namespace. This will assume
     that the container has zsh installed
 
     Args:
-        pod_name (str): The name of the pod to exec into
-        namespace (str): The namespace the pod is located in
-        container_name (str): The name of the container to exec into
+    ----
+      pod_name (str): The name of the pod to exec into
+      namespace (str): The namespace the pod is located in
+      container_name (str): The name of the container to exec into
+
     """
     api_client = client.ApiClient()
     api_instance = client.CoreV1Api(api_client)
@@ -679,17 +693,20 @@ def _exec_shell_in_pod(
 
 
 def _fill_out_jobconfig_args_from_command_line(
-    jobconfig_args: dict, command_line_args: dict
+    jobconfig_args: dict,
+    command_line_args: dict,
 ) -> dict[str, str]:
-    """
-    Fill out the jobconfig_args dictionary with the c.
+    """Fill out the jobconfig_args dictionary with the c.
 
     Args:
-        jobconfig_args (dict): The dictionary to fill out
-        command_line_args (dict): The dictionary containing the command line arguments
+    ----
+      jobconfig_args (dict): The dictionary to fill out
+      command_line_args (dict): The dictionary containing the command line arguments
 
     Returns:
-        dict: The updated jobconfig_args dictionary
+    -------
+      dict: The updated jobconfig_args dictionary
+
     """
     for key, value in command_line_args.items():
         jobconfig_args[key] = value
@@ -697,17 +714,18 @@ def _fill_out_jobconfig_args_from_command_line(
 
 
 def _find_pod_by_pvc(pvc_name: str) -> str:
-    """
-    Given the name of a PVC, find the name of a pod it is attached to. If no pod is attached, return an empty string
+    """Given the name of a PVC, find the name of a pod it is attached to. If no pod is attached, return an empty string
 
     Args:
-        pvc_name (str): The name of the PVC to search for
+    ----
+      pvc_name (str): The name of the PVC to search for
 
     Returns:
-        str: The name of the pod the PVC is attached to, or an empty string if no pod is attached.
+    -------
+      str: The name of the pod the PVC is attached to, or an empty string if no pod is attached.
+
     """
     try:
-
         v1 = client.CoreV1Api()
 
         # List all pods in all namespaces
@@ -715,63 +733,60 @@ def _find_pod_by_pvc(pvc_name: str) -> str:
 
         for pod in pods:
             for volume in pod.spec.volumes:
-                if (
-                    volume.persistent_volume_claim
-                    and volume.persistent_volume_claim.claim_name == pvc_name
-                ):
+                if volume.persistent_volume_claim and volume.persistent_volume_claim.claim_name == pvc_name:
                     return pod.metadata.name
 
         return ""
 
     except Exception as e:
-        print(f"Error occurred while searching for pod: {str(e)}")
+        print(f"Error occurred while searching for pod: {e!s}")
         return ""
 
 
 def _find_volume_by_pvc_and_pod(pod_name: str, namespace: str, pvc_name: str) -> str:
-    """
-    Given a pvc name, and the name of a pod, find the name the volume was given, for mounting purposes.
+    """Given a pvc name, and the name of a pod, find the name the volume was given, for mounting purposes.
     We assume there's a volume here, so fail if nothing is found
 
     Args:
-        pod_name (str): The name of the pod to search for
-        namespace (str): The namespace the pod is in
-        pvc_name (str): The name of the PVC to search for
+    ----
+      pod_name (str): The name of the pod to search for
+      namespace (str): The namespace the pod is in
+      pvc_name (str): The name of the PVC to search for
 
     Returns:
-        str: The name of the volume that mounts our pvc
+    -------
+      str: The name of the volume that mounts our pvc
+
     """
     try:
-
         v1 = client.CoreV1Api()
         pod = v1.read_namespaced_pod(name=pod_name, namespace=namespace)
 
         for volume in pod.spec.volumes:
-            if (
-                volume.persistent_volume_claim
-                and volume.persistent_volume_claim.claim_name == pvc_name
-            ):
+            if volume.persistent_volume_claim and volume.persistent_volume_claim.claim_name == pvc_name:
                 return volume.name
 
         logging.error(
-            f"No volume found using PVC '{pvc_name}' in pod '{pod_name}' in namespace '{namespace}'"
+            f"No volume found using PVC '{pvc_name}' in pod '{pod_name}' in namespace '{namespace}'",
         )
         sys.exit(1)
 
     except Exception as e:
-        logging.error(f"Error occurred while searching for volume: {str(e)}")
+        logging.exception(f"Error occurred while searching for volume: {e!s}")
         sys.exit(1)
 
 
 def _get_arguments_from_jobconfig(job_name: str) -> dict[str, str]:
-    """
-    Get the arguments from the jobconfig file.
+    """Get the arguments from the jobconfig file.
 
     Args:
-        job_name (str): The name of the job to get the arguments for
+    ----
+      job_name (str): The name of the job to get the arguments for
 
     Returns:
-        dict[str, str]: A dictionary containing the arguments
+    -------
+      dict[str, str]: A dictionary containing the arguments
+
     """
     try:
         jobs_dir = config.get_full_atils_dir("JOBS_DIR")
@@ -784,7 +799,7 @@ def _get_arguments_from_jobconfig(job_name: str) -> dict[str, str]:
         jobconfig_args = {}
 
         # Read the jobconfig file
-        with open(jobconfig_file, "r") as file:
+        with open(jobconfig_file) as file:
             jobconfig = json.load(file)
 
             if "args" in jobconfig.keys():
@@ -797,23 +812,25 @@ def _get_arguments_from_jobconfig(job_name: str) -> dict[str, str]:
         return jobconfig_args
 
     except Exception as e:
-        logging.error(
-            f"Error occurred while getting arguments from jobconfig: {str(e)}"
+        logging.exception(
+            f"Error occurred while getting arguments from jobconfig: {e!s}",
         )
         sys.exit(1)
 
 
 def _get_missing_arguments_interactive(
-    missing_args_dict: dict[str, str]
+    missing_args_dict: dict[str, str],
 ) -> dict[str, str]:
-    """
-    Get missing job arguments from the user.
+    """Get missing job arguments from the user.
 
     Args:
-        missing_args_dict (dict[str, str]): A dictionary containing the missing arguments
+    ----
+      missing_args_dict (dict[str, str]): A dictionary containing the missing arguments
 
     Returns:
-        dict[str, str]: A dictionary containing the updated missing arguments
+    -------
+      dict[str, str]: A dictionary containing the updated missing arguments
+
     """
     try:
         for arg_name, arg_value in missing_args_dict.items():
@@ -824,7 +841,7 @@ def _get_missing_arguments_interactive(
         return missing_args_dict
 
     except Exception as e:
-        logging.error(f"Error occurred while getting missing arguments: {str(e)}")
+        logging.exception(f"Error occurred while getting missing arguments: {e!s}")
         sys.exit(1)
 
 
@@ -848,19 +865,21 @@ def _launch_job(job_dict):
 
 
 def _patch_pod_with_devterm_container(
-    pod_name: str, namespace: str, volume_name: str
+    pod_name: str,
+    namespace: str,
+    volume_name: str,
 ) -> None:
-    """
-    Patch a pod with an ephemeral container, running our devterm image. This then mounts a PVC in the home directory,
+    """Patch a pod with an ephemeral container, running our devterm image. This then mounts a PVC in the home directory,
     to view and modify any files
 
     Args:
-        pod_name (str): The name of the pod to patch
-        namespace (str): The namespace the pod to patch lives in
-        volume_name (str): The name of the volume to mount in the pod
+    ----
+      pod_name (str): The name of the pod to patch
+      namespace (str): The namespace the pod to patch lives in
+      volume_name (str): The name of the volume to mount in the pod
+
     """
     try:
-
         api_instance = client.CoreV1Api()
 
         # Define the ephemeral container
@@ -870,7 +889,7 @@ def _patch_pod_with_devterm_container(
             "command": ["/bin/sh"],
             "args": ["-c", "sleep 1800"],  # Sleep for 30 minutes (1800 seconds)
             "volumeMounts": [
-                {"name": volume_name, "mountPath": f"/root/{volume_name}"}
+                {"name": volume_name, "mountPath": f"/root/{volume_name}"},
             ],
         }
 
@@ -879,27 +898,33 @@ def _patch_pod_with_devterm_container(
         try:
             # Patch the pod with the ephemeral container
             api_instance.patch_namespaced_pod_ephemeralcontainers(
-                name=pod_name, namespace=namespace, body=body
+                name=pod_name,
+                namespace=namespace,
+                body=body,
             )
 
             logging.devterm(
-                f"Successfully patched pod '{pod_name}' with ephemeral container"
+                f"Successfully patched pod '{pod_name}' with ephemeral container",
             )
         except Exception as e:
-            logging.error(f"Error patching pod '{pod_name}': {str(e)}")
+            logging.exception(f"Error patching pod '{pod_name}': {e!s}")
 
     except Exception as e:
-        logging.error(f"Error occurred while patching pod: {str(e)}")
+        logging.exception(f"Error occurred while patching pod: {e!s}")
 
 
 def _read(resp):
-    """
-    Redirect the terminal input to the stream, and read the response from the stream.
+    """Redirect the terminal input to the stream, and read the response from the stream.
     This is used to read the response from the stream when we are running a job.
+
     Args:
-        resp (stream): The stream object to read from.
+    ----
+      resp (stream): The stream object to read from.
+
     Returns:
-        str: The response from the stream.
+    -------
+      str: The response from the stream.
+
     """
     while resp.is_open():
         char = sys.stdin.read(1)
@@ -909,20 +934,20 @@ def _read(resp):
 
 
 def _render_job(job_name: str, args: dict[str, str]) -> str:
-    """
-    Given the name of a job, that is the same as a directory in the JOBS_DIR directory,
+    """Given the name of a job, that is the same as a directory in the JOBS_DIR directory,
     render the template with the arguments provided, and return it
     Args:
-        job_name (str): The name a job in the JOBS_DIR directory
-        args (dict[str, str]): A dictionary representing arguments. Each key should correspond to a
-        variable in a job template, with each value representing what should be filled in
+      job_name (str): The name a job in the JOBS_DIR directory
+      args (dict[str, str]): A dictionary representing arguments. Each key should correspond to a
+      variable in a job template, with each value representing what should be filled in
     Returns:
-        str: The contents of the template file, rendered with the values of args
+      str: The contents of the template file, rendered with the values of args
     """
     jobs_dir = config.get_full_atils_dir("JOBS_DIR")
     if os.path.exists(os.path.join(jobs_dir, job_name, "job.yaml")):
         rendered_job = template_utils.template_external_file(
-            os.path.join(jobs_dir, job_name, "job.yaml"), args
+            os.path.join(jobs_dir, job_name, "job.yaml"),
+            args,
         )
         return yaml.safe_load(rendered_job)
 

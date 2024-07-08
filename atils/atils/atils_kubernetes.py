@@ -5,10 +5,11 @@ import os
 import shutil
 import sys
 
-from atils.common import config, yaml_utils
-from atils.common.settings import settings
 from kubernetes import client
 from kubernetes import config as k8s_config
+
+from atils.common import config, yaml_utils
+from atils.common.settings import settings
 
 client.rest.logger.setLevel(logging.WARNING)
 
@@ -26,29 +27,37 @@ def main(args: list[str]):
     # TODO add autocomplete for secret names
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
-        help="Select a subcommand", dest="subparser_name"
+        help="Select a subcommand",
+        dest="subparser_name",
     )
 
     # Options for managing kubernetes secrets. This is different from Vault secrets management
     secrets_parser = subparsers.add_parser(
-        "secrets", help="Commands to manage kubernetes secrets"
+        "secrets",
+        help="Commands to manage kubernetes secrets",
     )
 
     secrets_parser.add_argument(
-        "command", choices=["decode"], help="Which command to use to operate on secrets"
+        "command",
+        choices=["decode"],
+        help="Which command to use to operate on secrets",
     )
 
     secrets_parser.add_argument(
-        "secret_name", help="The name of the secret to operate on"
+        "secret_name",
+        help="The name of the secret to operate on",
     )
 
     secrets_parser.add_argument(
-        "-n", "--namespace", help="The namespace of the secret to operate on"
+        "-n",
+        "--namespace",
+        help="The namespace of the secret to operate on",
     )
 
     # Options for RKE cluster setup
     rke_parser = subparsers.add_parser(
-        "rke-setup", help="Commands to manage the rke installation"
+        "rke-setup",
+        help="Commands to manage the rke installation",
     )
     rke_parser.add_argument(
         "-f",
@@ -68,7 +77,8 @@ def main(args: list[str]):
     )
 
     istio_parser = subparsers.add_parser(
-        "istio", help="Commands to manage or interact with istio"
+        "istio",
+        help="Commands to manage or interact with istio",
     )
     istio_parser.add_argument(
         "command",
@@ -109,7 +119,7 @@ def main(args: list[str]):
                     "kube-public",
                     "kube-system",
                     "local-path-storage",
-                ]
+                ],
             )
 
             _clear_pods_for_istio_injection(
@@ -119,17 +129,16 @@ def main(args: list[str]):
                     "kube-public",
                     "kube-system",
                     "local-path-storage",
-                ]
+                ],
             )
 
 
 def check_namespace_exists(namespace_name: str) -> bool:
-    """
-    Check if a given kubernetes namespace exists
+    """Check if a given kubernetes namespace exists
     Args:
-        namespace_name (str): The name of the namespace to check
+      namespace_name (str): The name of the namespace to check
     Returns:
-        bool: True if the namespace exists, False otherwise.
+      bool: True if the namespace exists, False otherwise.
     """
     # Create Kubernetes API client
     v1 = client.CoreV1Api()
@@ -145,11 +154,10 @@ def check_namespace_exists(namespace_name: str) -> bool:
 
 
 def get_and_decode_secret(secret_name: str, secret_namespace: str) -> None:
-    """
-    Get a kubernetes secret, and then decode and pretty print it
+    """Get a kubernetes secret, and then decode and pretty print it
     Args:
-        secret_name (str): The name of the secret to decode and print
-        secret_namespace (str): The namespace the given secret is located in
+      secret_name (str): The name of the secret to decode and print
+      secret_namespace (str): The namespace the given secret is located in
     """
     try:
         # Create a Kubernetes API client
@@ -159,12 +167,14 @@ def get_and_decode_secret(secret_name: str, secret_namespace: str) -> None:
             current_context = k8s_config.list_kube_config_contexts()[1]
             # Check if current_context["context"]["namespace"] is None
             secret_namespace = current_context.get("context").get(
-                "namespace", "default"
+                "namespace",
+                "default",
             )
 
         # Get the Secret from the specified namespace
         secret = api.read_namespaced_secret(
-            name=secret_name, namespace=secret_namespace
+            name=secret_name,
+            namespace=secret_namespace,
         )
 
         terminal_width = shutil.get_terminal_size().columns
@@ -186,14 +196,13 @@ def get_and_decode_secret(secret_name: str, secret_namespace: str) -> None:
             print("=" * int(terminal_width / 2))
 
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
+        logging.exception(f"An error occurred: {e}")
 
 
 def get_current_namespace() -> str:
-    """
-    Gets the current namespace set in the current context
+    """Gets the current namespace set in the current context
     Returns:
-        str: The current namespace set in the current context
+      str: The current namespace set in the current context
     """
     contexts, active_context = k8s_config.list_kube_config_contexts()
 
@@ -204,13 +213,14 @@ def get_current_namespace() -> str:
 
 
 def load_config() -> bool:
-    """
-    Loads some kind of kubernetes configuration, either in-cluster or in kubeconfig,
+    """Loads some kind of kubernetes configuration, either in-cluster or in kubeconfig,
     and returns true if it is able to. If it cannot, it will return false, and the main
     function is in charge of failing if it needs to
 
-    Returns:
-        (bool): True if a config could be loaded, false otherwise
+    Returns
+    -------
+      (bool): True if a config could be loaded, false otherwise
+
     """
     # TODO also support running from a pod
     if "KUBECONFIG" in os.environ:
@@ -222,24 +232,26 @@ def load_config() -> bool:
         return True
     else:
         logging.info(
-            "Could not find a kubeconfig. Any commands related to kubernetes have been disabled"
+            "Could not find a kubeconfig. Any commands related to kubernetes have been disabled",
         )
         return False
 
 
 def merge_and_replace_kubeconfig(cluster_name: str) -> None:
-    """
-    Merge a kubeconfig generated by rke with the system-wide kubeconfig. This is done by creating a backup of the
+    """Merge a kubeconfig generated by rke with the system-wide kubeconfig. This is done by creating a backup of the
     system-wide kubeconfig, then merging the two kubeconfigs, and then replacing the system-wide kubeconfig with the
     merged kubeconfig. This is done to avoid conflicts with other kubeconfigs that may be present in the system-wide
     kubeconfig. This function is used to replace the system-wide kubeconfig with a kubeconfig generated by rke.
+
     Args:
-        cluster_name (str): The name of the cluster. For now, the valid options are
-        dev-laptop, dev-cluster, and prod-cluster. TODO Update this documentation to reflect our new naming
-        convention:
-        qa-cluster: The K3s cluster running on our laptop
-        preprod-cluster: The RKE cluster made out of VMs we use for testing in a working environment
-        prod-cluster: The RKE cluster made out of VMs used to run our actual services
+    ----
+      cluster_name (str): The name of the cluster. For now, the valid options are
+      dev-laptop, dev-cluster, and prod-cluster. TODO Update this documentation to reflect our new naming
+      convention:
+      qa-cluster: The K3s cluster running on our laptop
+      preprod-cluster: The RKE cluster made out of VMs we use for testing in a working environment
+      prod-cluster: The RKE cluster made out of VMs used to run our actual services
+
     """
     shutil.copy(
         f"{settings.KUBECONFIG_LOCATION}/config",
@@ -266,30 +278,33 @@ def merge_and_replace_kubeconfig(cluster_name: str) -> None:
 
 
 def setup_rke_cluster(cluster_name: str, force: bool = False):
-    """
-    Set up an RKE whose specification is in kubernetes/rke/cluster_name.yaml. First attempts to check if the cluster is
+    """Set up an RKE whose specification is in kubernetes/rke/cluster_name.yaml. First attempts to check if the cluster is
     available TODO this doesn't work properly yet.
+
     Args:
-        cluster_name (str): The name of the cluster. For now, the valid options are
-        dev-laptop, dev-cluster, and prod-cluster. TODO Update this documentation to reflect our new naming
-        convention:
-        qa-cluster: The K3s cluster running on our laptop
-        preprod-cluster: The RKE cluster made out of VMs we use for testing in a working environment
-        prod-cluster: The RKE cluster made out of VMs used to run our actual services
-        force (bool): If True, the cluster will be set up even if it is already running. If False, the cluster will
-        not be set up if it is already running. Defaults to False.
+    ----
+      cluster_name (str): The name of the cluster. For now, the valid options are
+      dev-laptop, dev-cluster, and prod-cluster. TODO Update this documentation to reflect our new naming
+      convention:
+      qa-cluster: The K3s cluster running on our laptop
+      preprod-cluster: The RKE cluster made out of VMs we use for testing in a working environment
+      prod-cluster: The RKE cluster made out of VMs used to run our actual services
+      force (bool): If True, the cluster will be set up even if it is already running. If False, the cluster will
+      not be set up if it is already running. Defaults to False.
+
     """
     cluster_availability = _check_cluster_availability()
 
     if cluster_availability and not (force):
         logging.error(
-            "Cluster was reachable and --force was not used. If you wish to overwrite your cluster, use --force."
+            "Cluster was reachable and --force was not used. If you wish to overwrite your cluster, use --force.",
         )
         exit(0)
     elif not (cluster_availability) or force:
         # TODO Make this take config, and try to move these configuration files
         cluster_config_location: str = os.path.join(
-            settings.SCRIPT_INSTALL_DIRECTORY, f"../kubernetes/rke/{cluster_name}.yaml"
+            settings.SCRIPT_INSTALL_DIRECTORY,
+            f"../kubernetes/rke/{cluster_name}.yaml",
         )
         if os.path.isfile(cluster_config_location):
             # TODO we should add our own error checking here, rather than relying on RKE's.
@@ -297,16 +312,15 @@ def setup_rke_cluster(cluster_name: str, force: bool = False):
             merge_and_replace_kubeconfig(cluster_name)
         else:
             logging.error(
-                f"Could not find an rke file named {cluster_name}.yaml. Aborting"
+                f"Could not find an rke file named {cluster_name}.yaml. Aborting",
             )
             exit(1)
 
 
 def _check_cluster_availability() -> bool:
-    """
-    Checks if the cluster in the active context is available, by attempting to list nodes on a five second timeout
+    """Checks if the cluster in the active context is available, by attempting to list nodes on a five second timeout
     Returns:
-        true if the operation to list nodes succeeds, and false otherwise
+      true if the operation to list nodes succeeds, and false otherwise
     """
     try:
         contexts, active_context = k8s_config.list_kube_config_contexts()
@@ -327,21 +341,21 @@ def _check_cluster_availability() -> bool:
             return False
     except Exception as e:
         if "[Errno 64]" in e.args[0]:
-            logging.error(
+            logging.exception(
                 "Cluster host is down. If you are trying to setup a new cluster, use the"
-                + ' "rke-setup [cluster_name]" subcommand'
+                + ' "rke-setup [cluster_name]" subcommand',
             )
             return False
         elif "Max retries execeeded with url:" in e.args[0]:
-            logging.error(
+            logging.exception(
                 "Cluster host is unreachable. If you are trying to setup a new cluster, use the"
-                + ' "rke-setup [cluster_name]" subcommand'
+                + ' "rke-setup [cluster_name]" subcommand',
             )
             return False
 
         else:
-            logging.error("We found a new kind of issue! This is a bug.")
-            logging.error(e)
+            logging.exception("We found a new kind of issue! This is a bug.")
+            logging.exception(e)
             return False
 
 
@@ -365,35 +379,29 @@ def _clear_pods_for_istio_injection(excluded_namespaces: list[str]) -> None:
                 # Iterate over each pod
                 for pod in pods:
                     # Check if the pod already has an Istio sidecar injected
-                    if "istio-proxy" in [
-                        container.name for container in pod.spec.containers
-                    ]:
+                    if "istio-proxy" in [container.name for container in pod.spec.containers]:
                         print(
                             f"Skipping pod '{pod.metadata.name}' in namespace '{namespace_name}' (Istio sidecar already"
-                            + " injected)."
+                            + " injected).",
                         )
                         continue
 
                     # Check if the pod has the annotation sidecar.istio.io/inject: "false"
-                    if (
-                        pod.metadata.annotations
-                        and pod.metadata.annotations.get("sidecar.istio.io/inject")
-                        == "false"
-                    ):
+                    if pod.metadata.annotations and pod.metadata.annotations.get("sidecar.istio.io/inject") == "false":
                         print(
                             f"Skipping pod '{pod.metadata.name}' in namespace '{namespace_name}' (annotation"
-                            + ' sidecar.istio.io/inject: "false").'
+                            + ' sidecar.istio.io/inject: "false").',
                         )
                         continue
 
                     # Delete the pod
                     api.delete_namespaced_pod(pod.metadata.name, namespace_name)
                     print(
-                        f"Deleted pod '{pod.metadata.name}' in namespace '{namespace_name}' for Istio injection."
+                        f"Deleted pod '{pod.metadata.name}' in namespace '{namespace_name}' for Istio injection.",
                     )
 
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"Error: {e!s}")
 
 
 def _label_namespaces_for_istio_injection(excluded_namespaces: list[str]) -> None:
@@ -422,4 +430,4 @@ def _label_namespaces_for_istio_injection(excluded_namespaces: list[str]) -> Non
                 print(f"Skipping namespace '{namespace_name}' (excluded).")
 
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"Error: {e!s}")

@@ -1,5 +1,4 @@
-# This is the base workflow that builds a custom container image in this repo. It doesn't call itself,
-# but we use it on the on-pull and on-merge-to-master action
+# This is just an action we use to run local build+pushes
 on:
   workflow_dispatch:
     inputs:

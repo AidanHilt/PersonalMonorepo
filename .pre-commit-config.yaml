@@ -23,3 +23,12 @@ repos:
       - id: check-jsonschema
         files: "'.atils_buildconfig.json'"
         args: ["--schemafile", "json-schemas/atils_buildconfig.json"]
+      - id: check-jsonschema
+        files: "'.atils_jobconfig.json'"
+        args: ["--schemafile", "json-schemas/atils_jobconfig.json"]
+  # - repo: https://github.com/astral-sh/ruff-pre-commit
+  #   rev: v0.5.1
+  #   hooks:
+  #     - id: ruff
+  #       args: [--fix]
+  #     - id: ruff-format
