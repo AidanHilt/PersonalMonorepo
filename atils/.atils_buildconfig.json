@@ -29,12 +29,6 @@
       "name": "local-install",
       "command": "VERSION=$(grep -E '^version = \"' pyproject.toml | cut -d'\"' -f2); pipx install dist/atils-$VERSION.tar.gz --force",
       "order": 11
-    },
-    {
-      "name": "publish-py-pi",
-      "order": 20,
-      "command": "poetry publish -u __token__ -p \"$PYPI_AUTH_TOKEN\"",
-      "ci_only": true
     }
   ],
   "action_sets": [
@@ -55,26 +49,6 @@
         "local-install"
       ],
       "description": "Builds and installs atils locally, for testing purposes"
-    },
-    {
-      "name": "ci-build-publish",
-      "actions": [
-        "install-dependencies",
-        "test",
-        "type-check",
-        "validate_buildconfig",
-        "build",
-        "publish-py-pi",
-        "docker-build-arm64",
-        "docker-build-amd64",
-        "docker-push-arm64",
-        "docker-push-amd64",
-        "create-manifest-versioned",
-        "create-manifest-latest",
-        "push-manifest-versioned",
-        "push-manifest-latest"
-      ],
-      "description": "Builds and publishes atils to Docker Hub, as well as PyPI"
     }
   ]
 }
