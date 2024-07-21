@@ -9,7 +9,7 @@
   home.stateVersion = "24.05"; # Please read the comment before changing.
 
   imports = [
-    fetchurl {
+    builtins.fetchurl {
       url = "https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/feat/nixos/nix/home-manager/modules/zsh.nix";
     }
   ];
