@@ -10,7 +10,7 @@
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
 
-    shellInit = fetchFromGithub {
+    shellInit = builtins.fetchFromGithub {
       url = "https://github.com/AidanHilt/PersonalMonorepo";
       rev = "feat/nixos";
     } + "nix/home-manager/config-files/.p10k.zsh";
