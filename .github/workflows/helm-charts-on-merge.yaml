@@ -40,8 +40,14 @@ jobs:
     needs:
       - find-out-changes
     steps:
-      - run: echo "${{ needs.find-out-changes.outputs.changed_directories }}"
+      - name: Set up Helm
+        uses: azure/setup-helm@v4.2.0
       - uses: actions/checkout@v3
+      - name: Add Helm library repos
+        run: helm repo add bjws https://bjw-s.github.io/helm-charts/
+      - name: Build Helm dependencies
+        run: helm dependency build
+        working-directory: ${{ matrix.dir }}
       - name: Push modified Helm charts
         uses: bsord/helm-push@v4.2.0
         with:
