@@ -9,10 +9,9 @@
   home.stateVersion = "24.05"; # Please read the comment before changing.
 
   imports = [
-    fetchFromGithub {
-      url = "https://github.com/AidanHilt/PersonalMonorepo";
-      rev = "feat/nixos";
-    } + "nix/home-manager/modules/zsh.nix"
+    fetchurl {
+      url = "https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/feat/nixos/nix/home-manager/home.nix";
+    }
   ];
 
   # The home.packages option allows you to install Nix packages into your
