@@ -16,12 +16,6 @@
     } + "nix/home-manager/config-files/.p10k.zsh";
 
 
-    # initExtra = "
-
-    #  ''
-    #   source ~/.config/home-manager/.p10k.zsh
-    # '';
-
     plugins = [
       {
         name = "powerlevel10k";
