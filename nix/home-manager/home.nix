@@ -1,5 +1,11 @@
 { config, pkgs, ... }:
 
+let
+  zsh-config = fetchurl {
+    url = "https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/feat/nixos/nix/home-manager/modules/zsh.nix";
+    hash = ""
+  };
+
 {
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
@@ -9,9 +15,7 @@
   home.stateVersion = "24.05"; # Please read the comment before changing.
 
   imports = [
-    builtins.fetchurl {
-      url = "https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/feat/nixos/nix/home-manager/modules/zsh.nix";
-    }
+    zsh-config
   ];
 
   # The home.packages option allows you to install Nix packages into your
