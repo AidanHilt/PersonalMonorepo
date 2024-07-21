@@ -10,7 +10,7 @@
 
   imports = [
     fetchurl {
-      url = "https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/feat/nixos/nix/home-manager/home.nix";
+      url = "https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/feat/nixos/nix/home-manager/modules/zsh.nix";
     }
   ];
 
