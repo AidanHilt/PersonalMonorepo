@@ -5,7 +5,7 @@ let
     url = "https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/feat/nixos/nix/home-manager/modules/zsh.nix";
     sha256 = "";
   };
-
+in
 {
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
