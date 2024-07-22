@@ -1,8 +1,11 @@
 { config, pkgs, ... }:
 
-# let
-#   ;
-# in
+let
+  p10k-config = builtins.fetchurl {
+    url = "https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/feat/nixos/nix/home-manager/config-files/.p10k.zsh";
+    sha256 = "";
+  };
+in
 {
   programs.zsh = {
     enable = true;
@@ -10,11 +13,7 @@
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
 
-    shellInit = builtins.fetchFromGitHub {
-      url = "https://github.com/AidanHilt/PersonalMonorepo";
-      rev = "feat/nixos";
-    } + "nix/home-manager/config-files/.p10k.zsh";
-
+    shellInit = p10k-config;
 
     plugins = [
       {
