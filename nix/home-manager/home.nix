@@ -1,9 +1,9 @@
 { config, pkgs, ... }:
 
 let
-  zsh-config = pkgs.fetchurl {
+  zsh-config = builtins.fetchurl {
     url = "https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/feat/nixos/nix/home-manager/modules/zsh.nix";
-    sha256 = "";
+    sha256 = "1d3wylx2ax53q0j1hjivkvfrjwwijadix4cxjlbwd2d5za9b17ir";
   };
 in
 {
