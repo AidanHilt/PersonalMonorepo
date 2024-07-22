@@ -20,6 +20,7 @@ in
         file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
       }
       {
+        #Useless comment
         name = "powerlevel10k-config";
         src = p10k-config;
         file = ".p10k.zsh";
