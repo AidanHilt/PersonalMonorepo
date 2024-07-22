@@ -13,7 +13,7 @@ in
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
 
-    loginShellInit = p10k-config;
+    initExtra = p10k-config;
 
     plugins = [
       {
