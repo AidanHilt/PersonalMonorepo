@@ -3,7 +3,7 @@
 let
   zsh-config = pkgs.fetchurl {
     url = "https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/feat/nixos/nix/home-manager/modules/zsh.nix";
-    sha256 = ""
+    sha256 = "";
   };
 
 {
