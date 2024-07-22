@@ -13,7 +13,7 @@ in
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
 
-    initExtra = p10k-config;
+    initExtra = builtins.readfile(p10k-config);
 
     plugins = [
       {
