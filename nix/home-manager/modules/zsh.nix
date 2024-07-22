@@ -3,7 +3,6 @@
 let
   p10k-config = builtins.fetchurl {
     url = "https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/feat/nixos/nix/home-manager/config-files/.p10k.zsh";
-    sha256 = "1ixzfgrxgzq5fy7rw2r2dmh54ld8ydc5lx2cf61wik80pyd5d550";
   };
 in
 {
