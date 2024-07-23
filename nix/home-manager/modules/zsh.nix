@@ -22,8 +22,12 @@ in
       {
         #Useless comment
         name = "powerlevel10k-config";
-        src = p10k-config;
-        file = ".p10k.zsh";
+        src = builtins.fetchFromGitHub {
+          owner = "AidanHilt";
+          repo = "PersonalMonorepo";
+          rev = "feat/nixos"
+        };
+        file = "nix/home-manager/config-files/.p10k.zsh";
       }
     ];
 
