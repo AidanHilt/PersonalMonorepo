@@ -25,7 +25,7 @@ in
         src = builtins.fetchFromGitHub {
           owner = "AidanHilt";
           repo = "PersonalMonorepo";
-          rev = "feat/nixos"
+          rev = "feat/nixos";
         };
         file = "nix/home-manager/config-files/.p10k.zsh";
       }
