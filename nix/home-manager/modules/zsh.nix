@@ -22,7 +22,7 @@ in
       {
         #Useless comment
         name = "powerlevel10k-config";
-        src = builtins.fetchFromGitHub {
+        src = builtins.fetchGit {
           owner = "AidanHilt";
           repo = "PersonalMonorepo";
           rev = "feat/nixos";

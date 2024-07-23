@@ -1,7 +1,7 @@
 { config, pkgs, ... }:
 
 let
-  zsh-config = builtins.fetchFromGitHub {
+  zsh-config = builtins.fetchGit {
     owner = "AidanHilt";
     repo = "PersonalMonorepo";
     rev = "feat/nixos";
