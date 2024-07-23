@@ -12,7 +12,7 @@ in
   home.username = "aidan";
   home.homeDirectory = "/home/aidan";
 
-  home.stateVersion = "24.05"; # Please read the comment before changing.
+  home.stateVersion = "24.11"; # Please read the comment before changing.
 
   imports = [
     zsh-config

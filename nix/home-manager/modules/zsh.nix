@@ -7,8 +7,6 @@
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
 
-    initExtra = "source .zsh/plugins/powerlevel10k-config";
-
     plugins = [
       {
         name = "powerlevel10k";
@@ -17,7 +15,7 @@
       }
       {
         name = "powerlevel10k-config";
-        src = builtins.fetchGit {
+        src = builtins.fetchGitHub {
           url = "https://github.com/AidanHilt/PersonalMonorepo.git";
           ref = "feat/nixos";
         };
