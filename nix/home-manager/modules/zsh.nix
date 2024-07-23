@@ -15,7 +15,7 @@
       }
       {
         name = "powerlevel10k-config";
-        src = builtins.fetchGitHub {
+        src = builtins.fetchGit {
           url = "https://github.com/AidanHilt/PersonalMonorepo.git";
           ref = "feat/nixos";
         };
