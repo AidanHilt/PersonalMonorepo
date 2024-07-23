@@ -1,10 +1,11 @@
 { config, pkgs, ... }:
 
 let
-  zsh-config = builtins.fetchurl {
-    url = "https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/feat/nixos/nix/home-manager/modules/zsh.nix";
-    sha256 = "1f0vj9d6vqpxl9nzlmyz8wjyip1mza4vmsgbzsf9k75kmnmmdif7";
-  };
+  zsh-config = builtins.fetchFromGitHub {
+    owner = "AidanHilt";
+    repo = "PersonalMonorepo";
+    rev = "feat/nixos";
+  } + "nix/home-manager/modules/zsh.nix";
 in
 {
   # Home Manager needs a bit of information about you and the paths it should
