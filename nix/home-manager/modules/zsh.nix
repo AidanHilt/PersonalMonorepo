@@ -1,11 +1,5 @@
 { config, pkgs, ... }:
 
-let
-  p10k-config = builtins.fetchurl {
-    url = "https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/feat/nixos/nix/home-manager/config-files/.p10k.zsh";
-    sha256 = "1nlcca3m0fqfyp7glpfiiw22g4434lvph55j4k6qid0xbjhm9ygk";
-  };
-in
 {
   programs.zsh = {
     enable = true;
