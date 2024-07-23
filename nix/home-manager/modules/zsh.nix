@@ -7,6 +7,8 @@
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
 
+    initExtra = "source .zsh/plugins/powerlevel10k-config";
+
     plugins = [
       {
         name = "powerlevel10k";
@@ -14,7 +16,6 @@
         file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
       }
       {
-        #Useless comment
         name = "powerlevel10k-config";
         src = builtins.fetchGit {
           url = "https://github.com/AidanHilt/PersonalMonorepo.git";
