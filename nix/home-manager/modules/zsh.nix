@@ -23,9 +23,8 @@ in
         #Useless comment
         name = "powerlevel10k-config";
         src = builtins.fetchGit {
-          owner = "AidanHilt";
-          repo = "PersonalMonorepo";
-          rev = "feat/nixos";
+          url = "https://github.com/AidanHilt/PersonalMonorepo.git";
+          ref = "feat/nixos";
         };
         file = "nix/home-manager/config-files/.p10k.zsh";
       }

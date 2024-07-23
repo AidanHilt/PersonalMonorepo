@@ -2,10 +2,9 @@
 
 let
   zsh-config = builtins.fetchGit {
-    owner = "AidanHilt";
-    repo = "PersonalMonorepo";
-    rev = "feat/nixos";
-  } + "nix/home-manager/modules/zsh.nix";
+    url = "https://github.com/AidanHilt/PersonalMonorepo.git";
+    ref = "feat/nixos";
+  } + "/nix/home-manager/modules/zsh.nix";
 in
 {
   # Home Manager needs a bit of information about you and the paths it should
