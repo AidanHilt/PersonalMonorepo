@@ -1,9 +1,15 @@
 { config, pkgs, ... }:
-
+let {
+  vim-config = builtins.fetchGit {
+    url = "";
+    ref = "";
+  } + "/nix/modules/vim.nix"
+}
 {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      vim-config
     ];
 
   users.defaultUserShell = pkgs.zsh;
@@ -16,11 +22,6 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking.hostName = "nixos"; # Define your hostname.
-
-  #=======================================
-  # Vim setup and config
-  #=======================================
-  environment.variables = { EDITOR = "vim"; };
 
   #=======================================
   # Enable networking
@@ -86,7 +87,6 @@
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
-  services.vscode-server.enable = true;
 
   services.adguardhome.enable = true;
 
@@ -96,7 +96,7 @@
   networking.firewall.allowedTCPPorts = [ 53 3000 6443 ];
   networking.firewall.allowedUDPPorts = [ 53 ];
 
-  system.stateVersion = "24.05";
+  system.stateVersion = "24.11";
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   programs.zsh.enable = true;
