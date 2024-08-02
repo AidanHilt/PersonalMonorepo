@@ -5,7 +5,7 @@
     enable = true;
     # cisHardeneing = true;
 
-    # cni = "calico";
+    cni = "calico";
 
   };
 
