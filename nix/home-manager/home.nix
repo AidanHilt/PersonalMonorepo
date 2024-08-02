@@ -22,9 +22,7 @@ in
   # environment.
   home.packages = [];
 
-  home.sessionVariables = {
-    # EDITOR = "emacs";
-  };
+  home.sessionVariables = {};
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;

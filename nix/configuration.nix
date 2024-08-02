@@ -1,10 +1,10 @@
 { config, pkgs, ... }:
-let {
+let
   vim-config = builtins.fetchGit {
-    url = "";
-    ref = "";
-  } + "/nix/modules/vim.nix"
-}
+    url = "https://github.com/AidanHilt/PersonalMonorepo.git";
+    ref = "feat/nixos";
+  } + "/nix/modules/vim.nix";
+in
 {
   imports =
     [ # Include the results of the hardware scan.
