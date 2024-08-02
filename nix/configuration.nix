@@ -4,12 +4,17 @@ let
     url = "https://github.com/AidanHilt/PersonalMonorepo.git";
     ref = "feat/nixos";
   } + "/nix/modules/vim.nix";
+  rke2-server = builtins.fetchGit {
+    url = "https://github.com/AidanHilt/PersonalMonorepo.git";
+    ref = "feat/nixos";
+  } + "/nix/modules/rke-primary.nix";
 in
 {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       vim-config
+      rke2-server
     ];
 
   users.defaultUserShell = pkgs.zsh;
