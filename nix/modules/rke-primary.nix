@@ -3,9 +3,9 @@
 {
   services.rke2 = {
     enabled = true;
-    cisHardeneing = true;
+    # cisHardeneing = true;
 
-    cni = "calico";
+    # cni = "calico";
 
   };
 

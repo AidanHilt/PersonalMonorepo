@@ -95,8 +95,6 @@ in
 
   services.adguardhome.enable = true;
 
-  services.rke2.enable = true;
-
 
   networking.firewall.allowedTCPPorts = [ 53 3000 6443 ];
   networking.firewall.allowedUDPPorts = [ 53 ];
