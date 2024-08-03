@@ -3,7 +3,7 @@
 {
   services.rke2 = {
     enable = true;
-    cisHardening = true;
+    # cisHardening = true;
 
     cni = "calico";
 
