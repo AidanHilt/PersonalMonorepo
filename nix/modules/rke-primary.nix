@@ -3,10 +3,7 @@
 {
   services.rke2 = {
     enable = true;
-    # cisHardening = true;
-
     cni = "calico";
-
   };
 
   networking.firewall = {
