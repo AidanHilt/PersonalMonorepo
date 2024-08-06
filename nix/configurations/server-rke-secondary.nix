@@ -3,18 +3,20 @@ let
   vim-config = builtins.fetchGit {
     url = "https://github.com/AidanHilt/PersonalMonorepo.git";
     ref = "feat/nixos";
+    rev = "25a69ca0818b9abd82175a1f7a918225745c6898";
   } + "/nix/modules/vim.nix";
-  rke2-server = builtins.fetchGit {
+  rke2-secondary = builtins.fetchGit {
     url = "https://github.com/AidanHilt/PersonalMonorepo.git";
     ref = "feat/nixos";
-  } + "/nix/modules/rke-primary.nix";
+    rev = "dd222e483fe46c81120bbe36338def9a412fb1a5";
+  } + "/nix/modules/rke-secondary.nix";
 in
 {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       vim-config
-      rke2-server
+      rke2-secondary
     ];
 
   users.defaultUserShell = pkgs.zsh;
@@ -94,6 +96,11 @@ in
   services.openssh.enable = true;
 
   services.adguardhome.enable = true;
+
+  services.rke-secondary = {
+    serverAddr = "192.168.86.192:6443";
+    tokenFile = "/var/lib/rancher/rke2/server/node-token";
+  };
 
 
   networking.firewall.allowedTCPPorts = [ 53 3000 6443 ];
