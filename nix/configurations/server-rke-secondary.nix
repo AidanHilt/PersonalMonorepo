@@ -8,7 +8,7 @@ let
   rke2-secondary = builtins.fetchGit {
     url = "https://github.com/AidanHilt/PersonalMonorepo.git";
     ref = "feat/nixos";
-    rev = "dd222e483fe46c81120bbe36338def9a412fb1a5";
+    rev = "293a01e5452cba199554fa321418f6d61dd52884";
   } + "/nix/modules/rke-secondary.nix";
 in
 {

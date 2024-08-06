@@ -22,7 +22,7 @@ in
     tokenFile = cfg.tokenFile;
   };
 
-  networking.firewall = {
+  config.networking.firewall = {
     # See https://docs.rke2.io/install/requirements#inbound-network-rules for details
     allowedTCPPorts = [ 9345 6443 ];
     allowedTCPPortRanges = [
