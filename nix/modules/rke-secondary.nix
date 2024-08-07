@@ -13,23 +13,24 @@ in
     };
   };
 
+  config = {
+    systemd.services.rke2 = {
+      enable = true;
+      cni = "calico";
 
-  systemd.services.rke2 = {
-    enable = true;
-    cni = "calico";
+      serverAddr = cfg.serverAddr;
+      tokenFile = cfg.tokenFile;
+    };
 
-    serverAddr = cfg.serverAddr;
-    tokenFile = cfg.tokenFile;
-  };
-
-  config.networking.firewall = {
-    # See https://docs.rke2.io/install/requirements#inbound-network-rules for details
-    allowedTCPPorts = [ 9345 6443 ];
-    allowedTCPPortRanges = [
-      {
-        from = 30000;
-        to = 32767;
-      }
-    ];
-  };
+    config.networking.firewall = {
+      # See https://docs.rke2.io/install/requirements#inbound-network-rules for details
+      allowedTCPPorts = [ 9345 6443 ];
+      allowedTCPPortRanges = [
+        {
+          from = 30000;
+          to = 32767;
+        }
+      ];
+    };
+  }
 }
