@@ -14,7 +14,7 @@ in
   };
 
 
-  services.rke2 = {
+  config.services.rke2 = {
     enable = true;
     cni = "calico";
 
