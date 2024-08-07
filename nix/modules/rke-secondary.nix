@@ -14,7 +14,7 @@ in
   };
 
 
-  config.pkgs.services.rke2 = {
+  options.services.rke2 = {
     enable = true;
     cni = "calico";
 
