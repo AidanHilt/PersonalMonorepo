@@ -14,7 +14,7 @@ in
   };
 
   config = {
-    systemd.services.rke2 = {
+    services.rke2 = {
       enable = true;
 
       serverAddr = cfg.serverAddr;
