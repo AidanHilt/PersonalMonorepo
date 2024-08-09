@@ -98,6 +98,7 @@ in
   services.adguardhome.enable = true;
 
   services.rke-secondary = {
+    enable = true;
     serverAddr = "https://192.168.86.192:6443";
     tokenFile = "/var/lib/rancher/rke2/server/node-token";
   };

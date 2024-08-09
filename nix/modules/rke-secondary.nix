@@ -16,7 +16,7 @@ in
   };
 
   config = mkIf cfg.enable {
-    services.rke2 = {
+    systemd.services.rke2 = {
       enable = true;
       role = "agent";
 
