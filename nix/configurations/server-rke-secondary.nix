@@ -102,7 +102,6 @@ in
     tokenFile = "/var/lib/rancher/rke2/server/node-token";
   };
 
-
   networking.firewall.allowedTCPPorts = [ 53 3000 6443 ];
   networking.firewall.allowedUDPPorts = [ 53 ];
 
