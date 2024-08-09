@@ -16,6 +16,7 @@ in
   config = {
     systemd.services.rke2 = {
       enable = true;
+      role = "agent";
 
       serverAddr = cfg.serverAddr;
       tokenFile = cfg.tokenFile;
