@@ -16,7 +16,6 @@ in
   config = {
     systemd.services.rke2 = {
       enable = true;
-      cni = "calico";
 
       serverAddr = cfg.serverAddr;
       tokenFile = cfg.tokenFile;
