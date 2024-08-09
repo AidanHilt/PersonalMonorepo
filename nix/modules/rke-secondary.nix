@@ -5,6 +5,8 @@ let
 in
 {
   options.services.rke-secondary = {
+    enable = mkEnableOption "Enable RKE2 as an agent";
+
     serverAddr = mkOption {
       type = types.str;
     };
@@ -13,8 +15,8 @@ in
     };
   };
 
-  config = {
-    systemd.services.rke2 = {
+  config = mkIf cfg.enable {
+    services.rke2 = {
       enable = true;
       role = "agent";
 
