@@ -4,8 +4,8 @@ let
   zsh-config = builtins.fetchGit {
     url = "https://github.com/AidanHilt/PersonalMonorepo.git";
     ref = "feat/nixos";
-    rev = "6d7d718e50368944b652fc6de4be7f483211e850";
-  } + "/nix-server/home-manager/modules/zsh.nix";
+    rev = "6d7d718e50368944b652fc6de4be7f483211e850"; #pragma: allowlist secret
+  } + "/nix/home-manager/modules/zsh.nix";
 in
 {
   home-manager.users.aidan = {
