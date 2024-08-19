@@ -5,26 +5,27 @@ let
     url = "https://github.com/AidanHilt/PersonalMonorepo.git";
     ref = "feat/nixos";
     rev = "6d7d718e50368944b652fc6de4be7f483211e850";
-  } + "/nix/home-manager/modules/zsh.nix";
+  } + "/nix-server/home-manager/modules/zsh.nix";
 in
 {
-  # Home Manager needs a bit of information about you and the paths it should
-  # manage.
-  home.username = "aidan";
-  home.homeDirectory = "/home/aidan";
+  home-manager.users.aidan = {
+    # Home Manager needs a bit of information about you and the paths it should
+    # manage.
+    home.homeDirectory = "/home/aidan";
 
-  home.stateVersion = "24.11"; # Please read the comment before changing.
+    home.stateVersion = "24.11"; # Please read the comment before changing.
 
-  imports = [
-    zsh-config
-  ];
+    imports = [
+      zsh-config
+    ];
 
-  # The home.packages option allows you to install Nix packages into your
-  # environment.
-  home.packages = [];
+    # The home.packages option allows you to install Nix packages into your
+    # environment.
+    home.packages = [];
 
-  home.sessionVariables = {};
+    home.sessionVariables = {};
 
-  # Let Home Manager install and manage itself.
-  programs.home-manager.enable = true;
+    # Let Home Manager install and manage itself.
+    programs.home-manager.enable = true;
+  }
 }
