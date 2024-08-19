@@ -2,7 +2,7 @@ let
   vim-config = builtins.fetchGit {
     url = "https://github.com/AidanHilt/PersonalMonorepo.git";
     ref = "feat/nixos";
-    rev = "25a69ca0818b9abd82175a1f7a918225745c6898";
+    rev = "25a69ca0818b9abd82175a1f7a918225745c6898"; #pragma: allowlist secret
   } + "/nix/modules/vim.nix";
 
   home-manager = builtins.fetchTarball {
@@ -12,7 +12,7 @@ let
   home-dot-nix = builtins.fetchGit {
     url = "https://github.com/AidanHilt/PersonalMonorepo.git";
     ref = "feat/nixos";
-    rev = "55c541a1de560a03c8a4211490373c781e1c820e";
+    rev = "37a5ad149d646e7b085d34dbf3e655469e1aeac8"; #pragma: allowlist secret
   } + "/nix/home-manager/home.nix";
 in
 {
