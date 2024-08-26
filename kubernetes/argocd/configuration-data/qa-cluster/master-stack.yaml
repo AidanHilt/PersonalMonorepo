@@ -1,11 +1,11 @@
 env: qa-cluster
 
-gitRevision: chore/testing-jellyseerr
+gitRevision: chore/testing-jellyseeerr
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
   configurationDirectory: kubernetes/argocd/configuration-data
-  configurationRevision: chore/testing-jellyseer
+  configurationRevision: chore/testing-jellyseeer
 
 flaresolverr:
   enabled: false
