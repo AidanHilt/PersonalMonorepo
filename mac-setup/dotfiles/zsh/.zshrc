@@ -1,8 +1,12 @@
+FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+
+source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source $(brew --prefix)/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
-
-FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
 
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
@@ -33,7 +37,6 @@ alias kctx=kubectx
 
 alias ls=eza
 
-
 # Created by `pipx` on 2023-06-20 04:14:17
 export PATH="$PATH:/Users/ahilt/.local/bin"
 
@@ -43,9 +46,6 @@ export PATH="/Users/ahilt/.rd/bin:$PATH"
 # setopt no_share_history
 # unsetopt share_history
 
-source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-source $(brew --prefix)/share/zsh-history-substring-search/zsh-history-substring-search.zsh
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ] && \. "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"

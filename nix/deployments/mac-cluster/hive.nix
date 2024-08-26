@@ -12,7 +12,7 @@ let
   home-dot-nix = builtins.fetchGit {
     url = "https://github.com/AidanHilt/PersonalMonorepo.git";
     ref = "feat/nixos";
-    rev = "37a5ad149d646e7b085d34dbf3e655469e1aeac8"; #pragma: allowlist secret
+    rev = "a7ab75c98588602e37ce636a045cd8de68379cae"; #pragma: allowlist secret
   } + "/nix/home-manager/home.nix";
 in
 {
@@ -47,8 +47,6 @@ in
       openssh.authorizedKeys.keys = ["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1fOZ3HBZAi3l5BtE5nvccMTDvKkZLzaVoiVfU9P6QsDObcfoKgeMoQlxeJfMxluJOi4hy+FJgmB9Acly9dScMh3sgJv0TaSXiydMEmsR4giwrSfAP23tvLpKiyfTMNGptMYmrUgyvuau2nVbG39DPVdGMv6b5DUEDieu694HwtDIUF+UJsMl8zxVe0ATpzmZnCxd1WOHN0jYaIGa18pW73reIYkiGfrbsjmNSl/W3n0v3mAUhQHrPBS/Tp8zGB2LJ5rIs14hC87gaHL9XIozWpzFK2g0Lde/iaJaulvWYnvZbqxOLEHSi94YrNu8Qlj1gT/TRW9cQwzlkbZdncfCqmSY7rQ8jVTddQcypRAizkczBYeqYvQxEc21x48EVlWZokOrG3f0jZhhgo7T+TsSOaWc5UeYTMtsBCcQSyK7bvaXXLLYN0psmzvaF2w/yH4krPpKHl+3qhEw1IAW8s251gZ1Fu0MtFX+qpMzmJkJU/k2dTRjoCrqqA8MG5ZcFsBM= ahilt@hyperion.lan"];
     };
 
-    environment.variables = { EDITOR = "vim"; };
-
     programs.zsh.enable = true;
     users.defaultUserShell = pkgs.zsh;
     environment.pathsToLink = [ "/share/zsh" ];
@@ -64,6 +62,32 @@ in
        }
      ];
    };
+  };
+
+  mac-cluster-server-1 = { name, nodes, ... }: {
+    networking.hostName = "mac-cluster-server-1";
+    time.timeZone = "America/New_York";
+    deployment.buildOnTarget = true;
+    system.stateVersion = "24.11";
+    nixpkgs.hostPlatform = "aarch64-linux";
+
+    fileSystems."/" =  {
+      device = "/dev/disk/by-uuid/4890fa5e-4588-44da-b13a-d78118797fc9";
+      fsType = "ext4";
+    };
+
+    fileSystems."/boot" = {
+      device = "/dev/disk/by-uuid/B40C-F74F";
+      fsType = "vfat";
+      options = [ "fmask=0022" "dmask=0022" ];
+    };
+
+    services.rke2 = {
+      enable = true;
+      nodeName = "mac-cluster-server-1";
+
+      cni = "calico";
+    };
   };
 
   mac-cluster-server-2 = { name, nodes, ... }: {
