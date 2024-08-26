@@ -1,14 +1,14 @@
 env: qa-cluster
 
-gitRevision: feat/jellyseerr
+gitRevision: chore/testing-jellyseerr
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
   configurationDirectory: kubernetes/argocd/configuration-data
-  configurationRevision: feat/jellyseerr
+  configurationRevision: chore/testing-jellyseer
 
 flaresolverr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: false
 
@@ -23,7 +23,7 @@ grafana-promtail:
     enabled: false
 
 hashi-vault:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
@@ -60,7 +60,7 @@ sonarr:
     enabled: true
 
 transmission:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
@@ -85,7 +85,7 @@ jellyfin:
     enabled: true
 
 jellyseerr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
@@ -95,4 +95,4 @@ kiali:
     enabled: true
 
 service-monitors:
-  enabled: true
+  enabled: false
