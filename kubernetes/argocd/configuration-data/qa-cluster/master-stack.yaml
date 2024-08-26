@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: chore/testing-jellyseeerr
+gitRevision: chore/testing-jellyseeer
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
