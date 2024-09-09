@@ -8,7 +8,7 @@ configuration:
   configurationRevision: chore/testing-jellyseeer
 
 flaresolverr:
-  enabled: false
+  enabled: true
   configuration:
     enabled: false
 
