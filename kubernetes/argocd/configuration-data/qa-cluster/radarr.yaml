@@ -1,7 +1,7 @@
 radarr:
   urlBase: radarr
-  metrics:
-    enabled: true
+  # metrics:
+  #   enabled: true
 
   # postgres:
   #   enabled: true

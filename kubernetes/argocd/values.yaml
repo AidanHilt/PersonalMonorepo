@@ -87,7 +87,7 @@ configs:
     server.insecure: true
 
 applicationSet:
-  enabled: false
+  replicas: 0
 
 dex:
   enabled: false
