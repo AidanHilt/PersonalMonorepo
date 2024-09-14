@@ -94,7 +94,7 @@ def main(args: list[str]):
     args_dict: dict[str, str] = vars(arguments)
 
     if arguments.subparser_name == "rke-setup":
-        if vars(arguments).get("replace_kubeconfig"):
+        if vars(arguments).get("replace_kubeconfig_only"):
             merge_and_replace_kubeconfig(arguments.cluster_name)
         else:
             setup_rke_cluster(
