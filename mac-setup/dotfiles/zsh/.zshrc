@@ -20,6 +20,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 zstyle ':omz:update' mode auto      # update automatically without asking
 
 plugins=(git sudo copyfile copybuffer ansible copybuffer git-auto-fetch history kubectl per-directory-history poetry systemadmin kube-ps1)
+PROMPT='$(kube_ps1)'$PROMPT
 
 source $ZSH/oh-my-zsh.sh
 
