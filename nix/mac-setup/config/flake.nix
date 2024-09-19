@@ -120,11 +120,11 @@
       };
     };
 
-    home-dot-nix = builtins.fetchGit {
-      url = "https://github.com/AidanHilt/PersonalMonorepo.git";
-      ref = "feat/nix-darwin";
-      rev = "a7ab75c98588602e37ce636a045cd8de68379cae"; #pragma: allowlist secret
-    } + "/nix/home-manager/home.nix";
+    # home-dot-nix = builtins.fetchGit {
+    #   url = "https://github.com/AidanHilt/PersonalMonorepo.git";
+    #   ref = "feat/nix-darwin";
+    #   rev = "da16d2c28fde0d085e4276bccdf9aa1bcd13e37d"; #pragma: allowlist secret
+    # } + "/nix/home-manager/home.nix";
   in
   {
     darwinConfigurations."aidans-Virtual-Machine" = darwin.lib.darwinSystem {

@@ -8,6 +8,12 @@ let
       ref = "refs/heads/master";
       rev = "c43d9089df96cf8aca157762ed0e2ddca9fcd71e"; #pragma: allowlist secret
     })).extensions.${system};
+
+  vscode-settings = builtins.fetchGit {
+    url = "https://github.com/AidanHilt/PersonalMonorepo.git";
+    ref = "feat/nix-darwin";
+    rev = "da16d2c28fde0d085e4276bccdf9aa1bcd13e37d"; #pragma: allowlist secret
+  } + "/nix/home-manager/config-files/vscode-settings.json";
 in
 
 {
@@ -77,7 +83,7 @@ in
     enable = true;
 
     # TODO Get to
-    userSettings =  builtins.fromJSON (builtins.readFile ./vscode-settings.json);
+    userSettings = builtins.fromJSON (builtins.readFile vscode-settings);
 
     mutableExtensionsDir = false;
     extensions = with extensions.vscode-marketplace; [
