@@ -42,5 +42,9 @@ else
   echo "Created ~/.config/nixpkgs/config.nix with the packageOverrides configuration"
 fi
 
+# TODO download nix config flake, set hostname, and build/apply
 
-
+# TODO Give the user a checklist of items to do manually (that are just too fucking hard to automate)
+1. Download stuff from SMB share (if on personal machine)
+2. Set wallpaper
+3. Set f.lux, flycut, and rectangle to to run on startup

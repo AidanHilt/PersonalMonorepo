@@ -1,7 +1,6 @@
-{ config, pkgs, lib, ...}:
+{ inputs, globals, pkgs, lib, system, ...}:
 
 let
-  system = builtins.currentSystem;
   extensions =
     (import (builtins.fetchGit {
       url = "https://github.com/nix-community/nix-vscode-extensions";
@@ -9,11 +8,7 @@ let
       rev = "c43d9089df96cf8aca157762ed0e2ddca9fcd71e"; #pragma: allowlist secret
     })).extensions.${system};
 
-  vscode-settings = builtins.fetchGit {
-    url = "https://github.com/AidanHilt/PersonalMonorepo.git";
-    ref = "feat/nix-darwin";
-    rev = "da16d2c28fde0d085e4276bccdf9aa1bcd13e37d"; #pragma: allowlist secret
-  } + "/nix/home-manager/config-files/vscode-settings.json";
+  vscode-settings = globals.personalConfig + "/home-manager/config-files/vscode-settings.json";
 in
 
 {
@@ -57,6 +52,8 @@ in
       extraConfig = ''
         user_pref("extensions.autoDisableScopes", 0);
         user_pref("extensions.enabledScopes", 15);
+        user_pref("browser.startup.page", 3);
+        user_pref("browser.aboutConfig.showWarning", false)
       '';
 
     };
