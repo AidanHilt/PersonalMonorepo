@@ -1,9 +1,17 @@
 { inputs, config, pkgs, ... }:
 
 let
-  agenix = {
-    imports = [ inputs.agenix.nixosModules.age ];
-    environment.systemPackages = [ inputs.agenix.packages.${pkgs.system}.agenix ];
+  p2n = (inputs.poetry2nix.lib.mkPoetry2Nix { inherit pkgs; });
+  atils = p2n.mkPoetryApplication {
+    projectDir = builtins.fetchGit {
+      url = "https://github.com/AidanHilt/PersonalMonorepo.git";
+      ref = "feat/nix-darwin";
+      rev = "68599952e3b9ddb57fd6bca00279cd77426022c0"; #pragma: allowlist secret
+    } + "/atils";
+
+    groups = ["main"];
+
+#    overrides = p2n.overrides.withDefaults (final: prev: { ruff = pkgs.ruff; });
   };
 in
 
@@ -11,6 +19,7 @@ in
   age.secrets.smb-mount-config = {
     file = ../secrets/smb-mount-config.age;
     path = "/etc/smb_mount";
+    symlink = false;
   };
 
   homebrew = {
@@ -55,7 +64,10 @@ in
     };
   };
 
-  imports = [ agenix ];
+  environment.systemPackages = [
+    inputs.agenix.packages.${pkgs.system}.agenix
+    atils
+  ];
 
   environment.etc = {
     auto_master = {

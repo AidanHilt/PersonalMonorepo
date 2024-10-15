@@ -25,6 +25,7 @@ darwin.lib.darwinSystem {
 
     ../modules/common.nix
     ../modules/personal.nix
+
   ];
   specialArgs = { inherit inputs; };
 }

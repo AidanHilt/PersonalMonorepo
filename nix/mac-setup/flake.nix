@@ -14,6 +14,9 @@
 
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
+
+    poetry2nix.url = "github:nix-community/poetry2nix";
+    poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { self, nixpkgs, darwin, home-manager, ... }@inputs:
@@ -24,7 +27,7 @@
       personalConfig = builtins.fetchGit {
         url = "https://github.com/AidanHilt/PersonalMonorepo.git";
         ref = "feat/nix-darwin";
-        rev = "ecf79e2962e75acb23a23ce7f5cf6a4379bed693"; #pragma: allowlist secret
+        rev = "68599952e3b9ddb57fd6bca00279cd77426022c0"; #pragma: allowlist secret
       } + "/nix";
     };
 

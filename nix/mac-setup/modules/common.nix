@@ -97,4 +97,10 @@
       "visual-studio-code"
     ];
   };
+
+  nix = {
+    settings = {
+      experimental-features = [ "nix-command" "flakes" ];
+    };
+  };
 }
