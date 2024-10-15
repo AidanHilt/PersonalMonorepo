@@ -6,12 +6,10 @@ let
     projectDir = builtins.fetchGit {
       url = "https://github.com/AidanHilt/PersonalMonorepo.git";
       ref = "feat/nix-darwin";
-      rev = "68599952e3b9ddb57fd6bca00279cd77426022c0"; #pragma: allowlist secret
+      rev = "c5ef5b16ddc542d13b6ff4aa524b63d88bcaaa28"; #pragma: allowlist secret
     } + "/atils";
 
-    groups = ["main"];
-
-#    overrides = p2n.overrides.withDefaults (final: prev: { ruff = pkgs.ruff; });
+    overrides = p2n.overrides.withoutDefaults (final: prev: { ruff = pkgs.ruff; });
   };
 in
 
