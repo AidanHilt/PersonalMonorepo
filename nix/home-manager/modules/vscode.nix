@@ -1,7 +1,14 @@
 { inputs, globals, pkgs, lib, system, ...}:
 
 let
- vscode-settings = globals.personalConfig + "/home-manager/config-files/vscode-settings.json";
+  vscode-settings = globals.personalConfig + "/home-manager/config-files/vscode-settings.json";
+
+  extensions =
+    (import (builtins.fetchGit {
+      url = "https://github.com/nix-community/nix-vscode-extensions";
+      ref = "refs/heads/master";
+      rev = "c43d9089df96cf8aca157762ed0e2ddca9fcd71e"; #pragma: allowlist secret
+    })).extensions.${system};
 in
 
 {

@@ -27,7 +27,7 @@
       personalConfig = builtins.fetchGit {
         url = "https://github.com/AidanHilt/PersonalMonorepo.git";
         ref = "feat/nix-darwin";
-        rev = "b50d00c3a213612c4909758e9e4a6033af115219"; #pragma: allowlist secret
+        rev = "66e10c0ae432d018dd3ab3201d4b405afbc2d292"; #pragma: allowlist secret
       } + "/nix";
     };
 
