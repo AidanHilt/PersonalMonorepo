@@ -2,7 +2,6 @@
 
 let
   p2n = (inputs.poetry2nix.lib.mkPoetry2Nix { inherit pkgs; });
-  atilsDirectory = globals.personalConfig + "../atils";
 
   pypkgs-build-requirements = {
     argparse = ["setuptools"];
@@ -20,7 +19,7 @@ let
   );
 
   atils = p2n.mkPoetryApplication {
-    projectDir = atilsDirectory;
+    projectDir = config.personalConfig + "../atils";
 
     overrides = p2n-overrides;
     preferWheels = true;
@@ -28,7 +27,7 @@ let
 in
 
 {
-  # environment.systemPackages = [
-  #   atils
-  # ];
+  environment.systemPackages = [
+    atils
+  ];
 }

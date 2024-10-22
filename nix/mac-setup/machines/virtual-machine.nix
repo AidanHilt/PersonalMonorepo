@@ -3,18 +3,17 @@
 with inputs;
 
 let
-  #home-dot-nix = globals.personalConfig + "/home-manager/home.nix";
+  home-dot-nix = globals.personalConfig + "/home-manager/home.nix";
 in
 
 darwin.lib.darwinSystem {
   modules = [
-    globals
 
     home-manager.darwinModules.home-manager {
       home-manager.useGlobalPkgs = true;
       home-manager.useUserPackages = true;
       home-manager.backupFileExtension = "bak";
-      #home-manager.users.aidan = import home-dot-nix {inherit inputs globals pkgs ; system = pkgs.system; lib = home-manager.lib; };
+      home-manager.users.aidan = import home-dot-nix {inherit inputs globals pkgs ; system = pkgs.system; lib = home-manager.lib; };
       }
 
     ({ inputs, globals, ... }: {

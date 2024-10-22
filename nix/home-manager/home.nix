@@ -8,17 +8,17 @@ let
       rev = "c43d9089df96cf8aca157762ed0e2ddca9fcd71e"; #pragma: allowlist secret
     })).extensions.${system};
 
-  # vscode-config = globals.personalConfig + "/home-manager/modules/vscode.nix";
-  # firefox-config = globals.personalConfig + "/home-manager/modules/firefox.nix";
-  # vim-config = globals.personalConfig + "/home-manager/modules/vim.nix";
+  vscode-config = globals.personalConfig + "/home-manager/modules/vscode.nix";
+  firefox-config = globals.personalConfig + "/home-manager/modules/firefox.nix";
+  vim-config = globals.personalConfig + "/home-manager/modules/vim.nix";
 in
 
 {
-  # imports = [
-  #   vscode-config
-  #   firefox-config
-  #   vim-config
-  # ];
+  imports = [
+    vscode-config
+    firefox-config
+    vim-config
+  ];
 
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
