@@ -13,7 +13,7 @@ darwin.lib.darwinSystem {
       home-manager.useGlobalPkgs = true;
       home-manager.useUserPackages = true;
       home-manager.backupFileExtension = "bak";
-      home-manager.extraSpecialArgs = { inherit inputs globals; };
+      home-manager.extraSpecialArgs = { inherit inputs globals pkgs; };
       home-manager.users.aidan = import home-dot-nix {inherit inputs globals pkgs; system = pkgs.system; lib = home-manager.lib; };
       }
 
