@@ -1,16 +1,18 @@
 { inputs, globals, pkgs, lib, system, ...}:
 
 let
+  firefox-config = globals.personalConfig + "/home-manager/modules/firefox.nix";
+  vim-config = globals.personalConfig + "/home-manager/modules/vim.nix";
   vscode-config = globals.personalConfig + "/home-manager/modules/vscode.nix";
-  #firefox-config = globals.personalConfig + "/home-manager/modules/firefox.nix";
-  #vim-config = globals.personalConfig + "/home-manager/modules/vim.nix";
+  zsh-config = globals.personalConfig + "/home-manager/modules/zsh.nix";
 in
 
 {
   imports = [
+    firefox-config
+    vim-config
     vscode-config
-    #firefox-config
-    #vim-config
+    zsh-config
   ];
 
   # Home Manager needs a bit of information about you and the paths it should
