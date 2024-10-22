@@ -2,15 +2,15 @@
 
 let
   vscode-config = globals.personalConfig + "/home-manager/modules/vscode.nix";
-  firefox-config = globals.personalConfig + "/home-manager/modules/firefox.nix";
-  vim-config = globals.personalConfig + "/home-manager/modules/vim.nix";
+  #firefox-config = globals.personalConfig + "/home-manager/modules/firefox.nix";
+  #vim-config = globals.personalConfig + "/home-manager/modules/vim.nix";
 in
 
 {
   imports = [
     vscode-config
-    firefox-config
-    vim-config
+    #firefox-config
+    #vim-config
   ];
 
   # Home Manager needs a bit of information about you and the paths it should
