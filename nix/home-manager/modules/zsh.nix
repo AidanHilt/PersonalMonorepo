@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ inputs, globals, pkgs, lib, system, ...}:
 
 {
   programs.zsh = {
@@ -15,17 +15,16 @@
       }
       {
         name = "powerlevel10k-config";
-        src = builtins.fetchGit {
-          url = "https://github.com/AidanHilt/PersonalMonorepo.git";
-          ref = "feat/nixos";
-        };
-        file = "nix/home-manager/config-files/.p10k.zsh";
+        src = globals.personalConfig;
+        file = "home-manager/config-files/.p10k.zsh";
       }
     ];
 
     shellAliases = {
-      ll = "ls -l";
+      ls = "eza";
       update = "sudo nixos-rebuild switch";
+      kctx = "kubectx";
+      kns = "kubens";
     };
 
     history = {
@@ -34,7 +33,11 @@
 
     oh-my-zsh = {
       enable = true;
-      plugins = [ "git" "sudo" "copyfile" "copybuffer" "git-auto-fetch" "history" "per-directory-history" "systemadmin" "kube-ps1" ];
+      plugins = [ "git" "sudo" "copyfile" "copybuffer" "git-auto-fetch" "history" "per-directory-history" "systemadmin" "kubectl" ];
     };
+
+    initExtra = ''
+      setopt rmstarsilent
+    '';
   };
 }
