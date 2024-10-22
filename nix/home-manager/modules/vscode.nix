@@ -8,7 +8,7 @@ let
       url = "https://github.com/nix-community/nix-vscode-extensions";
       ref = "refs/heads/master";
       rev = "c43d9089df96cf8aca157762ed0e2ddca9fcd71e"; #pragma: allowlist secret
-    })).extensions.${system};
+    })).extensions.${pkgs.system};
 in
 
 {
