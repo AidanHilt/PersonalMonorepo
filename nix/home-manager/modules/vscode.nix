@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, lib, system, ...}:
 
 let
-  vscode-settings = inputs.nixpkgs.personalConfig + "/home-manager/config-files/vscode-settings.json";
+  vscode-settings = globals.personalConfig + "/home-manager/config-files/vscode-settings.json";
 
   extensions =
     (import (builtins.fetchGit {
