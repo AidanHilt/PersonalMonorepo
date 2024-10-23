@@ -34,12 +34,12 @@ in
 
     sessionVariables = {
       ATILS_INSTALL_DIR="/Users/${globals.username}/PersonalMonorepo";
-      ATILS_KUBECONFIG_LOCATION="/Users/ahilt/.kube/";
+      ATILS_KUBECONFIG_LOCATION="/Users/${globals.username}/.kube/";
       ATILS_SCRIPT_INSTALL_DIRECTORY="/Users/ahilt/PersonalMonorepo/atils";
       ATILS_HELM_CHARTS_DIR="kubernetes/helm-charts";
       ATILS_LOG_LEVEL="INFO";
       ATILS_JOBS_DIR="kubernetes/jobs";
-      ATILS_CONFIG_DIRECTORY="/Users/ahilt/.atils";
+      ATILS_CONFIG_DIRECTORY="/Users/${globals.username}/.atils";
     };
   };
 }
