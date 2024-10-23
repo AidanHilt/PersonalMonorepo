@@ -1,6 +1,7 @@
 { inputs, globals, pkgs, lib, system, ...}:
 
 let
+  atils-config = globals.personalConfig + "/home-manager/modules/atils.nix";
   firefox-config = globals.personalConfig + "/home-manager/modules/firefox.nix";
   vim-config = globals.personalConfig + "/home-manager/modules/vim.nix";
   vscode-config = globals.personalConfig + "/home-manager/modules/vscode.nix";
@@ -9,6 +10,7 @@ in
 
 {
   imports = [
+    atils-config
     firefox-config
     vim-config
     vscode-config

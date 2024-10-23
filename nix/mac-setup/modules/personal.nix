@@ -1,9 +1,6 @@
 { inputs, pkgs, globals, ... }:
 
 {
-  # imports = [
-  #   ./atils.nix
-  # ];
 
   age.secrets.smb-mount-config = {
     file = ../secrets/smb-mount-config.age;
