@@ -33,7 +33,7 @@ in
     ];
 
     sessionVariables = {
-      ATILS_INSTALL_DIR="/Users/ahilt/PersonalMonorepo";
+      ATILS_INSTALL_DIR="/Users/${globals.username}/PersonalMonorepo";
       ATILS_KUBECONFIG_LOCATION="/Users/ahilt/.kube/";
       ATILS_SCRIPT_INSTALL_DIRECTORY="/Users/ahilt/PersonalMonorepo/atils";
       ATILS_HELM_CHARTS_DIR="kubernetes/helm-charts";
