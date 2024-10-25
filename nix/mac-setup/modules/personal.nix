@@ -3,6 +3,7 @@
 {
   imports = [
     ./smb-mount.nix
+    ./rclone.nix
   ];
 
   homebrew = {
