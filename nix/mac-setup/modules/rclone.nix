@@ -33,7 +33,7 @@
         ];
         RunAtLoad = true;
         StartInterval = 300;
-      }
+      };
     };
   };
 }
