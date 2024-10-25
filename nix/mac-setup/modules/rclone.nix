@@ -16,7 +16,7 @@
   };
 
   launchd.agents = {
-    rclone-keepass = {
+    rcloneKeepass = {
       enable = true;
       config = {
         Program = "rclone";
