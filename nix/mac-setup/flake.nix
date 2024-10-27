@@ -27,7 +27,7 @@
       personalConfig = builtins.fetchGit {
         url = "https://github.com/AidanHilt/PersonalMonorepo.git";
         ref = "feat/nix-darwin";
-        rev = "6df9807072f6baf7bd55625dbb8dc55d8344f57d"; #pragma: allowlist secret
+        rev = "c9478a538d082c5243c8ca3fdf76c4dd9138cd91"; #pragma: allowlist secret
       } + "/nix";
     };
 
@@ -42,7 +42,7 @@
   in
   {
     darwinConfigurations = {
-      "aidans-Virtual-Machine" = import ./machines/virtual-machine.nix { inherit inputs globals pkgs; };
+      "virtual-machine" = import ./machines/virtual-machine.nix { inherit inputs globals pkgs; };
     };
   };
 }

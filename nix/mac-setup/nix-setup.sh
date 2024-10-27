@@ -2,11 +2,11 @@
 # Install Nix
 curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 
-source /etc/zshrc
-
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-nix-build https://github.com/LnL7/nix-darwin/archive/master.tar.gz -A installer
+source /etc/zshrc
+
+/run/current-system/sw/bin/nix-build https://github.com/LnL7/nix-darwin/archive/master.tar.gz -A installer
 
 ./result/bin/darwin-installer
 
@@ -43,9 +43,12 @@ mkdir -p ~/.config/nix-darwin
 # fi
 
 # TODO download nix config flake, set hostname, and build/apply
+# We're pretty much dependent on Git, so we need to get that installed in order to set up our whole system
+xcode-select --install
 
-# TODO Give the user a checklist of items to do manually (that are just too fucking hard to automate)
-# 1. Download stuff from SMB share (if on personal machine)
-# 2. Set wallpaper
-# 3. Set f.lux, flycut, and rectangle to to run on startup
-# 4. Set up sync for wallpaper and KeePass
+git clone https://github.com/AidanHilt/PersonalMonorepo.git
+
+echo "darwin-rebuild --flake ~/PersonalMonorepo/nix/mac-setup" | pbcopy
+
+echo "This script has finished running. Please open a new terminal, and then CMD+V to run the nix command that will run the initial nix setup"
+echo "Once the nix installation has been completed, you can open a new terminal and run 'finish-setup' to finalize the setup"
