@@ -21,6 +21,8 @@ darwin.lib.darwinSystem {
       users.users.aidan = {
         home = "/Users/aidan";
       };
+
+      networking.hostName = "virtual-machine";
     })
 
     agenix.darwinModules.default

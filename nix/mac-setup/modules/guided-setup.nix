@@ -19,36 +19,45 @@ get_confirmation() {
 }
 
 # 1. Welcome message
-echo "\n📱 Let's finish setting up your Mac!\n"
+echo "📱 Let's finish setting up your Mac!"
 sleep 1
+
+# 1a. Rclone sync
+if get_confirmation "If you've enabled rsync for a personal machine, select yes to manually sync"; then
+  mkdir ~/KeePass
+  mkdir ~/Wallpapers
+  rclone bisync drive:KeePass ~/KeePass --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
+  rclone bisync drive:Wallpapers ~/Wallpapers --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
+fi
+
 
 # 2. Wallpaper settings
 if get_confirmation "Would you like to change your wallpaper?"; then
-    echo "\nOpening Desktop & Screen Saver preferences..."
+    echo "Opening Desktop & Screen Saver preferences..."
     open "x-apple.systempreferences:com.apple.preference.desktopscreeneffect" -W
 fi
 
 # 3. Login items setup
-echo "\n⚙️ Enable the following apps in login items:"
+echo "⚙️ Enable the following apps in login items:"
 echo "   • f.lux"
 echo "   • Rectangle"
 echo "   • Flycut"
-echo "\nOpening Login Items preferences..."
-open "x-apple.systempreferences:com.apple.preference.security?General" -W
+echo "Opening Login Items preferences..."
+open "x-apple.systempreferences:com.apple.LoginItems-Settings.extension" -W
 
 # 4. Firefox launch
-echo "\n🦊 We're going to launch Firefox now. It's expected to fail - this is normal and will finalize some issues we have because of the nix+homebrew combo."
+echo "🦊 We're going to launch Firefox now. It's expected to fail - this is normal and will finalize some issues we have because of the nix+homebrew combo."
 sleep 2
 open -a "Firefox"
 sleep 3
 
 # 5. Reboot prompt
-if get_confirmation "\n🔄 Would you like to reboot now?"; then
-    echo "\nRebooting in 5 seconds... Press Ctrl+C to cancel."
+if get_confirmation "🔄 Would you like to reboot now?"; then
+    echo "Rebooting in 5 seconds... Press Ctrl+C to cancel."
     sleep 5
     sudo reboot
 else
-    echo "\n✨ Setup complete! Please remember to reboot your computer soon."
+    echo "✨ Setup complete! Please remember to reboot your computer soon."
 fi
   '';
 
