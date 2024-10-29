@@ -1,19 +1,19 @@
 #!/bin/zsh
 # Install Nix
-# curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 
-# /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# /nix/var/nix/profiles/default/bin/nix-build https://github.com/LnL7/nix-darwin/archive/master.tar.gz -A installer
+/nix/var/nix/profiles/default/bin/nix-build https://github.com/LnL7/nix-darwin/archive/master.tar.gz -A installer
 
-# /nix/var/nix/profiles/default/bin/nix-channel --add http://nixos.org/channels/nixpkgs-unstable nixpkgs
-# /nix/var/nix/profiles/default/bin/nix-channel --update
+/nix/var/nix/profiles/default/bin/nix-channel --add http://nixos.org/channels/nixpkgs-unstable nixpkgs
+/nix/var/nix/profiles/default/bin/nix-channel --update
 
-# ./result/bin/darwin-installer
+./result/bin/darwin-installer
 
-# mkdir -p ~/.config/nix-darwin
+mkdir -p ~/.config/nix-darwin
 
-# git clone https://github.com/AidanHilt/PersonalMonorepo.git
+git clone https://github.com/AidanHilt/PersonalMonorepo.git
 
 hostnames=("virtual-machine")
 
