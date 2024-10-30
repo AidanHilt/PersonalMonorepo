@@ -18,11 +18,13 @@ get_confirmation() {
     done
 }
 
-# 1. Welcome message
+# Welcome message
 echo "📱 Let's finish setting up your Mac!"
 sleep 1
 
-# 1a. Rclone sync
+# Secrets
+
+# Rclone sync
 if get_confirmation "If you've enabled rsync for a personal machine, select yes to manually sync"; then
   mkdir ~/KeePass
   mkdir ~/Wallpapers
@@ -31,13 +33,13 @@ if get_confirmation "If you've enabled rsync for a personal machine, select yes 
 fi
 
 
-# 2. Wallpaper settings
+# Wallpaper settings
 if get_confirmation "Would you like to change your wallpaper?"; then
     echo "Opening Desktop & Screen Saver preferences..."
     open "x-apple.systempreferences:com.apple.preference.desktopscreeneffect" -W
 fi
 
-# 3. Login items setup
+# Login items setup
 echo "⚙️ Enable the following apps in login items:"
 echo "   • f.lux"
 echo "   • Rectangle"
@@ -45,7 +47,7 @@ echo "   • Flycut"
 echo "Opening Login Items preferences..."
 open "x-apple.systempreferences:com.apple.LoginItems-Settings.extension" -W
 
-# 4. Firefox launch
+# Firefox launch
 echo "🦊 We're going to launch Firefox now. It's expected to fail - this is normal and will finalize some issues we have because of the nix+homebrew combo."
 sleep 2
 open -a "Firefox"
