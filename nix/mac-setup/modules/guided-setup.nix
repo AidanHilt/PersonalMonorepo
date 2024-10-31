@@ -22,7 +22,19 @@ get_confirmation() {
 echo "📱 Let's finish setting up your Mac!"
 sleep 1
 
-# Secrets
+# Secrets setup
+if get_confirmation "Agenix secrets are likely NOT decrypted at this point. Confirm to set them up"; then
+  sudo ssh-keygen -A
+  curl -F "file=@/etc/ssh/ssh_host_rsa_key.pub" https://x0.at
+  echo "This is gonna suck, but you'll need to update the agenix secrets on a machine that's already set up."
+  echo "The key that you need to download is at the link above. Make sure the rekeyed files are merged to master for continuing"
+  read -s -k "?Press any key to continue"
+  returnDir=$(pwd)
+  cd ~/PersonalMonorepo
+  git pull
+  cd "$returnDir"
+  darwin-rebuild switch --flake ~/PersonalMonorepo/nix/mac-setup
+fi
 
 # Rclone sync
 if get_confirmation "If you've enabled rsync for a personal machine, select yes to manually sync"; then
