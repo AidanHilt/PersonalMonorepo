@@ -28,7 +28,7 @@ if get_confirmation "Agenix secrets are likely NOT decrypted at this point. Conf
   curl -F "file=@/etc/ssh/ssh_host_rsa_key.pub" https://x0.at
   echo "This is gonna suck, but you'll need to update the agenix secrets on a machine that's already set up."
   echo "The key that you need to download is at the link above. Make sure the rekeyed files are merged to master for continuing"
-  read -s -k "?Press any key to continue"
+  read -p "Press any key to continue: " -n 1 -r
   returnDir=$(pwd)
   cd ~/PersonalMonorepo
   git pull
