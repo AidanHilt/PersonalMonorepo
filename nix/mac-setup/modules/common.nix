@@ -2,7 +2,8 @@
 let
 
   update = pkgs.writeShellScriptBin "update" ''
-    git pull -C ~/PersonalMonorepo
+    cd ~/PersonalMonorepo
+    git pull -q
     darwin-rebuild switch --flake ~/PersonalMonorepo/nix/mac-setup
 '';
 
