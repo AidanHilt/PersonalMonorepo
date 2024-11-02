@@ -22,7 +22,7 @@ darwin.lib.darwinSystem {
         home = "/Users/aidan";
       };
 
-      networking.hostName = "virtual-machine";
+      networking.hostName = "hyperion";
     })
 
     agenix.darwinModules.default
