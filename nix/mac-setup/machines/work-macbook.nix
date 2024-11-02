@@ -3,7 +3,7 @@
 with inputs;
 
 let
-  home-dot-nix = globals.personalConfig + "/home-manager/home.nix";
+  home-dot-nix = globals.personalConfig + "/home-manager/machine-configs/work-macbook.nix";
 in
 
 darwin.lib.darwinSystem {
@@ -14,21 +14,19 @@ darwin.lib.darwinSystem {
       home-manager.useUserPackages = true;
       home-manager.backupFileExtension = "bak";
       home-manager.extraSpecialArgs = { inherit inputs globals pkgs; };
-      home-manager.users.aidan = import home-dot-nix {inherit inputs globals pkgs; system = pkgs.system; lib = home-manager.lib; };
+      home-manager.users.ahilt = import home-dot-nix {inherit inputs globals pkgs; system = pkgs.system; lib = home-manager.lib; };
       }
 
     ({ inputs, globals, ... }: {
-      users.users.aidan = {
-        home = "/Users/aidan";
+      users.users.ahilt = {
+        home = "/Users/ahilt";
       };
 
-      networking.hostName = "virtual-machine";
+      networking.hostName = "macbookpro.lan";
     })
 
-    agenix.darwinModules.default
-
     ../modules/common.nix
-    ../modules/personal.nix
+    ../modules/work.nix
 
   ];
   specialArgs = { inherit inputs globals; };

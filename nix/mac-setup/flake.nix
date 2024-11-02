@@ -26,8 +26,8 @@
       username = "aidan";
       personalConfig = builtins.fetchGit {
         url = "https://github.com/AidanHilt/PersonalMonorepo.git";
-        ref = "feat/nix-darwin";
-        rev = "c9478a538d082c5243c8ca3fdf76c4dd9138cd91"; #pragma: allowlist secret
+        ref = "master";
+        rev = "47e8ce02fef4131220421e00f9fcda4918ed1cf2"; #pragma: allowlist secret
       } + "/nix";
     };
 
@@ -42,7 +42,10 @@
   in
   {
     darwinConfigurations = {
-      "virtual-machine" = import ./machines/virtual-machine.nix { inherit inputs globals pkgs; };
+      # Work machine name
+      "macbookpro.lan" = import ./machines/work-macbook.nix { inherit inputs globals pkgs; };
+      # Personal machine name
+      hyperion = import ./machines/personal-macbook.nix { inherit inputs globals pkgs; };
     };
   };
 }
