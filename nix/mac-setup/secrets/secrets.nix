@@ -5,6 +5,6 @@ let
 in
 {
   "smb-mount-config.age".publicKeys = [ hyperion workvm ];
-  #"rclone-config.age".publicKeys = [ hyperion workvm ];
-  #"kubeconfig.age".publicKeys = [ hyperion workvm ];
+  "rclone-config.age".publicKeys = [ hyperion workvm ];
+  "kubeconfig.age".publicKeys = [ hyperion workvm ];
 }
