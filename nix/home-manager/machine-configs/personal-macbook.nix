@@ -12,7 +12,6 @@ in
   imports = [
     atils-config
     firefox-config
-    mac-misc
     vim-config
     vscode-config
     zsh-config
