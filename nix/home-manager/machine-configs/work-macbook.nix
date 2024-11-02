@@ -2,7 +2,6 @@
 
 let
   firefox-config = globals.personalConfig + "/home-manager/modules/firefox.nix";
-  mac-misc = globals.personalConfig + "/home-manager/modules/mac-misc.nix";
   vim-config = globals.personalConfig + "/home-manager/modules/vim.nix";
   vscode-config = globals.personalConfig + "/home-manager/modules/vscode.nix";
   zsh-config = globals.personalConfig + "/home-manager/modules/zsh.nix";

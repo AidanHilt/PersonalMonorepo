@@ -3,7 +3,6 @@
 let
   atils-config = globals.personalConfig + "/home-manager/modules/atils.nix";
   firefox-config = globals.personalConfig + "/home-manager/modules/firefox.nix";
-  mac-misc = globals.personalConfig + "/home-manager/modules/mac-misc.nix";
   vim-config = globals.personalConfig + "/home-manager/modules/vim.nix";
   vscode-config = globals.personalConfig + "/home-manager/modules/vscode.nix";
   zsh-config = globals.personalConfig + "/home-manager/modules/zsh.nix";

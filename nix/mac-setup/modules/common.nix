@@ -1,4 +1,12 @@
 { inputs, lib, pkgs, ...}:
+let
+
+  update = pkgs.writeShellScriptBin "update" ''
+    git clone -C ~/PersonalMonorepo
+    darwin-rebuild switch --flake ~/PersonalMonorepo/nix/mac-setup
+'';
+
+in
 
 {
   services.nix-daemon.enable = true;
@@ -6,6 +14,7 @@
   programs.zsh.enable = true;
 
   environment.systemPackages = [
+    update
     pkgs.vim
     pkgs.python3
     pkgs.act
