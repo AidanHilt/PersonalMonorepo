@@ -6,7 +6,7 @@
 
   # TODO let's try and get this set up right, right now the permissions are fucked
   # Maybe we need a ticket?
-  age.secrets.rclone-config = {
+  age.secrets.kubeconfig = {
     file = ../secrets/kubeconfig.age;
     path = "/Users/${globals.username}/.kube/config";
     owner = "${globals.username}";
