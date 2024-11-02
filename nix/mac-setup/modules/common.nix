@@ -29,6 +29,9 @@
     pkgs.yq
     pkgs.terragrunt
     pkgs.defaultbrowser
+    pkgs.rustc
+    pkgs.cargo
+    inputs.agenix.packages.${pkgs.system}.agenix
   ];
   security.pam.enableSudoTouchIdAuth = true;
 
