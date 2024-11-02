@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "atils"
-version = "1.4.3"
+version = "1.4.4"
 description = "A series of scripts used to interact and work with this repository."
 authors = ["Aidan Hilt <aidanhilt2@gmail.com>"]
 readme = "README.md"
