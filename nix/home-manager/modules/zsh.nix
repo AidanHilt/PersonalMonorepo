@@ -22,7 +22,6 @@
 
     shellAliases = {
       ls = "eza";
-      update = "sudo nixos-rebuild switch";
       kctx = "kubectx";
       kns = "kubens";
     };
