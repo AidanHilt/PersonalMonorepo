@@ -12,5 +12,6 @@
     owner = "${globals.username}";
     group = "${globals.username}";
     mode = "744";
+    symlink = false;
   };
 }
