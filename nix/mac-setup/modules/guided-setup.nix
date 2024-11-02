@@ -21,7 +21,6 @@ get_confirmation() {
 # Welcome message
 echo "📱 Let's finish setting up your Mac!"
 sleep 1
-touch "~/Library/Application Support/Firefox/profiles.ini"
 
 # Secrets setup
 if get_confirmation "Agenix secrets are likely NOT decrypted at this point. Confirm to set them up"; then

@@ -42,6 +42,9 @@ while true; do
 done
 
 sudo mv /etc/auto_master /etc/auto_master.before-nix-darwin
+mkdir "~/Library/Application Support/Firefox"
+touch "~/Library/Application Support/Firefox/profiles.ini"
+
 
 echo "darwin-rebuild switch --flake ~/PersonalMonorepo/nix/mac-setup#$selected_hostname" | pbcopy
 
