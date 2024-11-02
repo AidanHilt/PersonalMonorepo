@@ -16,7 +16,8 @@ repos:
       #   exclude: "(?s:atils/atils/templates/(?>.*?\|kubernetes/helm\-charts/).*)\Z"
       - id: detect-private-key
       - id: no-commit-to-branch
-      - id: trailing-whitespace
+#      - id: trailing-whitespace
+ #       exclude: "^(?!.*\.age$).*$"
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.28.0
     hooks:
