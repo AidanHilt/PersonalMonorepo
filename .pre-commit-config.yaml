@@ -1,24 +1,24 @@
 repos:
   - repo: git@github.com:Yelp/detect-secrets.git
-    rev: v1.4.0
+    rev: v1.5.0
     hooks:
       - id: detect-secrets
         args: ["--baseline", ".secrets.baseline"]
   - repo: git@github.com:pre-commit/pre-commit-hooks.git
-    rev: v4.4.0
+    rev: v5.0.0
     hooks:
+      - id: trailing-whitespace
+        exclude: '.*\.age$'
+      - id: check-yaml
+        exclude: "^(?:atils/templates|kubernetes/helm-charts)/.*$"
       - id: check-added-large-files
         args: ["--maxkb=5000"]
       - id: check-executables-have-shebangs
       - id: check-json
-      # - id: check-yaml
-      #   #exclude items in atils/atils/templates, and kubernetes/helm-charts
-      #   exclude: "(?s:atils/atils/templates/(?>.*?\|kubernetes/helm\-charts/).*)\Z"
       - id: detect-private-key
       - id: no-commit-to-branch
-      #- id: trailing-whitespace
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.28.0
+    rev: 0.29.4
     hooks:
       - id: check-jsonschema
         files: "'.atils_buildconfig.json'"
@@ -26,9 +26,3 @@ repos:
       - id: check-jsonschema
         files: "'.atils_jobconfig.json'"
         args: ["--schemafile", "json-schemas/atils_jobconfig.json"]
-  # - repo: https://github.com/astral-sh/ruff-pre-commit
-  #   rev: v0.5.1
-  #   hooks:
-  #     - id: ruff
-  #       args: [--fix]
-  #     - id: ruff-format
