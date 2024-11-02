@@ -15,7 +15,7 @@ mkdir -p ~/.config/nix-darwin
 
 git clone https://github.com/AidanHilt/PersonalMonorepo.git
 
-hostnames=("virtual-machine")
+hostnames=("Aidans-Macbook-Pro", "hyperion")
 
 # Print available options
 echo "\nAvailable hostnames:"
