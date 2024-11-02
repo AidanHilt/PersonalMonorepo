@@ -27,7 +27,7 @@
       personalConfig = builtins.fetchGit {
         url = "https://github.com/AidanHilt/PersonalMonorepo.git";
         ref = "feat/post-install-nix-extras";
-        rev = "bd46a8dae1952860f6dd95d8640965a147885b79"; #pragma: allowlist secret
+        rev = "a462cb6af56544ce38b25771ec48a72f5d956c8d"; #pragma: allowlist secret
       } + "/nix";
     };
 
