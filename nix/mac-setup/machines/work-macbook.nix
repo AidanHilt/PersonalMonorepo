@@ -22,7 +22,7 @@ darwin.lib.darwinSystem {
         home = "/Users/ahilt";
       };
 
-      networking.hostName = "Aidans-Macbook-Pro";
+      networking.hostName = "Aidans-MacBook-Pro";
     })
 
     ../modules/common.nix

@@ -1,9 +1,10 @@
 let
   hyperion = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1fOZ3HBZAi3l5BtE5nvccMTDvKkZLzaVoiVfU9P6QsDObcfoKgeMoQlxeJfMxluJOi4hy+FJgmB9Acly9dScMh3sgJv0TaSXiydMEmsR4giwrSfAP23tvLpKiyfTMNGptMYmrUgyvuau2nVbG39DPVdGMv6b5DUEDieu694HwtDIUF+UJsMl8zxVe0ATpzmZnCxd1WOHN0jYaIGa18pW73reIYkiGfrbsjmNSl/W3n0v3mAUhQHrPBS/Tp8zGB2LJ5rIs14hC87gaHL9XIozWpzFK2g0Lde/iaJaulvWYnvZbqxOLEHSi94YrNu8Qlj1gT/TRW9cQwzlkbZdncfCqmSY7rQ8jVTddQcypRAizkczBYeqYvQxEc21x48EVlWZokOrG3f0jZhhgo7T+TsSOaWc5UeYTMtsBCcQSyK7bvaXXLLYN0psmzvaF2w/yH4krPpKHl+3qhEw1IAW8s251gZ1Fu0MtFX+qpMzmJkJU/k2dTRjoCrqqA8MG5ZcFsBM= ahilt@hyperion.lan";
-  virtualmachine = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFxIWIbz65yO8xKVyJHTazsPJdzUgSZYec9gEa0fBAfB root@aidans-Virtual-Machine.local";
-  othervirtualmachine = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDZF1tLDyGrJxhNWtvyFVcifrxg8A14yzsoa/DGwfFUAh3KLFlp+fH4zI0NfEX/egU0At9n9OT7s4i52XTMVMPYg1TroVYYINfcoEUo7s4JZ3JuFzveCy+j4FVJDVLLYu06KAx2KRNROToEcbsqcCakgHw7Oii+m8lk21v2Gh4/i5i1p1RaboHVHL8Px5TD01xtIxK5SfyozONDaJaArfAbyOiMY9pCu+5Bx0N3vJGtIXL/myBNVgUN+SYxEKLgAY1u/ciPFHXUG3PJeV5Onh7NMYGjOm0XxLiGFOTy/wjZkm79x5bttOUnTf1VoV/JKOUDP34s59Rphk7bX+k6Gn2xrhGgctBFIJIA9JOMpNx1oQFXULoqT84isF6P9bMuGKj/TQeqNk0zg7kOzUoknrrapQuTDtGtjvbx3R3PuUyRnOfRf+JHWHw5DirGYuERERVlPFyrsc3cOmeNwODfUoTSl8Ekq/A6S7dJuvHRMyvWC2BHAlWFJ86GTCM2kw02V3c= root@virtual-machine";
+  # We don't use secrets, but we need a second machine that can run agenix to handle setup
+  workvm = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDEgIyx4Hs7Tl3Fkg6nlqCpIzzzzsMd5ecgk5Kfh8bJ70ktcetn9OCJ/MkkR0LmHiZNh8dobHS78PqqAendqQa9Yo1SAh4Qu1G8Aw1rd3MhktM+6j22qsNpC2Tomj3Y5kEwpNjW0jEEuJM30JC7RuJshA7/kSs+3mcw1uYr89TcZJba1ZT5d6+NfRyaZ9zrwwmeDHfp73H56D6Il0ppWx9ig0r8v64xhQNTr4T3ilGjDEYj127QmpanWbihrt4uIV7kd9FGGTmeDsdqrPRmz3i9cDYY8j7s9NuCqdnGrOGEdAyGSboXYjUEOEhia/iH6/DhU8dcNlmdEdzaUMi9ewvJgiWc5bM7TC0jMFbEeRyyOsFqbDanLx2ggMVYB9vOpwJ/n/IfhIEXQff6TFXgCvcDIVf94Pq5EsRIM8D4DqArOSYL1+whXG2I/6u9lNmwkJDA7v+ocsG9he4ZlUmcJ184wqbHOibP9k2k6oluGerWGeN5pQv69BvztYYWL1i1zWU= root@Aidans-Macbook-Pro";
 in
 {
-  "smb-mount-config.age".publicKeys = [ hyperion virtualmachine othervirtualmachine ];
-  "rclone-config.age".publicKeys = [ hyperion virtualmachine othervirtualmachine ];
+  "smb-mount-config.age".publicKeys = [ hyperion workvm ];
+  "rclone-config.age".publicKeys = [ hyperion workvm ];
+  "kubeconfig.age".publicKeys = [ hyperion workvm ];
 }
