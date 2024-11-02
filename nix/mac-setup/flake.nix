@@ -43,7 +43,7 @@
   {
     darwinConfigurations = {
       # Work machine name
-      "Aidans-Macbook-Pro" = import ./machines/work-macbook.nix { inherit inputs globals pkgs; };
+      "Aidans-MacBook-Pro" = import ./machines/work-macbook.nix { inherit inputs globals pkgs; };
       # Personal machine name
       hyperion = import ./machines/personal-macbook.nix { inherit inputs globals pkgs; };
     };
