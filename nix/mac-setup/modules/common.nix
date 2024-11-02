@@ -29,6 +29,8 @@
     pkgs.yq
     pkgs.terragrunt
     pkgs.defaultbrowser
+    pkgs.rustc
+    pkgs.cargo
   ];
   security.pam.enableSudoTouchIdAuth = true;
 
