@@ -7,8 +7,8 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: oci://tccr.io/truecharts
-      chart: crafty-4
+    - repoURL: tccr.io/truecharts
+      path: crafty-4
       targetRevision: {{ index .Values "crafty-server" "version" }}
   destination:
     server: 'https://kubernetes.default.svc'
