@@ -1,0 +1,20 @@
+{{ if index .Values "crafty-server" "enabled" }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: crafty-server
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/AidanHilt/PersonalMonorepo
+      path:
+      targetRevision: {{ .Values.gitRevision }}
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+{{end}}

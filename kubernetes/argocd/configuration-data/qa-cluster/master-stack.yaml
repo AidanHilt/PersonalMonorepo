@@ -7,6 +7,11 @@ configuration:
   configurationDirectory: kubernetes/argocd/configuration-data
   configurationRevision: feat/crafty-server
 
+crafty-server:
+  enabled: true
+  configuration:
+    enabled: true
+
 flaresolverr:
   enabled: false
   configuration:
@@ -95,4 +100,4 @@ kiali:
     enabled: true
 
 service-monitors:
-  enabled: true
+  enabled: false
