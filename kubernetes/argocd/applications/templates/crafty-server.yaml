@@ -9,6 +9,7 @@ spec:
   sources:
     - repoURL: tccr.io/truecharts
       path: crafty-4
+      chart: crafty-4
       targetRevision: {{ index .Values "crafty-server" "version" }}
   destination:
     server: 'https://kubernetes.default.svc'
