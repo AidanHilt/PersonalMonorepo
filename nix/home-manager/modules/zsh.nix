@@ -22,9 +22,9 @@
 
     shellAliases = {
       ls = "eza";
-      update = "sudo nixos-rebuild switch";
       kctx = "kubectx";
       kns = "kubens";
+      remouse = "~/Library/Python/3.9/bin/remouse";
     };
 
     history = {

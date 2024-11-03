@@ -10,6 +10,7 @@ in
 {
   imports = [
     firefox-config
+    mac-misc
     vim-config
     vscode-config
     zsh-config

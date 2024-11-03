@@ -14,6 +14,7 @@ curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix 
 mkdir -p ~/.config/nix-darwin
 
 git clone https://github.com/AidanHilt/PersonalMonorepo.git
+(cd PersonalMonorepo && pre-commit install)
 
 hostnames=("Aidans-Macbook-Pro", "hyperion")
 
@@ -42,8 +43,8 @@ while true; do
 done
 
 sudo mv /etc/auto_master /etc/auto_master.before-nix-darwin
-mkdir "~/Library/Application Support/Firefox"
-touch "~/Library/Application Support/Firefox/profiles.ini"
+mkdir ~/Library/Application\ Support/Firefox
+touch ~/Library/Application\ Support/Firefox/profiles.ini
 
 
 echo "darwin-rebuild switch --flake ~/PersonalMonorepo/nix/mac-setup#$selected_hostname" | pbcopy
