@@ -10,7 +10,7 @@
     file = ../secrets/kubeconfig.age;
     path = "/Users/${globals.username}/.kube/config";
     owner = "${globals.username}";
-    mode = "744";
+    mode = "700";
     symlink = false;
   };
 }
