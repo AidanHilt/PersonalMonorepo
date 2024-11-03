@@ -13,11 +13,19 @@ let
   git commit -m "Nix commit"
 '';
 
+  argocd-commit = pkgs.writeShellScriptBin "argocd-commit" ''
+  cd ~/PersonalMonorepo
+  git add kubernetes/argocd/*
+  git commit -m "Argocd commit"
+  git push
+'';
+
   update-kubeconfig = pkgs.writeShellScriptBin "update-kubeconfig" ''
   cd ~/PersonalMonorepo/nix/mac-setup/secrets
   cat ~/.kube/config | pbcopy
   agenix -e kubeconfig.age
 '';
+
 
 in
 
