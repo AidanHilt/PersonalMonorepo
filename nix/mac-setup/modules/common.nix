@@ -13,6 +13,11 @@ let
   git commit -m "Nix commit"
 '';
 
+  update-kubeconfig = pkgs.writeShellScriptBin "update-kubeconfig" ''
+  cat ~/.kube/config | pbcopy
+  agenix -e ~/PersonalMonorepo/mac-setup/secrets/kubeconfig.age
+'';
+
 in
 
 {
