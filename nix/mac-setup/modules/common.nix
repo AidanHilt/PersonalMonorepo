@@ -7,6 +7,12 @@ let
     darwin-rebuild switch --flake ~/PersonalMonorepo/nix/mac-setup
 '';
 
+  nix-commit = pkgs.writeShellScriptBin "nix-commit" ''
+  cd ~/PersonalMonorepo
+  git add nix/*
+  git commit -m "Nix commit"
+'';
+
 in
 
 {
@@ -16,6 +22,7 @@ in
 
   environment.systemPackages = [
     update
+    nix-commit
     pkgs.vim
     pkgs.python3
     pkgs.act

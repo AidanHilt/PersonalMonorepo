@@ -24,7 +24,8 @@
       ls = "eza";
       kctx = "kubectx";
       kns = "kubens";
-      remouse = "~/Library/Python/3.9/bin/remouse";
+      # Let's just leave this, we're doing a fancy ReMarkable setup
+      #remouse = "~/Library/Python/3.9/bin/remouse";
     };
 
     history = {
