@@ -1,0 +1,16 @@
+{
+  "actions": [
+    {
+      "name": "setup-cluster",
+      "command": "kind create cluster",
+      "order": 0,
+      "description": "Create the cluster"
+    },
+    {
+      "name": "teardown-cluster",
+      "command": "kind delete cluster",
+      "order": 1,
+      "description": "Delete the cluster"
+    }
+  ]
+}

@@ -9,8 +9,8 @@
   age.secrets.kubeconfig = {
     file = ../secrets/kubeconfig.age;
     path = "/Users/${globals.username}/.kube/config";
-    owner = "${globals.username}";
-    group = "${globals.username}";
+    owner = "aidan";
+    group = "aidan";
     mode = "744";
     symlink = false;
   };
