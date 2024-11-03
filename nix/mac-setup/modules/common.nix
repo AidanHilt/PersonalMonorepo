@@ -14,8 +14,9 @@ let
 '';
 
   update-kubeconfig = pkgs.writeShellScriptBin "update-kubeconfig" ''
+  cd ~/PersonalMonorepo/mac-setup/secrets
   cat ~/.kube/config | pbcopy
-  agenix -e ~/PersonalMonorepo/mac-setup/secrets/kubeconfig.age
+  agenix -e kubeconfig.age
 '';
 
 in
