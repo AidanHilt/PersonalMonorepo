@@ -38,6 +38,7 @@ in
     update
     nix-commit
     update-kubeconfig
+    argocd-commit
     pkgs.vim
     pkgs.python3
     pkgs.act
