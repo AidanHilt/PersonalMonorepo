@@ -28,6 +28,7 @@ in
   environment.systemPackages = [
     update
     nix-commit
+    update-kubeconfig
     pkgs.vim
     pkgs.python3
     pkgs.act
