@@ -5,7 +5,7 @@ gitRevision: feat/jellyseerr
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
   configurationDirectory: kubernetes/argocd/configuration-data
-  configurationRevision: feat/jellyseerr
+  configurationRevision: feat/crafty-server
 
 flaresolverr:
   enabled: true
