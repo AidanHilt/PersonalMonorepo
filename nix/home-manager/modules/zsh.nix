@@ -24,6 +24,7 @@
       ls = "eza";
       kctx = "kubectx";
       kns = "kubens";
+      remouse = "Library/Python/3.9/bin/remouse"
     };
 
     history = {

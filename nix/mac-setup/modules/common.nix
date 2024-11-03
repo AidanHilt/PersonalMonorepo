@@ -41,7 +41,6 @@ in
     pkgs.defaultbrowser
     pkgs.rustc
     pkgs.cargo
-    pkgs.remarkable-mouse
     inputs.agenix.packages.${pkgs.system}.agenix
   ];
   security.pam.enableSudoTouchIdAuth = true;
