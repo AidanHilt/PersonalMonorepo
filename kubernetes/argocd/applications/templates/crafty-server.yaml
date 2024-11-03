@@ -9,7 +9,7 @@ spec:
   sources:
     - repoURL: oci://tccr.io/truecharts/crafty-4
       chart: crafty-4
-      targetRevision: {{ .Values.gitRevision }}
+      targetRevision: {{ index .Values "crafty-server" "version" }}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: argocd
