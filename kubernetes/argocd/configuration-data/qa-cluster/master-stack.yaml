@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: feat/jellyseerr
+gitRevision: feat/crafty-server
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
