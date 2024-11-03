@@ -7,8 +7,8 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: https://github.com/AidanHilt/PersonalMonorepo
-      path:
+    - repoURL: oci://tccr.io/truecharts/crafty-4
+      chart: crafty-4
       targetRevision: {{ .Values.gitRevision }}
   destination:
     server: 'https://kubernetes.default.svc'
