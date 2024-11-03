@@ -13,7 +13,6 @@
     file = ../secrets/rclone-config.age;
     path = "/Users/${globals.username}/.config/rclone/rclone.conf";
     owner = "${globals.username}";
-    group = "${globals.username}";
     mode = "744";
   };
 
