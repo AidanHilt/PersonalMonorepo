@@ -11,14 +11,14 @@ spec:
       path: crafty-4
       chart: crafty-4
       targetRevision: {{ index .Values "crafty-server" "version" }}
-    {{- if index .Values "crafty-server" "configuration" "enabled" }}
+      {{- if index .Values "crafty-server" "configuration" "enabled" }}
       helm:
         valueFiles:
           - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/jellyfin.yaml"
-   - repoURL: {{ .Values.configuration.configurationRepo }}
-     targetRevision: {{ .Values.gitRevision }}
-     ref: values
-     {{- end }}
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.gitRevision }}
+      ref: values
+      {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: crafty
