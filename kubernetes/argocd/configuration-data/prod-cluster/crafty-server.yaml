@@ -1,17 +1,21 @@
 persistence:
   servers:
     enabled: false
+    size: 5Gi
     mountPath: /crafty/servers
   logs:
-    enabled: false
+    enabled: true
+    size: 5Gi
     mountPath: /crafty/logs
   import:
-    enabled: false
+    enabled: true
+    size: 5Gi
     mountPath: /crafty/import
   backups:
-    enabled: false
+    enabled: true
+    size: 5Gi
     mountPath: /crafty/backups
   config:
     enabled: true
-    size: 10Gi
-    mountPath: /crafty
+    size: 5Gi
+    mountPath: /crafty/app/config
