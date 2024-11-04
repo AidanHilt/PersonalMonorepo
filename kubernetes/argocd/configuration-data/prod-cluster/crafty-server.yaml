@@ -19,3 +19,7 @@ persistence:
     enabled: true
     size: 5Gi
     mountPath: /crafty/app/config
+
+portal:
+  open:
+    enabled: true
