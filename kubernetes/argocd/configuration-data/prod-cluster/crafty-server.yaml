@@ -1,19 +1,16 @@
 persistence:
-  # config:
-  #   enabled: true
-  #   mountPath: /crafty/app/config
-  # servers:
-  #   enabled: true
-  #   mountPath: /crafty/servers
-  # logs:
-  #   enabled: true
-  #   mountPath: /crafty/logs
-  # import:
-  #   enabled: true
-  #   mountPath: /crafty/import
-  # backups:
-  #   enabled: true
-  #   mountPath: /crafty/backups
+  servers:
+    enabled: false
+    mountPath: /crafty/servers
+  logs:
+    enabled: false
+    mountPath: /crafty/logs
+  import:
+    enabled: false
+    mountPath: /crafty/import
+  backups:
+    enabled: false
+    mountPath: /crafty/backups
   config:
     enabled: true
     size: 10Gi
