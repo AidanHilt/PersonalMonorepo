@@ -26,8 +26,8 @@
       username = "aidan";
       personalConfig = builtins.fetchGit {
         url = "https://github.com/AidanHilt/PersonalMonorepo.git";
-        ref = "feat/crafty-server";
-        rev = "aa671c4145621edc9f4a653d01539bc63a8d1008"; #pragma: allowlist secret
+        ref = "feat/aws-install";
+        rev = "f959700fbc406cc8846e29f89aa692e7c0e33e7e"; #pragma: allowlist secret
       } + "/nix";
     };
 
