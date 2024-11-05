@@ -7,7 +7,7 @@
 
   environment.systemPackages = [
     pkgs.colima
-    pkgs.aws
+    pkgs.awscli2
   ];
 
   homebrew = {
