@@ -15,7 +15,7 @@ let
 
   argocd-commit = pkgs.writeShellScriptBin "argocd-commit" ''
   cd ~/PersonalMonorepo
-  git add kubernetes/argocd/*
+  git add kubernetes/
   git commit -m "Argocd commit"
   git push
 '';
@@ -64,6 +64,7 @@ in
     pkgs.defaultbrowser
     pkgs.rustc
     pkgs.cargo
+    pkgs.inetutils
     inputs.agenix.packages.${pkgs.system}.agenix
   ];
   security.pam.enableSudoTouchIdAuth = true;

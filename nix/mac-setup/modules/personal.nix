@@ -20,6 +20,7 @@
       "orbstack"
       "postman"
       "utm"
+      "prismlauncher"
     ];
   };
 

@@ -1,11 +1,11 @@
 env: prod-cluster
 
-gitRevision: feat/crafty-server
+gitRevision: master
 
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
   configurationDirectory: kubernetes/argocd/configuration-data
-  configurationRevision: feat/crafty-server
+  configurationRevision: master
 
 crafty-server:
   enabled: true
