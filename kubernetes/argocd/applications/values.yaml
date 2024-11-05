@@ -1,3 +1,4 @@
+# Global config
 env: qa-cluster
 
 gitRevision: master
@@ -6,6 +7,14 @@ configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
   configurationDirectory: kubernetes/argocd/configuration-data
   configurationRevision: master
+
+# Service-specific config
+
+crafty-server:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "9.2.2"
 
 flaresolverr:
   enabled: false

@@ -1,0 +1,36 @@
+persistence:
+  servers:
+    enabled: true
+    size: 5Gi
+    mountPath: /crafty/servers
+  logs:
+    enabled: true
+    size: 5Gi
+    mountPath: /crafty/logs
+  import:
+    enabled: true
+    size: 5Gi
+    mountPath: /crafty/import
+  backups:
+    enabled: true
+    size: 5Gi
+    mountPath: /crafty/backups
+  config:
+    enabled: true
+    size: 5Gi
+    mountPath: /crafty/app/config
+
+portal:
+  open:
+    enabled: true
+
+service:
+  minecraft:
+    type: NodePort
+    enabled: true
+    ports:
+      minecraft:
+        enabled: true
+        port: 25565
+        targetPort: 25565
+        nodePort: 30002

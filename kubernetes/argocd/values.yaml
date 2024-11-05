@@ -3,6 +3,19 @@
 ##
 extraObjects:
   - apiVersion: v1
+    kind: Secret
+    metadata:
+      labels:
+        argocd.argoproj.io/secret-type: repository
+      name: truecharts
+      namespace: argocd
+    stringData:
+      url: tccr.io/truecharts
+      name: truecharts
+      type: helm
+      enableOCI: "true"
+
+  - apiVersion: v1
     kind: ConfigMap
     metadata:
       name: cmp-plugin

@@ -10,7 +10,7 @@ repos:
       - id: trailing-whitespace
         exclude: '.*\.age$'
       - id: check-yaml
-        exclude: "^(?:atils/templates|kubernetes/helm-charts)/.*$"
+        exclude: "^(?:atils/templates|kubernetes/helm-charts|kubernetes/argocd/applications)/.*$"
       - id: check-added-large-files
         args: ["--maxkb=5000"]
       - id: check-executables-have-shebangs

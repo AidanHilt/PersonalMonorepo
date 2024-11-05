@@ -7,6 +7,26 @@ let
     darwin-rebuild switch --flake ~/PersonalMonorepo/nix/mac-setup
 '';
 
+  nix-commit = pkgs.writeShellScriptBin "nix-commit" ''
+  cd ~/PersonalMonorepo
+  git add nix/*
+  git commit -m "Nix commit"
+'';
+
+  argocd-commit = pkgs.writeShellScriptBin "argocd-commit" ''
+  cd ~/PersonalMonorepo
+  git add kubernetes/
+  git commit -m "Argocd commit"
+  git push
+'';
+
+  update-kubeconfig = pkgs.writeShellScriptBin "update-kubeconfig" ''
+  cd ~/PersonalMonorepo/nix/mac-setup/secrets
+  cat ~/.kube/config | pbcopy
+  agenix -e kubeconfig.age
+'';
+
+
 in
 
 {
@@ -16,6 +36,9 @@ in
 
   environment.systemPackages = [
     update
+    nix-commit
+    update-kubeconfig
+    argocd-commit
     pkgs.vim
     pkgs.python3
     pkgs.act
@@ -41,6 +64,7 @@ in
     pkgs.defaultbrowser
     pkgs.rustc
     pkgs.cargo
+    pkgs.inetutils
     inputs.agenix.packages.${pkgs.system}.agenix
   ];
   security.pam.enableSudoTouchIdAuth = true;
