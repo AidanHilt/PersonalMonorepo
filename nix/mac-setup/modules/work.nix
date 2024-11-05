@@ -7,6 +7,7 @@
 
   environment.systemPackages = [
     pkgs.colima
+    pkgs.aws
   ];
 
   homebrew = {
