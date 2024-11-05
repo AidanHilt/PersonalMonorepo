@@ -26,6 +26,7 @@ portal:
 
 service:
   minecraft:
+    type: NodePort
     enabled: true
     ports:
       minecraft:
