@@ -31,6 +31,6 @@ service:
     ports:
       minecraft:
         enabled: true
-        port: 25565
+        #port: 25565
         targetPort: 25565
         nodePort: 32001
