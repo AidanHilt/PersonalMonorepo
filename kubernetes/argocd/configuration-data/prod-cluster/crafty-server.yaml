@@ -23,3 +23,13 @@ persistence:
 portal:
   open:
     enabled: true
+
+service:
+  minecraft:
+    enabled: true
+    ports:
+      minecraft:
+        enabled: true
+        port: 25565
+        targetPort: 25565
+        nodePort: 30000
