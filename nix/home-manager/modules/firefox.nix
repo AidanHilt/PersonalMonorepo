@@ -1,4 +1,8 @@
-{ inputs, globals, pkgs, lib, system, ...}:
+{ inputs, globals, pkgs, lib, system, osConfig, ...}:
+
+let
+  password-manager-extension = if osConfig.networking.hostName == "Aidans-Macbook-Pro" then keeper-password-manager else keepassxc-browser;
+in
 
 {
   home.activation.firefoxProfile = lib.hm.dag.entryAfter [ "writeBoundry" ] ''
@@ -18,7 +22,7 @@
         docsafterdark
         don-t-fuck-with-paste
         facebook-container
-        keepassxc-browser
+        password-manager-extension
         privacy-badger
         refined-github
         sponsorblock
