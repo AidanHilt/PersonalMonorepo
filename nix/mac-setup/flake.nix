@@ -27,7 +27,7 @@
       personalConfig = builtins.fetchGit {
         url = "https://github.com/AidanHilt/PersonalMonorepo.git";
         ref = "feat/password-manager-browser-extension";
-        rev = "7fc5058e2014e6fc0d97c502972b1316c7768c1d"; #pragma: allowlist secret
+        rev = "bac0a56dc1b8419d8f1a4534b30cbe0912c96a52"; #pragma: allowlist secret
       } + "/nix";
     };
 

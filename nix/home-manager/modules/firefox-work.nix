@@ -17,7 +17,6 @@
         clearurls
         docsafterdark
         don-t-fuck-with-paste
-        keeper-password-manager
         privacy-badger
         refined-github
         ublock-origin
