@@ -17,11 +17,9 @@
         clearurls
         docsafterdark
         don-t-fuck-with-paste
-        facebook-container
-        keepassxc-browser
+        keeper-password-manager
         privacy-badger
         refined-github
-        sponsorblock
         ublock-origin
         view-image
       ];
