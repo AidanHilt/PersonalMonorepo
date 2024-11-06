@@ -26,8 +26,8 @@
       username = "aidan";
       personalConfig = builtins.fetchGit {
         url = "https://github.com/AidanHilt/PersonalMonorepo.git";
-        ref = "feat/aws-install";
-        rev = "f959700fbc406cc8846e29f89aa692e7c0e33e7e"; #pragma: allowlist secret
+        ref = "feat/password-manager-browser-extension";
+        rev = "af43e3b8a4b57172f6e43bf4424e639b08f85363"; #pragma: allowlist secret
       } + "/nix";
     };
 
