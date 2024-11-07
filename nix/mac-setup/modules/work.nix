@@ -8,6 +8,7 @@
   environment.systemPackages = [
     pkgs.colima
     pkgs.awscli2
+    pkgs.helm-docs
   ];
 
   homebrew = {
