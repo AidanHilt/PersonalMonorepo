@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, lib, system, osConfig, ...}:
+{ inputs, globals, pkgs, lib, system, ...}:
 
 let
   atils-config = globals.personalConfig + "/home-manager/modules/atils.nix";
