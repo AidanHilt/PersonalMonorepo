@@ -14,7 +14,7 @@ in
 
 nixpkgs.lib.nixosSystem {
   modules = [
-    home-manager.darwinModules.home-manager {
+    home-manager.nixosModules.home-manager {
       home-manager.useGlobalPkgs = true;
       home-manager.useUserPackages = true;
       home-manager.backupFileExtension = "bak";
@@ -43,9 +43,6 @@ nixpkgs.lib.nixosSystem {
       nixpkgs.hostPlatform = "aarch64-linux";
       system.stateVersion = "24.11";
     })
-
-
-
     ../modules/common.nix
   ];
   specialArgs = { inherit inputs globals pkgs; };
