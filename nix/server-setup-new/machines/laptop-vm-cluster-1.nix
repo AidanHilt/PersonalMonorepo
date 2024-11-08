@@ -3,7 +3,7 @@
 with inputs;
 
 let
-  home-dot-nix = inputs.personalMonorepo + "/home-manager/machine-configs/personal-macbook.nix";
+  home-dot-nix = inputs.personalMonorepo + "/nix/home-manager/machine-configs/personal-macbook.nix";
 in
 
 nixpkgs.lib.nixosSystem {
