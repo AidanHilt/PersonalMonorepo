@@ -3,7 +3,7 @@
 with inputs;
 
 let
-  home-dot-nix = inputs.personalMonorepo + "/nix/home-manager/machine-configs/personal-macbook.nix";
+  home-dot-nix = inputs.personalMonorepo + "/nix/home-manager/machine-configs/home-server.nix";
 in
 
 nixpkgs.lib.nixosSystem {
@@ -23,7 +23,7 @@ nixpkgs.lib.nixosSystem {
       };
 
       networking.hostName = "laptop-vm-cluster-1";
-      pkgs.hostPlatform = "aarch64-linux";
+      nixpkgs.hostPlatform = "aarch64-linux";
     })
   ];
   specialArgs = { inherit inputs globals; };

@@ -18,7 +18,7 @@
 
   outputs = { self, nixpkgs, agenix, home-manager, ... }@inputs:
   let
-    #system = "aarch64-linux";
+    system = "aarch64-linux";
 
     globals = {
       username = "aidan";
@@ -27,7 +27,7 @@
 
     pkgs = import nixpkgs {
       config.allowUnfree = true;
-      #inherit system;
+      inherit system;
     };
   in
   {
