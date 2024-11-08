@@ -2,7 +2,7 @@
   description = "A flake managing server configurations";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/master";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
@@ -11,7 +11,7 @@
     agenix.inputs.nixpkgs.follows = "nixpkgs";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo";
+      url = "github:aidanhilt/PersonalMonorepo/feat/nix-server-setup";
       flake = false;
     };
   };
