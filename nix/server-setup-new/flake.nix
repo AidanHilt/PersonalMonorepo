@@ -18,6 +18,7 @@
 
   outputs = { self, nixpkgs, agenix, home-manager, ... }@inputs:
   let
+    system = "aarch64-linux";
     globals = {
       username = "aidan";
       personalConfig = inputs.personalMonorepo + "/nix";
@@ -25,6 +26,7 @@
 
     pkgs = import nixpkgs {
       config.allowUnfree = true;
+      inherit system;
     };
   in
   {
