@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, lib, system, osConfig, ...}:
+{ inputs, globals, pkgs, lib, system, ...}:
 
 let
   vim-config = globals.personalConfig + "/home-manager/modules/vim.nix";

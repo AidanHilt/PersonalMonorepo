@@ -88,16 +88,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1731039940,
-        "narHash": "sha256-x4ZUcQOkgPAu8Qc6OkTUv8zoyKQyCWQQUw/mN2r9GJU=",
+        "lastModified": 1730785428,
+        "narHash": "sha256-Zwl8YgTVJTEum+L+0zVAWvXAGbWAuXHax3KzuejaDyo=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "ff5eb0c8f4e45baf937b8007310f1cc4608c6ca0",
+        "rev": "4aa36568d413aca0ea84a1684d2d46f55dbabad7",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
-        "ref": "master",
+        "ref": "nixos-unstable",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -105,15 +105,16 @@
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1731037370,
-        "narHash": "sha256-rWYLqMX/tNkGnB8tONa0qQ78Y2gipHwZwcLZRXD1YaU=",
+        "lastModified": 1731071757,
+        "narHash": "sha256-gxaHHeC3b/kElLo9F5E8u8bDHdRrLgOQVXzbc+L/byY=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "fde068fe77abf2a23cc7c4f8a91cd1ecc3e8dfef",
+        "rev": "b9ffad25f261460e6233990d9acd2c769c782fbf",
         "type": "github"
       },
       "original": {
         "owner": "aidanhilt",
+        "ref": "feat/nix-server-setup",
         "repo": "PersonalMonorepo",
         "type": "github"
       }
