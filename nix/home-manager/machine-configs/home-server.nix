@@ -7,7 +7,7 @@ in
 
 {
   imports = [
-    vim-config
+    #vim-config
     zsh-config
   ];
 
