@@ -16,6 +16,8 @@
     pkgs.git
   ];
 
+  system.stateVersion = "24.11";
+
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
  # environment.pathsToLink = [ "/share/zsh" ];
