@@ -9,6 +9,7 @@
     pkgs.colima
     pkgs.awscli2
     pkgs.docker
+    pkgs.docker-buildx
   ];
 
   homebrew = {
