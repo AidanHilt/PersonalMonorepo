@@ -24,14 +24,6 @@ nixpkgs.lib.nixosSystem {
       }
 
     ({ inputs, globals, ... }: {
-      users.groups.aidan = {};
-
-      users.users.aidan = {
-        home = "/Users/aidan";
-        group = "aidan";
-        isNormalUser = true;
-        };
-
       fileSystems = {
         "/" = {
           device = "/dev/disk/by-uuid/475c3eec-824f-4834-b40a-52845766e530";
@@ -51,6 +43,8 @@ nixpkgs.lib.nixosSystem {
       networking.hostName = "laptop-vm-cluster-1";
       nixpkgs.hostPlatform = "aarch64-linux";
     })
+
+    ../modules/common.nix
   ];
   specialArgs = { inherit inputs globals; };
 }
