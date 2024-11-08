@@ -14,7 +14,6 @@ in
 
 nixpkgs.lib.nixosSystem {
   modules = [
-
     home-manager.darwinModules.home-manager {
       home-manager.useGlobalPkgs = true;
       home-manager.useUserPackages = true;
@@ -46,5 +45,5 @@ nixpkgs.lib.nixosSystem {
 
     ../modules/common.nix
   ];
-  specialArgs = { inherit inputs globals; };
+  specialArgs = { inherit inputs globals pkgs; };
 }
