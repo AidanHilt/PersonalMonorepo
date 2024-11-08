@@ -23,7 +23,6 @@
       personalConfig = inputs.personalMonorepo + "/nix";
     };
 
-
     pkgs = import nixpkgs {
       config.allowUnfree = true;
     };
