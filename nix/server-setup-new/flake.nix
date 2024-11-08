@@ -18,6 +18,7 @@
 
   outputs = { self, nixpkgs, agenix, home-manager, ... }@inputs:
   let
+    hostPlatform = builtins.currentSystem;
     globals = {
       username = "aidan";
     };
@@ -28,7 +29,7 @@
         inputs.nur.overlay
       ];
       config.allowUnfree = true;
-      inherit builtins.currentSystem;
+      inherit hostPlatform;
     };
   in
   {
