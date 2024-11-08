@@ -23,6 +23,7 @@ nixpkgs.lib.nixosSystem {
       };
 
       networking.hostName = "laptop-vm-cluster-1";
+      nixpkgs.hostPlatform = "aarch64-linux";
     })
   ];
   specialArgs = { inherit inputs globals; };
