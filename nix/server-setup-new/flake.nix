@@ -27,6 +27,7 @@
         inputs.nur.overlay
       ];
       config.allowUnfree = true;
+      hostPlatform = builtins.currentSystem;
     };
   in
   {
