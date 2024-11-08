@@ -22,12 +22,13 @@
       username = "aidan";
     };
 
+
     pkgs = import nixpkgs {
       overlays = [
         inputs.nur.overlay
       ];
       config.allowUnfree = true;
-      hostPlatform = builtins.currentSystem;
+      inherit builtins.currentSystem;
     };
   in
   {
