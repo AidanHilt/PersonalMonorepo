@@ -16,7 +16,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, darwin, home-manager, ... }@inputs:
+  outputs = { self, nixpkgs, agenix, home-manager, ... }@inputs:
   let
     globals = {
       username = "aidan";
