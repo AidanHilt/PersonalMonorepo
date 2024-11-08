@@ -37,8 +37,8 @@
       plugins = [ "git" "sudo" "copyfile" "copybuffer" "git-auto-fetch" "history" "per-directory-history" "systemadmin" "kubectl" ];
     };
 
-    initExtra = ''
-      setopt rmstarsilent
-    '';
+    # initExtra = ''
+    #   setopt rmstarsilent
+    # '';
   };
 }
