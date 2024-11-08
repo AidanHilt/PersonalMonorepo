@@ -28,6 +28,7 @@ nixpkgs.lib.nixosSystem {
         home = "/Users/aidan";
         group = "aidan";
         isNormalUser = true;
+        };
 
         fileSystems = {
           "/" = {
@@ -40,7 +41,6 @@ nixpkgs.lib.nixosSystem {
             fsType = "vfat";
             options = [ "fmask=0077" "dmask=0077" ];
           };
-        };
       };
 
       networking.hostName = "laptop-vm-cluster-1";
