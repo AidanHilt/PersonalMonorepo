@@ -20,6 +20,7 @@
   let
     globals = {
       username = "aidan";
+      personalConfig = inputs.personalMonorepo + "/nix";
     };
 
 
