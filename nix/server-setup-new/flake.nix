@@ -18,7 +18,8 @@
 
   outputs = { self, nixpkgs, agenix, home-manager, ... }@inputs:
   let
-    system = "aarch64-linux";
+    system = ["aarch64-linux" "x86_64-linux"];
+
     globals = {
       username = "aidan";
       personalConfig = inputs.personalMonorepo + "/nix";
