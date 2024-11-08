@@ -26,6 +26,21 @@ nixpkgs.lib.nixosSystem {
     ({ inputs, globals, ... }: {
       users.users.aidan = {
         home = "/Users/aidan";
+        group = "aidan";
+        isNormalUser = true;
+
+        fileSystems = {
+          "/" = {
+            device = "/dev/disk/by-uuid/475c3eec-824f-4834-b40a-52845766e530";
+            fsType = "ext4";
+          };
+
+          "/boot" = {
+            device = "/dev/disk/by-uuid/AAC8-AE1C";
+            fsType = "vfat";
+            options = [ "fmask=0077" "dmask=0077" ];
+          };
+        };
       };
 
       networking.hostName = "laptop-vm-cluster-1";
