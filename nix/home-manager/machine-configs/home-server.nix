@@ -14,7 +14,7 @@ in
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
 
-  home.stateVersion = "24.11"; # Please read the comment before changing.
+  home.stateVersion = "24.05"; # Please read the comment before changing.
 
   # The home.packages option allows you to install Nix packages into your
   # environment.
