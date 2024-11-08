@@ -24,6 +24,8 @@ nixpkgs.lib.nixosSystem {
       }
 
     ({ inputs, globals, ... }: {
+      users.groups.aidan = {};
+
       users.users.aidan = {
         home = "/Users/aidan";
         group = "aidan";
