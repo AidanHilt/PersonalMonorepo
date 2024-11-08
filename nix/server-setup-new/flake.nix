@@ -25,6 +25,7 @@
 
     pkgs = import nixpkgs {
       config.allowUnfree = true;
+      system = builtins.currentSystem;
     };
   in
   {
