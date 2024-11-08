@@ -1,4 +1,4 @@
-{ inputs, globals, nixpkgs, ...}:
+{ inputs, globals, pkgs, ...}:
 
 {
   users.groups.aidan = {};
