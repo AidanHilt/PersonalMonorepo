@@ -18,21 +18,14 @@
 
   outputs = { self, nixpkgs, agenix, home-manager, ... }@inputs:
   let
-    system = "aarch64-linux";
-
     globals = {
       username = "aidan";
       personalConfig = inputs.personalMonorepo + "/nix";
     };
-
-    pkgs = import nixpkgs {
-      config.allowUnfree = true;
-      inherit system;
-    };
   in
   {
     nixosConfigurations = {
-      laptop-vm-cluster-1 = import ./machines/laptop-vm-cluster-1.nix { inherit inputs globals pkgs; };
+      laptop-vm-cluster-1 = import ./machines/laptop-vm-cluster-1.nix { inherit inputs globals nixpkgs; };
     };
   };
 }

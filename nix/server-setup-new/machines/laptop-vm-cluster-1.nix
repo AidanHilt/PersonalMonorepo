@@ -1,9 +1,15 @@
-{ inputs, globals, pkgs, ...}:
+{ inputs, globals, nixpkgs, ...}:
 
 with inputs;
 
 let
   home-dot-nix = inputs.personalMonorepo + "/nix/home-manager/machine-configs/home-server.nix";
+
+  system = "aarch64-linux";
+  pkgs = import nixpkgs {
+    config.allowUnfree = true;
+    inherit system;
+  };
 in
 
 nixpkgs.lib.nixosSystem {
