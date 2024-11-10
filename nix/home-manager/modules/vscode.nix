@@ -46,7 +46,7 @@ in
       vscodevim.vim
       redhat.vscode-yaml
       slevesque.vscode-zipexplorer
-      ms-vscode.PowerShell
+      ms-vscode.powershell
      ];
   };
 }
