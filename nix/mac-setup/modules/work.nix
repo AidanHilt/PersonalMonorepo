@@ -3,13 +3,11 @@
 {
   imports = [
     ./guided-setup.nix
+    ./work-docker.nix
   ];
 
   environment.systemPackages = [
-    pkgs.colima
     pkgs.awscli2
-    pkgs.docker
-    pkgs.docker-buildx
   ];
 
   homebrew = {
