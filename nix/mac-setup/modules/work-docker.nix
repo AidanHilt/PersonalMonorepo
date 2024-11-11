@@ -19,8 +19,5 @@
       StandardOutPath = "/tmp/colima-autostart.log";
       StandardErrorPath = "/tmp/colima-autostart.error.log";
     };
-
-    # Only start if colima is installed
-    requires = [ "colima" ];
   };
 }
