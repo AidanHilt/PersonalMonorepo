@@ -25,7 +25,7 @@ in
     };
   };
 
-  environment.aliases = {
+  environment.shellAliases = {
     "docker build" = "docker-buildx build";
   };
 }
