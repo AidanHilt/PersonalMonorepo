@@ -26,6 +26,10 @@ let
   gen3-cluster-teardown = pkgs.writeShellScriptBin "gen3-cluster-teardown" ''
   kind delete cluster
   '';
+
+  gen3-helm-install = pkgs.writeShellScriptBin "gen3-helm-install" ''
+  helm upgrade --install gen3 ~/Gen3Repos/gen3-helm/helm/gen3
+  '';
 in
 
 {
@@ -34,6 +38,8 @@ in
     pkgs.docker
     pkgs.docker-buildx
     gen3-cluster-setup
+    gen3-cluster-teardown
+    gen3-helm-install
   ];
 
   # Launch Colima on startup, so we always have docker working
