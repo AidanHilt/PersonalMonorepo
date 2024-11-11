@@ -21,7 +21,10 @@ let
       hostPort: 443
       protocol: TCP
   EOF
+  '';
 
+  gen3-cluster-teardown = pkgs.writeShellScriptBin "gen3-cluster-teardown" ''
+  kind delete cluster
   '';
 in
 
