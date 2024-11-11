@@ -8,6 +8,7 @@
 
   environment.systemPackages = [
     pkgs.awscli2
+    pkgs.helm-docs
   ];
 
   homebrew = {
