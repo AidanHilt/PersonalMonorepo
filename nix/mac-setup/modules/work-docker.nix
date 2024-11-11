@@ -45,6 +45,7 @@ in
     gen3-cluster-setup
     gen3-cluster-teardown
     gen3-helm-install
+    gen3-edit-values
   ];
 
   # Launch Colima on startup, so we always have docker working
