@@ -9,7 +9,6 @@
 
   # Configuration for macOS LaunchAgent
   launchd.user.agents.colima-autostart = {
-    enable = true;
     path = [ "/bin" "/usr/bin" "/nix/var/nix/profiles/default/bin" ];
 
     serviceConfig = {
