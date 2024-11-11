@@ -28,7 +28,7 @@ let
   '';
 
   gen3-helm-install = pkgs.writeShellScriptBin "gen3-helm-install" ''
-  cd ~/Gen3Repos/gen3-helm/helm/gen3 && helm dependency build
+  cd ~/Gen3Repos/gen3-helm/helm/gen3 && helm dependency update
   helm upgrade --install gen3 ~/Gen3Repos/gen3-helm/helm/gen3
   '';
 in
