@@ -24,7 +24,7 @@ nixpkgs.lib.nixosSystem {
 
     ({ inputs, globals, ...}: {
       networking.hostName = "wsl-machine";
-      nixpkgs.hostPlatform = "x86_64-linux";
+      nixpkgs.hostPlatform = "amd64-linux";
 
       wsl = {
         enable = true;
