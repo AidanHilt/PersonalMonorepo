@@ -33,5 +33,7 @@ nixpkgs.lib.nixosSystem {
     })
 
     inputs.wsl.nixosModules.wsl
+
+    ../modules/common.nix
   ];
 }
