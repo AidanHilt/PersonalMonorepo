@@ -19,7 +19,7 @@
     wsl.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, agenix, home-manager }@inputs: 
+  outputs = { self, nixpkgs, agenix, home-manager, ... }@inputs: 
   let
     globals = {
       personalConfig = inputs.personalMonorepo + "/nix";
