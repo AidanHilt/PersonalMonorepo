@@ -27,7 +27,7 @@
   in
   {
     nixosConfigurations = {
-      wsl-machine = import ./machines/wsl-machine.nix { inherit inputs globals nixpkgs };
+      wsl-machine = import ./machines/wsl-machine.nix { inherit inputs globals nixpkgs; };
     };
   };
 }
