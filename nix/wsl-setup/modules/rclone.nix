@@ -30,6 +30,7 @@ in
     path = "/home/nixos/.config/rclone/rclone.conf";
     owner = "nixos";
     mode = "744";
+    symlink = false;
   };
 
 }
