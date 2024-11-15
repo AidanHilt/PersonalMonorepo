@@ -1,6 +1,20 @@
 { inputs, globals, pkgs, ...}:
 
+let 
+  update = pkgs.writeShellScriptBin "update" ''
+    cd $PERSONAL_MONOREPO_LOCATION
+    git pull -q
+    darwin-rebuild switch --flake $PERSONAL_MONOREPO_LOCATION/nix/mac-setup
+'';
+
+in
+
 {
+
+  environment.variables = {
+    PERSONAL_MONOREPO_LOCATION = "/mnt/d/Documents/Dev/PersonalMonorepo";
+  };
+
   users.groups.nixos = {};
 
   users.users.nixos = {
@@ -16,6 +30,7 @@
     pkgs.git
     pkgs.vim
     inputs.agenix.packages.${pkgs.system}.agenix
+    pkgs.eza
   ];
 
   system.stateVersion = "24.11";

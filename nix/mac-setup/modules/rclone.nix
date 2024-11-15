@@ -19,8 +19,6 @@ in
   ];
 
   # TODO update this so we encrypt files in Google Drive, for extra oomph
-  # TODO let's try and get this set up right, right now the permissions are fucked
-  # Maybe we need a ticket?
   age.secrets.rclone-config = {
     file = ../secrets/rclone-config.age;
     path = "/Users/${globals.username}/.config/rclone/rclone.conf";
