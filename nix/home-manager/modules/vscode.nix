@@ -43,7 +43,6 @@ in
       timonwong.shellcheck
       extensions.vscode-marketplace."4ops".terraform
       gruntfuggly.todo-tree
-      vscodevim.vim
       redhat.vscode-yaml
       slevesque.vscode-zipexplorer
      ];
