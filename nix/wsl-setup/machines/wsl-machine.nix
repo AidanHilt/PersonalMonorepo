@@ -36,6 +36,7 @@ nixpkgs.lib.nixosSystem {
     inputs.agenix.nixosModules.default
 
     ../modules/common.nix
+    ../modules/rclone.nix
   ];
   specialArgs = { inherit inputs globals; };
 }

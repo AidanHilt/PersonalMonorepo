@@ -9,10 +9,14 @@ let
   rclone bisync drive:KeePass ~/KeePass --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
   '';
 
-  windows-home-dir = "/mnt/c/
+  windows-home-dir = "/mnt/c/Users/Aidan";
 in
 
 {
+
+  environment.variables = {
+    WINDOWS_HOME_DIR = windows-home-dir;
+  };
 
   environment.systemPackages = [
     pkgs.rclone
@@ -22,9 +26,9 @@ in
 
   # TODO update this so we encrypt files in Google Drive, for extra oomph
   age.secrets.rclone-config = {
-    file = ../secrets/rclone-config.age;
-    path = "/Users/${globals.username}/.config/rclone/rclone.conf";
-    owner = "${globals.username}";
+    file = globals.personalConfig + "/secrets/rclone-config.age";
+    path = "/home/nixos/.config/rclone/rclone.conf";
+    owner = "nixos";
     mode = "744";
   };
 
