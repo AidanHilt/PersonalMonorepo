@@ -45,6 +45,8 @@ in
     inputs.agenix.packages.${pkgs.system}.agenix
     pkgs.eza
     update
+    argocd-commit
+    nix-commit
   ];
 
   system.stateVersion = "24.11";
