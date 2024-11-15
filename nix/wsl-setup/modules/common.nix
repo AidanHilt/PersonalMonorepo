@@ -15,6 +15,7 @@
   environment.systemPackages = [
     pkgs.git
     pkgs.vim
+    inputs.agenix.packages.${pkgs.system}.agenix
   ];
 
   system.stateVersion = "24.11";

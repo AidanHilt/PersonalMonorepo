@@ -33,7 +33,9 @@ nixpkgs.lib.nixosSystem {
     })
 
     inputs.wsl.nixosModules.wsl
+    inputs.agenix.nixosModules.default
 
     ../modules/common.nix
   ];
+  specialArgs = { inherit inputs globals; };
 }
