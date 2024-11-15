@@ -4,7 +4,20 @@ let
   update = pkgs.writeShellScriptBin "update" ''
     cd $PERSONAL_MONOREPO_LOCATION
     git pull -q
-    darwin-rebuild switch --flake $PERSONAL_MONOREPO_LOCATION/nix/mac-setup
+    sudo nixos-rebuild switch --flake $PERSONAL_MONOREPO_LOCATION/nix/wsl-setup
+'';
+
+  nix-commit = pkgs.writeShellScriptBin "nix-commit" ''
+  cd $PERSONAL_MONOREPO_LOCATION
+  git add nix/*
+  git commit -m "Nix commit"
+'';
+
+  argocd-commit = pkgs.writeShellScriptBin "argocd-commit" ''
+  cd $PERSONAL_MONOREPO_LOCATION
+  git add kubernetes/
+  git commit -m "Argocd commit"
+  git push
 '';
 
 in
@@ -31,6 +44,7 @@ in
     pkgs.vim
     inputs.agenix.packages.${pkgs.system}.agenix
     pkgs.eza
+    update
   ];
 
   system.stateVersion = "24.11";
