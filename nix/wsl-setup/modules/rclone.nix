@@ -29,6 +29,7 @@ in
     file = globals.personalConfig + "/secrets/rclone-config.age";
     path = "/home/nixos/.config/rclone/rclone.conf";
     owner = "nixos";
+    group = "nixos";
     mode = "744";
     symlink = false;
   };
