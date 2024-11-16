@@ -34,4 +34,31 @@ in
     symlink = false;
   };
 
+  systemd = {
+    timers = {
+      wallpaper-sync = {
+        wantedBy = [ "timers.target" ];
+        timerConfig = {
+          OnBootSec = "5m";
+          OnUnitActiveSec = "5m";
+          Unit = "wallpaper-sync.service";
+        };
+      };
+    };
+
+    services = {
+      wallpaper-sync = {
+        script = ''
+          set -xe
+          ${pkgs.rclone}/bin/rclone bisync drive:Wallpapers $WINDOWS_HOME_DIR/Wallpapers --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
+        '';
+
+        serviceConfig = {
+          Type = "oneshot";
+          User = "root";
+        };
+      }
+    }
+  };
+
 }
