@@ -50,7 +50,7 @@ in
       wallpaper-sync = {
         script = ''
           set -xe
-          ${pkgs.rclone}/bin/rclone bisync drive:Wallpapers $WINDOWS_HOME_DIR/Wallpapers --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
+          ${pkgs.rclone}/bin/rclone bisync drive:Wallpapers $WINDOWS_HOME_DIR/Wallpapers --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/nixos/.config/rclone/rclone.conf
         '';
 
         serviceConfig = {
