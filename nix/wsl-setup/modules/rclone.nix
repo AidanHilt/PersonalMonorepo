@@ -44,6 +44,15 @@ in
           Unit = "wallpaper-sync.service";
         };
       };
+
+      keepass-sync = {
+        wantedBy = [ "timers.target" ];
+        timerConfig = {
+          OnBootSec = "5m";
+          OnUnitActiveSec = "5m";
+          Unit = "keepass-sync.service";
+        };
+      };
     };
 
     services = {
@@ -51,6 +60,18 @@ in
         script = ''
           set -xe
           ${pkgs.rclone}/bin/rclone bisync drive:Wallpapers ${windows-home-dir}/Wallpapers --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/nixos/.config/rclone/rclone.conf
+        '';
+
+        serviceConfig = {
+          Type = "oneshot";
+          User = "root";
+        };
+      };
+
+      wallpaper-sync = {
+        script = ''
+          set -xe
+          ${pkgs.rclone}/bin/rclone bisync drive:KeePass ${windows-home-dir}/KeePass --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/nixos/.config/rclone/rclone.conf
         '';
 
         serviceConfig = {
