@@ -68,7 +68,7 @@ in
         };
       };
 
-      wallpaper-sync = {
+      keepass-sync = {
         script = ''
           set -xe
           ${pkgs.rclone}/bin/rclone bisync drive:KeePass ${windows-home-dir}/KeePass --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/nixos/.config/rclone/rclone.conf
