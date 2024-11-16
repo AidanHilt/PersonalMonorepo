@@ -57,8 +57,8 @@ in
           Type = "oneshot";
           User = "root";
         };
-      }
-    }
+      };
+    };
   };
 
 }
