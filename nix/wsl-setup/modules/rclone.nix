@@ -14,7 +14,7 @@ in
 
 {
 
-  environment.variables = {
+  environment.sessionVariables = {
     WINDOWS_HOME_DIR = windows-home-dir;
   };
 
