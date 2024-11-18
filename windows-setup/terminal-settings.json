@@ -35,7 +35,7 @@
     ],
     "copyFormatting": "none",
     "copyOnSelect": false,
-    "defaultProfile": "{ea523789-b43f-425f-91cb-afb03722980f}",
+    "defaultProfile": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
     "newTabMenu": 
     [
         {
@@ -54,24 +54,19 @@
             },
             {
                 "guid": "{0caa0dad-35be-5f56-a8ff-afceeeaa6101}",
-                "hidden": false,
+                "hidden": true,
                 "name": "Command Prompt"
             },
             {
                 "guid": "{b453ae62-4e3d-5e58-b989-0a998ec441b8}",
-                "hidden": false,
+                "hidden": true,
                 "name": "Azure Cloud Shell",
                 "source": "Windows.Terminal.Azure"
             },
             {
-                "commandline": "C:\\Program Files\\Git\\bin\\bash.exe",
-                "guid": "{ea523789-b43f-425f-91cb-afb03722980f}",
-                "name": "Git Bash"
-            },
-            {
-                "guid": "{2c4de342-38b7-51cf-b940-2309a097f518}",
+                "guid": "{c397f356-5e7b-55bc-956b-8cb4b9762c26}",
                 "hidden": false,
-                "name": "Ubuntu",
+                "name": "NixOS",
                 "source": "Windows.Terminal.Wsl"
             }
         ]
