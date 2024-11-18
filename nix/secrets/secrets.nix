@@ -12,7 +12,7 @@ let
   wsl-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOUAXkZfe1PNpA0inGMLBjU2FdTG5mqMU2/mXaucos2i root@nixos";
 in
 {
-  "smb-mount-config.age".publicKeys = [ hyperion-user hyperion-system wsl-user wsl-system workvm ];
-  "rclone-config.age".publicKeys = [ hyperion-user hyperion-system wsl-user wsl-system workvm ];
-  "kubeconfig.age".publicKeys = [ hyperion-user hyperion-system wsl-user wsl-system workvm ];
+  "smb-mount-config.age".publicKeys = [ hyperion-user hyperion-system wsl-user wsl-system workvm-user ];
+  "rclone-config.age".publicKeys = [ hyperion-user hyperion-system wsl-user wsl-system workvm-user ];
+  "kubeconfig.age".publicKeys = [ hyperion-user hyperion-system wsl-user wsl-system workvm-user ];
 }
