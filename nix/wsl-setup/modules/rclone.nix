@@ -67,7 +67,7 @@ in
           OnUnitActiveSec = "5m";
           Unit = "documents-folder-sync.service";
         };
-      }
+      };
     };
 
     services = {
