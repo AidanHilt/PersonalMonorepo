@@ -10,7 +10,7 @@ let
   '';
 
   sync-documents = pkgs.writeShellScriptBin "sync-documents" ''
-  rclone sync $WINDOWS_DOCUMENTS_DIR drive:Documents --drive-skip-gdocs --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
+  rclone sync $WINDOWS_DOCUMENTS_DIR drive:Documents --drive-skip-gdocs --create-empty-src-dirs --fix-case --resync
   '';
 
   windows-home-dir = "/mnt/c/Users/Aidan";
