@@ -28,6 +28,7 @@ in
     pkgs.rclone
     sync-wallpapers
     sync-keepass
+    sync-documents
   ];
 
   # TODO update this so we encrypt files in Google Drive, for extra oomph
