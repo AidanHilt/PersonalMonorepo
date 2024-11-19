@@ -9,13 +9,19 @@ let
   rclone bisync drive:KeePass $WINDOWS_HOME_DIR/KeePass --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
   '';
 
+  sync-documents = pkgs.writeShellScriptBin "sync-documents" ''
+  rclone sync $WINDOWS_DOCUMENTS_DIR drive:Documents --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
+  '';
+
   windows-home-dir = "/mnt/c/Users/Aidan";
+  windows-documents-dir = "/mnt/d/Documents";
 in
 
 {
 
   environment.sessionVariables = {
     WINDOWS_HOME_DIR = windows-home-dir;
+    WINDOWS_DOCUMENTS_DIR = windows-documents-dir;
   };
 
   environment.systemPackages = [
@@ -53,6 +59,15 @@ in
           Unit = "keepass-sync.service";
         };
       };
+
+      documents-folder-sync = {
+        wantedBy = [ "timers.target" ];
+        timerConfig = {
+          OnBootSec = "5m";
+          OnUnitActiveSec = "5m";
+          Unit = "documents-folder-sync.service";
+        };
+      }
     };
 
     services = {
@@ -69,6 +84,18 @@ in
       };
 
       keepass-sync = {
+        script = ''
+          set -xe
+          ${pkgs.rclone}/bin/rclone bisync drive:KeePass ${windows-home-dir}/KeePass --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/nixos/.config/rclone/rclone.conf
+        '';
+
+        serviceConfig = {
+          Type = "oneshot";
+          User = "root";
+        };
+      };
+
+      documents-folder-sync = {
         script = ''
           set -xe
           ${pkgs.rclone}/bin/rclone bisync drive:KeePass ${windows-home-dir}/KeePass --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/nixos/.config/rclone/rclone.conf
