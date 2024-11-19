@@ -99,7 +99,7 @@ in
       documents-folder-sync = {
         script = ''
           set -xe
-          ${pkgs.rclone}/bin/rclone bisync drive:KeePass ${windows-home-dir}/KeePass --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/nixos/.config/rclone/rclone.conf
+          ${pkgs.rclone}/bin/rclone sync ${windows-documents-dir} drive:Documents --drive-skip-gdocs --create-empty-src-dirs --fix-case --config /home/nixos/.config/rclone/rclone.conf
         '';
 
         serviceConfig = {
