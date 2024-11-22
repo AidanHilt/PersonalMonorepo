@@ -1,18 +1,26 @@
 # Define script names and descriptions as parallel arrays
 $scriptNames = @(
     "chocolatey-application-installs.ps1",
+    "move-user-profile.ps1",
+    "setup-default-browser.ps1",
     "disable-system-sounds.ps1",
+    "disable-startup-apps.ps1"
     "windows-explorer-settings.ps1",
     "wsl-setup.ps1",
     "windows-terminal.ps1"
+    "smb-setup.ps1"
 )
 
 $scriptDescriptions = @(
     "Uses chocolatey to install extra packages not provided by the ultimate utility",
+    "Moves what can be moved of the current user's home directory to a secondary drive."
+    "Sets Firefox as the default browser for as many actions as possible"
     "Disables all system sounds",
+    "Disables certain settings from starting on login"
     "Shows operating system-protected files",
     "Sets up WSL, as well as the WSL-based backup solution"
     "Configures windows terminal"
+    "Sets us up to mount homeshare SMB share. Make sure your password manager is ready   "
 )
 
 # Function to execute scripts with confirmation
@@ -52,6 +60,8 @@ function Execute-ScriptsWithConfirmation {
         }
     }
 }
+
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted
 
 # Run the main function
 Execute-ScriptsWithConfirmation
