@@ -3,10 +3,11 @@ $scriptNames = @(
   "setup-default-browser.ps1",
   "chocolatey-application-installs.ps1",
   "disable-system-sounds.ps1",
-  "disable-startup-apps.ps1"
+  "disable-startup-apps.ps1",
   "windows-explorer-settings.ps1",
   "wsl-setup.ps1",
-  "windows-terminal.ps1"
+  "desktop-background.ps1",
+  "windows-terminal.ps1",
   "smb-setup.ps1"
 )
 
@@ -14,10 +15,11 @@ $scriptDescriptions = @(
   "Sets Firefox as the default browser for as many actions as possible",
   "Uses chocolatey to install extra packages not provided by the ultimate utility",
   "Disables all system sounds",
-  "Disables certain settings from starting on login"
+  "Disables certain settings from starting on login",
   "Shows operating system-protected files",
-  "Sets up WSL, as well as the WSL-based backup solution"
-  "Configures windows terminal"
+  "Sets up WSL, as well as the WSL-based backup solution",
+  "Opens up the desktop background settings for modification",
+  "Configures windows terminal",
   "Sets us up to mount homeshare SMB share. Make sure your password manager is ready"
 )
 function Invoke-Logout {
