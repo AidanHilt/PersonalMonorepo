@@ -13,6 +13,10 @@ let
   rclone sync $WINDOWS_DOCUMENTS_DIR drive:Documents --drive-skip-gdocs --create-empty-src-dirs --fix-case
   '';
 
+  sync-lg-ghub = pkgs.writeShellScriptBin "sync-lg-ghub" ''
+  rclone sync $WINDOWS_HOME_DIR/AppData/local/LGHUB drive:GHUB-Windows--drive-skip-gdocs --create-empty-src-dirs --fix-case
+  '';
+
   windows-home-dir = "/mnt/c/Users/Aidan";
   windows-documents-dir = "/mnt/d/Documents";
 in
@@ -29,6 +33,7 @@ in
     sync-wallpapers
     sync-keepass
     sync-documents
+    sync-lg-ghub
   ];
 
   # TODO update this so we encrypt files in Google Drive, for extra oomph
@@ -69,6 +74,15 @@ in
           Unit = "documents-folder-sync.service";
         };
       };
+
+      lg-ghub-sync = {
+        wantedBy = [ "timers.target" ];
+        timerConfig = {
+          OnBootSec = "30m";
+          OnUnitActiveSec = "30m";
+          Unit = "lg-ghub-sync.service";
+        };
+      };
     };
 
     services = {
@@ -100,6 +114,18 @@ in
         script = ''
           set -xe
           ${pkgs.rclone}/bin/rclone sync ${windows-documents-dir} drive:Documents --drive-skip-gdocs --create-empty-src-dirs --fix-case --config /home/nixos/.config/rclone/rclone.conf
+        '';
+
+        serviceConfig = {
+          Type = "oneshot";
+          User = "root";
+        };
+      };
+
+      lg-ghub-sync = {
+        script = ''
+          set -xe
+          ${pkgs.rclone}/bin/rclone sync ${windows-homd-dir}/AppData/local/LGHUB drive:GHUB-Windows--drive-skip-gdocs --create-empty-src-dirs --fix-case --config /home/nixos/.config/rclone/rclone.conf
         '';
 
         serviceConfig = {
