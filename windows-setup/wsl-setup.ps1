@@ -71,4 +71,4 @@ if ($task) {
   Write-Error "Task verification failed. Please check Task Scheduler."
 }
 
-Set-Clipboard -Value "sudo nixos-rebuild switch --flake github:AidanHilt/PersonalMonorepo/feat/windows-setup/nix/wsl-setup"
+Set-Clipboard -Value "sudo nixos-rebuild switch --flake 'github:AidanHilt/PersonalMonorepo/feat/windows-setup?dir=nix/wsl-setup#wsl-machine'"

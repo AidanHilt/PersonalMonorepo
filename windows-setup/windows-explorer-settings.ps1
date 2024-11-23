@@ -10,7 +10,7 @@ $explorerPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanc
 
 try {
     # Show protected operating system files
-    Set-ItemProperty -Path $explorerPath -Name "ShowSuperHidden" -Value 1
+    Set-ItemProperty -Path $explorerPath -Name "Hidden" -Value 1
     Write-Host "Protected operating system files will now be visible"
 
     # Restart Windows Explorer to apply changes

@@ -64,8 +64,8 @@ in
       documents-folder-sync = {
         wantedBy = [ "timers.target" ];
         timerConfig = {
-          OnBootSec = "5m";
-          OnUnitActiveSec = "5m";
+          OnBootSec = "30m";
+          OnUnitActiveSec = "30m";
           Unit = "documents-folder-sync.service";
         };
       };
