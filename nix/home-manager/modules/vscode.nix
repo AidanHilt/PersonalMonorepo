@@ -45,6 +45,7 @@ in
       gruntfuggly.todo-tree
       redhat.vscode-yaml
       slevesque.vscode-zipexplorer
+      ms-vscode.powershell
      ];
   };
 }

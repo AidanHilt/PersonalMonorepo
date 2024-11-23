@@ -21,6 +21,7 @@
       "postman"
       "utm"
       "prismlauncher"
+      "crystalfetch"
     ];
   };
 
