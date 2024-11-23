@@ -26,8 +26,8 @@
       username = "aidan";
       personalConfig = builtins.fetchGit {
         url = "https://github.com/AidanHilt/PersonalMonorepo.git";
-        ref = "feat/windows-setup";
-        rev = "8c88e7a35d3c1fae9f6b87aea8c4b67c1a019b71"; #pragma: allowlist secret
+        ref = "master";
+        rev = "634ef9013cd29b8f414a81c0e4b3bdb0b48c0a5b"; #pragma: allowlist secret
       } + "/nix";
     };
 
