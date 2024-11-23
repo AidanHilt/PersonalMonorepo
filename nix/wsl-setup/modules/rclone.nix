@@ -17,6 +17,17 @@ let
   rclone sync $WINDOWS_HOME_DIR/AppData/local/LGHUB drive:GHUB-Windows--drive-skip-gdocs --create-empty-src-dirs --fix-case
   '';
 
+  sync-download-all = pkgs.writeShellScriptBin "sync-download-all" ''
+  mkdir $WINDOWS_HOME_DIR/Wallpapers
+  mkdir $WINDOWS_HOME_DIR/KeePass
+  mkdir $WINDOWS_HOME_DIR/AppData/local/LGHUB
+
+  rclone bisync drive:Wallpapers $WINDOWS_HOME_DIR/Wallpapers --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
+  rclone bisync drive:KeePass $WINDOWS_HOME_DIR/KeePass --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
+  rclone sync --drive-skip-gdocs $WINDOWS_DOCUMENTS_DIR drive:Documents --create-empty-src-dirs --fix-case
+  rclone sync drive:GHUB-Windows $WINDOWS_HOME_DIR/AppData/local/LGHUB --drive-skip-gdocs --create-empty-src-dirs --fix-case
+  '';
+
   windows-home-dir = "/mnt/c/Users/Aidan";
   windows-documents-dir = "/mnt/d/Documents";
 in
