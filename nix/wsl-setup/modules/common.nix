@@ -25,7 +25,7 @@ in
 {
 
   environment.variables = {
-    PERSONAL_MONOREPO_LOCATION = "/mnt/c/Users/Aidan/PersonalMonorepo";
+    PERSONAL_MONOREPO_LOCATION = "/mnt/d/Users/aidan/Documents/PersonalMonorepo";
   };
 
   users.groups.nixos = {};

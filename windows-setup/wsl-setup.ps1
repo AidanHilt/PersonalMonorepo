@@ -1,5 +1,5 @@
 $homeDir = [Environment]::GetFolderPath('UserProfile')
-$filePath = Join-Path -Path $homeDir -ChildPath "WSLFiles\nixos-wsl.tar.gz"
+$filePath = Join-Path -Path $homeDir -ChildPath "Documents\WSLFiles\nixos-wsl.tar.gz"
 
 # ====================================================
 # Create the directories that we will sync with rclone
@@ -33,7 +33,7 @@ if (-Not (Test-Path -Path "$filePath" -PathType Leaf)) {
 } else {
   Write-Output "Nixos file already exists!"
 }
-wsl --import NixOS $env:USERPROFILE\NixOS\ $filePath --version 2
+wsl --import NixOS $env:USERPROFILE\Documents\NixOS\ $filePath --version 2
 
 wsl -s NixOS
 
@@ -71,4 +71,4 @@ if ($task) {
   Write-Error "Task verification failed. Please check Task Scheduler."
 }
 
-Set-Clipboard -Value "sudo nixos-rebuild switch --flake 'github:AidanHilt/PersonalMonorepo/feat/windows-setup?dir=nix/wsl-setup#wsl-machine'"
+Set-Clipboard -Value "sudo nixos-rebuild switch --flake 'github:AidanHilt/PersonalMonorepo?dir=nix/wsl-setup#wsl-machine'"

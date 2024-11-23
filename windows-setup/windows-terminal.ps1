@@ -3,7 +3,7 @@
 
 $appDataLocal = $env:LOCALAPPDATA
 #TODO we want to move where this gets stored
-$personalMonorepoPath = "C:\PersonalMonorepo"
+$personalMonorepoPath = "D:\Users\aidan\Documents\PersonalMonorepo"
 
 $terminalSettingsSource = Join-Path $personalMonorepoPath "windows-setup\terminal-settings.json"
 $terminalSettingsDest = Join-Path $appDataLocal "Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"

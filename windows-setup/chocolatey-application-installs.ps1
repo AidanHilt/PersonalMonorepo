@@ -6,7 +6,7 @@ choco install steelseries-engine -y
 choco install lghub -y
 choco install virtualbox -y
 choco install windirstat -y
-# This will probably kill us at some point, but hopefully it's because the package is updatedchoco
+# This will probably kill us at some point, but hopefully it's because the package is updated
 choco install parsec -y --checksum 32AB1D25825F510B8BE2BFD73A48D6539DB914A9382726DD486BE114F6CCAE6E
 choco install localsend -y
 # Welp, as far as I can tell, both the winget and chocolatey packages are broken. Doesn't mean we 

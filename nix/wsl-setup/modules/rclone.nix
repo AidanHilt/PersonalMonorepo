@@ -24,12 +24,12 @@ let
 
   rclone bisync drive:Wallpapers $WINDOWS_HOME_DIR/Wallpapers --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
   rclone bisync drive:KeePass $WINDOWS_HOME_DIR/KeePass --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
-  rclone sync --drive-skip-gdocs $WINDOWS_DOCUMENTS_DIR drive:Documents --create-empty-src-dirs --fix-case
+  rclone sync drive:Documents $WINDOWS_DOCUMENTS_DIR --drive-skip-gdocs --create-empty-src-dirs --fix-case
   rclone sync drive:GHUB-Windows $WINDOWS_HOME_DIR/AppData/local/LGHUB --drive-skip-gdocs --create-empty-src-dirs --fix-case
   '';
 
-  windows-home-dir = "/mnt/c/Users/Aidan";
-  windows-documents-dir = "/mnt/d/Documents";
+  windows-home-dir = "/mnt/d/Users/aidan";
+  windows-documents-dir = "/mnt/d/Users/aidan/Documents";
 in
 
 {
