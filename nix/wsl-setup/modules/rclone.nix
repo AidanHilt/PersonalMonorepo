@@ -125,7 +125,7 @@ in
       lg-ghub-sync = {
         script = ''
           set -xe
-          ${pkgs.rclone}/bin/rclone sync ${windows-homd-dir}/AppData/local/LGHUB drive:GHUB-Windows--drive-skip-gdocs --create-empty-src-dirs --fix-case --config /home/nixos/.config/rclone/rclone.conf
+          ${pkgs.rclone}/bin/rclone sync ${windows-home-dir}/AppData/local/LGHUB drive:GHUB-Windows--drive-skip-gdocs --create-empty-src-dirs --fix-case --config /home/nixos/.config/rclone/rclone.conf
         '';
 
         serviceConfig = {
