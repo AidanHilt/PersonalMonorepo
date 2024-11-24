@@ -11,7 +11,7 @@
     agenix.inputs.nixpkgs.follows = "nixpkgs";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/feat/windows-setup";
+      url = "github:aidanhilt/PersonalMonorepo/";
       flake = false;
     };
 
@@ -19,7 +19,7 @@
     wsl.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, agenix, home-manager, ... }@inputs: 
+  outputs = { self, nixpkgs, agenix, home-manager, ... }@inputs:
   let
     globals = {
       personalConfig = inputs.personalMonorepo + "/nix";
