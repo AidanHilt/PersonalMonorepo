@@ -176,6 +176,23 @@
         "type": "github"
       }
     },
+    "personalMonorepo": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1732772809,
+        "narHash": "sha256-M7iYhU2oSPG2PQCh+NPvsl+BPsFB4c8+KxQVTgcY8Kw=",
+        "owner": "aidanhilt",
+        "repo": "PersonalMonorepo",
+        "rev": "2333ea9b30150ca28d39dc78ab1c35fa7c32fb49",
+        "type": "github"
+      },
+      "original": {
+        "owner": "aidanhilt",
+        "ref": "feat/standardizing",
+        "repo": "PersonalMonorepo",
+        "type": "github"
+      }
+    },
     "poetry2nix": {
       "inputs": {
         "flake-utils": "flake-utils",
@@ -207,6 +224,7 @@
         "home-manager": "home-manager_2",
         "nixpkgs": "nixpkgs",
         "nur": "nur",
+        "personalMonorepo": "personalMonorepo",
         "poetry2nix": "poetry2nix"
       }
     },
