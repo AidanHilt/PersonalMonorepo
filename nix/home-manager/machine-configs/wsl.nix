@@ -1,8 +1,8 @@
 { inputs, globals, pkgs, lib, system, ...}:
 
 let
-  vim-config = globals.personalConfig + "/home-manager/modules/vim.nix";
-  zsh-config = globals.personalConfig + "/home-manager/modules/zsh.nix";
+  vim-config = globals.nixConfig + "/home-manager/modules/vim.nix";
+  zsh-config = globals.nixConfig + "/home-manager/modules/zsh.nix";
 in
 
 {

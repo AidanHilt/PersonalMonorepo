@@ -3,7 +3,7 @@
 with inputs;
 
 let
-  home-dot-nix = globals.personalConfig + "/home-manager/machine-configs/personal-macbook.nix";
+  home-dot-nix = globals.nixConfig + "/home-manager/machine-configs/personal-macbook.nix";
 in
 
 darwin.lib.darwinSystem {

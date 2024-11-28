@@ -49,7 +49,7 @@ in
 
   # TODO update this so we encrypt files in Google Drive, for extra oomph
   age.secrets.rclone-config = {
-    file = globals.personalConfig + "/secrets/rclone-config.age";
+    file = globals.nixConfig + "/secrets/rclone-config.age";
     path = "/home/nixos/.config/rclone/rclone.conf";
     owner = "nixos";
     group = "nixos";

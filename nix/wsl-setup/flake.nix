@@ -22,7 +22,7 @@
   outputs = { self, nixpkgs, agenix, home-manager, ... }@inputs:
   let
     globals = {
-      personalConfig = inputs.personalMonorepo + "/nix";
+      nixConfig = inputs.personalMonorepo + "/nix";
     };
   in
   {

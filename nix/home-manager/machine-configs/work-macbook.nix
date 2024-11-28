@@ -1,10 +1,10 @@
 { inputs, globals, pkgs, lib, system, ...}:
 
 let
-  firefox-config = globals.personalConfig + "/home-manager/modules/firefox-work.nix";
-  vim-config = globals.personalConfig + "/home-manager/modules/vim.nix";
-  vscode-config = globals.personalConfig + "/home-manager/modules/vscode.nix";
-  zsh-config = globals.personalConfig + "/home-manager/modules/zsh.nix";
+  firefox-config = globals.nixConfig + "/home-manager/modules/firefox-work.nix";
+  vim-config = globals.nixConfig + "/home-manager/modules/vim.nix";
+  vscode-config = globals.nixConfig + "/home-manager/modules/vscode.nix";
+  zsh-config = globals.nixConfig + "/home-manager/modules/zsh.nix";
 in
 
 {
