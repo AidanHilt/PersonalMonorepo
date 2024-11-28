@@ -3,11 +3,12 @@
 {
   imports = [
     ./guided-setup.nix
+    ./work-docker.nix
   ];
 
   environment.systemPackages = [
-    pkgs.colima
     pkgs.awscli2
+    pkgs.helm-docs
   ];
 
   homebrew = {

@@ -17,6 +17,11 @@
 
     poetry2nix.url = "github:nix-community/poetry2nix";
     poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
+
+    personalMonorepo = {
+      url = "github:aidanhilt/PersonalMonorepo/feat/standardizing";
+      flake = false;
+    };
   };
 
   outputs = { self, nixpkgs, darwin, home-manager, ... }@inputs:
@@ -24,11 +29,7 @@
     system = "aarch64-darwin";
     globals = {
       username = "aidan";
-      personalConfig = builtins.fetchGit {
-        url = "https://github.com/AidanHilt/PersonalMonorepo.git";
-        ref = "master";
-        rev = "fde068fe77abf2a23cc7c4f8a91cd1ecc3e8dfef"; #pragma: allowlist secret
-      } + "/nix";
+      nixConfig = inputs.personalMonorepo + "/nix";
     };
 
     pkgs = import nixpkgs {
