@@ -45,6 +45,7 @@ nixpkgs.lib.nixosSystem {
     })
 
     ../modules/common.nix
+    ../modules/rke-leader.nix
   ];
   specialArgs = { inherit inputs globals pkgs; };
 }
