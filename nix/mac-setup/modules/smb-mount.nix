@@ -2,7 +2,7 @@
 
 {
   age.secrets.smb-mount-config = {
-    file = globals.nixConfig + secrets/smb-mount-config.age;
+    file = globals.nixConfig + "/secrets/smb-mount-config.age";
     path = "/etc/smb_mount";
     symlink = false;
   };
