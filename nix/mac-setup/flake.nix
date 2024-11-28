@@ -24,7 +24,7 @@
     system = "aarch64-darwin";
     globals = {
       username = "aidan";
-      personalConfig = builtins.fetchGit {
+      nixConfig = builtins.fetchGit {
         url = "https://github.com/AidanHilt/PersonalMonorepo.git";
         ref = "master";
         rev = "634ef9013cd29b8f414a81c0e4b3bdb0b48c0a5b"; #pragma: allowlist secret
