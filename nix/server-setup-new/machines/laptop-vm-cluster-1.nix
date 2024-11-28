@@ -3,7 +3,7 @@
 with inputs;
 
 let
-  home-dot-nix = inputs.personalMonorepo + "/nix/home-manager/machine-configs/home-server.nix";
+  home-dot-nix = globals.nixConfig + "/home-manager/machine-configs/home-server.nix";
 
   system = "aarch64-linux";
   pkgs = import nixpkgs {
