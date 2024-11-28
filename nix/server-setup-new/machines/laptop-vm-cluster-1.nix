@@ -43,6 +43,7 @@ nixpkgs.lib.nixosSystem {
       nixpkgs.hostPlatform = "aarch64-linux";
       system.stateVersion = "24.11";
     })
+
     ../modules/common.nix
   ];
   specialArgs = { inherit inputs globals pkgs; };

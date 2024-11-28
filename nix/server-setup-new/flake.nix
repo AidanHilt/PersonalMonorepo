@@ -21,6 +21,7 @@
     globals = {
       username = "aidan";
       personalConfig = inputs.personalMonorepo + "/nix";
+      k8s-cluster-master = "";
     };
   in
   {
