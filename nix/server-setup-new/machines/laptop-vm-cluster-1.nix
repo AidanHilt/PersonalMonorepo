@@ -44,6 +44,8 @@ nixpkgs.lib.nixosSystem {
       system.stateVersion = "24.11";
     })
 
+    agenix.nixosModules.default
+
     ../modules/common.nix
     ../modules/rke-primary.nix
     ../modules/adguard.nix
