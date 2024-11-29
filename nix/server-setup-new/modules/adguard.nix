@@ -7,7 +7,8 @@
 
   services.adguardhome = {
     enable = true;
-    mutableSettings = false;
+    #mutableSettings = false;
+    port = 3000;
   };
 
   networking.firewall = {
