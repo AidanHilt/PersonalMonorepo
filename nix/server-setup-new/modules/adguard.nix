@@ -16,10 +16,10 @@
     allowedUDPPorts = [ 53 ];
   };
 
-  age.secrets.rclone-config = {
-    file = globals.nixConfig + "/secrets/adguardhome.age";
-    path = "/var/lib/private/AdGuardHome/AdGuardHome.yaml";
-    owner = "aidan";
-    mode = "744";
-  };
+  # age.secrets.rclone-config = {
+  #   file = globals.nixConfig + "/secrets/adguardhome.age";
+  #   path = "/var/lib/private/AdGuardHome/AdGuardHome.yaml";
+  #   owner = "aidan";
+  #   mode = "744";
+  # };
 }
