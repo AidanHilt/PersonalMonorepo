@@ -10,6 +10,8 @@ let
     config.allowUnfree = true;
     inherit system;
   };
+
+  serverAddr = "192.168.86.227";
 in
 
 nixpkgs.lib.nixosSystem {
@@ -43,8 +45,6 @@ nixpkgs.lib.nixosSystem {
         mode = "744";
       };
 
-      services.rke-secondary.serverAddr = "192.168.86.227";
-
       boot.loader.systemd-boot.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
 
@@ -59,5 +59,5 @@ nixpkgs.lib.nixosSystem {
     ../modules/rke-secondary.nix
     ../modules/adguard.nix
   ];
-  specialArgs = { inherit inputs globals pkgs; };
+  specialArgs = { inherit inputs globals pkgs serverAddr; };
 }
