@@ -43,6 +43,8 @@ nixpkgs.lib.nixosSystem {
         mode = "744";
       };
 
+      services.rke-secondary.serverAddr = "192.168.86.227";
+
       boot.loader.systemd-boot.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
 
