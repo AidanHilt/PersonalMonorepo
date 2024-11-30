@@ -9,11 +9,12 @@ let
 
   # Mac cluster configuration
   laptop-vm-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC9Rdp+DdyYnl0+ZrVaCvWU/AG8pi6V6beuJPNd/CyoD root@nixos";
+  laptop-vm-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPzvjKclx6MNXzTqy3sFfZgSt7hN0u7VEnxi3oS8M/Ai root@nixos";
 in
 {
   "smb-mount-config.age".publicKeys = [ hyperion-user hyperion-system wsl-user wsl-system ];
   "rclone-config.age".publicKeys = [ hyperion-user hyperion-system wsl-user wsl-system ];
   "kubeconfig.age".publicKeys = [ hyperion-user hyperion-system wsl-user wsl-system ];
-  "adguardhome.age".publicKeys = [ hyperion-user laptop-vm-cluster-1-system];
-  "rke-token-mac-cluster.age".publicKeys = [ hyperion-user laptop-vm-cluster-1-system ];
+  "adguardhome.age".publicKeys = [ hyperion-user laptop-vm-cluster-1-system laptop-vm-cluster-1-system ];
+  "rke-token-mac-cluster.age".publicKeys = [ hyperion-user laptop-vm-cluster-1-system laptop-vm-cluster-1-system ];
 }
