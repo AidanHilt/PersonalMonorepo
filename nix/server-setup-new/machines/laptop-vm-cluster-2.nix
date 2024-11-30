@@ -56,7 +56,7 @@ nixpkgs.lib.nixosSystem {
     agenix.nixosModules.default
 
     ../modules/common.nix
-    ../modules/rke-secondary.nix
+    #../modules/rke-secondary.nix
     ../modules/adguard.nix
   ];
   specialArgs = { inherit inputs globals pkgs serverAddr; };
