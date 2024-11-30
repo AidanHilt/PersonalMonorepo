@@ -34,13 +34,13 @@ nixpkgs.lib.nixosSystem {
           fsType = "vfat";
           options = [ "fmask=0077" "dmask=0077" ];
         };
+      };
 
-        age.secrets.rke-token = {
-          file = globals.nixConfig + "/secrets/rke-token-mac-cluster.age";
-          path = "/var/lib/rancher/rke2/server/node-token";
-          owner = "aidan";
-          mode = "744";
-        };
+      age.secrets.rke-token = {
+        file = globals.nixConfig + "/secrets/rke-token-mac-cluster.age";
+        path = "/var/lib/rancher/rke2/server/node-token";
+        owner = "aidan";
+        mode = "744";
       };
 
       boot.loader.systemd-boot.enable = true;
