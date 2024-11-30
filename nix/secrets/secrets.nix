@@ -15,4 +15,5 @@ in
   "rclone-config.age".publicKeys = [ hyperion-user hyperion-system wsl-user wsl-system ];
   "kubeconfig.age".publicKeys = [ hyperion-user hyperion-system wsl-user wsl-system ];
   "adguardhome.age".publicKeys = [ hyperion-user laptop-vm-cluster-1-system];
+  "rke-token-mac-cluster.age".publicKeys = [ hyperion-user laptop-vm-cluster-1-system ];
 }
