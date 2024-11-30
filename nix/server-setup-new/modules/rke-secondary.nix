@@ -34,12 +34,4 @@ in
       ];
     };
   };
-
-  age.secrets. = {
-    file = globals.nixConfig + "/secrets/adguardhome.age";
-    path = "/var/lib/private/AdGuardHome/AdGuardHome.yaml";
-    owner = "aidan";
-    mode = "744";
-    symlink = false;
-  };
 }
