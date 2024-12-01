@@ -29,7 +29,6 @@ darwin.lib.darwinSystem {
 
     ../modules/common.nix
     ../modules/personal.nix
-    ../modules/hosts.nix
   ];
   specialArgs = { inherit inputs globals; };
 }

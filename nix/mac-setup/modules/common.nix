@@ -27,7 +27,6 @@ let
   agenix -e kubeconfig.age
 '';
 
-
 in
 
 {
