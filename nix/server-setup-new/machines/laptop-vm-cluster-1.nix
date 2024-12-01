@@ -50,7 +50,12 @@ nixpkgs.lib.nixosSystem {
       system.stateVersion = "24.11";
 
       networking.hostName = "laptop-vm-cluster-1";
-      networking.
+      networking.interfaces.enp0s1.ipv4.addresses = [
+        {
+          address = "192.168.86.20";
+          prefixLength = 24;
+        }
+      ];
     })
 
     agenix.nixosModules.default
