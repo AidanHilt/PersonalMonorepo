@@ -1,7 +1,7 @@
 { inputs, pkgs, globals, config, ... }:
 
 {
-  age.secrets.hosts-file = {
+  age.secrets.hosts = {
     file = globals.nixConfig + "/secrets/hosts.age";
     # owner = "root";
     # mode = "644";
