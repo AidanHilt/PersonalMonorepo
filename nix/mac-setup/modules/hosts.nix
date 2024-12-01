@@ -1,4 +1,4 @@
-{ inputs, pkgs, globals, config, ... }:
+{ inputs, pkgs, globals, ... }:
 
 {
   age.secrets.rclone-config = {
@@ -8,5 +8,5 @@
     mode = "644";
   };
 
-  networking.hostFiles = [ config.age.secrets.rclone-config.path ];
+  networking.hostFiles = [ age.secrets.rclone-config.path ];
 }
