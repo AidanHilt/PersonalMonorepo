@@ -12,6 +12,6 @@
       priority = 100;
       virtualRouterId = 81;
       virtualIps = [{ addr = "192.168.86.19"; }];
-    }
-  }
+    };
+  };
 }
