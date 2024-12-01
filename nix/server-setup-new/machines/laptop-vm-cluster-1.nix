@@ -46,9 +46,11 @@ nixpkgs.lib.nixosSystem {
       boot.loader.systemd-boot.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
 
-      networking.hostName = "laptop-vm-cluster-1";
       nixpkgs.hostPlatform = "aarch64-linux";
       system.stateVersion = "24.11";
+
+      networking.hostName = "laptop-vm-cluster-1";
+      networking.
     })
 
     agenix.nixosModules.default
