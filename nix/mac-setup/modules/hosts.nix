@@ -3,8 +3,8 @@
 {
   age.secrets.hosts-file = {
     file = globals.nixConfig + "/secrets/hosts.age";
-    # owner = "root";
-    # mode = "644";
+    owner = "root";
+    mode = "644";
     # symlink = false;
   };
 
