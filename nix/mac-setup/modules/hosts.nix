@@ -1,4 +1,4 @@
-{ inputs, pkgs, globals, config, ... }:
+{ inputs, pkgs, globals, ... }:
 
 {
   age.secrets.hosts-file = {
