@@ -19,7 +19,7 @@
     poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/feat/standardizing";
+      url = "github:aidanhilt/PersonalMonorepo/feat/nix-server-setup";
       flake = false;
     };
   };
