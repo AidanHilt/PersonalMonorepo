@@ -8,5 +8,5 @@
     mode = "644";
   };
 
-  networking.hostFiles = [ age.secrets.rclone-config.path ];
+  networking.hostFiles = [ inputs.agenix.secrets.rclone-config.path ];
 }
