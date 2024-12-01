@@ -23,8 +23,6 @@ darwin.lib.darwinSystem {
       };
 
       networking.hostName = "hyperion";
-
-      networking.hostFiles = [];
     })
 
     agenix.darwinModules.default
