@@ -8,5 +8,5 @@
     mode = "644";
   };
 
-  networking.hostFiles = [ inputs.age.secrets.rclone-config.path ];
+  networking.hostFiles = [ age.secrets.rclone-config.path ];
 }
