@@ -23,13 +23,15 @@ darwin.lib.darwinSystem {
       };
 
       networking.hostName = "hyperion";
+
+      networking.hostFiles = [];
     })
 
     agenix.darwinModules.default
 
     ../modules/common.nix
     ../modules/personal.nix
-    ../modules/hosts.nix
+    #../modules/hosts.nix
 
   ];
   specialArgs = { inherit inputs globals; };
