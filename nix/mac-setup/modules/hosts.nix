@@ -1,4 +1,4 @@
-{ inputs, pkgs, globals, ... }:
+{ inputs, pkgs, globals, config, ... }:
 
 {
   age.secrets.rclone-config = {
