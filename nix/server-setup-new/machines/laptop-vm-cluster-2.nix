@@ -65,6 +65,7 @@ nixpkgs.lib.nixosSystem {
     ../modules/common.nix
     #../modules/rke-secondary.nix
     ../modules/adguard.nix
+    ../modules/keepalived-staging.nix
   ];
   specialArgs = { inherit inputs globals pkgs serverAddr; };
 }
