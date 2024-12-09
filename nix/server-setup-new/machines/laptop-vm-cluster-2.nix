@@ -55,7 +55,7 @@ nixpkgs.lib.nixosSystem {
       networking.hostName = "laptop-vm-cluster-2";
       networking.interfaces.enp0s1.ipv4.addresses = [
         {
-          address = "192.168.86.20";
+          address = "192.168.86.21";
           prefixLength = 24;
         }
       ];
