@@ -33,7 +33,7 @@ in
     pkgs.git
     pkgs.vim
     pkgs.eza
-    upload-host-key
+   # upload-host-key
   ];
 
   system.stateVersion = "24.11";
