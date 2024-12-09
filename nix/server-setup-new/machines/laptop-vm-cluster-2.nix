@@ -59,6 +59,17 @@ nixpkgs.lib.nixosSystem {
           prefixLength = 24;
         }
       ];
+
+      services.openssh = {
+        enable = true;
+
+        hostKeys = [
+          {
+            path = "etc/ssh/ssh_host_ed25519_key";
+            type = "ed25519";
+          }
+        ];
+      };
     })
 
     agenix.nixosModules.default
