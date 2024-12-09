@@ -11,7 +11,7 @@ let
     inherit system;
   };
 
-  serverAddr = "192.168.86.21";
+  serverAddr = "192.168.86.227";
 in
 
 nixpkgs.lib.nixosSystem {
@@ -49,9 +49,16 @@ nixpkgs.lib.nixosSystem {
       boot.loader.systemd-boot.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
 
-      networking.hostName = "laptop-vm-cluster-2";
       nixpkgs.hostPlatform = "aarch64-linux";
       system.stateVersion = "24.11";
+
+      networking.hostName = "laptop-vm-cluster-2";
+      networking.interfaces.enp0s1.ipv4.addresses = [
+        {
+          address = "192.168.86.20";
+          prefixLength = 24;
+        }
+      ];
     })
 
     agenix.nixosModules.default
