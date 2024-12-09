@@ -3,6 +3,17 @@
 {
   users.groups.aidan = {};
 
+  services.openssh = {
+    enable = true;
+
+    hostKeys = [
+      {
+        path = "/etc/ssh/ssh_host_ed25519_key";
+        type = "ed25519";
+      }
+    ];
+  };
+
   users.users.aidan = {
     home = "/home/aidan";
     group = "aidan";
