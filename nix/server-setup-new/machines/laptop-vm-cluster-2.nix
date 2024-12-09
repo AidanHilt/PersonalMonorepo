@@ -26,17 +26,16 @@ nixpkgs.lib.nixosSystem {
 
     ({ inputs, globals, ... }: {
       fileSystems = {
-        "/" =
-          { device = "/dev/disk/by-uuid/ff2214b9-0586-449e-b6ad-f09b09504e55";
-            fsType = "ext4";
-          };
+        "/" = {
+          device = "/dev/disk/by-uuid/4574ed8a-7849-4343-90e6-6395045e322d";
+          fsType = "ext4";
+        };
 
-        "/boot" =
-          { device = "/dev/disk/by-uuid/8B8C-F950";
-            fsType = "vfat";
-            options = [ "fmask=0077" "dmask=0077" ];
-          };
-
+      "/boot" = {
+          device = "/dev/disk/by-uuid/E7D5-910C";
+          fsType = "vfat";
+          options = [ "fmask=0077" "dmask=0077" ];
+        };
       };
 
       age.secrets.rke-token = {
