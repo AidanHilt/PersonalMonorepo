@@ -27,6 +27,7 @@ darwin.lib.darwinSystem {
 
     ../modules/common.nix
     ../modules/work.nix
+    ../modules/work-docker.nix
 
   ];
   specialArgs = { inherit inputs globals; };

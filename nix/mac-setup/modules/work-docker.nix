@@ -42,6 +42,7 @@ in
     pkgs.colima
     pkgs.docker
     pkgs.docker-buildx
+    pkgs.docker-credential-helpers
     gen3-cluster-setup
     gen3-cluster-teardown
     gen3-helm-install
@@ -56,7 +57,6 @@ in
       Label = "com.user.colima-autostart";
       ProgramArguments = [ "colima" "start" ];
       RunAtLoad = true;
-      KeepAlive = false;
       StandardOutPath = "/tmp/colima-autostart.log";
       StandardErrorPath = "/tmp/colima-autostart.error.log";
     };
