@@ -50,6 +50,7 @@ nixpkgs.lib.nixosSystem {
       system.stateVersion = "24.11";
 
       networking = {
+        defaultGateway = "192.168.86.1";
         hostName = "laptop-vm-cluster-1";
         nameservers = [ "192.168.86.3" ];
         interfaces.enp0s1.ipv4.addresses = [
