@@ -24,16 +24,16 @@ nixpkgs.lib.nixosSystem {
 
     ({ inputs, globals, ... }: {
       fileSystems = {
-        "/" = {
-          device = "/dev/disk/by-uuid/1cbdfff8-d5d5-4f56-8672-676859e786ca";
-          fsType = "ext4";
-        };
+  "/" =
+    { device = "/dev/disk/by-uuid/bb7bfa45-7bdc-471d-a985-8cb160ca9b89";
+      fsType = "ext4";
+    };
 
-        "/boot" = {
-          device = "/dev/disk/by-uuid/4919-9DDA";
-          fsType = "vfat";
-          options = [ "fmask=0077" "dmask=0077" ];
-        };
+  "/boot" =
+    { device = "/dev/disk/by-uuid/80F3-C7B2";
+      fsType = "vfat";
+      options = [ "fmask=0077" "dmask=0077" ];
+    };
       };
 
       age.secrets.rke-token = {
@@ -49,13 +49,16 @@ nixpkgs.lib.nixosSystem {
       nixpkgs.hostPlatform = "aarch64-linux";
       system.stateVersion = "24.11";
 
-      networking.hostName = "laptop-vm-cluster-1";
-      networking.interfaces.enp0s1.ipv4.addresses = [
-        {
-          address = "192.168.86.20";
-          prefixLength = 24;
-        }
-      ];
+      networking = {
+        hostName = "laptop-vm-cluster-1";
+        nameservers = [ "192.168.86.1" ];
+        interfaces.enp0s1.ipv4.addresses = [
+          {
+            address = "192.168.86.20";
+            prefixLength = 24;
+          }
+        ];
+      };
     })
 
     agenix.nixosModules.default
