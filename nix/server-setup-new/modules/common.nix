@@ -4,6 +4,10 @@ let
   upload-host-key = pkgs.writeShellScriptBin "upload-host-key" ''
     curl -F "file=@/etc/ssh/ssh_host_ed25519_key.pub https://x0.at"
   '';
+
+  update = pkgs.writeShellScriptBin "update" ''
+    sudo nixos-rebuild switch --flake 'github:AidanHilt/PersonalMonorepo/feat/nix-server-setup?dir=nix/server-setup-new'
+  '';
 in
 
 {
@@ -34,6 +38,7 @@ in
     pkgs.vim
     pkgs.eza
     upload-host-key
+    update
   ];
 
   system.stateVersion = "24.11";
