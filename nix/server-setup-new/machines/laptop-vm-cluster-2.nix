@@ -11,7 +11,7 @@ let
     inherit system;
   };
 
-  serverAddr = "192.168.86.227";
+  serverAddr = "192.168.86.20";
 in
 
 nixpkgs.lib.nixosSystem {
@@ -67,7 +67,7 @@ nixpkgs.lib.nixosSystem {
     agenix.nixosModules.default
 
     ../modules/common.nix
-    #../modules/rke-secondary.nix
+    ../modules/rke-secondary.nix
     ../modules/adguard.nix
     ../modules/keepalived-staging.nix
   ];
