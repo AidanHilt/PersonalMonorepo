@@ -63,7 +63,6 @@ nixpkgs.lib.nixosSystem {
         ];
       };
     })
-    })
 
     agenix.nixosModules.default
 
