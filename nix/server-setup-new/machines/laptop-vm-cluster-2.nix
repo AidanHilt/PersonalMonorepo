@@ -51,13 +51,18 @@ nixpkgs.lib.nixosSystem {
       nixpkgs.hostPlatform = "aarch64-linux";
       system.stateVersion = "24.11";
 
-      networking.hostName = "laptop-vm-cluster-2";
-      networking.interfaces.enp0s1.ipv4.addresses = [
-        {
-          address = "192.168.86.21";
-          prefixLength = 24;
-        }
-      ];
+      networking = {
+        defaultGateway = "192.168.86.1";
+        hostName = "laptop-vm-cluster-2";
+        nameservers = [ "192.168.86.3" ];
+        interfaces.enp0s1.ipv4.addresses = [
+          {
+            address = "192.168.86.21";
+            prefixLength = 24;
+          }
+        ];
+      };
+    })
     })
 
     agenix.nixosModules.default

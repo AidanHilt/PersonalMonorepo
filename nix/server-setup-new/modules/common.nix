@@ -5,6 +5,7 @@ let
     curl -F "file=@/etc/ssh/ssh_host_ed25519_key.pub https://x0.at"
   '';
 
+  #TODO update this so we're doing master by default. Add a flag to provide a branch
   update = pkgs.writeShellScriptBin "update" ''
     sudo nixos-rebuild switch --flake 'github:AidanHilt/PersonalMonorepo/feat/nix-server-setup?dir=nix/server-setup-new'
   '';
