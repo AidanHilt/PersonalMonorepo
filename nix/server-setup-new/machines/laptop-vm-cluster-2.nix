@@ -11,7 +11,7 @@ let
     inherit system;
   };
 
-  serverAddr = "https://192.168.86.20";
+  serverAddr = "https://192.168.86.20:9345";
 in
 
 nixpkgs.lib.nixosSystem {
