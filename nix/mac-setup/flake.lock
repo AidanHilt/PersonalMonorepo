@@ -179,16 +179,16 @@
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1732772809,
-        "narHash": "sha256-M7iYhU2oSPG2PQCh+NPvsl+BPsFB4c8+KxQVTgcY8Kw=",
+        "lastModified": 1733066873,
+        "narHash": "sha256-Vo7+FETWGRzgME7gfsID++xNpw5Dpsprk+JVneLIBwo=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "2333ea9b30150ca28d39dc78ab1c35fa7c32fb49",
+        "rev": "8bbbe47e0fa1f3e4b3d8146f08e192041896e197",
         "type": "github"
       },
       "original": {
         "owner": "aidanhilt",
-        "ref": "feat/standardizing",
+        "ref": "feat/nix-server-setup",
         "repo": "PersonalMonorepo",
         "type": "github"
       }

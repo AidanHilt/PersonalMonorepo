@@ -1,5 +1,5 @@
 {
-  description = "A very basic flake";
+  description = "A flake managing MacOS configuration";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/master";
@@ -19,7 +19,7 @@
     poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/feat/standardizing";
+      url = "github:aidanhilt/PersonalMonorepo/feat/nix-server-setup";
       flake = false;
     };
   };

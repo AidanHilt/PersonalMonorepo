@@ -11,6 +11,7 @@ let
   cd ~/PersonalMonorepo
   git add nix/*
   git commit -m "Nix commit"
+  git push
 '';
 
   argocd-commit = pkgs.writeShellScriptBin "argocd-commit" ''
@@ -25,7 +26,6 @@ let
   cat ~/.kube/config | pbcopy
   agenix -e kubeconfig.age
 '';
-
 
 in
 
