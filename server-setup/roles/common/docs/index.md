@@ -1,2 +1,0 @@
-# Common Role
-This role covers software and configurations that all servers in the cluster will have. This includes setting up Docker, OpenVPN, and PiHole, as well as installing pre-requisites for LonghornFS.
