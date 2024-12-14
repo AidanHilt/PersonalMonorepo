@@ -7,7 +7,20 @@ let
 
   #TODO update this so we're doing master by default. Add a flag to provide a branch
   update = pkgs.writeShellScriptBin "update" ''
-    sudo nixos-rebuild switch --flake 'github:AidanHilt/PersonalMonorepo/feat/nix-server-setup?dir=nix/server-setup-new'
+    BRANCH="main"
+    while [[ $# -gt 0 ]]; do
+      case $1 in
+        --branch)
+          BRANCH="$2"
+          shift 2
+          ;;
+        *)
+          echo "Unknown option: $1"
+          exit 1
+          ;;
+      esac
+    done
+    sudo nixos-rebuild switch --flake "github:AidanHilt/PersonalMonorepo/$BRANCH?dir=nix/server-setup"
   '';
 in
 
