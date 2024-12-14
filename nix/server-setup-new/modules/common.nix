@@ -7,7 +7,7 @@ let
 
   #TODO update this so we're doing master by default. Add a flag to provide a branch
   update = pkgs.writeShellScriptBin "update" ''
-    BRANCH="main"
+    BRANCH="master"
     while [[ $# -gt 0 ]]; do
       case $1 in
         --branch)
