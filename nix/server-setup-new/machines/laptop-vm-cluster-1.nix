@@ -40,6 +40,7 @@ nixpkgs.lib.nixosSystem {
         file = globals.nixConfig + "/secrets/rke-token-mac-cluster.age";
         path = "/var/lib/rancher/rke2/server/node-token";
         symlink = false;
+        mode = "777";
       };
 
       boot.loader.systemd-boot.enable = true;
