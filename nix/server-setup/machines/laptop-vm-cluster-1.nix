@@ -59,6 +59,7 @@ nixpkgs.lib.nixosSystem {
 
     ../modules/common.nix
     ../modules/rke-primary.nix
+    ../modules/rke-universal.nix
     ../modules/adguard.nix
     ../modules/keepalived-staging.nix
   ];
