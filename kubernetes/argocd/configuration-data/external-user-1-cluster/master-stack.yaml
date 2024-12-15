@@ -1,0 +1,9 @@
+env: external-user-1-cluster
+
+gitRevision: master
+
+configuration:
+  configurationRevision: feat/full-release-beta-test
+
+longhorn:
+  enabled: true
