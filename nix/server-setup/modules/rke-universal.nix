@@ -12,5 +12,5 @@
     ];
   };
 
-  services.openiscsi.enable;
+  services.openiscsi.enable = true;
 }
