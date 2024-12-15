@@ -51,7 +51,7 @@ in
     pkgs.git
     pkgs.vim
     pkgs.eza
-    pkgs.openisci
+    pkgs.openiscsi
     upload-host-key
     update
   ];
