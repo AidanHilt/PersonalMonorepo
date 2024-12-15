@@ -51,6 +51,7 @@ in
     pkgs.git
     pkgs.vim
     pkgs.eza
+    pkgs.iscid
     upload-host-key
     update
   ];
