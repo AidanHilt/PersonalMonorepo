@@ -7,3 +7,5 @@ configuration:
 
 longhorn:
   enabled: true
+  configuration:
+    enabled: true

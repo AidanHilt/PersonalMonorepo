@@ -1,0 +1,5 @@
+image:
+  longhorn:
+    manager:
+      repository: aidanhilt/longhorn-nixos
+      tag: feat-full-release-beta-test
