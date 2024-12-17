@@ -25,7 +25,7 @@
                 }))
               {
                 # https://github.com/nix-community/poetry2nix/blob/master/docs/edgecases.md#modulenotfounderror-no-module-named-packagename
-                # package = [ "setuptools" ];
+                argparse = [ "setuptools" ];
               }
           );
         };
