@@ -17,6 +17,7 @@
         # see https://github.com/nix-community/poetry2nix/tree/master#api for more functions and examples.
         atils = { poetry2nix, lib }: poetry2nix.mkPoetryApplication {
           projectDir = self;
+          preferWheels = true;
           overrides = poetry2nix.overrides.withDefaults (final: super:
             lib.mapAttrs
               (attr: systems: super.${attr}.overridePythonAttrs
