@@ -17,7 +17,7 @@ spec:
         releaseName: longhorn
     {{- if index .Values "longhorn" "configuration" "enabled" }}
         valueFiles:
-          - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/grafana-dashboards"
+          - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/longhorn"
     - repoURL: {{ .Values.configuration.configurationRepo }}
       targetRevision: {{ .Values.gitRevision }}
       ref: values

@@ -1,0 +1,21 @@
+{
+  "actions": [
+    {
+      "name": "validate_buildconfig",
+      "command": "check-jsonschema .atils_buildconfig.json --schemafile ../../json-schemas/atils_buildconfig.json",
+      "order": 0
+    },
+    {
+      "name": "build-local-latest",
+      "command": ". ./config.env; docker buildx build --platform linux/arm64 . -t $IMAGE_NAME:latest --load",
+      "order": 1,
+      "description": "Build a local copy tagged with latest, so we can do local testing easily"
+    },
+    {
+      "name": "ci-build-publish",
+      "command": "source config.env && TAG=$(git rev-parse --abbrev-ref HEAD | sed s%/%-%g) && act -W $ATILS_INSTALL_DIR/.github/workflows/custom-containers-local-build-push.yaml --input image=atils-avp --input tags=$IMAGE_NAME:$TAG --secret-file $ATILS_INSTALL_DIR/.github/workflows/.secrets -C $ATILS_INSTALL_DIR",
+      "order": 10,
+      "description": "Local action to build and publish an image, tagged with the current branch"
+    }
+  ]
+}
