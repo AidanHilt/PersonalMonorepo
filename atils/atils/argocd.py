@@ -77,7 +77,7 @@ def main(args: list[str]) -> None:
   )
   master_stack_parser.add_argument(
     "environment",
-    choices=["qa-cluster", "preprod-cluster", "prod-cluster"],
+    choices=["qa-cluster", "preprod-cluster", "prod-cluster", "external-user-1-cluster"],
     help="Which environment to use for templating",
   )
   master_stack_parser.add_argument(
@@ -111,7 +111,7 @@ def main(args: list[str]) -> None:
   )
   install_argocd_parser.add_argument(
     "environment",
-    choices=["qa-cluster", "preprod-cluster", "prod-cluster"],
+    choices=["qa-cluster", "preprod-cluster", "prod-cluster", "external-user-1-cluster"],
     help="Which environment to use for templating",
   )
 
