@@ -1,4 +1,4 @@
-{ inputs, pkgs, globals, ... }:
+{ inputs, pkgs, globals, pkgs-teraform, ... }:
 
 {
   imports = [
@@ -9,6 +9,7 @@
   environment.systemPackages = [
     pkgs.awscli2
     pkgs.helm-docs
+    pkgs-terraform.terraform
   ];
 
   homebrew = {

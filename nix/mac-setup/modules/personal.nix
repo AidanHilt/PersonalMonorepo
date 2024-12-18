@@ -1,6 +1,11 @@
 { inputs, pkgs, globals, ... }:
 
 {
+
+  environment.systemPackages = [
+    pkgs.terraform
+  ];
+
   imports = [
     ./smb-mount.nix
     ./rclone.nix

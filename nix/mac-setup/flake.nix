@@ -4,6 +4,8 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/master";
 
+    nixpkgs-old-terraform.url = "github:nixos/nixpkgs/unstable?rev=5a8650469a9f8a1958ff9373bd27fb8e54c4365d";
+
     darwin.url = "github:lnl7/nix-darwin";
     darwin.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -39,11 +41,17 @@
 
       inherit system;
     };
+
+    pkgs-terraform = import nixpkgs-old-terraform {
+      config.allowUnfree = true;
+
+      inherit system;
+    };
   in
   {
     darwinConfigurations = {
       # Work machine name
-      "Aidans-MacBook-Pro" = import ./machines/work-macbook.nix { inherit inputs globals pkgs; };
+      "Aidans-MacBook-Pro" = import ./machines/work-macbook.nix { inherit inputs globals pkgs pkgs-terraform; };
       # Personal machine name
       hyperion = import ./machines/personal-macbook.nix { inherit inputs globals pkgs; };
     };

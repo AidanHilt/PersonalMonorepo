@@ -65,7 +65,6 @@ in
     pkgs.rustc
     pkgs.cargo
     pkgs.inetutils
-    pkgs.terraform
     inputs.agenix.packages.${pkgs.system}.agenix
   ];
   security.pam.enableSudoTouchIdAuth = true;
