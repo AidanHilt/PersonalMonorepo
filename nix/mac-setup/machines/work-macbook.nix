@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, ...}:
+{ inputs, globals, pkgs, pkgs-terraform, ...}:
 
 with inputs;
 
