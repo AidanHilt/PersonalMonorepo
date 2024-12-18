@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/master";
 
-    nixpkgs-old-terraform.url = "github:nixos/nixpkgs/unstable?rev=5a8650469a9f8a1958ff9373bd27fb8e54c4365d";
+    nixpkgs-old-terraform.url = "github:nixos/nixpkgs?rev=5a8650469a9f8a1958ff9373bd27fb8e54c4365d";
 
     darwin.url = "github:lnl7/nix-darwin";
     darwin.inputs.nixpkgs.follows = "nixpkgs";
