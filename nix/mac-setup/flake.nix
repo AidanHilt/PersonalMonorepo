@@ -21,7 +21,7 @@
     poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, darwin, home-manager, ... }@inputs:
+  outputs = { self, nixpkgs, darwin, home-manager, nixpkgs-old-terraform ... }@inputs:
   let
     system = "aarch64-darwin";
     globals = {
