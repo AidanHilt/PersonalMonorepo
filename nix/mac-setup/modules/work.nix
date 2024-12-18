@@ -1,4 +1,4 @@
-{ inputs, pkgs, globals, pkgs-teraform, ... }:
+{ inputs, pkgs, globals, pkgs-terraform, ... }:
 
 {
   imports = [
