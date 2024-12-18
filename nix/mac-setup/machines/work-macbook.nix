@@ -30,5 +30,5 @@ darwin.lib.darwinSystem {
     ../modules/work-docker.nix
 
   ];
-  specialArgs = { inherit inputs globals; };
+  specialArgs = { inherit inputs globals pkgs-terraform; };
 }
