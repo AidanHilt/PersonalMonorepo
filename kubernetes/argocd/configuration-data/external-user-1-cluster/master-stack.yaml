@@ -12,3 +12,8 @@ longhorn:
 
 flaresolverr:
   enabled: true
+
+hashi-vault:
+  enabled: true
+  configuration:
+    enabled: true

@@ -46,7 +46,7 @@ hashi-vault:
   enabled: false
   configuration:
     enabled: false
-  version: "0.27.0"
+  version: "0.29.1"
 
 vault-secrets-operator:
   # No enabled flag, because this is always deployed when Vault is enabled
