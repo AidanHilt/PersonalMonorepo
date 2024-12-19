@@ -3,3 +3,6 @@ image:
     manager:
       repository: aidanhilt/longhorn-manager-nixos
       tag: feat-full-release-beta-test
+
+defaultSettings:
+  defaultReplicaCount: 2
