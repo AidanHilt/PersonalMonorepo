@@ -6,3 +6,7 @@ image:
 
 defaultSettings:
   defaultReplicaCount: 2
+  allowCollectingLonghornUsageMetrics: false
+
+persistence:
+  defaultClassReplicaCount: 2
