@@ -9,3 +9,6 @@ longhorn:
   enabled: true
   configuration:
     enabled: true
+
+flaresolverr:
+  enabled: true
