@@ -4,7 +4,7 @@ image:
       repository: aidanhilt/longhorn-manager-nixos
       tag: feat-full-release-beta-test
     instanceManager:
-      repository: aidanhilt/longhorn-manager-nixos
+      repository: aidanhilt/longhorn-instance-manager-nixos
       tag: feat-full-release-beta-test
 
 defaultSettings:
