@@ -10,6 +10,7 @@ image:
 defaultSettings:
   defaultReplicaCount: 2
   allowCollectingLonghornUsageMetrics: false
+  systemManagedPodsImagePullPolicy: Always
 
 persistence:
   defaultClassReplicaCount: 2
