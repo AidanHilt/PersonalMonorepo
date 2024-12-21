@@ -25,7 +25,7 @@ stringData:
                 query_limit: null
                 grab_limit: null
                 tags:
-                  - cloudflare
+                - cloudflare
                 fields:
                   definitionFile: 1337x
                   baseUrl: null
@@ -202,7 +202,7 @@ stringData:
               FlareSolverr:
                 type: flaresolverr
                 tags:
-                  - cloudflare
+                - cloudflare
                 host_url: {{ .Values.flaresolverr.host_url }}
                 request_timeout: 60
         apps:
