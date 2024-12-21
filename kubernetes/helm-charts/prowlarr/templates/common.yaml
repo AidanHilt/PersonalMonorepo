@@ -9,7 +9,7 @@ env:
       secretKeyRef:
         name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName }}
         key: apiKey
-  - name: PROWLARR__URL_BASE
+  - name: PROWLARR__URL__BASE
     value: {{ .Values.prowlarr.urlBase }}
   {{ if .Values.prowlarr.postgres.enabled }}
   - name: PROWLARR__POSTGRES_HOST
