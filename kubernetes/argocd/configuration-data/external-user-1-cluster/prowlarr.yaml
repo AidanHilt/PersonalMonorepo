@@ -4,6 +4,9 @@ prowlarr:
   configSecret:
     existingSecret: prowlarr-config-secret
 
+image:
+  tag: latest
+
 serviceAccount:
   create: true
   name: prowlarr
