@@ -30,7 +30,6 @@ def main(args: list[str]) -> None:
     exit(1)
 
   # TODO Add auto-complete for application names
-  # TODO Add a command to list all apps and their status
   parser: argparse.ArgumentParser = argparse.ArgumentParser()
   subparsers = parser.add_subparsers(
     help="Commands to manage argocd",
