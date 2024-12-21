@@ -1,7 +1,5 @@
 prowlarr:
   urlBase: prowlarr
-  metrics:
-    enabled: true
 
   # postgres:
   #   enabled: true

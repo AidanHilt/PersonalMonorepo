@@ -1,13 +1,5 @@
 radarr:
   urlBase: radarr
-  metrics:
-    enabled: true
-
-  # postgres:
-  #   enabled: true
-  #   setupJob:
-  #     enabled: true
-  #     setupJobSecret: setup-job-config-secret
 
   configSecret:
     existingSecret: radarr-config-secret
