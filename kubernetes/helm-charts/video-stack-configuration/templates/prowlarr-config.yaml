@@ -299,6 +299,7 @@ stringData:
             authentication_required: enabled
             username: aidan
             password: testpass
+            password_confirmation: testpass
             certificate_validation: enabled
           proxy:
             enable: false
@@ -311,6 +312,7 @@ stringData:
             bypass_proxy_for_local_addresses: true
           logging:
             log_level: {{ .Values.prowlarr.loggingLevel }}
+            log_size_limit: 10
           analytics:
             send_anonymous_usage_data: false
           updates:
