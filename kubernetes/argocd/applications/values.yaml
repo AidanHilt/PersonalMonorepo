@@ -8,7 +8,8 @@ gitRevision: master
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
   configurationDirectory: kubernetes/argocd/configuration-data
-  configurationRevision: master
+  # If left unset, will use the value of gitRevision above
+  configurationRevision: ""
 
 # Service-specific config
 
