@@ -142,7 +142,7 @@ stringData:
                 secret_fields: {}
               LinuxTracker:
                 type: linuxtracker
-               enable: true
+                enable: true
                 sync_profile: Standard
                 redirect: false
                 priority: 25
