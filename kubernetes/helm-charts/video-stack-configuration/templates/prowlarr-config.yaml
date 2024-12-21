@@ -16,28 +16,6 @@ stringData:
           indexers:
             delete_unmanaged: false
             definitions:
-              1337x:
-                type: 1337x
-                enable: true
-                sync_profile: Standard
-                redirect: false
-                priority: 25
-                query_limit: null
-                grab_limit: null
-                tags: []
-                fields:
-                  definitionFile: 1337x
-                  baseUrl: null
-                  baseSettings.limitsUnit: Day
-                  torrentBaseSettings.appMinimumSeeders: null
-                  torrentBaseSettings.seedRatio: null
-                  torrentBaseSettings.seedTime: null
-                  torrentBaseSettings.packSeedTime: null
-                  downloadlink: iTorrents.org
-                  downloadlink2: magnet
-                  sort: created
-                  type: desc
-                secret_fields: {}
               Badass Torrents:
                 type: badasstorrents
                 enable: true
