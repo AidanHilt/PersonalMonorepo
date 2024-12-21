@@ -24,7 +24,8 @@ stringData:
                 priority: 25
                 query_limit: null
                 grab_limit: null
-                tags: []
+                tags:
+                  - cloudflare
                 fields:
                   definitionFile: 1337x
                   baseUrl: null
@@ -141,7 +142,7 @@ stringData:
                 secret_fields: {}
               LinuxTracker:
                 type: linuxtracker
-                enable: true
+               enable: true
                 sync_profile: Standard
                 redirect: false
                 priority: 25
@@ -200,7 +201,8 @@ stringData:
             definitions:
               FlareSolverr:
                 type: flaresolverr
-                tags: []
+                tags:
+                  - cloudflare
                 host_url: {{ .Values.flaresolverr.host_url }}
                 request_timeout: 60
         apps:
@@ -292,10 +294,10 @@ stringData:
             url_base: {{ .Values.prowlarr.urlBase }}
             instance_name: Prowlarr
           security:
-            authentication: external
+            authentication: form
             authentication_required: enabled
-            username: null
-            password: null
+            username: aidan
+            password: testpass
             certificate_validation: enabled
           proxy:
             enable: false
