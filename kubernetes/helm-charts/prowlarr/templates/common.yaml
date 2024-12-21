@@ -4,7 +4,7 @@
 {{- define "prowlarr.harcodedValues" -}}
 env:
   {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
-  - name: PROWLARR__API__KEY
+  - name: PROWLARR__AUTH__APIKEY
     valueFrom:
       secretKeyRef:
         name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName }}
