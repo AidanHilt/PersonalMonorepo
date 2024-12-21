@@ -297,8 +297,8 @@ stringData:
           security:
             authentication: form
             authentication_required: enabled
-            username: null
-            password: null
+            username: aidan
+            password: testpass
             certificate_validation: enabled
           proxy:
             enable: false
