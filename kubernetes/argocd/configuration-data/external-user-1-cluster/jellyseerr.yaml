@@ -2,9 +2,6 @@ jellyseerr:
   configSecret:
     existingSecret: jellyseerr-config-secret
 
-image:
-  tag: develop
-
 serviceAccount:
   create: true
   name: jellyseerr

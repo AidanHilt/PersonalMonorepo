@@ -1,12 +1,6 @@
 prowlarr:
   urlBase: prowlarr
 
-  # postgres:
-  #   enabled: true
-  #   setupJob:
-  #     enabled: true
-  #     setupJobSecret: setup-job-config-secret
-
   configSecret:
     existingSecret: prowlarr-config-secret
 
