@@ -294,9 +294,11 @@ stringData:
             url_base: {{ .Values.prowlarr.urlBase }}
             instance_name: Prowlarr
           security:
+            authentication: form
             authentication_required: enabled
-            username: aidan
-            password: testpass
+            username: null
+            password: null
+            certificate_validation: enabled
           proxy:
             enable: false
             proxy_type: http
