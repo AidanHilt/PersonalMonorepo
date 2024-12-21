@@ -90,7 +90,7 @@ service:
 
 serviceMonitor:
   main:
-    enabled: true
+    enabled: {{ .Values.metrics.enabled }}
     serviceName: '{{ include "bjw-s.common.lib.chart.names.fullname" $ }}-metrics'
     endpoints:
     - port: metrics
