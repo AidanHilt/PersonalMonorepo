@@ -282,7 +282,8 @@ stringData:
           delete_unmanaged: false
           definitions: {}
         tags:
-          definitions: []
+          definitions:
+          - cloudflare
         general:
           host:
             bind_address: '*'
