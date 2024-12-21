@@ -1,4 +1,4 @@
-FROM alpine as download-tool
+FROM alpine AS download-tool
 
 ARG TARGETARCH
 
