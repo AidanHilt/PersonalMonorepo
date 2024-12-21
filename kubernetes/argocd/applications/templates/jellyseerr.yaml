@@ -15,7 +15,7 @@ spec:
        valueFiles:
          - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/jellyseerr.yaml"
    - repoURL: {{ .Values.configuration.configurationRepo }}
-     targetRevision: {{ .Values.gitRevision }}
+     targetRevision: {{ .Values.configuration.configurationRevision | default .Values.gitRevision }}
      ref: values
      {{- end }}
   destination:
