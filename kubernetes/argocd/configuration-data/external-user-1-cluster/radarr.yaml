@@ -4,6 +4,9 @@ radarr:
   configSecret:
     existingSecret: radarr-config-secret
 
+image:
+  tag: latest
+
 serviceAccount:
   create: true
   name: radarr
@@ -14,8 +17,3 @@ serviceAccount:
 persistence:
   config:
     enabled: true
-    advancedMounts:
-      main:
-        main:
-          - path: /config
-            readOnly: false
