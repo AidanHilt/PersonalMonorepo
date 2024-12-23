@@ -4,9 +4,6 @@ radarr:
   configSecret:
     existingSecret: radarr-config-secret
 
-image:
-  tag: 5.5.3
-
 serviceAccount:
   create: true
   name: radarr
@@ -17,3 +14,4 @@ serviceAccount:
 persistence:
   config:
     enabled: true
+    readOnly: false
