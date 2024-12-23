@@ -3,13 +3,13 @@
 {{/* Append the hardcoded settings */}}
 {{- define "radarr.harcodedValues" -}}
 env:
-  - name: RADARR__API__KEY
+  - name: RADARR__AUTH__APIKEY
     valueFrom:
       secretKeyRef:
         {{ $defaultSecretName := printf "%v-%v" .Release.Name "config-secret"}}
         name: {{ .Values.radarr.configSecret.existingSecret | default $defaultSecretName}}
         key: apiKey
-  - name: RADARR__URL__BASE
+  - name: RADARR__SERVER__URLBASE
     value: {{ .Values.radarr.urlBase }}
   {{ if .Values.radarr.postgres.enabled }}
   - name: RADARR__POSTGRES__HOST
