@@ -5,7 +5,7 @@ radarr:
     existingSecret: radarr-config-secret
 
 image:
-  tag: latest
+  tag: 5.5.3
 
 serviceAccount:
   create: true
