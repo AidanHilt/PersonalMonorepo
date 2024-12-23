@@ -15,7 +15,7 @@ persistence:
   config:
     enabled: true
     advancedMounts:
-      main:
+      radarr:
         radarr:
           - path: /config
             readOnly: false
