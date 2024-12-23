@@ -14,3 +14,8 @@ serviceAccount:
 persistence:
   config:
     enabled: true
+    advancedMounts:
+      main:
+        radarr:
+          - path: /config
+            readOnly: false
