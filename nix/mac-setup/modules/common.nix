@@ -27,7 +27,7 @@ let
   agenix -e kubeconfig.age
 '';
 
-  cluster-setup = pkgs.writeShellScriptBin "gen3-cluster-setup" ''
+  cluster-setup = pkgs.writeShellScriptBin "cluster-setup" ''
   cat <<EOF | kind create cluster --config=-
   kind: Cluster
   apiVersion: kind.x-k8s.io/v1alpha4
@@ -49,7 +49,7 @@ let
   EOF
   '';
 
-  cluster-teardown = pkgs.writeShellScriptBin "gen3-cluster-teardown" ''
+  cluster-teardown = pkgs.writeShellScriptBin "cluster-teardown" ''
   kind delete cluster
   '';
 
