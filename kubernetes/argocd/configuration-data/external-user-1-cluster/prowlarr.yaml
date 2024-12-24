@@ -29,7 +29,7 @@ probes:
           - bash
           - -c
           - curl --fail localhost:9696/api/v1/system/status?apiKey=$PROWLARR__AUTH__APIKEY
-      failureThreshold: 10
+      failureThreshold: 2
       initialDelaySeconds: 60
       periodSeconds: 10
       successThreshold: 1
