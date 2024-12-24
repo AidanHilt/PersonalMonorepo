@@ -24,7 +24,8 @@ stringData:
                 priority: 25
                 query_limit: null
                 grab_limit: null
-                tags: []
+                tags:
+                - "cloudflare"
                 fields:
                   definitionFile: 1337x
                   baseUrl: null
@@ -200,7 +201,8 @@ stringData:
             definitions:
               FlareSolverr:
                 type: flaresolverr
-                tags: []
+                tags:
+                - "cloudflare"
                 host_url: {{ .Values.flaresolverr.host_url }}
                 request_timeout: 60
         apps:
@@ -280,7 +282,8 @@ stringData:
           delete_unmanaged: false
           definitions: {}
         tags:
-          definitions: []
+          definitions:
+          - cloudflare
         general:
           host:
             bind_address: '*'
@@ -292,10 +295,11 @@ stringData:
             url_base: {{ .Values.prowlarr.urlBase }}
             instance_name: Prowlarr
           security:
-            authentication: external
+            authentication: form
             authentication_required: enabled
-            username: null
-            password: null
+            username: aidan
+            password: testpass
+            password_confirmation: testpass
             certificate_validation: enabled
           proxy:
             enable: false
@@ -308,6 +312,7 @@ stringData:
             bypass_proxy_for_local_addresses: true
           logging:
             log_level: {{ .Values.prowlarr.loggingLevel }}
+            log_size_limit: 10
           analytics:
             send_anonymous_usage_data: false
           updates:

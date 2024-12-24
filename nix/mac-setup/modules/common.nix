@@ -27,6 +27,32 @@ let
   agenix -e kubeconfig.age
 '';
 
+  cluster-setup = pkgs.writeShellScriptBin "cluster-setup" ''
+  cat <<EOF | kind create cluster --config=-
+  kind: Cluster
+  apiVersion: kind.x-k8s.io/v1alpha4
+  nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+    - |
+      kind: InitConfiguration
+      nodeRegistration:
+        kubeletExtraArgs:
+          node-labels: "ingress-ready=true"
+    extraPortMappings:
+    - containerPort: 80
+      hostPort: 80
+      protocol: TCP
+    - containerPort: 443
+      hostPort: 443
+      protocol: TCP
+  EOF
+  '';
+
+  cluster-teardown = pkgs.writeShellScriptBin "cluster-teardown" ''
+  kind delete cluster
+  '';
+
 in
 
 {
@@ -39,6 +65,8 @@ in
     nix-commit
     update-kubeconfig
     argocd-commit
+    cluster-setup
+    cluster-teardown
     pkgs.vim
     pkgs.python3
     pkgs.act

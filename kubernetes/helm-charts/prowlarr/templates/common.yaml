@@ -4,28 +4,28 @@
 {{- define "prowlarr.harcodedValues" -}}
 env:
   {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
-  - name: PROWLARR__API_KEY
+  - name: PROWLARR__AUTH__APIKEY
     valueFrom:
       secretKeyRef:
         name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName }}
         key: apiKey
-  - name: PROWLARR__URL_BASE
+  - name: PROWLARR__SERVER__URLBASE
     value: {{ .Values.prowlarr.urlBase }}
   {{ if .Values.prowlarr.postgres.enabled }}
-  - name: PROWLARR__POSTGRES_HOST
+  - name: PROWLARR__POSTGRES__HOST
     value: {{ .Values.prowlarr.postgres.host }}
-  - name: PROWLARR__POSTGRES_MAIN_DB
+  - name: PROWLARR__POSTGRES__MAINDB
     value: {{ .Values.prowlarr.postgres.mainDb }}
-  - name: PROWLARR__POSTGRES_LOG_DB
+  - name: PROWLARR__POSTGRES__LOGDB
     value: {{ .Values.prowlarr.postgres.logDb }}
-  - name: PROWLARR__POSTGRES_PORT
+  - name: PROWLARR__POSTGRES__PORT
     value: {{ .Values.prowlarr.postgres.port | quote }}
-  - name: PROWLARR__POSTGRES_USER
+  - name: PROWLARR__POSTGRES__USER
     valueFrom:
       secretKeyRef:
         name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName }}
         key: postgresUsername
-  - name: PROWLARR__POSTGRES_PASSWORD
+  - name: PROWLARR__POSTGRES__PASSWORD
     valueFrom:
       secretKeyRef:
         name: {{ .Values.prowlarr.configSecret.existingSecret | default $defaultSecretName}}

@@ -1,0 +1,16 @@
+image:
+  longhorn:
+    manager:
+      repository: aidanhilt/longhorn-manager-nixos
+      tag: feat-full-release-beta-test
+    instanceManager:
+      repository: aidanhilt/longhorn-instance-manager-nixos
+      tag: feat-full-release-beta-test
+
+defaultSettings:
+  defaultReplicaCount: 2
+  allowCollectingLonghornUsageMetrics: false
+  systemManagedPodsImagePullPolicy: Always
+
+persistence:
+  defaultClassReplicaCount: 2

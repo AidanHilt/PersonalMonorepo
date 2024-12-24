@@ -10,6 +10,8 @@ let
     config.allowUnfree = true;
     inherit system;
   };
+
+  hostname = "laptop-vm-cluster-1";
 in
 
 nixpkgs.lib.nixosSystem {
@@ -44,7 +46,7 @@ nixpkgs.lib.nixosSystem {
 
       networking = {
         defaultGateway = "192.168.86.1";
-        hostName = "laptop-vm-cluster-1";
+        hostName = hostname;
         nameservers = [ "192.168.86.3" ];
         interfaces.enp0s1.ipv4.addresses = [
           {
@@ -53,12 +55,18 @@ nixpkgs.lib.nixosSystem {
           }
         ];
       };
+
+      services.openiscsi = {
+        enable = true;
+        name = hostname;
+      };
     })
 
     agenix.nixosModules.default
 
     ../modules/common.nix
     ../modules/rke-primary.nix
+    ../modules/rke-universal.nix
     ../modules/adguard.nix
     ../modules/keepalived-staging.nix
   ];

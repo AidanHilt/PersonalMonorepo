@@ -1,0 +1,58 @@
+env: external-user-1-cluster
+
+gitRevision: feat/full-release-beta-test
+
+longhorn:
+  enabled: true
+  configuration:
+    enabled: true
+
+flaresolverr:
+  enabled: true
+
+hashi-vault:
+  enabled: true
+  configuration:
+    enabled: true
+
+vault-secrets-operator:
+  configuration:
+    enabled: true
+
+jellyfin:
+  enabled: true
+  configuration:
+    enabled: true
+
+jellyseerr:
+  enabled: true
+  configuration:
+    enabled: true
+
+prowlarr:
+  enabled: true
+  configuration:
+    enabled: true
+
+radarr:
+  enabled: true
+  configuration:
+    enabled: true
+
+sonarr:
+  enabled: true
+  configuration:
+    enabled: true
+
+transmission:
+  enabled: true
+  configuration:
+    enabled: true
+
+video-stack-configuration:
+  enabled: true
+  configuration:
+    enabled: true
+
+ingress:
+  enabled: true

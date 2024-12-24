@@ -25,11 +25,15 @@ spec:
             port: 80
             urlBase: /radarr
             apiKey: <path:argocd/data/video_stack_configuration#radarrApiKey>
+            rootFilders:
+              - /videos/Movies
 
           sonarr:
             port: 80
             urlBase: /sonarr
             apiKey: <path:argocd/data/video_stack_configuration#sonarrApiKey>
+            rootFolders:
+              - /videos/TV
 
           jellyseerr:
             port: 80

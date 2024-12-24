@@ -37,7 +37,7 @@ additionalContainers:
     args:
       {{- . | toYaml | nindent 5 }}
     {{- end }}
-    {{- if or .Values.vpn.openvpn.auth .Values.vpn.openvpn.authSecret }}
+    {{- if or .Values.vpn.auth .Values.vpn.authSecret }}
     envFrom:
       - secretRef:
         {{- if .Values.vpn.authSecret }}
@@ -106,10 +106,10 @@ persistence:
     type: emptyDir
   {{- end }}
   {{- if .Values.vpn.enabled }}
-  vpnauth:
-    enabled: true
-    type: secret
-    name: {{ include "bjw-s.common.lib.chart.names.fullname" $ }}-openvpn
+  # vpnauth:
+  #   enabled: true
+  #   type: secret
+  #   name: {{ include "bjw-s.common.lib.chart.names.fullname" $ }}-openvpn
   {{- if or .Values.vpn.scripts.up .Values.vpn.scripts.down }}
   vpnscript:
     type: configMap

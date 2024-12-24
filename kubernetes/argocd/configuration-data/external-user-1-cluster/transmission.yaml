@@ -1,0 +1,35 @@
+transmission:
+  alternateUi:
+    enabled: true
+
+env:
+  TRANSMISSION_WEB_HOME: /custom/flood-for-transmission
+
+persistence:
+  videos:
+    enabled: true
+    type: hostPath
+    hostPath: /videos
+  config:
+    enabled: true
+    size: 1Gi
+
+vpn:
+  enabled: true
+  authSecret: vpn-auth-secret
+  configFileSecret: vpn-config-secret
+  scripts:
+    up: |-
+      #!/bin/bash
+      echo "connected" > /shared/vpnstatus
+    down: |-
+      #!/bin/bash
+      echo "disconnected" > /shared/vpnstatus
+
+initContainers:
+  fix-permissions:
+    image: busybox
+    command: ["sh", "-c", "chmod -R 777 /videos"]
+    volumeMounts:
+      - name: videos
+        mountPath: /videos
