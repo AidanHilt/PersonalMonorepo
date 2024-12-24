@@ -65,6 +65,8 @@ in
     nix-commit
     update-kubeconfig
     argocd-commit
+    cluster-setup
+    cluster-teardown
     pkgs.vim
     pkgs.python3
     pkgs.act
