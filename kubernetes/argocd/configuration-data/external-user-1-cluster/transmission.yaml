@@ -9,6 +9,7 @@ persistence:
   videos:
     enabled: true
     type: hostPath
+    hostPath: /videos
 
 vpn:
   enabled: true
