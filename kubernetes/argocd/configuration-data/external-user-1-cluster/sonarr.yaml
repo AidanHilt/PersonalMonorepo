@@ -32,3 +32,9 @@ initContainers:
     volumeMounts:
       - name: videos
         mountPath: /videos
+  fix-permissions:
+    image: busybox
+    command: ["sh", "-c", "chmod -R 777 /videos"]
+    volumeMounts:
+      - name: videos
+        mountPath: /videos
