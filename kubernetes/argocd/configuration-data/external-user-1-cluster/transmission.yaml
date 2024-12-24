@@ -5,6 +5,11 @@ transmission:
 env:
   TRANSMISSION_WEB_HOME: /custom/flood-for-transmission
 
+persistence:
+  videos:
+    enabled: true
+    type: hostPath
+
 vpn:
   enabled: true
   authSecret: vpn-auth-secret

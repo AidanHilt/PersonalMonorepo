@@ -14,6 +14,9 @@ serviceAccount:
 persistence:
   config:
     enabled: true
+  videos:
+    enabled: true
+    type: hostPath
 
 # I know I know, but I needed to get this working, and on RKE it looks like everything is owned by root. Long-term, we'll need to figure this out,
 # but it's fine for a first pass
