@@ -7,5 +7,5 @@ terraform {
 }
 
 inputs = merge(local.environment_vars.inputs, {
-  kubeconfig_context = "laptop-cluster-context"
+  kubeconfig_context = "kind-kind"
 })
