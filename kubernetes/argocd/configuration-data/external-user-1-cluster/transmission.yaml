@@ -25,3 +25,11 @@ vpn:
     down: |-
       #!/bin/bash
       echo "disconnected" > /shared/vpnstatus
+
+initContainers:
+  fix-permissions:
+    image: busybox
+    command: ["sh", "-c", "chmod -R 777 /videos"]
+    volumeMounts:
+      - name: videos
+        mountPath: /videos
