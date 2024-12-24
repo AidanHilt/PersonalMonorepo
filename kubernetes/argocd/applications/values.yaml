@@ -59,6 +59,8 @@ vault-secrets-operator:
 
 ingress:
   enabled: false
+  # Should be set to either "kind", or "baremetal" (RKE2 is baremetal). This will let us deploy the right type of ingress based on the environment
+  clusterType: "kind"
 
 istio:
   enabled: false

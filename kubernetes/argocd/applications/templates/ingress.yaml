@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/kubernetes/ingress-nginx.git
     targetRevision: HEAD
-    path: deploy/static/provider/baremetal
+    path: deploy/static/provider/{{ .Values.ingress.clusterType }}
   destination:
     server: https://kubernetes.default.svc
     namespace: ingress-nginx
