@@ -13,9 +13,12 @@ serviceAccount:
 
 persistence:
   config:
-    enabled: false
+    enabled: true
     size: 10Gi
   videos:
     enabled: true
     type: hostPath
     hostPath: /videos
+
+image:
+  repository: linxserver/jellyfin
