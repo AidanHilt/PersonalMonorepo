@@ -37,7 +37,7 @@ additionalContainers:
     args:
       {{- . | toYaml | nindent 5 }}
     {{- end }}
-    {{- if or .Values.vpn.openvpn.auth .Values.vpn.openvpn.authSecret }}
+    {{- if or .Values.vpn.auth .Values.vpn.authSecret }}
     envFrom:
       - secretRef:
         {{- if .Values.vpn.authSecret }}
