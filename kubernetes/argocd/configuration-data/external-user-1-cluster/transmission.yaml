@@ -10,6 +10,9 @@ persistence:
     enabled: true
     type: hostPath
     hostPath: /videos
+  config:
+    enabled: true
+    size: 1Gi
 
 vpn:
   enabled: true
