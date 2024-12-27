@@ -1,6 +1,6 @@
 env: external-user-1-cluster
 
-gitRevision: feat/full-release-beta-test
+gitRevision: feat/external-user-1-release
 
 longhorn:
   enabled: true
