@@ -56,3 +56,4 @@ video-stack-configuration:
 
 ingress:
   enabled: true
+  clusterType: "baremetal"
