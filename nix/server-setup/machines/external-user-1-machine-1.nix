@@ -44,6 +44,9 @@ nixpkgs.lib.nixosSystem {
       nixpkgs.hostPlatform = "x86_64-linux";
       system.stateVersion = "24.11";
 
+      networking.hostname = "external-user-1-machine-1";
+      networking.networkmanager.enable = true;
+
       services.openiscsi = {
         enable = true;
         name = hostname;
