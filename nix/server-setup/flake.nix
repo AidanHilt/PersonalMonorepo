@@ -28,6 +28,7 @@
     nixosConfigurations = {
       laptop-vm-cluster-1 = import ./machines/laptop-vm-cluster-1.nix { inherit inputs globals nixpkgs; };
       laptop-vm-cluster-2 = import ./machines/laptop-vm-cluster-2.nix { inherit inputs globals nixpkgs; };
+      external-user-1-machine-1 = import ./machines/external-user-1-machine-1.nix { inherit inputs globals nixpkgs; };
     };
   };
 }
