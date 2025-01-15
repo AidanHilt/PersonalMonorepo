@@ -4,6 +4,10 @@ sonarr:
   configSecret:
     existingSecret: sonarr-config-secret
 
+image:
+  repository: linuxserver/sonarr
+  tag: latest
+
 serviceAccount:
   create: true
   name: sonarr
