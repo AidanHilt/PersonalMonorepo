@@ -1,0 +1,39 @@
+sonarr:
+  urlBase: sonarr
+
+  configSecret:
+    existingSecret: sonarr-config-secret
+
+serviceAccount:
+  create: true
+  name: sonarr
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"
+
+# persistence:
+#   config:
+#     enabled: true
+#   videos:
+#     enabled: true
+#     type: hostPath
+#     hostPath: /videos
+
+# I know I know, but I needed to get this working, and on RKE it looks like everything is owned by root. Long-term, we'll need to figure this out,
+# but it's fine for a first pass
+securityContext:
+  runAsUser: 0
+  runAsGroup: 0
+# initContainers:
+#   init-tv-dir:
+#     image: busybox
+#     command: ["sh", "-c", "mkdir -p /videos/TV"]
+#     volumeMounts:
+#       - name: videos
+#         mountPath: /videos
+#   fix-permissions:
+#     image: busybox
+#     command: ["sh", "-c", "chmod -R 777 /videos"]
+#     volumeMounts:
+#       - name: videos
+#         mountPath: /videos

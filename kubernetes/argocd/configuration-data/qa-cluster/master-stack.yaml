@@ -1,34 +1,17 @@
-env: qa-cluster
+env: external-user-1-cluster
 
-gitRevision: feat/crafty-server
+gitRevision: feat/external-user-1-release
 
-configuration:
-  configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
-  configurationDirectory: kubernetes/argocd/configuration-data
-  configurationRevision: feat/crafty-server
-
-crafty-server:
+longhorn:
   enabled: true
   configuration:
     enabled: true
 
 flaresolverr:
-  enabled: false
-  configuration:
-    enabled: false
-
-grafana-loki:
-  enabled: false
-  configuration:
-    enabled: true
-
-grafana-promtail:
-  enabled: false
-  configuration:
-    enabled: false
+  enabled: true
 
 hashi-vault:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
 
@@ -36,68 +19,41 @@ vault-secrets-operator:
   configuration:
     enabled: true
 
-ingress:
-  enabled: true
-
-postgres:
-  enabled: false
-  configuration:
-    enabled: true
-
-prometheus:
-  enabled: false
-  configuration:
-    enabled: true
-
-prowlarr:
-  enabled: false
-  configuration:
-    enabled: true
-
-radarr:
-  enabled: false
-  configuration:
-    enabled: true
-
-sonarr:
-  enabled: false
-  configuration:
-    enabled: true
-
-transmission:
-  enabled: false
-  configuration:
-    enabled: true
-
-video-stack-configuration:
-  enabled: false
-  configuration:
-    enabled: true
-
-istio:
-  enabled: false
-  configuration:
-    enabled: false
-
-istio-base:
-  enabled: false
-  configuration:
-    enabled: false
-
 jellyfin:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
 
 jellyseerr:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
 
-kiali:
-  enabled: false
+prowlarr:
+  enabled: true
   configuration:
     enabled: true
 
-service-monitors:
-  enabled: false
+radarr:
+  enabled: true
+  configuration:
+    enabled: true
+
+sonarr:
+  enabled: true
+  configuration:
+    enabled: true
+
+transmission:
+  enabled: true
+  configuration:
+    enabled: true
+
+video-stack-configuration:
+  enabled: true
+  configuration:
+    enabled: true
+
+ingress:
+  enabled: true
+  clusterType: "kind"

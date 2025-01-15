@@ -14,6 +14,5 @@ server:
       storage "file" {
         path = "/vault/data"
       }
-  dev:
-    enabled: true
-  logLevel: debug
+    dev:
+      enabled: true
