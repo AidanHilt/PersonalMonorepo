@@ -1,6 +1,6 @@
-env: external-user-1-cluster
+env: qa-cluster
 
-gitRevision: feat/external-user-1-release
+gitRevision: feat/buildarr-update
 
 longhorn:
   enabled: true
