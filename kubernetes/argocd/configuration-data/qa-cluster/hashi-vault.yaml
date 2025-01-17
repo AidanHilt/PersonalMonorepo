@@ -14,5 +14,5 @@ server:
       storage "file" {
         path = "/vault/data"
       }
-    dev:
-      enabled: true
+  dev:
+    enabled: true
