@@ -25,7 +25,7 @@ probes:
           - /usr/bin/env
           - bash
           - -c
-          - curl --fail localhost:8989/api/v1/system/status?apiKey=$SONxARR__AUTH__APIKEY
+          - curl --fail localhost:8989/api/v1/system/status?apiKey=$SONARR__AUTH__APIKEY
       failureThreshold: 2
       initialDelaySeconds: 60
       periodSeconds: 10
