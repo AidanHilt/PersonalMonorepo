@@ -18,10 +18,7 @@ persistence:
 probes:
   liveness:
     enabled: true
-    ## Set this to true if you wish to specify your own livenessProbe
     custom: true
-    ## The spec field contains the values for the default livenessProbe.
-    ## If you selected custom: true, this field holds the definition of the livenessProbe.
     spec:
       exec:
         command:
