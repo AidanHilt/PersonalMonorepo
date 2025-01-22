@@ -73,6 +73,7 @@ in
     argocd-commit
     cluster-setup
     cluster-teardown
+    reset-docker
     pkgs.vim
     pkgs.python3
     pkgs.act
