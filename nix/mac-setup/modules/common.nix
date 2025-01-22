@@ -27,6 +27,12 @@ let
   agenix -e kubeconfig.age
 '';
 
+  reset-docker = pkgs.writeShellScriptBin "reset-docker" ''
+  docker container prune --force
+  docker image prune -a --force
+  docker builder prune --force
+'';
+
   cluster-setup = pkgs.writeShellScriptBin "cluster-setup" ''
   cat <<EOF | kind create cluster --config=-
   kind: Cluster
