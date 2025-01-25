@@ -3,26 +3,26 @@
 {{/* Append the hardcoded settings */}}
 {{- define "radarr.harcodedValues" -}}
 env:
-  - name: RADARR__API_KEY
+  - name: RADARR__AUTH__APIKEY
     valueFrom:
       secretKeyRef:
         {{ $defaultSecretName := printf "%v-%v" .Release.Name "config-secret"}}
-        name: {{ .Values.radarr.configSecret.existingSecret | default $defaultSecretName}}
+        name: {{ .Values.RADARR.configSecret.existingSecret | default $defaultSecretName}}
         key: apiKey
-  - name: RADARR__URL_BASE
-    value: {{ .Values.radarr.urlBase }}
-  {{ if .Values.radarr.postgres.enabled }}
-  - name: RADARR__POSTGRES_HOST
-    value: {{ .Values.radarr.postgres.host }}
-  - name: RADARR__POSTGRES_MAIN_DB
-    value: {{ .Values.radarr.postgres.mainDb }}
-  - name: RADARR__POSTGRES_LOG_DB
-    value: {{ .Values.radarr.postgres.logDb }}
-  - name: RADARR__POSTGRES_PORT
-    value: {{ .Values.radarr.postgres.port | quote }}
-  - name: RADARR__POSTGRES_USER
-    value: {{ .Values.radarr.postgres.username }}
-  - name: RADARR__POSTGRES_PASSWORD
+  - name: RADARR__SERVER__URLBASE
+    value: {{ .Values.RADARR.urlBase }}
+  {{ if .Values.RADARR.postgres.enabled }}
+  - name: RADARR__POSTGRES__HOST
+    value: {{ .Values.RADARR.postgres.host }}
+  - name: RADARR__POSTGRES__MAINDB
+    value: {{ .Values.RADARR.postgres.mainDb }}
+  - name: RADARR__POSTGRES__LOGDB
+    value: {{ .Values.RADARR.postgres.logDb }}
+  - name: RADARR__POSTGRES__PORT
+    value: {{ .Values.RADARR.postgres.port | quote }}
+  - name: RADARR__POSTGRES__USER
+    value: {{ .Values.RADARR.postgres.username }}
+  - name: RADARR__POSTGRES__PASSWORD
     valueFrom:
       secretKeyRef:
         name: radarr-config-secret
