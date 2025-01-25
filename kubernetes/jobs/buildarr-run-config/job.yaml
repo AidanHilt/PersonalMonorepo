@@ -26,4 +26,4 @@ spec:
           secretName: buildarr-{{ application_name }}-config-secret
           {% endif %}
       restartPolicy: Never
-  backoffLimit: 4
+  backoffLimit: 1
