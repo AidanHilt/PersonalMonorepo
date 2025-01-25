@@ -7,21 +7,21 @@ env:
     valueFrom:
       secretKeyRef:
         {{ $defaultSecretName := printf "%v-%v" .Release.Name "config-secret"}}
-        name: {{ .Values.RADARR.configSecret.existingSecret | default $defaultSecretName}}
+        name: {{ .Values.radarr.configSecret.existingSecret | default $defaultSecretName}}
         key: apiKey
   - name: RADARR__SERVER__URLBASE
-    value: {{ .Values.RADARR.urlBase }}
-  {{ if .Values.RADARR.postgres.enabled }}
+    value: {{ .Values.radarr.urlBase }}
+  {{ if .Values.radarr.postgres.enabled }}
   - name: RADARR__POSTGRES__HOST
-    value: {{ .Values.RADARR.postgres.host }}
+    value: {{ .Values.radarr.postgres.host }}
   - name: RADARR__POSTGRES__MAINDB
-    value: {{ .Values.RADARR.postgres.mainDb }}
+    value: {{ .Values.radarr.postgres.mainDb }}
   - name: RADARR__POSTGRES__LOGDB
-    value: {{ .Values.RADARR.postgres.logDb }}
+    value: {{ .Values.radarr.postgres.logDb }}
   - name: RADARR__POSTGRES__PORT
-    value: {{ .Values.RADARR.postgres.port | quote }}
+    value: {{ .Values.radarr.postgres.port | quote }}
   - name: RADARR__POSTGRES__USER
-    value: {{ .Values.RADARR.postgres.username }}
+    value: {{ .Values.radarr.postgres.username }}
   - name: RADARR__POSTGRES__PASSWORD
     valueFrom:
       secretKeyRef:
