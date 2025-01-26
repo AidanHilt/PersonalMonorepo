@@ -4,6 +4,10 @@ prowlarr:
   configSecret:
     existingSecret: prowlarr-config-secret
 
+image:
+  repository: linuxserver/prowlarr
+  tag: latest
+
 serviceAccount:
   create: true
   name: prowlarr
