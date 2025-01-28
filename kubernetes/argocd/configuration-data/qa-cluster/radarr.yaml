@@ -23,23 +23,6 @@ persistence:
     type: hostPath
     hostPath: /videos
 
-probes:
-  liveness:
-    enabled: true
-    custom: true
-    spec:
-      exec:
-        command:
-          - /usr/bin/env
-          - bash
-          - -c
-          - "curl --fail localhost:7878/api/v1/system/status?apiKey=$RADARR__AUTH__APIKEY"
-      failureThreshold: 2
-      initialDelaySeconds: 60
-      periodSeconds: 10
-      successThreshold: 1
-      timeoutSeconds: 10
-
 # I know I know, but I needed to get this working, and on RKE it looks like everything is owned by root. Long-term, we'll need to figure this out,
 # but it's fine for a first pass
 securityContext:
