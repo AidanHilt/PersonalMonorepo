@@ -7,5 +7,5 @@ terraform {
 }
 
 inputs = merge(local.environment_vars.inputs, {
-  kubeconfig_context = "kind-qa-cluster"
+  kubeconfig_context = "kind-kind"
 })
