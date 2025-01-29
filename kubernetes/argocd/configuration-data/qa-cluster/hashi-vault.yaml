@@ -16,4 +16,3 @@ server:
       }
   dev:
     enabled: true
-  logLevel: debug

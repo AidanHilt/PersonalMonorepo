@@ -3,26 +3,26 @@
 {{/* Append the hardcoded settings */}}
 {{- define "sonarr.hardcodedValues" -}}
 env:
-  - name: SONARR__API_KEY
+  - name: SONARR__AUTH__APIKEY
     valueFrom:
       secretKeyRef:
         {{ $defaultSecretName := printf "%v-%v" .Release.Name "config-secret"}}
         name: {{ .Values.sonarr.configSecret.existingSecret | default $defaultSecretName}}
         key: apiKey
-  - name: SONARR__URL_BASE
+  - name: SONARR__SERVER__URLBASE
     value: {{ .Values.sonarr.urlBase }}
   {{ if .Values.sonarr.postgres.enabled }}
-  - name: SONARR__POSTGRES_HOST
+  - name: SONARR__POSTGRES__HOST
     value: {{ .Values.sonarr.postgres.host }}
-  - name: SONARR__POSTGRES_MAIN_DB
+  - name: SONARR__POSTGRES__MAINDB
     value: {{ .Values.sonarr.postgres.mainDb }}
-  - name: SONARR__POSTGRES_LOG_DB
+  - name: SONARR__POSTGRES__LOGDB
     value: {{ .Values.sonarr.postgres.logDb }}
-  - name: SONARR__POSTGRES_PORT
+  - name: SONARR__POSTGRES__PORT
     value: {{ .Values.sonarr.postgres.port | quote }}
-  - name: SONARR__POSTGRES_USER
+  - name: SONARR__POSTGRES__USER
     value: {{ .Values.sonarr.postgres.username }}
-  - name: SONARR__POSTGRES_PASSWORD
+  - name: SONARR__POSTGRES__PASSWORD
     valueFrom:
       secretKeyRef:
         name: sonarr-config-secret

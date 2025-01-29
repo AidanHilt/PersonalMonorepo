@@ -1,0 +1,14 @@
+jellyseerr:
+  configSecret:
+    existingSecret: jellyseerr-config-secret
+
+image:
+  repository: fallenbagel/jellyseerr
+  tag: latest
+
+serviceAccount:
+  create: true
+  name: jellyseerr
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"
