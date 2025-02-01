@@ -36,6 +36,12 @@ nixpkgs.lib.nixosSystem {
             fsType = "vfat";
             options = [ "fmask=0077" "dmask=0077" ];
           };
+
+          "/externalStorage" = {
+            device = "/dev/disk/by-uuid/DF54-1403";
+            fsType = "vfat";
+            options = [ "fmask=0022" "dmask=0022" ];
+          };
       };
 
       boot.loader.systemd-boot.enable = true;
