@@ -117,7 +117,7 @@ in
 
   system.defaults = {
     dock = {
-      expose-group-by-app = true;
+      expose-group-apps = true;
       show-recents = false;
     };
 
