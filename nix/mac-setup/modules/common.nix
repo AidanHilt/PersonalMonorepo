@@ -84,7 +84,7 @@ in
     pkgs.pre-commit
     pkgs.detect-secrets
     pkgs.k9s
-    pkgs.kubectx
+    pkgs.kubecm
     pkgs.kubernetes-helm
     pkgs.pipx
     pkgs.kind
