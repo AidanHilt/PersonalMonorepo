@@ -5,9 +5,10 @@ set -m
 
 set -e
 
-if [ ! -f /config/data/data/jellyfin.db ]; then
+if [ ! -f /config/data/data ]; then
     mkdir -p /config/data/data
-    cp /config-templates/jellyfin.db /config/data/data/
+    cp -r /config-templates/* /config/
+    echo "ATILS: Copied over blank jellyfin.db template"
 fi
 
 export ADD_TIME=$(date +"%Y-%m-%d %H:%M:%S.%N")
@@ -17,10 +18,12 @@ if [[ ! -z "${JELLYFIN__API_KEY}" ]]; then
 
   if [[ $apiKeyExists -eq 0 ]]; then
     (cat /setup_scripts/api_key.sql | envsubst) > api_key_filled.sql
-    sqlite3 /config/data/data/jellyfin.db < api_key_filled.sql
+    sqlite3 /config/data/jellyfin.db < api_key_filled.sql
     rm api_key_filled.sql
   fi
 fi
+
+echo "ATILS: Updated jellyfin DB"
 
 if [[ ! -z "${JELLYFIN__USERNAME}" ]]; then
   if [[ ! -z "${JELLYFIN__PASSWORD}" ]]; then

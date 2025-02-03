@@ -11,4 +11,4 @@ COPY config /config-templates
 
 RUN chmod +x /entrypoint.sh
 
-ENTRYPOINT ["bash", "/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
