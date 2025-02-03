@@ -5,6 +5,11 @@ set -m
 
 set -e
 
+if [ ! -f /config/data/data/jellyfin.db ]; then
+    mkdir -p /config/data/data
+    cp /config-templates/jellyfin.db /config/data/data/
+fi
+
 export ADD_TIME=$(date +"%Y-%m-%d %H:%M:%S.%N")
 
 if [[ ! -z "${JELLYFIN__API_KEY}" ]]; then
@@ -12,7 +17,7 @@ if [[ ! -z "${JELLYFIN__API_KEY}" ]]; then
 
   if [[ $apiKeyExists -eq 0 ]]; then
     (cat /setup_scripts/api_key.sql | envsubst) > api_key_filled.sql
-    sqlite3 /config/data/jellyfin.db < api_key_filled.sql
+    sqlite3 /config/data/data/jellyfin.db < api_key_filled.sql
     rm api_key_filled.sql
   fi
 fi
@@ -40,8 +45,8 @@ if [[ ! -z "${JELLYFIN__USERNAME}" ]]; then
   if [[ -z "$(curl "http://localhost:8096/$baseUrl/Users" -H 'Authorization: MediaBrowser Token="'"$JELLYFIN__API_KEY"'"' | jq '.[] | select(.Name | contains("'"$JELLYFIN__USERNAME"'")) | .Name')" ]]; then
     if [[ ! -z "${JELLYFIN__PASSWORD}" ]]; then
       user_body=$(curl "http://localhost:8096$baseUrl/Users/New" -H 'accept: application/json' -H 'Content-Type: application/json' -H 'Authorization: MediaBrowser Token="'"$JELLYFIN__API_KEY"'"' -d '{ "Name": "'"$JELLYFIN__USERNAME"'", "Password": "'"$JELLYFIN__PASSWORD"'"}')
-      user_id=$(echo $user_body | jq -r '.Id' | tr -d '"')
-      modified_user_policy=$(echo $user_body | jq -r '.Policy' | jq -r '.IsAdministrator=true')
+      user_id=$(echo "$user_body" | jq -r '.Id' | tr -d '"')
+      modified_user_policy=$(echo "$user_body" | jq -r '.Policy' | jq -r '.IsAdministrator=true')
       curl "http://localhost:8096$baseUrl/Users/$user_id/Policy" -H 'accept: application/json' -H 'Content-Type: application/json' -H 'Authorization: MediaBrowser Token="'"$JELLYFIN__API_KEY"'"' -d "$modified_user_policy"
     else
       echo "JELLYFIN__USERNAME was set, but JELLYFIN__PASSWORD was not. Skipping user configuration"

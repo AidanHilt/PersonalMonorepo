@@ -52,7 +52,7 @@ build-backend = "poetry.core.masonry.api"
 Homepage = "https://github.com/AidanHilt/PersonalMonorepo/tree/master/atils"
 
 [project.scripts]
-atils = "atils.atils:main"
+atils = "atils:main"
 [tool.bumpver]
 current_version = "2024.1001-alpha"
 version_pattern = "YYYY.BUILD[-TAG]"
