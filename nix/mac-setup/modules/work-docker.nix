@@ -16,8 +16,6 @@ in
     pkgs.colima
     pkgs.docker
     pkgs.docker-buildx
-    gen3-cluster-setup
-    gen3-cluster-teardown
     gen3-helm-install
     gen3-edit-values
   ];
