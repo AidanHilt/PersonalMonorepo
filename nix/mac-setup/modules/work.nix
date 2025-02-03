@@ -17,7 +17,7 @@
       "insomnia"
       "keeper-password-manager"
       "microsoft-remote-desktop"
-      #"openvpn-connect"
+      "openvpn-connect"
     ];
   };
 
