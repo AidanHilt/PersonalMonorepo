@@ -11,6 +11,8 @@ env:
         key: apiKey
   - name: PROWLARR__SERVER__URLBASE
     value: {{ .Values.prowlarr.urlBase }}
+  - name: PROWLARR__AUTH__METHOD
+    value: external
   {{ if .Values.prowlarr.postgres.enabled }}
   - name: PROWLARR__POSTGRES__HOST
     value: {{ .Values.prowlarr.postgres.host }}
