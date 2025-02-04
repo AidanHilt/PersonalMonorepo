@@ -42,7 +42,8 @@ fi
 
 /jellyfin/jellyfin --ffmpeg /usr/lib/jellyfin-ffmpeg/ffmpeg &
 
-sleep 5
+#TODO I think this actually depends on the speed of the machine. Ideally, we should figure out a way to wait until the server is ready, and not just time-gate it
+sleep 15
 
 if [[ ! -z "${JELLYFIN__USERNAME}" ]]; then
   if [[ -z "$(curl "http://localhost:8096/$baseUrl/Users" -H 'Authorization: MediaBrowser Token="'"$JELLYFIN__API_KEY"'"' | jq '.[] | select(.Name | contains("'"$JELLYFIN__USERNAME"'")) | .Name')" ]]; then
