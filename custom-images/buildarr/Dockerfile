@@ -44,7 +44,7 @@ ENV PGID=1000
 RUN apk add su-exec tzdata && \
     python -m pip install wheel && \
     for f in /dist/*.whl; do python -m pip install "$f"; done && \
-    #rm -r /dist && \
+    rm -r /dist && \
     chmod +x /bootstrap.sh
 
 # Set the Buildarr configuration folder as the default Docker container working folder.
