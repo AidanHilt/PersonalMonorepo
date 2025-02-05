@@ -9,6 +9,7 @@ persistence:
   videos:
     enabled: true
     type: hostPath
+    mountPath: /videos
     hostPath: /externalStorage/videos
   config:
     enabled: true
