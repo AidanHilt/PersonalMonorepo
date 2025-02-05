@@ -11,6 +11,10 @@ env:
         key: apiKey
   - name: RADARR__SERVER__URLBASE
     value: {{ .Values.radarr.urlBase }}
+  {{- if .Values.radarr.externalAuth }}
+  - name: SONARR__AUTH__METHOD
+    value: External
+  {{- end }}
   {{ if .Values.radarr.postgres.enabled }}
   - name: RADARR__POSTGRES__HOST
     value: {{ .Values.radarr.postgres.host }}

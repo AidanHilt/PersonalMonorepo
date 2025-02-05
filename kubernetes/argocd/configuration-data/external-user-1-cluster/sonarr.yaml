@@ -4,6 +4,8 @@ sonarr:
   configSecret:
     existingSecret: sonarr-config-secret
 
+  externalAuth: true
+
 serviceAccount:
   create: true
   name: sonarr

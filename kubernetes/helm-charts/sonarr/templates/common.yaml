@@ -11,6 +11,10 @@ env:
         key: apiKey
   - name: SONARR__SERVER__URLBASE
     value: {{ .Values.sonarr.urlBase }}
+  {{- if .Values.sonarr.externalAuth }}
+  - name: SONARR__AUTH__METHOD
+    value: External
+  {{- end }}
   {{ if .Values.sonarr.postgres.enabled }}
   - name: SONARR__POSTGRES__HOST
     value: {{ .Values.sonarr.postgres.host }}

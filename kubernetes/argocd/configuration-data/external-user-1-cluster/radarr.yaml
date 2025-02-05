@@ -4,6 +4,8 @@ radarr:
   configSecret:
     existingSecret: radarr-config-secret
 
+  externalAuth: true
+
 serviceAccount:
   create: true
   name: radarr
