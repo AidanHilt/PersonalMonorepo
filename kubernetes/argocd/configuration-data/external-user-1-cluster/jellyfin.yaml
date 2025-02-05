@@ -18,6 +18,7 @@ persistence:
   videos:
     enabled: true
     type: hostPath
+    mountPath: /videos
     hostPath: /externalStorage/videos
 
 image:
