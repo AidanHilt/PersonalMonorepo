@@ -12,7 +12,7 @@ env:
   - name: RADARR__SERVER__URLBASE
     value: {{ .Values.radarr.urlBase }}
   {{- if .Values.radarr.externalAuth }}
-  - name: SONARR__AUTH__METHOD
+  - name: RADARR__AUTH__METHOD
     value: External
   {{- end }}
   {{ if .Values.radarr.postgres.enabled }}
