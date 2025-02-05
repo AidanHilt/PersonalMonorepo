@@ -9,7 +9,7 @@ persistence:
   videos:
     enabled: true
     type: hostPath
-    hostPath: /videos
+    hostPath: /externalStorage/videos
   config:
     enabled: true
     size: 1Gi
@@ -32,4 +32,4 @@ initContainers:
     command: ["sh", "-c", "chmod -R 777 /videos"]
     volumeMounts:
       - name: videos
-        mountPath: /videos
+        mountPath: /externalStorage/videos
