@@ -33,4 +33,4 @@ initContainers:
     command: ["sh", "-c", "chmod -R 777 /videos"]
     volumeMounts:
       - name: videos
-        mountPath: /externalStorage/videos
+        mountPath: /videos
