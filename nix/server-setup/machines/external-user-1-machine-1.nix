@@ -57,6 +57,8 @@ nixpkgs.lib.nixosSystem {
         enable = true;
         name = hostname;
       };
+
+      services.logind.lidSwitch = "ignore";
     })
 
     agenix.nixosModules.default
