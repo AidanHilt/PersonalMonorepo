@@ -41,7 +41,7 @@ spec:
             image: aidanhilt/jellyseerr
             version: develop
             jellyfin:
-              hostname: jellyfin
+              hostname: http://jellyfin/emby
               port: 80
               urlBase: /emby
               username: <path:argocd/data/video_stack_configuration#jellyfinUsername>
