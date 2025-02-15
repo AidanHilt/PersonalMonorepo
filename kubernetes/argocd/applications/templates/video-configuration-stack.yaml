@@ -43,7 +43,6 @@ spec:
             jellyfin:
               hostname: http://jellyfin/emby
               port: 80
-              urlBase: /emby
               username: <path:argocd/data/video_stack_configuration#jellyfinUsername>
               password: <path:argocd/data/video_stack_configuration#jellyfinPassword>
               emailAddress: <path:argocd/data/video_stack_configuration#jellyfinEmail>

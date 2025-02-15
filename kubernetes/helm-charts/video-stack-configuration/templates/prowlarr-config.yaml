@@ -79,7 +79,7 @@ stringData:
                 secret_fields: {}
               GloDLS:
                 type: glodls
-                enable: false
+                enable: true
                 sync_profile: Standard
                 redirect: false
                 priority: 25
