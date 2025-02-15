@@ -12,7 +12,6 @@ serviceAccount:
   annotations:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "-2"
-# persistence:
-#   config:
-#     enabled: true
-
+persistence:
+  config:
+    enabled: true

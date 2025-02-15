@@ -2,10 +2,10 @@ jellyseerr:
   configSecret:
     existingSecret: jellyseerr-config-secret
 
-# persistence:
-#   config:
-#     enabled: true
-#     mountPath: /app/config
+persistence:
+  config:
+    enabled: true
+    mountPath: /app/config
 
 serviceAccount:
   create: true
