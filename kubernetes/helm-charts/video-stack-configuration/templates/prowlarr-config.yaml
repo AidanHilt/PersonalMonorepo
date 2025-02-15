@@ -41,7 +41,7 @@ stringData:
                 secret_fields: {}
               Badass Torrents:
                 type: badasstorrents
-                enable: true
+                enable: false
                 sync_profile: Standard
                 redirect: false
                 priority: 25
