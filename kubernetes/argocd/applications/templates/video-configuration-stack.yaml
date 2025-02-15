@@ -38,8 +38,6 @@ spec:
           jellyseerr:
             port: 80
             apiKey: <path:argocd/data/video_stack_configuration#jellyseerrApiKey>
-            image: aidanhilt/jellyseerr
-            version: develop
             jellyfin:
               hostname: http://jellyfin/emby
               port: 80
