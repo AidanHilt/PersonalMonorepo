@@ -12,7 +12,7 @@ jellyseerr:
   jellyfin:
     hostname: jellyfin
     port: 8096
-    urlBase: /
+    url_base: /
     username: admin
     password: ""
     emailAddress: someone@somewhere.com
