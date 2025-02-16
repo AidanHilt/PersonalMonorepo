@@ -22,6 +22,6 @@ persistence:
     hostPath: /externalStorage/videos
 
 image:
-  repository: jellyfin/jellyfin
-  tag: 10.10.5
+  repository: aidanhilt/jellyfin
+  tag: feat-external-user-1-retry
   pullPolicy: Always
