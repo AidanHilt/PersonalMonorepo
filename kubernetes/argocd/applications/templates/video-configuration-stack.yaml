@@ -40,7 +40,7 @@ spec:
             apiKey: <path:argocd/data/video_stack_configuration#jellyseerrApiKey>
             jellyfin:
               hostname: jellyfin
-              base_url: emby
+              url_base: emby
               port: "80"
               username: <path:argocd/data/video_stack_configuration#jellyfinUsername>
               password: <path:argocd/data/video_stack_configuration#jellyfinPassword>
