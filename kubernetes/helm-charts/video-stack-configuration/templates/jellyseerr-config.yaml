@@ -28,7 +28,7 @@ stringData:
         jellyfin:
           server_url: {{ .Values.jellyseerr.jellyfin.hostname }}
           port: {{ .Values.jellyseerr.jellyfin.port }}
-          url_base: {{ .Values.jellyseerr.jellyfin.urlBase }}
+          url_base: {{ .Values.jellyseerr.jellyfin.url_base }}
           username: {{ .Values.jellyseerr.jellyfin.username }}
           password: "{{ .Values.jellyseerr.jellyfin.password }}"
           email_address: {{ .Values.jellyseerr.jellyfin.emailAddress }}
