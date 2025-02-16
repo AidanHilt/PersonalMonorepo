@@ -8,6 +8,7 @@ spec:
       containers:
       - name: buildarr-{{ application_name }}-configurator
         image: {{ image }}
+        imagePullPolicy: Always
         command: [sh]
         args:
         - -c
