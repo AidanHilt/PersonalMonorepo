@@ -16,3 +16,4 @@ serviceAccount:
 
 image:
   repository: aidanhilt/jellyseerr
+  pullPolicy: Always
