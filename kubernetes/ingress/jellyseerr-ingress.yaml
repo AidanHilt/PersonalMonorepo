@@ -9,7 +9,7 @@ spec:
     - host: jellyseerr.localhost
       http:
         paths:
-          - path: /
+          - path: /jellyseerr
             pathType: Prefix
             backend:
               service:
