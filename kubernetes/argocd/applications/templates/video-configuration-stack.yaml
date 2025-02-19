@@ -37,7 +37,7 @@ spec:
 
           jellyseerr:
             hostname: jellyseerr
-            url_base: /jellyseerr
+            urlBase: /jellyseerr
             port: 80
             apiKey: <path:argocd/data/video_stack_configuration#jellyseerrApiKey>
             jellyfin:

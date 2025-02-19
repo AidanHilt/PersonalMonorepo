@@ -9,7 +9,7 @@ stringData:
       hostname: {{ .Values.jellyseerr.hostname }}
       port: {{ .Values.jellyseerr.port }}
       protocol: http
-      url_base: null
+      url_base: {{ .Values.jellyseerr.urlBase }}
       api_key: {{ .Values.jellyseerr.apiKey }}
       image: {{ .Values.jellyseerr.image }}
       version: {{ .Values.jellyseerr.version }}
