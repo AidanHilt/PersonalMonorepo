@@ -12,9 +12,9 @@ serviceAccount:
     "helm.sh/hook-weight": "-1"
 
 persistence:
-  # config:
-  #   enabled: true
-  #   size: 10Gi
+  config:
+    enabled: true
+    size: 10Gi
   videos:
     enabled: true
     type: hostPath
