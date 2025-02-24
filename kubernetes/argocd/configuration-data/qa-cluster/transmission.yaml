@@ -14,6 +14,10 @@ persistence:
   config:
     enabled: true
     size: 1Gi
+  tunDevice:
+    enabled: true
+    type: hostPath
+    hostPath: /dev/net/tun
 
 vpn:
   enabled: true
