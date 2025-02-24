@@ -2,9 +2,10 @@ jellyseerr:
   configSecret:
     existingSecret: jellyseerr-config-secret
 
-image:
-  repository: fallenbagel/jellyseerr
-  tag: latest
+persistence:
+  config:
+    enabled: true
+    mountPath: /app/config
 
 serviceAccount:
   create: true
@@ -12,3 +13,7 @@ serviceAccount:
   annotations:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "-2"
+
+image:
+  repository: aidanhilt/jellyseerr
+  pullPolicy: Always
