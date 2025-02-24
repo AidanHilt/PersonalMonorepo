@@ -16,8 +16,6 @@ persistence:
     size: 1Gi
 
 vpn:
-  image:
-    tag: 2.6.11-alpine-3.20.3
   enabled: true
   authSecret: vpn-auth-secret
   configFileSecret: vpn-config-secret
