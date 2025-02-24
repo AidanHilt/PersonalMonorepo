@@ -17,7 +17,7 @@ persistence:
 
 vpn:
   image:
-    tag: 2.6.12-alpine-3.21.2
+    tag: 2.6.11-alpine-3.20.3
   enabled: true
   authSecret: vpn-auth-secret
   configFileSecret: vpn-config-secret
