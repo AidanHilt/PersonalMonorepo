@@ -48,9 +48,6 @@ additionalContainers:
     {{- end }}
     {{- if or .Values.vpn.configFile .Values.vpn.configFileSecret .Values.vpn.scripts.up .Values.vpn.scripts.down .Values.vpn.additionalVolumeMounts .Values.persistence.shared.enabled }}
     volumeMounts:
-      - name: tun-device
-        hostPath:
-          path: /dev/net/tun
     {{- if or .Values.vpn.configFile .Values.vpn.configFileSecret }}
       {{- if .Values.vpn.vpnConfigFileSecret }}
       - name: {{ .Values.vpn.vpnConfigFileSecret }}
