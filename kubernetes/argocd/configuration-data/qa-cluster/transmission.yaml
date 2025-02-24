@@ -14,7 +14,7 @@ persistence:
   config:
     enabled: true
     size: 1Gi
-  tunDevice:
+  tun-device:
     enabled: true
     type: hostPath
     hostPath: /dev/net/tun
