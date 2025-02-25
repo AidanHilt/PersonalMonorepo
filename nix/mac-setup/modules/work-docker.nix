@@ -33,4 +33,12 @@ in
       StandardErrorPath = "/tmp/colima-autostart.error.log";
     };
   };
+
+  homebrew = {
+    enable = true;
+
+    brews = [
+      "docker-credential-helper"
+    ];
+  };
 }

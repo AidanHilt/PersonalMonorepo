@@ -18,6 +18,8 @@
       "keeper-password-manager"
       "microsoft-remote-desktop"
       "openvpn-connect"
+      "microsoft-teams"
+      "microsoft-outlook"
     ];
   };
 
