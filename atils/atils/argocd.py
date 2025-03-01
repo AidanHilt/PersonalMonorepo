@@ -114,16 +114,6 @@ def main(args: list[str]) -> None:
     help="Which environment to use for templating",
   )
 
-  port_forward_parser = subparsers.add_parser(
-    "port-forward",
-    help="Automatically port fowards ArgoCD, opens a browser, and copies the password",
-  )
-
-  get_password_parser = subparsers.add_parser(
-    "get-password",
-    help="Get the admin password using the default secret.",
-  )
-
   disable_parser = subparsers.add_parser(
     "disable",
     help="Disables an application from the master stack",
@@ -154,9 +144,6 @@ def main(args: list[str]) -> None:
   elif arguments.subparser_name == "install-argocd":
     args_dict = vars(arguments)
     install_argocd(args_dict["environment"])
-  # Port forward ArgoCD and open a browser window
-  elif arguments.subparser_name == "port-forward":
-    open_argocd_port_forward()
   # Disable an application from the master stack
   elif arguments.subparser_name == "disable":
     args_dict = vars(arguments)
@@ -175,10 +162,6 @@ def main(args: list[str]) -> None:
       sys.exit(1)
     else:
       enable_application(args_dict["application"])
-  # Get the ArgoCD password from the default secret
-  # TODO once we've validated that ArgoCD doesn't do its own auth, delete this
-  elif arguments.subparser_name == "get-password":
-    get_argocd_password()
   else:
     logging.error(f"Invalid command: {arguments.subparser_name}")
     exit(1)
@@ -319,24 +302,6 @@ def enable_application(application: str) -> None:
     print(f"Error: {e}")
     sys.exit(1)
 
-
-def get_argocd_password() -> None:
-  # TODO once we've validated that ArgoCD doesn't do its own auth, delete this
-  # Use kubectl to get the ArgoCD password
-  result = subprocess.run(
-    "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath={{.data.password}} | base64 -d".format(),
-    shell=True,
-    capture_output=True,
-    check=False,
-  )
-  subprocess.run(
-    f"echo {result.stdout.decode('utf-8')} | pbcopy",
-    shell=True,
-    capture_output=True,
-    check=False,
-  )
-
-
 def get_tracked_applications():
   """Get all applications under the master stack application. It loops over the resources field, picking out names
   whose kind is Application
@@ -437,33 +402,6 @@ def install_master_stack(args_dict: dict[str, str]) -> None:
         "Master-stack already exists. If you want to force a recreation, use"
         + " --force-master-reconfiguration[Not yet working]",
       )
-
-
-def open_argocd_port_forward():
-  """Create an port forward to the ArgoCD server service, and open that page in a web browser"""
-  # TODO remove the password stuff, since we can assume we're running on the network
-  result = subprocess.run(
-    "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath={{.data.password}} | base64 -d".format(),
-    shell=True,
-    capture_output=True,
-    check=False,
-  )
-  subprocess.run(
-    f"echo {result.stdout.decode('utf-8')} | pbcopy",
-    shell=True,
-    capture_output=True,
-    check=False,
-  )
-  # Open a new tab in the default browser to localhost:8080 with webbrowser
-  webbrowser.open_new_tab("http://localhost:8080/argocd")
-
-  # Port forward to the ArgoCD UI
-  subprocess.run(
-    "kubectl -n argocd port-forward svc/argocd-server -n argocd 8080:443",
-    shell=True,
-    check=False,
-  )
-
 
 def print_application_status(applications, show_updates=False, spin_char="-") -> None:
   """Iterate over a list of applications, getting their status, and then printing the name. Green means the application
