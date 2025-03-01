@@ -75,7 +75,6 @@ in
     cluster-teardown
     reset-docker
     pkgs.vim
-    pkgs.python3
     pkgs.act
     pkgs.git
     pkgs.kubectl
