@@ -9,10 +9,6 @@
     ./hosts.nix
   ];
 
-  environment.systemPackages = [
-    pkgs.poetry
-  ];
-
   homebrew = {
     casks = [
       "discord"
