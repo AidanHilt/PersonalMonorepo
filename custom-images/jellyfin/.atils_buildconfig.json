@@ -13,7 +13,7 @@
     },
     {
       "name": "ci-build-publish",
-      "command": ". ./config.env && TAG=$(git rev-parse --abbrev-ref HEAD | sed s%/%-%g) && act -W $ATILS_INSTALL_DIR/.github/workflows/custom-containers-local-build-push.yaml --input image=atils-avp --input tags=$IMAGE_NAME:$TAG --secret-file $ATILS_INSTALL_DIR/.github/workflows/.secrets -C $ATILS_INSTALL_DIR",
+      "command": ". ./config.env && TAG=$(git rev-parse --abbrev-ref HEAD | sed s%/%-%g) && act -W $ATILS_INSTALL_DIR/.github/workflows/custom-containers-local-build-push.yaml --input image=jellyfin --input tags=$IMAGE_NAME:$TAG --secret-file $ATILS_INSTALL_DIR/.github/workflows/.secrets -C $ATILS_INSTALL_DIR",
       "order": 10,
       "description": "Local action to build and publish an image, tagged with the current branch"
     }

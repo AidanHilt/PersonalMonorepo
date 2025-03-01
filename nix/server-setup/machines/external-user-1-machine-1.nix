@@ -26,16 +26,22 @@ nixpkgs.lib.nixosSystem {
 
     ({ inputs, globals, ... }: {
         fileSystems = {
-        "/" = {
-          device = "/dev/disk/by-uuid/6e507691-a02a-434d-a5cd-fb505d51dbee";
-          fsType = "ext4";
-        };
+          "/" = {
+            device = "/dev/disk/by-uuid/18767db7-d061-4550-9860-3bc6572b57f3";
+            fsType = "ext4";
+          };
 
-        "/boot" = {
-          device = "/dev/disk/by-uuid/30FE-4BD0";
-          fsType = "vfat";
-          options = [ "fmask=0077" "dmask=0077" ];
-        };
+          "/boot" = {
+            device = "/dev/disk/by-uuid/4068-E35D";
+            fsType = "vfat";
+            options = [ "fmask=0077" "dmask=0077" ];
+          };
+
+          "/externalStorage" = {
+            device = "/dev/disk/by-uuid/DF54-1403";
+            fsType = "vfat";
+            options = [ "fmask=0000" "dmask=0000" "uid=aidan" "gid=aidan"];
+          };
       };
 
       boot.loader.systemd-boot.enable = true;
@@ -51,6 +57,8 @@ nixpkgs.lib.nixosSystem {
         enable = true;
         name = hostname;
       };
+
+      services.logind.lidSwitch = "ignore";
     })
 
     agenix.nixosModules.default

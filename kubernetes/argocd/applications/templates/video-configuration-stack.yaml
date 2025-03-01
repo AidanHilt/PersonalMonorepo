@@ -36,14 +36,14 @@ spec:
               - /videos/TV
 
           jellyseerr:
+            hostname: jellyseerr
+            urlBase: /jellyseerr
             port: 80
             apiKey: <path:argocd/data/video_stack_configuration#jellyseerrApiKey>
-            image: aidanhilt/jellyseerr
-            version: develop
             jellyfin:
               hostname: jellyfin
+              url_base: /emby
               port: 80
-              urlBase: /emby
               username: <path:argocd/data/video_stack_configuration#jellyfinUsername>
               password: <path:argocd/data/video_stack_configuration#jellyfinPassword>
               emailAddress: <path:argocd/data/video_stack_configuration#jellyfinEmail>

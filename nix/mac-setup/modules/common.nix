@@ -84,7 +84,7 @@ in
     pkgs.pre-commit
     pkgs.detect-secrets
     pkgs.k9s
-    pkgs.kubectx
+    pkgs.kubecm
     pkgs.kubernetes-helm
     pkgs.pipx
     pkgs.kind
@@ -117,7 +117,7 @@ in
 
   system.defaults = {
     dock = {
-      expose-group-by-app = true;
+      expose-group-apps = true;
       show-recents = false;
     };
 

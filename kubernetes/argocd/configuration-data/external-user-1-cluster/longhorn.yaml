@@ -8,9 +8,15 @@ image:
       tag: feat-full-release-beta-test
 
 defaultSettings:
-  defaultReplicaCount: 2
+  defaultReplicaCount: 1
   allowCollectingLonghornUsageMetrics: false
   systemManagedPodsImagePullPolicy: Always
 
 persistence:
-  defaultClassReplicaCount: 2
+  defaultClassReplicaCount: 1
+
+csi:
+  attacherReplicaCount: 1
+  provisionerReplicaCount: 1
+  resizerReplicaCount: 1
+  snapshotterReplicaCount: 1

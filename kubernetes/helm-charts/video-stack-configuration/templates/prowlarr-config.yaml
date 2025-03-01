@@ -41,7 +41,7 @@ stringData:
                 secret_fields: {}
               Badass Torrents:
                 type: badasstorrents
-                enable: true
+                enable: false
                 sync_profile: Standard
                 redirect: false
                 priority: 25
@@ -294,13 +294,6 @@ stringData:
             ssl_cert_password: null
             url_base: {{ .Values.prowlarr.urlBase }}
             instance_name: Prowlarr
-          security:
-            authentication: form
-            authentication_required: enabled
-            username: aidan
-            password: testpass
-            password_confirmation: testpass
-            certificate_validation: enabled
           proxy:
             enable: false
             proxy_type: http

@@ -9,7 +9,8 @@ persistence:
   videos:
     enabled: true
     type: hostPath
-    hostPath: /videos
+    mountPath: /videos
+    hostPath: /externalStorage/videos
   config:
     enabled: true
     size: 1Gi

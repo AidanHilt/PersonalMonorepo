@@ -101,6 +101,7 @@ vpn:
   # -- Set the VPN container securityContext
   # @default -- See values.yaml
   securityContext:
+    privileged: true
     capabilities:
       add:
         - NET_ADMIN

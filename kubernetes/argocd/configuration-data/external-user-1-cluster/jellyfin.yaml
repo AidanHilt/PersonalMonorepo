@@ -18,8 +18,10 @@ persistence:
   videos:
     enabled: true
     type: hostPath
-    hostPath: /videos
+    mountPath: /videos
+    hostPath: /externalStorage/videos
 
 image:
-  repository: lscr.io/linuxserver/jellyfin
-  tag: latest
+  repository: aidanhilt/jellyfin
+  tag: feat-external-user-1-retry
+  pullPolicy: Always

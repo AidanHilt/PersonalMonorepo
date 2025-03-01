@@ -4,9 +4,7 @@ radarr:
   configSecret:
     existingSecret: radarr-config-secret
 
-image:
-  repository: linuxserver/radarr
-  tag: latest
+  externalAuth: true
 
 serviceAccount:
   create: true
@@ -16,11 +14,12 @@ serviceAccount:
     "helm.sh/hook-weight": "-2"
 
 persistence:
-  #   config:
-  #     enabled: true
+  config:
+    enabled: true
   videos:
     enabled: true
     type: hostPath
+    mountPath: /videos
     hostPath: /videos
 
 # I know I know, but I needed to get this working, and on RKE it looks like everything is owned by root. Long-term, we'll need to figure this out,
@@ -29,7 +28,7 @@ securityContext:
   runAsUser: 0
   runAsGroup: 0
 # initContainers:
-#   init-movies-dir:
+#   init-tv-dir:
 #     image: busybox
 #     command: ["sh", "-c", "mkdir -p /videos/Movies"]
 #     volumeMounts:

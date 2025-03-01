@@ -1,6 +1,6 @@
 env: external-user-1-cluster
 
-gitRevision: feat/external-user-1-release
+gitRevision: feat/external-user-1-retry
 
 longhorn:
   enabled: true
@@ -56,4 +56,4 @@ video-stack-configuration:
 
 ingress:
   enabled: true
-  clusterType: "kind"
+  clusterType: "baremetal"

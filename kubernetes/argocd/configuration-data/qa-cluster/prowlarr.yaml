@@ -4,9 +4,7 @@ prowlarr:
   configSecret:
     existingSecret: prowlarr-config-secret
 
-image:
-  repository: linuxserver/prowlarr
-  tag: latest
+  externalAuth: true
 
 serviceAccount:
   create: true
@@ -14,6 +12,6 @@ serviceAccount:
   annotations:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "-2"
-# persistence:
-#   config:
-#     enabled: true
+persistence:
+  config:
+    enabled: true

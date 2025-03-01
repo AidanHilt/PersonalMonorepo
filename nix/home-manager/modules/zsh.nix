@@ -22,8 +22,9 @@
 
     shellAliases = {
       ls = "eza";
-      kctx = "kubectx";
-      kns = "kubens";
+      kctx = "kubecm switch";
+      kns = "kubecm namespace";
+      kctx-add = "kubecm add";
       # Let's just leave this, we're doing a fancy ReMarkable setup
       #remouse = "~/Library/Python/3.9/bin/remouse";
     };

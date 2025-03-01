@@ -1,11 +1,6 @@
 env: qa-cluster
 
-gitRevision: feat/buildarr-update
-
-longhorn:
-  enabled: true
-  configuration:
-    enabled: true
+gitRevision: feat/external-user-1-retry
 
 flaresolverr:
   enabled: true

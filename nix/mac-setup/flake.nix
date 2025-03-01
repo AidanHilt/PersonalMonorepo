@@ -2,7 +2,7 @@
   description = "A flake managing MacOS configuration";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/master";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     darwin.url = "github:lnl7/nix-darwin";
     darwin.inputs.nixpkgs.follows = "nixpkgs";
@@ -19,7 +19,7 @@
     poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/feat/full-release-beta-test";
+      url = "github:aidanhilt/PersonalMonorepo/feat/external-user-1-retry";
       flake = false;
     };
   };
@@ -34,7 +34,7 @@
 
     pkgs = import nixpkgs {
       overlays = [
-        inputs.nur.overlay
+        inputs.nur.overlays.default
       ];
       config.allowUnfree = true;
 

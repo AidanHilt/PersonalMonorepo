@@ -5,7 +5,6 @@ let
     curl -F "file=@/etc/ssh/ssh_host_ed25519_key.pub https://x0.at"
   '';
 
-  #TODO update this so we're doing master by default. Add a flag to provide a branch
   update = pkgs.writeShellScriptBin "update" ''
     BRANCH="master"
     while [[ $# -gt 0 ]]; do
@@ -47,10 +46,13 @@ in
     openssh.authorizedKeys.keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIImw5CsGmsR1WTunv5bvNcozmoUSgJf76RMvy6SZtA2R aidan@hyperion"];
   };
 
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
   environment.systemPackages = [
     pkgs.git
     pkgs.vim
     pkgs.eza
+    pkgs.htop
     upload-host-key
     update
   ];

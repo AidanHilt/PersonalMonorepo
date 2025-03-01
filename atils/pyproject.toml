@@ -1,3 +1,6 @@
+[project]
+name = "atils"
+
 [tool.poetry]
 name = "atils"
 version = "1.5.0"
@@ -24,7 +27,7 @@ dynaconf = "^3.1.12"
 jinja2 = "^3.1.2"
 termcolor = "^2.3.0"
 watchfiles = "^0.21.0"
-setuptools = "^72.0.0"
+setuptools = "^75.0.0"
 colored = "^2.2.4"
 rich = "^13.7.1"
 
@@ -49,7 +52,7 @@ build-backend = "poetry.core.masonry.api"
 Homepage = "https://github.com/AidanHilt/PersonalMonorepo/tree/master/atils"
 
 [project.scripts]
-atils = "atils.atils:main"
+atils = "atils:main"
 [tool.bumpver]
 current_version = "2024.1001-alpha"
 version_pattern = "YYYY.BUILD[-TAG]"
