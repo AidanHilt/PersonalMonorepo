@@ -9,6 +9,12 @@
     ./hosts.nix
   ];
 
+  environment.systemPackages = [
+    pkgs.python312
+    pkgs.poetry
+    pkgs.python312packages.pip
+  ];
+
   homebrew = {
     casks = [
       "discord"
