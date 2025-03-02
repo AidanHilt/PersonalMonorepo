@@ -1,0 +1,31 @@
+{{- if index .Values "radarr" "enabled" }}
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: radarr-auth
+  namespace: videos
+spec:
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: radarr
+    serviceAccount: radarr
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: radarr-config-secret
+  namespace: videos
+spec:
+  type: kv-v2
+  mount: videos
+  path: radarr/config
+
+  destination:
+    name: radarr-config-secret
+    create: true
+
+  refreshAfter: 30s
+
+  vaultAuthRef: radarr-auth
+{{- end }}

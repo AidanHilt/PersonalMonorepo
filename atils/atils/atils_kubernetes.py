@@ -5,8 +5,7 @@ import os
 import shutil
 import sys
 
-from atils.common import config, yaml_utils
-from atils.common.settings import settings
+from atils.common import config
 from kubernetes import client
 from kubernetes import config as k8s_config
 
@@ -102,7 +101,8 @@ def main(args: list[str]):
 
 
 def check_namespace_exists(namespace_name: str) -> bool:
-  """Check if a given kubernetes namespace exists
+  """
+  Check if a given kubernetes namespace exists
   Args:
     namespace_name (str): The name of the namespace to check
   Returns:
@@ -122,7 +122,8 @@ def check_namespace_exists(namespace_name: str) -> bool:
 
 
 def get_and_decode_secret(secret_name: str, secret_namespace: str) -> None:
-  """Get a kubernetes secret, and then decode and pretty print it
+  """
+  Get a kubernetes secret, and then decode and pretty print it
   Args:
     secret_name (str): The name of the secret to decode and print
     secret_namespace (str): The namespace the given secret is located in
@@ -168,7 +169,8 @@ def get_and_decode_secret(secret_name: str, secret_namespace: str) -> None:
 
 
 def get_current_namespace() -> str:
-  """Gets the current namespace set in the current context
+  """
+  Gets the current namespace set in the current context
   Returns:
     str: The current namespace set in the current context
   """

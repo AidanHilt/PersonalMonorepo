@@ -1,2 +1,0 @@
-# Ingress Configuration
-Port-forwarding is terrible, so we want to be able to access all of our services from a subpath. On our production server, we do that with Istio virtual services, but those don't work on all environments. When they don't work, we'll instead use ingresses, which are stored here. All of these are pretty self-explanatory, and they're meant to be managed with ArgoCD.

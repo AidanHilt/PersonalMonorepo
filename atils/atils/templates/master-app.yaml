@@ -7,7 +7,7 @@ spec:
   project: default
   sources:
     - repoURL: https://github.com/AidanHilt/PersonalMonorepo
-      path: kubernetes/argocd/applications
+      path: kubernetes/helm-charts/k8s-resources/master-stack
       targetRevision: {{ git_revision }}
       helm:
         valueFiles:

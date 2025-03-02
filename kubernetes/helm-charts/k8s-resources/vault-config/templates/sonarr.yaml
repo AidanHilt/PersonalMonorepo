@@ -1,0 +1,31 @@
+{{- if index .Values "sonarr" "enabled" }}
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: sonarr-auth
+  namespace: videos
+spec:
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: sonarr
+    serviceAccount: sonarr
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: sonarr-config-secret
+  namespace: videos
+spec:
+  type: kv-v2
+  mount: videos
+  path: sonarr/config
+
+  destination:
+    name: sonarr-config-secret
+    create: true
+
+  refreshAfter: 30s
+
+  vaultAuthRef: sonarr-auth
+{{- end }}

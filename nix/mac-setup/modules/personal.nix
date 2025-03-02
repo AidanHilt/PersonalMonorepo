@@ -10,6 +10,7 @@
   ];
 
   environment.systemPackages = [
+    pkgs.python312
     pkgs.poetry
   ];
 

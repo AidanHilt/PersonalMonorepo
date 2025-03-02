@@ -1,0 +1,31 @@
+{{- if index .Values "jellyfin" "enabled" }}
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: jellyfin-auth
+  namespace: videos
+spec:
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: jellyfin
+    serviceAccount: jellyfin
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: jellyfin-config-secret
+  namespace: videos
+spec:
+  type: kv-v2
+  mount: videos
+  path: jellyfin/config
+
+  destination:
+    name: jellyfin-config-secret
+    create: true
+
+  refreshAfter: 30s
+
+  vaultAuthRef: jellyfin-auth
+{{- end }}

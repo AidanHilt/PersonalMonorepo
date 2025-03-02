@@ -1,0 +1,9 @@
+apiVersion: v2
+name: ingress-config
+description: A set of kubernetes ingress objects
+
+type: application
+
+version: 0.0.1
+
+appVersion: "0.0.0"

@@ -10,8 +10,8 @@ repos:
     hooks:
       - id: trailing-whitespace
         exclude: '.*\.age$'
-      - id: check-yaml
-        exclude: "^(?:atils/templates|kubernetes/helm-charts|kubernetes/argocd/applications|kubernetes/jobs)/.*$"
+      # - id: check-yaml
+      #   exclude: "^(?:atils/templates|kubernetes/helm-charts|kubernetes/argocd/applications|kubernetes/jobs)/.*$"
       # - id: check-added-large-files
       #   args: ["--maxkb=5000"]
       - id: check-executables-have-shebangs

@@ -1,0 +1,9 @@
+apiVersion: v2
+name: vault-config
+description: Vault configuration resources needed to work with kubernetes
+
+type: application
+
+version: 0.0.1
+
+appVersion: "0.0.0"

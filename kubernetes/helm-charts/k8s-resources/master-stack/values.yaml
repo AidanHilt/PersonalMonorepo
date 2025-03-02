@@ -1,0 +1,152 @@
+# Global config
+env: qa-cluster
+
+# This is the version of Atils resources we are targeting. That means this is the branch that our own Helm charts will use, as well as any of our static config
+# This is also the branch that will be used for configuration (i.e. values files), unless configuration.configurationRevision is set below
+gitRevision: master
+
+configuration:
+  configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
+  configurationDirectory: kubernetes/argocd/configuration-data
+  # If left unset, will use the value of gitRevision above
+  configurationRevision: ""
+
+# Service-specific config
+
+crafty-server:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "9.2.2"
+
+flaresolverr:
+  enabled: false
+  configuration:
+    enabled: false
+
+gateways:
+  enabled: false
+
+grafana-dashboards:
+  enabled: false
+
+grafana-datasources:
+  enabled: false
+
+grafana-loki:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "5.47.1"
+
+grafana-promtail:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "6.15.5"
+
+hashi-vault:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "0.29.1"
+
+vault-secrets-operator:
+  # No enabled flag, because this is always deployed when Vault is enabled
+  configuration:
+    enabled: false
+  version: "0.5.2"
+
+ingress:
+  enabled: false
+  # Should be set to either "kind", or "baremetal" (RKE2 is baremetal). This will let us deploy the right type of ingress based on the environment
+  clusterType: "kind"
+  hostname: localhost
+
+istio:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "1.21.0"
+
+istio-base:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "1.21.0"
+
+istio-gateway:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "1.21.0"
+
+jellyfin:
+  enabled: false
+  configuration:
+    enabled: false
+
+jellyseerr:
+  enabled: false
+  configuration:
+    enabled: false
+
+kiali:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "1.81.0"
+
+longhorn:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "1.8.0"
+
+metallb:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "0.14.3"
+
+metallb-config:
+  enabled: false
+
+postgres:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "15.2.5"
+
+prometheus:
+  enabled: false
+  configuration:
+    enabled: false
+
+prowlarr:
+  enabled: false
+  configuration:
+    enabled: false
+
+radarr:
+  enabled: false
+  configuration:
+    enabled: false
+
+service-monitors:
+  enabled: false
+
+sonarr:
+  enabled: false
+  configuration:
+    enabled: false
+
+transmission:
+  enabled: false
+  configuration:
+    enabled: false
+
+video-stack-configuration:
+  enabled: false
+  configuration:
+    enabled: false

@@ -1,0 +1,19 @@
+{{ if index .Values "metallb-config" "enabled" }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb-config
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/AidanHilt/PersonalMonorepo
+    path: kubernetes/helmc-charts/k8s-resources/argmetallb/configuration/overlays/{{ .Values.env }}
+    targetRevision: {{ .Values.gitRevision }}
+  destination:
+    server: 'https://kubernetes.default.svc'
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+{{end}}
