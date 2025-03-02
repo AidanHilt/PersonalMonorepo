@@ -17,8 +17,6 @@ python = "^3.12,<3.13"
 mypy = "^1.1.1"
 kubernetes = "^28.1.0"
 argparse = "^1.4.0"
-types-pyyaml = "^6.0.12.9"
-deepdiff = "^6.3.0"
 shutils = "^0.1.0"
 requests = "^2.29.0"
 hvac = "^1.1.0"
@@ -51,7 +49,7 @@ build-backend = "poetry.core.masonry.api"
 Homepage = "https://github.com/AidanHilt/PersonalMonorepo/tree/master/atils"
 
 [project.scripts]
-atils = "atils:main"
+atils = "atils_bin.atils:main"
 [tool.bumpver]
 current_version = "2024.1001-alpha"
 version_pattern = "YYYY.BUILD[-TAG]"
