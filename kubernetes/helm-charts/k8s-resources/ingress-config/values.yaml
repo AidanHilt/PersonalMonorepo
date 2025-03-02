@@ -28,7 +28,7 @@ sonarr:
 transmission:
   enabled: false
 
-vault:
+hashi-vault:
   enabled: false
 
 hostname: localhost
