@@ -8,7 +8,7 @@ spec:
   project: default
   sources:
    - repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
-     path: kubernetes/helm-charts/jellyfin
+     path: kubernetes/helm-charts/applications/jellyfin
      targetRevision: {{ .Values.gitRevision }}
      {{- if index .Values "jellyfin" "configuration" "enabled" }}
      helm:

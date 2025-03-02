@@ -8,7 +8,7 @@ spec:
   project: default
   sources:
    - repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
-     path: kubernetes/helm-charts/jellyseerr
+     path: kubernetes/helm-charts/applications/jellyseerr
      targetRevision: {{ .Values.gitRevision }}
      {{- if index .Values "jellyseerr" "configuration" "enabled" }}
      helm:
