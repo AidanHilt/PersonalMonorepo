@@ -1,3 +1,4 @@
+{{- if index .Values "jellyfin" "enabled" }}
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultAuth
 metadata:
@@ -27,3 +28,4 @@ spec:
   refreshAfter: 30s
 
   vaultAuthRef: jellyfin-auth
+{{- end }}

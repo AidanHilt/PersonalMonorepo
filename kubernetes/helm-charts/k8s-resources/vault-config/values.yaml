@@ -1,0 +1,20 @@
+jellyfin:
+  enabled: false
+
+jellyseerr:
+  enabled: false
+
+postgres:
+  enabled: false
+
+prowlarr:
+  enabled: false
+
+radarr:
+  enabled: false
+
+sonarr:
+  enabled: false
+
+video-stack-configuration:
+  enabled: false
