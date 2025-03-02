@@ -12,6 +12,28 @@ spec:
       targetRevision: {{ .Values.gitRevision }}
       helm:
         releaseName: vault-config
+        values: |
+        jellyfin:
+          enabled: {{ index .Values "jellyfin" "enabled" }}
+
+        jellyseerr:
+          enabled: {{ index .Values "jellyseerr" "enabled" }}
+
+        postgres:
+          enabled: {{ index .Values "postgres" "enabled" }}
+
+        prowlarr:
+          enabled: {{ index .Values "prowlarr" "enabled" }}
+
+        radarr:
+          enabled: {{ index .Values "radarr" "enabled" }}
+
+        sonarr:
+          enabled: {{ index .Values "sonarr" "enabled" }}
+
+        video-stack-configuration:
+          enabled: {{ index .Values "video-stack-configuration" "enabled" }}
+
   destination:
     server: 'https://kubernetes.default.svc'
   syncPolicy:
