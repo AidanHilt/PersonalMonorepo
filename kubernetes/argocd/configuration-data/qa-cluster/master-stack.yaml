@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: feat/external-user-1-retry
+gitRevision: feat/helmification-and-reorg
 
 flaresolverr:
   enabled: true
