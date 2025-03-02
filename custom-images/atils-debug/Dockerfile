@@ -22,12 +22,12 @@ RUN sed -i -e "s/bin\/ash/bin\/zsh/" /etc/passwd && \
     git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k && \
     git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting && \
     git clone https://github.com/zsh-users/zsh-autosuggestions.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && \
-    git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
+    git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-history-substring-search && \
+    curl https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/refs/heads/master/nix/home-manager/config-files/.p10k.zsh > /root/.p10k.zsh
 
 WORKDIR /root
 
 COPY .zshrc /root/.zshrc
-COPY .p10k.zsh /root/.p10k.zsh
 
 # Set the entrypoint to keep the container running
 CMD ["sleep", "infinity"]
