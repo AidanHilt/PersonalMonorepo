@@ -1,13 +1,23 @@
 apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: postgres-auth
+  namespace: postgres
+spec:
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: postgres
+    serviceAccount: postgres-postgresql
+---
+apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultStaticSecret
 metadata:
   name: postgres-config-secret
   namespace: postgres
 spec:
   type: kv-v2
-
   mount: postgres
-
   path: postgres-config
 
   destination:
@@ -17,3 +27,4 @@ spec:
   refreshAfter: 30s
 
   vaultAuthRef: postgres-auth
+

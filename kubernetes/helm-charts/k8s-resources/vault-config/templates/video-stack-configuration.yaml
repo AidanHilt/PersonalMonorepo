@@ -1,0 +1,35 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: setup-job-auth
+  namespace: videos
+spec:
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: setup_job
+    serviceAccount: setup-job
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: setup-job-config-secret
+  namespace: videos
+spec:
+  type: kv-v2
+  mount: videos
+  path: setup_job/config
+
+  destination:
+    name: setup-job-config-secret
+    create: true
+
+  refreshAfter: 30s
+
+  vaultAuthRef: setup-job-auth
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: setup-job
+  namespace: videos

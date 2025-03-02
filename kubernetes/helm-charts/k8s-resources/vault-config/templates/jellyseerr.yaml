@@ -1,13 +1,23 @@
 apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: jellyseerr-auth
+  namespace: videos
+spec:
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: jellyseerr
+    serviceAccount: jellyseerr
+---
+apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultStaticSecret
 metadata:
   name: jellyseerr-config-secret
   namespace: videos
 spec:
   type: kv-v2
-
   mount: videos
-
   path: jellyseerr/config
 
   destination:
