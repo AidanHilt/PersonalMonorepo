@@ -29,6 +29,8 @@ spec:
     repoURL: https://github.com/AidanHilt/PersonalMonorepo
     path: kubernetes/helm-charts/k8s-resources/ingress-config
     targetRevision: {{ .Values.gitRevision }}
+    helm:
+      releaseName: ingress-config
   destination:
     server: 'https://kubernetes.default.svc'
   syncPolicy:
