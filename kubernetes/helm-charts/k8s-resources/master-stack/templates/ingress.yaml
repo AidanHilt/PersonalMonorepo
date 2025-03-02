@@ -27,10 +27,10 @@ spec:
   project: default
   source:
     repoURL: https://github.com/AidanHilt/PersonalMonorepo
-    path: kubernetes/helm-charts/k8s-resources/ingress
+    path: kubernetes/helm-charts/k8s-resources/ingress-config
     targetRevision: {{ .Values.gitRevision }}
-    directory:
-      exclude: '{mkdocs.yaml,catalog-info.yaml,docs/*}'
+    helm:
+
   destination:
     server: 'https://kubernetes.default.svc'
   syncPolicy:

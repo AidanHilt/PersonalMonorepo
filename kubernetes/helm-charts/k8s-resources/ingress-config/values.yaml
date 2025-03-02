@@ -1,0 +1,34 @@
+argocd:
+  enabled: false
+
+crafty-server:
+  enabled: false
+
+grafana:
+  enabled: false
+
+jellyfin:
+  enabled: false
+
+jellyseerr:
+  enabled: false
+
+kiali:
+  enabled: false
+
+prowlarr:
+  enabled: false
+
+radarr:
+  enabled: false
+
+sonarr:
+  enabled: false
+
+transmission:
+  enabled: false
+
+vault:
+  enabled: false
+
+hostname: localhost

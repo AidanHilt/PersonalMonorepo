@@ -1,17 +1,19 @@
+{{- if index .Values "sonarr" "enabled" }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: transmission
+  name: sonarr
   namespace: videos
 spec:
   ingressClassName: nginx
   rules:
     - http:
         paths:
-          - path: /transmission
+          - path: /sonarr
             pathType: Prefix
             backend:
               service:
-                name: transmission
+                name: sonarr
                 port:
                   number: 80
+{{- end }}
