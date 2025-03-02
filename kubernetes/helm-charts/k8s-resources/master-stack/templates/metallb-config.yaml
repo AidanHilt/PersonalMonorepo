@@ -8,7 +8,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/AidanHilt/PersonalMonorepo
-    path: kubernetes/helmc-charts/k8s-resources/metallb/configuration/overlays/{{ .Values.env }}
+    path: kubernetes/helmc-charts/k8s-resources/argmetallb/configuration/overlays/{{ .Values.env }}
     targetRevision: {{ .Values.gitRevision }}
   destination:
     server: 'https://kubernetes.default.svc'
