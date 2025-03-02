@@ -9,7 +9,7 @@ spec:
   sources:
     - repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
       targetRevision: {{ .Values.env }}
-      path: kubernetes/helm-charts/transmission
+      path: kubernetes/helm-charts/applications/transmission
       targetRevision: {{ .Values.gitRevision }}
     {{- if index .Values "transmission" "configuration" "enabled" }}
       helm:

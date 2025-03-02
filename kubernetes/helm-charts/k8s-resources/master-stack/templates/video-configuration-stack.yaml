@@ -9,7 +9,7 @@ spec:
   sources:
    - repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
      targetRevision: {{ .Values.gitRevision }}
-     path: kubernetes/helm-charts/video-stack-configuration
+     path: kubernetes/helm-charts/k8s-resources/video-stack-configuration
      plugin:
       name: argocd-vault-plugin-helm
       {{- if index .Values "video-stack-configuration" "configuration" "enabled" }}

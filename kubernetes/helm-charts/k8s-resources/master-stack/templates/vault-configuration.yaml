@@ -8,7 +8,7 @@ spec:
   project: default
   sources:
     - repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
-      path: kubernetes/vault
+      path: kubernetes/helm-charts/k8s-resources/vault
       targetRevision: {{ .Values.gitRevision }}
       directory:
         recurse: true

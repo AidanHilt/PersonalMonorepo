@@ -8,7 +8,7 @@ spec:
   project: default
   sources:
     - repoURL: https://github.com/AidanHilt/PersonalMonorepo
-      path: kubernetes/prometheus
+      path: kubernetes/helm-charts/k8s-resources/prometheus
       targetRevision: {{ .Values.gitRevision }}
   destination:
     server: 'https://kubernetes.default.svc'
