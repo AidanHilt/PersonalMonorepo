@@ -5,7 +5,7 @@ RUN pip3 install poetry
 COPY . ./
 
 # Install project dependencies using Poetry
-RUN poetry install --no-interaction --no-dev --no-root
+RUN poetry install --no-interaction --no-root
 
 # Build and install the project
 RUN poetry build
