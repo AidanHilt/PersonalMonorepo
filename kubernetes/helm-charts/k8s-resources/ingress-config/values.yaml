@@ -1,7 +1,4 @@
-argocd:
-  enabled: false
-
-crafty-server:
+rafty-server:
   enabled: false
 
 grafana:
