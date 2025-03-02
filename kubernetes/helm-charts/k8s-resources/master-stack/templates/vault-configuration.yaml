@@ -10,8 +10,8 @@ spec:
     - repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
       path: kubernetes/helm-charts/k8s-resources/vault-config
       targetRevision: {{ .Values.gitRevision }}
-      directory:
-        recurse: true
+      helm:
+        releaseName: vault-config
   destination:
     server: 'https://kubernetes.default.svc'
   syncPolicy:
