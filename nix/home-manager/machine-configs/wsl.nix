@@ -9,6 +9,7 @@ in
   imports = [
     vim-config
     zsh-config
+    "${fetchTarball "https://github.com/msteen/nixos-vscode-server/tarball/master"}/modules/vscode-server/home.nix"
   ];
 
   # Home Manager needs a bit of information about you and the paths it should
@@ -21,6 +22,8 @@ in
   home.packages = [];
 
   home.sessionVariables = {};
+
+  services.vscode-server.enable = true;
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
