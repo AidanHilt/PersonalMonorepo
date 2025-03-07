@@ -30,6 +30,8 @@ nixpkgs.lib.nixosSystem {
         enable = true;
         defaultUser = "nixos";
       };
+
+
     })
 
     inputs.wsl.nixosModules.wsl

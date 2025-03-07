@@ -9,6 +9,7 @@
 
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
+    
 
     personalMonorepo = {
       url = "github:aidanhilt/PersonalMonorepo/";

@@ -42,6 +42,7 @@ in
   environment.systemPackages = [
     pkgs.git
     pkgs.vim
+    pkgs.wget
     inputs.agenix.packages.${pkgs.system}.agenix
     pkgs.eza
     update
@@ -53,9 +54,10 @@ in
 
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
- # environment.pathsToLink = [ "/share/zsh" ];
 
   services.openssh.enable = true;
+
+  programs.nix-ld.enable = true;
 
   nix = {
     settings = {
