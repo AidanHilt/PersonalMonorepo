@@ -5,7 +5,7 @@ with inputs;
 let
   home-dot-nix = globals.nixConfig + "/home-manager/machine-configs/home-server.nix";
 
-  system = "aarch64-linux";
+  system = "x86_64-linux";
   pkgs = import nixpkgs {
     config.allowUnfree = true;
     inherit system;
@@ -38,7 +38,7 @@ nixpkgs.lib.nixosSystem {
       boot.loader.systemd-boot.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
 
-      nixpkgs.hostPlatform = "aarch64-linux";
+      nixpkgs.hostPlatform = "x86_64-linux";
       system.stateVersion = "24.11";
 
       networking = {
