@@ -4,6 +4,36 @@
 
 { config, pkgs, ... }:
 
+let 
+
+  update = pkgs.writeShellScriptBin "install-flake" ''
+    BRANCH="master"
+    while [[ $# -gt 0 ]]; do
+      case $1 in
+        --branch)
+          BRANCH="$2"
+          shift 2
+          ;;
+        *)
+          echo "Unknown option: $1"
+          exit 1
+          ;;
+      esac
+    done
+
+    printf "Please enter a hostname: "
+    read hostname
+
+    if [ -z "$hostname" ]; then
+      printf "Error: Hostname is required.\n" >&2
+      exit 1
+    fi
+
+    sudo nixos-rebuild switch --flake "github:AidanHilt/PersonalMonorepo/$BRANCH?dir=nix/server-setup#hostname"
+  '';
+
+in
+
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -16,7 +46,6 @@
   boot.loader.grub.useOSProber = true;
 
   networking.hostName = "nixos"; # Define your hostname.
-;
   networking.networkmanager.enable = true;
 
   time.timeZone = "America/New_York";
