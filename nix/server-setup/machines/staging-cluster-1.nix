@@ -57,6 +57,8 @@ nixpkgs.lib.nixosSystem {
         enable = true;
         name = hostname;
       };
+
+      virtualisation.virtualbox.guest.enable = true;
     })
 
     agenix.nixosModules.default
