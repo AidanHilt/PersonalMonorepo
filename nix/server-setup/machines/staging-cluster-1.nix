@@ -57,6 +57,15 @@ nixpkgs.lib.nixosSystem {
         enable = true;
         name = hostname;
       };
+      #=========================================================================
+      # This is all virtualbox-specific stuff. I don't totally know how it works
+      #=========================================================================
+      boot.initrd.availableKernelModules = [ "ata_piix" "ohci_pci" "ehci_pci" "ahci" "sd_mod" "sr_mod" ];
+      boot.initrd.kernelModules = [ ];
+      boot.kernelModules = [ ];
+      boot.extraModulePackages = [ ];
+
+      swapDevices = [ ];
 
       virtualisation.virtualbox.guest.enable = true;
     })
