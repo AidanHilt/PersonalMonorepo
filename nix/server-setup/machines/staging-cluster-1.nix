@@ -28,15 +28,15 @@ nixpkgs.lib.nixosSystem {
 
     ({ inputs, globals, ... }: {
       fileSystems = { 
-        "/" = 
-        { 
+        "/" = { 
           device = "/dev/disk/by-uuid/21cafb2b-1b43-4d57-bfb2-eedbb03dbbc6";
           fsType = "ext4";
         };
       };
 
-      boot.loader.systemd-boot.enable = true;
-      boot.loader.efi.canTouchEfiVariables = true;
+      boot.loader.grub.enable = true;
+      boot.loader.grub.device = "/dev/sda";
+      boot.loader.grub.useOSProber = true;
 
       nixpkgs.hostPlatform = "x86_64-linux";
       system.stateVersion = "24.11";
@@ -57,6 +57,7 @@ nixpkgs.lib.nixosSystem {
         enable = true;
         name = hostname;
       };
+
       #=========================================================================
       # This is all virtualbox-specific stuff. I don't totally know how it works
       #=========================================================================
