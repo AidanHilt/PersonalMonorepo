@@ -6,5 +6,5 @@ By far, the worst part of setting up a NixOS machine is bootstrapping it. It's n
     * ```curl https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/refs/heads/feat/staging-cluster-setup/nix/server-setup/bootstrap/configuration.nix > /etc/nixos/configuration.nix```   
     This will add a few tools we'll use later in the process to our `configuration.nix`. This needs to be run with some kind of root access
     * ```nixos-rebuild switch```  
-    Actually applies our new configuration.nix. You shouldn't even need to reboot! 
+    Actually applies our new configuration.nix. You shouldn't even need to reboot! Make sure to add a `sudo` if you're not running as root 
 2. sfasdfasdf

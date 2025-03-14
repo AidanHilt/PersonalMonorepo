@@ -27,16 +27,11 @@ nixpkgs.lib.nixosSystem {
       }
 
     ({ inputs, globals, ... }: {
-      fileSystems = {
-      "/" = {
-          device = "/dev/disk/by-uuid/4fc9779c-69d2-4d71-910b-0e39de53e09d";
+      fileSystems = { 
+        "/" = 
+        { 
+          device = "/dev/disk/by-uuid/21cafb2b-1b43-4d57-bfb2-eedbb03dbbc6";
           fsType = "ext4";
-        };
-
-      "/boot" = {
-          device = "/dev/disk/by-uuid/5370-5201";
-          fsType = "vfat";
-          options = [ "fmask=0077" "dmask=0077" ];
         };
       };
 
