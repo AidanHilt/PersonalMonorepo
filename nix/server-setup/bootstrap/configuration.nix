@@ -6,7 +6,7 @@
 
 let 
 
-  update = pkgs.writeShellScriptBin "install-flake" ''
+  installFlake = pkgs.writeShellScriptBin "install-flake" ''
     BRANCH="master"
     while [[ $# -gt 0 ]]; do
       case $1 in
@@ -86,6 +86,7 @@ in
   environment.systemPackages = with pkgs; [
     vim 
     git
+    installFlake
   ];
 
   services.openssh = {
