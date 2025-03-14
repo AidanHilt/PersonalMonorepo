@@ -29,7 +29,7 @@ let
       exit 1
     fi
 
-    sudo nixos-rebuild switch --flake "github:AidanHilt/PersonalMonorepo/$BRANCH?dir=nix/server-setup#hostname"
+    sudo nixos-rebuild switch --flake "github:AidanHilt/PersonalMonorepo/$BRANCH?dir=nix/server-setup#$hostname"
   '';
 
 in
