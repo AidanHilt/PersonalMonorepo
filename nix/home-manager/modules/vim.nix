@@ -15,6 +15,8 @@
       shiftwidth = 2;
 
       number = true;
+
+      smartcase = true;
     };
   };
 }

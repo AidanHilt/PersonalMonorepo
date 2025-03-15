@@ -21,6 +21,7 @@
         refined-github
         ublock-origin
         view-image
+        keeper-password-manager
       ];
 
 
