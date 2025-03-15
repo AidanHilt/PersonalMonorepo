@@ -128,7 +128,7 @@ in
     pkgs.gettext
     inputs.agenix.packages.${pkgs.system}.agenix
   ];
-  security.pam.services.sudo_local.touchIdAuth = true;
+  security.pam.enableSudoTouchIdAuth = true;
 
   nixpkgs = {
     hostPlatform = "aarch64-darwin";
