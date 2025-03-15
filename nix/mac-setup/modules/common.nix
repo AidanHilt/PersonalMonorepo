@@ -126,6 +126,7 @@ in
     pkgs.cargo
     pkgs.inetutils
     pkgs.terraform
+    pkgs.gettext
     inputs.agenix.packages.${pkgs.system}.agenix
   ];
   security.pam.enableSudoTouchIdAuth = true;
