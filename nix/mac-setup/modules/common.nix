@@ -87,7 +87,6 @@ let
 in
 
 {
-  services.nix-daemon.enable = true;
 
   programs.zsh.enable = true;
 
@@ -129,7 +128,7 @@ in
     pkgs.gettext
     inputs.agenix.packages.${pkgs.system}.agenix
   ];
-  security.pam.enableSudoTouchIdAuth = true;
+  security.pam.services.sudo_local.touchIdAuth = true;
 
   nixpkgs = {
     hostPlatform = "aarch64-darwin";
