@@ -4,7 +4,6 @@ with inputs;
 
 let
   home-dot-nix = globals.nixConfig + "/home-manager/machine-configs/personal-macbook.nix";
-  kubernetes-config = globals.nixConfig + "/shared-modules/kubernetes.nix";
 in
 
 darwin.lib.darwinSystem {
