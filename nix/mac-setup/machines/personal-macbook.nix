@@ -4,7 +4,7 @@ with inputs;
 
 let
   home-dot-nix = globals.nixConfig + "/home-manager/machine-configs/personal-macbook.nix";
-  shared-modules = globals.nixConfig + "shared-modules";
+  shared-modules = globals.nixConfig + "/shared-modules";
 in
 
 darwin.lib.darwinSystem {
@@ -31,7 +31,7 @@ darwin.lib.darwinSystem {
 
     ../modules/common.nix
     ../modules/personal.nix
-    import shared-modules + "kubernetes.nix"
+    import shared-modules + "/kubernetes.nix"
   ];
   specialArgs = { inherit inputs globals; };
 }
