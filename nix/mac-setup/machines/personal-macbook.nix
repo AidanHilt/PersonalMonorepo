@@ -25,13 +25,14 @@ darwin.lib.darwinSystem {
 
       networking.hostName = "hyperion";
 
+      imports = [shared-modules + "/kubernetes.nix"];
+
     })
 
     agenix.darwinModules.default
 
     ../modules/common.nix
     ../modules/personal.nix
-    import shared-modules + "/kubernetes.nix"
   ];
   specialArgs = { inherit inputs globals; };
 }
