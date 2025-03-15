@@ -28,7 +28,7 @@ in
       Label = "com.user.colima-autostart";
       ProgramArguments = [ "colima" "start" ];
       RunAtLoad = true;
-      KeepAlive = false;
+      KeepAlive = true;
       StandardOutPath = "/tmp/colima-autostart.log";
       StandardErrorPath = "/tmp/colima-autostart.error.log";
     };

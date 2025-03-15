@@ -3,6 +3,7 @@
 let
   atils-config = globals.nixConfig + "/home-manager/modules/atils.nix";
   firefox-config = globals.nixConfig + "/home-manager/modules/firefox.nix";
+  kubernetes-config = globals.nixConfig + "/home-manager/modules/kubernetes.nix";
   vim-config = globals.nixConfig + "/home-manager/modules/vim.nix";
   vscode-config = globals.nixConfig + "/home-manager/modules/vscode.nix";
   zsh-config = globals.nixConfig + "/home-manager/modules/zsh.nix";
@@ -12,6 +13,7 @@ in
   imports = [
     atils-config
     firefox-config
+    kubernetes-config
     vim-config
     vscode-config
     zsh-config

@@ -5,7 +5,6 @@
     ./smb-mount.nix
     ./rclone.nix
     ./guided-setup.nix
-    ./kubernetes.nix
     ./hosts.nix
   ];
 

@@ -22,9 +22,6 @@
 
     shellAliases = {
       ls = "eza";
-      kctx = "kubecm switch";
-      kns = "kubecm namespace";
-      kctx-add = "kubecm add";
       # Let's just leave this, we're doing a fancy ReMarkable setup
       #remouse = "~/Library/Python/3.9/bin/remouse";
     };
@@ -35,7 +32,7 @@
 
     oh-my-zsh = {
       enable = true;
-      plugins = [ "git" "sudo" "copyfile" "copybuffer" "git-auto-fetch" "history" "per-directory-history" "systemadmin" "kubectl" ];
+      plugins = [ "git" "sudo" "copyfile" "copybuffer" "git-auto-fetch" "history" "per-directory-history" "systemadmin" ];
     };
 
     # initExtra = ''
