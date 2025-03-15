@@ -1,12 +1,16 @@
 { inputs, pkgs, globals, ... }:
 
+let
+  kubernetes-config = globals.nixConfig + "/shared-modules/kubernetes.nix";
+in
+
 {
   imports = [
     ./smb-mount.nix
     ./rclone.nix
     ./guided-setup.nix
-    ./kubernetes.nix
     ./hosts.nix
+    kubernetes-config
   ];
 
   environment.systemPackages = [
