@@ -12,7 +12,7 @@
     
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/";
+      url = "github:aidanhilt/PersonalMonorepo/feat/staging-cluster-setup";
       flake = false;
     };
 
@@ -24,6 +24,7 @@
   let
     globals = {
       nixConfig = inputs.personalMonorepo + "/nix";
+      username = "nixos";
     };
   in
   {
