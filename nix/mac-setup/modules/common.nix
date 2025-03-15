@@ -1,6 +1,5 @@
 { inputs, lib, pkgs, ...}:
 let
-
   update = pkgs.writeShellScriptBin "update" ''
     cd ~/PersonalMonorepo
     git pull -q
@@ -84,9 +83,12 @@ let
   done
   '';
 
+  kubernetes-config = globals.nixConfig + "/shared-modules/kubernetes.nix";
+
 in
 
 {
+  imports = [kubernetes-config];
 
   programs.zsh.enable = true;
 
