@@ -31,28 +31,28 @@ in
   programs.zsh.enable = true;
 
   environment.systemPackages = [
-    pkgs.vim
     pkgs.act
-    pkgs.git
-    pkgs.p7zip
-    pkgs.syncthing
-    pkgs.pre-commit
-    pkgs.detect-secrets
-    pkgs.pipx
-    pkgs.wget
-    pkgs.eza
-    pkgs.yarn
-    pkgs.postgresql
-    pkgs.check-jsonschema
-    pkgs.jq
-    pkgs.yq
-    pkgs.terragrunt
-    pkgs.defaultbrowser
-    pkgs.rustc
     pkgs.cargo
-    pkgs.inetutils
-    pkgs.terraform
+    pkgs.check-jsonschema
+    pkgs.defaultbrowser
+    pkgs.detect-secrets
+    pkgs.eza
     pkgs.gettext
+    pkgs.git
+    pkgs.inetutils
+    pkgs.jq
+    pkgs.p7zip
+    pkgs.pipx
+    pkgs.postgresql
+    pkgs.pre-commit
+    pkgs.rustc
+    pkgs.syncthing
+    pkgs.terraform
+    pkgs.terragrunt
+    pkgs.vim
+    pkgs.wget
+    pkgs.yarn
+    pkgs.yq
 
     inputs.agenix.packages.${pkgs.system}.agenix
 
@@ -78,15 +78,6 @@ in
       show-recents = false;
     };
 
-    NSGlobalDomain = {
-      "com.apple.swipescrolldirection" = false;
-    };
-
-    screencapture = {
-      location = "/Users/aidan/Desktop/screenshots";
-      show-thumbnail = false;
-    };
-
     finder = {
       AppleShowAllExtensions = true;
       AppleShowAllFiles = true;
@@ -94,6 +85,15 @@ in
       ShowPathbar = true;
       ShowStatusBar = true;
       FXPreferredViewStyle = "icnv";
+    };
+
+    NSGlobalDomain = {
+      "com.apple.swipescrolldirection" = false;
+    };
+
+    screencapture = {
+      location = "/Users/aidan/Desktop/screenshots";
+      show-thumbnail = false;
     };
 
     trackpad = {
