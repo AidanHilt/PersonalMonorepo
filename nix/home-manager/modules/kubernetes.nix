@@ -2,7 +2,7 @@
 
 {
   modules = [
-    agenix.homeManagerModules.default {
+    inputs.agenix.homeManagerModules.default {
       age.secrets.kubeconfig = {
         file = globals.nixConfig + "/secrets/kubeconfig.age";
         path = "${config.home.homeDirectory}./.kube/config";
