@@ -39,7 +39,6 @@ in
     pkgs.pre-commit
     pkgs.detect-secrets
     pkgs.pipx
-    pkgs.kind
     pkgs.wget
     pkgs.eza
     pkgs.yarn

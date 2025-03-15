@@ -83,10 +83,12 @@ in
   };
 
   environment.systemPackages = [
-    pkgs.kubectl
     pkgs.k9s
+    pkgs.kind
     pkgs.kubecm
+    pkgs.kubectl
     pkgs.kubernetes-helm
+
     argocd-commit
     clear-namespace
     cluster-setup
