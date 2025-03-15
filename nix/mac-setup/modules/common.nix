@@ -1,4 +1,4 @@
-{ inputs, lib, pkgs, ...}:
+{ inputs, lib, pkgs, globals, ...}:
 let
   update = pkgs.writeShellScriptBin "update" ''
     cd ~/PersonalMonorepo
