@@ -19,7 +19,7 @@
     poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/feat/external-user-1-retry";
+      url = "github:aidanhilt/PersonalMonorepo/feat/staging-cluster-setup";
       flake = false;
     };
   };
