@@ -8,7 +8,7 @@
 
   age.secrets.kubeconfig = {
     file = globals.nixConfig + "/secrets/kubeconfig.age";
-#       path = "${inputs.agenix.homeManagerModules.default.config.home.homeDirectory}.kube/config";
+    path = "${inputs.agenix.homeManagerModules.default.config.home.homeDirectory}.kube/config";
     mode = "700";
     symlink = false;
   };
