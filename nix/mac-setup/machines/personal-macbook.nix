@@ -24,8 +24,6 @@ darwin.lib.darwinSystem {
 
       networking.hostName = "hyperion";
 
-      imports = [kubernetes-config];
-
     })
 
     agenix.darwinModules.default
