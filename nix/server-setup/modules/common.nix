@@ -1,10 +1,6 @@
 { inputs, globals, pkgs, ...}:
 
 let
-  upload-host-key = pkgs.writeShellScriptBin "upload-host-key" ''
-    curl -F "file=@/etc/ssh/ssh_host_ed25519_key.pub https://x0.at"
-  '';
-
   update = pkgs.writeShellScriptBin "update" ''
     BRANCH="master"
     while [[ $# -gt 0 ]]; do
