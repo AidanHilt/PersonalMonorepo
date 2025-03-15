@@ -52,15 +52,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1741906019,
-        "narHash": "sha256-c9L0yCdpBzPVTcExcqTti6vP6GuPVaCaVCDf0M8eu+I=",
+        "lastModified": 1741126078,
+        "narHash": "sha256-ng0a4cIq3c9E3iGKomlwqKzVYs2RLOzQho2U1Mc2sqU=",
         "owner": "lnl7",
         "repo": "nix-darwin",
-        "rev": "4d8a451649b6de429ea7e169378488305d0d9399",
+        "rev": "c172f50b55b087f8e7801631de977461603bb976",
         "type": "github"
       },
       "original": {
         "owner": "lnl7",
+        "ref": "nix-darwin-24.11",
         "repo": "nix-darwin",
         "type": "github"
       }
@@ -221,11 +222,11 @@
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1742009098,
-        "narHash": "sha256-KK2j1aGfF0T1oKOF4jqC3ViE7LHBrhvibC4TZTyXj20=",
+        "lastModified": 1742009312,
+        "narHash": "sha256-xnsE1m5f9yeTtJfQClLNAx32olaWYpzCMz6bb4y8FE4=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "92265dd601bb1535aef6cbf0154d9dd249c5ae46",
+        "rev": "52a99a15dc9112a03246d8515ee41c3db34681c4",
         "type": "github"
       },
       "original": {
