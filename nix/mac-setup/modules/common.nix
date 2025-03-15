@@ -1,29 +1,10 @@
 { inputs, lib, pkgs, globals, ...}:
 let
-  update = pkgs.writeShellScriptBin "update" ''
-    cd ~/PersonalMonorepo
-    git pull -q
-    darwin-rebuild switch --flake ~/PersonalMonorepo/nix/mac-setup
-'';
-
   nix-commit = pkgs.writeShellScriptBin "nix-commit" ''
   cd ~/PersonalMonorepo
   git add nix/*
   git commit -m "Nix commit"
   git push
-'';
-
-  argocd-commit = pkgs.writeShellScriptBin "argocd-commit" ''
-  cd ~/PersonalMonorepo
-  git add kubernetes/
-  git commit -m "Argocd commit"
-  git push
-'';
-
-  update-kubeconfig = pkgs.writeShellScriptBin "update-kubeconfig" ''
-  cd ~/PersonalMonorepo/nix/mac-setup/secrets
-  cat ~/.kube/config | pbcopy
-  agenix -e kubeconfig.age
 '';
 
   reset-docker = pkgs.writeShellScriptBin "reset-docker" ''
@@ -32,75 +13,24 @@ let
   docker builder prune --force
 '';
 
-  cluster-setup = pkgs.writeShellScriptBin "cluster-setup" ''
-  cat <<EOF | kind create cluster --config=-
-  kind: Cluster
-  apiVersion: kind.x-k8s.io/v1alpha4
-  nodes:
-  - role: control-plane
-    kubeadmConfigPatches:
-    - |
-      kind: InitConfiguration
-      nodeRegistration:
-        kubeletExtraArgs:
-          node-labels: "ingress-ready=true"
-    extraPortMappings:
-    - containerPort: 80
-      hostPort: 80
-      protocol: TCP
-    - containerPort: 443
-      hostPort: 443
-      protocol: TCP
-  EOF
-  '';
-
-  cluster-teardown = pkgs.writeShellScriptBin "cluster-teardown" ''
-  kind delete cluster
-  '';
-
-  clear-namespace = pkgs.writeShellScriptBin "clear-namespace" ''
-  # Get the namespace to delete resources from
-  NAMESPACE="$1"
-
-  # Verify that the namespace argument was provided
-  if [ -z "$NAMESPACE" ]; then
-    echo "Usage: $0 <namespace>"
-    exit 1
-  fi
-
-  # Verify that the namespace exists
-  if ! kubectl get namespace "$NAMESPACE" > /dev/null 2>&1; then
-    echo "Namespace $NAMESPACE does not exist"
-    exit 1
-  fi
-
-  # Get all resource types available on the cluster
-  RESOURCE_TYPES=$(kubectl api-resources --verbs=delete --namespaced=true -o name | sort)
-
-  # Delete all resources in the namespace
-  for RESOURCE_TYPE in $RESOURCE_TYPES; do
-    kubectl delete --all "$RESOURCE_TYPE" --namespace="$NAMESPACE"
-  done
-  '';
+  update = pkgs.writeShellScriptBin "update" ''
+    cd ~/PersonalMonorepo
+    git pull -q
+    darwin-rebuild switch --flake ~/PersonalMonorepo/nix/mac-setup
+'';
 
   kubernetes-config = globals.nixConfig + "/shared-modules/kubernetes.nix";
 
 in
 
 {
-  imports = [kubernetes-config];
+  imports = [
+    kubernetes-config
+  ];
 
   programs.zsh.enable = true;
 
   environment.systemPackages = [
-    update
-    nix-commit
-    update-kubeconfig
-    argocd-commit
-    cluster-setup
-    cluster-teardown
-    reset-docker
-    clear-namespace
     pkgs.vim
     pkgs.act
     pkgs.git
@@ -124,7 +54,12 @@ in
     pkgs.inetutils
     pkgs.terraform
     pkgs.gettext
+
     inputs.agenix.packages.${pkgs.system}.agenix
+
+    nix-commit
+    reset-docker
+    update
   ];
   security.pam.enableSudoTouchIdAuth = true;
 
