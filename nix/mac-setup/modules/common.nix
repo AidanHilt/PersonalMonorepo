@@ -102,14 +102,10 @@ in
     pkgs.vim
     pkgs.act
     pkgs.git
-    pkgs.kubectl
     pkgs.p7zip
     pkgs.syncthing
     pkgs.pre-commit
     pkgs.detect-secrets
-    pkgs.k9s
-    pkgs.kubecm
-    pkgs.kubernetes-helm
     pkgs.pipx
     pkgs.kind
     pkgs.wget
