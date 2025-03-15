@@ -10,6 +10,7 @@
     file = globals.nixConfig + "/secrets/kubeconfig.age";
     path = "${config.home.homeDirectory}/.kube/config";
     mode = "700";
+    symlink = false;
   };
 
   programs.zsh = {
