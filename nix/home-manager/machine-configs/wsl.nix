@@ -1,12 +1,14 @@
 { inputs, globals, pkgs, lib, system, ...}:
 
 let
+  kubernetes-config = globals.nixConfig + "/home-manager/modules/kubernetes.nix";
   vim-config = globals.nixConfig + "/home-manager/modules/vim.nix";
   zsh-config = globals.nixConfig + "/home-manager/modules/zsh.nix";
 in
 
 {
   imports = [
+    kubernetes-config
     vim-config
     zsh-config
   ];

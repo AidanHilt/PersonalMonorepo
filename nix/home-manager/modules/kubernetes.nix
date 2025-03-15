@@ -1,6 +1,18 @@
  { inputs, globals, pkgs, lib, system, ...}:
 
 {
+  modules = [
+    agenix.homeManagerModules.default {
+      age.secrets.kubeconfig = {
+        file = globals.nixConfig + "/secrets/kubeconfig.age";
+        path = "${config.home.homeDirectory}./.kube/config";
+        owner = "${globals.username}";
+        mode = "700";
+        symlink = false;
+      };
+    }
+  ];
+
   programs.zsh = {
     enable = true;
 
