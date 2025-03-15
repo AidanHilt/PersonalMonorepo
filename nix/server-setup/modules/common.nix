@@ -52,7 +52,6 @@ in
     pkgs.vim
     pkgs.eza
     pkgs.htop
-    upload-host-key
     update
   ];
 
