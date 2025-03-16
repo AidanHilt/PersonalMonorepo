@@ -1,0 +1,10 @@
+{
+  "actions": [
+    {
+      "name": "copy-iso-result",
+      "command": "sudo cp -r $PERSONAL_MONOREPO_LOCATION/nix/server-setup/result/iso/ /mnt/d/Users/aidan/Documents/NixOS/",
+      "order": 3
+    }
+  ],
+  "action_sets": {}
+}

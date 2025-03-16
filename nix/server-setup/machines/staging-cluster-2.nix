@@ -11,9 +11,8 @@ let
     inherit system;
   };
 
-  serverAddr = "192.168.86.22";
-
-  hostname = "staging-cluster-1";
+  serverAddr = "192.168.86.23";
+  hostname = "staging-cluster-2";
 in
 
 nixpkgs.lib.nixosSystem {
@@ -32,6 +31,14 @@ nixpkgs.lib.nixosSystem {
           device = "/dev/disk/by-uuid/21cafb2b-1b43-4d57-bfb2-eedbb03dbbc6";
           fsType = "ext4";
         };
+      };
+
+
+      age.secrets.rke-token = {
+        file = globals.nixConfig + "/secrets/rke-token-staging-cluster.age";
+        path = "/var/lib/rancher/rke2/server/token";
+        symlink = false;
+        mode = "444";
       };
 
       nixpkgs.hostPlatform = "x86_64-linux";
@@ -74,7 +81,7 @@ nixpkgs.lib.nixosSystem {
     agenix.nixosModules.default
 
     ../modules/common.nix
-    ../modules/rke-primary.nix
+    ../modules/rke-secondary.nix
     ../modules/rke-universal.nix
     ../modules/adguard.nix
     ../modules/keepalived-staging.nix
