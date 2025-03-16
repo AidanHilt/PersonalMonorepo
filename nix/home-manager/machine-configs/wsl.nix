@@ -1,6 +1,7 @@
 { inputs, globals, pkgs, lib, system, ...}:
 
 let
+  atils-config = globals.nixConfig + "/home-manager/modules/atils.nix"; 
   kubernetes-config = globals.nixConfig + "/home-manager/modules/kubernetes.nix";
   vim-config = globals.nixConfig + "/home-manager/modules/vim.nix";
   zsh-config = globals.nixConfig + "/home-manager/modules/zsh.nix";
@@ -8,6 +9,7 @@ in
 
 {
   imports = [
+    atils-config
     kubernetes-config
     vim-config
     zsh-config
