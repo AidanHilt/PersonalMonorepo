@@ -45,7 +45,7 @@ nixpkgs.lib.nixosSystem {
         defaultGateway = "192.168.86.1";
         hostName = hostname;
         nameservers = [ "192.168.86.3" ];
-        interfaces.enp0s1.ipv4.addresses = [
+        interfaces.enp0s3.ipv4.addresses = [
           {
             address = serverAddr;
             prefixLength = 24;
