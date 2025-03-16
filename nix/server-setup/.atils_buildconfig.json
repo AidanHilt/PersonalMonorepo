@@ -1,8 +1,13 @@
 {
   "actions": [
     {
+      "name": "build-x86-iso",
+      "command": "nix build .#nixosConfigurations.iso_image_x86.config.system.build.isoImage",
+      "order": 0
+    },
+    {
       "name": "copy-iso-result",
-      "command": "sudo cp -r $PERSONAL_MONOREPO_LOCATION/nix/server-setup/result/iso/ /mnt/d/Users/aidan/Documents/NixOS/",
+      "command": "cp -r $PERSONAL_MONOREPO_LOCATION/nix/server-setup/result/iso/ /mnt/d/Users/aidan/Documents/NixOS/",
       "order": 3
     }
   ],
