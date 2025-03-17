@@ -94,7 +94,7 @@ let
           
           # Create a single partition on /dev/sda
           echo "Creating partition on /dev/sda..."
-          parted -s /dev/sda mklabel gpt
+          parted -s /dev/sda mklabel msdos
           check_command "Failed to create GPT label"
           
           parted -s /dev/sda mkpart primary ext4 0% 100%
@@ -102,6 +102,7 @@ let
           
           echo "Setting partition as bootable..."
           parted -s /dev/sda set 1 boot on
+          parted -s /dev/sda set 1 bios_grub on
           check_command "Failed to set boot flag"
           
           echo "Partitioning complete. New partition table:"
