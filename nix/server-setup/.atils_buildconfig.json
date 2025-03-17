@@ -6,10 +6,25 @@
       "order": 0
     },
     {
-      "name": "copy-iso-result",
+      "name": "copy-iso-results",
       "command": "cp -r $PERSONAL_MONOREPO_LOCATION/nix/server-setup/result/iso/ /mnt/d/Users/aidan/Documents/NixOS/",
-      "order": 3
+      "order": 1
+    },
+    {
+      "name": "fix-permissions",
+      "command": "sudo chmod -R 777 /mnt/d/Users/aidan/Documents/NixOS/",
+      "order": 2
     }
   ],
-  "action_sets": {}
+  "action_sets": [
+    {
+      "name": "build-and-copy",
+      "actions": [
+        "build-x86-iso",
+        "copy-iso-results",
+        "fix-permissions"
+      ],
+      "default": true
+    }
+  ]
 }
