@@ -70,9 +70,12 @@ nixpkgs.lib.nixosSystem {
       #=========================================================================
       # This is all virtualbox-specific stuff. I don't totally know how it works
       #=========================================================================
-      boot.loader.grub.enable = true;
-      boot.loader.grub.device = "/dev/sda";
-   #   boot.loader.grub.useOSProber = true;
+      # boot.loader.grub.enable = true;
+      # boot.loader.grub.device = "/dev/sda";
+      # boot.loader.grub.useOSProber = true;
+
+      boot.loader.systemd-boot.enable = true;
+      boot.loader.efi.canTouchEfiVariables = true;
 
       boot.initrd.availableKernelModules = [ "ata_piix" "ohci_pci" "ehci_pci" "ahci" "sd_mod" "sr_mod" ];
       boot.initrd.kernelModules = [ ];
