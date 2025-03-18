@@ -94,7 +94,7 @@ let
           
           # Create a single partition on /dev/sda
           echo "Creating partition on /dev/sda..."
-          parted -s /dev/sda mklabel msdos
+          parted -s /dev/sda mklabel gpt
           check_command "Failed to create GPT label"
           
           parted -s /dev/sda mkpart primary ext4 0% 100%
