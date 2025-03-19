@@ -23,8 +23,8 @@ let
   mac-cluster-machines = [laptop-vm-cluster-1-system laptop-vm-cluster-2-system];
 
   # Our main staging cluster, in the form of NixOS machines running on x86 hardware
-  staging-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJsUGRNwoIXHp2KE12jKuIyJq7CK+gL71lXMkQFt9l8w root@nixos";
-  staging-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIuOp3yI1ICxNnPERTbVsahB0xIQBycfRhM6uZpsJxMv root@nixos";
+  staging-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIImXssIeNM0HqEu8ZKnpaweicauH4bYNrkwpIX/Hjcwh root@staging-cluster-1";
+  staging-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEtEtJHjubtypPO8div7UechAnJvtiJE/DtkgMXxx8V4 root@staging-cluster-2";
 
   staging-cluster-machines = [staging-cluster-1-system staging-cluster-2-system];
 in
