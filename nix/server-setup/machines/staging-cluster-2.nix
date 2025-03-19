@@ -11,6 +11,8 @@ let
     inherit system;
   };
 
+  clusterPrimaryAddr = "192.168.86.22";
+
   serverAddr = "192.168.86.23";
   hostname = "staging-cluster-2";
 in
@@ -95,5 +97,5 @@ nixpkgs.lib.nixosSystem {
     ../modules/adguard.nix
     ../modules/keepalived-staging.nix
   ];
-  specialArgs = { inherit inputs globals pkgs serverAddr; };
+  specialArgs = { inherit inputs globals pkgs clusterPrimaryAddr; };
 }
