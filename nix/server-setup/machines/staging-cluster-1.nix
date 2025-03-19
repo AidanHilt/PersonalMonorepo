@@ -59,9 +59,6 @@ nixpkgs.lib.nixosSystem {
         name = hostname;
       };
 
-      #=========================================================================
-      # This is all virtualbox-specific stuff. I don't totally know how it works
-      #=========================================================================
       boot.loader.systemd-boot.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
 
