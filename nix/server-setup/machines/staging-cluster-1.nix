@@ -32,6 +32,11 @@ nixpkgs.lib.nixosSystem {
           device = "/dev/disk/by-uuid/21cafb2b-1b43-4d57-bfb2-eedbb03dbbc6";
           fsType = "ext4";
         };
+        "/boot" = { 
+          device = "/dev/disk/by-label/BOOT";
+          fsType = "vfat";
+          options = [ "fmask=0022" "dmask=0022" ];
+        };  
       };
 
       nixpkgs.hostPlatform = "x86_64-linux";
