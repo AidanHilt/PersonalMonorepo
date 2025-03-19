@@ -29,7 +29,7 @@ nixpkgs.lib.nixosSystem {
     ({ inputs, globals, ... }: {
       fileSystems = { 
         "/" = { 
-          device = "/dev/disk/by-uuid/ROOTDIR";
+          device = "/dev/disk/by-label/ROOTDIR";
           fsType = "ext4";
         };
         "/boot" = { 
