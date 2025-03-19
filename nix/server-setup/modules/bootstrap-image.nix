@@ -28,6 +28,58 @@ let
     sudo nixos-rebuild switch --flake "github:AidanHilt/PersonalMonorepo/$BRANCH?dir=nix/server-setup#$hostname"
   '';
 
+  bootstrapVbox = pkgs.writeShellScriptBin "bootstrap-vbox" ''
+    PARTITION_CHECK=$(lsblk -nd -o PTTYPE "/dev/sda" 2> /dev/null)
+    if [ -z "$PARTITION_CHECK" ]; then
+      echo "Performing VirtualBox disk partitioning..."
+      echo "WARNING: All data on /dev/sda will be lost!"
+      read -p "Continue? (y/n): " confirm
+      
+      if [ "$confirm" != "y" ]; then
+          echo "Operation cancelled"
+          exit 0
+      fi
+      echo "Partitioning disk"
+      parted /dev/sda -- mklabel gpt
+      parted /dev/sda -- mkpart root ext4 512MB 100%
+      parted /dev/sda -- mkpart ESP fat32 1MB 512MB
+      parted /dev/sda -- set 2 esp on
+
+      mkfs.ext4 -L ROOTDIR /dev/sda1
+      mkfs.fat -F 32 -n BOOT /dev/sda2
+
+      mount /dev/disk/by-label/ROOTDIR /mnt
+      mkdir -p /mnt/boot
+      mount /dev/disk/by-label/BOOT /mnt/boot
+    else
+      echo "Disk already looks partitioned. If it's not, reset it"
+    fi
+
+    echo "Select hostname for flake install:"
+    echo "1) staging-cluster-1"
+    echo "2) staging-cluster-2"
+    echo "3) staging-cluster-3"
+    read -p "Enter selection (1-3):" hostname_choice
+
+    case "$hostname_choice" in 
+      1)
+        hostname="staging-cluster-1"
+      ;;
+      2)
+        hostname="staging-cluster-2"
+      ;;
+      3)
+        hostname="staging-cluster-3"
+      ;;
+      *)
+        echo "Invalid option $hostname_choice"
+        exit 1
+      ;;
+    esac
+
+    nixos-install --flake "github:AidanHilt/PersonalMonorepo/feat/staging-cluster-setup?dir=nix/server-setup#$hostname"
+  '';
+
   bootstrapCommand = pkgs.writeShellScriptBin "bootstrap" ''
   # Script to handle platform-specific disk operations
 
@@ -79,42 +131,7 @@ let
   # Perform platform-specific actions
   case "$platform" in
       vbox)
-          echo "Performing VirtualBox disk partitioning..."
-          echo "This will create a single partition on /dev/sda"
-          echo "WARNING: All data on /dev/sda will be lost!"
-          read -p "Continue? (y/n): " confirm
-          
-          if [ "$confirm" != "y" ]; then
-              echo "Operation cancelled"
-              exit 0
-          fi
-          
-          # Check if parted is available
-          command -v parted >/dev/null 2>&1 || error_exit "parted is not installed"
-          
-          # Create a single partition on /dev/sda
-          echo "Creating partition on /dev/sda..."
-          parted -s /dev/sda mklabel gpt
-          check_command "Failed to create GPT label"
-          
-          parted -s /dev/sda mkpart primary ext4 0% 100%
-          check_command "Failed to create partition"
-          
-          echo "Setting partition as bootable..."
-          parted -s /dev/sda set 1 boot on
-          parted -s /dev/sda set 1 bios_grub on
-          check_command "Failed to set boot flag"
-          
-          echo "Partitioning complete. New partition table:"
-          parted -s /dev/sda print
-          
-          echo "Successfully created partition on /dev/sda"
 
-          mkfs.ext4 /dev/sda1 -L ROOTDIR
-          ;;
-      *)
-          error_exit "Platform handling not implemented"
-          ;;
   esac
 
   exit 0
