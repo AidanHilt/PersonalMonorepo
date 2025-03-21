@@ -111,6 +111,8 @@ metallb:
 
 metallb-config:
   enabled: false
+  configuration:
+    enabled: false
 
 postgres:
   enabled: false
