@@ -9,12 +9,14 @@
 
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
-    
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/";
+      url = "github:aidanhilt/PersonalMonorepo/feat/staging-cluster-setup";
       flake = false;
     };
+
+    poetry2nix.url = "github:nix-community/poetry2nix";
+    poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
 
     wsl.url = "github:nix-community/NixOS-WSL";
     wsl.inputs.nixpkgs.follows = "nixpkgs";
@@ -24,6 +26,7 @@
   let
     globals = {
       nixConfig = inputs.personalMonorepo + "/nix";
+      username = "nixos";
     };
   in
   {

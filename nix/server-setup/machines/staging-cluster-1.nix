@@ -5,15 +5,15 @@ with inputs;
 let
   home-dot-nix = globals.nixConfig + "/home-manager/machine-configs/home-server.nix";
 
-  system = "aarch64-linux";
+  system = "x86_64-linux";
   pkgs = import nixpkgs {
     config.allowUnfree = true;
     inherit system;
   };
 
-  serverAddr = "192.168.86.20";
+  serverAddr = "192.168.86.22";
 
-  hostname = "laptop-vm-cluster-2";
+  hostname = "staging-cluster-1";
 in
 
 nixpkgs.lib.nixosSystem {
@@ -27,39 +27,28 @@ nixpkgs.lib.nixosSystem {
       }
 
     ({ inputs, globals, ... }: {
-      fileSystems = {
-      "/" = {
-          device = "/dev/disk/by-uuid/4fc9779c-69d2-4d71-910b-0e39de53e09d";
+      fileSystems = { 
+        "/" = { 
+          device = "/dev/disk/by-label/ROOTDIR";
           fsType = "ext4";
         };
-
-      "/boot" = {
-          device = "/dev/disk/by-uuid/5370-5201";
+        "/boot" = { 
+          device = "/dev/disk/by-label/BOOT";
           fsType = "vfat";
-          options = [ "fmask=0077" "dmask=0077" ];
-        };
+          options = [ "fmask=0022" "dmask=0022" ];
+        };  
       };
 
-      age.secrets.rke-token = {
-        file = globals.nixConfig + "/secrets/rke-token-mac-cluster.age";
-        path = "/var/lib/rancher/rke2/server/token";
-        symlink = false;
-        mode = "444";
-      };
-
-      boot.loader.systemd-boot.enable = true;
-      boot.loader.efi.canTouchEfiVariables = true;
-
-      nixpkgs.hostPlatform = "aarch64-linux";
+      nixpkgs.hostPlatform = "x86_64-linux";
       system.stateVersion = "24.11";
 
       networking = {
         defaultGateway = "192.168.86.1";
         hostName = hostname;
         nameservers = [ "192.168.86.3" ];
-        interfaces.enp0s1.ipv4.addresses = [
+        interfaces.enp0s3.ipv4.addresses = [
           {
-            address = "192.168.86.21";
+            address = serverAddr;
             prefixLength = 24;
           }
         ];
@@ -69,12 +58,24 @@ nixpkgs.lib.nixosSystem {
         enable = true;
         name = hostname;
       };
+
+      boot.loader.systemd-boot.enable = true;
+      boot.loader.efi.canTouchEfiVariables = true;
+
+      boot.initrd.availableKernelModules = [ "ata_piix" "ohci_pci" "ehci_pci" "ahci" "sd_mod" "sr_mod" ];
+      boot.initrd.kernelModules = [ ];
+      boot.kernelModules = [ ];
+      boot.extraModulePackages = [ ];
+
+      swapDevices = [ ];
+
+      virtualisation.virtualbox.guest.enable = true;
     })
 
     agenix.nixosModules.default
 
     ../modules/common.nix
-    ../modules/rke-secondary.nix
+    ../modules/rke-primary.nix
     ../modules/rke-universal.nix
     ../modules/adguard.nix
     ../modules/keepalived-staging.nix

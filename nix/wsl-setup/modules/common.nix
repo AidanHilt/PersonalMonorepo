@@ -20,9 +20,14 @@ let
   git push
 '';
 
+  kubernetes-config = globals.nixConfig + "/shared-modules/kubernetes.nix";
+
 in
 
 {
+  imports = [
+    kubernetes-config
+  ];
 
   environment.variables = {
     PERSONAL_MONOREPO_LOCATION = "/home/nixos/PersonalMonorepo";

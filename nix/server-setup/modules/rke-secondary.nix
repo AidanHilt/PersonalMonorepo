@@ -1,4 +1,4 @@
-{ lib, config, pkgs, serverAddr, ... }:
+{ lib, config, pkgs, clusterPrimaryAddr, ... }:
 with lib;
 
 {
@@ -6,7 +6,7 @@ with lib;
     enable = true;
 
     tokenFile = "/var/lib/rancher/rke2/server/token";
-    serverAddr = "https://${serverAddr}:9345";
+    serverAddr = "https://${clusterPrimaryAddr}:9345";
 
     cni = "calico";
   };
