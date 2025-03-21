@@ -10,8 +10,7 @@ in
 
     ./smb-mount.nix
     ./rclone.nix
-    ./guided-setup.nix
-    ./hosts.nix
+    ./smb-mount.nix
   ];
 
   environment.systemPackages = [
