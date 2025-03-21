@@ -50,12 +50,12 @@ let
       ;;
     esac
 
-    branch=""
+    BRANCH="master"
 
     # echo "Enter branch to build config from (default is master):"
-    # read -p "Enter branch name: " branch_name
+    # read -p "Enter branch name: " BRANCH
 
-    nixos-install --flake "github:AidanHilt/PersonalMonorepo/feat/staging-cluster-setup?dir=nix/server-setup#$hostname"
+    nixos-install --flake "github:AidanHilt/PersonalMonorepo/$BRANCH?dir=nix/server-setup#$hostname"
   '';
 in
 
