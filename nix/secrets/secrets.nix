@@ -25,8 +25,9 @@ let
   # Our main staging cluster, in the form of NixOS machines running on x86 hardware
   staging-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIImXssIeNM0HqEu8ZKnpaweicauH4bYNrkwpIX/Hjcwh root@staging-cluster-1";
   staging-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOYRGHzNc7rYSsxveCvZAicjiPT3NHdOkXmmlH3g7Y/m root@staging-cluster-2";
+  staging-cluster-3-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGoMCDJlMcyrK65E269A1cwJqO9kLMc/uVu7VfK7LcZN root@staging-cluster-3";
 
-  staging-cluster-machines = [staging-cluster-1-system staging-cluster-2-system];
+  staging-cluster-machines = [staging-cluster-1-system staging-cluster-2-system staging-cluster-3-system];
 in
 {
   "hosts.age".publicKeys = user-machines ++ mac-cluster-machines;
