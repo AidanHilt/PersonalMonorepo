@@ -2,6 +2,9 @@ env: qa-cluster
 
 gitRevision: staging-cluster-k8s-work
 
+configuration:
+  configurationRevision: staging-cluster-k8s-work
+
 flaresolverr:
   enabled: true
 
