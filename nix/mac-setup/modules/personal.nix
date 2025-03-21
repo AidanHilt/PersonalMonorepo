@@ -1,7 +1,13 @@
 { inputs, pkgs, globals, ... }:
 
+let
+  hosts-config = globals.nixConfig + "/shared-modules/hosts.nix";
+in
+
 {
   imports = [
+    hosts-config
+
     ./smb-mount.nix
     ./rclone.nix
     ./guided-setup.nix
