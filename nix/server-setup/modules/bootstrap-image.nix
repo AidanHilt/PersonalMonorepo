@@ -52,8 +52,8 @@ let
 
     BRANCH="master"
 
-    # echo "Enter branch to build config from (default is master):"
-    # read -p "Enter branch name: " BRANCH
+    echo "Enter branch to build config from (default is master):"
+    read -p "Enter branch name: " BRANCH
 
     nixos-install --flake "github:AidanHilt/PersonalMonorepo/$BRANCH?dir=nix/server-setup#$hostname"
   '';

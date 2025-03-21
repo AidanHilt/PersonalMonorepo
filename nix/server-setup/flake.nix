@@ -31,6 +31,7 @@
       external-user-1-machine-1 = import ./machines/external-user-1-machine-1.nix { inherit inputs globals nixpkgs; };
       staging-cluster-1 = import ./machines/staging-cluster-1.nix { inherit inputs globals nixpkgs; };
       staging-cluster-2 = import ./machines/staging-cluster-2.nix { inherit inputs globals nixpkgs; };
+      staging-cluster-3 = import ./machines/staging-cluster-3.nix { inherit inputs globals nixpkgs; };
 
       # How we build our bootstrap iso image
       iso_image_x86 = nixpkgs.lib.nixosSystem {
