@@ -1,6 +1,6 @@
 env: staging-cluster
 
-hostname: staging.cluster.local
+hostname: staging-cluster-lb.local
 
 gitRevision: staging-cluster-k8s-work
 
