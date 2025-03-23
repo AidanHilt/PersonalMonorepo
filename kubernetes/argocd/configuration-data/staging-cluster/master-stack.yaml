@@ -1,4 +1,6 @@
-env: qa-cluster
+env: staging-cluster
+
+hostname: staging.cluster.local
 
 gitRevision: staging-cluster-k8s-work
 

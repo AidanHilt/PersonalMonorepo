@@ -46,7 +46,6 @@ spec:
       helm:
         releaseName: gateway-config
         values: |
-      values: |
         crafty-server:
           enabled: {{ index .Values "crafty-server" "enabled" }}
 
@@ -77,7 +76,7 @@ spec:
         hashi-vault:
           enabled: {{ index .Values "hashi-vault" "enabled" }}
 
-        hostname: {{ index .Values "istio-gateway" "hostname" }}
+        hostname: {{ index .Values "hostname" }}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: argocd
