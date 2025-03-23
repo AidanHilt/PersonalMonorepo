@@ -1,7 +1,8 @@
+{{- if index .Values "sonarr" "enabled" }}
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: radarr
+  name: sonarr
   namespace: istio-system
 spec:
   hosts:
@@ -11,9 +12,10 @@ spec:
   http:
     - match:
         - uri:
-            prefix: /radarr
+            prefix: /sonarr
       route:
         - destination:
-            host: radarr.videos.svc.cluster.local
+            host: sonarr.videos.svc.cluster.local
             port:
               number: 80
+{{- end }}

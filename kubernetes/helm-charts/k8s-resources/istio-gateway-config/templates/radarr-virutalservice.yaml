@@ -1,7 +1,8 @@
+{{- if index .Values "radarr" "enabled" }}
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: grafana
+  name: radarr
   namespace: istio-system
 spec:
   hosts:
@@ -11,13 +12,10 @@ spec:
   http:
     - match:
         - uri:
-            prefix: /grafana/
-        - uri:
-            prefix: /grafana
-      rewrite:
-        uri: /
+            prefix: /radarr
       route:
         - destination:
-            host: prometheus-grafana.monitoring.svc.cluster.local
+            host: radarr.videos.svc.cluster.local
             port:
               number: 80
+{{- end }}
