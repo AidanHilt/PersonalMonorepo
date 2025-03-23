@@ -44,39 +44,39 @@ spec:
       path: kubernetes/helm-charts/k8s-resources/istio-gateway-config
       targetRevision: {{ .Values.gitRevision }}
       helm:
-        releaseName: gateway-config
+        releaseName: istio-gateway-config
         values: |
-        crafty-server:
-          enabled: {{ index .Values "crafty-server" "enabled" }}
+          crafty-server:
+            enabled: {{ index .Values "crafty-server" "enabled" }}
 
-        grafana:
-          enabled: {{ index .Values "prometheus" "enabled" }}
+          grafana:
+            enabled: {{ index .Values "prometheus" "enabled" }}
 
-        jellyfin:
-          enabled: {{ index .Values "jellyfin" "enabled" }}
+          jellyfin:
+            enabled: {{ index .Values "jellyfin" "enabled" }}
 
-        jellyseerr:
-          enabled: {{ index .Values "jellyseerr" "enabled" }}
+          jellyseerr:
+            enabled: {{ index .Values "jellyseerr" "enabled" }}
 
-        kiali:
-          enabled: {{ index .Values "kiali" "enabled" }}
+          kiali:
+            enabled: {{ index .Values "kiali" "enabled" }}
 
-        prowlarr:
-          enabled: {{ index .Values "prowlarr" "enabled" }}
+          prowlarr:
+            enabled: {{ index .Values "prowlarr" "enabled" }}
 
-        radarr:
-          enabled: {{ index .Values "radarr" "enabled" }}
+          radarr:
+            enabled: {{ index .Values "radarr" "enabled" }}
 
-        sonarr:
-          enabled: {{ index .Values "sonarr" "enabled" }}
+          sonarr:
+            enabled: {{ index .Values "sonarr" "enabled" }}
 
-        transmission:
-          enabled: {{ index .Values "transmission" "enabled" }}
+          transmission:
+            enabled: {{ index .Values "transmission" "enabled" }}
 
-        hashi-vault:
-          enabled: {{ index .Values "hashi-vault" "enabled" }}
+          hashi-vault:
+            enabled: {{ index .Values "hashi-vault" "enabled" }}
 
-        hostname: {{ index .Values "hostname" }}
+          hostname: {{ index .Values "hostname" }}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: argocd
