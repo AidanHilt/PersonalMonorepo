@@ -24,9 +24,6 @@ flaresolverr:
   configuration:
     enabled: false
 
-gateways:
-  enabled: true
-
 grafana-dashboards:
   enabled: false
 
