@@ -1,5 +1,12 @@
 { inputs, pkgs, globals, ... }:
 
+let
+ awsSignIn = pkgs.writeShellScriptBin "aws-signin" ''
+  aws sso login --profile my-sso
+  export AWS_PROFILE=cso
+ '';
+in
+
 {
   imports = [
     ./guided-setup.nix
@@ -9,6 +16,7 @@
   environment.systemPackages = [
     pkgs.awscli2
     pkgs.helm-docs
+    awsSignIn
   ];
 
   homebrew = {
