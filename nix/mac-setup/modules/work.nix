@@ -3,7 +3,7 @@
 let
  awsSignIn = pkgs.writeShellScriptBin "aws-signin" ''
   aws sso login --profile my-sso
-  export AWS_PROFILE=cso
+  export AWS_PROFILE=csoc
  '';
 in
 
