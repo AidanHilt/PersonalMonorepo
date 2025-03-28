@@ -32,6 +32,7 @@
   {
     nixosConfigurations = {
       wsl-machine = import ./machines/wsl-machine.nix { inherit inputs globals nixpkgs; };
+      big-boi-desktop = import ./machines/big-boi-desktop.nix { inherit inputs globals nixpkgs; };
     };
   };
 }
