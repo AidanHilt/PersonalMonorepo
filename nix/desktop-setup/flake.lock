@@ -160,16 +160,16 @@
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1742013014,
-        "narHash": "sha256-ezzOvyhgcAVsP524Zdq3BFrEwL93uA3hYITKSj+pLb8=",
+        "lastModified": 1743183954,
+        "narHash": "sha256-HIA3HL4y+a7tO/ZOAu3P/HefyabiVGtPoyHfhG+bHdI=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "0fafb77d75cf957464e8fa5c4b4aec2c5f45961f",
+        "rev": "5c8d3aa5426cf06fd3a302ad787a1e843bb0e244",
         "type": "github"
       },
       "original": {
         "owner": "aidanhilt",
-        "ref": "feat/staging-cluster-setup",
+        "ref": "staging-cluster-k8s-work",
         "repo": "PersonalMonorepo",
         "type": "github"
       }
