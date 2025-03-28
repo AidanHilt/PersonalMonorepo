@@ -10,6 +10,7 @@ let
     config.allowUnfree = true;
     inherit system;
   };
+
 in
 
 nixpkgs.lib.nixosSystem {
@@ -25,6 +26,25 @@ nixpkgs.lib.nixosSystem {
     ({ inputs, globals, ...}: {
       networking.hostName = "big-boi-desktop";
       nixpkgs.hostPlatform = "aarch64-linux";
+
+      fileSystems = {
+        "/" = {
+        device = "/dev/disk/by-label/DESKTOPROOT";
+        fsType = "ext4";
+        };
+
+        "/boot" = {
+          device = "/dev/disk/by-label/BOOT";
+          fsType = "vfat";
+          options = [ "fmask=0077" "dmask=0077" ];
+        };
+      };
+
+      boot.loader.systemd-boot.enable = true;
+      boot.loader.efi.canTouchEfiVariables = true;
+
+      networking.hostName = "big-boi-desktop";
+
     })
 
     inputs.agenix.nixosModules.default

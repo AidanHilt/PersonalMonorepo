@@ -10,6 +10,8 @@
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
 
+    nur.url = "github:nix-community/nur";
+
     personalMonorepo = {
       url = "github:aidanhilt/PersonalMonorepo/staging-cluster-k8s-work";
       flake = false;
@@ -28,11 +30,20 @@
       nixConfig = inputs.personalMonorepo + "/nix";
       username = "nixos";
     };
+
+    pkgs = import nixpkgs {
+      overlays = [
+        inputs.nur.overlays.default
+      ];
+      config.allowUnfree = true;
+
+      inherit system;
+    };
   in
   {
     nixosConfigurations = {
       wsl-machine = import ./machines/wsl-machine.nix { inherit inputs globals nixpkgs; };
-      big-boi-desktop = import ./machines/big-boi-desktop.nix { inherit inputs globals nixpkgs; };
+      vm-desktop = import ./machines/vm-desktop.nix { inherit inputs globals nixpkgs; };
     };
   };
 }
