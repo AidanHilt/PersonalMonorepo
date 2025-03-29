@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, username, ...}:
+{ inputs, globals, pkgs, machine-config, ...}:
 
 let
   update = pkgs.writeShellScriptBin "update" ''
@@ -27,11 +27,11 @@ in
     PERSONAL_MONOREPO_LOCATION = "/home/nixos/PersonalMonorepo";
   };
 
-  users.groups."${username}" = {};
+  users.groups."${machine-config.username}" = {};
 
-  users.users."${username}" = {
-    home = "/home/${username}";
-    group = "${username}";
+  users.users."${machine-config.username}" = {
+    home = "/home/${machine-config.username}";
+    group = "${machine-config.username}";
     extraGroups = [ "networkmanager" "wheel" ];
     isNormalUser = true;
 
