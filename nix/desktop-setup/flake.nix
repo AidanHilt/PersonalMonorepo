@@ -32,8 +32,8 @@
 
       machine-configs = {
         "vm-desktop" = {
-          username = "aidan"
-        }
+          username = "aidan";
+        };
       };
 
       mkSystem = name: system: nixpkgs: nixpkgs.lib.nixosSystem (
