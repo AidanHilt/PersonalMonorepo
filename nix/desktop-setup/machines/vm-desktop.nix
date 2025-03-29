@@ -11,7 +11,7 @@ let
 in
 {
   imports = [
-    ../modules/common.nix
+    ../modules/common.nix { inherit machine-config; }
     ../modules/rclone.nix
   ];
 
