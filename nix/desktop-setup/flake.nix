@@ -32,7 +32,7 @@
         nixConfig = inputs.personalMonorepo + "/nix";
       };
 
-      mkSystem = name: system: nixpkgs: {} nixpkgs.lib.nixosSystem {
+      mkSystem = name: system: nixpkgs: nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = { inherit inputs globals nixpkgs; };
         modules = [
