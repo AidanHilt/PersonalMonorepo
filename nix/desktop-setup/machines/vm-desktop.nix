@@ -1,4 +1,4 @@
-{ inputs, globals, nixpkgs, pkgs, system, ...}:
+{ inputs, globals, nixpkgs, pkgs, ...}:
 
 with inputs;
 
@@ -16,7 +16,6 @@ in
   ];
 
   networking.hostName = "big-boi-desktop";
-  nixpkgs.hostPlatform = system;
 
   fileSystems = {
     "/" = {
