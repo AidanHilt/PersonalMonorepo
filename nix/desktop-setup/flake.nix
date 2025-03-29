@@ -41,7 +41,7 @@
     };
     in {
       nixosConfigurations = {
-        vm-desktop = mkSystem "vm-desktop" "aarch64-linux" inputs.nixpkgs {};
+        vm-desktop = mkSystem "vm-desktop" "aarch64-linux" inputs.nixpkgs;
         wsl-machine = import ./machines/wsl-machine.nix { inherit inputs globals nixpkgs; };
       };
   };
