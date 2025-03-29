@@ -12,7 +12,7 @@ let
   system = "aarch64-linux";
 in
 
-nixpkgs.lib.nixosSystem {
+pkgs.lib.nixosSystem {
   modules = [
     home-manager.nixosModules.home-manager {
       home-manager.useGlobalPkgs = true;
