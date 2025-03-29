@@ -27,29 +27,24 @@
   };
 
   outputs = { self, nixpkgs, ... }@inputs:
-
-  inputs.flake-utils.lib.eachDefaultSystem (system:
-    let
-      globals = {
-        nixConfig = inputs.personalMonorepo + "/nix";
-      };
-
-      pkgs = import nixpkgs {
-        overlays = [
-          inputs.nur.overlays.default
-        ];
-        config.allowUnfree = true;
-
-        inherit system;
-      };
-    in
-      {
-        nixosConfigurations = {
-          "aarch64-linux" = {
-            vm-desktop = import ./machines/vm-desktop.nix { inherit inputs globals nixpkgs pkgs; };
-          };
-          wsl-machine = import ./machines/wsl-machine.nix { inherit inputs globals nixpkgs; };
-
+    inputs.flake-utils.lib.eachDefaultSystem (system:
+      let
+        globals = {
+          nixConfig = inputs.personalMonorepo + "/nix";
         };
-      });
+
+        pkgs = import nixpkgs {
+          overlays = [
+            inputs.nur.overlays.default
+          ];
+          config.allowUnfree = true;
+
+          inherit system;
+        };
+      in {
+        nixosConfigurations = {
+          vm-desktop = ./machines/vm-desktop.nix { inherit inputs globals nixpkgs pkgs; };
+          wsl-machine = import ./machines/wsl-machine.nix { inherit inputs globals nixpkgs; };
+        };
+    });
 }
