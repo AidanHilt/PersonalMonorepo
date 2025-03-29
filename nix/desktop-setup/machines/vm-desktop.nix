@@ -11,9 +11,11 @@ let
 in
 {
   imports = [
-    ../modules/common.nix { inherit machine-config; }
+    ../modules/common.nix
     ../modules/rclone.nix
   ];
+
+  specialArgs = { inherit machine-config; };
 
   networking.hostName = "big-boi-desktop";
 
