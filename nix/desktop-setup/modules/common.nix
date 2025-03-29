@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, username, ...}:
 
 let
   update = pkgs.writeShellScriptBin "update" ''
@@ -27,7 +27,7 @@ in
     PERSONAL_MONOREPO_LOCATION = "/home/nixos/PersonalMonorepo";
   };
 
-  users.groups."${machine-config.username}" = {};
+  users.groups."${username}" = {};
 
   # users.users."${machine-config.username}" = {
   #   home = "/home/${machine-config.username}";
