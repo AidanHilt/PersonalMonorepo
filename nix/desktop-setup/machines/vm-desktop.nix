@@ -9,7 +9,6 @@ let
     username = "aidan";
   };
 
-  system = "aarch64-linux";
 in
 
 nixpkgs.lib.nixosSystem {
