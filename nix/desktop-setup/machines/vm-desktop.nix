@@ -15,6 +15,8 @@ in
     ../modules/rclone.nix
   ];
 
+  specialArgs = machine-config;
+
   networking.hostName = "big-boi-desktop";
 
   fileSystems = {
