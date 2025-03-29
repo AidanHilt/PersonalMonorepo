@@ -1,4 +1,4 @@
-{ inputs, globals, nixpkgs, pkgs, ...}:
+{ inputs, globals, nixpkgs, pkgs, system, ...}:
 
 with inputs;
 
