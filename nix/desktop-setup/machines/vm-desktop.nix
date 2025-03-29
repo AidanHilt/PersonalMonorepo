@@ -8,7 +8,7 @@ in
 {
   imports = [
     ../modules/common.nix
-    ../modules/rclone.nix
+ #   ../modules/rclone.nix
   ];
 
   networking.hostName = "big-boi-desktop";
