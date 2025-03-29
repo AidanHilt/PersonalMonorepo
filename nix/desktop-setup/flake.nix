@@ -27,24 +27,22 @@
   };
 
   outputs = { self, nixpkgs, ... }@inputs:
-    inputs.flake-utils.lib.eachDefaultSystem (system:
-      let
-        globals = {
-          nixConfig = inputs.personalMonorepo + "/nix";
-        };
+    let
+      globals = {
+        nixConfig = inputs.personalMonorepo + "/nix";
+      };
 
-        pkgs = import nixpkgs {
-          overlays = [
-            inputs.nur.overlays.default
-          ];
-          config.allowUnfree = true;
-
-          inherit system;
-        };
-      in {
-        nixosConfigurations = {
-          vm-desktop = ./machines/vm-desktop.nix { inherit inputs globals nixpkgs pkgs; };
-          wsl-machine = import ./machines/wsl-machine.nix { inherit inputs globals nixpkgs; };
-        };
-    });
+      mkSystem = name: system: nixpkgs: nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = { inherit inputs globals nixpkgs pkgs; };
+        modules = [
+          ./machines/${name}.nix
+        ];
+    };
+    in {
+      nixosConfigurations = {
+        vm-desktop = mkSystem "vm-desktop" "aarch64-linux" inputs.nixpkgs {};
+        wsl-machine = import ./machines/wsl-machine.nix { inherit inputs globals nixpkgs; };
+      };
+  };
 }
