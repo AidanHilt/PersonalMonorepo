@@ -34,7 +34,7 @@
 
       mkSystem = name: system: nixpkgs: nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = { inherit inputs globals nixpkgs };
+        specialArgs = { inherit inputs globals nixpkgs; };
         modules = [
           ./machines/${name}.nix
         ];
