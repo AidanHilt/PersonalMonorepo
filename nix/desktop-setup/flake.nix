@@ -26,7 +26,7 @@
     wsl.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, agenix, home-manager, ... }@inputs:
+  outputs = { self, nixpkgs, ... }@inputs:
 
   inputs.flake-utils.lib.eachDefaultSystem (system:
     let
