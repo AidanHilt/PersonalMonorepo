@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, username, ...}:
 
 let
   update = pkgs.writeShellScriptBin "update" ''
