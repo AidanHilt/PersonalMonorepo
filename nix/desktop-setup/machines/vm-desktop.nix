@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, ...}:
+{ inputs, globals, nixpkgs, pkgs, ...}:
 
 with inputs;
 
@@ -12,7 +12,7 @@ let
   system = "aarch64-linux";
 in
 
-pkgs.lib.nixosSystem {
+nixpkgs.lib.nixosSystem {
   modules = [
     home-manager.nixosModules.home-manager {
       home-manager.useGlobalPkgs = true;
