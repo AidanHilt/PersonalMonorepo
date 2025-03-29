@@ -4,8 +4,6 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    flake-utils.url = "github:numtide/flake-utils";
-
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -32,14 +30,19 @@
         nixConfig = inputs.personalMonorepo + "/nix";
       };
 
-      mkSystem = name: system: nixpkgs: nixpkgs.lib.nixosSystem {
+      mkSystem = name: system: nixpkgs: nixpkgs.lib.nixosSystem (
+      let
+        username = "aidan";
+      in
+
+      {
         inherit system;
-        specialArgs = { inherit inputs globals nixpkgs; };
+        specialArgs = { inherit inputs globals nixpkgs username; };
         modules = [
           ./machines/${name}.nix
           inputs.agenix.nixosModules.default
         ];
-    };
+      });
     in {
       nixosConfigurations = {
         vm-desktop = mkSystem "vm-desktop" "aarch64-linux" inputs.nixpkgs;

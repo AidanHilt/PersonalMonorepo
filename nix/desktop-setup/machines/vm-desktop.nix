@@ -4,12 +4,10 @@ with inputs;
 
 let
   home-dot-nix = inputs.personalMonorepo + "/nix/home-manager/machine-configs/big-boi-desktop.nix";
-
-  username = "aidan";
 in
 {
   imports = [
-    import ../modules/common.nix { inherit username; }
+    ../modules/common.nix
     ../modules/rclone.nix
   ];
 
