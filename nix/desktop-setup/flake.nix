@@ -28,23 +28,25 @@
 
   outputs = { self, nixpkgs, agenix, home-manager, ... }@inputs:
 
-  inputs.flake-utils.lib.eachDefaultSystem (system: let
-    globals = {
-      nixConfig = inputs.personalMonorepo + "/nix";
-    };
+  inputs.flake-utils.lib.eachDefaultSystem (system:
+    let
+      globals = {
+        nixConfig = inputs.personalMonorepo + "/nix";
+      };
 
-    pkgs = import nixpkgs {
-      overlays = [
-        inputs.nur.overlays.default
-      ];
-      config.allowUnfree = true;
+      pkgs = import nixpkgs {
+        overlays = [
+          inputs.nur.overlays.default
+        ];
+        config.allowUnfree = true;
 
-      inherit system;
-    };
-  in
-    nixosConfigurations = {
-      wsl-machine = import ./machines/wsl-machine.nix { inherit inputs globals nixpkgs; };
-      vm-desktop = import ./machines/vm-desktop.nix { inherit inputs globals nixpkgs pkgs; };
-    };
-  );
+        inherit system;
+      };
+    in
+      {
+        nixosConfigurations = {
+          wsl-machine = import ./machines/wsl-machine.nix { inherit inputs globals nixpkgs; };
+          vm-desktop = import ./machines/vm-desktop.nix { inherit inputs globals nixpkgs pkgs; };
+        };
+      });
 }
