@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, ...}:
+{ inputs, globals, pkgs, machine-config, ...}:
 
 let
   update = pkgs.writeShellScriptBin "update" ''
@@ -20,24 +20,18 @@ let
   git push
 '';
 
-  kubernetes-config = globals.nixConfig + "/shared-modules/kubernetes.nix";
-
 in
 
 {
-  imports = [
-    kubernetes-config
-  ];
-
   environment.variables = {
     PERSONAL_MONOREPO_LOCATION = "/home/nixos/PersonalMonorepo";
   };
 
-  users.groups.nixos = {};
+  users.groups."${machine-config.username}" = {};
 
-  users.users.nixos = {
-    home = "/home/nixos";
-    group = "nixos";
+  users.users."${machine-config.username}" = {
+    home = "/home/${machine-config.username}";
+    group = "${machine-config.username}";
     extraGroups = [ "networkmanager" "wheel" ];
     isNormalUser = true;
 

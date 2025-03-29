@@ -4,6 +4,8 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
+    flake-utils.url = "github:numtide/flake-utils";
+
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -25,7 +27,8 @@
   };
 
   outputs = { self, nixpkgs, agenix, home-manager, ... }@inputs:
-  let
+
+  inputs.flake-utils.lib.eachDefaultSystem (system: let
     globals = {
       nixConfig = inputs.personalMonorepo + "/nix";
       username = "nixos";
@@ -39,11 +42,10 @@
 
       inherit system;
     };
-  in
-  {
+  in {
     nixosConfigurations = {
       wsl-machine = import ./machines/wsl-machine.nix { inherit inputs globals nixpkgs; };
-      vm-desktop = import ./machines/vm-desktop.nix { inherit inputs globals nixpkgs; };
+      vm-desktop = import ./machines/vm-desktop.nix { inherit inputs globals pkgs; };
     };
-  };
+  })
 }

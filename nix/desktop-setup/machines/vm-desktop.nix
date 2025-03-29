@@ -1,16 +1,15 @@
-{ inputs, globals, nixpkgs, ...}:
+{ inputs, globals, pkgs, ...}:
 
 with inputs;
 
 let
   home-dot-nix = inputs.personalMonorepo + "/nix/home-manager/machine-configs/big-boi-desktop.nix";
 
-  system = "aarch64-linux";
-  pkgs = import nixpkgs {
-    config.allowUnfree = true;
-    inherit system;
+  machine-config = {
+    username = "aidan";
   };
 
+  system = "aarch64-linux";
 in
 
 nixpkgs.lib.nixosSystem {
@@ -20,12 +19,12 @@ nixpkgs.lib.nixosSystem {
       home-manager.useUserPackages = true;
       home-manager.backupFileExtension = "bak";
       home-manager.extraSpecialArgs = { inherit inputs globals pkgs; };
-      home-manager.users.nixos = import home-dot-nix {inherit inputs globals pkgs; system = pkgs.system; lib = home-manager.lib; };
+      home-manager.users.aidan = import home-dot-nix {inherit inputs globals pkgs; system = pkgs.system; lib = home-manager.lib; };
     }
 
     ({ inputs, globals, ...}: {
       networking.hostName = "big-boi-desktop";
-      nixpkgs.hostPlatform = "aarch64-linux";
+      nixpkgs.hostPlatform = system;
 
       fileSystems = {
         "/" = {
@@ -44,7 +43,6 @@ nixpkgs.lib.nixosSystem {
       boot.loader.efi.canTouchEfiVariables = true;
 
       networking.hostName = "big-boi-desktop";
-
     })
 
     inputs.agenix.nixosModules.default
