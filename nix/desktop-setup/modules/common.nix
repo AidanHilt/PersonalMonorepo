@@ -27,11 +27,11 @@ in
     PERSONAL_MONOREPO_LOCATION = "/home/nixos/PersonalMonorepo";
   };
 
-  users.groups."${machine-config.username}" = {};
+  users.groups."${username}" = {};
 
-  users.users."${machine-config.username}" = {
-    home = "/home/${machine-config.username}";
-    group = "${machine-config.username}";
+  users.users."${username}" = {
+    home = "/home/${username}";
+    group = "${username}";
     extraGroups = [ "networkmanager" "wheel" ];
     isNormalUser = true;
 

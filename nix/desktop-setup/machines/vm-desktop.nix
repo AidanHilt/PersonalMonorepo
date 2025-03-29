@@ -5,7 +5,7 @@ with inputs;
 let
   home-dot-nix = inputs.personalMonorepo + "/nix/home-manager/machine-configs/big-boi-desktop.nix";
 
-  username = "aidan"
+  username = "aidan";
 in
 {
   imports = [
