@@ -30,9 +30,15 @@
         nixConfig = inputs.personalMonorepo + "/nix";
       };
 
+      machine-configs = {
+        "vm-desktop" = {
+          username = "aidan"
+        }
+      };
+
       mkSystem = name: system: nixpkgs: nixpkgs.lib.nixosSystem (
       let
-        username = "aidan";
+        username = machine-configs."vm-desktop".username;
       in
 
       {
