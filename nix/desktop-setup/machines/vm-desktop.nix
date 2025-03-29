@@ -13,7 +13,7 @@ in
   imports = [
     import ../modules/common.nix (
       args
-      // { machine-config = machine-config }
+      // { machine-config = machine-config; }
     )
     ../modules/rclone.nix
   ];
