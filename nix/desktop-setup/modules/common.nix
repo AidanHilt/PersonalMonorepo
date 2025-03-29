@@ -27,16 +27,16 @@ in
     PERSONAL_MONOREPO_LOCATION = "/home/nixos/PersonalMonorepo";
   };
 
-  users.groups."${username}" = {};
+  users.groups."${machine-config.username}" = {};
 
-  # users.users."${machine-config.username}" = {
-  #   home = "/home/${machine-config.username}";
-  #   group = "${machine-config.username}";
-  #   extraGroups = [ "networkmanager" "wheel" ];
-  #   isNormalUser = true;
+  users.users."${machine-config.username}" = {
+    home = "/home/${machine-config.username}";
+    group = "${machine-config.username}";
+    extraGroups = [ "networkmanager" "wheel" ];
+    isNormalUser = true;
 
-  #   openssh.authorizedKeys.keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIImw5CsGmsR1WTunv5bvNcozmoUSgJf76RMvy6SZtA2R aidan@hyperion"];
-  # };
+    openssh.authorizedKeys.keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIImw5CsGmsR1WTunv5bvNcozmoUSgJf76RMvy6SZtA2R aidan@hyperion"];
+  };
 
   environment.systemPackages = [
     pkgs.git

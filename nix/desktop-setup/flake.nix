@@ -38,14 +38,14 @@
 
       mkSystem = name: system: nixpkgs: nixpkgs.lib.nixosSystem (
       let
-        username = machine-configs."vm-desktop".username;
+        machine-config = ./machines/${name}/configuration.nix;
       in
 
       {
         inherit system;
-        specialArgs = { inherit inputs globals nixpkgs username; };
+        specialArgs = { inherit inputs globals nixpkgs machine-config; };
         modules = [
-          ./machines/${name}.nix
+          ./machines/${name}/configuration.nix
           inputs.agenix.nixosModules.default
         ];
       });
