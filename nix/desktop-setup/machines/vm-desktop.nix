@@ -11,10 +11,7 @@ let
 in
 {
   imports = [
-    import ../modules/common.nix (
-      args
-      { machine-config = machine-config; }
-    )
+    import ../modules/common.nix { inherit machine-config; }
     ../modules/rclone.nix
   ];
 
