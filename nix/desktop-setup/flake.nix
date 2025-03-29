@@ -47,5 +47,5 @@
       wsl-machine = import ./machines/wsl-machine.nix { inherit inputs globals nixpkgs; };
       vm-desktop = import ./machines/vm-desktop.nix { inherit inputs globals pkgs; };
     };
-  })
+  });
 }
