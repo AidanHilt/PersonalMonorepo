@@ -8,7 +8,6 @@ let
   machine-config = {
     username = "aidan";
   };
-
 in
 
 nixpkgs.lib.nixosSystem {
@@ -40,8 +39,6 @@ nixpkgs.lib.nixosSystem {
 
       boot.loader.systemd-boot.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
-
-      networking.hostName = "big-boi-desktop";
     })
 
     inputs.agenix.nixosModules.default
