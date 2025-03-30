@@ -33,7 +33,7 @@
       mkSystem = name: system: nixpkgs: nixpkgs.lib.nixosSystem (
         {
           inherit system;
-          specialArgs = import ./machines.${name}/values.nix // { inherit inputs globals nixpkgs; };
+          specialArgs = import ./machines/${name}/values.nix // { inherit inputs globals nixpkgs; };
           modules = [
             ./machines/${name}/configuration.nix
             inputs.agenix.nixosModules.default
