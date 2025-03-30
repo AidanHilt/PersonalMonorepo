@@ -30,25 +30,16 @@
         nixConfig = inputs.personalMonorepo + "/nix";
       };
 
-      machine-configs = {
-        "vm-desktop" = {
-          username = "aidan";
-        };
-      };
-
       mkSystem = name: system: nixpkgs: nixpkgs.lib.nixosSystem (
-      let
-        machine-config = ./machines/${name}/configuration.nix;
-      in
-
-      {
-        inherit system;
-        specialArgs = { inherit inputs globals nixpkgs machine-config; };
-        modules = [
-          ./machines/${name}/configuration.nix
-          inputs.agenix.nixosModules.default
-        ];
-      });
+        {
+          inherit system;
+          specialArgs = { inherit inputs globals nixpkgs; "./machines/${name}/values.nix" };
+          modules = [
+            ./machines/${name}/configuration.nix
+            inputs.agenix.nixosModules.default
+          ];
+        }
+      );
     in {
       nixosConfigurations = {
         vm-desktop = mkSystem "vm-desktop" "aarch64-linux" inputs.nixpkgs;
