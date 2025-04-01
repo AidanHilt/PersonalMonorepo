@@ -1,0 +1,22 @@
+{ inputs, globals, pkgs, machine-config, ...}:
+{
+  imports = [
+    ./universal.nix
+
+    ../hosts.nix
+    ../locale-and-time.nix
+  ];
+
+  users.groups."${machine-config.username}" = {};
+
+  users.users."${machine-config.username}" = {
+    home = "/home/${machine-config.username}";
+    extraGroups = [ "networkmanager" "wheel" ];
+    isNormalUser = true;
+  };
+
+  programs.zsh.enable = true;
+  users.defaultUserShell = pkgs.zsh;
+
+  services.openssh.enable = true;
+}
