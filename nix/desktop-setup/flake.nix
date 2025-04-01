@@ -44,6 +44,7 @@
           inherit system;
           specialArgs = import ./machines/${system}/${name}/values.nix // { inherit inputs globals nixpkgs; };
           modules = [
+            inputs.home-manager.darwinModules.home-manager
             ./machines/${system}/${name}/configuration.nix
             inputs.agenix.nixosModules.default
           ];
