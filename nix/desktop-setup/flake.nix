@@ -35,7 +35,7 @@
           inherit system;
           specialArgs = import ./machines/${system}/${name}/values.nix // { inherit inputs globals nixpkgs; };
           modules = [
-            ./machines/${name}/configuration.nix
+            ./machines/${system}/${name}/configuration.nix
             inputs.agenix.nixosModules.default
           ];
         }
