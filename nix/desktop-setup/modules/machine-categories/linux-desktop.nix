@@ -2,9 +2,9 @@
 
 {
   imports = [
-    ./linux-universal
+    ./linux-universal.nix
 
-    ../roles/nixos/deepin-desktop
+    ../roles/nixos/deepin-desktop.nix
   ];
 
   programs.nix-ld.enable = true;
