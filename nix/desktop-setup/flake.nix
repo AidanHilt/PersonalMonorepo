@@ -30,6 +30,15 @@
         nixConfig = inputs.personalMonorepo + "/nix";
       };
 
+      isNixosConfig = dir: builtins.pathExists (dir + "/configuration.nix");
+
+      aarch64LinuxDir = ./machines/aarch64-linux
+      aarch64LinuxDirContents = builtins.readDir ./machines/aarch64-linux;
+      aarch64LinuxDirNames = builtins.attrNames (lib.filterAttrs (name: type: type == "directory") aarch64LinuxDirectoryContents);
+      aarch64LinuxHosts = builtins.filter (name:
+        isNixosConfig (aarch64LinuxDir + "/${name}")
+      ) aarch64LinuxDirNames;
+
       mkSystem = name: system: nixpkgs: nixpkgs.lib.nixosSystem (
         {
           inherit system;
@@ -40,10 +49,9 @@
           ];
         }
       );
+
+      aarch64LinuxConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystem name "aarch64-linux")) {} aarch64LinuxHosts;
     in {
-      nixosConfigurations = {
-        vm-desktop = mkSystem "vm-desktop" "aarch64-linux" inputs.nixpkgs;
-        wsl-machine = import ./machines/wsl-machine.nix { inherit inputs globals nixpkgs; };
-      };
+      nixosConfigurations = aarch64LinuxConfigs;
   };
 }
