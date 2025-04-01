@@ -17,7 +17,7 @@
     useUserPackages = true;
     backupFileExtension = "bak";
     extraSpecialArgs = { inherit inputs globals pkgs; };
-    users.${machine-config.username} = import ./home.nix {inherit inputs globals pkgs; system = pkgs.system; lib = home-manager.lib; };
+    users.${machine-config.username} = import ./home.nix {inherit inputs globals pkgs; system = pkgs.system; lib = inputs.home-manager.lib; };
   };
 
   # Bootloader.
