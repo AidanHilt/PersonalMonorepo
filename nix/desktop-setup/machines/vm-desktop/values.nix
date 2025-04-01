@@ -1,5 +1,5 @@
 {
   machine-config = {
-    username = "aidan"
+    username = "aidan";
   };
 }
