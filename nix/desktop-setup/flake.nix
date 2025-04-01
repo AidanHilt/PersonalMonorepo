@@ -32,7 +32,7 @@
 
       isNixosConfig = dir: builtins.pathExists (dir + "/configuration.nix");
 
-      aarch64LinuxDir = ./machines/aarch64-linux
+      aarch64LinuxDir = ./machines/aarch64-linux;
       aarch64LinuxDirContents = builtins.readDir ./machines/aarch64-linux;
       aarch64LinuxDirNames = builtins.attrNames (lib.filterAttrs (name: type: type == "directory") aarch64LinuxDirectoryContents);
       aarch64LinuxHosts = builtins.filter (name:
