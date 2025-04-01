@@ -39,16 +39,16 @@
         isNixosConfig (aarch64LinuxDir + "/${name}")
       ) aarch64LinuxDirNames;
 
-      mkSystem = name: system: nixpkgs.lib.nixosSystem (
-        {
+      mkSystem = name: system: {
+        "${name}" = nixpkgs.lib.nixosSystem {
           inherit system;
           specialArgs = import ./machines/${system}/${name}/values.nix // { inherit inputs globals nixpkgs; };
           modules = [
             ./machines/${system}/${name}/configuration.nix
             inputs.agenix.nixosModules.default
           ];
-        }
-      );
+        };
+      };
 
       aarch64LinuxConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystem name "aarch64-linux")) {} aarch64LinuxHosts;
     in {
