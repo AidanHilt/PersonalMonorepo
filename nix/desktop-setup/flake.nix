@@ -39,7 +39,7 @@
         isNixosConfig (aarch64LinuxDir + "/${name}")
       ) aarch64LinuxDirNames;
 
-      mkSystem = name: system: nixpkgs: nixpkgs.lib.nixosSystem (
+      mkSystem = name: system: nixpkgs.lib.nixosSystem (
         {
           inherit system;
           specialArgs = import ./machines/${system}/${name}/values.nix // { inherit inputs globals nixpkgs; };
