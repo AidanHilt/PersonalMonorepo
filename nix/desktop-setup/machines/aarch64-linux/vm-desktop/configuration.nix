@@ -9,7 +9,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
 
-      ../../modules/machine-categories/linux-desktop.nix
+      ../../../modules/machine-categories/linux-desktop.nix
     ];
 
   # Bootloader.
