@@ -34,7 +34,7 @@
 
       aarch64LinuxDir = ./machines/aarch64-linux;
       aarch64LinuxDirContents = builtins.readDir ./machines/aarch64-linux;
-      aarch64LinuxDirNames = builtins.attrNames (nixpkgs.lib.filterAttrs (name: type: type == "directory") aarch64LinuxDirectoryContents);
+      aarch64LinuxDirNames = builtins.attrNames (nixpkgs.lib.filterAttrs (name: type: type == "directory") aarch64LinuxDirContents);
       aarch64LinuxHosts = builtins.filter (name:
         isNixosConfig (aarch64LinuxDir + "/${name}")
       ) aarch64LinuxDirNames;
