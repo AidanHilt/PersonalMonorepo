@@ -35,7 +35,6 @@
         inputs.nur.overlays.default
       ];
       config.allowUnfree = true;
-      inherit system;
     };
 
       isNixosConfig = dir: builtins.pathExists (dir + "/configuration.nix");
