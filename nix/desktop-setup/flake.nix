@@ -30,7 +30,7 @@
         nixConfig = inputs.personalMonorepo + "/nix";
       };
 
-      pkgsFor = lib.genAttrs (import systems) (
+      pkgsFor = inputs.nixpkgs.lib.genAttrs (import systems) (
         system:
           import nixpkgs {
             inherit system;
