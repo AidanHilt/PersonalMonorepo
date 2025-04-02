@@ -2,7 +2,7 @@
 
 {
   age.secrets.hosts-file = {
-    file = ../secrets/hosts.age;
+    file = ../../../secrets/hosts.age;
     path = "/etc/hosts";
     owner = "root";
     mode = "644";
