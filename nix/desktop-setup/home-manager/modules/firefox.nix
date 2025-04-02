@@ -11,7 +11,7 @@
 
   programs.firefox = {
     enable = true;
-    package = null;
+    package = lib.mkIf (pkgs.system == "aarch64-darwin") null;
     profiles.aidan = {
       isDefault = true;
       extensions = with pkgs.nur.repos.rycee.firefox-addons; [
