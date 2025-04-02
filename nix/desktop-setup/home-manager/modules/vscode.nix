@@ -1,7 +1,7 @@
 { inputs, globals, machine-config, pkgs, lib, system, ...}:
 
 let
-  vscode-settings = "../config-files/vscode-settings.json";
+  vscode-settings = ../config-files/vscode-settings.json;
 
   extensions =
     (import (builtins.fetchGit {
