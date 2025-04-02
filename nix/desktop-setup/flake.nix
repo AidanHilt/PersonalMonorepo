@@ -57,7 +57,7 @@
       mkSystem = name: system: {
         "${name}" = nixpkgs.lib.nixosSystem {
           inherit system;
-          specialArgs = import ./machines/${system}/${name}/values.nix // { inherit inputs globals pkgs-aarch64-linux; };
+          specialArgs = ({pkgs = pkgs-aarch64-linux} // import ./machines/${system}/${name}/values.nix) // { inherit inputs globals };
           modules = [
             inputs.home-manager.darwinModules.home-manager
             ./machines/${system}/${name}/configuration.nix
