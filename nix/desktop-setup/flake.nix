@@ -30,12 +30,16 @@
         nixConfig = inputs.personalMonorepo + "/nix";
       };
 
-      pkgs = import nixpkgs {
-      overlays = [
-        inputs.nur.overlays.default
-      ];
-      config.allowUnfree = true;
-    };
+      pkgsFor = lib.genAttrs (import systems) (
+        system:
+          import nixpkgs {
+            inherit system;
+            config.allowUnfree = true;
+              overlays = [
+                inputs.nur.overlays.default
+              ];
+          }
+      );
 
       isNixosConfig = dir: builtins.pathExists (dir + "/configuration.nix");
 
@@ -49,6 +53,7 @@
       mkSystem = name: system: {
         "${name}" = nixpkgs.lib.nixosSystem {
           inherit system;
+          pkgs = pkgsFor.aarch64-linux;
           specialArgs = import ./machines/${system}/${name}/values.nix // { inherit inputs globals pkgs; };
           modules = [
             inputs.home-manager.darwinModules.home-manager
