@@ -7,7 +7,7 @@
     ../roles/nixos/deepin-desktop.nix
   ];
 
-  environment.systemPackages = with pkgs [
+  environment.systemPackages = with pkgs; [
     firefox
   ];
 
