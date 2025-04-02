@@ -1,7 +1,7 @@
-{ inputs, globals, machine-config, pkgs, lib, system, ...}:
+{ inputs, globals, machine-config, pkgs, lib, ...}:
 
 {
-  home.activation.firefoxProfile = lib.mkIf (system == "aarch64-darwin")
+  home.activation.firefoxProfile = lib.mkIf (pkgs.system == "aarch64-darwin")
     (lib.hm.dag.entryAfter [ "writeBoundry" ] ''
       run mv $HOME/Library/Application\ Support/Firefox/profiles.ini $HOME/Library/Application\ Support/Firefox/profiles.hm
       run cp $HOME/Library/Application\ Support/Firefox/profiles.hm $HOME/Library/Application\ Support/Firefox/profiles.ini
