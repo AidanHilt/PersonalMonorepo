@@ -59,7 +59,7 @@
           inherit system;
           specialArgs = ({pkgs = pkgs-aarch64-linux;} // import ./machines/${system}/${name}/values.nix) // { inherit inputs globals; };
           modules = [
-            inputs.home-manager.darwinModules.home-manager
+            inputs.home-manager.nixosModules.home-manager
             ./machines/${system}/${name}/configuration.nix
             inputs.agenix.nixosModules.default
           ];
