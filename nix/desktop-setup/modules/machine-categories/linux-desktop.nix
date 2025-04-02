@@ -7,9 +7,7 @@
     ../roles/nixos/deepin-desktop.nix
   ];
 
-  environment.systemPackages = with pkgs; [
-    firefox
-  ];
+  programs.firefox.enable = true;
 
   programs.nix-ld.enable = true;
 }
