@@ -67,19 +67,24 @@
 
       aarch64LinuxHosts = getConfigsForSystem "aarch64-linux";
 
-      mkSystem = name: system: {
+      mkSystemNixos = name: system:
+        let
+          moduleType = if system == "aarch64-darwin" then "darwinModules" else "nixosModules";
+        in
+        {
         "${name}" = nixpkgs.lib.nixosSystem {
           inherit system;
           specialArgs = ({pkgs = pkgsFor.aarch64-linux;} // import ./machines/${system}/${name}/values.nix) // { inherit inputs globals; };
           modules = [
-            inputs.home-manager.nixosModules.home-manager
+            inputs.home-manager."${moduleType}".home-manager
             ./machines/${system}/${name}/configuration.nix
-            inputs.agenix.nixosModules.default
+            inputs.agenix."${moduleType}".default
+            inputs.wsl."${moduleType}".wsl
           ];
         };
       };
 
-      aarch64LinuxConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystem name "aarch64-linux")) {} aarch64LinuxHosts;
+      aarch64LinuxConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystemNixos name "aarch64-linux")) {} aarch64LinuxHosts;
     in {
       nixosConfigurations = aarch64LinuxConfigs;
   };
