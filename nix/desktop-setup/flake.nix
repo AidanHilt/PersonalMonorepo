@@ -60,7 +60,6 @@
             inputs.home-manager.nixosModules.home-manager
             ./machines/${system}/${name}/configuration.nix
             inputs.agenix.nixosModules.default
-            inputs.agenix.nixosModules.default
           ];
         };
       };

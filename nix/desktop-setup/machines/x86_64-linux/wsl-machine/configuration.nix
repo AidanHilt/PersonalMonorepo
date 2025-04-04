@@ -18,7 +18,7 @@
 
   wsl = {
     enable = true;
-    defaultUser = "nixos";
+    defaultUser = "${machine-config.username}";
   };
 
   specialArgs = { inherit inputs globals; };

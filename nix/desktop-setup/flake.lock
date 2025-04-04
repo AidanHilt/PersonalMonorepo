@@ -217,11 +217,11 @@
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1743738652,
-        "narHash": "sha256-5LP9ACubu5zayLdwB6ZNyaQQRQ078FLyxUkNrYs+WDc=",
+        "lastModified": 1743738855,
+        "narHash": "sha256-c7dIjIWGtJiotgawbhf+sxhlk8hIPU88yMnR3b8QpxA=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "ecc54b3c08c72e8c78de2e0157789932dc9133c8",
+        "rev": "bde650a1ec821a8ca5a0413c1e00e9633a0b4711",
         "type": "github"
       },
       "original": {
