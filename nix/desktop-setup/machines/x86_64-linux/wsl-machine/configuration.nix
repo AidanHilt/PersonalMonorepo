@@ -2,16 +2,6 @@
 
 with inputs;
 
-let
-  home-dot-nix = inputs.personalMonorepo + "/nix/home-manager/machine-configs/wsl.nix";
-
-  system = "x86_64-linux";
-  pkgs = import nixpkgs {
-    config.allowUnfree = true;
-    inherit system;
-  };
-in
-
 nixpkgs.lib.nixosSystem {
   modules = [
     home-manager.nixosModules.home-manager {
@@ -37,8 +27,6 @@ nixpkgs.lib.nixosSystem {
     inputs.wsl.nixosModules.wsl
     inputs.agenix.nixosModules.default
 
-    ../modules/common.nix
-    ../modules/rclone.nix
   ];
   specialArgs = { inherit inputs globals; };
 }

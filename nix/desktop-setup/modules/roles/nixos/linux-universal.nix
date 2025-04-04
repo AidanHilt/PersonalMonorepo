@@ -2,10 +2,7 @@
 
 {
   imports = [
-    ./universal.nix
-
-    ../roles/universal/hosts.nix
-    ../roles/universal/locale-and-time.nix
+    ../universal/universal-base.nix
   ];
 
   users.groups."${machine-config.username}" = {};

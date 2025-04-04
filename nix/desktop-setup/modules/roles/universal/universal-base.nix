@@ -3,6 +3,11 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 {
+  imports = [
+    ./hosts.nix
+    ./locale-and-time.nix
+  ]
+
   system.stateVersion = "24.11";
 
   nix = {

@@ -3,11 +3,5 @@
 {
   imports = [
     ../roles/nixos/linux-universal.nix
-
-    ../roles/nixos/deepin-desktop.nix
   ];
-
-  programs.firefox.enable = true;
-
-  programs.nix-ld.enable = true;
 }
