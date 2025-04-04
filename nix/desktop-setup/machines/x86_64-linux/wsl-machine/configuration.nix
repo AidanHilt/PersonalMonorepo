@@ -1,32 +1,21 @@
-{ inputs, globals, nixpkgs, ...}:
-
-with inputs;
-
-nixpkgs.lib.nixosSystem {
-  modules = [
-    home-manager.nixosModules.home-manager {
-      home-manager.useGlobalPkgs = true;
-      home-manager.useUserPackages = true;
-      home-manager.backupFileExtension = "bak";
-      home-manager.extraSpecialArgs = { inherit inputs globals pkgs; };
-      home-manager.users.nixos = import home-dot-nix {inherit inputs globals pkgs; system = pkgs.system; lib = home-manager.lib; };
-    }
-
-    ({ inputs, globals, ...}: {
-      networking.hostName = "wsl-machine";
-      nixpkgs.hostPlatform = "x86_64-linux";
-
-      wsl = {
-        enable = true;
-        defaultUser = "nixos";
-      };
+{ config, pkgs, machine-config, inputs, globals, ... }:
 
 
-    })
+{
+  home-manager = {
+    useGlobalPkgs = true;
+    useUserPackages = true;
+    backupFileExtension = "bak";
+    extraSpecialArgs = { inherit inputs globals pkgs; };
+    users.${machine-config.username} = import ./home.nix {inherit inputs globals pkgs machine-config; system = pkgs.system; lib = home-manager.lib; };
+  };
 
-    inputs.wsl.nixosModules.wsl
-    inputs.agenix.nixosModules.default
+  networking.hostName = "wsl-machine";
 
-  ];
+  wsl = {
+    enable = true;
+    defaultUser = "nixos";
+  };
+
   specialArgs = { inherit inputs globals; };
 }

@@ -52,15 +52,14 @@
         isNixosConfig (aarch64LinuxDir + "/${name}")
       ) aarch64LinuxDirNames;
 
-      pkgs-aarch64-linux = pkgsFor.aarch64-linux;
-
       mkSystem = name: system: {
         "${name}" = nixpkgs.lib.nixosSystem {
           inherit system;
-          specialArgs = ({pkgs = pkgs-aarch64-linux;} // import ./machines/${system}/${name}/values.nix) // { inherit inputs globals; };
+          specialArgs = ({pkgs = pkgsFor.aarch64-linux;} // import ./machines/${system}/${name}/values.nix) // { inherit inputs globals; };
           modules = [
             inputs.home-manager.nixosModules.home-manager
             ./machines/${system}/${name}/configuration.nix
+            inputs.agenix.nixosModules.default
             inputs.agenix.nixosModules.default
           ];
         };
