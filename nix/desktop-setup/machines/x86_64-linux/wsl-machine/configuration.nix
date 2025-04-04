@@ -2,6 +2,10 @@
 
 
 {
+  imports = [
+    ../../../modules/machine-categories/linux-desktop-terminal.nix
+  ];
+
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
