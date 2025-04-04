@@ -6,7 +6,7 @@
   imports = [
     ./hosts.nix
     ./locale-and-time.nix
-  ]
+  ];
 
   system.stateVersion = "24.11";
 
