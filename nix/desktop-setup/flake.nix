@@ -45,12 +45,34 @@
 
       isNixosConfig = dir: builtins.pathExists (dir + "/configuration.nix");
 
-      aarch64LinuxDir = ./machines/aarch64-linux;
-      aarch64LinuxDirContents = builtins.readDir ./machines/aarch64-linux;
-      aarch64LinuxDirNames = builtins.attrNames (nixpkgs.lib.filterAttrs (name: type: type == "directory") aarch64LinuxDirContents);
-      aarch64LinuxHosts = builtins.filter (name:
-        isNixosConfig (aarch64LinuxDir + "/${name}")
-      ) aarch64LinuxDirNames;
+      getConfigsForSystem = system:
+        let
+          # Directory path for this system
+          systemDir = ./machines/${system};
+
+          # Read directory contents
+          systemDirContents = builtins.readDir systemDir;
+
+          # Filter to only include directories
+          systemDirNames = builtins.attrNames (nixpkgs.lib.filterAttrs
+            (name: type: type == "directory")
+            systemDirContents);
+
+          # Filter to only include directories with configuration.nix
+          systemHosts = builtins.filter (name:
+            isNixosConfig (systemDir + "/${name}")
+          ) systemDirNames;
+        in
+          systemHosts;
+
+      # aarch64LinuxDir = ./machines/aarch64-linux;
+      # aarch64LinuxDirContents = builtins.readDir ./machines/aarch64-linux;
+      # aarch64LinuxDirNames = builtins.attrNames (nixpkgs.lib.filterAttrs (name: type: type == "directory") aarch64LinuxDirContents);
+      # aarch64LinuxHosts = builtins.filter (name:
+      #   isNixosConfig (aarch64LinuxDir + "/${name}")
+      # ) aarch64LinuxDirNames;
+
+      aarch64LinuxHosts = getConfigsForSystem "aarch64-linux";
 
       mkSystem = name: system: {
         "${name}" = nixpkgs.lib.nixosSystem {
