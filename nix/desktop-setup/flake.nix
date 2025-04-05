@@ -75,7 +75,7 @@
         {
         "${name}" = nixpkgs.lib.nixosSystem {
           inherit system;
-          specialArgs = ({pkgs = pkgsFor.aarch64-linux;} // import ./machines/${system}/${name}/values.nix) // { inherit inputs globals; };
+          specialArgs = ( import ./machines/${system}/${name}/values.nix) // { pkgs = pkgsFor.aarch64-linux; inherit inputs globals; };
           modules = [
             inputs.home-manager."${moduleType}".home-manager
             ./machines/${system}/${name}/configuration.nix

@@ -20,6 +20,10 @@ in
 {
   nixpkgs.config.allowUnfree = true;
 
+  environment.variables = {
+    PERSONAL_MONOREPO_LOCATION = "/home/nixos/PersonalMonorepo";
+  };
+
   environment.systemPackages = with pkgs; [
     act
     cargo
@@ -37,7 +41,7 @@ in
     syncthing
     terraform
     terragrunt
-    # yarn
-    # yq
+    yarn
+    yq
   ] ++ mac-apps;
 }
