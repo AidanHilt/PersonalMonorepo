@@ -32,9 +32,9 @@ in
     postgresql
     pre-commit
     rustc
-    # syncthing
-    # terraform
-    # terragrunt
+    syncthing
+    terraform
+    terragrunt
     # yarn
     # yq
   ] ++ mac-apps;
