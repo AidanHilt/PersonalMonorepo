@@ -1,5 +1,3 @@
 {
-  machine-config = {
-    username = "nixos";
-  };
+  username = "nixos";
 }
