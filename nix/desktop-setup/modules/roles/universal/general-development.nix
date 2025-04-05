@@ -14,7 +14,7 @@ let
   docker builder prune --force
 '';
 
-  mac-apps = if pkgs.system == "aarch64-darwin" then [ defaultbrowser ] else [];
+  mac-apps = if pkgs.system == "aarch64-darwin" then with pkgs; [ defaultbrowser ] else [];
 in
 
 {
