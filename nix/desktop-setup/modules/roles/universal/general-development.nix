@@ -25,7 +25,6 @@ in
     detect-secrets
     eza
     gettext
-    git
     inetutils
     jq
     p7zip
@@ -36,8 +35,6 @@ in
     syncthing
     terraform
     terragrunt
-    vim
-    wget
     yarn
     yq
   ] ++ mac-apps;
