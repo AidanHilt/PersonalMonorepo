@@ -3,5 +3,6 @@
 {
   imports = [
     ../roles/nixos/linux-universal.nix
+    ../roles/universal/general-development.nix
   ];
 }

@@ -4,6 +4,8 @@
   imports = [
     ../roles/nixos/linux-universal.nix
     ../roles/nixos/deepin-desktop.nix
+
+    ../roles/universal/general-development.nix
   ];
 
   programs.firefox.enable = true;
