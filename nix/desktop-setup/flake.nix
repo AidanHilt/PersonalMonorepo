@@ -71,13 +71,14 @@
       mkSystem = name: system:
         let
           moduleType = if system == "aarch64-darwin" then "darwinModules" else "nixosModules";
+          user-base = if system == "aarch64-darwin" then "/Users" else "/home";
         in
         {
         "${name}" = nixpkgs.lib.nixosSystem {
           inherit system;
 
           specialArgs = {
-            machine-config = (import ./machines/${system}/${name}/values.nix) // {home-directory = "/home/aidan";};
+            machine-config = (import ./machines/${system}/${name}/values.nix) // {user-base = user-base;};
             pkgs = pkgsFor.aarch64-linux;
             inherit inputs globals;
           };
