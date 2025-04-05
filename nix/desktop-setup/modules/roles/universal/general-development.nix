@@ -28,14 +28,14 @@ in
     inetutils
     jq
     p7zip
-    pipx
-    postgresql
-    pre-commit
-    rustc
-    syncthing
-    terraform
-    terragrunt
-    yarn
-    yq
+    # pipx
+    # postgresql
+    # pre-commit
+    # rustc
+    # syncthing
+    # terraform
+    # terragrunt
+    # yarn
+    # yq
   ] ++ mac-apps;
 }
