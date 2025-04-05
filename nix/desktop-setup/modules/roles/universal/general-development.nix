@@ -1,14 +1,14 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 let
-  nix-commit = writeShellScriptBin "nix-commit" ''
+  nix-commit = pkgs.writeShellScriptBin "nix-commit" ''
   cd $PERSONAL_MONOREPO_LOCATION
   git add nix/*
   git commit -m "Nix commit"
   git push
 '';
 
-  reset-docker = writeShellScriptBin "reset-docker" ''
+  reset-docker = pkgs.writeShellScriptBin "reset-docker" ''
   docker container prune --force
   docker image prune -a --force
   docker builder prune --force
