@@ -28,10 +28,10 @@ in
     inetutils
     jq
     p7zip
-    # pipx
-    # postgresql
-    # pre-commit
-    # rustc
+    pipx
+    postgresql
+    pre-commit
+    rustc
     # syncthing
     # terraform
     # terragrunt
