@@ -21,7 +21,7 @@ in
   nixpkgs.config.allowUnfree = true;
 
   environment.variables = {
-    PERSONAL_MONOREPO_LOCATION = machine-config.homeDirectory;
+    PERSONAL_MONOREPO_LOCATION = machine-config.home-directory;
   };
 
   environment.systemPackages = with pkgs; [
