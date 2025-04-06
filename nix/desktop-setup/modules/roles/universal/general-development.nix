@@ -63,7 +63,6 @@ in
           git clone https://github.com/AidanHilt/PersonalMonorepo.git "$PERSONAL_MONOREPO_LOCATION"
         fi
       '';
-      deps = [ pkgs.git ];
     };
   };
 }
