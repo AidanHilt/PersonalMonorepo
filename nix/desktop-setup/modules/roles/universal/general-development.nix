@@ -55,4 +55,14 @@ in
     nix-commit
     reset-docker
   ] ++ mac-apps;
+
+  system.userActivationScripts = {
+    getPersonalMonorepo = {
+      text = ''
+        if [ ! -d "$PERSONAL_MONOREPO_LOCATION" ]; then
+          git clone https://github.com/AidanHilt/PersonalMonorepo.git "$PERSONAL_MONOREPO_LOCATION"
+        fi
+      '';
+    };
+  };
 }
