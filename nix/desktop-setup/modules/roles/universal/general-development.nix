@@ -1,6 +1,13 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 let
+  argocd-commit = pkgs.writeShellScriptBin "argocd-commit" ''
+  cd $PERSONAL_MONOREPO_LOCATION
+  git add kubernetes/
+  git commit -m "Argocd commit"
+  git push
+'';
+
   nix-commit = pkgs.writeShellScriptBin "nix-commit" ''
   cd $PERSONAL_MONOREPO_LOCATION
   git add nix/*
@@ -43,5 +50,9 @@ in
     terragrunt
     yarn
     yq
+
+    argocd-commit
+    nix-commit
+    reset-docker
   ] ++ mac-apps;
 }

@@ -5,13 +5,6 @@
 { inputs, pkgs, globals, ... }:
 
 let
-  argocd-commit = pkgs.writeShellScriptBin "argocd-commit" ''
-  cd ~/PersonalMonorepo
-  git add kubernetes/
-  git commit -m "Argocd commit"
-  git push
-'';
-
   clear-namespace = pkgs.writeShellScriptBin "clear-namespace" ''
   # Get the namespace to delete resources from
   NAMESPACE="$1"
@@ -78,7 +71,6 @@ in
     pkgs.kubectl
     pkgs.kubernetes-helm
 
-    argocd-commit
     clear-namespace
     cluster-setup
     cluster-teardown
