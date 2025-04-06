@@ -14,7 +14,7 @@
     package = lib.mkIf (pkgs.system == "aarch64-darwin") null;
     profiles.aidan = {
       isDefault = true;
-      extensions = with pkgs.nur.repos.rycee.firefox-addons; [
+      extensions.packages = with pkgs.nur.repos.rycee.firefox-addons; [
         clearurls
         docsafterdark
         don-t-fuck-with-paste
