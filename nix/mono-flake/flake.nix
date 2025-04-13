@@ -98,6 +98,8 @@
       aarch64LinuxConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystem name "aarch64-linux")) {} aarch64LinuxHosts;
       x86_64LinuxConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystem name "x86_64-linux")) {} x86_64LinuxHosts;
     in {
-      nixosConfigurations = aarch64DarwinConfigs // aarch64LinuxConfigs // x86_64LinuxConfigs;
+      nixosConfigurations = aarch64LinuxConfigs // x86_64LinuxConfigs;
+
+      darwinConfigurations = aarch64DarwinConfigs;
   };
 }
