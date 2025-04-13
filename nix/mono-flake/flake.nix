@@ -93,7 +93,7 @@
             inputs.home-manager."${moduleType}".home-manager
             ./machines/${system}/${name}/configuration.nix
             inputs.agenix."${moduleType}".default
-#            inputs.wsl."${moduleType}".wsl
+            inputs.wsl."${moduleType}".wsl
           ];
         };
       };
@@ -104,6 +104,6 @@
     in {
       nixosConfigurations = aarch64LinuxConfigs // x86_64LinuxConfigs;
 
-      darwinConfigurations = aarch64DarwinConfigs;
+      #darwinConfigurations = aarch64DarwinConfigs;
   };
 }
