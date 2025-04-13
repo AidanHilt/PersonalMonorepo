@@ -93,7 +93,7 @@
             inputs.home-manager."${moduleType}".home-manager
             ./machines/${system}/${name}/configuration.nix
             inputs.agenix."${moduleType}".default
-            inputs.wsl."${moduleType}".wsl
+#            inputs.wsl."${moduleType}".wsl
           ];
         };
       };
