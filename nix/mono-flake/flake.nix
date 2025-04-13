@@ -85,7 +85,7 @@
 
           specialArgs = {
             machine-config = (import ./machines/${system}/${name}/values.nix) // {user-base = user-base;};
-            pkgs = pkgsFor.aarch64-linux;
+            pkgs = pkgsFor.system;
             inherit inputs globals;
           };
 
