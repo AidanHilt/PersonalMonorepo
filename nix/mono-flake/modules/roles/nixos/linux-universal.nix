@@ -8,7 +8,6 @@
   users.groups."${machine-config.username}" = {};
 
   users.users."${machine-config.username}" = {
-    home = "/home/${machine-config.username}";
     extraGroups = [ "networkmanager" "wheel" ];
     isNormalUser = true;
   };
