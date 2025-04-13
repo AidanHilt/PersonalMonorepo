@@ -1,6 +1,12 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 let
+  # Platform-specific logic or setup
+  platform-apps = if pkgs.system == "aarch64-darwin" then with pkgs; [ defaultbrowser ] else with pkgs; [];
+
+  rebuild-app = if pkgs.system == "aarch64-darwin" then "darwin-rebuild" else "nixos-rebuild";
+
+  # Shortcut scripts
   argocd-commit = pkgs.writeShellScriptBin "argocd-commit" ''
   cd $PERSONAL_MONOREPO_LOCATION
   git add kubernetes/
@@ -21,7 +27,11 @@ let
   docker builder prune --force
 '';
 
-  mac-apps = if pkgs.system == "aarch64-darwin" then with pkgs; [ defaultbrowser ] else [];
+  update = pkgs.writeShellScriptBin "update" ''
+  cd $PERSONAL_MONOREPO_LOCATION
+  git pull -q
+  ${rebuild-app} switch --flake $PERSONAL_MONOREPO_LOCATION
+'';
 in
 
 {
@@ -54,7 +64,7 @@ in
     argocd-commit
     nix-commit
     reset-docker
-  ] ++ mac-apps;
+  ] ++ platform-apps;
 
   system.userActivationScripts = {
     getPersonalMonorepo = {
