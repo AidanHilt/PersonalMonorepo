@@ -39,6 +39,7 @@
             config.allowUnfree = true;
               overlays = [
                 inputs.nur.overlays.default
+                inputs.agenix.overlays.default
               ];
           }
       );

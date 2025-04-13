@@ -1,29 +1,6 @@
 { inputs, lib, pkgs, globals, ...}:
-let
-  nix-commit = pkgs.writeShellScriptBin "nix-commit" ''
-  cd ~/PersonalMonorepo
-  git add nix/*
-  git commit -m "Nix commit"
-  git push
-'';
-
-  reset-docker = pkgs.writeShellScriptBin "reset-docker" ''
-  docker container prune --force
-  docker image prune -a --force
-  docker builder prune --force
-'';
-
-
-
-  kubernetes-config = globals.nixConfig + "/shared-modules/kubernetes.nix";
-
-in
 
 {
-  imports = [
-    kubernetes-config
-  ];
-
   programs.zsh.enable = true;
 
   environment.systemPackages = [
