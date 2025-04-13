@@ -5,8 +5,7 @@
 { config, pkgs, machine-config, inputs, globals, ... }:
 
 {
-  imports =
-    [ # Include the results of the hardware scan.
+  imports = [
       ./hardware-configuration.nix
 
       ../../../modules/machine-categories/linux-desktop.nix

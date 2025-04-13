@@ -7,7 +7,7 @@ let
       echo "Performing VirtualBox disk partitioning..."
       echo "WARNING: All data on /dev/sda will be lost!"
       read -p "Continue? (y/n): " confirm
-      
+
       if [ "$confirm" != "y" ]; then
           echo "Operation cancelled"
           exit 0
@@ -34,7 +34,7 @@ let
     echo "3) staging-cluster-3"
     read -p "Enter selection (1-3):" hostname_choice
 
-    case "$hostname_choice" in 
+    case "$hostname_choice" in
       1)
         hostname="staging-cluster-1"
       ;;

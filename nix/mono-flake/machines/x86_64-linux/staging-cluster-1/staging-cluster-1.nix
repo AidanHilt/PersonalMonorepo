@@ -27,16 +27,16 @@ nixpkgs.lib.nixosSystem {
       }
 
     ({ inputs, globals, ... }: {
-      fileSystems = { 
-        "/" = { 
+      fileSystems = {
+        "/" = {
           device = "/dev/disk/by-label/ROOTDIR";
           fsType = "ext4";
         };
-        "/boot" = { 
+        "/boot" = {
           device = "/dev/disk/by-label/BOOT";
           fsType = "vfat";
           options = [ "fmask=0022" "dmask=0022" ];
-        };  
+        };
       };
 
       nixpkgs.hostPlatform = "x86_64-linux";

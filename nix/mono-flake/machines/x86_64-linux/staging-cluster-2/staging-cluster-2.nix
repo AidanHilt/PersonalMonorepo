@@ -13,8 +13,8 @@ let
 
   clusterPrimaryAddr = "192.168.86.22";
 
-  serverAddr = "192.168.86.24";
-  hostname = "staging-cluster-3";
+  serverAddr = "192.168.86.23";
+  hostname = "staging-cluster-2";
 in
 
 nixpkgs.lib.nixosSystem {
@@ -28,17 +28,17 @@ nixpkgs.lib.nixosSystem {
       }
 
     ({ inputs, globals, ... }: {
-      fileSystems = { 
-        "/" = { 
+      fileSystems = {
+        "/" = {
           device = "/dev/disk/by-label/ROOTDIR";
           fsType = "ext4";
         };
 
-        "/boot" = { 
+        "/boot" = {
           device = "/dev/disk/by-label/BOOT";
           fsType = "vfat";
           options = [ "fmask=0022" "dmask=0022" ];
-        };       
+        };
       };
 
 
