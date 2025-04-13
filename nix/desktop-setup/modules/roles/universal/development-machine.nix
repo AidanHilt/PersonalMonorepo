@@ -64,6 +64,7 @@ in
     argocd-commit
     nix-commit
     reset-docker
+    update
   ] ++ platform-apps;
 
   system.userActivationScripts = {
