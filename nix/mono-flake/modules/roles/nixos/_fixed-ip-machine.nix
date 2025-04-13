@@ -1,12 +1,17 @@
-      networking = {
-        defaultGateway = "192.168.86.1";
-        hostName = hostname;
-        nameservers = [ "192.168.86.3" ];
-        interfaces.enp0s1.ipv4.addresses = [
-          {
-            address = "192.168.86.20";
-            prefixLength = 24;
-          }
-        ];
-      };
-    }
+{ inputs, globals, pkgs, machine-config, ...}:
+
+
+{
+  networking = mkIf ${machine-config.networking.fixedIp} {
+    defaultGateway = ${machine-config.networking.gateway};
+    nameservers = ${machine-config.networking.nameservers};
+    interfaces.enp0s1.ipv4.addresses = [
+      {
+        address = ${machine-config.networking.address};
+        prefixLength = ${machine-config.networking.prefixLength};
+      }
+    ];
+  };
+}
+
+
