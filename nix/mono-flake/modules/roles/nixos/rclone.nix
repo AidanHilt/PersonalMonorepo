@@ -1,4 +1,4 @@
-{ inputs, pkgs, globals, ... }:
+{ inputs, globals, pkgs, machine-config, ...}:
 
 let
   sync-wallpapers = pkgs.writeShellScriptBin "sync-wallpapers" ''

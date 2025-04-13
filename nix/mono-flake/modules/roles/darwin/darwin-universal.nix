@@ -1,49 +1,9 @@
-{ inputs, lib, pkgs, globals, ...}:
+{ inputs, globals, pkgs, machine-config, ...}:
 
 {
   programs.zsh.enable = true;
 
-  environment.systemPackages = [
-    pkgs.act
-    pkgs.cargo
-    pkgs.check-jsonschema
-    pkgs.defaultbrowser
-    pkgs.detect-secrets
-    pkgs.eza
-    pkgs.gettext
-    pkgs.git
-    pkgs.inetutils
-    pkgs.jq
-    pkgs.p7zip
-    pkgs.pipx
-    pkgs.postgresql
-    pkgs.pre-commit
-    pkgs.rustc
-    pkgs.syncthing
-    pkgs.terraform
-    pkgs.terragrunt
-    pkgs.vim
-    pkgs.wget
-    pkgs.yarn
-    pkgs.yq
-
-    inputs.agenix.packages.${pkgs.system}.agenix
-
-    nix-commit
-    reset-docker
-    update
-  ];
   security.pam.enableSudoTouchIdAuth = true;
-
-  nixpkgs = {
-    hostPlatform = "aarch64-darwin";
-
-    config = {
-      allowUnfree = true;
-    };
-  };
-
-  system.stateVersion = 5;
 
   system.defaults = {
     dock = {
@@ -65,7 +25,7 @@
     };
 
     screencapture = {
-      location = "/Users/aidan/Desktop/screenshots";
+      location = "/Users/${machine-config.username}/Desktop/screenshots";
       show-thumbnail = false;
     };
 
@@ -99,11 +59,5 @@
       "iterm2"
       "visual-studio-code"
     ];
-  };
-
-  nix = {
-    settings = {
-      experimental-features = [ "nix-command" "flakes" ];
-    };
   };
 }

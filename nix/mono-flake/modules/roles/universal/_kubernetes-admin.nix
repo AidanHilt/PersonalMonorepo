@@ -1,8 +1,7 @@
 # This stores common configuration for running kubernetes. Note that this will not have shell configurations, as we like doing those in Home Manager.
 # That configuration is located here:
 
-
-{ inputs, pkgs, globals, ... }:
+{ inputs, globals, pkgs, machine-config, ...}:
 
 let
   clear-namespace = pkgs.writeShellScriptBin "clear-namespace" ''
