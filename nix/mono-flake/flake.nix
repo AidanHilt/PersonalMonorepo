@@ -4,6 +4,9 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
 
+    darwin.url = "github:lnl7/nix-darwin/nix-darwin-24.11";
+    darwin.inputs.nixpkgs.follows = "nixpkgs";
+
     home-manager.url = "github:nix-community/home-manager/release-24.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -72,11 +75,12 @@
 
       mkSystem = name: system:
         let
+          systemFunction = if system == "aarch64-darwin" then darwin.lib.darwinSystem else nixpkgs.lib.nixosSystem;
           moduleType = if system == "aarch64-darwin" then "darwinModules" else "nixosModules";
           user-base = if system == "aarch64-darwin" then "/Users" else "/home";
         in
         {
-        "${name}" = nixpkgs.lib.nixosSystem {
+        "${name}" = systemFunction {
           inherit system;
 
           specialArgs = {
