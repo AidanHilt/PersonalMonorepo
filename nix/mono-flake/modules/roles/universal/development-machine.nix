@@ -47,6 +47,7 @@ in
 
   environment.systemPackages = with pkgs; [
     act
+    agenix
     cargo
     check-jsonschema
     detect-secrets
