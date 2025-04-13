@@ -104,6 +104,6 @@
     in {
       nixosConfigurations = aarch64LinuxConfigs // x86_64LinuxConfigs;
 
-      #darwinConfigurations = aarch64DarwinConfigs;
+      darwinConfigurations = aarch64DarwinConfigs;
   };
 }
