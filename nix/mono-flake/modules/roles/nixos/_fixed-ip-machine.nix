@@ -1,6 +1,6 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
-
+# TODO Let's add a with statement here
 {
   networking = mkIf ${machine-config.networking.fixedIp} {
     defaultGateway = ${machine-config.networking.gateway};
