@@ -20,5 +20,5 @@
   #   clusterEndpoint = "";
   #   # Used to identify which secrets to provide to the cluster
   #   clusterName = "";
-  # }
+  # };
 }

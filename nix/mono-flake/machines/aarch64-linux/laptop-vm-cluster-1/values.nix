@@ -9,5 +9,5 @@
 
   k8s = {
     primaryNode = true;
-  }
+  };
 }
