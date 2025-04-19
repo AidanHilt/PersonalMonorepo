@@ -13,5 +13,5 @@
     clusterEndpoint = "192.168.86.20";
     # Used to identify which secrets to provide to the cluster
     clusterName = "laptop-cluster";
-  }
+  };
 }
