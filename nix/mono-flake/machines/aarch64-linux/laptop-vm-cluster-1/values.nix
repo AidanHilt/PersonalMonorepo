@@ -14,6 +14,4 @@ let
   category-config = import ../../shared-values/laptop-vm-cluster.nix;
 in
 
-{
   pkgs.lib.recursiveUpdate machine-config category-config
-}
