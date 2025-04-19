@@ -7,6 +7,6 @@
 
   services.openiscsi = {
     enable = true;
-    name = hostname;
+    name = machine-config.hostname;
   };
 }
