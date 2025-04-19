@@ -108,6 +108,7 @@
           system = "x86_64-linux";
           modules = [
             (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
+            inputs.home-manager.nixosModules.home-manager
             ./modules/nixos/bootstrap-image.nix
           ];
         };
@@ -116,6 +117,7 @@
           system = "aarch64-linux";
           modules = [
             (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
+            inputs.home-manager.nixosModules.home-manager
             ./modules/nixos/bootstrap-image.nix
           ];
         };
