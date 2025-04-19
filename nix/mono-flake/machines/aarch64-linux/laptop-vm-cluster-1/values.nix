@@ -6,4 +6,4 @@
   k8s = {
     primaryNode = true;
   };
-} // import ../shared-values/laptop-vm-cluster.nix
+} // import ../../shared-values/laptop-vm-cluster.nix
