@@ -11,6 +11,7 @@ let
     };
   };
 
-  category-config = import ../../shared-values/laptop-vm-cluster.nix;
+ # category-config = import ../../shared-values/laptop-vm-cluster.nix;
+ category-config = {};
 in
   (pkgs.lib.recursiveUpdate machine-config category-config)
