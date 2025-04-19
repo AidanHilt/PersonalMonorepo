@@ -4,7 +4,7 @@ let
   rke-config = if machine-config.k8s.primaryNode then
     {
       tokenFile = "/var/lib/rancher/rke2/server/token";
-      serverAddr = "https://${machine-config.k8s.clusterEnpoint}:9345";
+      serverAddr = "https://${machine-config.k8s.clusterEndpoint}:9345";
     }
 
   else
