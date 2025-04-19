@@ -3,6 +3,8 @@
     address = "192.168.86.20";
   };
 
+  primaryNode = true;
+
   k8s = {
     primaryNode = true;
   };
