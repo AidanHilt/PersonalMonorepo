@@ -102,7 +102,24 @@
       aarch64LinuxConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystem name "aarch64-linux")) {} aarch64LinuxHosts;
       x86_64LinuxConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystem name "x86_64-linux")) {} x86_64LinuxHosts;
     in {
-      nixosConfigurations = aarch64LinuxConfigs // x86_64LinuxConfigs;
+      nixosConfigurations = aarch64LinuxConfigs // x86_64LinuxConfigs // {
+        # How we build our bootstrap iso images
+        iso_image_x86 = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules = [
+            (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
+            ./modules/nixos/bootstrap-image.nix
+          ];
+        };
+
+        iso_image_aarch64 = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+          modules = [
+            (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
+            ./modules/nixos/bootstrap-image.nix
+          ];
+        };
+      };
 
       darwinConfigurations = aarch64DarwinConfigs;
   };
