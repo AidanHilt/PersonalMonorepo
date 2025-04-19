@@ -3,7 +3,7 @@
 
 {
   imports = [
-    ../roles/nixos/homelab-node
+    ../roles/nixos/homelab-node.nix
   ];
 
   fileSystems = {
