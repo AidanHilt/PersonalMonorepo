@@ -84,7 +84,7 @@
           inherit system;
 
           specialArgs = {
-            machine-config = (import ./machines/${system}/${name}/values.nix { inherit pkgs; }) // {user-base = user-base; hostname = name;};
+            machine-config = (import ./machines/${system}/${name}/values.nix { pkgs = pkgsFor.${system}; }) // {user-base = user-base; hostname = name;};
             pkgs = pkgsFor.${system};
             inherit inputs globals;
           };
