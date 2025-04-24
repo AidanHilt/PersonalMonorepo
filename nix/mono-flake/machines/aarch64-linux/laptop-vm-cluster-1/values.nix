@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, ...}:
+{ ... }:
 
 let
   machine-config = {
