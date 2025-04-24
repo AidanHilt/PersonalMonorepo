@@ -83,18 +83,18 @@
         "${name}" = systemFunction {
           inherit system;
 
-          # specialArgs = {
-          #   machine-config = (import ./machines/${system}/${name}/values.nix { pkgs = pkgsFor.${system}; }) // {user-base = user-base; hostname = name;};
-          #   pkgs = pkgsFor.${system};
-          #   inherit inputs globals;
-          # };
+          specialArgs = {
+            machine-config = (import ./machines/${system}/${name}/values.nix { pkgs = pkgsFor.${system}; }) // {user-base = user-base; hostname = name;};
+            pkgs = pkgsFor.${system};
+            inherit inputs globals;
+          };
 
           modules = [
             ./machines/${system}/${name}/configuration.nix
 
-            # inputs.home-manager.${moduleType}.home-manager
-            # inputs.agenix.${moduleType}.default
-            # inputs.wsl.${moduleType}.wsl
+            inputs.home-manager.${moduleType}.home-manager
+            inputs.agenix.${moduleType}.default
+            inputs.wsl.${moduleType}.wsl
           ];
         };
       };
