@@ -80,7 +80,7 @@
           user-base = if system == "aarch64-darwin" then "/Users" else "/home";
         in
         {
-        "${name}" = systemFunction {
+        "${name}" = nixpkgs.lib.nixosSystem {
           inherit system;
 
           specialArgs = {
@@ -99,7 +99,7 @@
       };
 
       aarch64DarwinConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystem name "aarch64-darwin")) {} aarch64DarwinHosts;
-      aarch64LinuxConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystem name "aarch64-linux" {})) {} aarch64LinuxHosts;
+      aarch64LinuxConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystem name "aarch64-linux")) {} aarch64LinuxHosts;
       x86_64LinuxConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystem name "x86_64-linux")) {} x86_64LinuxHosts;
     in {
       nixosConfigurations = aarch64LinuxConfigs // x86_64LinuxConfigs // {
