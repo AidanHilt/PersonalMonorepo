@@ -80,14 +80,14 @@
           user-base = if system == "aarch64-darwin" then "/Users" else "/home";
         in
         {
-        "${name}" = nixpkgs.lib.nixosSystem {
+        "${name}" = systemFunction {
           inherit system;
 
-          specialArgs = {
-            machine-config = (import ./machines/${system}/${name}/values.nix { pkgs = pkgsFor.${system}; }) // {user-base = user-base; hostname = name;};
-            pkgs = pkgsFor.${system};
-            inherit inputs globals;
-          };
+          # specialArgs = {
+          #   machine-config = (import ./machines/${system}/${name}/values.nix { pkgs = pkgsFor.${system}; }) // {user-base = user-base; hostname = name;};
+          #   pkgs = pkgsFor.${system};
+          #   inherit inputs globals;
+          # };
 
           modules = [
             inputs.home-manager.${moduleType}.home-manager
