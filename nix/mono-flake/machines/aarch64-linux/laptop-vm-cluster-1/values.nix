@@ -2,6 +2,8 @@
 
 let
   machine-config = {
+    hostname = "laptop-vm-cluster-1";
+
     networking = {
       address = "192.168.86.20";
     };

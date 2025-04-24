@@ -16,6 +16,8 @@
     };
   };
 
+  networking.hostname = machine-config.hostname;
+
   environment.systemPackages = [
     pkgs.git
     pkgs.vim
