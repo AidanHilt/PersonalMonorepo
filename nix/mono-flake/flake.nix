@@ -90,10 +90,10 @@
           };
 
           modules = [
-            inputs.home-manager."${moduleType}".home-manager
+            inputs.home-manager.${moduleType}.home-manager
             ./machines/${system}/${name}/configuration.nix
-            inputs.agenix."${moduleType}".default
-            inputs.wsl."${moduleType}".wsl
+            inputs.agenix.${moduleType}.default
+            inputs.wsl.${moduleType}.wsl
           ];
         };
       };
