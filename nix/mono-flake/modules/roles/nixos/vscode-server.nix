@@ -2,5 +2,5 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 {
-  services.vscode-server.enable = true;
+  programs.nix-ld.enable = true
 }
