@@ -2,4 +2,6 @@
 
 {
   username = "nixos";
+
+  hostname = "utf-machine";
 }
