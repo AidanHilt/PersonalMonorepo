@@ -3,6 +3,8 @@
 
 {
   imports = [
+    ../roles/nixos/linux-universal.nix
+
     ../roles/nixos/homelab-node.nix
   ];
 
