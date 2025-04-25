@@ -1,3 +1,5 @@
+{ pkgs, ... }:
+
 {
   username = "nixos";
 }
