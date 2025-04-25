@@ -23,8 +23,6 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "vm-desktop";
-
   # Enable networking
   networking.networkmanager.enable = true;
 
