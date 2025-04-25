@@ -14,7 +14,4 @@
   #   users.${machine-config.username} = import ./home.nix {inherit inputs globals pkgs machine-config; system = pkgs.system; lib = home-manager.lib; };
   # };
 
-  networking.hostName = "wsl-machine";
-
-  specialArgs = { inherit inputs globals; };
 }
