@@ -25,6 +25,9 @@
     poetry2nix.url = "github:nix-community/poetry2nix";
     poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
 
+    vscode-server.url = "github:nix-community/nixos-vscode-server";
+    vscode-server.inputs.nixpkgs.follows = "nixpkgs";
+
     wsl.url = "github:nix-community/NixOS-WSL";
     wsl.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -94,6 +97,7 @@
 
             inputs.home-manager.${moduleType}.home-manager
             inputs.agenix.${moduleType}.default
+            inputs.vscode-server.nixosModules.default
             inputs.wsl.${moduleType}.wsl
           ];
         };
