@@ -2,5 +2,5 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 {
-  programs.nix-ld.enable = true
+  programs.nix-ld.enable = true;
 }
