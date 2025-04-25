@@ -1,5 +1,9 @@
+{ pkgs, ... }:
+
 {
   username = "";
+
+  hostname = "";
 
   # imports = [
   #  ../shared-values/<machine-group>.nix

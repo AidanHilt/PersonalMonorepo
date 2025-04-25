@@ -1,31 +1,40 @@
 {
-  "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit",
-    "source.fixAll": "explicit"
-  },
-  "workbench.colorTheme": "Default Dark+",
-  "security.workspace.trust.untrustedFiles": "open",
-  "editor.tabSize": 2,
   "[python]": {
-    "editor.formatOnType": true,
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": null,
     "editor.codeActionsOnSave": {
       "source.fixAll": "always"
-    }
+    },
+    "editor.defaultFormatter": null,
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true
+  },
+  "[tf]": {
+    "editor.defaultFormatter": "hashicorp.terraform",
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true
   },
   "[yaml]": {
-    "editor.insertSpaces": true,
-    "editor.autoIndent": "advanced",
     "diffEditor.ignoreTrimWhitespace": false,
+    "editor.autoIndent": "advanced",
+    "editor.insertSpaces": true,
     "editor.quickSuggestions": {
-      "other": true,
       "comments": false,
+      "other": true,
       "strings": true
     }
   },
-  "explorer.autoReveal": "focusNoScroll",
+  "aws.suppressPrompts": {
+    "codeWhispererNewWelcomeMessage": true
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
   "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "explorer.autoReveal": "focusNoScroll",
+  "githubPullRequests.pullBranch": "never",
+  "security.workspace.trust.untrustedFiles": "open",
+  "workbench.colorTheme": "Default Dark+",
   "yaml.customTags": [
     "!And",
     "!And sequence",
@@ -55,16 +64,5 @@
     "!Split",
     "!Split sequence"
   ],
-  "githubPullRequests.pullBranch": "never",
-  "aws.suppressPrompts": {
-    "codeWhispererNewWelcomeMessage": true
-  },
-  "[tf]": {
-    "editor.formatOnType": true,
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "hashicorp.terraform"
-  },
-  "amazonQ.suppressPrompts": {
-    "codeWhispererConnectionExpired": true
-  }
+  "chat.commandCenter.enabled": false
 }

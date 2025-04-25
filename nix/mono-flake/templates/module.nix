@@ -1,6 +1,5 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
-
 {
   imports = [];
 

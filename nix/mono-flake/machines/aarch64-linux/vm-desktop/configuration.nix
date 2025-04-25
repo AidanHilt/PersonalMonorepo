@@ -9,6 +9,7 @@
       ./hardware-configuration.nix
 
       ../../../modules/machine-categories/linux-desktop.nix
+      ../../../modules/roles/nixos/vscode-server.nix
     ];
 
   home-manager = {
