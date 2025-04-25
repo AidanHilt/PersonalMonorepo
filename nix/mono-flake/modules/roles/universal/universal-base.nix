@@ -16,7 +16,7 @@
     };
   };
 
-  networking.hostname = machine-config.hostname;
+  networking.hostName = machine-config.hostname;
 
   environment.systemPackages = [
     pkgs.git
