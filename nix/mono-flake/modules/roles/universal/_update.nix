@@ -4,31 +4,15 @@ let
   update-script = pkgs.writeShellScriptBin "update" ''
   #!/bin/bash
   # Helper functions
-  prompt_with_default() {
-    local arg_name="$1"
-    local default_value="$2"
-    
-    # Prompt user with the argument name and default value
-    echo -n "$arg_name [$default_value]: "
-    
-    # Read user input
-    local user_input
-    read user_input
-    
-    # If user input is empty, use the default value
-    if [ -z "$user_input" ]; then
-        echo "$default_value"
-    else
-        echo "$user_input"
-    fi
-  }
-
 
   # Main script
 
   # 1. Source the environment file if it exists
   if [ -f ~/.atils/update-config.env ]; then
     source ~/.atils/update-config.env
+  else
+    echo "~/.atils/update-config.env not found. Your choices will be saved in that file."
+    echo "If you want to be prompted for choices every time, abort and run 'echo UPDATE__NO_SAVE="true" > ~/.atils/update-config.env'
   fi
 
   # 2. Determine the rebuild executable based on the OS
