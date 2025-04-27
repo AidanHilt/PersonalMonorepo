@@ -23,7 +23,7 @@ let
 
     # 3. If we're doing a remote (i.e. GitHub) update, we need to build out the full reference (URL + branch)
     if [ ! -z "$UPDATE__FROM_REMOTE" ]; then
-      if [[ ${UPDATE__REMOTE_URL: -1} != "/" ]]; then
+      if [[ $\{UPDATE__REMOTE_URL: -1\} != "/" ]]; then
         UPDATE__REMOTE_URL="$UPDATE__REMOTE_URL/"
       fi
 
