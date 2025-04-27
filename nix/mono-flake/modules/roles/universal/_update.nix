@@ -72,9 +72,9 @@ let
     read user_input
 
     if [ -z "$user_input" ]; then
-        UPDATE__FLAKE_LOCATION="$user_input"
+      UPDATE__FLAKE_LOCATION="github:AidanHilt/PersonalMonorepo/master?dir=nix/mono-flake"
     else
-        UPDATE__FLAKE_LOCATION="github:AidanHilt/PersonalMonorepo/master?dir=nix/mono-flake"
+      UPDATE__FLAKE_LOCATION="$user_input"
     fi
   fi
   
@@ -85,14 +85,14 @@ let
     read user_input
 
     if [ -z "$user_input" ]; then
-        UPDATE__MACHINE_NAME="$user_input"
+      UPDATE__MACHINE_NAME="$hostname"
     else
-        UPDATE__MACHINE_NAME="$hostname"
+      UPDATE__MACHINE_NAME="$user_input"
     fi
   fi
 
   echo "Rebuilding system with flake: $UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
-  #sudo $rebuildExecutable switch --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
+  #csudo $rebuildExecutable switch --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
   '';
 in
 
