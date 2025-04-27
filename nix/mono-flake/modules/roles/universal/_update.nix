@@ -32,18 +32,18 @@ let
         UPDATE__REMOTE_BRANCH="master"
       fi
 
-      question_mark_pos=$(expr index "$UPDATE__FLAKE_LOCATION" "?")
+      question_mark_pos=$(expr index "$UPDATE__REMOTE_URL" "?")
 
       if [ $question_mark_pos -gt 0 ]; then
           # Extract parts before and after the "?"
-          before_question=''${UPDATE__FLAKE_LOCATION:0:$question_mark_pos-1}
-          after_question=''${UPDATE__FLAKE_LOCATION:$question_mark_pos-1}
+          before_question=''${UPDATE__REMOTE_URL:0:$question_mark_pos-1}
+          after_question=''${UPDATE__REMOTE_URL:$question_mark_pos-1}
           
           # Construct new string with branch inserted before "?"
           UPDATE__FLAKE_LOCATION="''${before_question}/''${UPDATE__FLAKE_BRANCH}''${after_question}"
       else
           # No "?" found, append branch to the end
-          UPDATE__FLAKE_LOCATION="''${UPDATE__FLAKE_LOCATION}/''${UPDATE__FLAKE_BRANCH}"
+          UPDATE__FLAKE_LOCATION="''${UPDATE__REMOTE_URL}/''${UPDATE__FLAKE_BRANCH}"
       fi
     fi
 
