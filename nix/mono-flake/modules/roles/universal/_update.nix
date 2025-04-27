@@ -45,8 +45,6 @@ let
           # No "?" found, append branch to the end
           UPDATE__FLAKE_LOCATION="''${UPDATE__FLAKE_LOCATION}/''${UPDATE__FLAKE_BRANCH}"
       fi
-
-      UPDATE__FLAKE_LOCATION="$UPDATE__REMOTE_URL$UPDATE__REMOTE_BRANCH"
     fi
 
     # 3. Run the rebuild command with sudo
