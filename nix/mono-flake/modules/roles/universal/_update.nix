@@ -67,7 +67,7 @@ let
   # Ideally, we could do this with a function, but subshells suck.
   # 3. Run the rebuild command with sudo
   if [ -z "$UPDATE__FLAKE_LOCATION" ]; then
-    echo -n "The location of the flake you want to use [github:AidanHilt/PersonalMonorepo/master?dir=nix/mono-flake]: "
+    echo -n "The location of the flake you want to use to update (github:AidanHilt/PersonalMonorepo/master?dir=nix/mono-flake): "
     
     read user_input
 
@@ -79,8 +79,15 @@ let
   fi
   
   if [ -z "$UPDATE__MACHINE_NAME" ]; then
-    default_machine_name=$(hostname)
-    UPDATE__MACHINE_NAME=$(prompt_with_default "The name of the machine to use for the update" "$default_machine_name")
+    echo -n "The name of the machine you want to use to update ($hostname): "
+    
+    read user_input
+
+    if [ -z "$user_input" ]; then
+        UPDATE__FLAKE_LOCATION="$user_input"
+    else
+        UPDATE__FLAKE_LOCATION="$hostname"
+    fi
   fi
 
   echo "Rebuilding system with flake: $UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
