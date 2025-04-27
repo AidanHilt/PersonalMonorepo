@@ -21,14 +21,27 @@ let
 
     echo "Using rebuild executable: $rebuildExecutable"
 
+    # 3. If we're doing a remote (i.e. GitHub) update, we need to build out the full reference (URL + branch)
+    if [ ! -z "$UPDATE__FROM_REMOTE" ]; then
+      if [[ $UPDATE__REMOTE_URL =~ /$ ]]; then
+        UPDATE__REMOTE_URL="$UPDATE__REMOTE_URL/"
+      fi
+
+      if [ -z "$UPDATE__REMOTE_BRANCH" ]; then 
+        UPDATE__REMOTE_BRANCH="master"
+      fi
+
+      UPDATE__FLAKE_LOCATION="$UPDATE__REMOTE_URL$UPDATE__REMOTE_BRANCH"
+    fi
+
     # 3. Run the rebuild command with sudo
-    if [ -z "$UPDATE_FLAKE_LOCATION" ] || [ -z "$UPDATE_MACHINE_NAME" ]; then
-        echo "Error: UPDATE_FLAKE_LOCATION or UPDATE_MACHINE_NAME not set in config file"
+    if [ -z "$UPDATE__FLAKE_LOCATION" ] || [ -z "$UPDATE__MACHINE_NAME" ]; then
+        echo "Error: UPDATE__FLAKE_LOCATION or UPDATE__MACHINE_NAME not set in config file"
         exit 1
     fi
 
-    echo "Rebuilding system with flake: $UPDATE_FLAKE_LOCATION#$UPDATE_MACHINE_NAME"
-    sudo $rebuildExecutable switch --flake "$UPDATE_FLAKE_LOCATION#$UPDATE_MACHINE_NAME"
+    echo "Rebuilding system with flake: $UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
+    sudo $rebuildExecutable switch --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
   '';
 in
 
