@@ -85,9 +85,9 @@ let
     read user_input
 
     if [ -z "$user_input" ]; then
-        UPDATE__FLAKE_LOCATION="$user_input"
+        UPDATE__MACHINE_NAME="$user_input"
     else
-        UPDATE__FLAKE_LOCATION="$hostname"
+        UPDATE__MACHINE_NAME="$hostname"
     fi
   fi
 
