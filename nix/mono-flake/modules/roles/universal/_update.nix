@@ -79,6 +79,7 @@ let
   fi
   
   if [ -z "$UPDATE__MACHINE_NAME" ]; then
+    hostname=$(hostname)
     echo -n "The name of the machine you want to use to update ($hostname): "
     
     read user_input
