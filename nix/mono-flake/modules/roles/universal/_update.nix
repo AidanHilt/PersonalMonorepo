@@ -40,7 +40,7 @@ let
           after_question=''${UPDATE__REMOTE_URL:$question_mark_pos-1}
           
           # Construct new string with branch inserted before "?"
-          UPDATE__FLAKE_LOCATION="''${before_question}/''${UPDATE__REMOTE_BRANCH}''${after_question}"
+          UPDATE__FLAKE_LOCATION="''${before_question}''${UPDATE__REMOTE_BRANCH}''${after_question}"
       else
           # No "?" found, append branch to the end
           UPDATE__FLAKE_LOCATION="''${UPDATE__REMOTE_URL}/''${UPDATE__REMOTE_BRANCH}"
