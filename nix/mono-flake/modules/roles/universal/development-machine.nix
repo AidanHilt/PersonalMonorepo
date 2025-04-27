@@ -27,11 +27,11 @@ let
   docker builder prune --force
 '';
 
-  update = pkgs.writeShellScriptBin "update" ''
-  cd $PERSONAL_MONOREPO_LOCATION
-  git pull -q
-  ${rebuild-app} switch --flake $PERSONAL_MONOREPO_LOCATION/nix/mono-flake
-'';
+#   update = pkgs.writeShellScriptBin "update" ''
+#   cd $PERSONAL_MONOREPO_LOCATION
+#   git pull -q
+#   ${rebuild-app} switch --flake $PERSONAL_MONOREPO_LOCATION/nix/mono-flake
+# '';
 in
 
 {
