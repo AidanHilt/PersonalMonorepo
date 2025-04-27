@@ -12,7 +12,7 @@ let
     source ~/.atils/update-config.env
   else
     echo "~/.atils/update-config.env not found. Your choices will be saved in that file."
-    echo "If you want to be prompted for choices every time, abort and run 'echo UPDATE__NO_SAVE="true" > ~/.atils/update-config.env'
+    echo "If you want to be prompted for choices every time, abort and run 'echo UPDATE__NO_SAVE="true" > ~/.atils/update-config.env'"
   fi
 
   # 2. Determine the rebuild executable based on the OS
