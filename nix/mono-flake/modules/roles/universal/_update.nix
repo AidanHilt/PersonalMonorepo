@@ -23,12 +23,27 @@ let
 
     # 3. If we're doing a remote (i.e. GitHub) update, we need to build out the full reference (URL + branch)
     if [ ! -z "$UPDATE__FROM_REMOTE" ]; then
+      # Because you're going to forget, the double single quote is an escape character for nix
       if [[ ''${UPDATE__REMOTE_URL: -1} != "/" ]]; then
         UPDATE__REMOTE_URL="$UPDATE__REMOTE_URL/"
       fi
 
       if [ -z "$UPDATE__REMOTE_BRANCH" ]; then 
         UPDATE__REMOTE_BRANCH="master"
+      fi
+
+      question_mark_pos=$(expr index "$UPDATE__FLAKE_LOCATION" "?")
+
+      if [ $question_mark_pos -gt 0 ]; then
+          # Extract parts before and after the "?"
+          before_question=''${UPDATE__FLAKE_LOCATION:0:$question_mark_pos-1}
+          after_question=''${UPDATE__FLAKE_LOCATION:$question_mark_pos-1}
+          
+          # Construct new string with branch inserted before "?"
+          UPDATE__FLAKE_LOCATION="''${before_question}/''${UPDATE__FLAKE_BRANCH}''${after_question}"
+      else
+          # No "?" found, append branch to the end
+          UPDATE__FLAKE_LOCATION="''${UPDATE__FLAKE_LOCATION}/''${UPDATE__FLAKE_BRANCH}"
       fi
 
       UPDATE__FLAKE_LOCATION="$UPDATE__REMOTE_URL$UPDATE__REMOTE_BRANCH"
