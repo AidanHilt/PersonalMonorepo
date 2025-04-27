@@ -69,7 +69,6 @@ let
   if [ -z "$UPDATE__FLAKE_LOCATION" ]; then
     echo -n "The location of the flake you want to use [github:AidanHilt/PersonalMonorepo/master?dir=nix/mono-flake]: "
     
-    local user_input
     read user_input
 
     if [ -z "$user_input" ]; then
