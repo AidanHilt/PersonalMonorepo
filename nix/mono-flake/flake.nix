@@ -116,6 +116,11 @@
 
         iso_image_aarch64 = nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
+          specialArgs = {
+            machine-config = import ./machines/shared-values/bootstrap-image.nix { pkgs = pkgsFor.aarch64-linux; };
+            pkgs = pkgsFor.${system};
+            inherit inputs globals;
+          };
           modules = [
             (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
             inputs.home-manager.nixosModules.home-manager
