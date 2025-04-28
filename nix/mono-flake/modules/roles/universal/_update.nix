@@ -51,7 +51,7 @@ let
 
   # Ideally, we could do this with a function, but subshells suck.
   # 3. Run the rebuild command with sudo
-  if [ -z "$UPDATE__FLAKE_LOCATION" && -z "$UPDATE__REMOTE_URL" ]; then
+  if [ -z "$UPDATE__FLAKE_LOCATION" ] && [ -z "$UPDATE__REMOTE_URL" ]; then
     echo -n "Do you want to update from a remote or local source? (remote/local): "
     read source_type
     source_type="''${source_type:-remote}"  # Default to remote if empty
