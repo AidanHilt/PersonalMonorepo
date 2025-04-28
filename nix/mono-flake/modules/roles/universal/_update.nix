@@ -128,7 +128,7 @@ let
     fi
   fi
 
-  echo $(env)
+  echo $(env | grep UPDATE__ )
 
   echo "Rebuilding system with flake: $UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
   sudo $rebuildExecutable switch --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
