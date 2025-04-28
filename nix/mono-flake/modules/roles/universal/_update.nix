@@ -128,10 +128,23 @@ let
     fi
   fi
 
-  echo $(env | grep UPDATE__ )
-
   echo "Rebuilding system with flake: $UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
   sudo $rebuildExecutable switch --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
+
+  if [ -z "$UPDATE__NO_SAVE" ]; then
+    # List of variables to check and save
+    variables=("UPDATE__REMOTE_URL" "UPDATE__REMOTE_BRANCH" "UPDATE__FLAKE_LOCATION" "UPDATE__MACHINE_NAME")
+    
+    for var in "''${variables[@]}"; do
+        # Check if the variable is set (not empty)
+        if [ -n "''${!var}" ]; then
+            # Call update_config with the variable name and its value
+            update_config "$var" "''${!var}"
+        fi
+    done
+    
+    echo "All configuration values have been saved."
+  fi
   '';
 in
 
