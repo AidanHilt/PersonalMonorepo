@@ -114,11 +114,11 @@
           ];
         };
 
-        iso_image_aarch64 = nixpkgs.lib.nixosSystem {
+        iso-image-aarch64 = nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
           specialArgs = {
             machine-config = import ./machines/shared-values/bootstrap-image.nix { pkgs = pkgsFor.aarch64-linux; };
-            pkgs = pkgsFor.${system};
+            pkgs = pkgsFor.aarch64-linux;
             inherit inputs globals;
           };
           modules = [
