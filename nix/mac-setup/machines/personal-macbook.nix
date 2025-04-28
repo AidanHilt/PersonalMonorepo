@@ -20,7 +20,7 @@ darwin.lib.darwinSystem {
     ({ inputs, globals, ... }: {
       users.users.aidan = {
         home = "/Users/aidan";
-        extraGroups = ["nixbld"];
+        groups = ["nixbld"];
       };
 
       networking.hostName = "hyperion";
