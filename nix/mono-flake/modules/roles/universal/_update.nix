@@ -23,7 +23,7 @@ let
       # Check if key already exists in the file
       if grep -q "^$key=" "$config_file"; then
           # Update existing key
-          sed -i.bak "s|^$key=.*|$key=$value|" "$config_file" && rm -f "${config_file}.bak"
+          sed -i.bak "s|^$key=.*|$key=$value|" "$config_file" && rm -f "''${config_file}.bak"
           echo "Updated $key=$value in config file"
       else
           # Append new key-value pair
