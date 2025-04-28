@@ -13,7 +13,7 @@
   };
 
   programs.zsh.enable = true;
-  users.defaultUserShell = pkgs.zsh;
+  users.defaultUserShell = lib.mkForce pkgs.zsh;
 
   services.openssh.enable = true;
 }
