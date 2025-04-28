@@ -61,6 +61,6 @@ in
 
 {
   imports = [
-    ../linux-universal
+    ../nixos/linux-universal
   ];
 }
