@@ -131,8 +131,8 @@ in
   nix = {
     linux-builder = {
       enable = true;
-    #   ephemeral = true;
-    #   maxJobs = 4;
+      ephemeral = true;
+      maxJobs = 4;
     #   config = {
     #     virtualisation = {
     #       darwin-builder = {
