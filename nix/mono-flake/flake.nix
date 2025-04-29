@@ -123,7 +123,6 @@
           };
           modules = [
             (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
-            inputs.home-manager.nixosModules.home-manager
             ./modules/roles/nixos/bootstrap-image.nix
           ];
         };
