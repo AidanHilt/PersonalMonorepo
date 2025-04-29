@@ -129,8 +129,8 @@ in
   };
 
   nix = {
-    # linux-builder = {
-    #   enable = true;
+    linux-builder = {
+      enable = true;
     #   ephemeral = true;
     #   maxJobs = 4;
     #   config = {
@@ -142,7 +142,7 @@ in
     #       cores = 6;
     #     };
     #   };
-    # };
+    };
 
     settings = {
       experimental-features = [ "nix-command" "flakes" ];
