@@ -14,15 +14,15 @@ repo_name="PersonalMonorepo"
 path="nix/mono-flake/machines/aarch64-darwin"  # Optional path within the repository
 branch="${1:-master}"  # Default branch is main
 
-hostnames=$(/usr/bin/curl -s "https://api.github.com/repos/$repo_owner/$repo_name/contents/$path?ref=$branch" |
+hostnames_raw=$(/usr/bin/curl -s "https://api.github.com/repos/$repo_owner/$repo_name/contents/$path?ref=$branch" |
                 /usr/bin/jq -r '.[] | select(.type=="dir") | .name')
+
+readarray -t hostnames <<<"$hostnames_raw"
 
 if [ ${#hostnames[@]} -eq 0 ] && [ $? -ne 0 ]; then
     echo "Error fetching repository contents" >&2
     return 1
 fi
-
-echo "$hostnames"
 
 echo "Available hostnames:"
 i=1
@@ -31,7 +31,6 @@ for hostname in "$hostnames[@]"; do
   i=$((i+1))
 done
 
-exit
 
 # Get user selection with input validation
 while true; do
