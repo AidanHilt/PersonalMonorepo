@@ -52,12 +52,12 @@ if [ -d /etc/auto_master ]; then
   /usr/bin/sudo /bin/mv /etc/auto_master /etc/auto_master.before-nix-darwin
 fi
 
-if [ ! -d "$HOME/Library/Application\ Support/Firefox" ]; then
+if [ ! -d ~/Library/Application\ Support/Firefox ]; then
   /bin/mkdir ~/Library/Application\ Support/Firefox
 fi
 
 if [ ! -d "$HOME/Library/Application\ Support/Firefox/profiles.ini" ]; then
-/usr/bin/touch ~/Library/Application\ Support/Firefox/profiles.ini
+  /usr/bin/touch ~/Library/Application\ Support/Firefox/profiles.ini
 fi
 
 /usr/bin/sudo nix run nix-darwin#darwin-rebuild -- switch --flake 'github:AidanHilt/PersonalMonorepo/staging-cluster-k8s-work?dir=nix/mono-flake#$selected_hostname'
