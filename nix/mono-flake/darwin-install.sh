@@ -27,8 +27,8 @@ fi
 # Using grep and cut for basic parsing (more robust would be jq if available)
 while read -r line; do
   # Extract type and name
-  type=$(echo "$line" | grep -o '"type":"[^"]*"' | cut -d'"' -f4)
-  name=$(echo "$line" | grep -o '"name":"[^"]*"' | cut -d'"' -f4)
+  type=$(echo "$line" | /usr/bin/grep -o '"type":"[^"]*"' | cut -d'"' -f4)
+  name=$(echo "$line" | /usr/bin/grep -o '"name":"[^"]*"' | cut -d'"' -f4)
 
   # Add to array if it's a directory
   if [ "$type" = "dir" ]; then
