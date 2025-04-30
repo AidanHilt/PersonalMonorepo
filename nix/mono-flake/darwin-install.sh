@@ -7,7 +7,9 @@ if [ ! -d /nix ]; then
   curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 fi
 
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+if [ ! -d /opt/homebrew ]; then
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
 
 repo_owner="AidanHilt"
 repo_name="PersonalMonorepo"
@@ -15,7 +17,7 @@ path="nix/mono-flake/machines/aarch64-darwin"  # Optional path within the reposi
 branch="${1:-master}"  # Default branch is main
 
 # Temporary file for response
-temp_file=$(mktemp)
+temp_file=$(/usr/bin/mktemp)
 
 # Use GitHub API to get contents
 curl -s "https://api.github.com/repos/$repo_owner/$repo_name/contents/$path?ref=$branch" > "$temp_file"
