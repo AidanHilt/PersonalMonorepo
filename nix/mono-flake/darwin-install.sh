@@ -17,7 +17,7 @@ branch="${1:-master}"  # Default branch is main
 hostnames_raw=$(/usr/bin/curl -s "https://api.github.com/repos/$repo_owner/$repo_name/contents/$path?ref=$branch" |
                 /usr/bin/jq -r '.[] | select(.type=="dir") | .name')
 
-readarray -t hostnames <<<"$hostnames_raw"
+hostnames=("${(@f)$(< "$hostnames_raw")}")
 
 if [ ${#hostnames[@]} -eq 0 ] && [ $? -ne 0 ]; then
     echo "Error fetching repository contents" >&2
