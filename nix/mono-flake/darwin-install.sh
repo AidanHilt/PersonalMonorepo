@@ -20,7 +20,7 @@ branch="${1:-master}"  # Default branch is main
 temp_file=$(/usr/bin/mktemp)
 
 # Use GitHub API to get contents
-curl -s "https://api.github.com/repos/$repo_owner/$repo_name/contents/$path?ref=$branch" > "$temp_file"
+/usr/bin/curl -s "https://api.github.com/repos/$repo_owner/$repo_name/contents/$path?ref=$branch" > "$temp_file"
 
 # Check if the request was successful
 if [ $? -ne 0 ]; then
