@@ -14,20 +14,14 @@ repo_name="PersonalMonorepo"
 path="nix/mono-flake/machines/aarch64-darwin"  # Optional path within the repository
 branch="${1:-master}"  # Default branch is main
 
-# Temporary file for response
-temp_file=$(/usr/bin/mktemp)
+hostnames=$(/usr/bin/curl -s "https://api.github.com/repos/$repo_owner/$repo_name/contents/$path?ref=$branch" |
+                 jq -r '.[] | select(.type=="dir") | .name')
 
-# Use GitHub API to get contents
-/usr/bin/curl -s "https://api.github.com/repos/$repo_owner/$repo_name/contents/$path?ref=$branch" > "$temp_file"
-
-# Check if the request was successful
-if [ $? -ne 0 ]; then
-  echo "Error fetching repository contents" >&2
-  rm -f "$temp_file"
-  return 1
+if [ ${#hostnames[@]} -eq 0 ] && [ $? -ne 0 ]; then
+    echo "Error fetching repository contents" >&2
+    return 1
 fi
 
-hostnames=()
 
 # Parse JSON response to extract directories
 # Using grep and cut for basic parsing (more robust would be jq if available)

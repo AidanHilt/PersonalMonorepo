@@ -8,4 +8,6 @@ Instructions for using the bootstrap image go here
 
 tl;dr: `curl https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/refs/heads/staging-cluster-k8s-work/nix/mono-flake/darwin-install.sh | zsh`
 
+For now, do NOT install determinate nix, it breaks... something, although I forget what.
+
 More documentation to follow
