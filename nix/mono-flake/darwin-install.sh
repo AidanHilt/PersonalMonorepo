@@ -49,8 +49,8 @@ while true; do
 done
 
 /usr/bin/sudo /bin/mv /etc/auto_master /etc/auto_master.before-nix-darwin
-mkdir ~/Library/Application\ Support/Firefox
-touch ~/Library/Application\ Support/Firefox/profiles.ini
+/usr/bin/mkdir ~/Library/Application\ Support/Firefox
+/usr/bin/touch ~/Library/Application\ Support/Firefox/profiles.ini
 
 
 echo "darwin-rebuild switch --flake 'github:AidanHilt/PersonalMonorepo/staging-cluster-k8s-work?dir=nix/mono-flake#$selected_hostname" | pbcopy
