@@ -64,7 +64,7 @@ mkdir ~/Library/Application\ Support/Firefox
 touch ~/Library/Application\ Support/Firefox/profiles.ini
 
 
-echo "darwin-rebuild switch --flake ~/PersonalMonorepo/nix/mac-setup#$selected_hostname" | pbcopy
+echo "darwin-rebuild switch --flake 'github:AidanHilt/PersonalMonorepo/staging-cluster-k8s-work?dir=nix/mono-flake#$selected_hostname" | pbcopy
 
 echo "This script has finished running. Please open a new terminal, and then CMD+V to run the nix command that will run the initial nix setup"
 echo "Once the nix installation has been completed, you can open a new terminal and run 'finish-setup' to finalize the setup"

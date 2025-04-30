@@ -6,6 +6,6 @@ Instructions for using the bootstrap image go here
 
 ## Darwin Setup
 
-tl;dr: `curl https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/refs/heads/master/nix/mono-flake/darwin-install.sh | zsh`
+tl;dr: `curl https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/refs/heads/staging-cluster-k8s-work/nix/mono-flake/darwin-install.sh | zsh`
 
 More documentation to follow
