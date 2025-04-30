@@ -9,11 +9,6 @@ if [ ! -d /opt/homebrew ]; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
-PATH=$PATH:/usr/bin
-
-env | grep PATH
-exit
-
 repo_owner="AidanHilt"
 repo_name="PersonalMonorepo"
 path="nix/mono-flake/machines/aarch64-darwin"  # Optional path within the repository
@@ -45,7 +40,7 @@ while read -r line; do
   if [ "$type" = "dir" ]; then
       hostnames+=("$name")
   fi
-done < <(grep -o '"type":"[^"]*","name":"[^"]*"' "$temp_file")
+done < <(/usr/bin/grep -o '"type":"[^"]*","name":"[^"]*"' "$temp_file")
 
 # Clean up
 rm -f "$temp_file"
