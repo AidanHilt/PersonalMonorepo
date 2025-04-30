@@ -48,7 +48,9 @@ while true; do
   fi
 done
 
-/usr/bin/sudo /bin/mv /etc/auto_master /etc/auto_master.before-nix-darwin
+if [ -d /etc/auto_master ]; then
+  /usr/bin/sudo /bin/mv /etc/auto_master /etc/auto_master.before-nix-darwin
+fi
 /usr/bin/mkdir ~/Library/Application\ Support/Firefox
 /usr/bin/touch ~/Library/Application\ Support/Firefox/profiles.ini
 
