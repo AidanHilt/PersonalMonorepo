@@ -29,6 +29,8 @@ for hostname in "$hostnames[@]"; do
   i=$((i+1))
 done
 
+exit
+
 # Get user selection with input validation
 while true; do
   echo -n "\nSelect hostname (1-${#hostnames[@]}): "
