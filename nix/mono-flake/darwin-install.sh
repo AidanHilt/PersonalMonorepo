@@ -1,16 +1,19 @@
 #!/bin/zsh
+
+set -e
+
 # Install Nix
 curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-local repo_owner="AidanHilt"
-local repo_name="PersonalMonorepo"
-local path="nix/mono-flake/machines/aarch64-darwin"  # Optional path within the repository
-local branch="${1:-master}"  # Default branch is main
+repo_owner="AidanHilt"
+repo_name="PersonalMonorepo"
+path="nix/mono-flake/machines/aarch64-darwin"  # Optional path within the repository
+branch="${1:-master}"  # Default branch is main
 
 # Temporary file for response
-local temp_file=$(mktemp)
+temp_file=$(mktemp)
 
 # Use GitHub API to get contents
 curl -s "https://api.github.com/repos/$repo_owner/$repo_name/contents/$path?ref=$branch" > "$temp_file"
@@ -22,15 +25,14 @@ if [ $? -ne 0 ]; then
   return 1
 fi
 
-# Initialize array compatible with both bash and zsh
-local -a hostnames=()
+hostnames=()
 
 # Parse JSON response to extract directories
 # Using grep and cut for basic parsing (more robust would be jq if available)
 while read -r line; do
   # Extract type and name
-  local type=$(echo "$line" | grep -o '"type":"[^"]*"' | cut -d'"' -f4)
-  local name=$(echo "$line" | grep -o '"name":"[^"]*"' | cut -d'"' -f4)
+  type=$(echo "$line" | grep -o '"type":"[^"]*"' | cut -d'"' -f4)
+  name=$(echo "$line" | grep -o '"name":"[^"]*"' | cut -d'"' -f4)
 
   # Add to array if it's a directory
   if [ "$type" = "dir" ]; then
