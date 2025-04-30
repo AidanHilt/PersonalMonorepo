@@ -89,13 +89,17 @@
             inherit inputs globals;
           };
 
-          modules = [
-            ./machines/${system}/${name}/configuration.nix
+          modules = nixpkgs.lib.mkMerge [
+            [
+              ./machines/${system}/${name}/configuration.nix
 
-            inputs.home-manager.${moduleType}.home-manager
-            inputs.agenix.${moduleType}.default
-          ] ++ nixpkgs.lib.mkIf moduleType != "darwinModules" [
-            inputs.wsl.${moduleType}.wsl
+              inputs.home-manager.${moduleType}.home-manager
+              inputs.agenix.${moduleType}.default
+            ]
+
+            nixpkgs.lib.mkIf moduleType != "darwinModules" [
+              inputs.wsl.${moduleType}.wsl
+            ]
           ];
         };
       };
