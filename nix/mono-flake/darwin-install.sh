@@ -15,7 +15,7 @@ path="nix/mono-flake/machines/aarch64-darwin"  # Optional path within the reposi
 branch="${1:-master}"  # Default branch is main
 
 hostnames=$(/usr/bin/curl -s "https://api.github.com/repos/$repo_owner/$repo_name/contents/$path?ref=$branch" |
-                 jq -r '.[] | select(.type=="dir") | .name')
+                 /usr/bin/jq -r '.[] | select(.type=="dir") | .name')
 
 if [ ${#hostnames[@]} -eq 0 ] && [ $? -ne 0 ]; then
     echo "Error fetching repository contents" >&2
