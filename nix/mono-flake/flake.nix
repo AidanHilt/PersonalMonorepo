@@ -97,7 +97,7 @@
               inputs.agenix.${moduleType}.default
             ]
 
-            nixpkgs.lib.mkIf moduleType != "darwinModules" [
+            nixpkgs.lib.mkIf moduleType == "nixosModules" [
               inputs.wsl.${moduleType}.wsl
             ]
           ];
