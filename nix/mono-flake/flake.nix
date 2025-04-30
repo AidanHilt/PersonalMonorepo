@@ -95,7 +95,7 @@
             inputs.home-manager.${moduleType}.home-manager
             inputs.agenix.${moduleType}.default
           ] ++ mkIf moduleType != "darwinModules" [
-            moduleType == inputs.wsl.${moduleType}.wsl
+            inputs.wsl.${moduleType}.wsl
           ];
         };
       };
