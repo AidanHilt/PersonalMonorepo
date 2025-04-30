@@ -89,18 +89,14 @@
             inherit inputs globals;
           };
 
-          modules = nixpkgs.lib.mkMerge [
-            [
-              ./machines/${system}/${name}/configuration.nix
+          platformModules = if moduleType == "nixosModules" then [inputs.wsl.nixosModules.wsl] else [];
 
-              inputs.home-manager.${moduleType}.home-manager
-              inputs.agenix.${moduleType}.default
-            ]
+          modules = [
+            ./machines/${system}/${name}/configuration.nix
 
-            nixpkgs.lib.mkIf moduleType == "nixosModules" [
-              inputs.wsl.${moduleType}.wsl
-            ]
-          ];
+            inputs.home-manager.${moduleType}.home-manager
+            inputs.agenix.${moduleType}.default
+          ] ++ platformModules;
         };
       };
 
