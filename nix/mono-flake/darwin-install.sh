@@ -55,6 +55,6 @@ fi
 /usr/bin/touch ~/Library/Application\ Support/Firefox/profiles.ini
 
 
-nix run nix-darwin#darwin-rebuild -- switch --flake 'github:AidanHilt/PersonalMonorepo/staging-cluster-k8s-work?dir=nix/mono-flake#$selected_hostname'
+/usr/bin/sudo nix run nix-darwin#darwin-rebuild -- switch --flake 'github:AidanHilt/PersonalMonorepo/staging-cluster-k8s-work?dir=nix/mono-flake#$selected_hostname'
 
 echo "Open a new terminal and run 'finish-setup' to finalize the setup"
