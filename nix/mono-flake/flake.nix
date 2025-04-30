@@ -94,7 +94,7 @@
 
             inputs.home-manager.${moduleType}.home-manager
             inputs.agenix.${moduleType}.default
-          ] ++ mkIf moduleType != "darwinModules" [
+          ] ++ nixpkgs.lib.mkIf moduleType != "darwinModules" [
             inputs.wsl.${moduleType}.wsl
           ];
         };
