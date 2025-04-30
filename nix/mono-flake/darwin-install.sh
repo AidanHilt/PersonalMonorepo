@@ -48,7 +48,7 @@ while true; do
   fi
 done
 
-sudo mv /etc/auto_master /etc/auto_master.before-nix-darwin
+/usr/bin/sudo mv /etc/auto_master /etc/auto_master.before-nix-darwin
 mkdir ~/Library/Application\ Support/Firefox
 touch ~/Library/Application\ Support/Firefox/profiles.ini
 
