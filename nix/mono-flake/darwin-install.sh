@@ -11,6 +11,9 @@ fi
 
 PATH=$PATH:/usr/bin
 
+env | grep PATH
+exit
+
 repo_owner="AidanHilt"
 repo_name="PersonalMonorepo"
 path="nix/mono-flake/machines/aarch64-darwin"  # Optional path within the repository
