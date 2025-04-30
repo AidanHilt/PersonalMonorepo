@@ -43,7 +43,7 @@ while read -r line; do
 done < <(/usr/bin/grep -o '"type":"[^"]*","name":"[^"]*"' "$temp_file")
 
 # Clean up
-rm -f "$temp_file"
+/usr/bin/rm -f "$temp_file"
 
 # Get user selection with input validation
 while true; do
