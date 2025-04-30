@@ -60,6 +60,6 @@ if [ ! -d ~/Library/Application\ Support/Firefox/profiles.ini ]; then
   /usr/bin/touch ~/Library/Application\ Support/Firefox/profiles.ini
 fi
 
-/nix/var/nix/profiles/default/bin/nix run nix-darwin#darwin-rebuild -- switch --flake 'github:AidanHilt/PersonalMonorepo/staging-cluster-k8s-work?dir=nix/mono-flake#$selected_hostname'
+/nix/var/nix/profiles/default/bin/nix run nix-darwin#darwin-rebuild -- switch --flake "github:AidanHilt/PersonalMonorepo/staging-cluster-k8s-work?dir=nix/mono-flake#$selected_hostname"
 
 echo "Open a new terminal and run 'finish-setup' to finalize the setup"
