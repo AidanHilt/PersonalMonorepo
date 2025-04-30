@@ -22,23 +22,6 @@ if [ ${#hostnames[@]} -eq 0 ] && [ $? -ne 0 ]; then
     return 1
 fi
 
-
-# Parse JSON response to extract directories
-# Using grep and cut for basic parsing (more robust would be jq if available)
-while read -r line; do
-  # Extract type and name
-  type=$(echo "$line" | /usr/bin/grep -o '"type":"[^"]*"' | cut -d'"' -f4)
-  name=$(echo "$line" | /usr/bin/grep -o '"name":"[^"]*"' | cut -d'"' -f4)
-
-  # Add to array if it's a directory
-  if [ "$type" = "dir" ]; then
-      hostnames+=("$name")
-  fi
-done < <(/usr/bin/grep -o '"type":"[^"]*","name":"[^"]*"' "$temp_file")
-
-# Clean up
-/bin/rm -f "$temp_file"
-
 # Get user selection with input validation
 while true; do
   echo -n "\nSelect hostname (1-${#hostnames[@]}): "
