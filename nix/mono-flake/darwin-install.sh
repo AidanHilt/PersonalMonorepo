@@ -22,6 +22,8 @@ if [ ${#hostnames[@]} -eq 0 ] && [ $? -ne 0 ]; then
     return 1
 fi
 
+echo "$hostnames"
+
 echo "Available hostnames:"
 i=1
 for hostname in "$hostnames[@]"; do
