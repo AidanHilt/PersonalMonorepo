@@ -78,6 +78,8 @@
           systemFunction = if system == "aarch64-darwin" then darwin.lib.darwinSystem else nixpkgs.lib.nixosSystem;
           moduleType = if system == "aarch64-darwin" then "darwinModules" else "nixosModules";
           user-base = if system == "aarch64-darwin" then "/Users" else "/home";
+
+          platformModules = if moduleType == "nixosModules" then [inputs.wsl.nixosModules.wsl] else [];
         in
         {
         "${name}" = systemFunction {
@@ -88,8 +90,6 @@
             pkgs = pkgsFor.${system};
             inherit inputs globals;
           };
-
-          platformModules = if moduleType == "nixosModules" then [inputs.wsl.nixosModules.wsl] else [];
 
           modules = [
             ./machines/${system}/${name}/configuration.nix
