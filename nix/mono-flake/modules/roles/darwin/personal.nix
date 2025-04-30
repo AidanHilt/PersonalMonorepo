@@ -2,9 +2,8 @@
 
 {
   imports = [
-    ./smb-mount.nix
-    ./rclone.nix
-    ./smb-mount.nix
+    ./_smb-mount.nix
+    ./_rclone.nix
   ];
 
   environment.systemPackages = [

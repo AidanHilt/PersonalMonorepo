@@ -1,6 +1,10 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 {
+  imports = [
+    ./_guided-setup.nix
+  ];
+
   programs.zsh.enable = true;
 
   security.pam.enableSudoTouchIdAuth = true;
@@ -77,7 +81,7 @@
       };
     };
 
-    settings = {x
+    settings = {
       trusted-users = [
         "aidan"
         "root"

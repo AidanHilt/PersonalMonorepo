@@ -9,8 +9,7 @@ in
 
 {
   imports = [
-    ./guided-setup.nix
-    ./work-docker.nix
+    ./_work-docker.nix
   ];
 
   environment.systemPackages = [

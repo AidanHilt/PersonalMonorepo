@@ -12,8 +12,8 @@
   networking.hostName = "hyperion";
 
   imports = [
-    ../../../modules/common.nix
-    ../../../modules/personal.nix
+    ../../../modules/roles/darwin/darwin-universal.nix
+    ../../../modules/roles/darwin/personal.nix
   ];
 
 }
