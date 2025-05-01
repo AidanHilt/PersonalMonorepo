@@ -2,6 +2,8 @@
 
 {
   imports = [
+    ./_locale-and-time.nix
+
     ../universal/universal-base.nix
   ];
 

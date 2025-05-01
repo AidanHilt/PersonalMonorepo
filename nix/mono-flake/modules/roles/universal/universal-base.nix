@@ -5,7 +5,6 @@
 {
   imports = [
     #./_hosts.nix
-    ./_locale-and-time.nix
     ./_update.nix
   ];
 
