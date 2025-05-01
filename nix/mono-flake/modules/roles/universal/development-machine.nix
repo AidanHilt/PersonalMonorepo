@@ -2,7 +2,7 @@
 
 let
   # Platform-specific logic or setup
-  platform-apps = if pkgs.system == "aarch64-darwin" then with pkgs; [ defaultbrowser ] else with pkgs; [];
+  platform-apps = if pkgs.system == "aarch64-darwin" then with pkgs; [] else with pkgs; [];
 
   rebuild-app = if pkgs.system == "aarch64-darwin" then "darwin-rebuild" else "nixos-rebuild";
 

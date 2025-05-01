@@ -7,6 +7,10 @@
     ../universal/universal-base.nix
   ];
 
+  environment.systemPackages = with pkgs; [
+    defaultbrowser
+  ];
+
   system.stateVersion = 5;
 
   programs.zsh.enable = true;
