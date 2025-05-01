@@ -8,10 +8,10 @@ let
       local key="$1"
       local value="$2"
       local config_file="$HOME/.atils/update-config.env"
-      
+
       # Create directory if it doesn't exist
       mkdir -p "$(dirname "$config_file")"
-      
+
       # Check if file exists
       if [ ! -f "$config_file" ]; then
           # Create new file with the key-value pair
@@ -19,7 +19,7 @@ let
           echo "Created new config file with $key=$value"
           return 0
       fi
-      
+
       # Check if key already exists in the file
       if grep -q "^$key=" "$config_file"; then
           # Update existing key
@@ -46,7 +46,7 @@ let
   if [[ "$(uname)" == "Darwin" ]]; then
     rebuildExecutable="darwin-rebuild"
   else
-    rebuildExecutable="nixos-rebuild"
+    rebuildExecutable="sudo nixos-rebuild"
   fi
 
   # Ideally, we could do this with a function, but subshells suck.
@@ -55,17 +55,17 @@ let
     echo -n "Do you want to update from a remote or local source? (remote/local): "
     read source_type
     source_type="''${source_type:-remote}"  # Default to remote if empty
-    
+
     if [[ "$source_type" == "remote" ]]; then
         # For remote source, get repository and branch
         echo -n "Remote repository (default: github:AidanHilt/PersonalMonorepo): "
         read remote_repo
         UPDATE__REMOTE_URL="''${remote_repo:-github:AidanHilt/PersonalMonorepo}"
-        
+
         echo -n "Branch to use (default: master): "
         read branch_name
         UPDATE__REMOTE_BRANCH="''${branch_name:-master}"
-        
+
     elif [[ "$source_type" == "local" ]]; then
         # For local source, check if PERSONAL_MONOREPO_LOCATION exists
         local_default=""
@@ -75,14 +75,14 @@ let
         else
             echo -n "Local flake location: "
         fi
-        
+
         read local_path
         if [ -n "$local_default" ] && [ -z "$local_path" ]; then
             UPDATE__FLAKE_LOCATION="$local_default"
         else
             UPDATE__FLAKE_LOCATION="$local_path"
         fi
-        
+
     else
         echo "Invalid option. Defaulting to remote source."
         UPDATE__FLAKE_LOCATION="github:AidanHilt/PersonalMonorepo/master?dir=nix/mono-flake"
@@ -96,7 +96,7 @@ let
     UPDATE__REMOTE_URL="$UPDATE__REMOTE_URL/"
     fi
 
-    if [ -z "$UPDATE__REMOTE_BRANCH" ]; then 
+    if [ -z "$UPDATE__REMOTE_BRANCH" ]; then
     UPDATE__REMOTE_BRANCH="master"
     fi
 
@@ -106,7 +106,7 @@ let
       # Extract parts before and after the "?"
       before_question=''${UPDATE__REMOTE_URL:0:$question_mark_pos-1}
       after_question=''${UPDATE__REMOTE_URL:$question_mark_pos-1}
-      
+
       # Construct new string with branch inserted before "?"
       UPDATE__FLAKE_LOCATION="''${before_question}''${UPDATE__REMOTE_BRANCH}''${after_question}"
     else
@@ -114,11 +114,11 @@ let
       UPDATE__FLAKE_LOCATION="''${UPDATE__REMOTE_URL}/''${UPDATE__REMOTE_BRANCH}"
     fi
   fi
-  
+
   if [ -z "$UPDATE__MACHINE_NAME" ]; then
     hostname=$(hostname)
     echo -n "The name of the machine you want to use to update ($hostname): "
-    
+
     read user_input
 
     if [ -z "$user_input" ]; then
@@ -129,12 +129,12 @@ let
   fi
 
   echo "Rebuilding system with flake: $UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
-  sudo $rebuildExecutable switch --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
+  $rebuildExecutable switch --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
 
   if [ -z "$UPDATE__NO_SAVE" ]; then
     # List of variables to check and save
     variables=("UPDATE__REMOTE_URL" "UPDATE__REMOTE_BRANCH" "UPDATE__FLAKE_LOCATION" "UPDATE__MACHINE_NAME")
-    
+
     for var in "''${variables[@]}"; do
         # Check if the variable is set (not empty)
         if [ -n "''${!var}" ]; then
@@ -142,7 +142,7 @@ let
             update_config "$var" "''${!var}"
         fi
     done
-    
+
     echo "All configuration values have been saved."
   fi
   '';
