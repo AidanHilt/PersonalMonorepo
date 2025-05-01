@@ -1,4 +1,4 @@
-{ inputs, globals, machine-config, pkgs, lib, system, ...}:
+{ inputs, globals, pkgs, ...}:
 
 {
   home.activation.firefoxProfile = lib.hm.dag.entryAfter [ "writeBoundry" ] ''

@@ -1,4 +1,4 @@
-{ inputs, globals, machine-config, pkgs, lib, system, ...}:
+{ inputs, globals, pkgs, ...}:
 
 let
   vscode-settings = ../config-files/vscode-settings.json;

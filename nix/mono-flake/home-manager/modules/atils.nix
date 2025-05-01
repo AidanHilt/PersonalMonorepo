@@ -1,4 +1,4 @@
-{ inputs, pkgs, globals, machine-config, ... }:
+{ inputs, pkgs, globals, ... }:
 
 # TODO turn this hideous abomination into something working and repeatable
 

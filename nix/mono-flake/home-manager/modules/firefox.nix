@@ -1,4 +1,4 @@
-{ inputs, globals, machine-config, pkgs, lib, ...}:
+{ inputs, globals, pkgs, ...}:
 
 {
   home.activation.firefoxProfile = lib.mkIf (pkgs.system == "aarch64-darwin")

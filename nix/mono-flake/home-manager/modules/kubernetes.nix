@@ -1,4 +1,4 @@
- { inputs, globals, machine-config, pkgs, lib, system, config, ...}:
+{ inputs, globals, pkgs, ...}:
 
 {
 
