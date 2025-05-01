@@ -3,6 +3,8 @@
 {
   imports = [
     ./_guided-setup.nix
+
+    ../universal/universal-base.nix
   ];
 
   programs.zsh.enable = true;
