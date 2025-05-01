@@ -15,8 +15,8 @@
       }
       {
         name = "powerlevel10k-config";
-        src = ../../home-manager/config-files/.p10k.zsh;
-        file = "home-manager/config-files/.p10k.zsh";
+        src = lib.cleanSource ../config-files;
+        file = ".p10k.zsh";
       }
     ];
 
