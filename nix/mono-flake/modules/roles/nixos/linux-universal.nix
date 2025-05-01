@@ -10,6 +10,7 @@
   users.groups."${machine-config.username}" = {};
 
   users.users."${machine-config.username}" = {
+    group = "${machine-config.username}";
     extraGroups = [ "networkmanager" "wheel" ];
     isNormalUser = true;
   };

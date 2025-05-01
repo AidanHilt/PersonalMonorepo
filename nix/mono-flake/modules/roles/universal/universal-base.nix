@@ -27,7 +27,6 @@
   nixpkgs.config.allowUnfree = true;
 
   users.users."${machine-config.username}" = {
-    group = "${machine-config.username}";
     home = "${machine-config.user-base}/${machine-config.username}";
 
     openssh.authorizedKeys.keys = [
