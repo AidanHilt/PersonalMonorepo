@@ -1,0 +1,19 @@
+jellyseerr:
+  configSecret:
+    existingSecret: jellyseerr-config-secret
+
+persistence:
+  config:
+    enabled: true
+    mountPath: /app/config
+
+serviceAccount:
+  create: true
+  name: jellyseerr
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"
+
+image:
+  repository: aidanhilt/jellyseerr
+  pullPolicy: Always

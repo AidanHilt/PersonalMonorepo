@@ -1,0 +1,98 @@
+{
+  "[python]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "always"
+    },
+    "editor.defaultFormatter": null,
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true
+  },
+  "[tf]": {
+    "editor.defaultFormatter": "hashicorp.terraform",
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true
+  },
+  "[yaml]": {
+    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.autoIndent": "advanced",
+    "editor.insertSpaces": true,
+    "editor.quickSuggestions": {
+      "comments": false,
+      "other": true,
+      "strings": true
+    }
+  },
+  "aws.suppressPrompts": {
+    "codeWhispererNewWelcomeMessage": true
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "explorer.autoReveal": "focusNoScroll",
+  "githubPullRequests.pullBranch": "never",
+  "security.workspace.trust.untrustedFiles": "open",
+  "workbench.colorTheme": "Default Dark+",
+  "yaml.customTags": [
+    "!And",
+    "!And sequence",
+    "!If",
+    "!If sequence",
+    "!Not",
+    "!Not sequence",
+    "!Equals",
+    "!Equals sequence",
+    "!Or",
+    "!Or sequence",
+    "!FindInMap",
+    "!FindInMap sequence",
+    "!Base64",
+    "!Join",
+    "!Join sequence",
+    "!Cidr",
+    "!Ref",
+    "!Sub",
+    "!Sub sequence",
+    "!GetAtt",
+    "!GetAZs",
+    "!ImportValue",
+    "!ImportValue sequence",
+    "!Select",
+    "!Select sequence",
+    "!Split",
+    "!Split sequence"
+  ],
+  "chat.commandCenter.enabled": false,
+  "workbench.startupEditor": "none",
+  "remote.SSH.defaultExtensions": [
+    "mads-hartmann.bash-ide-vscode",
+    "ms-azuretools.vscode-docker",
+    "brunnerh.file-properties-viewer",
+    "github.vscode-github-actions",
+    "github.vscode-pull-request-github",
+    "golang.go",
+    "hashicorp.hcl",
+    "ms-python.isort",
+    "wholroyd.jinja",
+    "ms-kubernetes-tools.vscode-kubernetes-tools",
+    "ms-vsliveshare.vsliveshare",
+    "shd101wyy.markdown-preview-enhanced",
+    "bbenoist.nix",
+    "ms-python.vscode-pylance",
+    "ms-python.python",
+    "ms-python.debugpy",
+    "mechatroner.rainbow-csv",
+    "ms-vscode-remote.remote-ssh",
+    "ms-vscode-remote.remote-ssh-edit",
+    "ms-vscode.remote-explorer",
+    "charliermarsh.ruff",
+    "timonwong.shellcheck",
+    "extensions.vscode-marketplace.4ops.terraform",
+    "gruntfuggly.todo-tree",
+    "redhat.vscode-yaml",
+    "slevesque.vscode-zipexplorer",
+    "ms-vscode.powershell"
+  ]
+}

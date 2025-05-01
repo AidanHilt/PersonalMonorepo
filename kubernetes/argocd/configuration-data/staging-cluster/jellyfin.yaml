@@ -1,0 +1,27 @@
+jellyfin:
+  urlBase: /emby
+
+  configSecret:
+    existingSecret: jellyfin-config-secret
+
+serviceAccount:
+  create: true
+  name: jellyfin
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-1"
+
+persistence:
+  config:
+    enabled: true
+    size: 10Gi
+  videos:
+    enabled: true
+    type: hostPath
+    mountPath: /videos
+    hostPath: /videos
+
+image:
+  repository: aidanhilt/jellyfin
+  tag: feat-external-user-1-retry
+  pullPolicy: Always

@@ -1,0 +1,5 @@
+{pkgs, ...}:
+
+{
+  username = "aidan";
+}
