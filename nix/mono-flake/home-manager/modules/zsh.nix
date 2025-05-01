@@ -15,7 +15,7 @@
       }
       {
         name = "powerlevel10k-config";
-        src = globals.nixConfig;
+        src = ../../../home-manager/config-files/.p10k.zsh;
         file = "home-manager/config-files/.p10k.zsh";
       }
     ];
