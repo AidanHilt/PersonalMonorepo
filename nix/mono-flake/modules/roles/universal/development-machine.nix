@@ -72,7 +72,7 @@ in
    # update
   ] ++ platform-apps;
 
-  system.userActivationScripts = {
+  system.activationScripts = {
     getPersonalMonorepo = {
       text = ''
         if [ ! -d "$PERSONAL_MONOREPO_LOCATION" ]; then
