@@ -48,7 +48,7 @@ while true; do
   fi
 done
 
-if [ -d /etc/auto_master ]; then
+if [ -f /etc/auto_master ]; then
   /usr/bin/sudo /bin/mv /etc/auto_master /etc/auto_master.before-nix-darwin
 fi
 
