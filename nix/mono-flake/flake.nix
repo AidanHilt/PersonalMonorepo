@@ -52,6 +52,7 @@
         system:
           let
             nixpkgs-version = if system == "aarch64-darwin" then inputs.nixpkgs-darwin else inputs.nixpkgs;
+            platform-overlays = if system == "aarch64-darwin" then [(self: super: {nodejs = super.nodejs_22;})] else [];
           in
           import nixpkgs-version {
             inherit system;
@@ -59,7 +60,7 @@
               overlays = [
                 inputs.nur.overlays.default
                 inputs.agenix.overlays.default
-              ];
+              ] ++ platform-overlays;
           }
       );
 
