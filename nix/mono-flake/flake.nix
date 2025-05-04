@@ -4,16 +4,15 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
 
-    darwin.url = "github:lnl7/nix-darwin/nix-darwin-24.11";
-    darwin.inputs.nixpkgs.follows = "nixpkgs";
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
-    home-manager.url = "github:nix-community/home-manager/release-24.11";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs";
-
-    systems.url = "github:nix-systems/default";
-
-    agenix.url = "github:ryantm/agenix";
-    agenix.inputs.nixpkgs.follows = "nixpkgs";
+    home-manager = {
+      url = "github:nix-community/home-manager/release-24.11";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     nur.url = "github:nix-community/nur";
 
@@ -22,11 +21,25 @@
       flake = false;
     };
 
-    poetry2nix.url = "github:nix-community/poetry2nix";
-    poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
+    poetry2nix = {
+      url = "github:nix-community/poetry2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
-    wsl.url = "github:nix-community/NixOS-WSL";
-    wsl.inputs.nixpkgs.follows = "nixpkgs";
+    systems.url = "github:nix-systems/default";
+
+    wsl = {
+      url = "github:nix-community/NixOS-WSL";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # Darwin-specific items
+    nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-24.11-darwin";
+
+    darwin = {
+      url = "github:lnl7/nix-darwin/nix-darwin-24.11";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, nixpkgs, darwin, ... }@inputs:
@@ -37,7 +50,10 @@
 
       pkgsFor = inputs.nixpkgs.lib.genAttrs (import inputs.systems) (
         system:
-          import nixpkgs {
+          let
+            nixpkgs-version = if system == "aarch64-darwin" then inputs.nixpkgs-darwin else inputs.nixpkgs;
+          in
+          import nixpkgs-version {
             inherit system;
             config.allowUnfree = true;
               overlays = [
