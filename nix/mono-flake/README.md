@@ -6,7 +6,7 @@ Instructions for using the bootstrap image go here
 
 ## Darwin Setup
 
-tl;dr: `curl https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/refs/heads/staging-cluster-k8s-work/nix/mono-flake/darwin-install.sh | zsh`
+tl;dr: `curl https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/refs/heads/staging-cluster-k8s-work/nix/mono-flake/darwin-install.sh -o /tmp/installer && /tmp/installer`
 
 For now, do NOT install determinate nix, it breaks... something, although I forget what.
 
