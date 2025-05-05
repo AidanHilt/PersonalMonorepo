@@ -27,11 +27,6 @@ let
   docker builder prune --force
 '';
 
-#   update = pkgs.writeShellScriptBin "update" ''
-#   cd $PERSONAL_MONOREPO_LOCATION
-#   git pull -q
-#   ${rebuild-app} switch --flake $PERSONAL_MONOREPO_LOCATION/nix/mono-flake
-# '';
 in
 
 {
@@ -69,10 +64,9 @@ in
     argocd-commit
     nix-commit
     reset-docker
-   # update
   ] ++ platform-apps;
 
-  system.activationScripts = {
+  system.activationScripts.postUserActivation = {
     getPersonalMonorepo = {
       text = ''
         if [ ! -d "$PERSONAL_MONOREPO_LOCATION" ]; then
