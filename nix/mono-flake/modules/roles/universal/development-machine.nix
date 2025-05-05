@@ -66,8 +66,8 @@ in
     reset-docker
   ] ++ platform-apps;
 
-  system.activationScripts.postUserActivation = {
-    getPersonalMonorepo = {
+  system.activationScripts = {
+    postUserActivation = {
       text = ''
         if [ ! -d "$PERSONAL_MONOREPO_LOCATION" ]; then
           git clone https://github.com/AidanHilt/PersonalMonorepo.git "$PERSONAL_MONOREPO_LOCATION"
