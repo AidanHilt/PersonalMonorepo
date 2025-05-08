@@ -1,14 +1,9 @@
 { inputs, globals, pkgs, lib, system, ...}:
 
-let
-  vim-config = globals.nixConfig + "/home-manager/modules/vim.nix";
-  zsh-config = globals.nixConfig + "/home-manager/modules/zsh.nix";
-in
-
 {
   imports = [
-    vim-config
-    zsh-config
+    ../modules/vim.nix
+    ../modules/zsh.nix
   ];
 
   # Home Manager needs a bit of information about you and the paths it should
