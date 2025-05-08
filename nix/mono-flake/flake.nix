@@ -145,7 +145,7 @@
             (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
             ./modules/roles/nixos/bootstrap-image.nix
 
-            home-manager.nixosModules.home-manager {
+            inputs.home-manager.nixosModules.home-manager {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.backupFileExtension = "bak";
