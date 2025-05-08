@@ -149,8 +149,8 @@
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.backupFileExtension = "bak";
-              home-manager.extraSpecialArgs = { inherit inputs globals pkgs; };
-              home-manager.users.nixos = import ./home-manager/shared-configs/server.nix {inherit inputs globals pkgs; system = pkgs.system; lib = home-manager.lib; };
+              home-manager.extraSpecialArgs = { inherit inputs globals; pkgs = pkgsFor.aarch64-linux; };
+              home-manager.users.nixos = import ./home-manager/shared-configs/server.nix {inherit inputs globals; pkgs = pkgsFor.aarch64-linux; system = pkgs.system; lib = home-manager.lib; };
             }
 
             (
