@@ -158,15 +158,15 @@
               };
             }
 
-            (
-              {pkgs, ...}: {
-                isoImage = {
-                  makeEfiBootable = true;
-                  makeUsbBootable = true;
-                  squashfsCompression = "zstd -Xcompression-level 6"; #way faster build time
-                };
-              }
-            )
+            # (
+            #   {pkgs, ...}: {
+            #     isoImage = {
+            #       makeEfiBootable = true;
+            #       makeUsbBootable = true;
+            #       squashfsCompression = "zstd -Xcompression-level 6"; #way faster build time
+            #     };
+            #   }
+            # )
           ];
         };
       };
