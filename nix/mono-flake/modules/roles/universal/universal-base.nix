@@ -22,7 +22,7 @@
     pkgs.eza
   ];
 
-  nixpkgs.config.allowUnfree = true;
+  pkgs.config.allowUnfree = true;
 
   users.users."${machine-config.username}" = {
     home = "${machine-config.user-base}/${machine-config.username}";
