@@ -34,8 +34,6 @@ in
     ./_kubernetes-admin.nix
   ];
 
-  nixpkgs.config.allowUnfree = true;
-
   environment.variables = {
     PERSONAL_MONOREPO_LOCATION = "${machine-config.user-base}/${machine-config.username}/PersonalMonorepo";
   };
