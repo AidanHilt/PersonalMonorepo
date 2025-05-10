@@ -11,7 +11,7 @@ in
     userSettings = builtins.fromJSON (builtins.readFile vscode-settings);
 
     mutableExtensionsDir = false;
-    extensions = with pkgss.vscode-marketplace; [
+    extensions = with pkgs.vscode-marketplace; [
       mads-hartmann.bash-ide-vscode
       ms-azuretools.vscode-docker
       brunnerh.file-properties-viewer
