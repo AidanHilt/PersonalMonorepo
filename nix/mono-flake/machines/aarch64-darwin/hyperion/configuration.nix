@@ -15,7 +15,4 @@
 
     ../../../modules/roles/universal/development-machine.nix
   ];
-
-  nixpkgs.config.allowUnfree = true;
-
 }
