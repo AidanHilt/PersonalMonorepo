@@ -2,13 +2,6 @@
 
 let
   vscode-settings = ../config-files/vscode-settings.json;
-
-  extensions =
-    (import (builtins.fetchGit {
-      url = "https://github.com/nix-community/nix-vscode-extensions";
-      allRefs = true;
-      rev = "5603fb6fb99f68dfc244429c79a7b706ed9a2fd7"; #pragma: allowlist secret
-    })).extensions.${pkgs.system};
 in
 
 {
@@ -18,7 +11,7 @@ in
     userSettings = builtins.fromJSON (builtins.readFile vscode-settings);
 
     mutableExtensionsDir = false;
-    extensions = with extensions.vscode-marketplace; [
+    extensions = with pkgss.vscode-marketplace; [
       mads-hartmann.bash-ide-vscode
       ms-azuretools.vscode-docker
       brunnerh.file-properties-viewer

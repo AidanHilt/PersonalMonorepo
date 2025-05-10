@@ -28,6 +28,13 @@
 
     systems.url = "github:nix-systems/default";
 
+    # Home Manager items
+    nix-vscode-extensions = {
+      url = "github:nix-community/nix-vscode-extensions";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # Linux-specific items
     wsl = {
       url = "github:nix-community/NixOS-WSL";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -60,6 +67,7 @@
               overlays = [
                 inputs.nur.overlays.default
                 inputs.agenix.overlays.default
+                inputs.nix-vscode-extensions.overlays.default
               ] ++ platform-overlays;
           }
       );
