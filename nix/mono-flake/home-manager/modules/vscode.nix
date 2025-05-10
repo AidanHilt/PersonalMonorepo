@@ -34,7 +34,7 @@ in
       ms-vscode.remote-explorer
       charliermarsh.ruff
       timonwong.shellcheck
-      extensions.vscode-marketplace."4ops".terraform
+      "4ops".terraform
       gruntfuggly.todo-tree
       redhat.vscode-yaml
       slevesque.vscode-zipexplorer
