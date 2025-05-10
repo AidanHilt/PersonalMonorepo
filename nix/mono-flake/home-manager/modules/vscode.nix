@@ -6,7 +6,7 @@ let
   extensions =
     (import (builtins.fetchGit {
       url = "https://github.com/nix-community/nix-vscode-extensions";
-      ref = "refs/heads/master";
+      ref = "master";
       rev = "5603fb6fb99f68dfc244429c79a7b706ed9a2fd7"; #pragma: allowlist secret
     })).extensions.${pkgs.system};
 in
