@@ -12,6 +12,9 @@ in
 
     mutableExtensionsDir = false;
     extensions = with pkgs.vscode-marketplace; [
+      # These guys need to have the full title because of string stuff
+      pkgs.vscode-marketplace."4ops".terraform
+
       mads-hartmann.bash-ide-vscode
       ms-azuretools.vscode-docker
       brunnerh.file-properties-viewer
@@ -34,7 +37,6 @@ in
       ms-vscode.remote-explorer
       charliermarsh.ruff
       timonwong.shellcheck
-      "4ops".terraform
       gruntfuggly.todo-tree
       redhat.vscode-yaml
       slevesque.vscode-zipexplorer
