@@ -25,7 +25,6 @@
       "utm"
       "prismlauncher"
       "crystalfetch"
-      "phoenix-slides"
     ];
   };
 
