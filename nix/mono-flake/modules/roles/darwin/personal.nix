@@ -25,6 +25,7 @@
       "utm"
       "prismlauncher"
       "crystalfetch"
+      "dupeguru"
     ];
   };
 
