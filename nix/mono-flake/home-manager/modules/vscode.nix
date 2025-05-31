@@ -2,6 +2,10 @@
 
 let
   vscode-settings = ../config-files/vscode-settings.json;
+
+  # Unfortunately, some VSCode extensions(!) do not work on aarch64-linux, so let's read what platform we're on,
+  # and only apply those if its safe
+  platform-specific-extensions = if pkgs.system != "aarch64-linux" then [ms-python.vscode-pylance ms-python.python ms-python.debugpy] else [];
 in
 
 {
@@ -28,9 +32,6 @@ in
       ms-vsliveshare.vsliveshare
       shd101wyy.markdown-preview-enhanced
       bbenoist.nix
-      ms-python.vscode-pylance
-      ms-python.python
-      ms-python.debugpy
       mechatroner.rainbow-csv
       ms-vscode-remote.remote-ssh
       ms-vscode-remote.remote-ssh-edit

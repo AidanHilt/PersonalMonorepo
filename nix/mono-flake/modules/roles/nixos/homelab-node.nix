@@ -38,7 +38,6 @@ in
 
   environment.systemPackages = with pkgs; [
     htop
-
     update
   ];
 }
