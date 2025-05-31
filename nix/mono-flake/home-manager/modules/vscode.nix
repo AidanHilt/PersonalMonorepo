@@ -5,7 +5,7 @@ let
 
   # Unfortunately, some VSCode extensions(!) do not work on aarch64-linux, so let's read what platform we're on,
   # and only apply those if its safe
-  platform-specific-extensions = if pkgs.system != "aarch64-linux" then [ms-python.vscode-pylance ms-python.python ms-python.debugpy] else [];
+  platform-specific-extensions = if pkgs.system != "aarch64-linux" then with pkgs.vscode-marketplace;[ms-python.vscode-pylance ms-python.python ms-python.debugpy] else [];
 in
 
 {
