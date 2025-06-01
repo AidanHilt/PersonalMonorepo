@@ -90,7 +90,7 @@ let
   fi
 
   # 4. If we're doing a remote (i.e. GitHub) update, we need to build out the full reference (URL + branch)
-  if [ ! -z "$UPDATE__FROM_REMOTE" ]; then
+  if [ ! -z "$UPDATE__REMOTE_URL" ]; then
     # Because you're going to forget, the double single quote is an escape character for nix
     if [[ ''${UPDATE__REMOTE_URL: -1} != "/" ]]; then
     UPDATE__REMOTE_URL="$UPDATE__REMOTE_URL/"
@@ -151,7 +151,7 @@ in
 {
 
   environment.systemPackages = [
-  update-script
+    update-script
   ];
 
 }
