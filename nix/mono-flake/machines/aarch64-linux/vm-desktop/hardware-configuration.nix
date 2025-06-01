@@ -11,16 +11,49 @@
   boot.kernelModules = [ ];
   boot.extraModulePackages = [ ];
 
-  fileSystems = {
-    "/" = {
-    device = "/dev/disk/by-label/DESKTOPROOT";
-    fsType = "ext4";
-    };
+  # fileSystems = {
+  #   "/" = {
+  #   device = "/dev/disk/by-label/DESKTOPROOT";
+  #   fsType = "ext4";
+  #   };
 
-    "/boot" = {
-      device = "/dev/disk/by-label/BOOT";
-      fsType = "vfat";
-      options = [ "fmask=0077" "dmask=0077" ];
+  #   "/boot" = {
+  #     device = "/dev/disk/by-label/BOOT";
+  #     fsType = "vfat";
+  #     options = [ "fmask=0077" "dmask=0077" ];
+  #   };
+  # };
+
+
+  disko.devices = {
+    disk = {
+      vda = {
+        device = "/dev/vda";
+        type = "disk";
+        content = {
+          type = "gpt";
+          partitions = {
+            ESP = {
+              type = "EF00";
+              size = "100M";
+              content = {
+                type = "filesystem";
+                format = "vfat";
+                mountpoint = "/boot";
+                mountOptions = [ "umask=0077" ];
+              };
+            };
+            root = {
+              size = "100%";
+              content = {
+                type = "filesystem";
+                format = "ext4";
+                mountpoint = "/";
+              };
+            };
+          };
+        };
+      };
     };
   };
 

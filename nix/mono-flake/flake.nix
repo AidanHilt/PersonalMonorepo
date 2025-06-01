@@ -40,6 +40,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    disko = {
+      url = "github:nix-community/disko/latest";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Darwin-specific items
     nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-24.11-darwin";
 
@@ -104,7 +109,7 @@
           moduleType = if system == "aarch64-darwin" then "darwinModules" else "nixosModules";
           user-base = if system == "aarch64-darwin" then "/Users" else "/home";
 
-          platformModules = if moduleType == "nixosModules" then [inputs.wsl.nixosModules.wsl] else [];
+          platformModules = if moduleType == "nixosModules" then [inputs.wsl.nixosModules.wsl inputs.disko.nixosModules.disko] else [];
         in
         {
         "${name}" = systemFunction {

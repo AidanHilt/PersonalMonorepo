@@ -66,13 +66,13 @@ in
 
 
   #TODO If this breaks on Linux, you need to figure out what the NixOS equivalent of this is, and then implement platform-specific logic
-  # system.activationScripts = {
-  #   postUserActivation = {
-  #     text = ''
-  #       if [ ! -d "$PERSONAL_MONOREPO_LOCATION" ]; then
-  #         git clone https://github.com/AidanHilt/PersonalMonorepo.git "$PERSONAL_MONOREPO_LOCATION"
-  #       fi
-  #     '';
-  #   };
-  # };
+  system.activationScripts = {
+    postUserActivation = {
+      text = ''
+        if [ ! -d "$PERSONAL_MONOREPO_LOCATION" ]; then
+          git clone https://github.com/AidanHilt/PersonalMonorepo.git "$PERSONAL_MONOREPO_LOCATION"
+        fi
+      '';
+    };
+  };
 }
