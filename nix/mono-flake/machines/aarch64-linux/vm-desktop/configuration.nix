@@ -8,6 +8,7 @@
   imports = [
       ./hardware-configuration.nix
 
+      ../../../modules/disko-configs/vda-single-disk.nix
       ../../../modules/machine-categories/linux-desktop.nix
       ../../../modules/roles/nixos/vscode-server.nix
     ];
@@ -21,8 +22,12 @@
   };
 
   # Bootloader
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  # boot.loader.systemd-boot.enable = true;
+  # boot.loader.efi.canTouchEfiVariables = true;
+
+  boot.loader.grub.enable = true;
+  boot.loader.grub.efiSupport = true;
+  boot.loader.grub.efiInstallAsRemovable = true;
 
   # Enable networking
   networking.networkmanager.enable = true;
