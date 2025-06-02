@@ -149,7 +149,7 @@
           system = "aarch64-linux";
 
           specialArgs = {
-            machine-config = import ./machines/shared-values/bootstrap-image.nix;
+            machine-config = import ./modules/shared-values/bootstrap-image.nix;
             pkgs = pkgsFor.aarch64-linux;
             inherit inputs globals;
           };

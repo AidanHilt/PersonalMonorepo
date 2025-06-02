@@ -29,7 +29,7 @@ let
     # };
   };
 
-  category-config = import ../../shared-values/<category>.nix;
+  category-config = import ../../../modules/shared-values/<category>.nix;
 
   final-output = pkgs.lib.recursiveUpdate machine-config category-config;
 in

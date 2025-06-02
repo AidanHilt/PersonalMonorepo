@@ -1,6 +1,6 @@
 {
   imports = [
-   ../shared-values/laptop-vm-cluster.nix
+   ../../../modules/shared-values/laptop-vm-cluster.nix
   ];
 
   networking = {
