@@ -29,8 +29,8 @@
     ];
   };
 
-  programs.zsh.enable = true;
-  users.defaultUserShell = pkgs.zsh;
+  # programs.zsh.enable = true;
+  # users.defaultUserShell = pkgs.zsh;
 
   security.pam.services.login.allowNullPassword = true;
 
