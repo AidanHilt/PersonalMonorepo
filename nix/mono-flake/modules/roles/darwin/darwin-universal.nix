@@ -76,7 +76,7 @@
   nix = {
     linux-builder = {
       enable = true;
-      ephemeral = true;
+      ephemeral = false;
       systems = ["x86_64-linux" "aarch64-linux"];
       config.boot.binfmt.emulatedSystems = ["x86_64-linux"];
       config = {
