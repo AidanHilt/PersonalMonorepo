@@ -36,5 +36,5 @@
 
   security.sudo.wheelNeedsPassword = false;
 
-  services.getty.autologinUser = "root";
+  services.getty.autologinUser = lib.mkForce "root";
 }
