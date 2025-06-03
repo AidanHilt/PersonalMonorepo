@@ -24,7 +24,7 @@
   };
 
   users.users.root = {
-    password = "";
+    password = pkgs.lib.mkForce "";
 
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIImw5CsGmsR1WTunv5bvNcozmoUSgJf76RMvy6SZtA2R aidan@hyperion"
