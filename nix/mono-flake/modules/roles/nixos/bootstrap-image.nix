@@ -23,14 +23,15 @@
     };
   };
 
-  # users.users.root = {
-  #   password = pkgs.lib.mkForce "";
+  users.users.root = {
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIImw5CsGmsR1WTunv5bvNcozmoUSgJf76RMvy6SZtA2R aidan@hyperion"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEEAi2UjaWUsDVY6wUMMcIjDXzyizhax86Z0J2I6fYM0 nixos@nixos"
+    ];
+  };
 
-  #   openssh.authorizedKeys.keys = [
-  #     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIImw5CsGmsR1WTunv5bvNcozmoUSgJf76RMvy6SZtA2R aidan@hyperion"
-  #     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEEAi2UjaWUsDVY6wUMMcIjDXzyizhax86Z0J2I6fYM0 nixos@nixos"
-  #   ];
-  # };
+  programs.zsh.enable = true;
+  users.defaultUserShell = pkgs.zsh;
 
   security.pam.services.login.allowNullPassword = true;
 
