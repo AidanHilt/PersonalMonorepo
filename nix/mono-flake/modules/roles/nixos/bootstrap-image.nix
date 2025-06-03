@@ -15,8 +15,6 @@ let
     pkgs.vim
     pkgs.eza
   ];
-  documentation.enable = false;
-  documentation.nixos.enable = false;
 
   services.openssh = {
     enable = true;
