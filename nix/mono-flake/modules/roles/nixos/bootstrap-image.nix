@@ -18,8 +18,6 @@ let
   documentation.enable = false;
   documentation.nixos.enable = false;
 
-  boot.kernelParams = [ "boot.shell_on_fail" ];
-
   services.openssh = {
     enable = true;
     settings = {
@@ -30,10 +28,14 @@ let
 
   users.users.root = {
     password = "";
+
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIImw5CsGmsR1WTunv5bvNcozmoUSgJf76RMvy6SZtA2R aidan@hyperion"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEEAi2UjaWUsDVY6wUMMcIjDXzyizhax86Z0J2I6fYM0 nixos@nixos"
+    ];
   };
 
   security.pam.services.login.allowNullPassword = true;
-  security.pam.services.sshd.allowNullPassword = true;
 
   security.sudo.wheelNeedsPassword = false;
 
