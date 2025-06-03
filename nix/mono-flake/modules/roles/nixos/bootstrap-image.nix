@@ -8,7 +8,7 @@ let
     };
   };
 
-  networking.hostName = nixos-bootstrap;
+  networking.hostName = "nixos-bootstrap";
 
   environment.systemPackages = [
     pkgs.git
