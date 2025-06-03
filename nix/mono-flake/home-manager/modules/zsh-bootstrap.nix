@@ -16,13 +16,9 @@
       {
         name = "powerlevel10k-config";
         src = pkgs.lib.cleanSource ../config-files;
-        file = ".p10k.zsh";
+        file = ".p10k.bootstrap.zsh";
       }
     ];
-
-    shellAliases = {
-      ls = "eza";
-    };
 
     history = {
       size = 10000;
@@ -30,11 +26,7 @@
 
     oh-my-zsh = {
       enable = true;
-      plugins = [ "git" "sudo" "copyfile" "copybuffer" "git-auto-fetch" "history" "per-directory-history" "systemadmin" ];
+      plugins = [ "git" "sudo" "systemadmin" ];
     };
-
-    # initExtra = ''
-    #   setopt rmstarsilent
-    # '';
   };
 }

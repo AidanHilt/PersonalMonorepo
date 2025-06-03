@@ -12,7 +12,6 @@
   environment.systemPackages = [
     pkgs.git
     pkgs.vim
-    pkgs.eza
   ];
 
   services.openssh = {
