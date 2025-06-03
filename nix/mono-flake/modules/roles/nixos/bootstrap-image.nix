@@ -1,6 +1,5 @@
 { inputs, globals, pkgs, ...}:
 
-let
 {
   nix = {
     settings = {
