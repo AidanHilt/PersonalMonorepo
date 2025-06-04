@@ -15,19 +15,19 @@ NC='\033[0m' # No Color
 
 # Function to print colored output
 print_error() {
-    echo -e "${RED}Error: $1${NC}" >&2
+    echo -e "''${RED}Error: $1''${NC}" >&2
 }
 
 print_info() {
-    echo -e "${BLUE}Info: $1${NC}"
+    echo -e "''${BLUE}Info: $1''${NC}"
 }
 
 print_success() {
-    echo -e "${GREEN}Success: $1${NC}"
+    echo -e "''${GREEN}Success: $1''${NC}"
 }
 
 print_warning() {
-    echo -e "${YELLOW}Warning: $1${NC}"
+    echo -e "''${YELLOW}Warning: $1''${NC}"
 }
 
 # Check if PERSONAL_MONOREPO_LOCATION is set
