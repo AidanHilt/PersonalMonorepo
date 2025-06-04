@@ -90,7 +90,7 @@ print_success "Found ''${#MACHINE_NAMES[@]} machine configuration(s)"
 echo
 print_info "Available machine configurations:"
 for i in {1..''${#MACHINE_NAMES[@]}}; do
-    echo "  $i) ''${MACHINE_NAMES[$i]}"
+    echo "  $i) ''${MACHINE_NAMES[$i-1]}"
 done
 
 # Get user selection
