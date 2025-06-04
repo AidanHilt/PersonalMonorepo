@@ -31,7 +31,7 @@ print_warning() {
 }
 
 # Check if PERSONAL_MONOREPO_LOCATION is set
-if [[ -z "${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
+if [[ -z "''${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
     print_error "PERSONAL_MONOREPO_LOCATION environment variable is not set"
     print_info "Please set this variable to point to your personal monorepo location"
     exit 1
