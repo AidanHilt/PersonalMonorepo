@@ -2,7 +2,7 @@
 
 let
 installer-script = pkgs.writeShellScriptBin "nixos-remote-install" ''
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 
 set -euo pipefail
 
@@ -73,7 +73,6 @@ if [[ -d "$X86_64_DIR" ]]; then
     done
 fi
 
-# NOTE: Remember, the double single quote is an escape character in Nix
 # Check if we found any machines
 if [[ ''${#MACHINE_NAMES[@]} -eq 0 ]]; then
     print_error "No machine configurations found in $MACHINES_DIR"
@@ -82,15 +81,16 @@ if [[ ''${#MACHINE_NAMES[@]} -eq 0 ]]; then
 fi
 
 # Sort machine names alphabetically
-MACHINE_NAMES=($(printf '%s\n' "''${MACHINE_NAMES[@]}" | sort))
+IFS=$'\n' MACHINE_NAMES=($(sort <<<"''${MACHINE_NAMES[*]}"))
+unset IFS
 
 print_success "Found ''${#MACHINE_NAMES[@]} machine configuration(s)"
 
 # Present numbered list to user
 echo
 print_info "Available machine configurations:"
-for i in {1..''${#MACHINE_NAMES[@]}}; do
-    echo "  $i) ''${MACHINE_NAMES[$i]}"
+for ((i=0; i<''${#MACHINE_NAMES[@]}; i++)); do
+    echo "  $((i+1))) ''${MACHINE_NAMES[$i]}"
 done
 
 # Get user selection
@@ -101,7 +101,7 @@ while true; do
 
     # Validate selection
     if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ''${#MACHINE_NAMES[@]} ]]; then
-        SELECTED_MACHINE="''${MACHINE_NAMES[$selection]}"
+        SELECTED_MACHINE="''${MACHINE_NAMES[$((selection-1))]}"
         break
     else
         print_error "Invalid selection. Please enter a number between 1 and ''${#MACHINE_NAMES[@]}"
@@ -115,60 +115,6 @@ echo
 while true; do
     echo -n "Enter the IP address of the machine you are trying to install NixOS on: "
     read -r ip_address
-
-    # Basic IP validation (IPv4)
-    if [[ "$ip_address" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-        # Check each octet is valid (0-255)
-        valid=true
-        IFS='.' read -ra ADDR <<< "$ip_address"
-        for octet in "''${ADDR[@]}"; do
-            if [[ "$octet" -gt 255 ]]; then
-                valid=false
-                break
-            fi
-        done
-
-        if $valid; then
-            break
-        fi
-    fi
-
-    print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
-done
-
-print_success "Target IP address: $ip_address"
-
-# Confirm before running
-echo
-print_warning "About to run nixos-anywhere with the following configuration:"
-echo "  Machine: $SELECTED_MACHINE"
-echo "  Target: root@$ip_address"
-echo "  Flake: $FLAKE_DIR#$SELECTED_MACHINE"
-echo
-
-echo -n "Continue? (y/N): "
-read -r confirm
-
-if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-    print_info "Operation cancelled by user"
-    exit 0
-fi
-
-# Run nixos-anywhere
-print_info "Starting nixos-anywhere deployment..."
-echo
-
-nix run github:nix-community/nixos-anywhere -- \
-    --flake "$FLAKE_DIR#$SELECTED_MACHINE" \
-    --target-host "root@$ip_address" \
-    --build-on-remote
-
-if [[ $? -eq 0 ]]; then
-    print_success "nixos-anywhere deployment completed successfully!"
-else
-    print_error "nixos-anywhere deployment failed"
-    exit 1
-fi
 '';
 
 in
