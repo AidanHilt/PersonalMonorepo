@@ -202,7 +202,7 @@ echo
 read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
 
 
-nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$ip_address" "${CMD_ARRAY[*]}"
+nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$ip_address" "''${CMD_ARRAY[*]}"
 
 if [[ $? -eq 0 ]]; then
     print_success "nixos-anywhere deployment completed successfully!"
