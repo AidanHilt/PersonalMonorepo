@@ -199,6 +199,8 @@ fi
 print_info "Starting nixos-anywhere deployment..."
 echo
 
+echo "$NIXOS_ANYWHERE_ARGS"
+
 if [[ ! -z $NIXOS_ANYWHERE_ARGS ]]; then
   read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$ip_address" "''${CMD_ARRAY[*]}"
