@@ -14,7 +14,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # False by default
-NIXOS_ANYWHERE_ARGS_PROVIDED=false
+NIXOS_ANYWHERE_ARGS_PROVIDED=0
 
 # Function to print colored output
 print_error() {
