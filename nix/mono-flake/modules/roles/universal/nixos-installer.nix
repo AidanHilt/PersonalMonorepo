@@ -30,6 +30,47 @@ print_warning() {
     echo -e "''${YELLOW}Warning: $1''${NC}"
 }
 
+show_usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "OPTIONS:"
+    echo "  --nixos-anywhere-args ARGS    Arguments to pass through to nixos-anywhere"
+    echo "  --help                        Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0 --nixos-anywhere-args '--build-on-remote --debug'"
+    echo ""
+}
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --nixos-anywhere-args)
+            if [[ $# -lt 2 ]]; then
+                print_error "--nixos-anywhere-args requires an argument"
+                exit 1
+            fi
+            NIXOS_ANYWHERE_ARGS="$2"
+            NIXOS_ANYWHERE_ARGS_PROVIDED=true
+            shift 2
+            ;;
+        --help|-h)
+            show_usage
+            exit 0
+            ;;
+        -*)
+            print_error "Unknown option: $1"
+            print_info "Use --help to see available options"
+            exit 1
+            ;;
+        *)
+            print_error "Unexpected argument: $1"
+            print_info "Currently only --nixos-anywhere-args is supported"
+            print_info "Use --help to see usage information"
+            exit 1
+            ;;
+    esac
+done
+
 # Check if PERSONAL_MONOREPO_LOCATION is set
 if [[ -z "''${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
     print_error "PERSONAL_MONOREPO_LOCATION environment variable is not set"
@@ -158,10 +199,10 @@ fi
 print_info "Starting nixos-anywhere deployment..."
 echo
 
-nix run github:nix-community/nixos-anywhere -- \
-    --flake "$FLAKE_DIR#$SELECTED_MACHINE" \
-    --target-host "root@$ip_address" \
-    --build-on-remote
+read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
+
+
+nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$ip_address" "${CMD_ARRAY[*]}"
 
 if [[ $? -eq 0 ]]; then
     print_success "nixos-anywhere deployment completed successfully!"
