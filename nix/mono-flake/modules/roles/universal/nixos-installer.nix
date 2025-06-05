@@ -13,6 +13,9 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# False by default
+NIXOS_ANYWHERE_ARGS_PROVIDED=false
+
 # Function to print colored output
 print_error() {
     echo -e "''${RED}Error: $1''${NC}" >&2
