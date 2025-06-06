@@ -1,0 +1,82 @@
+env: staging-cluster
+
+hostname: staging-cluster-lb.local
+
+gitRevision: staging-cluster-k8s-work
+
+configuration:
+  configurationRevision: staging-cluster-k8s-work
+
+flaresolverr:
+  enabled: true
+
+gateways:
+  enabled: true
+
+hashi-vault:
+  enabled: true
+  configuration:
+    enabled: true
+
+vault-secrets-operator:
+  configuration:
+    enabled: true
+
+istio:
+  enabled: true
+
+istio-base:
+  enabled: true
+
+istio-gateway:
+  enabled: true
+
+jellyfin:
+  enabled: true
+  configuration:
+    enabled: true
+
+jellyseerr:
+  enabled: true
+  configuration:
+    enabled: true
+
+kiali:
+  enabled: true
+
+longhorn:
+  enabled: true
+
+metallb:
+  enabled: true
+
+metallb-config:
+  enabled: true
+
+postgres:
+  enabled: true
+
+prowlarr:
+  enabled: true
+  configuration:
+    enabled: true
+
+radarr:
+  enabled: true
+  configuration:
+    enabled: true
+
+sonarr:
+  enabled: true
+  configuration:
+    enabled: true
+
+transmission:
+  enabled: true
+  configuration:
+    enabled: true
+
+video-stack-configuration:
+  enabled: true
+  configuration:
+    enabled: true

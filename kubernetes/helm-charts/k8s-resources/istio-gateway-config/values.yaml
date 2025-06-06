@@ -13,6 +13,9 @@ jellyseerr:
 kiali:
   enabled: false
 
+longhorn:
+  enabled: false
+
 prowlarr:
   enabled: false
 

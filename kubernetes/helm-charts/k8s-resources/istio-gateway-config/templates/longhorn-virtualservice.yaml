@@ -1,0 +1,23 @@
+{{- if index .Values "longhorn" "enabled" }}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: longhorn
+  namespace: istio-system
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - internal-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /longhorn
+    rewrite:
+      uri: " "
+    route:
+    - destination:
+        host: longhorn-frontend.longhorn-system.svc.cluster.local
+        port:
+          number: 80
+{{- end }}

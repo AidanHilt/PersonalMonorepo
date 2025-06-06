@@ -1,0 +1,21 @@
+{{- if index .Values "jellyfin" "enabled" }}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: jellyfin
+  namespace: istio-system
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - internal-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /emby
+      route:
+        - destination:
+            host: jellyfin.videos.svc.cluster.local
+            port:
+              number: 80
+{{- end }}

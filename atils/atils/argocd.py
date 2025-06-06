@@ -5,7 +5,6 @@ import logging
 import subprocess
 import sys
 import time
-import webbrowser
 
 import colored
 import requests
@@ -42,7 +41,8 @@ def main(args: list[str]) -> None:
   )
   setup_parser.add_argument(
     "environment",
-    choices=["qa-cluster", "preprod-cluster", "prod-cluster", "external-user-1-cluster"],
+    choices=["qa-cluster", "preprod-cluster", "prod-cluster", "external-user-1-cluster",
+              "staging-cluster"],
     help="Which environment to use for templating",
   )
   setup_parser.add_argument(

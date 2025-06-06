@@ -1,5 +1,0 @@
-bases:
-- ../../base
-patchesStrategicMerge:
-- ipaddresspool.yaml
-- l2advertisement.yaml

@@ -655,4 +655,4 @@ terragrunt-debug.tfvars.json
 
 .github/workflows/.secrets
 
-nix/server-setup/result
+nix/mono-flake/result
