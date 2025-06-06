@@ -6,7 +6,7 @@
 
 {
   imports = [
-      ./hardware-configuration.nix
+      ../../../modules/hardware-configs/utm.nix
 
       ../../../modules/disko-configs/vda-single-disk.nix
       ../../../modules/machine-categories/homelab-node.nix
