@@ -15,7 +15,7 @@ let
     };
   };
 
-  category-config = import ../../../modules/shared-values/laptop-vm-clusternix;
+  category-config = import ../../../modules/shared-values/laptop-vm-cluster.nix;
 
   final-output = pkgs.lib.recursiveUpdate machine-config category-config;
 in
