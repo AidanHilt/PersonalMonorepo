@@ -2,34 +2,20 @@
 
 let
   machine-config = {
-    username = "";
+    username = "aidan";
 
-    # TODO we probably just want to read hostname from the folder
-    hostname = "";
+    hostname = "macbook-cluster-1";
 
-    # imports = [
-    #  ../shared-values/<machine-group>.nix
-    # ];
+    networking = {
+      address = "192.168.86.20";
+    };
 
-    # networking = {
-    #   fixedIp = false;
-
-    #   defaultGateway = "";
-    #   nameservers = [];
-    #   address = "";
-    #   prefixLength = 24;
-    # }
-
-    # k8s = {
-    #   primaryNode = false;
-
-    #   clusterEndpoint = "";
-    #   # Used to identify which secrets to provide to the cluster
-    #   clusterName = "";
-    # };
+    k8s = {
+      primaryNode = true;
+    };
   };
 
-  category-config = import ../../../modules/shared-values/<category>.nix;
+  category-config = import ../../../modules/shared-values/laptop-vm-clusternix;
 
   final-output = pkgs.lib.recursiveUpdate machine-config category-config;
 in

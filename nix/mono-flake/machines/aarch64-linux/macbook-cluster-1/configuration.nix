@@ -7,9 +7,10 @@
 {
   imports = [
       ../../../modules/hardware-configs/utm.nix
-
       ../../../modules/disko-configs/vda-single-disk.nix
-      ../../../modules/machine-categories/homelab-node.nix
+
+      ../../../modules/roles/nixos/linux-universal.nix
+      ../../../modules/roles/nixos/homelab-node.nix
     ];
 
   home-manager = {
@@ -25,7 +26,6 @@
     efiSupport = true;
     efiInstallAsRemovable = true;
   };
-
 
   users.users."${machine-config.username}".hashedPassword = "$y$j9T$47Fj09DL3ycTvCft06SAE1$FIYj3k6p1wzVOrZI.aLp5s7IBblimqa1/k/ACv9hiC/";
 
