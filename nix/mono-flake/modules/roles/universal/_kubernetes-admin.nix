@@ -123,7 +123,7 @@ let
   echo "Step 3: Encrypting kubeconfig with age..."
 
   # Step 3: Encrypt kubeconfig using age with the recipients file
-  OUTPUT_FILE="/tmp/kubeconfig.age"
+  OUTPUT_FILE="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets/kubeconfig.age"
 
   echo "$KUBECONFIG_CONTENT" | age -e -R "$TEMP_RECIPIENTS" > "$OUTPUT_FILE"
 
