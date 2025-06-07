@@ -38,6 +38,8 @@ show_usage() {
   echo ""
   echo "OPTIONS:"
   echo "  --nixos-anywhere-args ARGS  Arguments to pass through to nixos-anywhere"
+  echo "  --machine-name NAME  Name of the machine to use. Must be present in the mono flake"
+  echo "  --remote-ip IP  The IP address of the remote machine we want to install NixOS on"
   echo "  --help            Show this help message"
   echo ""
   echo "Examples:"
@@ -54,6 +56,24 @@ while [[ $# -gt 0 ]]; do
       fi
       NIXOS_ANYWHERE_ARGS="$2"
       NIXOS_ANYWHERE_ARGS_PROVIDED=true
+      shift 2
+      ;;
+    --machine-name)
+      if [[ $# -lt 2 ]]; then
+        print_error "--machine-name requires an argument"
+        exit 1
+      fi
+      SELECTED_MACHINE="$2"
+      SELECTED_MACHINE_ARG_PROVIDED=true
+      shift 2
+      ;;
+    --remote-ip)
+      if [[ $# -lt 2 ]]; then
+        print_error "--remote-ip requires an argument"
+        exit 1
+      fi
+      ip_address="$2"
+      IP_ADDRESS_ARG_PROVIDED=true
       shift 2
       ;;
     --help|-h)
@@ -93,94 +113,98 @@ fi
 
 print_success "Found mono-flake directory"
 
-# Collect machine names from both architectures
-MACHINES_DIR="$FLAKE_DIR/machines"
-MACHINE_NAMES=()
+if [[ "$MACHINE_NAME_ARG_PROVIDED" != true ]]; then
+  # Collect machine names from both architectures
+  MACHINES_DIR="$FLAKE_DIR/machines"
+  MACHINE_NAMES=()
 
-# Check aarch64-linux machines
-AARCH64_DIR="$MACHINES_DIR/aarch64-linux"
-if [[ -d "$AARCH64_DIR" ]]; then
-  for dir in "$AARCH64_DIR"/*/; do
-    if [[ -d "$dir" ]]; then
-      MACHINE_NAMES+=($(basename "$dir"))
-    fi
-  done
-fi
-
-# Check x86_64-linux machines
-X86_64_DIR="$MACHINES_DIR/x86_64-linux"
-if [[ -d "$X86_64_DIR" ]]; then
-  for dir in "$X86_64_DIR"/*/; do
-    if [[ -d "$dir" ]]; then
-      MACHINE_NAMES+=($(basename "$dir"))
-    fi
-  done
-fi
-
-# Check if we found any machines
-if [[ ''${#MACHINE_NAMES[@]} -eq 0 ]]; then
-  print_error "No machine configurations found in $MACHINES_DIR"
-  print_info "Please ensure you have machine configurations in aarch64-linux or x86_64-linux subdirectories"
-  exit 1
-fi
-
-# Sort machine names alphabetically
-IFS=$'\n' MACHINE_NAMES=($(sort <<<"''${MACHINE_NAMES[*]}"))
-unset IFS
-
-print_success "Found ''${#MACHINE_NAMES[@]} machine configuration(s)"
-
-# Present numbered list to user
-echo
-print_info "Available machine configurations:"
-for ((i=0; i<''${#MACHINE_NAMES[@]}; i++)); do
-  echo "  $((i+1))) ''${MACHINE_NAMES[$i]}"
-done
-
-# Get user selection
-echo
-while true; do
-  echo -n "Select a machine configuration (1-''${#MACHINE_NAMES[@]}): "
-  read -r selection
-
-  # Validate selection
-  if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ''${#MACHINE_NAMES[@]} ]]; then
-    SELECTED_MACHINE="''${MACHINE_NAMES[$((selection-1))]}"
-    break
-  else
-    print_error "Invalid selection. Please enter a number between 1 and ''${#MACHINE_NAMES[@]}"
-  fi
-done
-
-print_success "Selected machine: $SELECTED_MACHINE"
-
-# Get IP address from user
-echo
-while true; do
-  echo -n "Enter the IP address of the machine you are trying to install NixOS on: "
-  read -r ip_address
-
-  # Basic IP validation (IPv4)
-  if [[ "$ip_address" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-    # Check each octet is valid (0-255)
-    valid=true
-    IFS='.' read -ra ADDR <<< "$ip_address"
-    for octet in "''${ADDR[@]}"; do
-      if [[ "$octet" -gt 255 ]]; then
-        valid=false
-        break
+  # Check aarch64-linux machines
+  AARCH64_DIR="$MACHINES_DIR/aarch64-linux"
+  if [[ -d "$AARCH64_DIR" ]]; then
+    for dir in "$AARCH64_DIR"/*/; do
+      if [[ -d "$dir" ]]; then
+        MACHINE_NAMES+=($(basename "$dir"))
       fi
     done
-
-    if $valid; then
-      break
-    fi
   fi
 
-  print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
-done
+  # Check x86_64-linux machines
+  X86_64_DIR="$MACHINES_DIR/x86_64-linux"
+  if [[ -d "$X86_64_DIR" ]]; then
+    for dir in "$X86_64_DIR"/*/; do
+      if [[ -d "$dir" ]]; then
+        MACHINE_NAMES+=($(basename "$dir"))
+      fi
+    done
+  fi
 
-print_success "Target IP address: $ip_address"
+  # Check if we found any machines
+  if [[ ''${#MACHINE_NAMES[@]} -eq 0 ]]; then
+    print_error "No machine configurations found in $MACHINES_DIR"
+    print_info "Please ensure you have machine configurations in aarch64-linux or x86_64-linux subdirectories"
+    exit 1
+  fi
+
+  # Sort machine names alphabetically
+  IFS=$'\n' MACHINE_NAMES=($(sort <<<"''${MACHINE_NAMES[*]}"))
+  unset IFS
+
+  print_success "Found ''${#MACHINE_NAMES[@]} machine configuration(s)"
+
+  # Present numbered list to user
+  echo
+  print_info "Available machine configurations:"
+  for ((i=0; i<''${#MACHINE_NAMES[@]}; i++)); do
+    echo "  $((i+1))) ''${MACHINE_NAMES[$i]}"
+  done
+
+  # Get user selection
+  echo
+  while true; do
+    echo -n "Select a machine configuration (1-''${#MACHINE_NAMES[@]}): "
+    read -r selection
+
+    # Validate selection
+    if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ''${#MACHINE_NAMES[@]} ]]; then
+      SELECTED_MACHINE="''${MACHINE_NAMES[$((selection-1))]}"
+      break
+    else
+      print_error "Invalid selection. Please enter a number between 1 and ''${#MACHINE_NAMES[@]}"
+    fi
+  done
+
+  print_success "Selected machine: $SELECTED_MACHINE"
+fi
+
+if [[ IP_ADDRESS_ARG_PROVIDED != true ]]; then
+  # Get IP address from user
+  echo
+  while true; do
+    echo -n "Enter the IP address of the machine you are trying to install NixOS on: "
+    read -r ip_address
+
+    # Basic IP validation (IPv4)
+    if [[ "$ip_address" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+      # Check each octet is valid (0-255)
+      valid=true
+      IFS='.' read -ra ADDR <<< "$ip_address"
+      for octet in "''${ADDR[@]}"; do
+        if [[ "$octet" -gt 255 ]]; then
+          valid=false
+          break
+        fi
+      done
+
+      if $valid; then
+        break
+      fi
+    fi
+
+    print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
+  done
+
+  print_success "Target IP address: $ip_address"
+fi
 
 # Confirm before running
 echo
