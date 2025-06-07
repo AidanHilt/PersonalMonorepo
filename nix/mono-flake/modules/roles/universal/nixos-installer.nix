@@ -244,6 +244,31 @@ fi
 
 print_info "Waiting 30 seconds for the machine to reboot, then we're going to do keys"
 
+# Get IP address from user
+echo
+while true; do
+  echo -n "Enter the IP address of the machine after rebooting: "
+  read -r ip_address
+
+  # Basic IP validation (IPv4)
+  if [[ "$ip_address" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+    # Check each octet is valid (0-255)
+    valid=true
+    IFS='.' read -ra ADDR <<< "$ip_address"
+    for octet in "''${ADDR[@]}"; do
+      if [[ "$octet" -gt 255 ]]; then
+        valid=false
+        break
+      fi
+    done
+
+    if $valid; then
+      break
+    fi
+  fi
+
+  print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
+
 nixos-key-retrieval $SELECTED_MACHINE $ip_address
 '';
 
