@@ -115,7 +115,7 @@ fi
 
 print_success "Found mono-flake directory"
 
-if [[ "$MACHINE_NAME_ARG_PROVIDED" != true ]]; then
+if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   # Collect machine names from both architectures
   MACHINES_DIR="$FLAKE_DIR/machines"
   MACHINE_NAMES=()
