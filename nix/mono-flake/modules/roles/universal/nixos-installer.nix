@@ -15,6 +15,8 @@ NC='\033[0m' # No Color
 
 # False by default
 NIXOS_ANYWHERE_ARGS_PROVIDED=0
+SELECTED_MACHINE_ARG_PROVIDED=0
+IP_ADDRESS_ARG_PROVIDED=0
 
 # Function to print colored output
 print_error() {
