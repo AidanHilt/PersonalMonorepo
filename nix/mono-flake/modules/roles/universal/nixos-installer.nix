@@ -18,19 +18,19 @@ NIXOS_ANYWHERE_ARGS_PROVIDED=0
 
 # Function to print colored output
 print_error() {
-  echo -e "''${RED}Error: $1''${NC}" >&2
+  echo -e "''''${RED}Error: $1''''${NC}" >&2
 }
 
 print_info() {
-  echo -e "''${BLUE}Info: $1''${NC}"
+  echo -e "''''${BLUE}Info: $1''''${NC}"
 }
 
 print_success() {
-  echo -e "''${GREEN}Success: $1''${NC}"
+  echo -e "''''${GREEN}Success: $1''''${NC}"
 }
 
 print_warning() {
-  echo -e "''${YELLOW}Warning: $1''${NC}"
+  echo -e "''''${YELLOW}Warning: $1''''${NC}"
 }
 
 show_usage() {
@@ -75,7 +75,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check if PERSONAL_MONOREPO_LOCATION is set
-if [[ -z "''${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
+if [[ -z "''''${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
   print_error "PERSONAL_MONOREPO_LOCATION environment variable is not set"
   print_info "Please set this variable to point to your personal monorepo location"
   exit 1
@@ -118,37 +118,37 @@ if [[ -d "$X86_64_DIR" ]]; then
 fi
 
 # Check if we found any machines
-if [[ ''${#MACHINE_NAMES[@]} -eq 0 ]]; then
+if [[ ''''${#MACHINE_NAMES[@]} -eq 0 ]]; then
   print_error "No machine configurations found in $MACHINES_DIR"
   print_info "Please ensure you have machine configurations in aarch64-linux or x86_64-linux subdirectories"
   exit 1
 fi
 
 # Sort machine names alphabetically
-IFS=$'\n' MACHINE_NAMES=($(sort <<<"''${MACHINE_NAMES[*]}"))
+IFS=$'\n' MACHINE_NAMES=($(sort <<<"''''${MACHINE_NAMES[*]}"))
 unset IFS
 
-print_success "Found ''${#MACHINE_NAMES[@]} machine configuration(s)"
+print_success "Found ''''${#MACHINE_NAMES[@]} machine configuration(s)"
 
 # Present numbered list to user
 echo
 print_info "Available machine configurations:"
-for ((i=0; i<''${#MACHINE_NAMES[@]}; i++)); do
-  echo "  $((i+1))) ''${MACHINE_NAMES[$i]}"
+for ((i=0; i<''''${#MACHINE_NAMES[@]}; i++)); do
+  echo "  $((i+1))) ''''${MACHINE_NAMES[$i]}"
 done
 
 # Get user selection
 echo
 while true; do
-  echo -n "Select a machine configuration (1-''${#MACHINE_NAMES[@]}): "
+  echo -n "Select a machine configuration (1-''''${#MACHINE_NAMES[@]}): "
   read -r selection
 
   # Validate selection
-  if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ''${#MACHINE_NAMES[@]} ]]; then
-    SELECTED_MACHINE="''${MACHINE_NAMES[$((selection-1))]}"
+  if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ''''${#MACHINE_NAMES[@]} ]]; then
+    SELECTED_MACHINE="''''${MACHINE_NAMES[$((selection-1))]}"
     break
   else
-    print_error "Invalid selection. Please enter a number between 1 and ''${#MACHINE_NAMES[@]}"
+    print_error "Invalid selection. Please enter a number between 1 and ''''${#MACHINE_NAMES[@]}"
   fi
 done
 
@@ -165,7 +165,7 @@ while true; do
     # Check each octet is valid (0-255)
     valid=true
     IFS='.' read -ra ADDR <<< "$ip_address"
-    for octet in "''${ADDR[@]}"; do
+    for octet in "''''${ADDR[@]}"; do
       if [[ "$octet" -gt 255 ]]; then
         valid=false
         break
@@ -204,7 +204,7 @@ echo
 
 if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
   read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
-  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$ip_address" "''${CMD_ARRAY[*]}"
+  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$ip_address" "''''${CMD_ARRAY[*]}"
 else
   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$ip_address"
 fi
@@ -287,7 +287,7 @@ fi
 echo "Retrieved SSH public key"
 
 # Step 5: Create the formatted string
-FORMATTED_STRING="${MACHINE_NAME}-system = \"$SSH_PUBKEY\";"
+FORMATTED_STRING="''${MACHINE_NAME}-system = \"$SSH_PUBKEY\";"
 echo "Generated string: $FORMATTED_STRING"
 
 # Step 6: Copy to clipboard
