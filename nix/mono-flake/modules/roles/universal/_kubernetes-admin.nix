@@ -145,12 +145,17 @@ let
 in
 
 {
-  environment.systemPackages = [
-    pkgs.k9s
-    pkgs.kind
-    pkgs.kubecm
-    pkgs.kubectl
-    pkgs.kubernetes-helm
+  environment.systemPackages = with pkgs [
+    k9s
+    kind
+    kubecm
+    kubectl
+    kubernetes-helm
+
+    # Dependencies for update-kubeconfig
+    age
+    yq
+    jq
 
     clear-namespace
     cluster-setup
