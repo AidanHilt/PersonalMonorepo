@@ -276,7 +276,7 @@ echo "Found username: $USERNAME"
 
 # Step 4: SSH and get public key
 echo "Connecting to $USERNAME@$IP_ADDRESS to retrieve SSH public key..."
-SSH_PUBKEY=$(ssh "$USERNAME@$IP_ADDRESS" "cat ~/.ssh/id_ed25519.pub" 2>/dev/null)
+SSH_PUBKEY=$(ssh "$USERNAME@$IP_ADDRESS" "cat /etc/ssh/ssh_host_ed25519_key.pub" 2>/dev/null)
 
 if [ -z "$SSH_PUBKEY" ]; then
   echo "Error: Could not retrieve SSH public key from $USERNAME@$IP_ADDRESS"
