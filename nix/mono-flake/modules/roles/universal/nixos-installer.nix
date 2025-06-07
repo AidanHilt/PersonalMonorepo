@@ -333,7 +333,7 @@ echo "Changing to $SECRETS_DIR and running agenix -e..."
 cd "$SECRETS_DIR"
 
 if command -v agenix >/dev/null 2>&1; then
-  agenix -e
+  agenix -r
 else
   echo "Error: agenix command not found in PATH"
   echo "Make sure agenix is installed and available"
