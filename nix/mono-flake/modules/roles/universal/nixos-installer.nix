@@ -266,6 +266,7 @@ while true; do
   fi
 done
 
+SELECTED_MACHINE=macbook-cluster-1
 nixos-key-retrieval $SELECTED_MACHINE $ip_address
 '';
 
