@@ -219,7 +219,7 @@ echo
 echo -n "Continue? (Y/n): "
 read -r confirm
 
-if [[ ! "$confirm" =~ ^[Nn]$ ]]; then
+if [[ "$confirm" =~ ^[Nn]$ ]]; then
   print_info "Operation cancelled by user"
   exit 0
 fi
