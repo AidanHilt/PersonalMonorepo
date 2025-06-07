@@ -215,6 +215,10 @@ else
   print_error "nixos-anywhere deployment failed"
   exit 1
 fi
+
+print_info "Waiting 30 seconds for the machine to reboot, then we're going to do keys"
+
+nixos-key-retrieval $SELECTED_MACHINE $ip_address
 '';
 
 secret-retrieval-script = pkgs.writeShellScriptBin "nixos-key-retrieval" ''
