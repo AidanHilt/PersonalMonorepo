@@ -145,7 +145,7 @@ let
 in
 
 {
-  environment.systemPackages = with pkgs [
+  environment.systemPackages = with pkgs; [
     k9s
     kind
     kubecm
