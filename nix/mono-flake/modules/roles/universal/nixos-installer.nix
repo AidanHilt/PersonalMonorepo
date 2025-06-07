@@ -216,10 +216,10 @@ echo "  Target: root@$ip_address"
 echo "  Flake: $FLAKE_DIR#$SELECTED_MACHINE"
 echo
 
-echo -n "Continue? (y/N): "
+echo -n "Continue? (Y/n): "
 read -r confirm
 
-if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+if [[ ! "$confirm" =~ ^[Nn]$ ]]; then
   print_info "Operation cancelled by user"
   exit 0
 fi
