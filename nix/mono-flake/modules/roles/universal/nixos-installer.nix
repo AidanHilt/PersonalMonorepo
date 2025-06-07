@@ -266,6 +266,7 @@ while true; do
       break
     fi
   fi
+done
 
   print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
 
