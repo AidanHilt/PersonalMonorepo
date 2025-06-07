@@ -178,7 +178,7 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   print_success "Selected machine: $SELECTED_MACHINE"
 fi
 
-if [[ IP_ADDRESS_ARG_PROVIDED != true ]]; then
+if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
   # Get IP address from user
   echo
   while true; do
