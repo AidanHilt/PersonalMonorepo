@@ -93,7 +93,7 @@ let
   echo "Step 1: Extracting kubeconfig and stripping current-context..."
 
   # Step 1: Cat kubeconfig, strip current-context, store the value
-  KUBECONFIG_CONTENT=$(cat "$KUBECONFIG" | yq 'del(."current-context")')
+  KUBECONFIG_CONTENT=$(cat "$KUBECONFIG" | yq 'del(."current-context")' --yaml-output)
 
   if [ -z "$KUBECONFIG_CONTENT" ]; then
       echo "Error: Failed to process kubeconfig or result is empty"
