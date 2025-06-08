@@ -553,8 +553,8 @@ else
     echo "You may need to run it manually if required"
 fi
 
-# Clean up temporary file
-rm -f "$TEMP_KUBECONFIG"
+# # Clean up temporary file
+# rm -f "$TEMP_KUBECONFIG"
 
 echo ""
 echo "Script completed successfully!"
