@@ -24,7 +24,7 @@ in
     file = ../../../secrets/rke-config-${machine-config.k8s.clusterName}.age;
     path = "etc/rancher/rke2/config.yaml";
     symlink = false;
-    mode = "444";
+    mode = "700";
   };
 
   networking.firewall = {
@@ -42,4 +42,18 @@ in
     enable = true;
     cni = "calico";
   } // rke-config;
+
+  # This is needed so the primary account can read rke2.yaml, and we can retrieve the config
+  system.activationScripts.rke-permissions = {
+    text = ''
+    chmod 740 /etc/rancher/rke2/rke2.yaml
+    chgrp rke-config-reader /etc/rancher/rke2/rke2.yaml
+    '';
+  };
+
+  users.users."${machine-config.username}" = {
+    extraGroups = [
+      "rke-config-reader"
+    ];
+  };
 }
