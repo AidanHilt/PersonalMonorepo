@@ -46,15 +46,8 @@ in
   # This is needed so the primary account can read rke2.yaml, and we can retrieve the config
   system.activationScripts.rke-permissions = {
     text = ''
-    groupadd rke-config-reader
-    chmod 640 /etc/rancher/rke2/rke2.yaml
-    chgrp rke-config-reader /etc/rancher/rke2/rke2.yaml
+    cp /etc/rancher/rke2/rke2.yaml /home/${machine-config.username}/.kube/rke2-kubeconfig.yaml
+    chown aidan /etc/rancher/rke2/rke2.yaml
     '';
-  };
-
-  users.users."${machine-config.username}" = {
-    extraGroups = [
-      "rke-config-reader"
-    ];
   };
 }
