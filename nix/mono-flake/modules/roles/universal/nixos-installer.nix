@@ -396,7 +396,170 @@ echo "Script completed successfully!"
 '';
 
 kubeconfig-retrieval-script = pkgs.writeShellScriptBin "nixos-kubernetes-access-retrieval" ''
-exit 1
+#!/bin/bash
+
+set -e
+
+# Function to display usage
+usage() {
+    echo "Usage: $0 <ssh-connection-string> [--cluster-name <name>] [--overwrite-ip <ip>]"
+    echo "  ssh-connection-string: user@host format"
+    echo "  --cluster-name: optional cluster name (will prompt if not provided)"
+    echo "  --overwrite-ip: optional IP to replace 127.0.0.1 (uses SSH host IP if not provided)"
+    echo ""
+    echo "Examples:"
+    echo "  $0 root@192.168.1.100"
+    echo "  $0 root@192.168.1.100 --cluster-name my-cluster"
+    echo "  $0 root@192.168.1.100 --cluster-name prod-cluster --overwrite-ip 10.0.0.100"
+    echo "  $0 root@192.168.1.100 --overwrite-ip 10.0.0.100"
+    exit 1
+}
+
+# Check if required tools are available
+for cmd in ssh sed kubecm; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "Error: $cmd is not installed or not in PATH"
+        exit 1
+    fi
+done
+
+# Parse arguments
+SSH_CONNECTION=""
+CLUSTER_NAME=""
+OVERWRITE_IP=""
+
+# First argument must be SSH connection string
+if [ $# -lt 1 ]; then
+    usage
+fi
+
+SSH_CONNECTION="$1"
+shift
+
+# Parse optional arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --cluster-name)
+            if [ -n "$2" ] && [[ $2 != --* ]]; then
+                CLUSTER_NAME="$2"
+                shift 2
+            else
+                echo "Error: --cluster-name requires a value"
+                usage
+            fi
+            ;;
+        --overwrite-ip)
+            if [ -n "$2" ] && [[ $2 != --* ]]; then
+                OVERWRITE_IP="$2"
+                shift 2
+            else
+                echo "Error: --overwrite-ip requires a value"
+                usage
+            fi
+            ;;
+        *)
+            echo "Error: Unknown option $1"
+            usage
+            ;;
+    esac
+done
+
+# Validate SSH connection string format
+if [[ ! "$SSH_CONNECTION" =~ .+@.+ ]]; then
+    echo "Error: Invalid SSH connection string format. Expected: user@host"
+    usage
+fi
+
+# Extract IP from SSH connection string
+SSH_HOST_IP=$(echo "$SSH_CONNECTION" | sed 's/.*@//')
+
+echo "SSH Connection: $SSH_CONNECTION"
+echo "SSH Host IP: $SSH_HOST_IP"
+
+# Step 1: Check for RKE2 kubeconfig on remote host
+echo "Step 1: Checking for RKE2 kubeconfig on remote host..."
+
+RKE2_CONFIG_PATH="/etc/rancher/rke2/rke2.yaml"
+if ! ssh "$SSH_CONNECTION" "test -f $RKE2_CONFIG_PATH" 2>/dev/null; then
+    echo "Error: RKE2 kubeconfig file does not exist at $RKE2_CONFIG_PATH on remote host"
+    exit 1
+fi
+
+echo "Found RKE2 kubeconfig, retrieving..."
+KUBECONFIG_CONTENT=$(ssh "$SSH_CONNECTION" "cat $RKE2_CONFIG_PATH" 2>/dev/null)
+
+if [ -z "$KUBECONFIG_CONTENT" ]; then
+    echo "Error: Failed to retrieve kubeconfig content or file is empty"
+    exit 1
+fi
+
+echo "Successfully retrieved kubeconfig content"
+
+# Step 2: Get cluster name if not provided
+if [ -z "$CLUSTER_NAME" ]; then
+    echo ""
+    read -p "Please enter the cluster name: " CLUSTER_NAME
+    if [ -z "$CLUSTER_NAME" ]; then
+        echo "Error: Cluster name cannot be empty"
+        exit 1
+    fi
+fi
+
+echo "Using cluster name: $CLUSTER_NAME"
+
+# Step 3: Replace all occurrences of "default" with cluster name
+echo "Step 3: Replacing 'default' with '$CLUSTER_NAME'..."
+KUBECONFIG_CONTENT=$(echo "$KUBECONFIG_CONTENT" | sed "s/default/$CLUSTER_NAME/g")
+
+# Step 4: Replace 127.0.0.1 with appropriate IP
+REPLACEMENT_IP="$SSH_HOST_IP"
+if [ -n "$OVERWRITE_IP" ]; then
+    REPLACEMENT_IP="$OVERWRITE_IP"
+    echo "Step 4: Replacing 127.0.0.1 with overwrite IP: $REPLACEMENT_IP"
+else
+    echo "Step 4: Replacing 127.0.0.1 with SSH host IP: $REPLACEMENT_IP"
+fi
+
+KUBECONFIG_CONTENT=$(echo "$KUBECONFIG_CONTENT" | sed "s/127\.0\.0\.1/$REPLACEMENT_IP/g")
+
+# Step 5: Output edited YAML to file
+TEMP_KUBECONFIG="/tmp/rke2-kubeconfig-''${CLUSTER_NAME}.yaml"
+echo "$KUBECONFIG_CONTENT" > "$TEMP_KUBECONFIG"
+
+echo "Step 5: Saved edited kubeconfig to: $TEMP_KUBECONFIG"
+
+# Step 6: Use kubecm to add the kubeconfig
+echo "Step 6: Adding kubeconfig to primary kubeconfig using kubecm..."
+
+if ! kubecm add -f "$TEMP_KUBECONFIG" --context-name "$CLUSTER_NAME"; then
+    echo "Error: Failed to add kubeconfig using kubecm"
+    echo "Temporary kubeconfig saved at: $TEMP_KUBECONFIG"
+    exit 1
+fi
+
+echo "Successfully added kubeconfig context: $CLUSTER_NAME"
+
+# Step 7: Call update-kubeconfig script
+echo "Step 7: Running update-kubeconfig script..."
+
+if command -v update-kubeconfig >/dev/null 2>&1; then
+    if ! update-kubeconfig; then
+        echo "Warning: update-kubeconfig script failed, but kubeconfig was still added"
+    else
+        echo "Successfully ran update-kubeconfig"
+    fi
+else
+    echo "Warning: update-kubeconfig script not found in PATH"
+    echo "You may need to run it manually if required"
+fi
+
+# Clean up temporary file
+rm -f "$TEMP_KUBECONFIG"
+
+echo ""
+echo "Script completed successfully!"
+echo "Cluster '$CLUSTER_NAME' has been added to your kubeconfig"
+echo "You can now use: kubectl config use-context $CLUSTER_NAME"
 '';
 
 in
@@ -407,5 +570,6 @@ in
   environment.systemPackages = [
     installer-script
     ssh-key-retrieval-script
+    kubeconfig-retrieval-script
   ];
 }
