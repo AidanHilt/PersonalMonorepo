@@ -47,7 +47,7 @@ in
   system.activationScripts.rke-permissions = {
     text = ''
     cp /etc/rancher/rke2/rke2.yaml /home/${machine-config.username}/.kube/rke2-kubeconfig.yaml
-    chown aidan /etc/rancher/rke2/rke2.yaml
+    chown aidan /home/${machine-config.username}/.kube/rke2-kubeconfig.yaml
     '';
   };
 }
