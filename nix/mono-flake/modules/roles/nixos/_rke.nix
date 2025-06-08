@@ -46,7 +46,8 @@ in
   # This is needed so the primary account can read rke2.yaml, and we can retrieve the config
   system.activationScripts.rke-permissions = {
     text = ''
-    chmod 740 /etc/rancher/rke2/rke2.yaml
+    groupadd rke-config-reader
+    chmod 640 /etc/rancher/rke2/rke2.yaml
     chgrp rke-config-reader /etc/rancher/rke2/rke2.yaml
     '';
   };
