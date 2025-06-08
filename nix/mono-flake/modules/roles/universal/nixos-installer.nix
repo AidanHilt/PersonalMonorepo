@@ -479,7 +479,7 @@ echo "SSH Host IP: $SSH_HOST_IP"
 # Step 1: Check for RKE2 kubeconfig on remote host
 echo "Step 1: Checking for RKE2 kubeconfig on remote host..."
 
-RKE2_CONFIG_PATH="/etc/rancher/rke2/rke2.yaml"
+RKE2_CONFIG_PATH="~/.kube/rke2-kubeconfig.yaml"
 if ! ssh "$SSH_CONNECTION" "test -f $RKE2_CONFIG_PATH" 2>/dev/null; then
     echo "Error: RKE2 kubeconfig file does not exist at $RKE2_CONFIG_PATH on remote host"
     exit 1
