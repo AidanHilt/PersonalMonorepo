@@ -395,7 +395,7 @@ fi
 echo "Script completed successfully!"
 '';
 
-kubeconfig-retrieval-script = pkgs.writeShellScriptBin "nixos-kubernetes-access-retrieval" ''
+kubeconfig-retrieval-script = pkgs.writeShellScriptBin "nixos-kubeconfig-retrieval" ''
 #!/bin/bash
 
 set -e
