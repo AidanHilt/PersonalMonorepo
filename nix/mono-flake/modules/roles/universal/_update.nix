@@ -111,7 +111,7 @@ let
       UPDATE__FLAKE_LOCATION="''${before_question}''${UPDATE__REMOTE_BRANCH}''${after_question}"
     else
       # No "?" found, append branch to the end
-      UPDATE__FLAKE_LOCATION="''${UPDATE__REMOTE_URL}/''${UPDATE__REMOTE_BRANCH}"
+      UPDATE__FLAKE_LOCATION="''${UPDATE__REMOTE_URL}''${UPDATE__REMOTE_BRANCH}"
     fi
   fi
 
