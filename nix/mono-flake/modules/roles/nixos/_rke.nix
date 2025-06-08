@@ -3,12 +3,11 @@
 let
   rke-config = if machine-config.k8s.primaryNode then
     {
-      serverAddr = "https://${machine-config.k8s.clusterEndpoint}:9345";
+      role = "server";
     }
-
   else
     {
-      role = "server";
+      serverAddr = "https://${machine-config.k8s.clusterEndpoint}:9345";
     };
 in
 
@@ -28,7 +27,7 @@ in
     mode = "444";
   };
 
-  networking.firewall = {
+  networking.joufirewall = {
     # See https://docs.rke2.io/install/requirements#inbound-network-rules for details
     allowedTCPPorts = [ 6443 6444 9345 10250 2379 2380 2381 9099 5473 ];
     allowedTCPPortRanges = [
