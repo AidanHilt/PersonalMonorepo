@@ -3,7 +3,6 @@
 let
   rke-config = if machine-config.k8s.primaryNode then
     {
-      tokenFile = "/var/lib/rancher/rke2/server/token";
       serverAddr = "https://${machine-config.k8s.clusterEndpoint}:9345";
     }
 
@@ -23,8 +22,8 @@ in
   ];
 
   age.secrets.rke-token = {
-    file = ../../../secrets/rke-token-${machine-config.k8s.clusterName}.age;
-    path = "/var/lib/rancher/rke2/server/token";
+    file = ../../../secrets/rke-config-${machine-config.k8s.clusterName}.age;
+    path = "/etc/default/rke2";
     symlink = false;
     mode = "444";
   };

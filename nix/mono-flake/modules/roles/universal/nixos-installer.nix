@@ -269,7 +269,7 @@ done
 nixos-key-retrieval $SELECTED_MACHINE $ip_address
 '';
 
-secret-retrieval-script = pkgs.writeShellScriptBin "nixos-key-retrieval" ''
+ssh-key-retrieval-script = pkgs.writeShellScriptBin "nixos-key-retrieval" ''
 #!/bin/bash
 
 set -e
@@ -395,11 +395,17 @@ fi
 echo "Script completed successfully!"
 '';
 
+kubeconfig-retrieval-script = pkgs.writeShellScriptBin "nixos-kubernetes-access-retrieval" ''
+exit 1
+'';
+
 in
 
 {
+  imports = [ ./_kubernetes-admin.nix ];
+
   environment.systemPackages = [
     installer-script
-    secret-retrieval-script
+    ssh-key-retrieval-script
   ];
 }
