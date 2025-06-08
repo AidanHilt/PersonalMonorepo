@@ -9,7 +9,7 @@
   age.secrets.kubeconfig = {
     file = ../../secrets/kubeconfig.age;
     path = "${config.home.homeDirectory}/.kube/config";
-    mode = "700";
+    mode = "600";
     symlink = false;
   };
 
