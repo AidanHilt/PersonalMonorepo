@@ -37,7 +37,5 @@ in
 
   "adguardhome.age".publicKeys = user-machines ++ mac-cluster-machines;
 
-  "rke-config-staging-cluster.age".publicKeys = user-machines ++ mac-cluster-machines;
-
-  #"rke-config-laptop-cluster.age".publicKeys = user-machines ++ mac-cluster-machines;
+  "rke-config-laptop-cluster.age".publicKeys = user-machines ++ mac-cluster-machines;
 }
