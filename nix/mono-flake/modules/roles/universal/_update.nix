@@ -58,9 +58,9 @@ let
 
     if [[ "$source_type" == "remote" ]]; then
         # For remote source, get repository and branch
-        echo -n "Remote repository (default: github:AidanHilt/PersonalMonorepo): "
+        echo -n "Remote repository (default: github:AidanHilt/PersonalMonorepo?dir=nix/mono-flake): "
         read remote_repo
-        UPDATE__REMOTE_URL="''${remote_repo:-github:AidanHilt/PersonalMonorepo}"
+        UPDATE__REMOTE_URL="''${remote_repo:-github:AidanHilt/PersonalMonorepo?dir=nix/mono-flake}"
 
         echo -n "Branch to use (default: master): "
         read branch_name
