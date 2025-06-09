@@ -271,17 +271,18 @@ nixos-key-retrieval $SELECTED_MACHINE $ip_address
 read -p "Is this the first machine of the cluster? (yes/no): " response
 
 case "$response" in
-    [Yy]|[Yy][Ee][Ss])
-        echo "Running nixos-kubeconfig-retrieval..."
-        nixos-kubeconfig-retrieval
-        ;;
-    [Nn]|[Nn][Oo])
-        echo "Skipping kubeconfig retrieval for non-first machine."
-        ;;
-    *)
-        echo "Please answer yes or no."
-        exit 1
-        ;;
+  [Yy]|[Yy][Ee][Ss])
+    echo "Running nixos-kubeconfig-retrieval..."
+    nixos-kubeconfig-retrieval
+    ;;
+  [Nn]|[Nn][Oo])
+    echo "Skipping kubeconfig retrieval for non-first machine."
+    ;;
+  *)
+    echo "Please answer yes or no."
+    exit 1
+    ;;
+esac
 '';
 
 ssh-key-retrieval-script = pkgs.writeShellScriptBin "nixos-key-retrieval" ''
