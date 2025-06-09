@@ -93,7 +93,7 @@ let
   echo "Step 1: Extracting kubeconfig and stripping current-context..."
 
   # Step 1: Cat kubeconfig, strip current-context, store the value
-  KUBECONFIG_CONTENT=$(cat "$KUBECONFIG" | yq 'del(."current-context")' --yaml-output)
+  KUBECONFIG_CONTENT=$(cat "$KUBECONFIG")
 
   if [ -z "$KUBECONFIG_CONTENT" ]; then
       echo "Error: Failed to process kubeconfig or result is empty"
@@ -139,7 +139,12 @@ let
       exit 1
   fi
 
-  echo "Script completed successfully!"
+  update
+'';
+
+sync-kubeconfig = pkgs.writeShellScriptBin "sync-kubeconfig" ''
+  cp ${age.secrets.kubeconfig} $KUBECONFIG
+  chmod 600 $KUBECONFIG
 '';
 
 in
@@ -162,4 +167,18 @@ in
     cluster-teardown
     update-kubeconfig
   ];
+
+  age.secrets.kubeconfig = {
+    file = ../../../secrets/kubeconfig.age;
+    mode = "400";
+  };
+
+  #TODO If this breaks on Linux, you need to figure out what the NixOS equivalent of this is, and then implement platform-specific logic
+  system.activationScripts = {
+    postUserActivation = {
+      text = ''
+        sync-kubeconfig
+      '';
+    };
+  };
 }
