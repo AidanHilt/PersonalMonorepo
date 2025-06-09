@@ -30,16 +30,12 @@ else
   exit 1
 fi
 
-echo "Found machine at: $MACHINE_PATH"
-
 # Step 2: Check for values.nix file
 VALUES_FILE="$MACHINE_PATH/values.nix"
 if [ ! -f "$VALUES_FILE" ]; then
   echo "Error: values.nix file not found at $VALUES_FILE"
   exit 1
 fi
-
-echo "Found values.nix file"
 
 # Step 3: Extract username from values.nix
 # Look for patterns like: username = "value"; or username="value";
@@ -51,7 +47,7 @@ if [ -z "$USERNAME" ]; then
   exit 1
 fi
 
-echo "Found username: $USERNAME"
+echo "$USERNAME"
 '';
 
 in
