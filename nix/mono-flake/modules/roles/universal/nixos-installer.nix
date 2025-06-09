@@ -267,7 +267,7 @@ while true; do
 done
 
 nixos-key-retrieval $SELECTED_MACHINE $ip_address
-USERNAME=(get-username-from-machine-name "$MACHINE_NAME")
+USERNAME=$(get-username-from-machine-name "$MACHINE_NAME")
 
 read -p "Is this the first machine of the cluster? (yes/no): " response
 
