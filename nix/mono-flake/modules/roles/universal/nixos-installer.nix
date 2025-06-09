@@ -267,6 +267,21 @@ while true; do
 done
 
 nixos-key-retrieval $SELECTED_MACHINE $ip_address
+
+read -p "Is this the first machine of the cluster? (yes/no): " response
+
+case "$response" in
+    [Yy]|[Yy][Ee][Ss])
+        echo "Running nixos-kubeconfig-retrieval..."
+        nixos-kubeconfig-retrieval
+        ;;
+    [Nn]|[Nn][Oo])
+        echo "Skipping kubeconfig retrieval for non-first machine."
+        ;;
+    *)
+        echo "Please answer yes or no."
+        exit 1
+        ;;
 '';
 
 ssh-key-retrieval-script = pkgs.writeShellScriptBin "nixos-key-retrieval" ''
@@ -283,48 +298,7 @@ fi
 MACHINE_NAME="$1"
 IP_ADDRESS="$2"
 
-# Check if PERSONAL_MONOREPO_LOCATION is set
-if [ -z "$PERSONAL_MONOREPO_LOCATION" ]; then
-  echo "Error: PERSONAL_MONOREPO_LOCATION environment variable is not set"
-  exit 1
-fi
-
-MONO_FLAKE_PATH="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake"
-MACHINES_PATH="$MONO_FLAKE_PATH/machines"
-
-# Step 1: Check for machine folder in both architectures
-MACHINE_PATH=""
-if [ -d "$MACHINES_PATH/aarch64-linux/$MACHINE_NAME" ]; then
-  MACHINE_PATH="$MACHINES_PATH/aarch64-linux/$MACHINE_NAME"
-elif [ -d "$MACHINES_PATH/x86_64-linux/$MACHINE_NAME" ]; then
-  MACHINE_PATH="$MACHINES_PATH/x86_64-linux/$MACHINE_NAME"
-else
-  echo "Error: Machine folder '$MACHINE_NAME' not found in aarch64-linux or x86_64-linux"
-  exit 1
-fi
-
-echo "Found machine at: $MACHINE_PATH"
-
-# Step 2: Check for values.nix file
-VALUES_FILE="$MACHINE_PATH/values.nix"
-if [ ! -f "$VALUES_FILE" ]; then
-  echo "Error: values.nix file not found at $VALUES_FILE"
-  exit 1
-fi
-
-echo "Found values.nix file"
-
-# Step 3: Extract username from values.nix
-# Look for patterns like: username = "value"; or username="value";
-USERNAME=$(grep -E '^\s*username\s*=\s*"[^"]*"' "$VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1)
-
-if [ -z "$USERNAME" ]; then
-  echo "Error: Could not find username in $VALUES_FILE"
-  echo "Looking for pattern: username = \"value\";"
-  exit 1
-fi
-
-echo "Found username: $USERNAME"
+USERNAME=(get-username-from-machine-name "$MACHINE_NAME")
 
 # Step 4: SSH and get public key
 echo "Connecting to $USERNAME@$IP_ADDRESS to retrieve SSH public key..."
@@ -402,8 +376,9 @@ set -e
 
 # Function to display usage
 usage() {
-    echo "Usage: $0 <ssh-connection-string> [--cluster-name <name>] [--overwrite-ip <ip>]"
-    echo "  ssh-connection-string: user@host format"
+    echo "Usage: $0 <username> <ip-address> [--cluster-name <name>] [--overwrite-ip <ip>]"
+    echo "  username: The username to use for SSH"
+    echo "  ip-address: The IP address to use for SSH"
     echo "  --cluster-name: optional cluster name (will prompt if not provided)"
     echo "  --overwrite-ip: optional IP to replace 127.0.0.1 (uses SSH host IP if not provided)"
     echo ""
@@ -429,11 +404,12 @@ CLUSTER_NAME=""
 OVERWRITE_IP=""
 
 # First argument must be SSH connection string
-if [ $# -lt 1 ]; then
+if [ $# -lt 2 ]; then
     usage
 fi
 
-SSH_CONNECTION="$1"
+USERNAME="$1"
+IP_ADDRESS="$2"
 shift
 
 # Parse optional arguments
@@ -464,29 +440,17 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate SSH connection string format
-if [[ ! "$SSH_CONNECTION" =~ .+@.+ ]]; then
-    echo "Error: Invalid SSH connection string format. Expected: user@host"
-    usage
-fi
-
-# Extract IP from SSH connection string
-SSH_HOST_IP=$(echo "$SSH_CONNECTION" | sed 's/.*@//')
-
-echo "SSH Connection: $SSH_CONNECTION"
-echo "SSH Host IP: $SSH_HOST_IP"
-
 # Step 1: Check for RKE2 kubeconfig on remote host
 echo "Step 1: Checking for RKE2 kubeconfig on remote host..."
 
 RKE2_CONFIG_PATH="~/.kube/rke2-kubeconfig.yaml"
-if ! ssh "$SSH_CONNECTION" "test -f $RKE2_CONFIG_PATH" 2>/dev/null; then
+if ! ssh ß"$USERNAME@$IP_ADDRESS" "test -f $RKE2_CONFIG_PATH" 2>/dev/null; then
     echo "Error: RKE2 kubeconfig file does not exist at $RKE2_CONFIG_PATH on remote host"
     exit 1
 fi
 
 echo "Found RKE2 kubeconfig, retrieving..."
-KUBECONFIG_CONTENT=$(ssh "$SSH_CONNECTION" "cat $RKE2_CONFIG_PATH" 2>/dev/null)
+KUBECONFIG_CONTENT=$(ssh "$USERNAME@$IP_ADDRESS" "cat $RKE2_CONFIG_PATH" 2>/dev/null)
 
 if [ -z "$KUBECONFIG_CONTENT" ]; then
     echo "Error: Failed to retrieve kubeconfig content or file is empty"
@@ -565,7 +529,10 @@ echo "You can now use: kubectl config use-context $CLUSTER_NAME"
 in
 
 {
-  imports = [ ./_kubernetes-admin.nix ];
+  imports = [
+    ./_kubernetes-admin.nix
+    ./_shell-script-lib.nix
+  ];
 
   environment.systemPackages = [
     installer-script
