@@ -173,6 +173,7 @@ in
   age.secrets.kubeconfig = {
     file = ../../../secrets/kubeconfig.age;
     mode = "400";
+    owner = "${machine-config.username}";
   };
 
   #TODO If this breaks on Linux, you need to figure out what the NixOS equivalent of this is, and then implement platform-specific logic
