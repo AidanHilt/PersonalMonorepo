@@ -447,7 +447,7 @@ done
 echo "Step 1: Checking for RKE2 kubeconfig on remote host..."
 
 RKE2_CONFIG_PATH="~/.kube/rke2-kubeconfig.yaml"
-if ! ssh ß"$USERNAME@$IP_ADDRESS" "test -f $RKE2_CONFIG_PATH" 2>/dev/null; then
+if ! ssh "$USERNAME@$IP_ADDRESS" "test -f $RKE2_CONFIG_PATH" 2>/dev/null; then
     echo "Error: RKE2 kubeconfig file does not exist at $RKE2_CONFIG_PATH on remote host"
     exit 1
 fi
