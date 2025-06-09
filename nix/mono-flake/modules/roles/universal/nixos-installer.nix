@@ -337,7 +337,7 @@ else
 fi
 
 # Step 7: Open secrets.nix
-SECRETS_FILE="$MONO_FLAKE_PATH/secrets/secrets.nix"
+SECRETS_FILE="$PERSONAL_MONOREPO_PATH/nix/mono-flake/secrets/secrets.nix"
 echo "Opening $SECRETS_FILE..."
 
 # Try different editors based on what's available and environment
