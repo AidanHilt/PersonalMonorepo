@@ -8,6 +8,8 @@ if [ $# -ne 1 ]; then
   exit 1
 fi
 
+MACHINE_NAME="$1"
+
 # Check if PERSONAL_MONOREPO_LOCATION is set
 if [ -z "$PERSONAL_MONOREPO_LOCATION" ]; then
   echo "Error: PERSONAL_MONOREPO_LOCATION environment variable is not set"
