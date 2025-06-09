@@ -267,13 +267,14 @@ while true; do
 done
 
 nixos-key-retrieval $SELECTED_MACHINE $ip_address
+USERNAME=(get-username-from-machine-name "$MACHINE_NAME")
 
 read -p "Is this the first machine of the cluster? (yes/no): " response
 
 case "$response" in
   [Yy]|[Yy][Ee][Ss])
     echo "Running nixos-kubeconfig-retrieval..."
-    nixos-kubeconfig-retrieval
+    nixos-kubeconfig-retrieval $USERNAME $ip_address
     ;;
   [Nn]|[Nn][Oo])
     echo "Skipping kubeconfig retrieval for non-first machine."
@@ -287,7 +288,6 @@ esac
 
 ssh-key-retrieval-script = pkgs.writeShellScriptBin "nixos-key-retrieval" ''
 #!/bin/bash
-
 set -e
 
 # Check if required arguments are provided
