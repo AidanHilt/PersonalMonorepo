@@ -355,7 +355,7 @@ else
 fi
 
 # Step 8: Change to secrets directory and run agenix
-SECRETS_DIR="$MONO_FLAKE_PATH/secrets"
+SECRETS_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets"
 echo "Changing to $SECRETS_DIR and running agenix -e..."
 cd "$SECRETS_DIR"
 
