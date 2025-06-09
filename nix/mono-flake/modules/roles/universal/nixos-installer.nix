@@ -299,7 +299,7 @@ fi
 MACHINE_NAME="$1"
 IP_ADDRESS="$2"
 
-USERNAME=(get-username-from-machine-name "$MACHINE_NAME")
+USERNAME=$(get-username-from-machine-name "$MACHINE_NAME")
 
 # Step 4: SSH and get public key
 echo "Connecting to $USERNAME@$IP_ADDRESS to retrieve SSH public key..."
