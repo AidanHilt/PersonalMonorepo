@@ -142,11 +142,6 @@ let
   update
 '';
 
-sync-kubeconfig = pkgs.writeShellScriptBin "sync-kubeconfig" ''
-  cp ${age.secrets.kubeconfig} $KUBECONFIG
-  chmod 600 $KUBECONFIG
-'';
-
 in
 
 {
@@ -166,6 +161,12 @@ in
     cluster-setup
     cluster-teardown
     update-kubeconfig
+
+    # REASON We need to access config, which is not available in the let statement
+    (pkgs.writeShellScriptBin "sync-kubeconfig" ''
+      cp ${config.age.secrets.kubeconfig} $KUBECONFIG
+      chmod 600 $KUBECONFIG
+    '')
   ];
 
   age.secrets.kubeconfig = {
