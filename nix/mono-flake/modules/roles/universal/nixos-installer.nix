@@ -361,6 +361,7 @@ cd "$SECRETS_DIR"
 
 if command -v agenix >/dev/null 2>&1; then
   agenix -r
+  nix-commit
 else
   echo "Error: agenix command not found in PATH"
   echo "Make sure agenix is installed and available"
@@ -384,10 +385,10 @@ usage() {
     echo "  --overwrite-ip: optional IP to replace 127.0.0.1 (uses SSH host IP if not provided)"
     echo ""
     echo "Examples:"
-    echo "  $0 root@192.168.1.100"
-    echo "  $0 root@192.168.1.100 --cluster-name my-cluster"
-    echo "  $0 root@192.168.1.100 --cluster-name prod-cluster --overwrite-ip 10.0.0.100"
-    echo "  $0 root@192.168.1.100 --overwrite-ip 10.0.0.100"
+    echo "  $0 root 192.168.1.100"
+    echo "  $0 root 192.168.1.100 --cluster-name my-cluster"
+    echo "  $0 root 192.168.1.100 --cluster-name prod-cluster --overwrite-ip 10.0.0.100"
+    echo "  $0 root 192.168.1.100 --overwrite-ip 10.0.0.100"
     exit 1
 }
 
@@ -411,6 +412,7 @@ fi
 
 USERNAME="$1"
 IP_ADDRESS="$2"
+shift
 shift
 
 # Parse optional arguments
