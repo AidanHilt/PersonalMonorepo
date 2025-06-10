@@ -96,151 +96,151 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Check if PERSONAL_MONOREPO_LOCATION is set
-if [[ -z "''${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
-  print_error "PERSONAL_MONOREPO_LOCATION environment variable is not set"
-  print_info "Please set this variable to point to your personal monorepo location"
-  exit 1
-fi
+# # Check if PERSONAL_MONOREPO_LOCATION is set
+# if [[ -z "''${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
+#   print_error "PERSONAL_MONOREPO_LOCATION environment variable is not set"
+#   print_info "Please set this variable to point to your personal monorepo location"
+#   exit 1
+# fi
 
-print_info "Using monorepo location: $PERSONAL_MONOREPO_LOCATION"
+# print_info "Using monorepo location: $PERSONAL_MONOREPO_LOCATION"
 
-# Check if mono-flake directory exists
-FLAKE_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake"
-if [[ ! -d "$FLAKE_DIR" ]]; then
-  print_error "Directory $FLAKE_DIR does not exist"
-  print_info "Please ensure your mono-flake is located at the expected path"
-  exit 1
-fi
+# # Check if mono-flake directory exists
+# FLAKE_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake"
+# if [[ ! -d "$FLAKE_DIR" ]]; then
+#   print_error "Directory $FLAKE_DIR does not exist"
+#   print_info "Please ensure your mono-flake is located at the expected path"
+#   exit 1
+# fi
 
-print_success "Found mono-flake directory"
+# print_success "Found mono-flake directory"
 
-if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
-  # Collect machine names from both architectures
-  MACHINES_DIR="$FLAKE_DIR/machines"
-  MACHINE_NAMES=()
+# if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
+#   # Collect machine names from both architectures
+#   MACHINES_DIR="$FLAKE_DIR/machines"
+#   MACHINE_NAMES=()
 
-  # Check aarch64-linux machines
-  AARCH64_DIR="$MACHINES_DIR/aarch64-linux"
-  if [[ -d "$AARCH64_DIR" ]]; then
-    for dir in "$AARCH64_DIR"/*/; do
-      if [[ -d "$dir" ]]; then
-        MACHINE_NAMES+=($(basename "$dir"))
-      fi
-    done
-  fi
+#   # Check aarch64-linux machines
+#   AARCH64_DIR="$MACHINES_DIR/aarch64-linux"
+#   if [[ -d "$AARCH64_DIR" ]]; then
+#     for dir in "$AARCH64_DIR"/*/; do
+#       if [[ -d "$dir" ]]; then
+#         MACHINE_NAMES+=($(basename "$dir"))
+#       fi
+#     done
+#   fi
 
-  # Check x86_64-linux machines
-  X86_64_DIR="$MACHINES_DIR/x86_64-linux"
-  if [[ -d "$X86_64_DIR" ]]; then
-    for dir in "$X86_64_DIR"/*/; do
-      if [[ -d "$dir" ]]; then
-        MACHINE_NAMES+=($(basename "$dir"))
-      fi
-    done
-  fi
+#   # Check x86_64-linux machines
+#   X86_64_DIR="$MACHINES_DIR/x86_64-linux"
+#   if [[ -d "$X86_64_DIR" ]]; then
+#     for dir in "$X86_64_DIR"/*/; do
+#       if [[ -d "$dir" ]]; then
+#         MACHINE_NAMES+=($(basename "$dir"))
+#       fi
+#     done
+#   fi
 
-  # Check if we found any machines
-  if [[ ''${#MACHINE_NAMES[@]} -eq 0 ]]; then
-    print_error "No machine configurations found in $MACHINES_DIR"
-    print_info "Please ensure you have machine configurations in aarch64-linux or x86_64-linux subdirectories"
-    exit 1
-  fi
+#   # Check if we found any machines
+#   if [[ ''${#MACHINE_NAMES[@]} -eq 0 ]]; then
+#     print_error "No machine configurations found in $MACHINES_DIR"
+#     print_info "Please ensure you have machine configurations in aarch64-linux or x86_64-linux subdirectories"
+#     exit 1
+#   fi
 
-  # Sort machine names alphabetically
-  IFS=$'\n' MACHINE_NAMES=($(sort <<<"''${MACHINE_NAMES[*]}"))
-  unset IFS
+#   # Sort machine names alphabetically
+#   IFS=$'\n' MACHINE_NAMES=($(sort <<<"''${MACHINE_NAMES[*]}"))
+#   unset IFS
 
-  print_success "Found ''${#MACHINE_NAMES[@]} machine configuration(s)"
+#   print_success "Found ''${#MACHINE_NAMES[@]} machine configuration(s)"
 
-  # Present numbered list to user
-  echo
-  print_info "Available machine configurations:"
-  for ((i=0; i<''${#MACHINE_NAMES[@]}; i++)); do
-    echo "  $((i+1))) ''${MACHINE_NAMES[$i]}"
-  done
+#   # Present numbered list to user
+#   echo
+#   print_info "Available machine configurations:"
+#   for ((i=0; i<''${#MACHINE_NAMES[@]}; i++)); do
+#     echo "  $((i+1))) ''${MACHINE_NAMES[$i]}"
+#   done
 
-  # Get user selection
-  echo
-  while true; do
-    echo -n "Select a machine configuration (1-''${#MACHINE_NAMES[@]}): "
-    read -r selection
+#   # Get user selection
+#   echo
+#   while true; do
+#     echo -n "Select a machine configuration (1-''${#MACHINE_NAMES[@]}): "
+#     read -r selection
 
-    # Validate selection
-    if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ''${#MACHINE_NAMES[@]} ]]; then
-      SELECTED_MACHINE="''${MACHINE_NAMES[$((selection-1))]}"
-      break
-    else
-      print_error "Invalid selection. Please enter a number between 1 and ''${#MACHINE_NAMES[@]}"
-    fi
-  done
+#     # Validate selection
+#     if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ''${#MACHINE_NAMES[@]} ]]; then
+#       SELECTED_MACHINE="''${MACHINE_NAMES[$((selection-1))]}"
+#       break
+#     else
+#       print_error "Invalid selection. Please enter a number between 1 and ''${#MACHINE_NAMES[@]}"
+#     fi
+#   done
 
-  print_success "Selected machine: $SELECTED_MACHINE"
-fi
+#   print_success "Selected machine: $SELECTED_MACHINE"
+# fi
 
-if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
-  # Get IP address from user
-  echo
-  while true; do
-    echo -n "Enter the IP address of the machine you are trying to install NixOS on: "
-    read -r ip_address
+# if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
+#   # Get IP address from user
+#   echo
+#   while true; do
+#     echo -n "Enter the IP address of the machine you are trying to install NixOS on: "
+#     read -r ip_address
 
-    # Basic IP validation (IPv4)
-    if [[ "$ip_address" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-      # Check each octet is valid (0-255)
-      valid=true
-      IFS='.' read -ra ADDR <<< "$ip_address"
-      for octet in "''${ADDR[@]}"; do
-        if [[ "$octet" -gt 255 ]]; then
-          valid=false
-          break
-        fi
-      done
+#     # Basic IP validation (IPv4)
+#     if [[ "$ip_address" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+#       # Check each octet is valid (0-255)
+#       valid=true
+#       IFS='.' read -ra ADDR <<< "$ip_address"
+#       for octet in "''${ADDR[@]}"; do
+#         if [[ "$octet" -gt 255 ]]; then
+#           valid=false
+#           break
+#         fi
+#       done
 
-      if $valid; then
-        break
-      fi
-    fi
+#       if $valid; then
+#         break
+#       fi
+#     fi
 
-    print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
-  done
+#     print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
+#   done
 
-  print_success "Target IP address: $ip_address"
-fi
+#   print_success "Target IP address: $ip_address"
+# fi
 
-# Confirm before running
-echo
-print_warning "About to run nixos-anywhere with the following configuration:"
-echo "  Machine: $SELECTED_MACHINE"
-echo "  Target: root@$ip_address"
-echo "  Flake: $FLAKE_DIR#$SELECTED_MACHINE"
-echo
+# # Confirm before running
+# echo
+# print_warning "About to run nixos-anywhere with the following configuration:"
+# echo "  Machine: $SELECTED_MACHINE"
+# echo "  Target: root@$ip_address"
+# echo "  Flake: $FLAKE_DIR#$SELECTED_MACHINE"
+# echo
 
-echo -n "Continue? (Y/n): "
-read -r confirm
+# echo -n "Continue? (Y/n): "
+# read -r confirm
 
-if [[ "$confirm" =~ ^[Nn]$ ]]; then
-  print_info "Operation cancelled by user"
-  exit 0
-fi
+# if [[ "$confirm" =~ ^[Nn]$ ]]; then
+#   print_info "Operation cancelled by user"
+#   exit 0
+# fi
 
-# Run nixos-anywhere
-print_info "Starting nixos-anywhere deployment..."
-echo
+# # Run nixos-anywhere
+# print_info "Starting nixos-anywhere deployment..."
+# echo
 
-if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
-  read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
-  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$ip_address" "''${CMD_ARRAY[*]}"
-else
-  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$ip_address"
-fi
+# if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
+#   read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
+#   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$ip_address" "''${CMD_ARRAY[*]}"
+# else
+#   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$ip_address"
+# fi
 
-if [[ $? -eq 0 ]]; then
-  print_success "nixos-anywhere deployment completed successfully!"
-else
-  print_error "nixos-anywhere deployment failed"
-  exit 1
-fi
+# if [[ $? -eq 0 ]]; then
+#   print_success "nixos-anywhere deployment completed successfully!"
+# else
+#   print_error "nixos-anywhere deployment failed"
+#   exit 1
+# fi
 
 # Get IP address from user
 echo
@@ -269,7 +269,7 @@ done
 USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
 nixos-key-retrieval $SELECTED_MACHINE $ip_address
-ssh -S "$USERNAME@$ip_address" "update"
+ssh -t "$USERNAME@$ip_address" "update"
 
 read -p "Is this the first machine of the cluster? (yes/no): " response
 
