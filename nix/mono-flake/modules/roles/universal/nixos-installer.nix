@@ -481,7 +481,7 @@ echo "Step 3: Replacing 'default' with '$CLUSTER_NAME'..."
 KUBECONFIG_CONTENT=$(echo "$KUBECONFIG_CONTENT" | sed "s/default/$CLUSTER_NAME/g")
 
 # Step 4: Replace 127.0.0.1 with appropriate IP
-REPLACEMENT_IP="$SSH_HOST_IP"
+REPLACEMENT_IP="$IP_ADDRESS"
 if [ "$OVERWRITE_IP" != "" ]; then
     REPLACEMENT_IP="$OVERWRITE_IP"
     echo "Step 4: Replacing 127.0.0.1 with overwrite IP: $REPLACEMENT_IP"
