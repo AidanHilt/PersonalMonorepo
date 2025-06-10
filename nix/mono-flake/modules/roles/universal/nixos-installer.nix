@@ -489,7 +489,8 @@ else
     echo "Step 4: Replacing 127.0.0.1 with SSH host IP: $REPLACEMENT_IP"
 fi
 
-KUBECONFIG_CONTENT=$(echo "$KUBECONFIG_CONTENT" | sed "s/127\.0\.0\.1/$REPLACEMENT_IP/g")
+ESCAPED_IP=$(printf '%s\n' "$REPLACEMENT_IP" | sed 's/[[\.*^$()+?{|]/\\&/g')
+KUBECONFIG_CONTENT=$(echo "$KUBECONFIG_CONTENT" | sed "s/127\.0\.0\.1/$ESCAPED_IP/g")
 
 # Step 5: Output edited YAML to file
 TEMP_KUBECONFIG="/tmp/rke2-kubeconfig-''${CLUSTER_NAME}.yaml"
