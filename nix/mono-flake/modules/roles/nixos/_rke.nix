@@ -41,6 +41,10 @@ in
   services.rke2 = {
     enable = true;
     cni = "calico";
+
+    extraFlags = [
+      "--config /etc/rancher/rke2/config.yaml"
+    ];
   } // rke-config;
 
   # This is needed so the primary account can read rke2.yaml, and we can retrieve the config
