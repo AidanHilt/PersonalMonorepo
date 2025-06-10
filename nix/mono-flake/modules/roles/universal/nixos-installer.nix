@@ -269,7 +269,7 @@ done
 USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
 nixos-key-retrieval $SELECTED_MACHINE $ip_address
-ssh "$USERNAME@$ip_address" "update"
+ssh -A "$USERNAME@$ip_address" "update"
 
 read -p "Is this the first machine of the cluster? (yes/no): " response
 
