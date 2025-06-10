@@ -489,8 +489,6 @@ else
     echo "Step 4: Replacing 127.0.0.1 with SSH host IP: $REPLACEMENT_IP"
 fi
 
-echo "$IP_ADDRESS"
-
 KUBECONFIG_CONTENT=$(echo "$KUBECONFIG_CONTENT" | sed "s/127\.0\.0\.1/$REPLACEMENT_IP/g")
 
 # Step 5: Output edited YAML to file
