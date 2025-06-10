@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, lib, system, ...}:
+{ inputs, globals, pkgs, lib, system, machine-config, ...}:
 
 {
   imports = [
@@ -10,6 +10,7 @@
     text = ''
       UPDATE__REMOTE_BRANCH="feat/rke-secret-management"
       UPDATE__FLAKE_LOCATION="github:AidanHilt/PersonalMonorepo/feat/rke-secret-management?dir=nix/mono-flake"
+      UPDATE__MACHINE_NAME="${machine-config.hostname}"
     '';
   };
 
