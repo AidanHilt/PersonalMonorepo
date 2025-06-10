@@ -43,7 +43,7 @@ in
     cni = "calico";
 
     extraFlags = [
-      "--config /etc/rancher/rke2/config.yaml"
+      "--config=/etc/rancher/rke2/config.yaml"
     ];
   } // rke-config;
 
