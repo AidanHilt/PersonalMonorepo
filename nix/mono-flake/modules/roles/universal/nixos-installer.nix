@@ -266,7 +266,7 @@ while true; do
   fi
 done
 
-USERNAME=$(get-username-from-machine-name "$MACHINE_NAME")
+USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
 nixos-key-retrieval $SELECTED_MACHINE $ip_address
 ssh "$USERNAME@$ip_address" "update"
