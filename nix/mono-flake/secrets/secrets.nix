@@ -17,7 +17,7 @@ let
 
   # A small test cluster we run on NixOS machines running as VMs on our MacBooks
   # Mac cluster configuration
-  macbook-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDVOcF+cieSl9bRjpqVGpQd8dwOdM3Wfwxx9kEJd2M8T root@macbook-cluster-1";
+  macbook-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAnrRQ+WzOhoe3u1SJ8060f1VZFofcwP9A5ONi8K2dxV root@macbook-cluster-1";
 
   mac-cluster-machines = [macbook-cluster-1-system];
 
