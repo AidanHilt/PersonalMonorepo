@@ -23,7 +23,7 @@
       "tor-browser"
       "orbstack"
       "postman"
-      #"utm"
+      "utm"
       "prismlauncher"
       "crystalfetch"
       "dupeguru"
