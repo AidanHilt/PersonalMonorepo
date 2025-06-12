@@ -139,6 +139,7 @@ let
       exit 1
   fi
 
+  nix-commit
   update
 '';
 
