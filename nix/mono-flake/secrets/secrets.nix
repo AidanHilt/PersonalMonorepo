@@ -10,7 +10,11 @@ let
   wsl-user = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEEAi2UjaWUsDVY6wUMMcIjDXzyizhax86Z0J2I6fYM0 nixos@nixos";
   wsl-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICbW6OhxPYPuJTZAgbpL3+PwHPNvdL2dw8+KqA1QeF47 root@nixos";
 
-  user-machines = [hyperion-user hyperion-system wsl-user wsl-system];
+  # Note: IF this is not blank, something is wrong. We need our bootstrap machines to be able to unkey everything, so the definition  should stay, but
+  # this should be cleared out by bootstrap scripts
+  nixos-bootstrap = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGqUeHB2s+7xtQUrlAqLvON2pdvoVHpBAKbpFJ+QxQ6F root@nixos-bootstrap";
+
+  user-machines = [hyperion-user hyperion-system wsl-user wsl-system nixos-bootstrap];
 
   # Our various server clusters
   # ===========================
