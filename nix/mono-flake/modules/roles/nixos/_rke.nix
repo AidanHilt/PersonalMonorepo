@@ -43,8 +43,8 @@ in
     cni = "calico";
 
     extraFlags = [
-      "--config /etc/rancher/rke2/config.yaml"
-      "--write-kubeconfig-mode 0644"
+      "--config=/etc/rancher/rke2/config.yaml"
+      "--write-kubeconfig-mode=0644"
     ];
   } // rke-config;
 
