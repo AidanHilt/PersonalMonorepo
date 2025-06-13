@@ -42,8 +42,6 @@ in
     enable = true;
     cni = "calico";
 
-    configPath = "/wrong/path";
-
     extraFlags = [
       "--write-kubeconfig-mode=0644"
     ];
