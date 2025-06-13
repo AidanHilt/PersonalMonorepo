@@ -269,7 +269,7 @@ done
 USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
 nixos-key-retrieval $SELECTED_MACHINE $ip_address
-ssh-keyscan $ip_address
+ssh-keygen -R $ip_address
 ssh -t "$USERNAME@$ip_address" "sudo systemctl stop rke2-server.service; sudo rke2 server --cluster-reset; update"
 
 read -p "Is this the first machine of the cluster? (yes/no): " response
