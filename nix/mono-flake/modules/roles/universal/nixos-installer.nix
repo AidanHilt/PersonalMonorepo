@@ -42,7 +42,7 @@ show_usage() {
   echo "  --nixos-anywhere-args ARGS  Arguments to pass through to nixos-anywhere"
   echo "  --machine-name NAME  Name of the machine to use. Must be present in the mono flake"
   echo "  --remote-ip IP  The IP address of the remote machine we want to install NixOS on"
-  echo "  --help      Show this help message"
+  echo "  --help            Show this help message"
   echo ""
   echo "Examples:"
   echo "  $0 --nixos-anywhere-args '--build-on-remote --debug'"
@@ -51,48 +51,48 @@ show_usage() {
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-  --nixos-anywhere-args)
-    if [[ $# -lt 2 ]]; then
-    print_error "--nixos-anywhere-args requires an argument"
-    exit 1
-    fi
-    NIXOS_ANYWHERE_ARGS="$2"
-    NIXOS_ANYWHERE_ARGS_PROVIDED=true
-    shift 2
-    ;;
-  --machine-name)
-    if [[ $# -lt 2 ]]; then
-    print_error "--machine-name requires an argument"
-    exit 1
-    fi
-    SELECTED_MACHINE="$2"
-    SELECTED_MACHINE_ARG_PROVIDED=true
-    shift 2
-    ;;
-  --remote-ip)
-    if [[ $# -lt 2 ]]; then
-    print_error "--remote-ip requires an argument"
-    exit 1
-    fi
-    ip_address="$2"
-    IP_ADDRESS_ARG_PROVIDED=true
-    shift 2
-    ;;
-  --help|-h)
-    show_usage
-    exit 0
-    ;;
-  -*)
-    print_error "Unknown option: $1"
-    print_info "Use --help to see available options"
-    exit 1
-    ;;
-  *)
-    print_error "Unexpected argument: $1"
-    print_info "Currently only --nixos-anywhere-args is supported"
-    print_info "Use --help to see usage information"
-    exit 1
-    ;;
+    --nixos-anywhere-args)
+      if [[ $# -lt 2 ]]; then
+        print_error "--nixos-anywhere-args requires an argument"
+        exit 1
+      fi
+      NIXOS_ANYWHERE_ARGS="$2"
+      NIXOS_ANYWHERE_ARGS_PROVIDED=true
+      shift 2
+      ;;
+    --machine-name)
+      if [[ $# -lt 2 ]]; then
+        print_error "--machine-name requires an argument"
+        exit 1
+      fi
+      SELECTED_MACHINE="$2"
+      SELECTED_MACHINE_ARG_PROVIDED=true
+      shift 2
+      ;;
+    --remote-ip)
+      if [[ $# -lt 2 ]]; then
+        print_error "--remote-ip requires an argument"
+        exit 1
+      fi
+      ip_address="$2"
+      IP_ADDRESS_ARG_PROVIDED=true
+      shift 2
+      ;;
+    --help|-h)
+      show_usage
+      exit 0
+      ;;
+    -*)
+      print_error "Unknown option: $1"
+      print_info "Use --help to see available options"
+      exit 1
+      ;;
+    *)
+      print_error "Unexpected argument: $1"
+      print_info "Currently only --nixos-anywhere-args is supported"
+      print_info "Use --help to see usage information"
+      exit 1
+      ;;
   esac
 done
 
@@ -123,28 +123,28 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   # Check aarch64-linux machines
   AARCH64_DIR="$MACHINES_DIR/aarch64-linux"
   if [[ -d "$AARCH64_DIR" ]]; then
-  for dir in "$AARCH64_DIR"/*/; do
-    if [[ -d "$dir" ]]; then
-    MACHINE_NAMES+=($(basename "$dir"))
-    fi
-  done
+    for dir in "$AARCH64_DIR"/*/; do
+      if [[ -d "$dir" ]]; then
+        MACHINE_NAMES+=($(basename "$dir"))
+      fi
+    done
   fi
 
   # Check x86_64-linux machines
   X86_64_DIR="$MACHINES_DIR/x86_64-linux"
   if [[ -d "$X86_64_DIR" ]]; then
-  for dir in "$X86_64_DIR"/*/; do
-    if [[ -d "$dir" ]]; then
-    MACHINE_NAMES+=($(basename "$dir"))
-    fi
-  done
+    for dir in "$X86_64_DIR"/*/; do
+      if [[ -d "$dir" ]]; then
+        MACHINE_NAMES+=($(basename "$dir"))
+      fi
+    done
   fi
 
   # Check if we found any machines
   if [[ ''${#MACHINE_NAMES[@]} -eq 0 ]]; then
-  print_error "No machine configurations found in $MACHINES_DIR"
-  print_info "Please ensure you have machine configurations in aarch64-linux or x86_64-linux subdirectories"
-  exit 1
+    print_error "No machine configurations found in $MACHINES_DIR"
+    print_info "Please ensure you have machine configurations in aarch64-linux or x86_64-linux subdirectories"
+    exit 1
   fi
 
   # Sort machine names alphabetically
@@ -157,22 +157,22 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   echo
   print_info "Available machine configurations:"
   for ((i=0; i<''${#MACHINE_NAMES[@]}; i++)); do
-  echo "  $((i+1))) ''${MACHINE_NAMES[$i]}"
+    echo "  $((i+1))) ''${MACHINE_NAMES[$i]}"
   done
 
   # Get user selection
   echo
   while true; do
-  echo -n "Select a machine configuration (1-''${#MACHINE_NAMES[@]}): "
-  read -r selection
+    echo -n "Select a machine configuration (1-''${#MACHINE_NAMES[@]}): "
+    read -r selection
 
-  # Validate selection
-  if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ''${#MACHINE_NAMES[@]} ]]; then
-    SELECTED_MACHINE="''${MACHINE_NAMES[$((selection-1))]}"
-    break
-  else
-    print_error "Invalid selection. Please enter a number between 1 and ''${#MACHINE_NAMES[@]}"
-  fi
+    # Validate selection
+    if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ''${#MACHINE_NAMES[@]} ]]; then
+      SELECTED_MACHINE="''${MACHINE_NAMES[$((selection-1))]}"
+      break
+    else
+      print_error "Invalid selection. Please enter a number between 1 and ''${#MACHINE_NAMES[@]}"
+    fi
   done
 
   print_success "Selected machine: $SELECTED_MACHINE"
@@ -182,27 +182,27 @@ if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
   # Get IP address from user
   echo
   while true; do
-  echo -n "Enter the IP address of the machine you are trying to install NixOS on: "
-  read -r ip_address
+    echo -n "Enter the IP address of the machine you are trying to install NixOS on: "
+    read -r ip_address
 
-  # Basic IP validation (IPv4)
-  if [[ "$ip_address" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-    # Check each octet is valid (0-255)
-    valid=true
-    IFS='.' read -ra ADDR <<< "$ip_address"
-    for octet in "''${ADDR[@]}"; do
-    if [[ "$octet" -gt 255 ]]; then
-      valid=false
-      break
+    # Basic IP validation (IPv4)
+    if [[ "$ip_address" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+      # Check each octet is valid (0-255)
+      valid=true
+      IFS='.' read -ra ADDR <<< "$ip_address"
+      for octet in "''${ADDR[@]}"; do
+        if [[ "$octet" -gt 255 ]]; then
+          valid=false
+          break
+        fi
+      done
+
+      if $valid; then
+        break
+      fi
     fi
-    done
 
-    if $valid; then
-    break
-    fi
-  fi
-
-  print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
+    print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
   done
 
   print_success "Target IP address: $ip_address"
@@ -250,19 +250,19 @@ while true; do
 
   # Basic IP validation (IPv4)
   if [[ "$ip_address" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-  # Check each octet is valid (0-255)
-  valid=true
-  IFS='.' read -ra ADDR <<< "$ip_address"
-  for octet in "''${ADDR[@]}"; do
-    if [[ "$octet" -gt 255 ]]; then
-    valid=false
-    break
-    fi
-  done
+    # Check each octet is valid (0-255)
+    valid=true
+    IFS='.' read -ra ADDR <<< "$ip_address"
+    for octet in "''${ADDR[@]}"; do
+      if [[ "$octet" -gt 255 ]]; then
+        valid=false
+        break
+      fi
+    done
 
-  if $valid; then
-    break
-  fi
+    if $valid; then
+      break
+    fi
   fi
 done
 
@@ -275,16 +275,16 @@ read -p "Is this the first machine of the cluster? (yes/no): " response
 
 case "$response" in
   [Yy]|[Yy][Ee][Ss])
-  echo "Running nixos-kubeconfig-retrieval..."
-  nixos-kubeconfig-retrieval $USERNAME $ip_address
-  ;;
+    echo "Running nixos-kubeconfig-retrieval..."
+    nixos-kubeconfig-retrieval $USERNAME $ip_address
+    ;;
   [Nn]|[Nn][Oo])
-  echo "Skipping kubeconfig retrieval for non-first machine."
-  ;;
+    echo "Skipping kubeconfig retrieval for non-first machine."
+    ;;
   *)
-  echo "Please answer yes or no."
-  exit 1
-  ;;
+    echo "Please answer yes or no."
+    exit 1
+    ;;
 esac
 '';
 
@@ -380,26 +380,26 @@ set -e
 
 # Function to display usage
 usage() {
-  echo "Usage: $0 <username> <ip-address> [--cluster-name <name>] [--overwrite-ip <ip>]"
-  echo "  username: The username to use for SSH"
-  echo "  ip-address: The IP address to use for SSH"
-  echo "  --cluster-name: optional cluster name (will prompt if not provided)"
-  echo "  --overwrite-ip: optional IP to replace 127.0.0.1 (uses SSH host IP if not provided)"
-  echo ""
-  echo "Examples:"
-  echo "  $0 root 192.168.1.100"
-  echo "  $0 root 192.168.1.100 --cluster-name my-cluster"
-  echo "  $0 root 192.168.1.100 --cluster-name prod-cluster --overwrite-ip 10.0.0.100"
-  echo "  $0 root 192.168.1.100 --overwrite-ip 10.0.0.100"
-  exit 1
+    echo "Usage: $0 <username> <ip-address> [--cluster-name <name>] [--overwrite-ip <ip>]"
+    echo "  username: The username to use for SSH"
+    echo "  ip-address: The IP address to use for SSH"
+    echo "  --cluster-name: optional cluster name (will prompt if not provided)"
+    echo "  --overwrite-ip: optional IP to replace 127.0.0.1 (uses SSH host IP if not provided)"
+    echo ""
+    echo "Examples:"
+    echo "  $0 root 192.168.1.100"
+    echo "  $0 root 192.168.1.100 --cluster-name my-cluster"
+    echo "  $0 root 192.168.1.100 --cluster-name prod-cluster --overwrite-ip 10.0.0.100"
+    echo "  $0 root 192.168.1.100 --overwrite-ip 10.0.0.100"
+    exit 1
 }
 
 # Check if required tools are available
 for cmd in ssh sed kubecm; do
-  if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "Error: $cmd is not installed or not in PATH"
-    exit 1
-  fi
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "Error: $cmd is not installed or not in PATH"
+        exit 1
+    fi
 done
 
 # Parse arguments
@@ -409,7 +409,7 @@ OVERWRITE_IP=""
 
 # First argument must be SSH connection string
 if [ $# -lt 2 ]; then
-  usage
+    usage
 fi
 
 USERNAME="$1"
@@ -419,30 +419,30 @@ shift
 
 # Parse optional arguments
 while [[ $# -gt 0 ]]; do
-  case $1 in
-    --cluster-name)
-      if [ -n "$2" ] && [[ $2 != --* ]]; then
-        CLUSTER_NAME="$2"
-        shift 2
-      else
-        echo "Error: --cluster-name requires a value"
-        usage
-      fi
-      ;;
-    --overwrite-ip)
-      if [ -n "$2" ] && [[ $2 != --* ]]; then
-        OVERWRITE_IP="$2"
-        shift 2
-      else
-        echo "Error: --overwrite-ip requires a value"
-        usage
-      fi
-      ;;
-    *)
-      echo "Error: Unknown option $1"
-      usage
-      ;;
-  esac
+    case $1 in
+        --cluster-name)
+            if [ -n "$2" ] && [[ $2 != --* ]]; then
+                CLUSTER_NAME="$2"
+                shift 2
+            else
+                echo "Error: --cluster-name requires a value"
+                usage
+            fi
+            ;;
+        --overwrite-ip)
+            if [ -n "$2" ] && [[ $2 != --* ]]; then
+                OVERWRITE_IP="$2"
+                shift 2
+            else
+                echo "Error: --overwrite-ip requires a value"
+                usage
+            fi
+            ;;
+        *)
+            echo "Error: Unknown option $1"
+            usage
+            ;;
+    esac
 done
 
 # Step 1: Check for RKE2 kubeconfig on remote host
@@ -450,28 +450,28 @@ echo "Step 1: Checking for RKE2 kubeconfig on remote host..."
 
 RKE2_CONFIG_PATH="~/.kube/rke2-kubeconfig.yaml"
 if ! ssh "$USERNAME@$IP_ADDRESS" "test -f $RKE2_CONFIG_PATH" 2>/dev/null; then
-  echo "Error: RKE2 kubeconfig file does not exist at $RKE2_CONFIG_PATH on remote host"
-  exit 1
+    echo "Error: RKE2 kubeconfig file does not exist at $RKE2_CONFIG_PATH on remote host"
+    exit 1
 fi
 
 echo "Found RKE2 kubeconfig, retrieving..."
 KUBECONFIG_CONTENT=$(ssh "$USERNAME@$IP_ADDRESS" "cat $RKE2_CONFIG_PATH" 2>/dev/null)
 
 if [ -z "$KUBECONFIG_CONTENT" ]; then
-  echo "Error: Failed to retrieve kubeconfig content or file is empty"
-  exit 1
+    echo "Error: Failed to retrieve kubeconfig content or file is empty"
+    exit 1
 fi
 
 echo "Successfully retrieved kubeconfig content"
 
 # Step 2: Get cluster name if not provided
 if [ -z "$CLUSTER_NAME" ]; then
-  echo ""
-  read -p "Please enter the cluster name: " CLUSTER_NAME
-  if [ -z "$CLUSTER_NAME" ]; then
-    echo "Error: Cluster name cannot be empty"
-    exit 1
-  fi
+    echo ""
+    read -p "Please enter the cluster name: " CLUSTER_NAME
+    if [ -z "$CLUSTER_NAME" ]; then
+        echo "Error: Cluster name cannot be empty"
+        exit 1
+    fi
 fi
 
 echo "Using cluster name: $CLUSTER_NAME"
@@ -483,10 +483,10 @@ KUBECONFIG_CONTENT=$(echo "$KUBECONFIG_CONTENT" | sed "s/default/$CLUSTER_NAME/g
 # Step 4: Replace 127.0.0.1 with appropriate IP
 REPLACEMENT_IP="$IP_ADDRESS"
 if [ "$OVERWRITE_IP" != "" ]; then
-  REPLACEMENT_IP="$OVERWRITE_IP"
-  echo "Step 4: Replacing 127.0.0.1 with overwrite IP: $REPLACEMENT_IP"
+    REPLACEMENT_IP="$OVERWRITE_IP"
+    echo "Step 4: Replacing 127.0.0.1 with overwrite IP: $REPLACEMENT_IP"
 else
-  echo "Step 4: Replacing 127.0.0.1 with SSH host IP: $REPLACEMENT_IP"
+    echo "Step 4: Replacing 127.0.0.1 with SSH host IP: $REPLACEMENT_IP"
 fi
 
 ESCAPED_IP=$(printf '%s\n' "$REPLACEMENT_IP" | sed 's/[[\.*^$()+?{|]/\\&/g')
@@ -502,9 +502,9 @@ echo "Step 5: Saved edited kubeconfig to: $TEMP_KUBECONFIG"
 echo "Step 6: Adding kubeconfig to primary kubeconfig using kubecm..."
 
 if ! kubecm add -f "$TEMP_KUBECONFIG" --context-name "$CLUSTER_NAME"; then
-  echo "Error: Failed to add kubeconfig using kubecm"
-  echo "Temporary kubeconfig saved at: $TEMP_KUBECONFIG"
-  exit 1
+    echo "Error: Failed to add kubeconfig using kubecm"
+    echo "Temporary kubeconfig saved at: $TEMP_KUBECONFIG"
+    exit 1
 fi
 
 echo "Successfully added kubeconfig context: $CLUSTER_NAME"
@@ -513,14 +513,14 @@ echo "Successfully added kubeconfig context: $CLUSTER_NAME"
 echo "Step 7: Running update-kubeconfig script..."
 
 if command -v update-kubeconfig >/dev/null 2>&1; then
-  if ! update-kubeconfig; then
-    echo "Warning: update-kubeconfig script failed, but kubeconfig was still added"
-  else
-    echo "Successfully ran update-kubeconfig"
-  fi
+    if ! update-kubeconfig; then
+        echo "Warning: update-kubeconfig script failed, but kubeconfig was still added"
+    else
+        echo "Successfully ran update-kubeconfig"
+    fi
 else
-  echo "Warning: update-kubeconfig script not found in PATH"
-  echo "You may need to run it manually if required"
+    echo "Warning: update-kubeconfig script not found in PATH"
+    echo "You may need to run it manually if required"
 fi
 
 # # Clean up temporary file
@@ -536,13 +536,13 @@ in
 
 {
   imports = [
-  ./_kubernetes-admin.nix
-  ./_shell-script-lib.nix
+    ./_kubernetes-admin.nix
+    ./_shell-script-lib.nix
   ];
 
   environment.systemPackages = [
-  installer-script
-  ssh-key-retrieval-script
-  kubeconfig-retrieval-script
+    installer-script
+    ssh-key-retrieval-script
+    kubeconfig-retrieval-script
   ];
 }
