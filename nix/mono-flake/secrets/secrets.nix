@@ -10,18 +10,14 @@ let
   wsl-user = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEEAi2UjaWUsDVY6wUMMcIjDXzyizhax86Z0J2I6fYM0 nixos@nixos";
   wsl-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICbW6OhxPYPuJTZAgbpL3+PwHPNvdL2dw8+KqA1QeF47 root@nixos";
 
-  # Note: IF this is not blank, something is wrong. We need our bootstrap machines to be able to unkey everything, so the definition  should stay, but
-  # this should be cleared out by bootstrap scripts
-  nixos-bootstrap = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGqUeHB2s+7xtQUrlAqLvON2pdvoVHpBAKbpFJ+QxQ6F root@nixos-bootstrap";
-
-  user-machines = [hyperion-user hyperion-system wsl-user wsl-system nixos-bootstrap];
+  user-machines = [hyperion-user hyperion-system wsl-user wsl-system ];
 
   # Our various server clusters
   # ===========================
 
   # A small test cluster we run on NixOS machines running as VMs on our MacBooks
   # Mac cluster configuration
-  macbook-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFhmHSzcTSzwrgbRSqURLE8fmXUBYIM7vKvGJToJhTJv root@macbook-cluster-1";
+  macbook-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDUzlZ21tYp6o31pyG/NE7hvc0kjkHO7VXouIJEc04pv root@macbook-cluster-1";
   macbook-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHeMH1/Fv0OhiYltX9YjdXAPlCTHqO/6t5WPO3LAtCrG root@macbook-cluster-2";
 
   mac-cluster-machines = [macbook-cluster-1-system macbook-cluster-2-system];
