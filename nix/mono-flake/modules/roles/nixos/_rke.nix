@@ -46,13 +46,4 @@ in
       "--write-kubeconfig-mode=0644"
     ];
   } // rke-config;
-
-  # This is needed so the primary account can read rke2.yaml, and we can retrieve the config
-  system.activationScripts.rke-permissions = {
-    text = ''
-    mkdir -p  /home/${machine-config.username}/.kube
-    cp /etc/rancher/rke2/rke2.yaml /home/${machine-config.username}/.kube/rke2-kubeconfig.yaml
-    chown aidan /home/${machine-config.username}/.kube/rke2-kubeconfig.yaml
-    '';
-  };
 }

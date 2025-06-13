@@ -270,7 +270,7 @@ USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
 ssh-keygen -R $ip_address
 nixos-key-retrieval $SELECTED_MACHINE $ip_address
-ssh -t "$USERNAME@$ip_address" "sudo systemctl stop rke2-server.service; sudo rm -rf /etc/rancher/rke2; sudo rm -rf /var/lib/rancher/rke2; update"
+ssh -t "$USERNAME@$ip_address" "sudo systemctl stop rke2-server.service; sudo rm -rf /etc/rancher/rke2; sudo rm -rf /var/lib/rancher/rke2; update; sudo systemctl restart rke2-server.service"
 
 read -p "Is this the first machine of the cluster? (yes/no): " response
 
@@ -449,7 +449,7 @@ done
 # Step 1: Check for RKE2 kubeconfig on remote host
 echo "Step 1: Checking for RKE2 kubeconfig on remote host..."
 
-RKE2_CONFIG_PATH="~/.kube/rke2-kubeconfig.yaml"
+RKE2_CONFIG_PATH="/etc/rancher/rke2/rke2.yaml"
 if ! ssh "$USERNAME@$IP_ADDRESS" "test -f $RKE2_CONFIG_PATH" 2>/dev/null; then
     echo "Error: RKE2 kubeconfig file does not exist at $RKE2_CONFIG_PATH on remote host"
     exit 1
