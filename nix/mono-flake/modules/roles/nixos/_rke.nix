@@ -42,8 +42,9 @@ in
     enable = true;
     cni = "calico";
 
+    configPath = "/wrong/path";
+
     extraFlags = [
-      "--config=/etc/rancher/rke2/config.yaml"
       "--write-kubeconfig-mode=0644"
     ];
   } // rke-config;
