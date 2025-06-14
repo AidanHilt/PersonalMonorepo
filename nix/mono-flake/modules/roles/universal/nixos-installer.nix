@@ -18,6 +18,7 @@ NIXOS_ANYWHERE_ARGS_PROVIDED=0
 SELECTED_MACHINE_ARG_PROVIDED=0
 IP_ADDRESS_ARG_PROVIDED=0
 POST_INSTALL_IP_ADDRESS_ARG_PROVIDED=0
+CLUSTER_NAME_ARG_PROVIDED=0
 
 # Function to print colored output
 print_error() {
@@ -44,6 +45,7 @@ show_usage() {
   echo "  --machine-name NAME         Name of the machine to use. Must be present in the mono flake"
   echo "  --remote-ip IP              The IP address of the remote machine we want to install NixOS on"
   echo "  --post-install-ip IP        The IP address of the machine after NixOS is installed"
+  echo "  --cluster-name CLUSTER_NAME The name of the cluster, used to identify it in kubeconfig and find secrets
   echo "  --help                      Show this help message"
   echo ""
   echo "Examples:"
@@ -87,6 +89,15 @@ while [[ $# -gt 0 ]]; do
       fi
       POST_INSTALL_IP_ADDRESS="$2"
       POST_INSTALL_IP_ADDRESS_ARG_PROVIDED=true
+      shift 2
+      ;;
+    --cluster-name)
+      if [[ $# -lt 2 ]]; then
+        print_error "--cluster-name requires an argument"
+        exit 1
+      fi
+      CLUSTER_NAME="$2"
+      CLUSTER_NAME_ARG_PROVIDED=true
       shift 2
       ;;
     --help|-h)
@@ -204,6 +215,11 @@ if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
   print_success "Target IP address: $IP_ADDRESS"
 fi
 
+if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true ]]; then
+  echo -n "Enter the name of the cluster. This will be used in the kubeconfig, and for decoding secrets: "
+  read -r CLUSTER_NAME
+fi
+
 # Confirm before running
 echo
 print_warning "About to run nixos-anywhere with the following configuration:"
@@ -224,7 +240,7 @@ fi
 print_info "Starting nixos-anywhere deployment..."
 echo
 
-FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files laptop-cluster)
+FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files $CLUSTER_IP)
 
 if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
   read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
@@ -269,7 +285,7 @@ read -p "Is this the first machine of the cluster? (yes/no): " RESPONSE
 case "$RESPONSE" in
   [Yy]|[Yy][Ee][Ss])
     echo "Running nixos-kubeconfig-retrieval..."
-    nixos-kubeconfig-retrieval $USERNAME $IP_ADDRESS
+    nixos-kubeconfig-retrieval $USERNAME $IP_ADDRESS --cluster-name $CLUSTER_NAME
     ;;
   [Nn]|[Nn][Oo])
     echo "Skipping kubeconfig retrieval for non-first machine."
