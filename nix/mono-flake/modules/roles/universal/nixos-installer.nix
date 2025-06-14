@@ -437,7 +437,6 @@ in
 
   environment.systemPackages = [
     installer-script
-    ssh-key-retrieval-script
     kubeconfig-retrieval-script
 
     ipcalc
