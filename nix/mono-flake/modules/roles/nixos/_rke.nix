@@ -48,6 +48,6 @@ in
       text = ''
         chgrp sensitive-file-readers /etc/rancher/rke2/rke2.yaml
       '';
-    }
+    };
   };
 }
