@@ -280,7 +280,7 @@ read -p "Is this the first machine of the cluster? (yes/no): " RESPONSE
 case "$RESPONSE" in
   [Yy]|[Yy][Ee][Ss])
     echo "Running nixos-kubeconfig-retrieval..."
-    nixos-kubeconfig-retrieval $USERNAME $IP_ADDRESS
+    nixos-kubeconfig-retrieval $USERNAME $IP_ADDRESS --cluster-name $CLUSTER_NAME
     ;;
   [Nn]|[Nn][Oo])
     echo "Skipping kubeconfig retrieval for non-first machine."
