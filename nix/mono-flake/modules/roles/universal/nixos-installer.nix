@@ -270,7 +270,7 @@ USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
 ssh-keygen -R $ip_address
 nixos-key-retrieval $SELECTED_MACHINE $ip_address
-ssh -t "$USERNAME@$ip_address" "sudo systemctl stop rke2-server.service; sudo rm -rf /etc/rancher/rke2; sudo rm -rf /var/lib/rancher/rke2; update; sudo systemctl restart rke2-server.service"
+ssh -t "$USERNAME@$ip_address" "sudo systemctl stop rke2-server.service; sudo rm -rf /etc/rancher/rke2; sudo rm -rf /var/lib/rancher/rke2; sudo systemctl daemon-reload; update;"
 
 read -p "Is this the first machine of the cluster? (yes/no): " response
 
