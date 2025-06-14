@@ -215,76 +215,77 @@ if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
   print_success "Target IP address: $IP_ADDRESS"
 fi
 
-# # Confirm before running
-# echo
-# print_warning "About to run nixos-anywhere with the following configuration:"
-# echo "  Machine: $SELECTED_MACHINE"
-# echo "  Target: root@$IP_ADDRESS"
-# echo "  Flake: $FLAKE_DIR#$SELECTED_MACHINE"
-# echo
+# Confirm before running
+echo
+print_warning "About to run nixos-anywhere with the following configuration:"
+echo "  Machine: $SELECTED_MACHINE"
+echo "  Target: root@$IP_ADDRESS"
+echo "  Flake: $FLAKE_DIR#$SELECTED_MACHINE"
+echo
 
-# echo -n "Continue? (Y/n): "
-# read -r confirm
+echo -n "Continue? (Y/n): "
+read -r confirm
 
-# if [[ "$confirm" =~ ^[Nn]$ ]]; then
-#   print_info "Operation cancelled by user"
-#   exit 0
-# fi
+if [[ "$confirm" =~ ^[Nn]$ ]]; then
+  print_info "Operation cancelled by user"
+  exit 0
+fi
 
-# # Run nixos-anywhere
-# print_info "Starting nixos-anywhere deployment..."
-# echo
+# Run nixos-anywhere
+print_info "Starting nixos-anywhere deployment..."
+echo
 
-FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files laptop-cluster)
+if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true ]]; then
+    echo ""
+    read -p "Please enter the cluster name: " CLUSTER_NAME
+    if [ -z "$CLUSTER_NAME" ]; then
+        echo "Error: Cluster name cannot be empty"
+        exit 1
+    fi
+fi
 
-# if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
-#   read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
-#   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE" "''${CMD_ARRAY[*]}"
-# else
-#   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE"
-# fi
+FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files $CLUSTER_NAME)
 
-# if [[ $? -eq 0 ]]; then
-#   print_success "nixos-anywhere deployment completed successfully!"
-# else
-#   print_error "nixos-anywhere deployment failed"
-#   exit 1
-# fi
+if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
+  read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
+  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE" "''${CMD_ARRAY[*]}"
+else
+  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE"
+fi
 
-# if [[ "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" != true ]]; then
-#   output_message="Enter the IP address of the machine after rebooting: "
-#   while true; do
-#     echo -n $output_message
-#     read -r POST_INSTALL_IP_ADDRESS
+if [[ $? -eq 0 ]]; then
+  print_success "nixos-anywhere deployment completed successfully!"
+else
+  print_error "nixos-anywhere deployment failed"
+  exit 1
+fi
 
-#     if ipcalc -c "$POST_INSTALL_IP_ADDRESS" > /dev/null 2>&1; then
-#       break
-#     fi
+if [[ "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" != true ]]; then
+  output_message="Enter the IP address of the machine after rebooting: "
+  while true; do
+    echo -n $output_message
+    read -r POST_INSTALL_IP_ADDRESS
 
-#     output_message="Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
-#   done
-# fi
+    if ipcalc -c "$POST_INSTALL_IP_ADDRESS" > /dev/null 2>&1; then
+      break
+    fi
+
+    output_message="Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
+  done
+fi
 
 USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
-# ssh-keygen -R $POST_INSTALL_IP_ADDRESS
-# ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
+ssh-keygen -R $POST_INSTALL_IP_ADDRESS
+ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
 
-# ssh -t "$USERNAME@$POST_INSTALL_IP_ADDRESS" "update"
+ssh -t "$USERNAME@$POST_INSTALL_IP_ADDRESS" "update"
 
 read -p "Is this the first machine of the cluster? (yes/no): " RESPONSE
 
 case "$RESPONSE" in
   [Yy]|[Yy][Ee][Ss])
     echo "Running nixos-kubeconfig-retrieval..."
-    if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true ]]; then
-        echo ""
-        read -p "Please enter the cluster name: " CLUSTER_NAME
-        if [ -z "$CLUSTER_NAME" ]; then
-            echo "Error: Cluster name cannot be empty"
-            exit 1
-        fi
-    fi
     nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME
     ;;
   [Nn]|[Nn][Oo])
