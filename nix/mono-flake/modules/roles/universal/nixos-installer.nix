@@ -501,7 +501,6 @@ fi
 sync-kubeconfig
 
 echo ""
-echo "Script completed successfully!"
 echo "Cluster '$CLUSTER_NAME' has been added to your kubeconfig"
 '';
 
