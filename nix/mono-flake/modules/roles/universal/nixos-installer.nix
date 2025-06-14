@@ -260,7 +260,9 @@ else
   exit 1
 fi
 
-if [[ "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" != true ]]; then
+if [[ "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" = true ]]; then
+  termdown 30 --no-bell --title "Waiting for machine to reboot"
+else
   output_message="Enter the IP address of the machine after rebooting: "
   while true; do
     echo -n $output_message
