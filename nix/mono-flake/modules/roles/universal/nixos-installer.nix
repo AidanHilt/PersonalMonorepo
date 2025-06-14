@@ -534,6 +534,7 @@ in
   environment.systemPackages = with pkgs; [
     installer-script
     kubeconfig-retrieval-script
+    ssh-key-retrieval-script
 
     ipcalc
     termdown
