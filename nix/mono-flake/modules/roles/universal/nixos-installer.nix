@@ -444,17 +444,6 @@ if ! ssh -t "$USERNAME@$IP_ADDRESS" "test -f $RKE2_CONFIG_PATH" 2>/dev/null; the
     exit 1
 fi
 
-echo "Found RKE2 kubeconfig, retrieving..."
-KUBECONFIG_CONTENT=$(ssh -t "$USERNAME@$IP_ADDRESS" "sudo cat $RKE2_CONFIG_PATH" 2>/dev/null)<&0 >&1 &
-
-if [ -z "$KUBECONFIG_CONTENT" ]; then
-    echo "Error: Failed to retrieve kubeconfig content or file is empty"
-    exit 1
-fi
-
-echo "Successfully retrieved kubeconfig content"
-
-# Step 2: Get cluster name if not provided
 if [ -z "$CLUSTER_NAME" ]; then
     echo ""
     read -p "Please enter the cluster name: " CLUSTER_NAME
@@ -464,13 +453,6 @@ if [ -z "$CLUSTER_NAME" ]; then
     fi
 fi
 
-echo "Using cluster name: $CLUSTER_NAME"
-
-# Step 3: Replace all occurrences of "default" with cluster name
-echo "Step 3: Replacing 'default' with '$CLUSTER_NAME'..."
-KUBECONFIG_CONTENT=$(echo "$KUBECONFIG_CONTENT" | sed "s/default/$CLUSTER_NAME/g")
-
-# Step 4: Replace 127.0.0.1 with appropriate IP
 REPLACEMENT_IP="$IP_ADDRESS"
 if [ "$OVERWRITE_IP" != "" ]; then
     REPLACEMENT_IP="$OVERWRITE_IP"
@@ -480,13 +462,10 @@ else
 fi
 
 ESCAPED_IP=$(printf '%s\n' "$REPLACEMENT_IP" | sed 's/[[\.*^$()+?{|]/\\&/g')
-KUBECONFIG_CONTENT=$(echo "$KUBECONFIG_CONTENT" | sed "s/127\.0\.0\.1/$ESCAPED_IP/g")
-
-# Step 5: Output edited YAML to file
 TEMP_KUBECONFIG="/tmp/rke2-kubeconfig-''${CLUSTER_NAME}.yaml"
-echo "$KUBECONFIG_CONTENT" > "$TEMP_KUBECONFIG"
 
-echo "Step 5: Saved edited kubeconfig to: $TEMP_KUBECONFIG"
+echo "Found RKE2 kubeconfig, retrieving..."
+ssh -t "$USERNAME@$IP_ADDRESS" "sudo cat $RKE2_CONFIG_PATH" | sed "s/default/$CLUSTER_NAME/g" | sed "s/127\.0\.0\.1/$ESCAPED_IP/g" > "$TEMP_KUBECONFIG"
 
 # Step 6: Use kubecm to add the kubeconfig
 echo "Step 6: Adding kubeconfig to primary kubeconfig using kubecm..."
