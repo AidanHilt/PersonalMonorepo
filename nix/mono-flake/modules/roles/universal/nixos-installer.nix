@@ -281,7 +281,7 @@ read -p "Is this the first machine of the cluster? (yes/no): " RESPONSE
 case "$RESPONSE" in
   [Yy]|[Yy][Ee][Ss])
     echo "Running nixos-kubeconfig-retrieval..."
-    if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true ]]
+    if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true ]]; then
         echo ""
         read -p "Please enter the cluster name: " CLUSTER_NAME
         if [ -z "$CLUSTER_NAME" ]; then
