@@ -1,24 +1,5 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
-let
-  update = pkgs.writeShellScriptBin "update" ''
-    BRANCH="master"
-    while [[ $# -gt 0 ]]; do
-      case $1 in
-        --branch)
-          BRANCH="$2"
-          shift 2
-          ;;
-        *)
-          echo "Unknown option: $1"
-          exit 1
-          ;;
-      esac
-    done
-    sudo nixos-rebuild switch --flake "github:AidanHilt/PersonalMonorepo/$BRANCH?dir=nix/server-setup"
-  '';
-in
-
 {
   imports = [
     ./_adguard.nix
@@ -38,6 +19,10 @@ in
 
   environment.systemPackages = with pkgs; [
     htop
-    update
   ];
+
+  users.groups.sensitive-file-readers = {
+    members = ["${machine-config.username}"];
+  };
+
 }

@@ -465,7 +465,7 @@ ESCAPED_IP=$(printf '%s\n' "$REPLACEMENT_IP" | sed 's/[[\.*^$()+?{|]/\\&/g')
 TEMP_KUBECONFIG="/tmp/rke2-kubeconfig-''${CLUSTER_NAME}.yaml"
 
 echo "Found RKE2 kubeconfig, retrieving..."
-ssh -tt "$USERNAME@$IP_ADDRESS" "sudo cat $RKE2_CONFIG_PATH" | sed "s/default/$CLUSTER_NAME/g" | sed "s/127\.0\.0\.1/$ESCAPED_IP/g" > "$TEMP_KUBECONFIG"
+ssh "$USERNAME@$IP_ADDRESS" "cat $RKE2_CONFIG_PATH" | sed "s/default/$CLUSTER_NAME/g" | sed "s/127\.0\.0\.1/$ESCAPED_IP/g" > "$TEMP_KUBECONFIG"
 
 # Step 6: Use kubecm to add the kubeconfig
 echo "Step 6: Adding kubeconfig to primary kubeconfig using kubecm..."

@@ -25,6 +25,7 @@ in
     path = "etc/rancher/rke2/config.yaml";
     symlink = false;
     mode = "700";
+    group = "sensitive-file-readers";
   };
 
   networking.firewall = {
@@ -41,9 +42,5 @@ in
   services.rke2 = {
     enable = true;
     cni = "calico";
-
-    extraFlags = [
-      "--write-kubeconfig-mode=0644"
-    ];
   } // rke-config;
 }
