@@ -23,7 +23,6 @@ in
   age.secrets.rke-token = {
     file = ../../../secrets/rke-config-${machine-config.k8s.clusterName}.age;
     path = "etc/rancher/rke2/config.yaml";
-    symlink = false;
     mode = "440";
   };
 
