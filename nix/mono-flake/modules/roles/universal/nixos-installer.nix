@@ -196,17 +196,16 @@ if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
 fi
 
 if [[ "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" != true ]];; then
-echo
-while true; do
-  echo -n "Enter the IP address of the machine after rebooting: "
-  read -r POST_INSTALL_IP_ADDRESS
+  while true; do
+    echo -n "Enter the IP address of the machine after rebooting: "
+    read -r POST_INSTALL_IP_ADDRESS
 
-  if ipcalc -c "$POST_INSTALL_IP_ADDRESS" > /dev/null 2>&1;
-    break
-  fi
+    if ipcalc -c "$POST_INSTALL_IP_ADDRESS" > /dev/null 2>&1;
+      break
+    fi
 
-  print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
-done
+    print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
+  done
 fi
 
 # Confirm before running
