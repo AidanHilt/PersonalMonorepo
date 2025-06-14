@@ -285,7 +285,7 @@ case "$RESPONSE" in
             exit 1
         fi
     fi
-    nixos-kubeconfig-retrieval $USERNAME $IP_ADDRESS --cluster-name $CLUSTER_NAME
+    nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME
     ;;
   [Nn]|[Nn][Oo])
     echo "Skipping kubeconfig retrieval for non-first machine."
