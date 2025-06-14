@@ -24,7 +24,7 @@ in
     file = ../../../secrets/rke-config-${machine-config.k8s.clusterName}.age;
     path = "etc/rancher/rke2/config.yaml";
     symlink = false;
-    mode = "700";
+    mode = "440";
   };
 
   networking.firewall = {
@@ -41,6 +41,10 @@ in
   services.rke2 = {
     enable = true;
     cni = "calico";
+
+    extraFlags = [
+      "--write-kubeconfig-mode=0640"
+    ];
   } // rke-config;
 
   system.activationScripts = {
