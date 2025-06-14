@@ -79,6 +79,15 @@ while [[ $# -gt 0 ]]; do
       IP_ADDRESS_ARG_PROVIDED=true
       shift 2
       ;;
+    --post-install-ip)
+      if [[ $# -lt 2 ]]; then
+        print_error "--post-install-ip requires an argument"
+        exit 1
+      fi
+      POST_INSTALL_IP_ADDRESS="$2"
+      POST_INSTALL_IP_ADDRESS_ARG_PROVIDED=true
+      shift 2
+      ;;
     --help|-h)
       show_usage
       exit 0
@@ -247,6 +256,11 @@ fi
 USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
 ssh-keygen -R $IP_ADDRESS
+
+if [[ "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" != true ]]; then
+  termdown 30 --no-bell --title "Waiting for machine to reboot"
+fi
+
 ssh -t "$USERNAME@$POST_INSTALL_IP_ADDRESS" "update"
 
 read -p "Is this the first machine of the cluster? (yes/no): " RESPONSE
@@ -439,5 +453,6 @@ in
     kubeconfig-retrieval-script
 
     ipcalc
+    termdown
   ];
 }

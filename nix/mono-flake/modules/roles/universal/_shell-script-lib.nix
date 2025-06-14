@@ -59,6 +59,10 @@ age -i ~/.ssh/id_ed25519 -d "$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets/
 echo $root | tr -d "\n"
 '';
 
+timer = pkgs.writeShellScriptBin "timer" ''
+
+'';
+
 in
 
 {
