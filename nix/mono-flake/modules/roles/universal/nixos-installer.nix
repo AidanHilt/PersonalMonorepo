@@ -445,6 +445,7 @@ if ! ssh -t "$USERNAME@$IP_ADDRESS" "test -f $RKE2_CONFIG_PATH" 2>/dev/null; the
 fi
 
 echo "Found RKE2 kubeconfig, retrieving..."
+echo "ssh -t \"$USERNAME@$IP_ADDRESS\" \"sudo cat $RKE2_CONFIG_PATH\""
 KUBECONFIG_CONTENT=$(ssh -t "$USERNAME@$IP_ADDRESS" "sudo cat $RKE2_CONFIG_PATH" 2>/dev/null)
 
 if [ -z "$KUBECONFIG_CONTENT" ]; then
