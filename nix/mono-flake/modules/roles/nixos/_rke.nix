@@ -25,7 +25,6 @@ in
     path = "etc/rancher/rke2/config.yaml";
     symlink = false;
     mode = "700";
-    group = "sensitive-file-readers";
   };
 
   networking.firewall = {
@@ -43,4 +42,12 @@ in
     enable = true;
     cni = "calico";
   } // rke-config;
+
+  system.activationScripts = {
+    chgrp-kubeconfig = {
+      text = ''
+        chgrp sensitive-file-readers /etc/rancher/rke2/rke2.yaml
+      '';
+    }
+  };
 }
