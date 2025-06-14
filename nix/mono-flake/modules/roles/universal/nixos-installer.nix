@@ -195,7 +195,7 @@ if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
   print_success "Target IP address: $IP_ADDRESS"
 fi
 
-if [[ "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" != true ]];; then
+if [[ "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" != true ]]; then
   while true; do
     echo -n "Enter the IP address of the machine after rebooting: "
     read -r POST_INSTALL_IP_ADDRESS
