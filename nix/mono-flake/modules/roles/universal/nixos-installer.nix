@@ -251,26 +251,26 @@ FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files laptop-cluster)
 #   exit 1
 # fi
 
-if [[ "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" != true ]]; then
-  output_message="Enter the IP address of the machine after rebooting: "
-  while true; do
-    echo -n $output_message
-    read -r POST_INSTALL_IP_ADDRESS
+# if [[ "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" != true ]]; then
+#   output_message="Enter the IP address of the machine after rebooting: "
+#   while true; do
+#     echo -n $output_message
+#     read -r POST_INSTALL_IP_ADDRESS
 
-    if ipcalc -c "$POST_INSTALL_IP_ADDRESS" > /dev/null 2>&1; then
-      break
-    fi
+#     if ipcalc -c "$POST_INSTALL_IP_ADDRESS" > /dev/null 2>&1; then
+#       break
+#     fi
 
-    output_message="Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
-  done
-fi
+#     output_message="Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
+#   done
+# fi
 
-USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
+# USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
-ssh-keygen -R $POST_INSTALL_IP_ADDRESS
-ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
+# ssh-keygen -R $POST_INSTALL_IP_ADDRESS
+# ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
 
-ssh -t "$USERNAME@$POST_INSTALL_IP_ADDRESS" "update"
+# ssh -t "$USERNAME@$POST_INSTALL_IP_ADDRESS" "update"
 
 read -p "Is this the first machine of the cluster? (yes/no): " RESPONSE
 
