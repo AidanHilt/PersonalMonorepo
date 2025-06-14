@@ -246,12 +246,12 @@ fi
 
 FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files $CLUSTER_NAME)
 
-# if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
-#   read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
-#   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE" "''${CMD_ARRAY[*]}"
-# else
-#   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE"
-# fi
+if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
+  read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
+  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE" "''${CMD_ARRAY[*]}"
+else
+  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE"
+fi
 
 if [[ $? -eq 0 ]]; then
   print_success "nixos-anywhere deployment completed successfully!"
