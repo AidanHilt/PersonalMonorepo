@@ -265,7 +265,7 @@ FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files laptop-cluster)
 #   done
 # fi
 
-# USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
+USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
 # ssh-keygen -R $POST_INSTALL_IP_ADDRESS
 # ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
