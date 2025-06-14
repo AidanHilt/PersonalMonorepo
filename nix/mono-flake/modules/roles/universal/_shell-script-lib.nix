@@ -56,7 +56,7 @@ mkdir -p "$root/etc/ssh"
 ssh-keygen -t ed25519 -f "$root/etc/ssh/ssh_host_ed25519_key" -N "" > /dev/null 2>&1
 mkdir -p "$root/etc/rancher/rke2"
 age -i ~/.ssh/id_ed25519 -d "$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets/rke-config-$1.age" > "$root/etc/rancher/rke2/config.yaml"
-echo $root
+echo $root | tr -d "\n"
 '';
 
 in
