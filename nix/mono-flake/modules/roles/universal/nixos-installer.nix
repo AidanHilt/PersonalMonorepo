@@ -271,7 +271,7 @@ ssh-keygen -R $POST_INSTALL_IP_ADDRESS
 ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
 
 if [[ "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" = true ]]; then
-  termdown 30 --no-bell --title "Waiting for machine to reboot"
+  termdown 30 --no-bell --title "Time till SSH"
 fi
 
 ssh -t "$USERNAME@$POST_INSTALL_IP_ADDRESS" "update"
