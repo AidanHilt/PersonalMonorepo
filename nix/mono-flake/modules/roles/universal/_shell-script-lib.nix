@@ -52,9 +52,9 @@ echo "$USERNAME"
 
 generate-homelab-node-files = pkgs.writeShellScriptBin "generate-homelab-node-files" ''
 root=$(mktemp -d)
-mkdir "$root/etc/ssh"
+mkdir -p "$root/etc/ssh"
 ssh-keygen -t ed25519 -f "$root/etc/ssh/ssh_host" -N ""
-mkdir "$root/etc/rancher"
+mkdir -p "$root/etc/rancher"
 age -i ~/.ssh/id_ed25519 -d "$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets/rke-config-$1.age" > "$root/etc/rancher/config.yaml"
 echo $root
 '';
