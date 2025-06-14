@@ -200,7 +200,7 @@ if [[ "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" != true ]]; then
     echo -n "Enter the IP address of the machine after rebooting: "
     read -r POST_INSTALL_IP_ADDRESS
 
-    if ipcalc -c "$POST_INSTALL_IP_ADDRESS" > /dev/null 2>&1;
+    if ipcalc -c "$POST_INSTALL_IP_ADDRESS" > /dev/null 2>&1; then
       break
     fi
 
