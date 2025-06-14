@@ -173,7 +173,7 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   IFS=$'\n' MACHINE_NAMES=($(sort <<<"''${MACHINE_NAMES[*]}"))
   unset IFS
 
-  print_success "Found ''${#MACHINE_NAMES[@]} machine configuration(s)"
+  print_success 'Found ''${#MACHINE_NAMES[@]} machine configuration(s)'
 
   # Present numbered list to user
   echo
