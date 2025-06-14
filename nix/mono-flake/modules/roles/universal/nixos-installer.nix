@@ -74,7 +74,7 @@ while [[ $# -gt 0 ]]; do
         print_error "--remote-ip requires an argument"
         exit 1
       fi
-      ip_address="$2"
+      IP_ADDRESS="$2"
       IP_ADDRESS_ARG_PROVIDED=true
       shift 2
       ;;
@@ -183,36 +183,37 @@ if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
   echo
   while true; do
     echo -n "Enter the IP address of the machine you are trying to install NixOS on: "
-    read -r ip_address
+    read -r IP_ADDRESS
 
-    # Basic IP validation (IPv4)
-    if [[ "$ip_address" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-      # Check each octet is valid (0-255)
-      valid=true
-      IFS='.' read -ra ADDR <<< "$ip_address"
-      for octet in "''${ADDR[@]}"; do
-        if [[ "$octet" -gt 255 ]]; then
-          valid=false
-          break
-        fi
-      done
-
-      if $valid; then
-        break
-      fi
+    if ipcalc -c "$POST_INSTALL_IP_ADDRESS" > /dev/null 2>&1;
+      break
     fi
 
     print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
   done
 
-  print_success "Target IP address: $ip_address"
+  print_success "Target IP address: $IP_ADDRESS"
+fi
+
+if [[ "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" != true ]];; then
+echo
+while true; do
+  echo -n "Enter the IP address of the machine after rebooting: "
+  read -r POST_INSTALL_IP_ADDRESS
+
+  if ipcalc -c "$POST_INSTALL_IP_ADDRESS" > /dev/null 2>&1;
+    break
+  fi
+
+  print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
+done
 fi
 
 # Confirm before running
 echo
 print_warning "About to run nixos-anywhere with the following configuration:"
 echo "  Machine: $SELECTED_MACHINE"
-echo "  Target: root@$ip_address"
+echo "  Target: root@$IP_ADDRESS"
 echo "  Flake: $FLAKE_DIR#$SELECTED_MACHINE"
 echo
 
@@ -228,11 +229,13 @@ fi
 print_info "Starting nixos-anywhere deployment..."
 echo
 
+FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files laptop-cluster)
+
 if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
   read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
-  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$ip_address" "''${CMD_ARRAY[*]}"
+  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE" "''${CMD_ARRAY[*]}"
 else
-  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$ip_address"
+  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE"
 fi
 
 if [[ $? -eq 0 ]]; then
@@ -242,42 +245,17 @@ else
   exit 1
 fi
 
-# Get IP address from user
-echo
-while true; do
-  echo -n "Enter the IP address of the machine after rebooting: "
-  read -r ip_address
-
-  # Basic IP validation (IPv4)
-  if [[ "$ip_address" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-    # Check each octet is valid (0-255)
-    valid=true
-    IFS='.' read -ra ADDR <<< "$ip_address"
-    for octet in "''${ADDR[@]}"; do
-      if [[ "$octet" -gt 255 ]]; then
-        valid=false
-        break
-      fi
-    done
-
-    if $valid; then
-      break
-    fi
-  fi
-done
-
 USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
-ssh-keygen -R $ip_address
-nixos-key-retrieval $SELECTED_MACHINE $ip_address
-ssh -t "$USERNAME@$ip_address" "sudo systemctl stop rke2-server.service; sudo rm -rf /etc/rancher/rke2; sudo rm -rf /var/lib/rancher/rke2; sudo systemctl daemon-reload; update;"
+ssh-keygen -R $IP_ADDRESS
+ssh -t "$USERNAME@$IP_ADDRESS" "update"
 
-read -p "Is this the first machine of the cluster? (yes/no): " response
+read -p "Is this the first machine of the cluster? (yes/no): " RESPONSE
 
-case "$response" in
+case "$RESPONSE" in
   [Yy]|[Yy][Ee][Ss])
     echo "Running nixos-kubeconfig-retrieval..."
-    nixos-kubeconfig-retrieval $USERNAME $ip_address
+    nixos-kubeconfig-retrieval $USERNAME $IP_ADDRESS
     ;;
   [Nn]|[Nn][Oo])
     echo "Skipping kubeconfig retrieval for non-first machine."
@@ -287,91 +265,6 @@ case "$response" in
     exit 1
     ;;
 esac
-'';
-
-ssh-key-retrieval-script = pkgs.writeShellScriptBin "nixos-key-retrieval" ''
-#!/bin/bash
-set -e
-
-# Check if required arguments are provided
-if [ $# -ne 2 ]; then
-  echo "Usage: $0 <machine-name> <ip-address>"
-  exit 1
-fi
-
-MACHINE_NAME="$1"
-IP_ADDRESS="$2"
-
-USERNAME=$(get-username-from-machine-name "$MACHINE_NAME")
-
-# Step 4: SSH and get public key
-echo "Connecting to $USERNAME@$IP_ADDRESS to retrieve SSH public key..."
-SSH_PUBKEY=$(ssh "$USERNAME@$IP_ADDRESS" "cat /etc/ssh/ssh_host_ed25519_key.pub" 2>/dev/null)
-
-if [ -z "$SSH_PUBKEY" ]; then
-  echo "Error: Could not retrieve SSH public key from $USERNAME@$IP_ADDRESS"
-  echo "Make sure ~/.ssh/id_ed25519.pub exists on the remote machine"
-  exit 1
-fi
-
-echo "Retrieved SSH public key"
-
-# Step 5: Create the formatted string
-FORMATTED_STRING="''${MACHINE_NAME}-system = \"$SSH_PUBKEY\";"
-echo "Generated string: $FORMATTED_STRING"
-
-# Step 6: Copy to clipboard
-# Try different clipboard commands based on what's available
-if command -v pbcopy >/dev/null 2>&1; then
-  # macOS
-  echo "$FORMATTED_STRING" | pbcopy
-  echo "Copied to clipboard using pbcopy"
-elif command -v xclip >/dev/null 2>&1; then
-  # Linux with xclip
-  echo "$FORMATTED_STRING" | xclip -selection clipboard
-  echo "Copied to clipboard using xclip"
-elif command -v wl-copy >/dev/null 2>&1; then
-  # Wayland
-  echo "$FORMATTED_STRING" | wl-copy
-  echo "Copied to clipboard using wl-copy"
-else
-  echo "Warning: No clipboard utility found (pbcopy, xclip, wl-copy)"
-  echo "The formatted string is: $FORMATTED_STRING"
-fi
-
-# Step 7: Open secrets.nix
-SECRETS_FILE="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets/secrets.nix"
-echo "Opening $SECRETS_FILE..."
-
-# Try different editors based on what's available and environment
-if [ -n "$EDITOR" ]; then
-  $EDITOR "$SECRETS_FILE"
-elif command -v code >/dev/null 2>&1; then
-  code "$SECRETS_FILE"
-elif command -v vim >/dev/null 2>&1; then
-  vim "$SECRETS_FILE"
-elif command -v nano >/dev/null 2>&1; then
-  nano "$SECRETS_FILE"
-else
-  echo "Warning: No suitable editor found. Please manually edit: $SECRETS_FILE"
-  echo "Add this line: $FORMATTED_STRING"
-fi
-
-# Step 8: Change to secrets directory and run agenix
-SECRETS_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets"
-echo "Changing to $SECRETS_DIR and running agenix -e..."
-cd "$SECRETS_DIR"
-
-if command -v agenix >/dev/null 2>&1; then
-  agenix -r
-  nix-commit
-else
-  echo "Error: agenix command not found in PATH"
-  echo "Make sure agenix is installed and available"
-  exit 1
-fi
-
-echo "Script completed successfully!"
 '';
 
 kubeconfig-retrieval-script = pkgs.writeShellScriptBin "nixos-kubeconfig-retrieval" ''
@@ -385,7 +278,7 @@ usage() {
     echo "  username: The username to use for SSH"
     echo "  ip-address: The IP address to use for SSH"
     echo "  --cluster-name: optional cluster name (will prompt if not provided)"
-    echo "  --overwrite-ip: optional IP to replace 127.0.0.1 (uses SSH host IP if not provided)"
+    echo "  --overwrite-ip: optional IP to replace 127.0.0.1 with in the retrieved kubeconfig (uses SSH host IP if not provided)"
     echo ""
     echo "Examples:"
     echo "  $0 root 192.168.1.100"
@@ -450,13 +343,13 @@ done
 echo "Step 1: Checking for RKE2 kubeconfig on remote host..."
 
 RKE2_CONFIG_PATH="/etc/rancher/rke2/rke2.yaml"
-if ! ssh "$USERNAME@$IP_ADDRESS" "test -f $RKE2_CONFIG_PATH" 2>/dev/null; then
+if ! ssh -t "$USERNAME@$IP_ADDRESS" "test -f $RKE2_CONFIG_PATH" 2>/dev/null; then
     echo "Error: RKE2 kubeconfig file does not exist at $RKE2_CONFIG_PATH on remote host"
     exit 1
 fi
 
 echo "Found RKE2 kubeconfig, retrieving..."
-KUBECONFIG_CONTENT=$(ssh "$USERNAME@$IP_ADDRESS" "cat $RKE2_CONFIG_PATH" 2>/dev/null)
+KUBECONFIG_CONTENT=$(ssh "$USERNAME@$IP_ADDRESS" "sudo cat $RKE2_CONFIG_PATH" 2>/dev/null)
 
 if [ -z "$KUBECONFIG_CONTENT" ]; then
     echo "Error: Failed to retrieve kubeconfig content or file is empty"
@@ -527,10 +420,11 @@ fi
 # # Clean up temporary file
 # rm -f "$TEMP_KUBECONFIG"
 
+sync-kubeconfig
+
 echo ""
 echo "Script completed successfully!"
 echo "Cluster '$CLUSTER_NAME' has been added to your kubeconfig"
-echo "You can now use: kubectl config use-context $CLUSTER_NAME"
 '';
 
 in
@@ -545,5 +439,7 @@ in
     installer-script
     ssh-key-retrieval-script
     kubeconfig-retrieval-script
+
+    ipcalc
   ];
 }
