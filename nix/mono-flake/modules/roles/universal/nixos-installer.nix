@@ -445,7 +445,7 @@ if ! ssh -t "$USERNAME@$IP_ADDRESS" "test -f $RKE2_CONFIG_PATH" 2>/dev/null; the
 fi
 
 echo "Found RKE2 kubeconfig, retrieving..."
-KUBECONFIG_CONTENT=$(ssh "$USERNAME@$IP_ADDRESS" "sudo cat $RKE2_CONFIG_PATH" 2>/dev/null)
+KUBECONFIG_CONTENT=$(ssh -t "$USERNAME@$IP_ADDRESS" "sudo cat $RKE2_CONFIG_PATH" 2>/dev/null)
 
 if [ -z "$KUBECONFIG_CONTENT" ]; then
     echo "Error: Failed to retrieve kubeconfig content or file is empty"
