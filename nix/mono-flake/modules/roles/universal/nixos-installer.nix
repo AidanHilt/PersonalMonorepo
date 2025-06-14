@@ -435,7 +435,7 @@ in
     ./_shell-script-lib.nix
   ];
 
-  environment.systemPackages = [
+  environment.systemPackages = with pkgs; [
     installer-script
     kubeconfig-retrieval-script
 
