@@ -45,6 +45,7 @@ show_usage() {
   echo "  --machine-name NAME         Name of the machine to use. Must be present in the mono flake"
   echo "  --remote-ip IP              The IP address of the remote machine we want to install NixOS on"
   echo "  --post-install-ip IP        The IP address of the machine after NixOS is installed"
+  echo "  --cluster-name CLUSTER_NAME The name of the cluster, used to identify it in kubeconfig and find
   echo "  --help                      Show this help message"
   echo ""
   echo "Examples:"
@@ -88,6 +89,15 @@ while [[ $# -gt 0 ]]; do
       fi
       POST_INSTALL_IP_ADDRESS="$2"
       POST_INSTALL_IP_ADDRESS_ARG_PROVIDED=true
+      shift 2
+      ;;
+    --cluster-name)
+      if [[ $# -lt 2 ]]; then
+        print_error "--cluster-name requires an argument"
+        exit 1
+      fi
+      CLUSTER_NAME="$2"
+      CLUSTER_NAME_ARG_PROVIDED=true
       shift 2
       ;;
     --help|-h)
