@@ -215,21 +215,21 @@ if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
   print_success "Target IP address: $IP_ADDRESS"
 fi
 
-# Confirm before running
-echo
-print_warning "About to run nixos-anywhere with the following configuration:"
-echo "  Machine: $SELECTED_MACHINE"
-echo "  Target: root@$IP_ADDRESS"
-echo "  Flake: $FLAKE_DIR#$SELECTED_MACHINE"
-echo
+# # Confirm before running
+# echo
+# print_warning "About to run nixos-anywhere with the following configuration:"
+# echo "  Machine: $SELECTED_MACHINE"
+# echo "  Target: root@$IP_ADDRESS"
+# echo "  Flake: $FLAKE_DIR#$SELECTED_MACHINE"
+# echo
 
-echo -n "Continue? (Y/n): "
-read -r confirm
+# echo -n "Continue? (Y/n): "
+# read -r confirm
 
-if [[ "$confirm" =~ ^[Nn]$ ]]; then
-  print_info "Operation cancelled by user"
-  exit 0
-fi
+# if [[ "$confirm" =~ ^[Nn]$ ]]; then
+#   print_info "Operation cancelled by user"
+#   exit 0
+# fi
 
 # Run nixos-anywhere
 print_info "Starting nixos-anywhere deployment..."
@@ -246,12 +246,12 @@ fi
 
 FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files $CLUSTER_NAME)
 
-if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
-  read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
-  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE" "''${CMD_ARRAY[*]}"
-else
-  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE"
-fi
+# if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
+#   read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
+#   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE" "''${CMD_ARRAY[*]}"
+# else
+#   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE"
+# fi
 
 if [[ $? -eq 0 ]]; then
   print_success "nixos-anywhere deployment completed successfully!"
