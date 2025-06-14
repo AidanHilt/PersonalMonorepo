@@ -173,7 +173,7 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   IFS=$'\n' MACHINE_NAMES=($(sort <<<"''${MACHINE_NAMES[*]}"))
   unset IFS
 
-  print_success 'Found ''${#MACHINE_NAMES[@]} machine configuration(s)'
+  print_success "Found ''${#MACHINE_NAMES[@]} machine configuration(s)"
 
   # Present numbered list to user
   echo
@@ -240,7 +240,7 @@ fi
 print_info "Starting nixos-anywhere deployment..."
 echo
 
-FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files $CLUSTER_IP)
+FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files laptop-cluster)
 
 if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
   read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
@@ -285,7 +285,7 @@ read -p "Is this the first machine of the cluster? (yes/no): " RESPONSE
 case "$RESPONSE" in
   [Yy]|[Yy][Ee][Ss])
     echo "Running nixos-kubeconfig-retrieval..."
-    nixos-kubeconfig-retrieval $USERNAME $IP_ADDRESS --cluster-name $CLUSTER_NAME
+    nixos-kubeconfig-retrieval $USERNAME $IP_ADDRESS
     ;;
   [Nn]|[Nn][Oo])
     echo "Skipping kubeconfig retrieval for non-first machine."
