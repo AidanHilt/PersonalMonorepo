@@ -24,7 +24,7 @@ in
     file = ../../../secrets/rke-config-${machine-config.k8s.clusterName}.age;
     path = "etc/rancher/rke2/config.yaml";
     symlink = false;
-    mode = "440";
+    mode = "400";
   };
 
   networking.firewall = {
@@ -48,7 +48,7 @@ in
   } // rke-config;
 
   system.activationScripts = {
-    chgrp-kubeconfig = {
+    chgrp-kubeconfig = pkgs.lib.mkIf ! machine-config.k8s.primaryNode {
       text = ''
         chgrp sensitive-file-readers /etc/rancher/rke2/rke2.yaml
       '';
