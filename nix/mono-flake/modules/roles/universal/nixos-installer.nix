@@ -247,7 +247,7 @@ fi
 FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files $CLUSTER_NAME)
 PUBKEY_LOCATION="$FILES_FOR_NEW_MACHINE/etc/ssh/ssh_host_ed25519_key.pub"
 
-nixos-key-retrieval "$PUBKEY_LOCATION"
+nixos-key-retrieval "$PUBKEY_LOCATION" "$SELECTED_MACHINE"
 
 if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
   read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
@@ -305,6 +305,7 @@ esac
 
 ssh-key-retrieval-script = pkgs.writeShellScriptBin "nixos-key-retrieval" ''
 SSH_PUBKEY=$(cat $1)
+MACHINE_NAME=$2
 
 if [ -z "$SSH_PUBKEY" ]; then
   echo "Error: Could not retrieve SSH public key from $1"
