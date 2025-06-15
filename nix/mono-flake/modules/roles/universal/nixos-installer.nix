@@ -247,6 +247,9 @@ fi
 FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files $CLUSTER_NAME)
 PUBKEY_LOCATION="$FILES_FOR_NEW_MACHINE/etc/ssh/ssh_host_ed25519_key.pub"
 
+echo $PUBKEY_LOCATION
+exit 0
+
 nixos-key-retrieval "$PUBKEY_LOCATION" "$SELECTED_MACHINE"
 
 if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
