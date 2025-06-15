@@ -245,6 +245,9 @@ if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true ]]; then
 fi
 
 FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files $CLUSTER_NAME)
+PUBKEY_LOCATION="$FILES_FOR_NEW_MACHINE/etc/ssh/ssh_host_ed25519_key.pub"
+
+nixos-key-retrieval "$PUBKEY_LOCATION"
 
 if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
   read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
