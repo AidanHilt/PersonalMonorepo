@@ -2,24 +2,12 @@
 
 let
   lib = nixpkgs.lib;
+
+  packages = import ./packages.nix { inherit nixpkgs darwin inputs; };
 in
 {
   # Package management utilities
-  packages = {
-    # Generate packages for all systems with overlays
-    genPkgsFor = systems: overlays: platformOverlays:
-      lib.genAttrs (import systems) (system:
-        let
-          nixpkgs-version = if system == "aarch64-darwin" then inputs.nixpkgs-darwin else inputs.nixpkgs;
-          systemOverlays = platformOverlays.${system} or [];
-        in
-        import nixpkgs-version {
-          inherit system;
-          config.allowUnfree = true;
-          overlays = overlays ++ systemOverlays;
-        }
-      );
-  };
+  packages = packages;
 
   # System discovery utilities
   discovery = {
@@ -124,17 +112,6 @@ in
 
   # High-level configuration builders
   configs = {
-    # Get all hosts by system
-    hostsBySystem = lib.genAttrs systems (system:
-      discovery.getConfigsForSystem system machinesDir
-    );
-
-    # Build configurations for each system
-    configsBySystem = lib.mapAttrs (system: hosts:
-      builders.mkSystemsForArch {
-        inherit system hosts pkgsFor machinesDir inputs globals;
-      }
-    ) hostsBySystem;
     # Build all configurations for the flake
     buildAllConfigs = {
       systems,
@@ -146,6 +123,18 @@ in
       platformOverlays ? {}
     }:
       let
+        # Get all hosts by system
+        hostsBySystem = lib.genAttrs systems (system:
+          discovery.getConfigsForSystem system machinesDir
+        );
+
+        # Build configurations for each system
+        configsBySystem = lib.mapAttrs (system: hosts:
+          builders.mkSystemsForArch {
+            inherit system hosts pkgsFor machinesDir inputs globals;
+          }
+        ) hostsBySystem;
+
         # Separate Darwin and NixOS configs
         darwinSystems = lib.filter (s: lib.hasSuffix "darwin" s) systems;
         nixosSystems = lib.filter (s: !lib.hasSuffix "darwin" s) systems;
