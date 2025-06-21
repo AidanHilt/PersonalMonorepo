@@ -88,9 +88,8 @@
         inherit platformOverlays;
       };
     in {
-      allConfigs;
-
-      #  // {
+      nixosConfigurations = allConfigs.nixosConfigurations
+      #  {
       #   # How we build our bootstrap iso images
       #   iso_image_x86 = nixpkgs.lib.nixosSystem {
       #     system = "x86_64-linux";
@@ -138,5 +137,7 @@
       #     ];
       #   };
       # };
-  }
+
+      darwinConfigurations = aarch64DarwinConfigs;
+  };
 }
