@@ -81,62 +81,12 @@
         baseOverlays
         platformOverlays;
 
-      isNixosConfig = dir: builtins.pathExists (dir + "/configuration.nix");
-
-      getConfigsForSystem = system:
-        let
-          # Directory path for this system
-          systemDir = ./machines/${system};
-
-          # Read directory contents
-          systemDirContents = builtins.readDir systemDir;
-
-          # Filter to only include directories
-          systemDirNames = builtins.attrNames (nixpkgs.lib.filterAttrs
-            (name: type: type == "directory")
-            systemDirContents);
-
-          # Filter to only include directories with configuration.nix
-          systemHosts = builtins.filter (name:
-            isNixosConfig (systemDir + "/${name}")
-          ) systemDirNames;
-        in
-          systemHosts;
-
-      aarch64DarwinHosts = getConfigsForSystem "aarch64-darwin";
-      aarch64LinuxHosts = getConfigsForSystem "aarch64-linux";
-      x86_64LinuxHosts = getConfigsForSystem "x86_64-linux";
-
-      mkSystem = name: system:
-        let
-          systemFunction = if system == "aarch64-darwin" then darwin.lib.darwinSystem else nixpkgs.lib.nixosSystem;
-          moduleType = if system == "aarch64-darwin" then "darwinModules" else "nixosModules";
-          user-base = if system == "aarch64-darwin" then "/Users" else "/home";
-
-          platformModules = if moduleType == "nixosModules" then [inputs.wsl.nixosModules.wsl inputs.disko.nixosModules.disko] else [];
-        in
-        {
-        "${name}" = systemFunction {
-          inherit system;
-
-          specialArgs = {
-            machine-config = (import ./machines/${system}/${name}/values.nix { pkgs = pkgsFor.${system}; }) // {user-base = user-base; hostname = name;};
-            pkgs = pkgsFor.${system};
-            inherit inputs globals;
-          };
-
-          modules = [
-            ./machines/${system}/${name}/configuration.nix
-
-            inputs.home-manager.${moduleType}.home-manager
-            inputs.agenix.${moduleType}.default
-          ] ++ platformModules;
-        };
+      allConfigs = myLib.configs.buildAllConfigs {
+        inherit systems pkgsFor inputs globals;
+        machinesDir = ./machines;
+        overlays = baseOverlays;
+        inherit platformOverlays;
       };
-
-      aarch64DarwinConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystem name "aarch64-darwin")) {} aarch64DarwinHosts;
-      aarch64LinuxConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystem name "aarch64-linux")) {} aarch64LinuxHosts;
-      x86_64LinuxConfigs = builtins.foldl' (accumulator: name: accumulator // (mkSystem name "x86_64-linux")) {} x86_64LinuxHosts;
     in {
       nixosConfigurations = aarch64LinuxConfigs // x86_64LinuxConfigs // {
         # How we build our bootstrap iso images

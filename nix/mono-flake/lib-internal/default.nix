@@ -75,7 +75,7 @@ in
         };
       in
       {
-        ${name} = systemFunction {
+        "${name}" = systemFunction {
           inherit system;
           specialArgs = {
             inherit machine-config inputs globals;
