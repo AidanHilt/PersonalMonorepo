@@ -5,7 +5,6 @@ let
 
   builders = import ./builders.nix { inherit nixpkgs darwin inputs; };
   discovery = import ./discovery.nix { inherit nixpkgs darwin inputs; };
-
 in
 
 {

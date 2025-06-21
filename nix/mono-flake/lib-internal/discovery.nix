@@ -1,5 +1,9 @@
 { nixpkgs, darwin, inputs }:
 
+let
+  lib = nixpkgs.lib;
+in
+
 {
   # Check if directory contains a NixOS/Darwin configuration
   isNixosConfig = dir: builtins.pathExists (dir + "/configuration.nix");
