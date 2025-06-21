@@ -1,5 +1,9 @@
 { nixpkgs, darwin, inputs }:
 
+let
+  discovery = import ./discovery.nix { inherit nixpkgs darwin inputs; };
+in
+
 {
   # Generate packages for all systems with overlays
   genPkgsFor = systems: overlays: platformOverlays:
