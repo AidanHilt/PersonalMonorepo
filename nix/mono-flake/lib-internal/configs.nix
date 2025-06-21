@@ -2,6 +2,9 @@
 
 let
   lib = nixpkgs.lib;
+
+  discoveryLib = import ./discovery.nix { inherit nixpkgs darwin inputs; };
+
 in
 
 {
