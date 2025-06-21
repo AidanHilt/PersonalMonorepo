@@ -63,7 +63,7 @@
       };
 
       allSystems = import inputs.systems;
-      systems = nixpkgs.lib.filter (sys: builtins.pathExists ("./machines" + "${sys}")) allSystems;
+      systems = nixpkgs.lib.filter (sys: builtins.pathExists ("./machines" + "/${sys}")) allSystems;
 
       baseOverlays = [
         inputs.nur.overlays.default
