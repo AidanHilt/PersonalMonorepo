@@ -62,7 +62,7 @@
         nixConfig = inputs.personalMonorepo + "/nix";
       };
 
-      systems = import inputs.systems;
+      systems = import lib.filter (sys: builtins.pathExists ("./machines" + "${sys}"))inputs.systems;
 
       baseOverlays = [
         inputs.nur.overlays.default
