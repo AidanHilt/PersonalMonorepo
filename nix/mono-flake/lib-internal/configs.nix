@@ -3,7 +3,8 @@
 let
   lib = nixpkgs.lib;
 
-  discoveryLib = import ./discovery.nix { inherit nixpkgs darwin inputs; };
+  builders = import ./builders.nix { inherit nixpkgs darwin inputs; };
+  discovery = import ./discovery.nix { inherit nixpkgs darwin inputs; };
 
 in
 
@@ -21,7 +22,7 @@ in
     let
       # Get all hosts by system
       hostsBySystem = lib.genAttrs systems (system:
-        discoveryLib.getConfigsForSystem system machinesDir
+        discovery.getConfigsForSystem system machinesDir
       );
 
       # Build configurations for each system
