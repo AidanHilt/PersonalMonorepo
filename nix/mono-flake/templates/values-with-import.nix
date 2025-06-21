@@ -7,10 +7,6 @@ let
     # TODO we probably just want to read hostname from the folder
     hostname = "";
 
-    # imports = [
-    #  ../shared-values/<machine-group>.nix
-    # ];
-
     # networking = {
     #   fixedIp = false;
 
