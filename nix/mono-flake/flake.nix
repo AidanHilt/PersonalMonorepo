@@ -81,7 +81,7 @@
         baseOverlays
         platformOverlays;
 
-      allConfigs = myLib.configs.buildAllConfigs {
+      allConfigs = internalLib.configs.buildAllConfigs {
         inherit systems pkgsFor inputs globals;
         machinesDir = ./machines;
         overlays = baseOverlays;
