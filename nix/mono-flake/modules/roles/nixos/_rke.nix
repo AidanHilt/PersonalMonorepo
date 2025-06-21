@@ -3,13 +3,11 @@
 let
   rke-config = if machine-config.k8s.primaryNode then
     {
-      tokenFile = "/var/lib/rancher/rke2/server/token";
-      serverAddr = "https://${machine-config.k8s.clusterEndpoint}:9345";
+      role = "server";
     }
-
   else
     {
-      role = "server";
+      serverAddr = "https://${machine-config.k8s.clusterEndpoint}:9345";
     };
 in
 
@@ -23,10 +21,10 @@ in
   ];
 
   age.secrets.rke-token = {
-    file = ../../../secrets/rke-token-${machine-config.k8s.clusterName}.age;
-    path = "/var/lib/rancher/rke2/server/token";
+    file = ../../../secrets/rke-config-${machine-config.k8s.clusterName}.age;
+    path = "etc/rancher/rke2/config.yaml";
     symlink = false;
-    mode = "444";
+    mode = "400";
   };
 
   networking.firewall = {
@@ -43,5 +41,17 @@ in
   services.rke2 = {
     enable = true;
     cni = "calico";
+
+    extraFlags = [
+      "--write-kubeconfig-mode=0640"
+    ];
   } // rke-config;
+
+  system.activationScripts = {
+    chgrp-kubeconfig = pkgs.lib.mkIf (!machine-config.k8s.primaryNode) {
+      text = ''
+        chgrp sensitive-file-readers /etc/rancher/rke2/rke2.yaml
+      '';
+    };
+  };
 }

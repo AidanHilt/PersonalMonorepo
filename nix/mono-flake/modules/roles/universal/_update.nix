@@ -58,9 +58,9 @@ let
 
     if [[ "$source_type" == "remote" ]]; then
         # For remote source, get repository and branch
-        echo -n "Remote repository (default: github:AidanHilt/PersonalMonorepo): "
+        echo -n "Remote repository (default: github:AidanHilt/PersonalMonorepo?dir=nix/mono-flake): "
         read remote_repo
-        UPDATE__REMOTE_URL="''${remote_repo:-github:AidanHilt/PersonalMonorepo}"
+        UPDATE__REMOTE_URL="''${remote_repo:-github:AidanHilt/PersonalMonorepo?dir=nix/mono-flake}"
 
         echo -n "Branch to use (default: master): "
         read branch_name
@@ -91,10 +91,6 @@ let
 
   # 4. If we're doing a remote (i.e. GitHub) update, we need to build out the full reference (URL + branch)
   if [ ! -z "$UPDATE__REMOTE_URL" ]; then
-    # Because you're going to forget, the double single quote is an escape character for nix
-    if [[ ''${UPDATE__REMOTE_URL: -1} != "/" ]]; then
-    UPDATE__REMOTE_URL="$UPDATE__REMOTE_URL/"
-    fi
 
     if [ -z "$UPDATE__REMOTE_BRANCH" ]; then
     UPDATE__REMOTE_BRANCH="master"
@@ -108,7 +104,7 @@ let
       after_question=''${UPDATE__REMOTE_URL:$question_mark_pos-1}
 
       # Construct new string with branch inserted before "?"
-      UPDATE__FLAKE_LOCATION="''${before_question}''${UPDATE__REMOTE_BRANCH}''${after_question}"
+      UPDATE__FLAKE_LOCATION="''${before_question}/''${UPDATE__REMOTE_BRANCH}''${after_question}"
     else
       # No "?" found, append branch to the end
       UPDATE__FLAKE_LOCATION="''${UPDATE__REMOTE_URL}/''${UPDATE__REMOTE_BRANCH}"

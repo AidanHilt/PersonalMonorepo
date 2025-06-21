@@ -1,10 +1,18 @@
-{ inputs, globals, pkgs, lib, system, ...}:
+{ inputs, globals, pkgs, lib, system, machine-config, ...}:
 
 {
   imports = [
     ../modules/vim.nix
     ../modules/zsh.nix
   ];
+
+  home.file.".atils/update-config.env" = {
+    text = ''
+      UPDATE__REMOTE_BRANCH="feat/rke-secret-management"
+      UPDATE__FLAKE_LOCATION="github:AidanHilt/PersonalMonorepo/feat/rke-secret-management?dir=nix/mono-flake"
+      UPDATE__MACHINE_NAME="${machine-config.hostname}"
+    '';
+  };
 
   # Home Manager needs a bit of information about you and the paths it should
   # manage.

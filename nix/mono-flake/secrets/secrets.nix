@@ -10,17 +10,17 @@ let
   wsl-user = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEEAi2UjaWUsDVY6wUMMcIjDXzyizhax86Z0J2I6fYM0 nixos@nixos";
   wsl-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICbW6OhxPYPuJTZAgbpL3+PwHPNvdL2dw8+KqA1QeF47 root@nixos";
 
-  user-machines = [hyperion-user hyperion-system wsl-user wsl-system];
+  user-machines = [hyperion-user hyperion-system wsl-user wsl-system ];
 
   # Our various server clusters
   # ===========================
 
   # A small test cluster we run on NixOS machines running as VMs on our MacBooks
   # Mac cluster configuration
-  laptop-vm-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAZUDDd40ePKePHdJS+ZJrb/ul36ZU5yTAQkx2Th26jw root@nixos";
-  laptop-vm-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ9KkI49t4alr1XEx2en2IUmiAJT8HqbcCppP1v58I+e root@nixos";
+  macbook-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEc6NpZLkS+PKk7cpJINQ/cLxFB5eMAQf8CbipEJcVHa noname";
+  macbook-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINNPr1gr8iGTjXIK1Mitl4tTAZ+WR7DS/N6FofcvRrE/ noname";
 
-  mac-cluster-machines = [laptop-vm-cluster-1-system laptop-vm-cluster-2-system];
+  mac-cluster-machines = [macbook-cluster-1-system macbook-cluster-2-system];
 
   # Our main staging cluster, in the form of NixOS machines running on x86 hardware
   staging-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIImXssIeNM0HqEu8ZKnpaweicauH4bYNrkwpIX/Hjcwh root@staging-cluster-1";
@@ -38,7 +38,5 @@ in
 
   "adguardhome.age".publicKeys = user-machines ++ mac-cluster-machines;
 
-  "rke-token-staging-cluster.age".publicKeys = user-machines ++ staging-cluster-machines;
-
-  "rke-token-mac-cluster.age".publicKeys = user-machines ++ mac-cluster-machines;
+  "rke-config-laptop-cluster.age".publicKeys = user-machines ++ mac-cluster-machines;
 }
