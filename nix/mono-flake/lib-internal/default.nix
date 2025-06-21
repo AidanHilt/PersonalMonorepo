@@ -124,6 +124,17 @@ in
 
   # High-level configuration builders
   configs = {
+    # Get all hosts by system
+    hostsBySystem = lib.genAttrs systems (system:
+      discovery.getConfigsForSystem system machinesDir
+    );
+
+    # Build configurations for each system
+    configsBySystem = lib.mapAttrs (system: hosts:
+      builders.mkSystemsForArch {
+        inherit system hosts pkgsFor machinesDir inputs globals;
+      }
+    ) hostsBySystem;
     # Build all configurations for the flake
     buildAllConfigs = {
       systems,
@@ -135,18 +146,6 @@ in
       platformOverlays ? {}
     }:
       let
-        # Get all hosts by system
-        hostsBySystem = lib.genAttrs systems (system:
-          builtins.discovery.getConfigsForSystem system machinesDir
-        );
-
-        # Build configurations for each system
-        configsBySystem = lib.mapAttrs (system: hosts:
-          builders.mkSystemsForArch {
-            inherit system hosts pkgsFor machinesDir inputs globals;
-          }
-        ) hostsBySystem;
-
         # Separate Darwin and NixOS configs
         darwinSystems = lib.filter (s: lib.hasSuffix "darwin" s) systems;
         nixosSystems = lib.filter (s: !lib.hasSuffix "darwin" s) systems;
