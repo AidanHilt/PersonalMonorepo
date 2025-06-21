@@ -88,7 +88,7 @@
         inherit platformOverlays;
       };
     in {
-      darwinConfigurations = aarch64DarwinConfigs;
+      #darwinConfigurations = aarch64DarwinConfigs;
       nixosConfigurations = allConfigs.nixosConfigurations;
       #  {
       #   # How we build our bootstrap iso images
