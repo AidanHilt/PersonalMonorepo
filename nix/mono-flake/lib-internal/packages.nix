@@ -1,6 +1,8 @@
 { nixpkgs, darwin, inputs }:
 
 let
+  lib = nixpkgs.lib;
+
   discovery = import ./discovery.nix { inherit nixpkgs darwin inputs; };
 in
 

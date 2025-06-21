@@ -1,6 +1,6 @@
 { nixpkgs, darwin, inputs }:
 
-{
+let
   # Create a system configuration
   mkSystem = { name, system, pkgsFor, machinesDir, inputs, globals ? {} }:
     let
@@ -43,8 +43,13 @@
   # Build all systems for a given architecture
   mkSystemsForArch = { system, hosts, pkgsFor, machinesDir, inputs, globals ? {} }:
     builtins.foldl' (acc: name:
-      acc // (builtins.builders.mkSystem {
+      acc // (mkSystem {
         inherit name system pkgsFor machinesDir inputs globals;
       })
     ) {} hosts;
+in
+
+{
+  mkSystem = mkSystem;
+  mkSystemsForArch = mkSystemsForArch;
 }
