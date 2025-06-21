@@ -142,7 +142,7 @@ in
 
         # Build configurations for each system
         configsBySystem = lib.mapAttrs (system: hosts:
-          builtins.builders.mkSystemsForArch {
+          builders.mkSystemsForArch {
             inherit system hosts pkgsFor machinesDir inputs globals;
           }
         ) hostsBySystem;
