@@ -56,26 +56,30 @@
 
   outputs = { self, nixpkgs, darwin, ... }@inputs:
     let
+      internalLib = import ./lib-internal/default.nix { inherit nixpkgs darwin inputs; };
+
       globals = {
         nixConfig = inputs.personalMonorepo + "/nix";
       };
 
-      pkgsFor = inputs.nixpkgs.lib.genAttrs (import inputs.systems) (
-        system:
-          let
-            nixpkgs-version = if system == "aarch64-darwin" then inputs.nixpkgs-darwin else inputs.nixpkgs;
-            platform-overlays = if system == "aarch64-darwin" then [(self: super: {nodejs = super.nodejs_22;})] else [];
-          in
-          import nixpkgs-version {
-            inherit system;
-            config.allowUnfree = true;
-              overlays = [
-                inputs.nur.overlays.default
-                inputs.agenix.overlays.default
-                inputs.nix-vscode-extensions.overlays.default
-              ] ++ platform-overlays;
-          }
-      );
+      systems = import inputs.systems;
+
+      baseOverlays = [
+        inputs.nur.overlays.default
+        inputs.agenix.overlays.default
+        inputs.nix-vscode-extensions.overlays.default
+      ];
+
+      platformOverlays = {
+        "aarch64-darwin" = [
+          (self: super: { nodejs = super.nodejs_22; })
+        ];
+      };
+
+      pkgsFor = internalLib.packages.genPkgsFor
+        inputs.systems
+        baseOverlays
+        platformOverlays;
 
       isNixosConfig = dir: builtins.pathExists (dir + "/configuration.nix");
 
