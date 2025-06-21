@@ -21,7 +21,9 @@ in
     let
       # Get all hosts by system
       hostsBySystem = lib.genAttrs systems (system:
-        discovery.getConfigsForSystem system machinesDir
+        if builtins.pathExists (machinesDir + "/${system}")
+        then discovery.getConfigsForSystem system machinesDir
+        else {}
       );
 
       # Build configurations for each system
