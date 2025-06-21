@@ -89,7 +89,7 @@
       };
     in {
       darwinConfigurations = aarch64DarwinConfigs;
-      nixosConfigurations = allConfigs.nixosConfigurations
+      nixosConfigurations = allConfigs.nixosConfigurations;
       #  {
       #   # How we build our bootstrap iso images
       #   iso_image_x86 = nixpkgs.lib.nixosSystem {
