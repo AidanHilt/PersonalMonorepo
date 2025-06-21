@@ -1,8 +1,6 @@
 { nixpkgs, darwin, inputs }:
 
 let
-  lib = nixpkgs.lib;
-
   buildersLib = import ./builders.nix { inherit nixpkgs darwin inputs; };
   configsLib = import ./configs.nix { inherit nixpkgs darwin inputs; };
   discoveryLib = import ./discovery.nix { inherit nixpkgs darwin inputs; };
