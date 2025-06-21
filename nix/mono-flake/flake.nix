@@ -89,7 +89,7 @@
       };
 
     in {
-      darwinConfigurations = allConfigs.aarch64DarwinConfigs;
+      darwinConfigurations = allConfigs.aarch64DarwinConfigurations;
       nixosConfigurations = allConfigs.nixosConfigurations;
 
       #  = aarch64LinuxConfigs // x86_64LinuxConfigs // {
