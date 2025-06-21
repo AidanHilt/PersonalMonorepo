@@ -62,7 +62,7 @@
         nixConfig = inputs.personalMonorepo + "/nix";
       };
 
-      systems = import nixpkgs.lib.filter ((sys: builtins.pathExists ("./machines" + "${sys}")) inputs.systems);
+      systems = nixpkgs.lib.filter ((sys: builtins.pathExists ("./machines" + "${sys}")) import inputs.systems);
 
       baseOverlays = [
         inputs.nur.overlays.default
