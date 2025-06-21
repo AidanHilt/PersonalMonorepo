@@ -3,38 +3,15 @@
 let
   lib = nixpkgs.lib;
 
-  packages = import ./packages.nix { inherit nixpkgs darwin inputs; };
+  packagesLib = import ./packages.nix { inherit nixpkgs darwin inputs; };
+  discoveryLib = import ./discovery.nix { inherit nixpkgs darwin inputs; };
 in
 {
   # Package management utilities
-  packages = packages;
+  packages = packagesLib;
 
   # System discovery utilities
-  discovery = {
-    # Check if directory contains a NixOS/Darwin configuration
-    isNixosConfig = dir: builtins.pathExists (dir + "/configuration.nix");
-
-    # Get all machine configs for a specific system
-    getConfigsForSystem = system: machinesDir:
-      let
-        systemDir = machinesDir + "/${system}";
-        systemDirContents = builtins.readDir systemDir;
-        systemDirNames = builtins.attrNames (lib.filterAttrs
-          (name: type: type == "directory")
-          systemDirContents
-        );
-        systemHosts = builtins.filter (name:
-          builtins.pathExists (systemDir + "/${name}/configuration.nix")
-        ) systemDirNames;
-      in
-      systemHosts;
-
-    # Get all hosts for all systems
-    getAllHosts = machinesDir: systems:
-      lib.genAttrs systems (system:
-        builtins.discovery.getConfigsForSystem system machinesDir
-      );
-  };
+  discovery = discoveryLib;
 
   # System building utilities
   builders = {
@@ -125,7 +102,7 @@ in
       let
         # Get all hosts by system
         hostsBySystem = lib.genAttrs systems (system:
-          discovery.getConfigsForSystem system machinesDir
+          discoveryLib.getConfigsForSystem system machinesDir
         );
 
         # Build configurations for each system
