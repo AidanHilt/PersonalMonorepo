@@ -48,7 +48,7 @@ in
   } // rke-config;
 
   system.activationScripts = {
-    chgrp-kubeconfig = pkgs.lib.mkIf (!machine-config.k8s.primaryNode) {
+    chgrp-kubeconfig = pkgs.lib.mkIf (machine-config.k8s.primaryNode) {
       text = ''
         chgrp sensitive-file-readers /etc/rancher/rke2/rke2.yaml
       '';
