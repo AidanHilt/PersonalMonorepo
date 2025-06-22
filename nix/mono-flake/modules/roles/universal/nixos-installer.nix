@@ -5,5 +5,7 @@
     ../../scripts/nixos-key-retrieval.nix
     ../../scripts/nixos-kubeconfig-retrieval.nix
     ../../scripts/nixos-remote-install.nix
+
+    ../../scripts/mono-flake-new-machine.nix
   ];
 }
