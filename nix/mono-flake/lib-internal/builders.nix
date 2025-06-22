@@ -1,7 +1,7 @@
 { nixpkgs, darwin, inputs }:
 
 let
-  valuesLib = import ./values.nix { inherit nixpkgs darwin inputs; };
+  values = import ./values.nix { inherit nixpkgs darwin inputs; };
 
   # Create a system configuration
   mkSystem = { name, system, pkgsFor, machinesDir, inputs, globals ? {} }:
