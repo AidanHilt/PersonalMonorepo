@@ -1,24 +1,28 @@
 { nixpkgs, darwin, inputs }:
 
 {
-  # Merge machine values with defaults
-  mergeValues = { defaults, values ? null }:
+  getMachineConfig = machineName: system:
     let
-      defaultsData = if builtins.isPath defaults then import defaults else defaults;
-      valuesData = if values != null then
-        (if builtins.isPath values then import values else values)
-      else {};
-    in
-    lib.recursiveUpdate defaultsData valuesData;
+      machinesDir = "../machines";
+      modulesDir = "../modules";
 
-  # Load machine values with defaults
-  loadMachineValues = { machineName, system, machinesDir, defaults ? {} }:
-    let
       machineValuesPath = machinesDir + "/${system}/${machineName}/values.nix";
-      hasValues = builtins.pathExists machineValuesPath;
+
+      machineValues = import machineValuesPath;
+
+      clusterName = machineValues.k8s.clusterName or null;
+
+      sharedValuesPath = if clusterName != null
+        then modulesDir + "/shared-values/${clusterName}.nix"
+        else null;
+
+      sharedValues = if sharedValuesPath != null && builtins.pathExists sharedValuesPath
+        then import sharedValuesPath
+        else {};
+
+      sharedValues = sharedValues // {
+        hostname = machineName;
+      };
     in
-    if hasValues then
-      lib.recursiveUpdate defaults (import machineValuesPath)
-    else
-      defaults;
-  }
+      lib.recursiveUpdate sharedValues machineValues;
+}
