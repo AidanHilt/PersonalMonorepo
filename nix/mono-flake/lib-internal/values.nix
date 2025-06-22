@@ -16,7 +16,7 @@ in
 
       defaultValuesFile = machineValues.defaultValues or null;
 
-      sharedValuesPath = if clusterName != null
+      sharedValuesPath = if defaultValuesFile != null
         then modulesDir + "/shared-values/${defaultValuesFile}.nix"
         else null;
 
