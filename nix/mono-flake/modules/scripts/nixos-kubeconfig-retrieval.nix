@@ -200,7 +200,11 @@ echo "Cluster '$CLUSTER_NAME' has been added to your kubeconfig"
 in
 
 {
-  environment.systemPackages = [
+  imports = [
+    ../roles/universal/_kubernetes-admin.nix
+  ];
+
+  environment.systemPackages = with pkgs; [
     nixos-kubeconfig-retrieval
     generate-homelab-node-files
     get-username-from-machine-name

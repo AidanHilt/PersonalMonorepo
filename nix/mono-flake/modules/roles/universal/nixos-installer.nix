@@ -2,8 +2,6 @@
 
 {
   imports = [
-    ./_kubernetes-admin.nix
-
     ../../scripts/nixos-key-retrieval.nix
     ../../scripts/nixos-kubeconfig-retrieval.nix
     ../../scripts/nixos-remote-install.nix
