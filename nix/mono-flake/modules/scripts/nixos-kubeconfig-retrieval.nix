@@ -3,6 +3,10 @@
 let
 
 get-username-from-machine-name = pkgs.writeShellScriptBin "get-username-from-machine-name" ''
+#!/usr/bin/env bash
+
+set -euo pipefail
+
 if [ $# -ne 1 ]; then
   echo "Usage: $0 <machine-name>"
   exit 1
