@@ -2,7 +2,7 @@
 
 let
 
-mono-flake-new-machine = pkgs.lib.writeShellScriptBin "mono-flake-new-machine" ''
+mono-flake-new-machine = pkgs.writeShellScriptBin "mono-flake-new-machine" ''
 #!/bin/bash
 
 set -euo pipefail
