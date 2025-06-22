@@ -46,7 +46,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check if PERSONAL_MONOREPO_LOCATION is set
-if [[ -z "${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
+if [[ -z "''${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
     echo "Error: PERSONAL_MONOREPO_LOCATION environment variable is not set"
     exit 1
 fi
