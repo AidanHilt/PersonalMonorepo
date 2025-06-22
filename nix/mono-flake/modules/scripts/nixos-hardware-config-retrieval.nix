@@ -95,7 +95,7 @@ trap "rm -rf $TEMP_DIR" EXIT
 
 # SSH into machine and generate hardware configuration
 echo "Generating hardware configuration on remote machine..."
-ssh "$USERNAME@$IP_ADDRESS" "sudo nixos-generate-config --show-hardware-config" > "$TEMP_DIR/hardware-configuration.nix"
+ssh "$USERNAME@$IP_ADDRESS" "nixos-generate-config --show-hardware-config" > "$TEMP_DIR/hardware-configuration.nix"
 
 if [[ ! -s "$TEMP_DIR/hardware-configuration.nix" ]]; then
     echo "Error: Failed to generate or retrieve hardware configuration"
