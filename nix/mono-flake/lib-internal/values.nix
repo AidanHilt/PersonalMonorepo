@@ -1,5 +1,9 @@
 { nixpkgs, darwin, inputs }:
 
+let
+  lib = nixpkgs.lib;
+in
+
 {
   getMachineConfig = machineName: system:
     let
