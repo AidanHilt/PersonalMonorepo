@@ -123,8 +123,8 @@ export SCRIPT_NAME_FULL="$SCRIPT_NAME"
 
 # Check if envsubst is available
 if ! command -v envsubst >/dev/null 2>&1; then
-    echo "Error: envsubst command not found. Please install gettext package."
-    exit 1
+  echo "Error: envsubst command not found. Please install gettext package."
+  exit 1
 fi
 
 # Process template with envsubst
