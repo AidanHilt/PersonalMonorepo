@@ -54,7 +54,7 @@ if [[ -z "''${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
     exit 1
 fi
 
-MACHINES_DIR="$PERSONAL_MONOREPO_LOCATION/nix/machines"
+MACHINES_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/machines"
 
 if [[ ! -d "$MACHINES_DIR" ]]; then
     echo "Error: Machines directory does not exist: $MACHINES_DIR"
