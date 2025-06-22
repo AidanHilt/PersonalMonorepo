@@ -47,11 +47,18 @@ in
     ];
   } // rke-config;
 
-  system.activationScripts = {
-    chgrp-kubeconfig = pkgs.lib.mkIf (machine-config.k8s.primaryNode) {
-      text = ''
-        chgrp sensitive-file-readers /etc/rancher/rke2/rke2.yaml
-      '';
+  systemd.services.fix-kubeconfig-permissions = pkgs.lib.mkIf (machine-config.k8s.primaryNode) {
+    description = "Fix kubeconfig permissions";
+    after = [ "rke2-server.service" ]; # adjust service name as needed
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
     };
+    script = ''
+      if [ -f /etc/rancher/rke2/rke2.yaml ]; then
+        chgrp sensitive-file-readers /etc/rancher/rke2/rke2.yaml
+      fi
+    '';
   };
 }
