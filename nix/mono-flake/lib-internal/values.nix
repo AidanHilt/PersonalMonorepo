@@ -26,6 +26,7 @@ in
 
       defaultValues = sharedValues // {
         hostname = machineName;
+        user-base = if lib.hasSuffix "darwin" system then "/Users" else "/home";
       };
     in
       lib.recursiveUpdate defaultValues machineValues;
