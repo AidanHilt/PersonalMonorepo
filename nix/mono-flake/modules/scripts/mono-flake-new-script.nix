@@ -55,7 +55,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check if PERSONAL_MONOREPO_LOCATION is set
-if [[ -z "${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
+if [[ -z "''${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
     echo "Error: PERSONAL_MONOREPO_LOCATION environment variable is not set"
     exit 1
 fi
@@ -96,7 +96,7 @@ fi
 
 # Add .nix extension if not present
 if [[ ! "$SCRIPT_NAME" =~ \.nix$ ]]; then
-    SCRIPT_NAME="${SCRIPT_NAME}.nix"
+    SCRIPT_NAME="''${SCRIPT_NAME}.nix"
 fi
 
 # Define output file path
@@ -118,7 +118,7 @@ if [[ -f "$OUTPUT_FILE" ]]; then
 fi
 
 # Export the script name as environment variable for envsubst
-export SCRIPT_NAME_BASE="${SCRIPT_NAME%.nix}"  # Remove .nix extension for template use
+export SCRIPT_NAME_BASE="''${SCRIPT_NAME%.nix}"  # Remove .nix extension for template use
 export SCRIPT_NAME_FULL="$SCRIPT_NAME"
 
 # Check if envsubst is available
