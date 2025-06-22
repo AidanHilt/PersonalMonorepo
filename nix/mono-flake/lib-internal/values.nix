@@ -14,10 +14,10 @@ in
 
       machineValues = import machineValuesPath;
 
-      clusterName = machineValues.defaultValues or null;
+      defaultValuesFile = machineValues.defaultValues or null;
 
       sharedValuesPath = if clusterName != null
-        then modulesDir + "/shared-values/${defaultValues}.nix"
+        then modulesDir + "/shared-values/${defaultValuesFile}.nix"
         else null;
 
       sharedValues = if sharedValuesPath != null && builtins.pathExists sharedValuesPath
