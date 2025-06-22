@@ -50,7 +50,7 @@ in
   system.activationScripts = {
     chgrp-kubeconfig = pkgs.lib.mkIf (machine-config.k8s.primaryNode) {
       text = ''
-        sudo chgrp sensitive-file-readers /etc/rancher/rke2/rke2.yaml
+        chgrp sensitive-file-readers /etc/rancher/rke2/rke2.yaml
       '';
     };
   };
