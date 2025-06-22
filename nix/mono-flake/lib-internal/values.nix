@@ -10,10 +10,10 @@
 
       machineValues = import machineValuesPath;
 
-      clusterName = machineValues.k8s.clusterName or null;
+      clusterName = machineValues.defaultValues or null;
 
       sharedValuesPath = if clusterName != null
-        then modulesDir + "/shared-values/${clusterName}.nix"
+        then modulesDir + "/shared-values/${defaultValues}.nix"
         else null;
 
       sharedValues = if sharedValuesPath != null && builtins.pathExists sharedValuesPath
