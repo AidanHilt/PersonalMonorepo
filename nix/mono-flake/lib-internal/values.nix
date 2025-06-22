@@ -7,8 +7,8 @@ in
 {
   getMachineConfig = machineName: system:
     let
-      machinesDir = "../machines";
-      modulesDir = "../modules";
+      machinesDir = ../machines;
+      modulesDir = ../modules;
 
       machineValuesPath = machinesDir + "/${system}/${machineName}/values.nix";
 
