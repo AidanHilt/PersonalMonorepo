@@ -20,9 +20,9 @@
         then import sharedValuesPath
         else {};
 
-      sharedValues = sharedValues // {
+      defaultValues = sharedValues // {
         hostname = machineName;
       };
     in
-      lib.recursiveUpdate sharedValues machineValues;
+      lib.recursiveUpdate defaultValues machineValues;
 }
