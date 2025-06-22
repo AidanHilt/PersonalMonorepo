@@ -1,5 +1,3 @@
-{ pkgs, ... }:
-
 {
   defaultValues = "laptop-cluster";
 }
