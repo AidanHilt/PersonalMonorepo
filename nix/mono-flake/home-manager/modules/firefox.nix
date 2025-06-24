@@ -3,10 +3,10 @@
 let
   work-machine = machine-config.work-machine or false;
 
-  additional-extensions = if work-machine then [
+  additional-extensions = if work-machine then with pkgs.nur.repos.rycee.firefox-addons; [
     keeper-password-manager
   ]
-  else [
+  else with pkgs.nur.repos.rycee.firefox-addons; [
     facebook-container
     keepassxc-browser
     sponsorblock
