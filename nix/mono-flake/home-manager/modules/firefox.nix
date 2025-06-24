@@ -1,4 +1,17 @@
-{ inputs, globals, pkgs, lib, ...}:
+{ inputs, globals, pkgs, lib, machine-config, ...}:
+
+let
+  work-machine = machine-config.work-machine or false;
+
+  additional-extensions = if work-machine then [
+    keeper-password-manager
+  ]
+  else [
+    facebook-container
+    keepassxc-browser
+    sponsorblock
+  ];
+in
 
 {
   home.activation.firefoxProfile = lib.mkIf (pkgs.system == "aarch64-darwin")
@@ -18,14 +31,11 @@
         clearurls
         docsafterdark
         don-t-fuck-with-paste
-        facebook-container
-        keepassxc-browser
         privacy-badger
         refined-github
-        sponsorblock
         ublock-origin
         view-image
-      ];
+      ] // additional-extensions;
 
 
       extraConfig = ''
