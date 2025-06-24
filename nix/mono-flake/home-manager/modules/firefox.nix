@@ -35,7 +35,7 @@ in
         refined-github
         ublock-origin
         view-image
-      ] // additional-extensions;
+      ] ++ additional-extensions;
 
 
       extraConfig = ''
