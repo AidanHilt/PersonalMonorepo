@@ -7,6 +7,7 @@
 
   services.keepalived = {
     enable = true;
+    openFirewall = true;
 
     vrrpInstances.adguardhome = {
       interface = "enp0s1";
