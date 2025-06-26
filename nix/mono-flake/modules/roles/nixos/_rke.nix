@@ -1,7 +1,9 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 let
-  rke-config = if machine-config.k8s.primaryNode then
+  clusterEndpoint = if machine-config.k8s.clusterEndpoint then machine-config.k8s.clusterEndpoint else machine.config.networking.loadBalancerIp;
+
+  rkeConfig = if machine-config.k8s.primaryNode then
     {
       role = "server";
     }
@@ -44,10 +46,10 @@ in
 
     extraFlags = [
       "--write-kubeconfig-mode=0640"
-      "--advertise-address=192.168.86.20"
+      "--advertise-address=${machine-config.networking.address}"
       "--tls-san=192.168.86.18"
     ];
-  } // rke-config;
+  } // rkeConfig;
 
   systemd.services.fix-kubeconfig-permissions = pkgs.lib.mkIf (machine-config.k8s.primaryNode) {
     description = "Fix kubeconfig permissions";

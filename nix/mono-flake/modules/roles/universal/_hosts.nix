@@ -5,7 +5,6 @@
     file = ../../../secrets/hosts.age;
     path = "/etc/hosts";
     owner = "root";
-    mode = "644";
     # symlink = false;
   };
 
