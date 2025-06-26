@@ -12,7 +12,7 @@
       interface = "enp0s1";
       priority = 100;
       virtualRouterId = 81;
-      virtualIps = [{ addr = "192.168.86.19"; }];
+      virtualIps = [{ addr = machine-config.networking.loadBalancerIp; }];
     };
   };
 }

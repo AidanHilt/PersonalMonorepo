@@ -19,29 +19,29 @@ in
       # These guys need to have the full title because of string stuff
       pkgs.vscode-marketplace."4ops".terraform
 
-      mads-hartmann.bash-ide-vscode
-      ms-azuretools.vscode-docker
+      bbenoist.nix
       brunnerh.file-properties-viewer
+      charliermarsh.ruff
       github.vscode-github-actions
       github.vscode-pull-request-github
       golang.go
+      gruntfuggly.todo-tree
       hashicorp.hcl
-      ms-python.isort
-      wholroyd.jinja
-      ms-kubernetes-tools.vscode-kubernetes-tools
-      ms-vsliveshare.vsliveshare
-      shd101wyy.markdown-preview-enhanced
-      bbenoist.nix
+      mads-hartmann.bash-ide-vscode
       mechatroner.rainbow-csv
+      ms-azuretools.vscode-docker
+      ms-kubernetes-tools.vscode-kubernetes-tools
+      ms-python.isort
       ms-vscode-remote.remote-ssh
       ms-vscode-remote.remote-ssh-edit
-      ms-vscode.remote-explorer
-      charliermarsh.ruff
-      timonwong.shellcheck
-      gruntfuggly.todo-tree
-      redhat.vscode-yaml
-      slevesque.vscode-zipexplorer
       ms-vscode.powershell
+      ms-vscode.remote-explorer
+      ms-vsliveshare.vsliveshare
+      redhat.vscode-yaml
+      shd101wyy.markdown-preview-enhanced
+      slevesque.vscode-zipexplorer
+      timonwong.shellcheck
+      wholroyd.jinja
      ];
   };
 }
