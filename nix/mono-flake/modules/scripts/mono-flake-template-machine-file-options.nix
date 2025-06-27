@@ -54,7 +54,7 @@ get_relative_path() {
 for file in "$OPTIONS_PATH"/*; do
   if [ -f "$file" ]; then
     # Calculate relative path from destination directory to the options file
-    relative_path=$(get_relative_path "$file" "$DEST_DIR")
+    relative_path=$(get_relative_path "$DEST_DIR" "$file")
 
     if [ -n "$FILE_LIST" ] && [ "$FILE_LIST" != "\n" ]; then
       FILE_LIST+="\n    #$relative_path"
