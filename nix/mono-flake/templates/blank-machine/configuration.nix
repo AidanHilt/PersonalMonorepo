@@ -5,7 +5,10 @@
 { config, pkgs, machine-config, inputs, globals, ... }:
 
 {
-  imports = [];
+  imports = [
+    ./home.nix
+    ./disko.nix
+  ];
 
   home-manager = {
     useGlobalPkgs = true;

@@ -1,7 +1,7 @@
-{ inputs, globals, pkgs, lib, system, ...}:
+{ inputs, globals, pkgs, lib, system, machine-config, ...}:
 
 {
-  imports = [];
+  imports = [$HOME_MANAGER_COMMON_CONFIG_OPTIONS];
 
   home.stateVersion = "24.11";
 
