@@ -61,14 +61,14 @@ for file in "$OPTIONS_PATH"/*; do
     relative_path=$(get_relative_path "$file" "$DEST_DIR")
 
     if [ -n "$FILE_LIST" ] && [ "$FILE_LIST" != "\n" ]; then
-      FILE_LIST+="\n$relative_path"
+      FILE_LIST+="\n    #$relative_path"
     else
-      FILE_LIST+="$relative_path"
+      FILE_LIST+="    #$relative_path"
     fi
   fi
 done
 
-FILE_LIST+="\n"  # Append newline
+FILE_LIST+="\n  "  # Append newline
 
 # Step 3: Export the target variable with the file list
 export "$TARGET_VARIABLE"="$FILE_LIST"
