@@ -46,10 +46,6 @@ get_relative_path() {
   local target="$1"
   local base="$2"
 
-  # Convert to absolute paths
-  target=$(cd "$(dirname "$target")" && pwd)/$(basename "$target")
-  base=$(cd "$base" && pwd)
-
   # Use Python to calculate relative path
   python3 -c "import os.path; print(os.path.relpath('$target', '$base'))" 2>/dev/null
 }
