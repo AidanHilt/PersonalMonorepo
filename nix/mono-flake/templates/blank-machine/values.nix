@@ -1,6 +1,7 @@
 {
   username = "";
 
+  # NOTE: You won't need to set hostname, unless you want it to be different from the name of the directory
   # hostname = "";
 
   # networking = {
@@ -20,6 +21,8 @@
   # k8s = {
   #   primaryNode = false;
 
+  #   NOTE: Either this or networking.loadBalancerIp MUST be set for RKE nodes. We should mostly be
+  #   using loadBalancerIp
   #   clusterEndpoint = "";
   #   # Used to identify which secrets to provide to the cluster
   #   clusterName = "";
