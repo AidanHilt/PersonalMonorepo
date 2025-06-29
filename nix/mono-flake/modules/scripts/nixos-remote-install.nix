@@ -281,45 +281,45 @@ if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
 fi
 
 # Confirm before running
-echo
-print_warning "About to run nixos-anywhere with the following configuration:"
-echo "  Machine: $SELECTED_MACHINE"
-echo "  Target: root@$IP_ADDRESS"
-echo "  Flake: $FLAKE_DIR#$SELECTED_MACHINE"
-echo
+# echo
+# print_warning "About to run nixos-anywhere with the following configuration:"
+# echo "  Machine: $SELECTED_MACHINE"
+# echo "  Target: root@$IP_ADDRESS"
+# echo "  Flake: $FLAKE_DIR#$SELECTED_MACHINE"
+# echo
 
-echo -n "Continue? (Y/n): "
-read -r confirm
+# echo -n "Continue? (Y/n): "
+# read -r confirm
 
-if [[ "$confirm" =~ ^[Nn]$ ]]; then
-  print_info "Operation cancelled by user"
-  exit 0
-fi
+# if [[ "$confirm" =~ ^[Nn]$ ]]; then
+#   print_info "Operation cancelled by user"
+#   exit 0
+# fi
 
-# Run nixos-anywhere
-print_info "Starting nixos-anywhere deployment..."
-echo
+# # Run nixos-anywhere
+# print_info "Starting nixos-anywhere deployment..."
+# echo
 
-if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true ]]; then
-    echo ""
-    read -p "Please enter the cluster name: " CLUSTER_NAME
-    if [ -z "$CLUSTER_NAME" ]; then
-        echo "Error: Cluster name cannot be empty"
-        exit 1
-    fi
-fi
+# if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true ]]; then
+#     echo ""
+#     read -p "Please enter the cluster name: " CLUSTER_NAME
+#     if [ -z "$CLUSTER_NAME" ]; then
+#         echo "Error: Cluster name cannot be empty"
+#         exit 1
+#     fi
+# fi
 
-FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files $CLUSTER_NAME)
-PUBKEY_LOCATION="$FILES_FOR_NEW_MACHINE/etc/ssh/ssh_host_ed25519_key.pub"
+# FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files $CLUSTER_NAME)
+# PUBKEY_LOCATION="$FILES_FOR_NEW_MACHINE/etc/ssh/ssh_host_ed25519_key.pub"
 
-nixos-key-retrieval "$PUBKEY_LOCATION" "$SELECTED_MACHINE"
+# nixos-key-retrieval "$PUBKEY_LOCATION" "$SELECTED_MACHINE"
 
-if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
-  read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
-  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE" "''${CMD_ARRAY[*]}"
-else
-  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE"
-fi
+# if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
+#   read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
+#   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE" "''${CMD_ARRAY[*]}"
+# else
+#   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE"
+# fi
 
 if [[ $? -eq 0 ]]; then
   print_success "nixos-anywhere deployment completed successfully!"
