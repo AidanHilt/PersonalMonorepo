@@ -17,7 +17,7 @@ let
 
   # A small test cluster we run on NixOS machines running as VMs on our laptop
   laptop-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFIeYzag+0puS2/iB/Dfgj4CFiJFopSet0NgmQGf8nEe noname";
-  laptop-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIWm7C2mQWVM+wP9ezBx9Ozz+ABe946rsNP6gZWG7CGX noname";
+  laptop-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBYPCI2abzSHOfnDK8aZnEGG7v1Kt2xu8rpeW00RpdJl noname";
 
   laptop-cluster-machines = [laptop-cluster-1-system laptop-cluster-2-system];
 
