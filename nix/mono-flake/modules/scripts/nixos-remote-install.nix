@@ -21,6 +21,8 @@ if [ -z "$PERSONAL_MONOREPO_LOCATION" ]; then
   exit 1
 fi
 
+echo "Huh 1?"
+
 MONO_FLAKE_PATH="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake"
 MACHINES_PATH="$MONO_FLAKE_PATH/machines"
 
@@ -35,12 +37,16 @@ else
   exit 1
 fi
 
+echo "Huh 2?"
+
 # Step 2: Check for values.nix file
 VALUES_FILE="$MACHINE_PATH/values.nix"
 if [ ! -f "$VALUES_FILE" ]; then
   echo "Error: values.nix file not found at $VALUES_FILE"
   exit 1
 fi
+
+echo "Huh 3?"
 
 # Step 3: Extract username from values.nix
 # Look for patterns like: username = "value"; or username="value";
