@@ -1,7 +1,7 @@
 {
   username = "";
 
-  defaultValuesFile = self + "/modules/shared-values/laptop-cluster.nix";
+  defaultValues = "laptop-cluster";
 
   k8s = {
     primaryNode = true;
