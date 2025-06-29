@@ -44,9 +44,15 @@ fi
 # Look for patterns like: username = "value"; or username="value";
 USERNAME=$(grep -E '^\s*username\s*=\s*"[^"]*"' "$VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1)
 
+FILENAME=$(grep -E '^\s*defaultValues\s*=\s*"[^"]*"' "$VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1)
+DEFAULT_VALUES_FILE="$MONO_FLAKE_PATH/modules/shared-values/$FILENAME.nix"
+
 if [ -z "$USERNAME" ]; then
-  echo "Error: Could not find username in $VALUES_FILE"
-  echo "Looking for pattern: username = \"value\";"
+  USERNAME=$(grep -E '^\s*defaultValues\s*=\s*"[^"]*"' "$DEFAULT_VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1)
+fi
+
+if [ -z "$USERNAME" ]; then
+  echo "No username found"
   exit 1
 fi
 
