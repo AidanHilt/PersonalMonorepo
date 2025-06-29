@@ -1,7 +1,7 @@
 {
   username = "";
 
-  # defaultValuesFile = $VALUES_FILE_COMMON_CONFIG_OPTIONS
+  # defaultValues = $VALUES_FILE_COMMON_CONFIG_OPTIONS
 
   # NOTE: You won't need to set hostname, unless you want it to be different from the name of the directory
   # hostname = "";
