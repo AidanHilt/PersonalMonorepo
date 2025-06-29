@@ -348,6 +348,7 @@ case "$RESPONSE" in
       nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME
     else
       nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME --overwrite-ip $ENDPOINT
+    fi
     ;;
   *)
     echo "Skipping kubeconfig retrieval for non-first machine."
