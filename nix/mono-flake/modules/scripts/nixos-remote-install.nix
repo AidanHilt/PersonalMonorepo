@@ -44,7 +44,7 @@ echo "Before anything"
 
 # Step 3: Extract username from values.nix
 # Look for patterns like: username = "value"; or username="value";
-USERNAME=$(grep -E '^\s*username\s*=\s*"[^"]*"' "$VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1)
+USERNAME=$(grep -E '^\s*username\s*=\s*"[^"]*"' "$VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1 || true) # Suppress errors if nothing is found
 
 echo "After username"
 
