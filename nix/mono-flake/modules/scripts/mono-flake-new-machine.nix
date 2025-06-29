@@ -133,18 +133,23 @@ echo "Creating machine '$MACHINE_NAME' for system '$SYSTEM'..."
 mkdir -p "$DEST_DIR"
 
 # Copy template files
-cp -r "$TEMPLATE_DIR"/* "$DEST_DIR/"
+cp -r "$TEMPLATE_DIR"/configuration.nix "$DEST_DIR"/configuration.nix
+mono-flake-template-machine-file-options $PERSONAL_MONO_REPO_LOCATION/nix/mono-flake/templates/blank-machine/disko.nix $DEST_DIR/disko.nix $PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/disko-configs DISKO_COMMON_CONFIG_OPTIONS
+mono-flake-template-machine-file-options $PERSONAL_MONO_REPO_LOCATION/nix/mono-flake/templates/blank-machine/home.nix $DEST_DIR/home.nix $PERSONAL_MONOREPO_LOCATION/nix/mono-flake/home-manager/shared-configs HOME_MANAGER_COMMON_CONFIG_OPTIONS
+mono-flake-template-machine-file-options $PERSONAL_MONO_REPO_LOCATION/nix/mono-flake/templates/blank-machine/values.nix $DEST_DIR/values.nix $PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/shared-values VALUES_FILE_COMMON_CONFIG_OPTIONS
+
+
 
 echo "Success! Machine created at: $DEST_DIR"
-echo ""
-echo "Next steps:"
-echo "1. Edit the configuration files in $DEST_DIR"
-echo "2. Customize the machine settings as needed"
 '';
 
 in
 
 {
+  imports = [
+    ./mono-flake-template-machine-file-options.nix
+  ];
+
   environment.systemPackages = [
     mono-flake-new-machine
   ];

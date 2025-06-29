@@ -14,13 +14,9 @@ in
 
       machineValues = import machineValuesPath;
 
-      defaultValuesFile = machineValues.defaultValues or null;
+      defaultValuesFile = machineValues.defaultValuesFile or null;
 
-      sharedValuesPath = if defaultValuesFile != null
-        then modulesDir + "/shared-values/${defaultValuesFile}.nix"
-        else null;
-
-      sharedValues = if sharedValuesPath != null && builtins.pathExists sharedValuesPath
+      sharedValues = if defaultValuesFile != null && builtins.pathExists defaultValuesFile
         then import sharedValuesPath
         else {};
 

@@ -57,9 +57,9 @@ for file in "$OPTIONS_PATH"/*; do
     relative_path=$(get_relative_path "$file" "$DEST_DIR")
 
     if [ -n "$FILE_LIST" ] && [ "$FILE_LIST" != "\n" ]; then
-      FILE_LIST+="\n    #$relative_path"
+      FILE_LIST+="\n    # $relative_path"
     else
-      FILE_LIST+="    #$relative_path"
+      FILE_LIST+="    # $relative_path"
     fi
   fi
 done
@@ -70,7 +70,7 @@ FILE_LIST+="\n  "  # Append newline
 export "$TARGET_VARIABLE"="$FILE_LIST"
 
 # Step 4: Run envsubst on source file and copy result to destination
-envsubst < "$SOURCE_FILE" > "$DESTINATION_FILE"
+envsubst < "$SOURCE_FILE" | awk '{gsub("\\\\n","\n")};1' > "$DESTINATION_FILE"
 
 echo "Successfully processed '$SOURCE_FILE' -> '$DESTINATION_FILE'"
 '';
