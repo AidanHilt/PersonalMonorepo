@@ -9,7 +9,7 @@ let
     }
   else
     {
-      serverAddr = "https://${machine-config.k8s.clusterEndpoint}:9345";
+      serverAddr = "https://${clusterEndpoint}:9345";
     };
 in
 
