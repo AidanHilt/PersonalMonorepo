@@ -56,7 +56,7 @@ FILENAME=$(grep -E '^\s*defaultValues\s*=\s*"[^"]*"' "$VALUES_FILE" | sed 's/.*"
 DEFAULT_VALUES_FILE="$MONO_FLAKE_PATH/modules/shared-values/$FILENAME.nix"
 
 if [ -z "$USERNAME" ]; then
-  USERNAME=$(grep -E '^\s*defaultValues\s*=\s*"[^"]*"' "$DEFAULT_VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1)
+  USERNAME=$(grep -E '^\s*username\s*=\s*"[^"]*"' "$DEFAULT_VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1)
 fi
 
 echo "$USERNAME"
