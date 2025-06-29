@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 let
-  clusterEndpoint = if machine-config.k8s.clusterEndpoint then machine-config.k8s.clusterEndpoint else machine-config.networking.loadBalancerIp;
+  clusterEndpoint = if machine-config ? k8s.clusterEndpoint then machine-config.k8s.clusterEndpoint else machine-config.networking.loadBalancerIp;
 
   rkeConfig = if machine-config.k8s.primaryNode then
     {
