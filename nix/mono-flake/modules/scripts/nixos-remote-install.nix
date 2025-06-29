@@ -6,6 +6,8 @@ get-username-from-machine-name = pkgs.writeShellScriptBin "get-username-from-mac
 
 set -euo pipefail
 
+echo "Huh?"
+
 if [ $# -ne 1 ]; then
   echo "Usage: $0 <machine-name>"
   exit 1
