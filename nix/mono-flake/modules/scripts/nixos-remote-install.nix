@@ -342,7 +342,7 @@ read -p "Is this the first machine of the cluster? (yes/no): " RESPONSE
 
 case "$RESPONSE" in
   [Yy]|[Yy][Ee][Ss])
-    read -p "(Optional) Provide a cluster endpoint to use in the kubeconfig" ENDPOINT
+    read -p "(Optional) Provide a cluster endpoint to use in the kubeconfig: " ENDPOINT
     echo "Running nixos-kubeconfig-retrieval..."
     if [ -z $ENDPOINT ]; then
       nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME
