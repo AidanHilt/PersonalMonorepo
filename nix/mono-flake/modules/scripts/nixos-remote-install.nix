@@ -57,6 +57,7 @@ DEFAULT_VALUES_FILE="$MONO_FLAKE_PATH/modules/shared-values/$FILENAME.nix"
 
 if [ -z "$USERNAME" ]; then
   USERNAME=$(grep -E '^\s*username\s*=\s*"[^"]*"' "$DEFAULT_VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1)
+  echo $USERNAME
 fi
 
 echo "$USERNAME"
