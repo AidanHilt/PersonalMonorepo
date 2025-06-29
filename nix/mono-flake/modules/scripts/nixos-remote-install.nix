@@ -349,7 +349,11 @@ USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 echo "Ok..."
 
 ssh-keygen -R $POST_INSTALL_IP_ADDRESS
-ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
+if [ -f ~/.ssh/known_hosts ]; then
+  ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
+else
+  ssh-keyscan $POST_INSTALL_IP_ADDRESS > ~/.ssh/known_hosts
+fi
 
 ssh -t "$USERNAME@$POST_INSTALL_IP_ADDRESS" "update"
 
