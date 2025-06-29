@@ -59,12 +59,16 @@ if [ -z "$USERNAME" ]; then
   USERNAME=$(grep -E '^\s*defaultValues\s*=\s*"[^"]*"' "$DEFAULT_VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1)
 fi
 
+echo "Huh 3?"
+
+
+
 if [ -z "$USERNAME" ]; then
   echo "No username found"
   exit 1
 fi
 
-echo "$USERNAME"
+echo "username: $USERNAME"
 '';
 
 nixos-remote-install = pkgs.writeShellScriptBin "nixos-remote-install" ''
