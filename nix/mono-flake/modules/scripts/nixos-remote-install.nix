@@ -312,14 +312,14 @@ fi
 FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files $CLUSTER_NAME)
 PUBKEY_LOCATION="$FILES_FOR_NEW_MACHINE/etc/ssh/ssh_host_ed25519_key.pub"
 
-# nixos-key-retrieval "$PUBKEY_LOCATION" "$SELECTED_MACHINE"
+nixos-key-retrieval "$PUBKEY_LOCATION" "$SELECTED_MACHINE"
 
-# if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
-#   read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
-#   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE" "''${CMD_ARRAY[*]}"
-# else
-#   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE"
-# fi
+if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
+  read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
+  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE" "''${CMD_ARRAY[*]}"
+else
+  nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE"
+fi
 
 if [[ $? -eq 0 ]]; then
   print_success "nixos-anywhere deployment completed successfully!"
