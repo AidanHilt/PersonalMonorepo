@@ -333,6 +333,8 @@ fi
 
 USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
+echo "Ok..."
+
 ssh-keygen -R $POST_INSTALL_IP_ADDRESS
 ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
 
