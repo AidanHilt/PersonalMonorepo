@@ -47,7 +47,7 @@ in
     extraFlags = [
       "--write-kubeconfig-mode=0640"
       "--advertise-address=${machine-config.networking.address}"
-      "--tls-san=192.168.86.18"
+      "--tls-san=${clusterEndpoint}"
     ];
   } // rkeConfig;
 
