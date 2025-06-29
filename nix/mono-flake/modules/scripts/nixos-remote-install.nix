@@ -346,14 +346,12 @@ fi
 
 USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
-echo "Ok..."
 
-ssh-keygen -R $POST_INSTALL_IP_ADDRESS
 if [ -f ~/.ssh/known_hosts ]; then
-  ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
-else
-  ssh-keyscan $POST_INSTALL_IP_ADDRESS > ~/.ssh/known_hosts
+  ssh-keygen -R $POST_INSTALL_IP_ADDRESS
 fi
+
+ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
 
 ssh -t "$USERNAME@$POST_INSTALL_IP_ADDRESS" "update"
 
