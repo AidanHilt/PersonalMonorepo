@@ -1,6 +1,4 @@
 {
-  username = "";
-
   defaultValues = "laptop-cluster";
 
   k8s = {
