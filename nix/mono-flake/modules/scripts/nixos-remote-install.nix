@@ -6,8 +6,6 @@ get-username-from-machine-name = pkgs.writeShellScriptBin "get-username-from-mac
 
 set -euo pipefail
 
-echo "Huh?"
-
 if [ $# -ne 1 ]; then
   echo "Usage: $0 <machine-name>"
   exit 1
@@ -46,9 +44,14 @@ fi
 # Look for patterns like: username = "value"; or username="value";
 USERNAME=$(grep -E '^\s*username\s*=\s*"[^"]*"' "$VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1)
 
+echo "After username"
+
 if [ -z "$USERNAME" ]; then
+  echo "Before filename"
   FILENAME=$(grep -E '^\s*defaultValues\s*=\s*"[^"]*"' "$VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1)
+  echo "After filename"
   DEFAULT_VALUES_FILE="$MONO_FLAKE_PATH/modules/shared-values/$FILENAME.nix"
+  echo "After creating file"
 
   USERNAME=$(grep -E '^\s*username\s*=\s*"[^"]*"' "$DEFAULT_VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1)
   echo $USERNAME
