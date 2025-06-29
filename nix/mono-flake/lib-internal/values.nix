@@ -17,7 +17,7 @@ in
       defaultValuesFile = machineValues.defaultValuesFile or null;
 
       sharedValues = if defaultValuesFile != null && builtins.pathExists defaultValuesFile
-        then import sharedValuesPath
+        then import defaultValuesFile
         else {};
 
       defaultValues = sharedValues // {
