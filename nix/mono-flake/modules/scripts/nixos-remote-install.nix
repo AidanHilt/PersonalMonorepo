@@ -280,7 +280,7 @@ if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
   print_success "Target IP address: $IP_ADDRESS"
 fi
 
-Confirm before running
+# Confirm before running
 echo
 print_warning "About to run nixos-anywhere with the following configuration:"
 echo "  Machine: $SELECTED_MACHINE"
