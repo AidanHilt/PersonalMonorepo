@@ -40,23 +40,21 @@ if [ ! -f "$VALUES_FILE" ]; then
   exit 1
 fi
 
-echo "Before anything"
-
 # Step 3: Extract username from values.nix
 # Look for patterns like: username = "value"; or username="value";
 USERNAME=$(grep -E '^\s*username\s*=\s*"[^"]*"' "$VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1 || true) # Suppress errors if nothing is found
 
-echo "After username"
-
 if [ -z "$USERNAME" ]; then
-  echo "Before filename"
-  FILENAME=$(grep -E '^\s*defaultValues\s*=\s*"[^"]*"' "$VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1)
-  echo "After filename"
-  DEFAULT_VALUES_FILE="$MONO_FLAKE_PATH/modules/shared-values/$FILENAME.nix"
-  echo "After creating file"
+  FILENAME=$(grep -E '^\s*defaultValues\s*=\s*"[^"]*"' "$VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1 || true)
 
-  USERNAME=$(grep -E '^\s*username\s*=\s*"[^"]*"' "$DEFAULT_VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1)
-  echo $USERNAME
+  if [ -z FILENAME ]; then
+    echo "Could not find username or a default values file. Exiting."
+    exit 1
+  fi
+
+  DEFAULT_VALUES_FILE="$MONO_FLAKE_PATH/modules/shared-values/$FILENAME.nix"
+
+  USERNAME=$(grep -E '^\s*username\s*=\s*"[^"]*"' "$DEFAULT_VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1 || true)
 fi
 
 
@@ -65,7 +63,7 @@ if [ -z "$USERNAME" ]; then
   exit 1
 fi
 
-echo "username: $USERNAME"
+echo "$USERNAME"
 '';
 
 nixos-remote-install = pkgs.writeShellScriptBin "nixos-remote-install" ''
