@@ -17,8 +17,9 @@ let
 
   # A small test cluster we run on NixOS machines running as VMs on our laptop
   laptop-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFIeYzag+0puS2/iB/Dfgj4CFiJFopSet0NgmQGf8nEe noname";
+  laptop-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH2Gk4ftGVOf7TNIB9Uagqfeuxy+3v4B1q5/y8rvGlza noname";
 
-  laptop-cluster-machines = [laptop-cluster-1-system];
+  laptop-cluster-machines = [laptop-cluster-1-system laptop-cluster-2-system];
 
   # Our main staging cluster, in the form of NixOS machines running on x86 hardware
   staging-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIImXssIeNM0HqEu8ZKnpaweicauH4bYNrkwpIX/Hjcwh root@staging-cluster-1";
