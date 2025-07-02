@@ -151,7 +151,6 @@ in
   ];
 
   environment.systemPackages = with pkgs; [
-  nixos-kubeconfig-retrieval
-  generate-homelab-node-files
+    nixos-kubeconfig-retrieval
   ];
 }
