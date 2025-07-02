@@ -11,7 +11,7 @@ let
   wsl-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICbW6OhxPYPuJTZAgbpL3+PwHPNvdL2dw8+KqA1QeF47 root@nixos";
 
   # Desktop VMs
-  vm-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINP28zxKMzsfY+EHT/x+9HA9NuGEu0H99KXHhsGBUapy noname";
+  vm-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK6AyDF2XEF5O9aFChRplEi/jFeDVqPmnpfPYZJQMLht noname";
 
   user-machines = [hyperion-user hyperion-system wsl-user wsl-system vm-desktop-system];
 
