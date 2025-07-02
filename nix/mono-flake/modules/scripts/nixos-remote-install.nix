@@ -331,6 +331,7 @@ if [[ "$HOMELAB_NODE_ARG_PROVIDED" != true ]]; then
   *)
     HOMELAB_NODE=false
   ;;
+  esac
 fi
 
 
