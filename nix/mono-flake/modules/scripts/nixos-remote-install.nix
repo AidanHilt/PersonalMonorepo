@@ -84,6 +84,7 @@ SELECTED_MACHINE_ARG_PROVIDED=0
 IP_ADDRESS_ARG_PROVIDED=0
 POST_INSTALL_IP_ADDRESS_ARG_PROVIDED=0
 CLUSTER_NAME_ARG_PROVIDED=0
+HOMELAB_NODE_ARG_PROVIDED=0
 
 # Function to print colored output
 print_error() {
@@ -111,6 +112,8 @@ show_usage() {
   echo "  --remote-ip IP              The IP address of the remote machine we want to install NixOS on"
   echo "  --post-install-ip IP        The IP address of the machine after NixOS is installed"
   echo "  --cluster-name CLUSTER_NAME The name of the cluster, used to identify it in kubeconfig and find"
+  echo "  --homelab-node              Installs secrets for a homelab node"
+  echo "  --desktop                   Installs secrets for a desktop (i.e. GUI) machine"
   echo "  --help                      Show this help message"
   echo ""
   echo "Examples:"
@@ -169,6 +172,22 @@ while [[ $# -gt 0 ]]; do
       show_usage
       exit 0
       ;;
+    --homelab-node)
+      if [[ $# -lt 1 ]]; then
+        print_error "INVARIANT VIOLATED"
+        exit 1
+      fi
+      HOMELAB_NODE="true"
+      HOMELAB_NODE_ARG_PROVIDED=true
+      shift 1
+    --desktop)
+      if [[ $# -lt 1 ]]; then
+        print_error "INVARIANT VIOLATED"
+        exit 1
+      fi
+      HOMELAB_NODE="false"
+      HOMELAB_NODE_ARG_PROVIDED=true
+      shift 1
     -*)
       print_error "Unknown option: $1"
       print_info "Use --help to see available options"
@@ -300,7 +319,19 @@ fi
 print_info "Starting nixos-anywhere deployment..."
 echo
 
-if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true ]]; then
+if [[ "$HOMELAB_NODE_ARG_PROVIDED" != true ]]; then
+  echo ""
+  read -p "Is this a homelab node? (y/n): " NODE_TYPE
+  case "$NODE_TYPE" in
+  [Yy]|[Yy][Ee][Ss])
+    HOMELAB_NODE=true
+  ;;
+  *)
+    HOMELAB_NODE=false
+  ;;
+
+
+if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true  ]] && [[ "$HOMELAB_NODE" = true ]]; then
     echo ""
     read -p "Please enter the cluster name: " CLUSTER_NAME
     if [ -z "$CLUSTER_NAME" ]; then
@@ -309,7 +340,12 @@ if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true ]]; then
     fi
 fi
 
-FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files $CLUSTER_NAME)
+if [[ "$HOMELAB_NODE" = true ]]; then
+  FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files $CLUSTER_NAME)
+else
+  FILES_FOR_NEW_MACHINE=$(generate-desktop-files)
+fi
+
 PUBKEY_LOCATION="$FILES_FOR_NEW_MACHINE/etc/ssh/ssh_host_ed25519_key.pub"
 
 nixos-key-retrieval "$PUBKEY_LOCATION" "$SELECTED_MACHINE"
@@ -375,6 +411,10 @@ esac
 in
 
 {
+  imports = [
+    ./lib/default.nix
+  ];
+
   environment.systemPackages = with pkgs; [
     ipcalc
     termdown
