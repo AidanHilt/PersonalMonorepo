@@ -180,6 +180,7 @@ while [[ $# -gt 0 ]]; do
       HOMELAB_NODE="true"
       HOMELAB_NODE_ARG_PROVIDED=true
       shift 1
+      ;;
     --desktop)
       if [[ $# -lt 1 ]]; then
         print_error "INVARIANT VIOLATED"
@@ -188,6 +189,7 @@ while [[ $# -gt 0 ]]; do
       HOMELAB_NODE="false"
       HOMELAB_NODE_ARG_PROVIDED=true
       shift 1
+      ;;
     -*)
       print_error "Unknown option: $1"
       print_info "Use --help to see available options"
