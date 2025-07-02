@@ -3,6 +3,7 @@
 let
   clusterEndpoint = if machine-config ? k8s.clusterEndpoint then machine-config.k8s.clusterEndpoint else machine-config.networking.loadBalancerIp;
 
+  #TODO Make it optional to set as primaryNode (default is false)
   rkeConfig = if machine-config.k8s.primaryNode then
     {
       role = "server";

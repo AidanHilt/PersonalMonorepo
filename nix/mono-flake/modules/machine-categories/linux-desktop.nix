@@ -3,7 +3,7 @@
 {
   imports = [
     ../roles/nixos/linux-universal.nix
-    ../roles/nixos/deepin-desktop.nix
+    ../roles/nixos/plasma-desktop.nix
     ../roles/nixos/virt-manager.nix
 
     ../roles/universal/development-machine.nix
