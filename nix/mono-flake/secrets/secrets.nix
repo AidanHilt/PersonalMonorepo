@@ -10,7 +10,10 @@ let
   wsl-user = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEEAi2UjaWUsDVY6wUMMcIjDXzyizhax86Z0J2I6fYM0 nixos@nixos";
   wsl-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICbW6OhxPYPuJTZAgbpL3+PwHPNvdL2dw8+KqA1QeF47 root@nixos";
 
-  user-machines = [hyperion-user hyperion-system wsl-user wsl-system];
+  # Desktop VMs
+  vm-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIICl+/Kht8elOMq2zPEPChfILD4+kit3WOFa4jKI+FRc noname";
+
+  user-machines = [hyperion-user hyperion-system wsl-user wsl-system vm-desktop-system];
 
   # Our various server clusters
   # ===========================
