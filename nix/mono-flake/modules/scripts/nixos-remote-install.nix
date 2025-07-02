@@ -331,6 +331,7 @@ if [[ "$HOMELAB_NODE_ARG_PROVIDED" != true ]]; then
   *)
     HOMELAB_NODE=false
   ;;
+fi
 
 
 if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true  ]] && [[ "$HOMELAB_NODE" = true ]]; then
