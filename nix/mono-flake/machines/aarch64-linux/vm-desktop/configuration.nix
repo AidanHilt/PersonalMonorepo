@@ -6,12 +6,12 @@
 
 {
   imports = [
-      ./hardware-configuration.nix
+    ./disko.nix
+    ./hardware-configuration.nix
 
-      ../../../modules/disko-configs/vda-single-disk.nix
-      ../../../modules/machine-categories/linux-desktop.nix
-      ../../../modules/roles/nixos/vscode-server.nix
-    ];
+    ../../../modules/machine-categories/linux-desktop.nix
+    ../../../modules/roles/nixos/vscode-server.nix
+  ];
 
   home-manager = {
     useGlobalPkgs = true;
@@ -21,10 +21,6 @@
     users.${machine-config.username} = import ./home.nix {inherit inputs globals pkgs machine-config; system = pkgs.system; lib = inputs.home-manager.lib; };
   };
 
-  # Bootloader
-  # boot.loader.systemd-boot.enable = true;
-  # boot.loader.efi.canTouchEfiVariables = true;
-
   boot.loader.grub.enable = true;
   boot.loader.grub.efiSupport = true;
   boot.loader.grub.efiInstallAsRemovable = true;
@@ -33,5 +29,4 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
-
 }
