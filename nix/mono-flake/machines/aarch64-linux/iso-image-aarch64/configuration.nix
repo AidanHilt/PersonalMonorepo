@@ -6,7 +6,7 @@
 
 {
   imports = [
-    (pkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
+    (inputs.nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
     ../../../modules/roles/nixos/bootstrap-image.nix
   ];
 
