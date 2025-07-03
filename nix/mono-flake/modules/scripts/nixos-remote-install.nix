@@ -395,22 +395,24 @@ ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
 
 ssh -t "$USERNAME@$POST_INSTALL_IP_ADDRESS" "update"
 
-read -p "Is this the first machine of the cluster? (yes/no): " RESPONSE
+if [[ "$HOMELAB_NODE" = true ]]; then
+  read -p "Is this the first machine of the cluster? (yes/no): " RESPONSE
 
-case "$RESPONSE" in
-  [Yy]|[Yy][Ee][Ss])
-    read -p "(Optional) Provide a cluster endpoint to use in the kubeconfig: " ENDPOINT
-    echo "Running nixos-kubeconfig-retrieval..."
-    if [ -z $ENDPOINT ]; then
-      nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME
-    else
-      nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME --overwrite-ip $ENDPOINT
-    fi
-    ;;
-  *)
-    echo "Skipping kubeconfig retrieval for non-first machine."
-    ;;
-esac
+  case "$RESPONSE" in
+    [Yy]|[Yy][Ee][Ss])
+      read -p "(Optional) Provide a cluster endpoint to use in the kubeconfig: " ENDPOINT
+      echo "Running nixos-kubeconfig-retrieval..."
+      if [ -z $ENDPOINT ]; then
+        nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME
+      else
+        nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME --overwrite-ip $ENDPOINT
+      fi
+      ;;
+    *)
+      echo "Skipping kubeconfig retrieval for non-first machine."
+      ;;
+  esac
+fi
 '';
 in
 

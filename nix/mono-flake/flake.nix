@@ -89,57 +89,10 @@
         inherit platformOverlays;
       };
 
+      nixosIsos = import ./modules/iso-image-definitions.nix { inherit pkgs pkgsFor; };
+
     in {
       darwinConfigurations = allConfigs.darwinConfigurations;
       nixosConfigurations = allConfigs.nixosConfigurations;
-
-      #  = aarch64LinuxConfigs // x86_64LinuxConfigs // {
-      #   # How we build our bootstrap iso images
-      #   iso_image_x86 = nixpkgs.lib.nixosSystem {
-      #     system = "x86_64-linux";
-      #     modules = [
-      #       (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
-      #       inputs.home-manager.nixosModules.home-manager
-      #       ./modules/nixos/bootstrap-image.nix
-      #     ];
-      #   };
-
-      #   iso-image-aarch64 = nixpkgs.lib.nixosSystem {
-      #     system = "aarch64-linux";
-
-      #     specialArgs = {
-      #       pkgs = pkgsFor.aarch64-linux;
-      #       inherit inputs globals;
-      #     };
-
-      #     modules = [
-      #       (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
-      #       ./modules/roles/nixos/bootstrap-image.nix
-
-      #       inputs.home-manager.nixosModules.home-manager {
-      #         home-manager.useGlobalPkgs = true;
-      #         home-manager.useUserPackages = true;
-      #         home-manager.backupFileExtension = "bak";
-      #         home-manager.extraSpecialArgs = { inherit inputs globals; pkgs = pkgsFor.aarch64-linux; };
-      #         home-manager.users.root = import ./home-manager/shared-configs/server.nix {
-      #           inherit inputs globals;
-      #           pkgs = pkgsFor.aarch64-linux;
-      #           system = "aarch64-linux";
-      #           lib = inputs.home-manager.nixosModules.home-manager.lib;
-      #         };
-      #       }
-
-      #       (
-      #         {pkgs, ...}: {
-      #           isoImage = {
-      #             makeEfiBootable = true;
-      #             makeUsbBootable = true;
-      #             squashfsCompression = "zstd -Xcompression-level 6"; #way faster build time
-      #           };
-      #         }
-      #       )
-      #     ];
-      #   };
-      # };
   };
 }
