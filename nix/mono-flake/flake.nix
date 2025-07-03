@@ -93,6 +93,6 @@
 
     in {
       darwinConfigurations = allConfigs.darwinConfigurations;
-      nixosConfigurations = allConfigs.nixosConfigurations;
+      nixosConfigurations = allConfigs.nixosConfigurations // nixosIsos;
   };
 }
