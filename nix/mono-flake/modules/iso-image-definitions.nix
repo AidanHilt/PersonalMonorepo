@@ -11,27 +11,5 @@
     ];
   };
 
-  iso-image-aarch64 = nixpkgs.lib.nixosSystem {
-    system = "aarch64-linux";
 
-    specialArgs = {
-      pkgs = pkgsFor.aarch64-linux;
-      inherit inputs globals;
-    };
-
-    modules = [
-      (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
-      ./modules/roles/nixos/bootstrap-image.nix
-
-      (
-        {pkgs, ...}: {
-          isoImage = {
-            makeEfiBootable = true;
-            makeUsbBootable = true;
-            squashfsCompression = "zstd -Xcompression-level 6"; #way faster build time
-          };
-        }
-      )
-    ];
-  };
 }
