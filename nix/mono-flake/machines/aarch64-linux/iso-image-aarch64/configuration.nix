@@ -5,8 +5,6 @@
 { config, pkgs, machine-config, inputs, globals, ... }:
 
 {
-  system = "aarch64-linux";
-
   modules = [
     (pkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
     ./modules/roles/nixos/bootstrap-image.nix
