@@ -5,10 +5,10 @@
 { config, pkgs, machine-config, inputs, globals, ... }:
 
 {
-  # imports = [
-  #   (pkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
-  #   ./modules/roles/nixos/bootstrap-image.nix
-  # ];
+  imports = [
+    #(pkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
+    ./modules/roles/nixos/bootstrap-image.nix
+  ];
 
   isoImage = {
     makeEfiBootable = true;
