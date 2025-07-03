@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, ...}:
+{ config, pkgs, machine-config, inputs, globals, ... }:
 
 {
   nix = {
