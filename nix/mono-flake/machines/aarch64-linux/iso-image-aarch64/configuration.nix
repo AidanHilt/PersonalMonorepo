@@ -6,15 +6,15 @@
 
 {
   imports = [
-    #(pkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
+    (pkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
     ../../../modules/roles/nixos/bootstrap-image.nix
   ];
 
-  # isoImage = {
-  #   makeEfiBootable = true;
-  #   makeUsbBootable = true;
-  #   squashfsCompression = "zstd -Xcompression-level 6"; #way faster build time
-  # };
+  isoImage = {
+    makeEfiBootable = true;
+    makeUsbBootable = true;
+    squashfsCompression = "zstd -Xcompression-level 6"; #way faster build time
+  };
 
   home-manager = {
     useGlobalPkgs = true;
