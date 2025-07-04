@@ -15,7 +15,7 @@
     isNormalUser = true;
   };
 
-  system.stateVersion = "24.11";
+  system.stateVersion = "25.05";
 
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
