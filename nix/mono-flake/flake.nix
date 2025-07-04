@@ -89,8 +89,6 @@
         inherit platformOverlays;
       };
 
-      #nixosIsos = import ./modules/iso-image-definitions.nix { inherit inputs globals pkgsFor; };
-
     in {
       darwinConfigurations = allConfigs.darwinConfigurations;
       nixosConfigurations = allConfigs.nixosConfigurations;

@@ -8,7 +8,6 @@ let
     let
       systemFunction = if system == "aarch64-darwin" then darwin.lib.darwinSystem else nixpkgs.lib.nixosSystem;
       moduleType = if system == "aarch64-darwin" then "darwinModules" else "nixosModules";
-      user-base = if system == "aarch64-darwin" then "/Users" else "/home";
 
       # Platform-specific modules
       platformModules = if moduleType == "nixosModules" then [

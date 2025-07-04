@@ -36,7 +36,7 @@ in
   ];
 
   environment.variables = {
-    PERSONAL_MONOREPO_LOCATION = "${machine-config.user-base}/${machine-config.username}/PersonalMonorepo";
+    PERSONAL_MONOREPO_LOCATION = "${machine-config.userBase}/${machine-config.username}/PersonalMonorepo";
   };
 
   environment.systemPackages = with pkgs; [
