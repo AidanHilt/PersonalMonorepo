@@ -20,6 +20,4 @@
     enable = true;
     defaultUser = "${machine-config.username}";
   };
-
-  specialArgs = { inherit inputs globals; };
 }
