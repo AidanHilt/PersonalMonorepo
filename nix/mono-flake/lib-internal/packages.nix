@@ -18,7 +18,9 @@ in
             grub2 = prev.grub2.overrideAttrs (oldAttrs: {
               patches = map (patch: 
                 if patch.name or "" == "23_prerequisite_1_key_protector_add_key_protectors_framework.patch"
-                then patch // { hash = "sha256-5aFHzc5qXBNLEc6yzI17AH6J7EYogcXdLxk//1QgumY="; }
+                  then patch // { hash = "sha256-5aFHzc5qXBNLEc6yzI17AH6J7EYogcXdLxk//1QgumY="; }
+                else if patch.name or "" == "23_CVE-2024-49504.patch.drv"
+                  then patch // { hash = "sha256-GejDL9IKbmbSUmp8F1NuvBcFAp2/W04jxmOatI5dKn8="; }
                 else patch
               ) oldAttrs.patches;
             });
