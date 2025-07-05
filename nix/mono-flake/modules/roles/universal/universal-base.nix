@@ -4,7 +4,7 @@
 
 {
   imports = [
-    #./_hosts.nix
+    ./_hosts.nix
     ./_update.nix
   ];
 
