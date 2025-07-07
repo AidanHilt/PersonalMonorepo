@@ -9,7 +9,7 @@ let
 in
 
 {
-  programs.vscode = {
+  programs.vscode.profile.default = {
     enable = true;
 
     userSettings = builtins.fromJSON (builtins.readFile vscode-settings);
