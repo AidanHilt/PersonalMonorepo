@@ -4,7 +4,6 @@
 
 {
   imports = [
-    ./_hosts.nix
     ./_update.nix
   ];
 
