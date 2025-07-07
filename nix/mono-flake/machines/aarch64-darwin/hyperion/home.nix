@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ../../../home-manager/modules/atils.nix
+    #../../../home-manager/modules/atils.nix
     ../../../home-manager/modules/firefox.nix
     ../../../home-manager/modules/kubernetes.nix
     ../../../home-manager/modules/vim.nix
