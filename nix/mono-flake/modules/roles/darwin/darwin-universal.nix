@@ -57,7 +57,7 @@
   system.activationScripts = {
     postActivation = {
       text = ''
-        sudo su ${machine-config.username}
+        su ${machine-config.username}
         defaultbrowser firefox
       '';
     };
