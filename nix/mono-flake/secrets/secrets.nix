@@ -14,7 +14,7 @@ let
   vm-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDf5TfKyOWg7WuMIVd3V0BinGGP1QJizp4b4Zux8gSPP noname";
 
   # Real-life desktop machines
-  big-boi-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID/gFGwBI7tK4VffDP93g6lZcFKy1Dinrb6s9ScCixbS noname";
+  big-boi-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII4Jmuo6BpW80AS7CpPtexi7PM+FUR5bXA20tzQpx0Mn noname";
 
   user-machines = [hyperion-user hyperion-system wsl-user wsl-system vm-desktop-system  big-boi-desktop-system];
 
