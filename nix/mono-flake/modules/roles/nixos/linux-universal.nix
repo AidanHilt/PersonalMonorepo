@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ./_hosts.nix
     ./_locale-and-time.nix
 
     ../universal/universal-base.nix
