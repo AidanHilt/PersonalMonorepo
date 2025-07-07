@@ -356,6 +356,8 @@ nixos-key-retrieval "$PUBKEY_LOCATION" "$SELECTED_MACHINE"
 
 if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
   read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
+  echo "''${CMD_ARRAY[*]}"
+  exit
   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE" "''${CMD_ARRAY[*]}"
 else
   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE"
