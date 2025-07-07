@@ -19,6 +19,8 @@
 
   system.primaryUser = "${machine-config.username}";
 
+  users.knownUsers = ["${machine-config.username}"];
+
   system.defaults = {
     dock = {
       expose-group-apps = true;
