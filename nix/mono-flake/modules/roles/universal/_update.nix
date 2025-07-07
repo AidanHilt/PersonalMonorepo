@@ -46,7 +46,7 @@ let
   if [[ "$(uname)" == "Darwin" ]]; then
     rebuildExecutable="darwin-rebuild"
   else
-    rebuildExecutable="sudo nixos-rebuild"
+    rebuildExecutable="nixos-rebuild"
   fi
 
   # Ideally, we could do this with a function, but subshells suck.
@@ -125,7 +125,7 @@ let
   fi
 
   echo "Rebuilding system with flake: $UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
-  $rebuildExecutable switch --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
+  sudo $rebuildExecutable switch --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
 
   if [ -z "$UPDATE__NO_SAVE" ]; then
     # List of variables to check and save
