@@ -15,7 +15,9 @@
 
   programs.zsh.enable = true;
 
-  security.pam.enableSudoTouchIdAuth = true;
+  security.pam.services.sudo_local.touchIdAuth = true;
+
+  system.primaryUser = "${machine-config.username}";
 
   system.defaults = {
     dock = {
@@ -49,8 +51,11 @@
   };
 
   system.activationScripts = {
-    postUserActivation = {
-      text = "defaultbrowser firefox";
+    postActivation = {
+      text = ''
+        sudo su ${machine-config.username}
+        defaultbrowser firefox
+      '';
     };
   };
 
