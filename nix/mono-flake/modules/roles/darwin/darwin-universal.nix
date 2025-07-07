@@ -77,7 +77,7 @@
       "flux"
       "rectangle"
       "flycut"
-      #"iterm2"
+      "iterm2"
       "visual-studio-code"
     ];
   };
