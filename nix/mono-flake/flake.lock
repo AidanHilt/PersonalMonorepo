@@ -298,11 +298,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1751851939,
-        "narHash": "sha256-xuUPRvqpFAX8aA8uFU+euDHvHbKvHhMMZ5kKkwmBn7o=",
+        "lastModified": 1751853196,
+        "narHash": "sha256-sgVIGMgDmPIZPP8ZR3M6DWb3j1t/2u+U1lnKWpMg7lo=",
         "owner": "nix-community",
         "repo": "nur",
-        "rev": "6e6b734b6143cd5776afeb5951e1492880c2234f",
+        "rev": "4b945bad25ea2c479fc8086321b18f93889d0421",
         "type": "github"
       },
       "original": {
@@ -314,16 +314,16 @@
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1749175041,
-        "narHash": "sha256-8mv7l1VlicgleGazNJ/to+X6gm8fHr71exblcFFpt/I=",
+        "lastModified": 1751853598,
+        "narHash": "sha256-44uTNllyucaGwKJD3A5rvhyxKwm/9yl/UvlMMXSrJyQ=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "d9922299799e801c443db0aa5e56bffb405fed62",
+        "rev": "bd5a0ac639aa204a8d6004c25341a62e39e26083",
         "type": "github"
       },
       "original": {
         "owner": "aidanhilt",
-        "ref": "staging-cluster-k8s-work",
+        "ref": "feat/flake-new-machine-improvements",
         "repo": "PersonalMonorepo",
         "type": "github"
       }

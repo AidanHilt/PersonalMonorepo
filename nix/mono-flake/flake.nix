@@ -17,7 +17,7 @@
     nur.url = "github:nix-community/nur";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/staging-cluster-k8s-work";
+      url = "github:aidanhilt/PersonalMonorepo/feat/flake-new-machine-improvements";
       flake = false;
     };
 
