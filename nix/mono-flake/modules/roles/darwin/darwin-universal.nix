@@ -21,7 +21,7 @@
 
   users.knownUsers = ["${machine-config.username}"];
 
-  users.users."${machine-config.username}".uid = 1000;
+  users.users."${machine-config.username}".uid = 501;
 
   system.defaults = {
     dock = {
