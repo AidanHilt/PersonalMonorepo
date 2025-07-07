@@ -21,6 +21,8 @@
 
   users.knownUsers = ["${machine-config.username}"];
 
+  users.users."${machine-config.username}".uid = 1000;
+
   system.defaults = {
     dock = {
       expose-group-apps = true;
