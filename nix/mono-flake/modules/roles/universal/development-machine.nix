@@ -71,7 +71,7 @@ in
     postActivation = {
       text = ''
         if [ ! -d "$PERSONAL_MONOREPO_LOCATION" ]; then
-          su aidan -c "${pkgs.git}/bin/git clone https://github.com/AidanHilt/PersonalMonorepo.git $PERSONAL_MONOREPO_LOCATION"
+          sudo su aidan -c "${pkgs.git}/bin/git clone https://github.com/AidanHilt/PersonalMonorepo.git $PERSONAL_MONOREPO_LOCATION"
         fi
       '';
     };
