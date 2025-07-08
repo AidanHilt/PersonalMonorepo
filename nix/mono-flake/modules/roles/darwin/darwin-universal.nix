@@ -54,14 +54,13 @@
     };
   };
 
-  # system.activationScripts = {
-  #   postActivation = {
-  #     text = ''
-  #       sudo su ${machine-config.username}
-  #       defaultbrowser firefox
-  #     '';
-  #   };
-  # };
+  system.activationScripts = {
+    postActivation = {
+      text = ''
+        defaultbrowser firefox
+      '';
+    };
+  };
 
   homebrew = {
     enable = true;
