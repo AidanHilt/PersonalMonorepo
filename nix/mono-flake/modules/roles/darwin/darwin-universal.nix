@@ -57,7 +57,7 @@
   system.activationScripts = {
     postActivation = {
       text = ''
-        defaultbrowser firefox
+        ${pkgs.defaultbrowser}/bin/defaultbrowser firefox
       '';
     };
   };
