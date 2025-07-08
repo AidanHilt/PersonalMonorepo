@@ -11,7 +11,7 @@ let
   wsl-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICbW6OhxPYPuJTZAgbpL3+PwHPNvdL2dw8+KqA1QeF47 root@nixos";
 
   # Desktop VMs
-  vm-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDf5TfKyOWg7WuMIVd3V0BinGGP1QJizp4b4Zux8gSPP noname";
+  vm-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP5BZ8K5s4LhPzZbXpzB8TKRjzfb2uYLL4lbIReVKG+6 noname";
 
   # Real-life desktop machines
   big-boi-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIw4G2DIw7iIjRbkscJRAMlUKpcLXQhCJrI/O4ZHKybm noname";
