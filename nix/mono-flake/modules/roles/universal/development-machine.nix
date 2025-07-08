@@ -27,6 +27,8 @@ let
   docker builder prune --force
 '';
 
+  personalMonorepoLocation = "${machine-config.userBase}/${machine-config.username}/PersonalMonorepo";
+
 in
 
 {
@@ -36,7 +38,7 @@ in
   ];
 
   environment.variables = {
-    PERSONAL_MONOREPO_LOCATION = "${machine-config.userBase}/${machine-config.username}/PersonalMonorepo";
+    PERSONAL_MONOREPO_LOCATION = "${personalMonorepoLocation}";
   };
 
   environment.systemPackages = with pkgs; [
@@ -70,10 +72,8 @@ in
   system.activationScripts = {
     postActivation = {
       text = ''
-        PERSONAL_MONOREPO_LOCATION=$(su aidan -c "echo $PERSONAL_MONOREPO_LOCATION")
-        echo "$PERSONAL_MONOREPO_LOCATION"
-        if [ ! -d "$PERSONAL_MONOREPO_LOCATION" ]; then
-          su aidan -c "${pkgs.git}/bin/git clone https://github.com/AidanHilt/PersonalMonorepo.git $PERSONAL_MONOREPO_LOCATION"
+        if [ ! -d "${personalMonorepoLocation}" ]; then
+          su aidan -c "${pkgs.git}/bin/git clone https://github.com/AidanHilt/PersonalMonorepo.git ${personalMonorepoLocation}"
         fi
       '';
     };
