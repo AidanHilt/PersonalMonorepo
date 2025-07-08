@@ -70,9 +70,9 @@ in
   system.activationScripts = {
     postActivation = {
       text = ''
-        sudo su - ${machine-config.username}
+        su ${machine-config.username}
         if [ ! -d "$PERSONAL_MONOREPO_LOCATION" ]; then
-          git clone https://github.com/AidanHilt/PersonalMonorepo.git "$PERSONAL_MONOREPO_LOCATION"
+          ${pkgs.git}/bin/git clone https://github.com/AidanHilt/PersonalMonorepo.git "$PERSONAL_MONOREPO_LOCATION"
         fi
       '';
     };
