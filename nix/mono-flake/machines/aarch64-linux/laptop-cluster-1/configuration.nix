@@ -10,7 +10,7 @@
     ./hardware-configuration.nix
 
     ../../../modules/roles/nixos/linux-universal.nix
-    ../../../modules/roles/nixos/homelab-node.nix
+    ../../../modules/shared-machine-configs/homelab-node.nix
   ];
 
   home-manager = {
