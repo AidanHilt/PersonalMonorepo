@@ -32,7 +32,7 @@ let
         ] ++ platformModules;
 
         imports = [
-          (modulesPath + "/misc/nixpkgs/read-only.nix")
+          (inputs.nixpkgs + "/misc/nixpkgs/read-only.nix")
         ];
       };
     };
