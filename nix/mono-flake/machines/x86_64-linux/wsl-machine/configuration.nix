@@ -3,7 +3,7 @@
 
 {
   imports = [
-    ../../../modules/machine-categories/linux-desktop-terminal.nix
+    ../../../modules/shared-machine-configs/linux-desktop-terminal.nix
   ];
 
   home-manager = {
