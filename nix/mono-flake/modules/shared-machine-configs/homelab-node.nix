@@ -2,10 +2,11 @@
 
 {
   imports = [
-    ./_adguard.nix
+    ./server/_adguard.nix
+    ./server/_keepalived.nix
+    ./server/_rke.nix
+
     ./_fixed-ip-machine.nix
-    ./_keepalived.nix
-    ./_rke.nix
   ];
 
   services.openssh = {
