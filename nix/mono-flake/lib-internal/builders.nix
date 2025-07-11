@@ -28,7 +28,12 @@ let
           (machinesDir + "/${system}/${name}/configuration.nix")
           inputs.home-manager.${moduleType}.home-manager
           inputs.agenix.${moduleType}.default
+
         ] ++ platformModules;
+
+        imports = [
+          (modulesPath + "/misc/nixpkgs/read-only.nix")
+        ];
       };
     };
 
