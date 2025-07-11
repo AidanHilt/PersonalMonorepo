@@ -10,17 +10,22 @@ let
   wsl-user = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEEAi2UjaWUsDVY6wUMMcIjDXzyizhax86Z0J2I6fYM0 nixos@nixos";
   wsl-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICbW6OhxPYPuJTZAgbpL3+PwHPNvdL2dw8+KqA1QeF47 root@nixos";
 
-  user-machines = [hyperion-user hyperion-system wsl-user wsl-system ];
+  # Desktop VMs
+  vm-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFfl8/kJbF4ntoSOq+sHgLPfZI18K6HS2p9iUFzPEtNn noname";
+
+  # Real-life desktop machines
+  big-boi-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAdaXVorsOMM9qbJnrU5lP6jCUKarqVef4M39GDANYGk noname";
+
+  user-machines = [hyperion-user hyperion-system wsl-user wsl-system vm-desktop-system  big-boi-desktop-system];
 
   # Our various server clusters
   # ===========================
 
-  # A small test cluster we run on NixOS machines running as VMs on our MacBooks
-  # Mac cluster configuration
-  macbook-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEc6NpZLkS+PKk7cpJINQ/cLxFB5eMAQf8CbipEJcVHa noname";
-  macbook-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINNPr1gr8iGTjXIK1Mitl4tTAZ+WR7DS/N6FofcvRrE/ noname";
+  # A small test cluster we run on NixOS machines running as VMs on our laptop
+  laptop-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFIeYzag+0puS2/iB/Dfgj4CFiJFopSet0NgmQGf8nEe noname";
+  laptop-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBYPCI2abzSHOfnDK8aZnEGG7v1Kt2xu8rpeW00RpdJl noname";
 
-  mac-cluster-machines = [macbook-cluster-1-system macbook-cluster-2-system];
+  laptop-cluster-machines = [laptop-cluster-1-system laptop-cluster-2-system];
 
   # Our main staging cluster, in the form of NixOS machines running on x86 hardware
   staging-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIImXssIeNM0HqEu8ZKnpaweicauH4bYNrkwpIX/Hjcwh root@staging-cluster-1";
@@ -30,13 +35,13 @@ let
   staging-cluster-machines = [staging-cluster-1-system staging-cluster-2-system staging-cluster-3-system];
 in
 {
-  "hosts.age".publicKeys = user-machines ++ mac-cluster-machines;
+  "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
 
   "smb-mount-config.age".publicKeys = user-machines;
   "rclone-config.age".publicKeys = user-machines;
   "kubeconfig.age".publicKeys = user-machines;
 
-  "adguardhome.age".publicKeys = user-machines ++ mac-cluster-machines;
+  "adguardhome.age".publicKeys = user-machines ++ laptop-cluster-machines;
 
-  "rke-config-laptop-cluster.age".publicKeys = user-machines ++ mac-cluster-machines;
+  "rke-config-laptop-cluster.age".publicKeys = user-machines ++ laptop-cluster-machines;
 }

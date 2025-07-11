@@ -1,13 +1,16 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 let
-  rke-config = if machine-config.k8s.primaryNode then
+  clusterEndpoint = if machine-config ? k8s.clusterEndpoint then machine-config.k8s.clusterEndpoint else machine-config.networking.loadBalancerIp;
+
+  #TODO Make it optional to set as primaryNode (default is false)
+  rkeConfig = if machine-config.k8s.primaryNode then
     {
       role = "server";
     }
   else
     {
-      serverAddr = "https://${machine-config.k8s.clusterEndpoint}:9345";
+      serverAddr = "https://${clusterEndpoint}:9345";
     };
 in
 
@@ -44,14 +47,23 @@ in
 
     extraFlags = [
       "--write-kubeconfig-mode=0640"
+      "--advertise-address=${machine-config.networking.address}"
+      "--tls-san=${clusterEndpoint}"
     ];
-  } // rke-config;
+  } // rkeConfig;
 
-  system.activationScripts = {
-    chgrp-kubeconfig = pkgs.lib.mkIf (!machine-config.k8s.primaryNode) {
-      text = ''
-        chgrp sensitive-file-readers /etc/rancher/rke2/rke2.yaml
-      '';
+  systemd.services.fix-kubeconfig-permissions = pkgs.lib.mkIf (machine-config.k8s.primaryNode) {
+    description = "Fix kubeconfig permissions";
+    after = [ "rke2-server.service" ]; # adjust service name as needed
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
     };
+    script = ''
+      if [ -f /etc/rancher/rke2/rke2.yaml ]; then
+        chgrp sensitive-file-readers /etc/rancher/rke2/rke2.yaml
+      fi
+    '';
   };
 }

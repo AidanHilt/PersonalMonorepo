@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, ...}:
+{ config, pkgs, machine-config, inputs, globals, ... }:
 
 {
   nix = {
@@ -28,9 +28,6 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEEAi2UjaWUsDVY6wUMMcIjDXzyizhax86Z0J2I6fYM0 nixos@nixos"
     ];
   };
-
-  # programs.zsh.enable = true;
-  # users.defaultUserShell = pkgs.zsh;
 
   security.pam.services.login.allowNullPassword = true;
 

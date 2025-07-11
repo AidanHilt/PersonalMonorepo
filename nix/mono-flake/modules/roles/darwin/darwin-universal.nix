@@ -15,7 +15,13 @@
 
   programs.zsh.enable = true;
 
-  security.pam.enableSudoTouchIdAuth = true;
+  security.pam.services.sudo_local.touchIdAuth = true;
+
+  system.primaryUser = "${machine-config.username}";
+
+  users.knownUsers = ["${machine-config.username}"];
+
+  users.users."${machine-config.username}".uid = 501;
 
   system.defaults = {
     dock = {
@@ -49,8 +55,10 @@
   };
 
   system.activationScripts = {
-    postUserActivation = {
-      text = "defaultbrowser firefox";
+    postActivation = {
+      text = ''
+        ${pkgs.defaultbrowser}/bin/defaultbrowser firefox
+      '';
     };
   };
 
@@ -82,10 +90,10 @@
       config = {
         virtualisation = {
           darwin-builder = {
-            diskSize = 40 * 1024;
-            memorySize = 8 * 1024;
+            diskSize = 80 * 1024;
+            memorySize = 12 * 1024;
           };
-          cores = 6;
+          cores = 8;
         };
       };
     };

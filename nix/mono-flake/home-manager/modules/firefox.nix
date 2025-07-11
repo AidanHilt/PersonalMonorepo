@@ -1,4 +1,17 @@
-{ inputs, globals, pkgs, lib, ...}:
+{ inputs, globals, pkgs, lib, machine-config, ...}:
+
+let
+  work-machine = machine-config.work-machine or false;
+
+  additional-extensions = if work-machine then with pkgs.nur.repos.rycee.firefox-addons; [
+    keeper-password-manager
+  ]
+  else with pkgs.nur.repos.rycee.firefox-addons; [
+    facebook-container
+    keepassxc-browser
+    sponsorblock
+  ];
+in
 
 {
   home.activation.firefoxProfile = lib.mkIf (pkgs.system == "aarch64-darwin")
@@ -14,18 +27,15 @@
     package = lib.mkIf (pkgs.system == "aarch64-darwin") null;
     profiles.aidan = {
       isDefault = true;
-      extensions = with pkgs.nur.repos.rycee.firefox-addons; [
+      extensions.packages = with pkgs.nur.repos.rycee.firefox-addons; [
         clearurls
         docsafterdark
         don-t-fuck-with-paste
-        facebook-container
-        keepassxc-browser
         privacy-badger
         refined-github
-        sponsorblock
         ublock-origin
         view-image
-      ];
+      ] ++ additional-extensions;
 
 
       extraConfig = ''

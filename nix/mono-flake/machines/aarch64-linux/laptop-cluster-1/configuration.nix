@@ -6,19 +6,19 @@
 
 {
   imports = [
-      ../../../modules/hardware-configs/utm.nix
-      ../../../modules/disko-configs/vda-single-disk.nix
+    ./disko.nix
+    ./hardware-configuration.nix
 
-      ../../../modules/roles/nixos/linux-universal.nix
-      ../../../modules/roles/nixos/homelab-node.nix
-    ];
+    ../../../modules/roles/nixos/linux-universal.nix
+    ../../../modules/roles/nixos/homelab-node.nix
+  ];
 
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
     backupFileExtension = "bak";
     extraSpecialArgs = { inherit inputs globals pkgs machine-config; };
-    users.${machine-config.username} = import ../../../home-manager/shared-configs/server.nix {inherit inputs globals pkgs machine-config; system = pkgs.system; lib = inputs.home-manager.lib; };
+    users.${machine-config.username} = import ./home.nix {inherit inputs globals pkgs machine-config; system = pkgs.system; lib = inputs.home-manager.lib; };
   };
 
   boot.loader.grub = {
@@ -28,8 +28,4 @@
   };
 
   users.users."${machine-config.username}".hashedPassword = "$y$j9T$47Fj09DL3ycTvCft06SAE1$FIYj3k6p1wzVOrZI.aLp5s7IBblimqa1/k/ACv9hiC/";
-
-  # Enable networking
-  networking.networkmanager.enable = true;
-
 }

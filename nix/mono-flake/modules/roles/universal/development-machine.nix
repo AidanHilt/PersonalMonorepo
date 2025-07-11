@@ -27,15 +27,18 @@ let
   docker builder prune --force
 '';
 
+  personalMonorepoLocation = "${machine-config.userBase}/${machine-config.username}/PersonalMonorepo";
+
 in
 
 {
   imports = [
     ./_kubernetes-admin.nix
+    ./_mono-flake-development.nix
   ];
 
   environment.variables = {
-    PERSONAL_MONOREPO_LOCATION = "${machine-config.user-base}/${machine-config.username}/PersonalMonorepo";
+    PERSONAL_MONOREPO_LOCATION = "${personalMonorepoLocation}";
   };
 
   environment.systemPackages = with pkgs; [
@@ -67,10 +70,10 @@ in
 
   #TODO If this breaks on Linux, you need to figure out what the NixOS equivalent of this is, and then implement platform-specific logic
   system.activationScripts = {
-    postUserActivation = {
+    postActivation = {
       text = ''
-        if [ ! -d "$PERSONAL_MONOREPO_LOCATION" ]; then
-          git clone https://github.com/AidanHilt/PersonalMonorepo.git "$PERSONAL_MONOREPO_LOCATION"
+        if [ ! -d "${personalMonorepoLocation}" ]; then
+          su aidan -c "${pkgs.git}/bin/git clone https://github.com/AidanHilt/PersonalMonorepo.git ${personalMonorepoLocation}"
         fi
       '';
     };
