@@ -16,6 +16,8 @@
     isNormalUser = true;
   };
 
+  users.users."${machine-config.username}".hashedPassword = pkgs.lib.mkIf machine-config.hashedPassword machine-config.hashedPassword;
+
   system.stateVersion = "25.05";
 
   programs.zsh.enable = true;

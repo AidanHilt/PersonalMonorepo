@@ -1,10 +1,20 @@
 {
-  username = "";
+  username = "aidan"; # Fuck it, it's mostly going to be me using it
+
+  # This sets the password for the default user specified above. You don't HAVE to set it, but if you don't, you will
+  # need another way to set your user's password. Only for Linux hosts, macOS machines are configured before Nix is available
+  # hashedPassword = "";
 
   # defaultValues = $VALUES_FILE_COMMON_CONFIG_OPTIONS;
 
   # NOTE: You won't need to set hostname, unless you want it to be different from the name of the directory
   # hostname = "";
+
+  # These settings are for controlling modules that are adjustable based on role, i.e. installing different extensions
+  # for a work machine vs a personal one. This does not need to be set if the default value listed here is acceptable
+  # configSwitches = {
+  #   workMachine = false;
+  # };
 
   # networking = {
   #   fixedIp = false;
