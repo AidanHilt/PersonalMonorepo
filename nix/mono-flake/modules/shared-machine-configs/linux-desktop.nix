@@ -7,6 +7,7 @@
     ../roles/nixos/desktop/apps/virt-manager.nix
 
     ../roles/universal/development-machine.nix
+    ../roles/universal/linux-admin.nix
   ];
 
   programs.firefox.enable = true;
