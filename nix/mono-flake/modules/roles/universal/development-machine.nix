@@ -34,6 +34,7 @@ in
 {
   imports = [
     ./_kubernetes-admin.nix
+
     ../../scripts/mono-flake/default.nix
   ];
 
