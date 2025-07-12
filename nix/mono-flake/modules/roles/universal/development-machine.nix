@@ -34,7 +34,7 @@ in
 {
   imports = [
     ./_kubernetes-admin.nix
-    ./_mono-flake-development.nix
+    ../../scripts/mono-flake/default.nix
   ];
 
   environment.variables = {
