@@ -418,7 +418,7 @@ in
 
 {
   imports = [
-    ./lib/default.nix
+    ../lib/default.nix
   ];
 
   environment.systemPackages = with pkgs; [
