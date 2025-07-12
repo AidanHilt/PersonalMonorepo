@@ -15,7 +15,7 @@
     extraGroups = [ "networkmanager" "wheel" ];
     isNormalUser = true;
 
-    hashedPassword = pkgs.lib.mkIf (machine-config.hashedPassword != null) machine-config.hashedPassword;
+    hashedPassword = pkgs.lib.mkIf (machine-config.hashedPassword) machine-config.hashedPassword;
   };
 
   system.stateVersion = "25.05";
