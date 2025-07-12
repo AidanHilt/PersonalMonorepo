@@ -147,7 +147,7 @@ in
     # TODO address this, we shouldn't be importing files that start with _.
     ../../roles/universal/kubernetes-admin.nix
 
-    ../lib/default.nix
+    ../../lib/default.nix
   ];
 
   environment.systemPackages = with pkgs; [
