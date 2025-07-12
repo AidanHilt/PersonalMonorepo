@@ -4,7 +4,8 @@
   imports = [
     ./_smb-mount.nix
     ./_rclone.nix
-    ../universal/nixos-installer.nix
+
+    ../../scripts/nixos/default.nix
   ];
 
   environment.systemPackages = [

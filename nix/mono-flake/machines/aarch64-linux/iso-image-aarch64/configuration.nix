@@ -3,7 +3,7 @@
 {
   imports = [
     (inputs.nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
-    ../../../modules/roles/nixos/bootstrap-image.nix
+    ../../../modules/shared-machine-configs/bootstrap-image.nix
   ];
 
   isoImage = {

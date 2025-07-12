@@ -2,8 +2,8 @@
 
 {
   imports = [
-    ./_hosts.nix
-    ./_locale-and-time.nix
+    ./hosts.nix
+    ./locale-and-time.nix
 
     ../universal/universal-base.nix
   ];
@@ -14,6 +14,8 @@
     group = "${machine-config.username}";
     extraGroups = [ "networkmanager" "wheel" ];
     isNormalUser = true;
+
+    hashedPassword = pkgs.lib.mkIf (machine-config.hashedPassword != null) machine-config.hashedPassword;
   };
 
   system.stateVersion = "25.05";

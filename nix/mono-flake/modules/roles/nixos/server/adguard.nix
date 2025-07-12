@@ -17,7 +17,7 @@
   };
 
   age.secrets.adguardhome = {
-    file = ../../../secrets/adguardhome.age;
+    file = ../../../../secrets/adguardhome.age;
     path = "/var/lib/private/AdGuardHome/AdGuardHome.yaml";
     symlink = false;
   };

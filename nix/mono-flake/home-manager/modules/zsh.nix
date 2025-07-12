@@ -22,6 +22,7 @@
 
     shellAliases = {
       ls = "eza";
+      ll = "eza -lrga";
     };
 
     history = {

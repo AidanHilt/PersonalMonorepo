@@ -22,12 +22,12 @@ let
         inherit system;
         specialArgs = {
           inherit machine-config inputs globals;
-          pkgs = pkgsFor.${system};
         };
         modules = [
           (machinesDir + "/${system}/${name}/configuration.nix")
           inputs.home-manager.${moduleType}.home-manager
           inputs.agenix.${moduleType}.default
+          {nixpkgs.pkgs = pkgsFor.${system};}
         ] ++ platformModules;
       };
     };

@@ -1,9 +1,9 @@
 { inputs, globals, pkgs, lib, machine-config, ...}:
 
 let
-  work-machine = machine-config.work-machine or false;
+  workMachine = machine-config.configSwitches.workMachine or false;
 
-  additional-extensions = if work-machine then with pkgs.nur.repos.rycee.firefox-addons; [
+  additionalExtensions = if workMachine then with pkgs.nur.repos.rycee.firefox-addons; [
     keeper-password-manager
   ]
   else with pkgs.nur.repos.rycee.firefox-addons; [
@@ -35,7 +35,7 @@ in
         refined-github
         ublock-origin
         view-image
-      ] ++ additional-extensions;
+      ] ++ additionalExtensions;
 
 
       extraConfig = ''
@@ -44,7 +44,6 @@ in
         user_pref("browser.startup.page", 3);
         user_pref("browser.aboutConfig.showWarning", false)
       '';
-
     };
   };
 }

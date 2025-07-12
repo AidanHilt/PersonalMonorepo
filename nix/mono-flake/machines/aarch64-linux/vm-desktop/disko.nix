@@ -2,6 +2,6 @@
 
 {
   imports = [
-    ../../../modules/disko-configs/vda-single-disk.nix
+    ../../../modules/shared-disko-configs/vda-single-disk.nix
   ];
 }
