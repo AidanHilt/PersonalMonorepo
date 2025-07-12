@@ -2,9 +2,9 @@
 
 {
   imports = [
-    ./nixos-hardware-config-retrieval.nix
-    ./nixos-key-retrieval.nix
-    ./nixos-kubeconfig-retrieval.nix
-    ./nixos-remote-install.nix
+    ./mono-flake-copy-machine.nix
+    ./mono-flake-new-machine.nix
+    ./mono-flake-new-script.nix
+    ./mono-flake-template-machine-file-options.nix
   ];
 }
