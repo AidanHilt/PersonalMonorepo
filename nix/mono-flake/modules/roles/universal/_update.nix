@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 let
-  update-script = pkgs.writeShellScriptBin "update" ''
+  update = pkgs.writeShellScriptBin "update" ''
   #!/bin/bash
   # Helper functions
   update_config() {
@@ -138,8 +138,6 @@ let
             update_config "$var" "''${!var}"
         fi
     done
-
-    echo "All configuration values have been saved."
   fi
   '';
 in
@@ -147,7 +145,7 @@ in
 {
 
   environment.systemPackages = [
-    update-script
+    Update
   ];
 
 }

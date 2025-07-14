@@ -11,9 +11,10 @@
   # hostname = "";
 
   # These settings are for controlling modules that are adjustable based on role, i.e. installing different extensions
-  # for a work machine vs a personal one. This does not need to be set if the default value listed here is acceptable
+  # for a work machine vs a personal one. These do not need to be set if the default value listed here is acceptable
   # configSwitches = {
   #   workMachine = false;
+  #   wsl = false;
   # };
 
   # networking = {
@@ -38,5 +39,16 @@
   #   clusterEndpoint = "";
   #   # Used to identify which secrets to provide to the cluster
   #   clusterName = "";
+  # };
+
+
+  # See modules/universal/rclone.nix for the real default values. You probably don't need to change this
+  # rclone = {
+  #   wallpaperDir = "/home/user/Wallpapers";
+  #   keePassDir = "/home/user/KeePass";
+
+  #   windowsDocumentsDir = "/mnt/d/user/Documents";
+  #   windowsHomeDir = "/mnt/d/user/";
+  #   windowsGHubConfigDir = "/mnt/d/user/AppData/local/LGHUB";
   # };
 }
