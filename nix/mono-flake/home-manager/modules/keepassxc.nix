@@ -3,7 +3,7 @@
 {
   programs.keepassxc = {
     settings = {
-      Browser.Enabled = true
+      Browser.Enabled = true;
     };
   };
 
