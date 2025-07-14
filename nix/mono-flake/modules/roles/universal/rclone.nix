@@ -8,7 +8,7 @@ let
   
   windowsDocumentsDir = if machine-config ? rcloneSync.windowsDocumentsDir then machine-config.rcloneSync.windowsDocumentsDir else "/mnt/d/Users/aidan/Documents";
   windowsHomeDir = if machine-config ? rcloneSync.windowsHomeDirDir then machine-config.rcloneSync.windowsHomeDir else "/mnt/d/Users/aidan";
-  windowsGHubConfigDir = if machine-config ? rcloneSync.windowsGHubConfigDir then machine-config.rcloneSync.windowsGHubConfigDir else "${windowsHomeDirLocation}/AppData/local/LGHUB";
+  windowsGHubConfigDir = if machine-config ? rcloneSync.windowsGHubConfigDir then machine-config.rcloneSync.windowsGHubConfigDir else "${windowsHomeDir}/AppData/local/LGHUB";
 
   syncWallpapers = pkgs.writeShellScriptBin "sync-wallpapers" ''
     rclone bisync drive:Wallpapers $WALLPAPER_DIR --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
