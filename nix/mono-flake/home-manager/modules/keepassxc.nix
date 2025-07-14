@@ -2,6 +2,9 @@
 
 {
   programs.keepassxc = {
+    enable = true;
+    package = null;
+
     settings = {
       Browser.Enabled = true;
     };
