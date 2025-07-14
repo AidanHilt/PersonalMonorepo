@@ -11,7 +11,7 @@
     ../../../home-manager/modules/keepassxc.nix
   ];
 
-  home-manager.backupFileExtension = "bak";
+  backupFileExtension = "bak";
 
   home.stateVersion = "25.05";
 
