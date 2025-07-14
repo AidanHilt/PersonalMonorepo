@@ -65,10 +65,10 @@ in
   ] ++ wslScripts;
 
   environment.sessionVariables = {
-    WALLPAPER_DIR = wallpaperDir;
-    KEEPASS_DIR = keePassDir;
-    WINDOWS_DOCUMENTS_DIR = windowsDocumentsDir;
-    WINDOWS_GHUB_CONFIG_DIR = windowsGHubConfigDir;
+    WALLPAPER_DIR = "${wallpaperDir}";
+    KEEPASS_DIR = "${keePassDir}";
+    WINDOWS_DOCUMENTS_DIR = "${windowsDocumentsDir}";
+    WINDOWS_GHUB_CONFIG_DIR = "${windowsGHubConfigDir}";
   };
 
     # TODO update this so we encrypt files in Google Drive, for extra oomph
