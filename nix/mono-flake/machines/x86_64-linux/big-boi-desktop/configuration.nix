@@ -11,6 +11,7 @@
 
     ../../../modules/shared-machine-configs/linux-desktop.nix
     ../../../modules/roles/nixos/vscode-server.nix
+    ../../../modules/roles/nixos/nvidia.nix
   ];
 
   home-manager = {
