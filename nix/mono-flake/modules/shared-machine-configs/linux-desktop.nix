@@ -5,6 +5,7 @@
     ../roles/nixos/linux-universal.nix
     ../roles/nixos/desktop/plasma-desktop.nix
     ../roles/nixos/desktop/apps/virt-manager.nix
+    ../roles/nixos/desktop/apps/keepassxc.nix
 
     ../roles/universal/development-machine.nix
     ../roles/universal/linux-admin.nix
