@@ -145,7 +145,7 @@ in
 {
 
   environment.systemPackages = [
-    Update
+    update
   ];
 
 }
