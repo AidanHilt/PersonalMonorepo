@@ -11,6 +11,8 @@
     ../../../home-manager/modules/keepassxc.nix
   ];
 
+  home-manager.backupFileExtension = "bak";
+
   home.stateVersion = "25.05";
 
   # Let Home Manager install and manage itself.
