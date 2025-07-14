@@ -76,12 +76,12 @@ in
     file = ../../../secrets/rclone-config.age;
     path = "/${machine-config.userBase}/${machine-config.username}/.config/rclone/rclone.conf";
     owner = "${machine-config.username}";
-    group = lib.pkgs.mkIf (pkgs.lib.hasSuffix "darwin") "${machine-config.username}";
+    group = pkgs.lib.mkIf (pkgs.lib.hasSuffix "darwin") "${machine-config.username}";
     mode = "400";
     symlink = false;
   };
 
-  launchd.agents = lib.pkgs.mkIf (pkgs.lib.hasSuffix "darwin") {
+  launchd.agents = pkgs.lib.mkIf (pkgs.lib.hasSuffix "darwin") {
     rcloneKeepass = {
       serviceConfig = {
         UserName = "${machine-config.username}";
@@ -130,7 +130,7 @@ in
     };
   };
 
-  systemd = lib.pkgs.mkIf (! pkgs.lib.hasSuffix "darwin") {
+  systemd = pkgs.lib.mkIf (! pkgs.lib.hasSuffix "darwin") {
     timers = {
       wallpaper-sync = {
         wantedBy = [ "timers.target" ];
