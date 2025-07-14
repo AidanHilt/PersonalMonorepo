@@ -173,7 +173,7 @@ in
       wallpaper-sync = {
         script = ''
           set -xe
-          ${pkgs.rclone}/bin/rclone bisync drive:Wallpapers ${windows-home-dir}/Wallpapers --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/nixos/.config/rclone/rclone.conf
+          ${pkgs.rclone}/bin/rclone bisync drive:Wallpapers $WALLPAPER_DIR --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/nixos/.config/rclone/rclone.conf
         '';
 
         serviceConfig = {
@@ -185,7 +185,7 @@ in
       keepass-sync = {
         script = ''
           set -xe
-          ${pkgs.rclone}/bin/rclone bisync drive:KeePass ${windows-home-dir}/KeePass --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/nixos/.config/rclone/rclone.conf
+          ${pkgs.rclone}/bin/rclone bisync drive:KeePass $KEEPASS_DIR --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/nixos/.config/rclone/rclone.conf
         '';
 
         serviceConfig = {
@@ -197,7 +197,7 @@ in
       documents-folder-sync = {
         script = ''
           set -xe
-          ${pkgs.rclone}/bin/rclone sync ${windows-documents-dir} drive:Documents --drive-skip-gdocs --create-empty-src-dirs --fix-case --config /home/nixos/.config/rclone/rclone.conf
+          ${pkgs.rclone}/bin/rclone sync $WINDOWS_DOCUMENTS_DIR drive:Documents --drive-skip-gdocs --create-empty-src-dirs --fix-case --config /home/nixos/.config/rclone/rclone.conf
         '';
 
         serviceConfig = {
@@ -209,7 +209,7 @@ in
       lg-ghub-sync = {
         script = ''
           set -xe
-          ${pkgs.rclone}/bin/rclone sync ${windows-home-dir}/AppData/local/LGHUB drive:GHUB-Windows--drive-skip-gdocs --create-empty-src-dirs --fix-case --config /home/nixos/.config/rclone/rclone.conf
+          ${pkgs.rclone}/bin/rclone sync $WINDOWS_GHUB_CONFIG_DIR drive:GHUB-Windows--drive-skip-gdocs --create-empty-src-dirs --fix-case --config /home/nixos/.config/rclone/rclone.conf
         '';
 
         serviceConfig = {
