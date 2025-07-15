@@ -43,7 +43,10 @@ select_directory() {
     done < <(find "$MODULES_DIR" -type d -not -path "$MODULES_DIR" -print0 | sort -z)
     
     if [[ ''${#dirs[@]} -eq 0 ]]; then
-        selected_dir="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake"
+        echo "No subdirectories found in $MODULES_DIR"
+        echo "Please create a directory first or specify a new path."
+        read -p "Enter directory name to create: " new_dir
+        selected_dir="$new_dir"
     else
         echo "$i) Create new directory"
         echo "0) Exit"
