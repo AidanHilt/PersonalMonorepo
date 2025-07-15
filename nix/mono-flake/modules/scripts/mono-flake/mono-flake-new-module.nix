@@ -79,8 +79,6 @@ get_module_name() {
     module_name="''${module_name%.nix}"
 }
 
-echo "We start here"
-
 # Parse command line arguments
 module_path=""
 while [[ $# -gt 0 ]]; do
@@ -100,8 +98,6 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
-
-echo "Bruh"
 
 # If module path is provided, use it directly
 if [[ -n "$module_path" ]]; then
