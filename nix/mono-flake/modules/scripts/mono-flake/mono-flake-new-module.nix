@@ -15,6 +15,8 @@ fi
 MODULES_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules"
 TEMPLATE_FILE="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/module.nix"
 
+HOME_MANAGER=""
+
 # Check if template file exists
 if [[ ! -f "$TEMPLATE_FILE" ]]; then
     echo "Error: Template file not found at $TEMPLATE_FILE"
@@ -86,7 +88,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --home-manager)
-            module_path="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/home-manager/modules"
+            HOME_MANAGERr=true
             shift 2
             ;;
         *)
@@ -112,6 +114,11 @@ if [[ -n "$module_path" ]]; then
     if [[ "$target_file" != *.nix ]]; then
         target_file="$target_file.nix"
     fi
+elif [[ ! -n "$HOME_MANAGER" ]]; then
+    get_module_name
+    
+    target_file="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/home-manager/modules/$module_name.nix"
+
 else
     # Interactive mode
     echo "Interactive module creation"
