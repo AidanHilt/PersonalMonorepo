@@ -5,6 +5,7 @@
 {
   imports = [
     ./_update.nix
+    ./_home-manager.nix
   ];
 
   nix = {
