@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, config, ...}:
 
 let 
   callerFile = builtins.unsafeGetAttrPos "imports" config;
