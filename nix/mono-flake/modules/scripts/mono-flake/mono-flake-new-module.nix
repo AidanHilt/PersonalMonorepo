@@ -114,7 +114,7 @@ if [[ -n "$module_path" ]]; then
     if [[ "$target_file" != *.nix ]]; then
         target_file="$target_file.nix"
     fi
-elif [[ ! -n "$HOME_MANAGER" ]]; then
+elif [[ -n "$HOME_MANAGER" ]]; then
     get_module_name
     
     target_file="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/home-manager/modules/$module_name.nix"
