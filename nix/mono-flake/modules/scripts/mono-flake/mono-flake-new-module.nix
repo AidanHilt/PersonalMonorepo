@@ -91,7 +91,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         --home-manager)
             HOME_MANAGER=true
-            shift 2
+            shift 1
             ;;
         *)
             echo "Unknown option: $1"
