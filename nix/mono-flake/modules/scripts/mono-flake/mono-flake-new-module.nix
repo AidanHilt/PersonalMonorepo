@@ -84,12 +84,10 @@ while [[ $# -gt 0 ]]; do
         --module-path)
             module_path="$2"
             shift 2
-            break
             ;;
         --home-manager)
             module_path="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/home-manager/modules"
             shift 2
-            break
             ;;
         *)
             echo "Unknown option: $1"
