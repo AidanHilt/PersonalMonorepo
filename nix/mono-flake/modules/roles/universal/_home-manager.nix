@@ -1,7 +1,8 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 let 
-  importingDir = builtins.toString (builtins.dirOf (__curPos.file or ./.));
+  callerFile = builtins.unsafeGetAttrPos "imports" config;
+  callerDir = if callerFile != null then builtins.dirOf callerFile.file else ./.;
 in
 
 {
