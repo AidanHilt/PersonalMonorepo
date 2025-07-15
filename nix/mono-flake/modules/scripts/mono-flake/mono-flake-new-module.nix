@@ -43,10 +43,7 @@ select_directory() {
     done < <(find "$MODULES_DIR" -type d -not -path "$MODULES_DIR" -print0 | sort -z)
     
     if [[ ''${#dirs[@]} -eq 0 ]]; then
-        echo "No subdirectories found in $MODULES_DIR"
-        echo "Please create a directory first or specify a new path."
-        read -p "Enter directory name to create: " new_dir
-        selected_dir="$new_dir"
+        selected_dir="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules"
     else
         echo "$i) Create new directory"
         echo "0) Exit"
@@ -87,10 +84,16 @@ while [[ $# -gt 0 ]]; do
         --module-path)
             module_path="$2"
             shift 2
+            break
+            ;;
+        --home-manager)
+            module_path="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/home-manager/modules"
+            shift 2
+            break
             ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--module-path PATH]"
+            echo "Usage: $0 [--module-path PATH] [--home-manager]"
             exit 1
             ;;
     esac
