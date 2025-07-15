@@ -88,7 +88,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --home-manager)
-            HOME_MANAGERr=true
+            HOME_MANAGER=true
             shift 2
             ;;
         *)
