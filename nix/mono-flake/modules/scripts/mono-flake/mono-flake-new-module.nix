@@ -116,6 +116,8 @@ if [[ -n "$module_path" ]]; then
     fi
 elif [[ -n "$HOME_MANAGER" ]]; then
     get_module_name
+
+    TEMPLATE_FILE="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/home-manager-module.nix"
     
     target_file="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/home-manager/modules/$module_name.nix"
 else
