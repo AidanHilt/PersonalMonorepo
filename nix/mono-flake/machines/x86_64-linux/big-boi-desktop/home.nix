@@ -4,11 +4,12 @@
   imports = [
     #../../../home-manager/modules/atils.nix
     ../../../home-manager/modules/firefox.nix
+    ../../../home-manager/modules/git.nix
+    ../../../home-manager/modules/keepassxc.nix
     ../../../home-manager/modules/kubernetes.nix
     ../../../home-manager/modules/vim.nix
     ../../../home-manager/modules/vscode.nix
     ../../../home-manager/modules/zsh.nix
-    ../../../home-manager/modules/keepassxc.nix
   ];
 
   home.stateVersion = "25.05";
