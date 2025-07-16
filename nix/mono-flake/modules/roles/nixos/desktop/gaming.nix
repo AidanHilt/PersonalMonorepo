@@ -5,7 +5,7 @@
 
   environment.systemPackages = with pkgs; [
     discord
-    parsec-bin
+    inputs.parsecgaming.packages.${pkgs.system}.parsecgaming
   ];
 
   programs.steam = {

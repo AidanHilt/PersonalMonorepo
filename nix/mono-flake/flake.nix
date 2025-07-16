@@ -17,7 +17,7 @@
     nur.url = "github:nix-community/nur";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/feat/flake-new-machine-improvements";
+      url = "github:aidanhilt/PersonalMonorepo/feat/stabilizing-desktop-linux";
       flake = false;
     };
 
@@ -50,6 +50,8 @@
       url = "github:nix-community/disko/latest";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    parsecgaming.url = "github:DarthPJB/parsec-gaming-nix";
 
     # Darwin-specific items
     nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.05-darwin";
