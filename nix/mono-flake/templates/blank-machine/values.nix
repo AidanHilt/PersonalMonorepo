@@ -1,4 +1,6 @@
 {
+  # Only uncommented values actually need to be set. See other comments for notes on values
+  
   username = "aidan"; # Fuck it, it's mostly going to be me using it
 
   # This sets the password for the default user specified above. You don't HAVE to set it, but if you don't, you will
@@ -50,5 +52,10 @@
   #   windowsDocumentsDir = "/mnt/d/user/Documents";
   #   windowsHomeDir = "/mnt/d/user/";
   #   windowsGHubConfigDir = "/mnt/d/user/AppData/local/LGHUB";
+  # };
+
+  # git = {
+  #   email = "aidanhilt2@gmail.com";
+  #   username = "ahilt";
   # };
 }
