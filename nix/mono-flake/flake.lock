@@ -292,6 +292,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_3": {
+      "locked": {
+        "lastModified": 1749857119,
+        "narHash": "sha256-tG5xUn3hFaPpAHYIvr2F88b+ovcIO5k1HqajFy7ZFPM=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "5f4f306bea96741f1588ea4f450b2a2e29f42b98",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-25.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nur": {
       "inputs": {
         "flake-parts": "flake-parts",
@@ -311,19 +327,63 @@
         "type": "github"
       }
     },
+    "parsecDeb": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-+sNEGgb2wARM8JDf3Gdzk+N/IFNERlEQJFROGQGP8XE=",
+        "type": "file",
+        "url": "https://builds.parsecgaming.com/package/parsec-linux.deb"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://builds.parsecgaming.com/package/parsec-linux.deb"
+      }
+    },
+    "parsecMeta": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-lP2Mc0/gVWM6X/79/xB0ncMj5vXUjtk+QTVC/z9/MaQ=",
+        "type": "file",
+        "url": "https://builds.parsecgaming.com/channel/release/appdata/linux/latest"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://builds.parsecgaming.com/channel/release/appdata/linux/latest"
+      }
+    },
+    "parsecgaming": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_3",
+        "parsecDeb": "parsecDeb",
+        "parsecMeta": "parsecMeta"
+      },
+      "locked": {
+        "lastModified": 1750191832,
+        "narHash": "sha256-rQ6BHygvbY87USdXwz7sNmdWvCAcuUvpWg1BlRhETWk=",
+        "owner": "DarthPJB",
+        "repo": "parsec-gaming-nix",
+        "rev": "8641dd83d53a0eef585a9a69546d4dc2f3284018",
+        "type": "github"
+      },
+      "original": {
+        "owner": "DarthPJB",
+        "repo": "parsec-gaming-nix",
+        "type": "github"
+      }
+    },
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1751853598,
-        "narHash": "sha256-44uTNllyucaGwKJD3A5rvhyxKwm/9yl/UvlMMXSrJyQ=",
+        "lastModified": 1752629606,
+        "narHash": "sha256-3YGR2eQUwo/SRnNIb1n0OlXoIlda7T6j/TRrO0neUaY=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "bd5a0ac639aa204a8d6004c25341a62e39e26083",
+        "rev": "c3e361f09dc5eb6289ecd3e66ba84362ea9b5ea5",
         "type": "github"
       },
       "original": {
         "owner": "aidanhilt",
-        "ref": "feat/flake-new-machine-improvements",
+        "ref": "feat/stabilizing-desktop-linux",
         "repo": "PersonalMonorepo",
         "type": "github"
       }
@@ -385,6 +445,7 @@
         "nixpkgs": "nixpkgs",
         "nixpkgs-darwin": "nixpkgs-darwin",
         "nur": "nur",
+        "parsecgaming": "parsecgaming",
         "personalMonorepo": "personalMonorepo",
         "plasma-manager": "plasma-manager",
         "poetry2nix": "poetry2nix",
