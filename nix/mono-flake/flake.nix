@@ -51,8 +51,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    parsecgaming.url = "github:DarthPJB/parsec-gaming-nix";
-
     # Darwin-specific items
     nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.05-darwin";
 
