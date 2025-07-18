@@ -3,6 +3,7 @@
 {
   imports = [];
 
+  # TODO Parsec works, but it's kind of ugly. See if we can add a pretty application too
   environment.systemPackages = with pkgs; [
     discord
     inputs.parsecgaming.packages.${pkgs.system}.parsecgaming
@@ -11,4 +12,9 @@
   programs.steam = {
     enable = true;
   };
+
+  services.sunshine = {
+    enable = true;
+    openFirewall = true;
+  }
 }
