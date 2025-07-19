@@ -1,5 +1,9 @@
 { pkgs, machine-config, ...}:
 
+let
+  wsl = if machine-config ? configSwitches.wsl then machine-config.configSwitches.wsl else false;
+in
+
 {
   wallpaperDir = if machine-config ? rcloneSync.wallpaperDir then machine-config.rcloneSync.wallpaperDir else "${machine-config.userBase}/${machine-config.username}/Wallpapers";
   keePassDir = if machine-config ? rcloneSync.keePassDir then machine-config.rcloneSync.keePassDir else "${machine-config.userBase}/${machine-config.username}/KeePass";
@@ -24,8 +28,6 @@
   syncGHub = pkgs.writeShellScriptBin "sync-g-hub" ''
     rclone sync $WINDOWS_GHUB_CONFIG_DIR drive:GHUB-Windows--drive-skip-gdocs --create-empty-src-dirs --fix-case
   '';
-
-  wsl = if machine-config ? configSwitches.wsl then machine-config.configSwitches.wsl else false;
 
   wslScripts = if wsl then [syncDocuments syncGHub] else [];
 
