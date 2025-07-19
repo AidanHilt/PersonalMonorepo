@@ -13,12 +13,7 @@ in
     pkgs.rclone
   ] ++ wslScripts;
 
-  environment.sessionVariables = with constants; {
-    WALLPAPER_DIR = wallpaperDir;
-    KEEPASS_DIR = keePassDir;
-    WINDOWS_DOCUMENTS_DIR = windowsDocumentsDir;
-    WINDOWS_GHUB_CONFIG_DIR = windowsGHubConfigDir;
-  };
+  environment.sessionVariables = constants.environmentVariables;
 
     # TODO update this so we encrypt files in Google Drive, for extra oomph
   age.secrets.rclone-config = {
