@@ -1,6 +1,6 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
-{
+lib.mkIf (pkgs.stdenv.isDarwin) {
   launchd.agents = {
     rcloneKeepass = {
       serviceConfig = {

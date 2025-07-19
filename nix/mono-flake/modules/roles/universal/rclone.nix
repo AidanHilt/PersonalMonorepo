@@ -52,6 +52,10 @@ let
 in
 
 {
+  imports = [
+    ./_rclone-service-linux.nix
+  ];
+
   environment.systemPackages = with pkgs; [
     syncDownloadAll
     syncKeepass
