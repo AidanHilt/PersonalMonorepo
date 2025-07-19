@@ -21,14 +21,14 @@
         };
       };
 
-      documents-folder-sync = {
-        wantedBy = [ "timers.target" ];
-        timerConfig = {
-          OnBootSec = "30m";
-          OnUnitActiveSec = "30m";
-          Unit = "documents-folder-sync.service";
-        };
-      };
+      # documents-folder-sync = {
+      #   wantedBy = [ "timers.target" ];
+      #   timerConfig = {
+      #     OnBootSec = "30m";
+      #     OnUnitActiveSec = "30m";
+      #     Unit = "documents-folder-sync.service";
+      #   };
+      # };
 
       # lg-ghub-sync = {
       #   wantedBy = [ "timers.target" ];
@@ -65,17 +65,17 @@
         };
       };
 
-      documents-folder-sync = {
-        script = ''
-          set -xe
-          ${pkgs.rclone}/bin/rclone sync $WINDOWS_DOCUMENTS_DIR drive:Documents --drive-skip-gdocs --create-empty-src-dirs --fix-case --config /home/${machine-config.username}/.config/rclone/rclone.conf
-        '';
+      # documents-folder-sync = {
+      #   script = ''
+      #     set -xe
+      #     ${pkgs.rclone}/bin/rclone sync $WINDOWS_DOCUMENTS_DIR drive:Documents --drive-skip-gdocs --create-empty-src-dirs --fix-case --config /home/${machine-config.username}/.config/rclone/rclone.conf
+      #   '';
 
-        serviceConfig = {
-          Type = "oneshot";
-          User = "root";
-        };
-      };
+      #   serviceConfig = {
+      #     Type = "oneshot";
+      #     User = "root";
+      #   };
+      # };
 
       # lg-ghub-sync = {
       #   script = ''
