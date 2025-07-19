@@ -81,7 +81,7 @@ in
     symlink = false;
   };
 
-  launchd.agents = (pkgs.lib.mkIf pkgs.lib.hasSuffix "darwin") {
+  launchd.agents = pkgs.lib.mkIf (pkgs.lib.hasSuffix "darwin") {
     rcloneKeepass = {
       serviceConfig = {
         UserName = "${machine-config.username}";
