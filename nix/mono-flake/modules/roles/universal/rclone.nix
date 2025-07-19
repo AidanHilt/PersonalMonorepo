@@ -50,12 +50,12 @@ let
     ''
   ;
 
-  serviceConfig = if (pkgs.lib.hasSuffix "darwin" pkgs.system) then ./_rclone-service-darwin.nix else ./_rclone-service-linux.nix;
+  autoSyncConfig = if (pkgs.lib.hasSuffix "darwin" pkgs.system) then ./_rclone-service-darwin.nix else ./_rclone-service-linux.nix;
 in
 
 {
   imports = [
-    serviceConfig
+    autoSyncConfig
   ];
 
   environment.systemPackages = with pkgs; [
