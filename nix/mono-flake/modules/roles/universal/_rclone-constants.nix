@@ -59,23 +59,23 @@ in
   windowsHomeDir = windowsHomeDir;
   windowsGHubConfigDir = windowsGHubConfigDir;
 
-  # syncWallpapers = pkgs.writeShellScriptBin "sync-wallpapers" ''
-  #   rclone bisync drive:Wallpapers $WALLPAPER_DIR --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
-  # '';
+  syncWallpapers = pkgs.writeShellScriptBin "sync-wallpapers" ''
+    rclone bisync drive:Wallpapers $WALLPAPER_DIR --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
+  '';
 
-  # syncKeepass = pkgs.writeShellScriptBin "sync-keepass" ''
-  #   rclone bisync drive:KeePass $KEEPASS_DIR --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
-  # '';
+  syncKeepass = pkgs.writeShellScriptBin "sync-keepass" ''
+    rclone bisync drive:KeePass $KEEPASS_DIR --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
+  '';
 
-  # syncDocuments = pkgs.writeShellScriptBin "sync-documents" ''
-  #   rclone sync $WINDOWS_DOCUMENTS_DIR drive:Documents --drive-skip-gdocs --create-empty-src-dirs --fix-case
-  # '';
+  syncDocuments = pkgs.writeShellScriptBin "sync-documents" ''
+    rclone sync $WINDOWS_DOCUMENTS_DIR drive:Documents --drive-skip-gdocs --create-empty-src-dirs --fix-case
+  '';
 
-  # syncGHub = pkgs.writeShellScriptBin "sync-g-hub" ''
-  #   rclone sync $WINDOWS_GHUB_CONFIG_DIR drive:GHUB-Windows--drive-skip-gdocs --create-empty-src-dirs --fix-case
-  # '';
+  syncGHub = pkgs.writeShellScriptBin "sync-g-hub" ''
+    rclone sync $WINDOWS_GHUB_CONFIG_DIR drive:GHUB-Windows--drive-skip-gdocs --create-empty-src-dirs --fix-case
+  '';
 
-  # wslScripts = if wsl then [syncDocuments syncGHub] else [];
+  wslScripts = wslScripts;
 
   # syncDownloadAll = if wsl then 
   #   pkgs.writeShellScriptBin "sync-download-all" ''
