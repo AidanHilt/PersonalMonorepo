@@ -12,14 +12,14 @@
         };
       };
 
-      keepass-sync = {
-        wantedBy = [ "timers.target" ];
-        timerConfig = {
-          OnBootSec = "5m";
-          OnUnitActiveSec = "5m";
-          Unit = "keepass-sync.service";
-        };
-      };
+      # keepass-sync = {
+      #   wantedBy = [ "timers.target" ];
+      #   timerConfig = {
+      #     OnBootSec = "5m";
+      #     OnUnitActiveSec = "5m";
+      #     Unit = "keepass-sync.service";
+      #   };
+      # };
 
       # documents-folder-sync = {
       #   wantedBy = [ "timers.target" ];
@@ -53,17 +53,17 @@
         };
       };
 
-      keepass-sync = {
-        script = ''
-          set -xe
-          ${pkgs.rclone}/bin/rclone bisync drive:KeePass $KEEPASS_DIR --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/${machine-config.username}/.config/rclone/rclone.conf
-        '';
+      # keepass-sync = {
+      #   script = ''
+      #     set -xe
+      #     ${pkgs.rclone}/bin/rclone bisync drive:KeePass $KEEPASS_DIR --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/${machine-config.username}/.config/rclone/rclone.conf
+      #   '';
 
-        serviceConfig = {
-          Type = "oneshot";
-          User = "root";
-        };
-      };
+      #   serviceConfig = {
+      #     Type = "oneshot";
+      #     User = "root";
+      #   };
+      # };
 
       # documents-folder-sync = {
       #   script = ''
