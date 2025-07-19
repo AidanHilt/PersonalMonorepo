@@ -54,7 +54,7 @@ in
 {
   imports = [
     ./_rclone-service-linux.nix
-    ./_rclone-service-darwin.nix
+    #./_rclone-service-darwin.nix
   ];
 
   environment.systemPackages = with pkgs; [
