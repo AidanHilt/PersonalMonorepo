@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
   clusterEndpoint = if machine-config ? k8s.clusterEndpoint then machine-config.k8s.clusterEndpoint else machine-config.networking.loadBalancerIp;

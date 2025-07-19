@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
 mono-flake-template-machine-file-options = pkgs.writeShellScriptBin "mono-flake-template-machine-file-options" ''

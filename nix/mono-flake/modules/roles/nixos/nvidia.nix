@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 {
   hardware.graphics.enable = true;

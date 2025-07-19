@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 let 
   email = if machine-config ? git.email then machine-config.git.email else "aidanhilt2@gmail.com";

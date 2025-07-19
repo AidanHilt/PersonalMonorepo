@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
 nixos-build-x86_64-iso = pkgs.writeShellScriptBin "nixos-build-x86_64-iso" ''

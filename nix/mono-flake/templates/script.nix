@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
 $SCRIPT_NAME_BASE = pkgs.writeShellScriptBin "$SCRIPT_NAME_BASE" ''

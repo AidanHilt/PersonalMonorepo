@@ -1,6 +1,6 @@
 # Note: This file is likely going to be pretty small, although the bigger we can get it, the better
 # This file is going to be imported by ALL machine categories, so you better make sure it's truly universal
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 {
   imports = [

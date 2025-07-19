@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 let 
   wallpaperDir = if machine-config ? rcloneSync.wallpaperDir then machine-config.rcloneSync.wallpaperDir else "${machine-config.userBase}/${machine-config.username}/Wallpapers";

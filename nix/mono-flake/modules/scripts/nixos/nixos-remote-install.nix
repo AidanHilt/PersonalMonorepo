@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
 get-username-from-machine-name = pkgs.writeShellScriptBin "get-username-from-machine-name" ''
