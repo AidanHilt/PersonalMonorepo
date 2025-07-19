@@ -55,7 +55,7 @@ in
 
 {
   imports = [
-    serviceCOnfig
+    serviceConfig
   ];
 
   environment.systemPackages = with pkgs; [
