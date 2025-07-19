@@ -1,3 +1,5 @@
+{ inputs, globals, pkgs, machine-config, lib, ...}:
+
 {
   wallpaperDir = if machine-config ? rcloneSync.wallpaperDir then machine-config.rcloneSync.wallpaperDir else "${machine-config.userBase}/${machine-config.username}/Wallpapers";
   keePassDir = if machine-config ? rcloneSync.keePassDir then machine-config.rcloneSync.keePassDir else "${machine-config.userBase}/${machine-config.username}/KeePass";
