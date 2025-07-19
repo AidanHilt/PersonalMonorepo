@@ -1,6 +1,6 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
-lib.mkIf (pkgs.system != "aarch64-darwin") {
+lib.mkIf (pkgs.stdenv.isLinux) {
   systemd = {
     timers = {
       # wallpaper-sync = {
