@@ -44,7 +44,7 @@
       wallpaper-sync = {
         script = ''
           set -xe
-          ${pkgs.rclone}/bin/rclone bisync drive:Wallpapers $WALLPAPER_DIR --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/${machine-config.username}/.config/rclone/rclone.conf
+          rclone bisync drive:Wallpapers $WALLPAPER_DIR --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/${machine-config.username}/.config/rclone/rclone.conf
         '';
 
         serviceConfig = {
