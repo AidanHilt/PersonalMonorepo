@@ -1,6 +1,6 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
-{
+lib.mkIf pkgs.stdenv.isLinux {
   systemd = {
     timers = {
       # wallpaper-sync = {

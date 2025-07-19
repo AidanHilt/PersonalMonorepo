@@ -49,13 +49,11 @@ let
       sync-keepass
     ''
   ;
-
-  autoSyncConfig = if (pkgs.lib.hasSuffix "darwin" pkgs.system) then ./_rclone-service-darwin.nix else ./_rclone-service-linux.nix;
 in
 
 {
   imports = [
-    (if pkgs.stdenv.isDarwin then ./_rclone-service-darwin.nix else ./_rclone-service-linux.nix)
+    ./_rclone-service-linux.nix
   ];
 
   environment.systemPackages = with pkgs; [
