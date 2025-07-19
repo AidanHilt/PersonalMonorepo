@@ -10,8 +10,6 @@
     ../roles/universal/rclone.nix
   ];
 
-  programs.firefox.enable = true;
-
   programs.nix-ld.enable = true;
 
   # Configure keymap in X11
