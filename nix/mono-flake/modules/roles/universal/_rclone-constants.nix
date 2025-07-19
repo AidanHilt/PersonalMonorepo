@@ -98,4 +98,11 @@ in
     ''
   ;
 
+  environmentVariables = {
+    WALLPAPER_DIR = wallpaperDir;
+    KEEPASS_DIR = keePassDir;
+    WINDOWS_DOCUMENTS_DIR = windowsDocumentsDir;
+    WINDOWS_GHUB_CONFIG_DIR = windowsGHubConfigDir;
+  };
+
 }
