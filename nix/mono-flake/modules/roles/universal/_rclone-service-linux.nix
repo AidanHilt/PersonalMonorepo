@@ -3,14 +3,14 @@
 {
   systemd = {
     timers = {
-      wallpaper-sync = {
-        wantedBy = [ "timers.target" ];
-        timerConfig = {
-          OnBootSec = "5m";
-          OnUnitActiveSec = "5m";
-          Unit = "wallpaper-sync.service";
-        };
-      };
+      # wallpaper-sync = {
+      #   wantedBy = [ "timers.target" ];
+      #   timerConfig = {
+      #     OnBootSec = "5m";
+      #     OnUnitActiveSec = "5m";
+      #     Unit = "wallpaper-sync.service";
+      #   };
+      # };
 
       # keepass-sync = {
       #   wantedBy = [ "timers.target" ];
