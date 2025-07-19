@@ -101,7 +101,6 @@ if [[ -z "''${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
     exit 1
 fi
 
-
 # Check if template file exists
 if [[ ! -f "$TEMPLATE_FILE" ]]; then
     echo "Error: Template file does not exist: $TEMPLATE_FILE"
@@ -113,6 +112,8 @@ if [[ ! -d "$OUTPUT_DIR" ]]; then
     echo "Creating output directory: $OUTPUT_DIR"
     mkdir -p "$OUTPUT_DIR"
 fi
+
+select_directory
 
 # Get script name (interactive or from argument)
 if [[ -z "$SCRIPT_NAME" ]]; then
