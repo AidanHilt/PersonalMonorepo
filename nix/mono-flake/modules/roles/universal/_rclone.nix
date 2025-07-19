@@ -5,15 +5,15 @@ let
 in
 
 {
-  environment.systemPackages = with pkgs; [
+  environment.systemPackages = with constants; [
     syncDownloadAll
     syncKeepass
     syncWallpapers
 
-    rclone
+    pkgs.rclone
   ] ++ wslScripts;
 
-  environment.sessionVariables = with constants{
+  environment.sessionVariables = with constants; {
     WALLPAPER_DIR = wallpaperDir;
     KEEPASS_DIR = keePassDir;
     WINDOWS_DOCUMENTS_DIR = windowsDocumentsDir;
