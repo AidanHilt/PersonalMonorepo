@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let 
-  constants = import _rclone-constants.nix;
+  constants = import ./_rclone-constants.nix;
 in
 
 {
