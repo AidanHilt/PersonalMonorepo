@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 {
-  launchd.agents = pkgs.lib.mkIf (pkgs.stdenv.isDarwin) {
+  launchd.agents = {
     rcloneKeepass = {
       serviceConfig = {
         UserName = "${machine-config.username}";

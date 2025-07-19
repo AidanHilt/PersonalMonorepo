@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 {
-  systemd = pkgs.lib.mkIf {
+  systemd = {
     timers = {
       wallpaper-sync = {
         wantedBy = [ "timers.target" ];
