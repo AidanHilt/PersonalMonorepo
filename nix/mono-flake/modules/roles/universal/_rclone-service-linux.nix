@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 {
-  systemd = pkgs.lib.mkIf (! pkgs.lib.hasSuffix "darwin") {
+  systemd = pkgs.lib.mkIf {
     timers = {
       wallpaper-sync = {
         wantedBy = [ "timers.target" ];
