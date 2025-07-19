@@ -1,4 +1,4 @@
-{ pkgs, machine-config, ...}:
+{ pkgs, machine-config, lib, ...}:
 
 let
   wallpaperDir = if machine-config ? rcloneSync.wallpaperDir then machine-config.rcloneSync.wallpaperDir else "${machine-config.userBase}/${machine-config.username}/Wallpapers";
@@ -101,8 +101,8 @@ in
   environmentVariables = {
     WALLPAPER_DIR = wallpaperDir;
     KEEPASS_DIR = keePassDir;
-    WINDOWS_DOCUMENTS_DIR = windowsDocumentsDir;
-    WINDOWS_GHUB_CONFIG_DIR = windowsGHubConfigDir;
+    WINDOWS_DOCUMENTS_DIR = (lib.mkIf wsl) windowsDocumentsDir;
+    WINDOWS_GHUB_CONFIG_DIR = (lib.mkIf wsl) windowsGHubConfigDir;
   };
 
 }
