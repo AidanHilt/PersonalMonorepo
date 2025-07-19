@@ -55,7 +55,8 @@ in
 
 {
   imports = [
-    autoSyncConfig
+    #autoSyncConfig
+    ./_rclone-service-linux.nix
   ];
 
   environment.systemPackages = with pkgs; [
