@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, ...}:
 
 let
-  update-script = pkgs.writeShellScriptBin "update" ''
+  update = pkgs.writeShellScriptBin "update" ''
   #!/bin/bash
   # Helper functions
   update_config() {
@@ -24,7 +24,6 @@ let
       if grep -q "^$key=" "$config_file"; then
           # Update existing key
           sed -i.bak "s|^$key=.*|$key=$value|" "$config_file" && rm -f "''${config_file}.bak"
-          echo "Updated $key=$value in config file"
       else
           # Append new key-value pair
           echo "$key=$value" >> "$config_file"
@@ -138,8 +137,6 @@ let
             update_config "$var" "''${!var}"
         fi
     done
-
-    echo "All configuration values have been saved."
   fi
   '';
 in
@@ -147,7 +144,7 @@ in
 {
 
   environment.systemPackages = [
-    update-script
+    update
   ];
 
 }

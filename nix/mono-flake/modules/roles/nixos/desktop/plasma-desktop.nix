@@ -9,7 +9,7 @@
     displayManager.sddm.wayland.enable = true;
   };
 
-environment.systemPackages = with pkgs; [
+  environment.systemPackages = with pkgs; [
     kdePackages.kcalc
     kdePackages.kcharselect
     kdePackages.kcolorchooser

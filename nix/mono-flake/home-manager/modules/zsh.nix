@@ -23,6 +23,7 @@
     shellAliases = {
       ls = "eza";
       ll = "eza -lrga";
+      pbcopy = pkgs.lib.mkIf (! pkgs.lib.hasSuffix "darwin" pkgs.system) "wl-copy"; 
     };
 
     history = {

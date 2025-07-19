@@ -10,6 +10,9 @@ set -euo pipefail
 # Default values
 SCRIPT_NAME=""
 
+TEMPLATE_FILE="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/script.nix"
+OUTPUT_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/scripts"
+
 # Function to display usage
 usage() {
     echo "Usage: $0 [OPTIONS] [SCRIPT_NAME]"
@@ -25,6 +28,44 @@ usage() {
     echo "  $0 my-script           # Positional argument"
     echo "  $0 -n my-script       # Named argument"
     exit 1
+}
+
+# Function to select directory interactively
+select_directory() {
+    echo "Available directories in $OUTPUT_DIR:"
+    local dirs=()
+    local i=1
+    
+    # Find all directories (including subdirectories)
+    while IFS= read -r -d "" dir; do
+        # Get relative path from modules directory
+        rel_path="''${dir#$OUTPUT_DIR/}"
+        dirs+=("$rel_path")
+        echo "$i) $rel_path"
+        ((i++))
+    done < <(find "$OUTPUT_DIR" -type d -not -path "$OUTPUT_DIR" -print0 | sort -z)
+    
+    if [[ ''${#dirs[@]} -eq 0 ]]; then
+        selected_dir="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/scripts"
+    else
+        echo "$i) Create new directory"
+        echo "0) Exit"
+        
+        read -p "Select directory (number): " choice
+        
+        if [[ "$choice" == "0" ]]; then
+            echo "Exiting..."
+            exit 0
+        elif [[ "$choice" == "$i" ]]; then
+            read -p "Enter new directory name: " new_dir
+            selected_dir="$new_dir"
+        elif [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -lt "$i" ]]; then
+            selected_dir="''${dirs[$((choice-1))]}"
+        else
+            echo "Invalid selection"
+            exit 1
+        fi
+    fi
 }
 
 # Parse command line arguments
@@ -60,10 +101,6 @@ if [[ -z "''${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
     exit 1
 fi
 
-# Define paths
-TEMPLATE_FILE="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/script.nix"
-OUTPUT_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/scripts"
-
 # Check if template file exists
 if [[ ! -f "$TEMPLATE_FILE" ]]; then
     echo "Error: Template file does not exist: $TEMPLATE_FILE"
@@ -75,6 +112,8 @@ if [[ ! -d "$OUTPUT_DIR" ]]; then
     echo "Creating output directory: $OUTPUT_DIR"
     mkdir -p "$OUTPUT_DIR"
 fi
+
+select_directory
 
 # Get script name (interactive or from argument)
 if [[ -z "$SCRIPT_NAME" ]]; then
@@ -100,7 +139,7 @@ if [[ ! "$SCRIPT_NAME" =~ \.nix$ ]]; then
 fi
 
 # Define output file path
-OUTPUT_FILE="$OUTPUT_DIR/$SCRIPT_NAME"
+OUTPUT_FILE="$OUTPUT_DIR/$selected_dir/$SCRIPT_NAME"
 
 # Check if output file already exists
 if [[ -f "$OUTPUT_FILE" ]]; then
