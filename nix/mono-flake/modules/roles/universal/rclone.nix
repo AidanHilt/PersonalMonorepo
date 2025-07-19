@@ -54,9 +54,9 @@ let
 in
 
 {
-  imports = [
-    serviceConfig
-  ];
+  # imports = [
+  #   serviceConfig
+  # ];
 
   environment.systemPackages = with pkgs; [
     syncDownloadAll
