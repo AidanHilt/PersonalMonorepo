@@ -1,6 +1,10 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
-lib.mkIf (pkgs.stdenv.isLinux) {
+{
+  imports = [
+    ../universal/_rclone.nix
+  ];
+
   systemd = {
     timers = {
       wallpaper-sync = {
