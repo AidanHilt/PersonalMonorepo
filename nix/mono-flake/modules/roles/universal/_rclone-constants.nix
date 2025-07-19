@@ -24,6 +24,8 @@ let
     rclone sync $WINDOWS_GHUB_CONFIG_DIR drive:GHUB-Windows--drive-skip-gdocs --create-empty-src-dirs --fix-case
   '';
 
+  wsl = machine-config.configSwitches.wsl or false;
+
   wslScripts = if wsl then [syncDocuments syncGHub] else [];
 
   syncDownloadAll = if wsl then 
