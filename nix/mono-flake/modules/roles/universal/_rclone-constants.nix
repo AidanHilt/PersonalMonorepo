@@ -77,25 +77,25 @@ in
 
   wslScripts = wslScripts;
 
-  # syncDownloadAll = if wsl then 
-  #   pkgs.writeShellScriptBin "sync-download-all" ''
-  #     mkdir $WALLPAPER_DIR
-  #     mkdir $KEEPASS_DIR
-  #     mkdir $WINDOWS_GHUB_CONFIG_DIR
+  syncDownloadAll = if wsl then 
+    pkgs.writeShellScriptBin "sync-download-all" ''
+      mkdir $WALLPAPER_DIR
+      mkdir $KEEPASS_DIR
+      mkdir $WINDOWS_GHUB_CONFIG_DIR
 
-  #     sync-wallpapers
-  #     sync-keepass
-  #     sync-documents
-  #     sync-g-hub
-  # '' 
-  # else 
-  #   pkgs.writeShellScriptBin "sync-download-all" ''
-  #     mkdir $WALLPAPER_DIR
-  #     mkdir $KEEPASS_DIR
+      sync-wallpapers
+      sync-keepass
+      sync-documents
+      sync-g-hub
+  '' 
+  else 
+    pkgs.writeShellScriptBin "sync-download-all" ''
+      mkdir $WALLPAPER_DIR
+      mkdir $KEEPASS_DIR
 
-  #     sync-wallpapers
-  #     sync-keepass
-  #   ''
-  # ;
+      sync-wallpapers
+      sync-keepass
+    ''
+  ;
 
 }
