@@ -5,6 +5,9 @@
     ../roles/nixos/linux-universal.nix
 
     ../roles/universal/development-machine.nix
+    ../roles/universal/linux-admin.nix
+    ../roles/universal/nixos-admin.nix
+    ../roles/universal/rclone.nix
   ];
 
   programs.firefox.enable = true;

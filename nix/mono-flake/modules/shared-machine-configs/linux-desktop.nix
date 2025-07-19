@@ -11,9 +11,7 @@
     ../roles/nixos/desktop/apps/keepassxc.nix
     ../roles/nixos/desktop/apps/piper.nix
 
-    ../roles/universal/development-machine.nix
-    ../roles/universal/linux-admin.nix
-    ../roles/universal/rclone.nix
+    ./linux-desktop-terminal.nix
   ];
 
   programs.firefox.enable = true;
