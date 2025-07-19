@@ -21,6 +21,7 @@ in
         pkgs.vscode-marketplace."4ops".terraform
 
         bbenoist.nix
+        bbenoist.vagrant
         brunnerh.file-properties-viewer
         charliermarsh.ruff
         github.vscode-github-actions
