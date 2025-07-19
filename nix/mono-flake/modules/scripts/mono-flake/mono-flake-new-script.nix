@@ -139,7 +139,7 @@ if [[ ! "$SCRIPT_NAME" =~ \.nix$ ]]; then
 fi
 
 # Define output file path
-OUTPUT_FILE="$selected_dir/$SCRIPT_NAME"
+OUTPUT_FILE="$OUTPUT_DIR/$selected_dir/$SCRIPT_NAME"
 
 # Check if output file already exists
 if [[ -f "$OUTPUT_FILE" ]]; then
