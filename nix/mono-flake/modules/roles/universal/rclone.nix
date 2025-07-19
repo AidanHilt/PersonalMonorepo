@@ -55,8 +55,7 @@ in
 
 {
   imports = [
-    #autoSyncConfig
-    ./_rclone-service-linux.nix
+    (if pkgs.stdenv.isDarwin then ./_rclone-service-darwin.nix else ./_rclone-service-linux.nix)
   ];
 
   environment.systemPackages = with pkgs; [
