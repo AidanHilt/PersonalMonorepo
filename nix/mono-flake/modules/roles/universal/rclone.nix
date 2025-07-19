@@ -54,9 +54,9 @@ let
 in
 
 {
-  imports = [
-    autoSyncConfig
-  ];
+  # imports = [
+  #   autoSyncConfig
+  # ];
 
   environment.systemPackages = with pkgs; [
     syncDownloadAll
