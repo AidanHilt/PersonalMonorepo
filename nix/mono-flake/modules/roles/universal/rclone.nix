@@ -52,7 +52,10 @@ let
 in
 
 {
-  imports = if pkgs.stdenv.isDarwin then [./_rclone-service-darwin.nix] else [./_rclone-service-linux.nix];
+  imports = [
+    ./_rclone-service-linux.nix
+    ./_rclone-service-darwin.nix
+  ];
 
   environment.systemPackages = with pkgs; [
     syncDownloadAll
