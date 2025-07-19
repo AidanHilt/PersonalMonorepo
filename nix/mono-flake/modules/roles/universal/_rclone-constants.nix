@@ -75,6 +75,8 @@ in
     rclone sync $WINDOWS_GHUB_CONFIG_DIR drive:GHUB-Windows--drive-skip-gdocs --create-empty-src-dirs --fix-case
   '';
 
+  wsl = wsl;
+
   wslScripts = wslScripts;
 
   syncDownloadAll = if wsl then 
