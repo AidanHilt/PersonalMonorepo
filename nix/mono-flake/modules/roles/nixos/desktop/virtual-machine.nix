@@ -7,14 +7,16 @@
     virt-manager
   ];
 
-  # networking = {
-  #   # Create the bridge interface
-  #   bridges = {
-  #     "br0" = {
-  #       interfaces = [ "enp4s0" ];  # Replace with your physical interface name
-  #     };
-  #   };
-  # };
+  networking = {
+    interfaces.enp4s0.useDHCP = true;
+    interfaces.b40.useDHCP = true;
+   
+    bridges = {
+      "br0" = {
+        interfaces = [ "enp4s0" ];  # Replace with your physical interface name
+      };
+    };
+  };
 
   virtualisation.libvirtd = {
     enable = true;
