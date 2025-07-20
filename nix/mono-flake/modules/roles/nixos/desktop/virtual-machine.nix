@@ -8,7 +8,7 @@
   ];
 
   networking = {
-    interfaces.enp4s0.useDHCP = true;
+    #interfaces.enp4s0.useDHCP = true;
     interfaces.br0.useDHCP = true;
    
     bridges = {
