@@ -156,6 +156,12 @@ if [[ -f "$OUTPUT_FILE" ]]; then
     esac
 fi
 
+target_dir="$(dirname "$OUTPUT_FILE")"
+if [[ ! -d "$target_dir" ]]; then
+    echo "Creating directory: $target_dir"
+    mkdir -p "$target_dir"
+fi
+
 # Export the script name as environment variable for envsubst
 export SCRIPT_NAME_BASE="''${SCRIPT_NAME%.nix}"  # Remove .nix extension for template use
 export SCRIPT_NAME_FULL="$SCRIPT_NAME"

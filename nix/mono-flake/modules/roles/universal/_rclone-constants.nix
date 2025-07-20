@@ -51,7 +51,6 @@ let
 in
 
 {
-
   wallpaperDir = wallpaperDir;
   keePassDir = keePassDir;
   
