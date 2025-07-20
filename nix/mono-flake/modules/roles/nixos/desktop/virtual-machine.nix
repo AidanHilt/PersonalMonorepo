@@ -2,7 +2,7 @@
 
 {
   virtualisation.libvirtd.enable = true;
-  users.users.${machine-config.username}.extraGroups = [ "libvirt" ];
+  users.users.${machine-config.username}.extraGroups = [ "libvirtd" ];
 
   environment.systemPackages = with pkgs; [
     qemu
