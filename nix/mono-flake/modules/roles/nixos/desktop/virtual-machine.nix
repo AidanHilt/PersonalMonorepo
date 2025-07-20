@@ -8,7 +8,9 @@
   ];
 
   networking = {
-    #interfaces.enp4s0.useDHCP = true;
+    useNetworkd = true;
+    networkmanager.enable = lib.mkForce false;
+    interfaces.enp4s0.useDHCP = false;
     interfaces.br0.useDHCP = true;
    
     bridges = {
