@@ -5,8 +5,8 @@
   users.users.${machine-config.username}.extraGroups = [ "libvirtd" ];
 
   environment.systemPackages = with pkgs; [
-    # qemu
-    # vagrant
-    # virt-manager
+    qemu
+    vagrant
+    virt-manager
   ];
 }
