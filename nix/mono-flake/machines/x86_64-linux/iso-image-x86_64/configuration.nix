@@ -1,4 +1,4 @@
-{ config, pkgs, machine-config, inputs, globals, ... }:
+{ config, pkgs, machine-config, inputs, lib, globals, ... }:
 
 {
   imports = [
@@ -9,6 +9,7 @@
   isoImage = {
     makeEfiBootable = true;
     makeUsbBootable = true;
+    isoBaseName = lib.mkForce "iso";
     squashfsCompression = "zstd -Xcompression-level 6"; #way faster build time
   };
 
