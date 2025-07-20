@@ -9,7 +9,7 @@
   isoImage = {
     makeEfiBootable = true;
     makeUsbBootable = true;
-    isoBaseName = lib.mkForce "iso";
+    isoBaseName = lib.mkForce "atils-nixos-bootstrap-x86_64";
     squashfsCompression = "zstd -Xcompression-level 6"; #way faster build time
   };
 
