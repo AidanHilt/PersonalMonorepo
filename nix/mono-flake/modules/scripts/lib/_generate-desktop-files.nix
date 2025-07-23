@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
 generate-desktop-files = pkgs.writeShellScriptBin "generate-desktop-files" ''

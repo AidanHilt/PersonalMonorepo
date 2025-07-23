@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
 nixos-hardware-config-retrieval = pkgs.writeShellScriptBin "nixos-hardware-config-retrieval" ''

@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
 mono-flake-new-module = pkgs.writeShellScriptBin "mono-flake-new-module" ''

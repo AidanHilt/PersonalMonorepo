@@ -1,0 +1,27 @@
+{ inputs, globals, pkgs, machine-config, lib, ...}:
+
+let 
+  constants = import ./_rclone-constants.nix {inherit pkgs machine-config lib;};
+in
+
+{
+  environment.systemPackages = with constants; [
+    syncDownloadAll
+    syncKeepass
+    syncWallpapers
+
+    pkgs.rclone
+  ] ++ wslScripts;
+
+  environment.sessionVariables = constants.environmentVariables;
+
+    # TODO update this so we encrypt files in Google Drive, for extra oomph
+  age.secrets.rclone-config = {
+    file = ../../../secrets/rclone-config.age;
+    path = "/${machine-config.userBase}/${machine-config.username}/.config/rclone/rclone.conf";
+    owner = "${machine-config.username}";
+    group = pkgs.lib.mkIf (! pkgs.lib.hasSuffix "darwin" pkgs.system) "${machine-config.username}";
+    mode = "400";
+    symlink = false;
+  };
+}

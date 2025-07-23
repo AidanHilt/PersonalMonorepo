@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
 
@@ -154,6 +154,12 @@ if [[ -f "$OUTPUT_FILE" ]]; then
             exit 0
             ;;
     esac
+fi
+
+target_dir="$(dirname "$OUTPUT_FILE")"
+if [[ ! -d "$target_dir" ]]; then
+    echo "Creating directory: $target_dir"
+    mkdir -p "$target_dir"
 fi
 
 # Export the script name as environment variable for envsubst

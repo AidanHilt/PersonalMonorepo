@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 {
   imports = [
@@ -11,18 +11,8 @@
     ../roles/nixos/desktop/apps/keepassxc.nix
     ../roles/nixos/desktop/apps/piper.nix
 
-    ../roles/universal/development-machine.nix
-    ../roles/universal/linux-admin.nix
-    ../roles/universal/rclone.nix
+    ./linux-desktop-terminal.nix
   ];
 
   programs.firefox.enable = true;
-
-  programs.nix-ld.enable = true;
-
-  # Configure keymap in X11
-  services.xserver.xkb = {
-    layout = "us";
-    variant = "";
-  };
 }

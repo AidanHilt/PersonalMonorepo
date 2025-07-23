@@ -1,13 +1,14 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 {
   imports = [
     ../roles/nixos/linux-universal.nix
+    ../roles/nixos/rclone.nix
 
     ../roles/universal/development-machine.nix
+    ../roles/universal/linux-admin.nix
+    ../roles/universal/nixos-admin.nix
   ];
-
-  programs.firefox.enable = true;
 
   programs.nix-ld.enable = true;
 

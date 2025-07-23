@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
 system-tasks-generate-hashed-password = pkgs.writeShellScriptBin "system-tasks-generate-hashed-password" ''

@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
   # Platform-specific logic or setup
@@ -34,8 +34,6 @@ in
 {
   imports = [
     ./kubernetes-admin.nix
-
-    ../../scripts/mono-flake/default.nix
   ];
 
   environment.variables = {

@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
 generate-homelab-node-files = pkgs.writeShellScriptBin "generate-homelab-node-files" ''
