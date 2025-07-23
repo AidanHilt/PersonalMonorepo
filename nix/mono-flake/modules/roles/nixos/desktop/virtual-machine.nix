@@ -7,6 +7,10 @@
     virt-manager
   ];
 
+  environment.variables = {
+    LIBVIRT_DEFAULT_URI="qemu:///system";
+  };
+
   networking = {
     useNetworkd = true;
     networkmanager.enable = lib.mkForce false;
@@ -22,7 +26,7 @@
 
   virtualisation.libvirtd = {
     enable = true;
-    #allowedBridges = ["br0"];
+    allowedBridges = ["br0"];
   };
 
   users.users.${machine-config.username}.extraGroups = [ "libvirtd" ];
