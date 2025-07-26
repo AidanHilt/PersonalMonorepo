@@ -14,9 +14,10 @@ let
   vm-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFfl8/kJbF4ntoSOq+sHgLPfZI18K6HS2p9iUFzPEtNn noname";
 
   # Real-life desktop machines
+  big-boi-user = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGiYYw10HWq2v6e3vMiZJ8ua5xDhLvR3wc5s3Nm1CTcW aidan@big-boi-desktop";
   big-boi-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAdaXVorsOMM9qbJnrU5lP6jCUKarqVef4M39GDANYGk noname";
 
-  user-machines = [hyperion-user hyperion-system wsl-user wsl-system vm-desktop-system  big-boi-desktop-system];
+  user-machines = [hyperion-user hyperion-system wsl-user wsl-system vm-desktop-system big-boi-desktop-system big-boi-user];
 
   # Our various server clusters
   # ===========================
@@ -44,4 +45,6 @@ in
   "adguardhome.age".publicKeys = user-machines ++ laptop-cluster-machines;
 
   "rke-config-laptop-cluster.age".publicKeys = user-machines ++ laptop-cluster-machines;
+
+  "rke-config-staging-cluster.age".publicKeys = user-machines ++ staging-cluster-machines;
 }
