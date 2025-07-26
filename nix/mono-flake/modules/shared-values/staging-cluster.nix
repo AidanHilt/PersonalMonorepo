@@ -1,7 +1,7 @@
 {
   username = "aidan";
 
-  hashedPassword = "$y$j9T$47Fj09DL3ycTvCft06SAE1$FIYj3k6p1wzVOrZI.aLp5s7IBblimqa1/k/ACv9hiC/";
+  hashedPassword = "$y$j9T$NExycssJl7999hLxnHVMj1$.Uyev45lQmbqVICYQX.GMv5sgTDrOLaNkARAWRLAP7.";
 
   networking = {
     fixedIp = true;
