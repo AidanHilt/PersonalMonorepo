@@ -44,7 +44,7 @@ echo "Found 'let' at line $let_line and 'in' at line $in_line"
 temp_file=$(mktemp)
 
 # Check if the key already exists between let and in lines
-key_line=$(sed -n "${let_line},${in_line}p" "$filename" | grep -n "^[[:space:]]*${key}[[:space:]]*=" | head -1 | cut -d: -f1)
+key_line=$(sed -n "''${let_line},''${in_line}p" "$filename" | grep -n "^[[:space:]]*''${key}[[:space:]]*=" | head -1 | cut -d: -f1)
 
 if [ -n "$key_line" ]; then
     # Key exists - calculate actual line number and update it
@@ -52,13 +52,13 @@ if [ -n "$key_line" ]; then
     echo "Key '$key' found at line $actual_key_line - updating..."
     
     # Update the existing key
-    sed "s/^[[:space:]]*${key}[[:space:]]*=.*/${key} = ${value};/" "$filename" > "$temp_file"
+    sed "s/^[[:space:]]*''${key}[[:space:]]*=.*/''${key} = ''${value};/" "$filename" > "$temp_file"
 else
     # Key doesn't exist - add it before the "in" line
     echo "Key '$key' not found - adding new entry..."
     
     # Get the indentation of the "in" line to match it
-    in_indent=$(sed -n "${in_line}p" "$filename" | sed 's/\(^[[:space:]]*\).*/\1/')
+    in_indent=$(sed -n "''${in_line}p" "$filename" | sed 's/\(^[[:space:]]*\).*/\1/')
     
     # Add the new key-value pair with a blank line before "in"
     {
@@ -66,13 +66,13 @@ else
         head -n $((in_line - 1)) "$filename"
         
         # Add the new key-value pair with proper indentation
-        echo "${in_indent}${key} = ${value};"
+        echo "''${in_indent}''${key} = ''${value};"
         
         # Add blank line for separation
         echo ""
         
         # Print the "in" line and everything after
-        tail -n +${in_line} "$filename"
+        tail -n +''${in_line} "$filename"
     } > "$temp_file"
 fi
 
