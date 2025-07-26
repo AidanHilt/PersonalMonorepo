@@ -3,7 +3,6 @@
 {
   environment.systemPackages = with pkgs; [
     qemu
-    vagrant
     virt-manager
   ];
 
