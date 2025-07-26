@@ -13,31 +13,9 @@ fi
 
 echo "Retrieved SSH public key"
 
-# Step 5: Create the formatted string
 FORMATTED_STRING="''${MACHINE_NAME}-system = \"$SSH_PUBKEY\";"
 
-# Step 6: Copy to clipboard
-# Try different clipboard commands based on what's available
-if command -v pbcopy >/dev/null 2>&1; then
-  # macOS
-  echo "$FORMATTED_STRING" | pbcopy
-  echo "Copied to clipboard using pbcopy"
-elif command -v xclip >/dev/null 2>&1; then
-  # Linux with xclip
-  echo "$FORMATTED_STRING" | xclip -selection clipboard
-  echo "Copied to clipboard using xclip"
-elif command -v wl-copy >/dev/null 2>&1; then
-  # Wayland
-  echo "$FORMATTED_STRING" | wl-copy
-  echo "Copied to clipboard using wl-copy"
-else
-  echo "Warning: No clipboard utility found (pbcopy, xclip, wl-copy)"
-  echo "The formatted string is: $FORMATTED_STRING"
-fi
-
-# Step 7: Open secrets.nix
-SECRETS_FILE="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets/secrets.nix"
-echo "Opening $SECRETS_FILE..."
+_modify-secrets-nix-let-statement "$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets/secrets.nix" "$MACHINE_NAME-system" '"$SSH_PUBKEY"'
 
 # Try different editors based on what's available and environment
 if [ -n "$EDITOR" ]; then
@@ -71,6 +49,10 @@ fi
 in
 
 {
+  imports = [
+    ../lib/default.nix
+  ];
+
   environment.systemPackages = [
     nixos-key-retrieval
   ];
