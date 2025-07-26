@@ -13,7 +13,7 @@ fi
 
 echo "Retrieved SSH public key"
 
-_modify-secrets-nix-let-statement "$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets/secrets.nix" "$MACHINE_NAME-system" "\"$SSH_PUBKEY\""
+_modify-secrets-nix-let-statement "$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets/secrets.nix" "$MACHINE_NAME-system" "$SSH_PUBKEY"
 
 # Step 8: Change to secrets directory and run agenix
 SECRETS_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets"
