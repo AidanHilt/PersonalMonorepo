@@ -1,7 +1,3 @@
-let 
-  personalMonorepoBranch = "feat/libvirt-terraform";
-in
-
 {
   description = "A very basic flake";
 
@@ -21,7 +17,7 @@ in
     nur.url = "github:nix-community/nur";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/${personalMonorepoBranch}";
+      url = "github:aidanhilt/PersonalMonorepo/feat/libvirt-terraform";
       flake = false;
     };
 
@@ -70,7 +66,7 @@ in
 
       globals = {
         nixConfig = inputs.personalMonorepo + "/nix";
-        personalMonorepoBranch = personalMonorepoBranch;
+        personalMonorepoBranch = "feat/libvirt-terraform";
       };
 
       allSystems = import inputs.systems;
