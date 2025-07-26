@@ -1,3 +1,7 @@
+let 
+  personalMonorepoBranch = "feat/libvirt-terraform";
+in
+
 {
   description = "A very basic flake";
 
@@ -17,7 +21,7 @@
     nur.url = "github:nix-community/nur";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/feat/stabilizing-desktop-linux";
+      url = "github:aidanhilt/PersonalMonorepo/${personalMonorepoBranch}";
       flake = false;
     };
 
@@ -66,6 +70,7 @@
 
       globals = {
         nixConfig = inputs.personalMonorepo + "/nix";
+        personalMonorepoBranch = personalMonorepoBranch;
       };
 
       allSystems = import inputs.systems;
