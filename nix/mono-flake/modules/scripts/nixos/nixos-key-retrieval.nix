@@ -13,23 +13,7 @@ fi
 
 echo "Retrieved SSH public key"
 
-FORMATTED_STRING="''${MACHINE_NAME}-system = \"$SSH_PUBKEY\";"
-
-_modify-secrets-nix-let-statement "$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets/secrets.nix" "$MACHINE_NAME-system" '"$SSH_PUBKEY"'
-
-# Try different editors based on what's available and environment
-if [ -n "$EDITOR" ]; then
-  $EDITOR "$SECRETS_FILE"
-elif command -v code >/dev/null 2>&1; then
-  code "$SECRETS_FILE"
-elif command -v vim >/dev/null 2>&1; then
-  vim "$SECRETS_FILE"
-elif command -v nano >/dev/null 2>&1; then
-  nano "$SECRETS_FILE"
-else
-  echo "Warning: No suitable editor found. Please manually edit: $SECRETS_FILE"
-  echo "Add this line: $FORMATTED_STRING"
-fi
+_modify-secrets-nix-let-statement "$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets/secrets.nix" "$MACHINE_NAME-system" "\"$SSH_PUBKEY\""
 
 # Step 8: Change to secrets directory and run agenix
 SECRETS_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/secrets"
