@@ -44,7 +44,7 @@ echo "Found 'let' at line $let_line and 'in' at line $in_line"
 temp_file=$(mktemp)
 
 # Check if the key already exists between let and in lines
-key_line=$(sed -n "''${let_line},''${in_line}p" "$filename" | grep -n "^[[:space:]]*$key[[:space:]]*=" | head -1 | cut -d: -f1)
+key_line=$(sed -n "''${let_line},''${in_line}p" "$filename" | grep -n "^[[:space:]]*$key[[:space:]]*=" | head -1 | cut -d: -f1 || true)
 
 if [ -n "$key_line" ]; then
     # Key exists - calculate actual line number and update it
