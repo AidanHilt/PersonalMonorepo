@@ -1,5 +1,4 @@
 let
-  # ==============================================================================
   # Machines that we use for development and management. Needs access to all files
   # ==============================================================================
 
@@ -20,7 +19,6 @@ let
 
   user-machines = [hyperion-user hyperion-system wsl-user wsl-system vm-desktop-system big-boi-desktop-system big-boi-user];
 
-  # ===========================
   # Our various server clusters
   # ===========================
 
