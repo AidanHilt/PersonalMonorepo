@@ -66,9 +66,6 @@ else
         # Add the new key-value pair with proper indentation
         echo "  ''${key} = ''${value};"
         
-        # Add blank line for separation
-        echo ""
-        
         # Print the "in" line and everything after
         tail -n +''${in_line} "$filename"
     } > "$temp_file"
