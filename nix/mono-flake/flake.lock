@@ -314,16 +314,16 @@
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1752806562,
-        "narHash": "sha256-0luM+kxxv6K2ebl5mzT9zfo0U32svRyteEDEoS7r/1s=",
+        "lastModified": 1753551323,
+        "narHash": "sha256-p48Dw/0UF0ZsBqq3oShQatDi5XjZ64vG7a3BhipSpzQ=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "71ce0beb11007340d6616a3228b65cfe0a4ae2ff",
+        "rev": "d88ff69b5f12e41a093c51980ef075f8c24d1e25",
         "type": "github"
       },
       "original": {
         "owner": "aidanhilt",
-        "ref": "feat/stabilizing-desktop-linux",
+        "ref": "feat/libvirt-terraform",
         "repo": "PersonalMonorepo",
         "type": "github"
       }
