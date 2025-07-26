@@ -57,8 +57,6 @@ else
     # Key doesn't exist - add it before the "in" line
     echo "Key '$key' not found - adding new entry..."
     
-    # Get the indentation of the "in" line to match it
-    in_indent=$(sed -n "''${in_line}p" "$filename" | sed 's/\(^[[:space:]]*\).*/\1/')
     
     # Add the new key-value pair with a blank line before "in"
     {
@@ -66,7 +64,7 @@ else
         head -n $((in_line - 1)) "$filename"
         
         # Add the new key-value pair with proper indentation
-        echo "''${in_indent}''${key} = ''${value};"
+        echo "  ''${key} = ''${value};"
         
         # Add blank line for separation
         echo ""

@@ -34,6 +34,8 @@ let
   staging-cluster-3-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGoMCDJlMcyrK65E269A1cwJqO9kLMc/uVu7VfK7LcZN root@staging-cluster-3";
 
   staging-cluster-machines = [staging-cluster-1-system staging-cluster-2-system staging-cluster-3-system];
+fart = poop;
+
 in
 {
   "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
