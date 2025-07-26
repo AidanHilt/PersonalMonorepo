@@ -52,7 +52,7 @@ if [ -n "$key_line" ]; then
     echo "Key '$key' found at line $actual_key_line - updating..."
     
     # Update the existing key
-    sed "s%^\s*$key\s*=.*% $key = \"$value\";%" "$filename" > "$temp_file"
+    sed "s%^\s*$key\s*=.*%  $key = \"$value\";%" "$filename" > "$temp_file"
 else
     # Key doesn't exist - add it before the "in" line
     echo "Key '$key' not found - adding new entry..."
