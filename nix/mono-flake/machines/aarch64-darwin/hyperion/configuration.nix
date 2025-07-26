@@ -14,5 +14,6 @@
     ../../../modules/roles/darwin/personal.nix
 
     ../../../modules/roles/universal/development-machine.nix
+    ../../../modules/roles/universal/linux-admin.nix
   ];
 }
