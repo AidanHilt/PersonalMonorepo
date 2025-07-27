@@ -17,6 +17,7 @@ in
 {
   imports = [
     ./_longhorn.nix
+    ./_rke-bootstrap-resources.nix
   ];
 
   environment.systemPackages = with pkgs; [
