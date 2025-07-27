@@ -7,7 +7,7 @@ in
 {
   environment.etc = {
     argoCD = {
-      target = manifestPath;
+      target = "${manifestPath}/argocd-helm.yaml";
       text = "test";
     };
   };
