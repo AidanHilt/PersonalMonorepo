@@ -126,6 +126,6 @@ in
 
 {
  systemd.tmpfiles.rules = [
-  "C ${manifestPath}/argocd-helm.yaml - - - - ${argocdManifest}"
+  "C ${manifestPath}/argocd-helm.yaml 600 - - - ${argocdManifest}"
  ]; 
 }
