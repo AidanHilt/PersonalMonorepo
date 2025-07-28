@@ -10,7 +10,7 @@ metadata:
 spec:
   repo: https://argoproj.github.io/argo-helm
   chart: argo-cd
-  version: "5.51.6"  # Pin to a specific version, update as needed
+  version: "8.2.2"
   targetNamespace: argocd
   createNamespace: true
   
@@ -119,7 +119,6 @@ spec:
 
     notifications:
       enabled: false
-  
   '';
 
   manifestPath = "/var/lib/rancher/rke2/server/manifests";
