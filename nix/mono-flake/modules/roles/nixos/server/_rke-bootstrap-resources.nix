@@ -121,11 +121,39 @@ spec:
       enabled: false
   '';
 
+  applicationManifest = pkgs.writeText "master-stack.yaml" ''
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: master-stack
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/AidanHilt/PersonalMonorepo
+      path: kubernetes/helm-charts/k8s-resources/master-stack
+      targetRevision: ${globals.personalMonorepoBranch}
+      helm:
+        valueFiles:
+          - "$values/kubernetes/argocd/configuration-data/${machine-config.k8s.clusterName}/master-stack.yaml"
+    - repoURL: ${globals.personalMonorepoURL}
+      targetRevision: ${globals.personalMonorepoBranch}
+      ref: values
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  '';
+
   manifestPath = "/var/lib/rancher/rke2/server/manifests";
 in
 
 {
  systemd.tmpfiles.rules = [
   "C ${manifestPath}/argocd-helm.yaml 600 - - - ${argocdManifest}"
+  "C ${manifestPath}/master-stack.yaml 600 - - - ${applicationManifest}"
  ]; 
 }

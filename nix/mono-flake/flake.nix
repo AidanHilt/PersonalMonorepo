@@ -67,6 +67,7 @@
       globals = {
         nixConfig = inputs.personalMonorepo + "/nix";
         personalMonorepoBranch = "feat/libvirt-terraform";
+        personalMonorepoURL = "https://github.com/AidanHilt/PersonalMonorepo";
       };
 
       allSystems = import inputs.systems;
