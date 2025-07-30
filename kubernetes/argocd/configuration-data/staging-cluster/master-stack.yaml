@@ -46,6 +46,8 @@ kiali:
 
 longhorn:
   enabled: true
+  configuration:
+    enabled: true
 
 metallb:
   enabled: true
