@@ -54,6 +54,8 @@ metallb:
 
 metallb-config:
   enabled: true
+  configuration:
+    enabled: true
 
 postgres:
   enabled: true
