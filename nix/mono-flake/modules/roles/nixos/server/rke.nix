@@ -7,6 +7,10 @@ let
   rkeConfig = if machine-config.k8s.primaryNode then
     {
       role = "server";
+
+      disable = [
+        "rke2-ingress-nginx"
+      ];
     }
   else
     {
