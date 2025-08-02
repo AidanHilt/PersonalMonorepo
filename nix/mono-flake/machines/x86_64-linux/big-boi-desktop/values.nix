@@ -13,6 +13,4 @@
     address = "192.168.86.5";
     mainNetworkInterface = "enp4s0";
   };
-
-
 }
