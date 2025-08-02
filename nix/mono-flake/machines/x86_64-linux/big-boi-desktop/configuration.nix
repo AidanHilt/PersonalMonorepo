@@ -10,7 +10,7 @@
     ./hardware-configuration.nix
 
     ../../../modules/shared-machine-configs/linux-desktop.nix
-    
+
     ../../../modules/roles/nixos/fixed-ip-machine.nix
     ../../../modules/roles/nixos/nvidia.nix
     ../../../modules/roles/nixos/vscode-server.nix
@@ -22,7 +22,4 @@
     efiInstallAsRemovable = true;
     useOSProber = true;
   };
-
-  # Enable networking
-  networking.networkmanager.enable = true;
 }
