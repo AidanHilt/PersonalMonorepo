@@ -15,9 +15,9 @@
     ../../../modules/roles/nixos/nvidia.nix
     ../../../modules/roles/nixos/vscode-server.nix
 
-    ../../../roles/universal/development-machine.nix
-    ../../../roles/universal/linux-admin.nix
-    ../../../roles/universal/nixos-admin.nix
+    ../../../modules/roles/universal/development-machine.nix
+    ../../../modules/roles/universal/linux-admin.nix
+    ../../../modules/roles/universal/nixos-admin.nix
   ];
 
   boot.loader.grub = {
