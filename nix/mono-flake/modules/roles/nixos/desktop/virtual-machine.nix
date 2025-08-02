@@ -13,12 +13,12 @@
   networking = {
     # useNetworkd = true;
     # networkmanager.enable = lib.mkForce false;
-    interfaces.enp4s0.useDHCP = false;
+    interfaces.${machine-config.networking.mainNetworkInterface}.useDHCP = false;
     interfaces.br0.useDHCP = true;
    
     bridges = {
       "br0" = {
-        interfaces = [ "enp4s0" ];
+        interfaces = [ "${machine-config.networking.mainNetworkInterface}" ];
       };
     };
   };
