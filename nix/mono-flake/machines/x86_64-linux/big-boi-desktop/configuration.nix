@@ -14,10 +14,6 @@
     ../../../modules/roles/nixos/fixed-ip-machine.nix
     ../../../modules/roles/nixos/nvidia.nix
     ../../../modules/roles/nixos/vscode-server.nix
-
-    ../../../modules/roles/universal/development-machine.nix
-    ../../../modules/roles/universal/linux-admin.nix
-    ../../../modules/roles/universal/nixos-admin.nix
   ];
 
   boot.loader.grub = {
