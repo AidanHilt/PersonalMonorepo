@@ -2,6 +2,7 @@
 
 {
   networking.hosts = {
+    "192.168.86.5" = ["big-boi-desktop.local"];
     # Current "prod" setup
     "192.168.86.2" = ["optiplex-node.local" "crafty.optiplex.local"];
     "192.168.86.3" = ["gaming-pc-node.local" "crafty.gaming-pc-node.local"];
