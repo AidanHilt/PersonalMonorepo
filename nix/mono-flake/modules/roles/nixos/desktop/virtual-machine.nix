@@ -11,14 +11,14 @@
   };
 
   networking = {
-    useNetworkd = true;
-    networkmanager.enable = lib.mkForce false;
+    # useNetworkd = true;
+    # networkmanager.enable = lib.mkForce false;
     interfaces.enp4s0.useDHCP = false;
     interfaces.br0.useDHCP = true;
    
     bridges = {
       "br0" = {
-        interfaces = [ "enp4s0" ];  # Replace with your physical interface name
+        interfaces = [ "enp4s0" ];
       };
     };
   };
