@@ -111,8 +111,8 @@ fi
 echo "Setting environment variables for context: $CONTEXT_NAME"
 
 for env_var in "''${ENV_VARS[@]}"; do
-  local var_name="''${env_var%=*}"
-  local var_value="''${env_var#*=}"
+  var_name="''${env_var%=*}"
+  var_value="''${env_var#*=}"
 
   dotenvx set "$var_name" "$var_value";
 done
