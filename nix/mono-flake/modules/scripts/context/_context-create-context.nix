@@ -48,13 +48,12 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$CONTEXT_NAME" ]]; then
-    echo "Enter context name:"
-    read -r CONTEXT_NAME
+  read -p "Enter context name:" CONTEXT_NAME
 fi
 
 # Validate the context name
 if ! validate_CONTEXT_NAME "$CONTEXT_NAME"; then
-    exit 1
+  exit 1
 fi
 
 # Create the full path
