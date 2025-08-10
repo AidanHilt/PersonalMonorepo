@@ -3,6 +3,10 @@
 let
   context-selector = pkgs.writeText "context-selector.sh" ''
     _context-context-selector() {
+      if [[ -n "$ZSH_VERSION" ]]; then
+        setopt KSH_ARRAYS
+      fi
+
       if [[ -z "''${ATILS_CONTEXTS_DIRECTORY}" ]]; then
         echo "Error: ATILS_CONTEXTS_DIRECTORY environment variable is not set"
         echo "Please set it to your desired contexts directory path"
@@ -22,7 +26,7 @@ let
         done
         echo -n "Select a context: "
         read CONTEXT_SELECTION
-        CONTEXT_NAME=''${contexts[(($CONTEXT_SELECTION - 1))]}
+        CONTEXT_NAME=''${contexts[(($CONTEXT_SELECTION))]}
         echo "$CONTEXT_NAME"
       else
         echo "  (contexts directory does not exist)"
