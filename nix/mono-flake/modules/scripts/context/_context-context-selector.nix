@@ -19,6 +19,9 @@ let
         for context in "''${contexts[@]}"; do
           echo "$i. $context"
           ((i++))
+          read -p "Select a context: " CONTEXT_SELECTION
+          CONTEXT_NAME=contexts[((CONTEXT_SELECTION - 1))]
+          echo "$CONTEXT_NAME"
         done
       else
         echo "  (contexts directory does not exist)"
