@@ -1,7 +1,5 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
-
-let
-  context-selector = pkgs.writeText "context-selector.sh" ''
+{
+  contextSelector = pkgs.writeText "context-selector.sh" ''
     _context-context-selector() {
       if [[ -z "''${ATILS_CONTEXTS_DIRECTORY}" ]]; then
         echo "Error: ATILS_CONTEXTS_DIRECTORY environment variable is not set"
@@ -33,8 +31,4 @@ let
       fi
     }
   '';
-in
-
-{
-  contextSelector = context-selector;
 }
