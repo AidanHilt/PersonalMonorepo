@@ -7,7 +7,6 @@ in
 {
   imports = [
     ./_context-activate-context.nix
-    ./_context-context-selector.nix
     ./_context-create-context.nix
     ./_context-delete-context.nix
     ./_context-list-contexts.nix
