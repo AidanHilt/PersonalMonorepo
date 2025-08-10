@@ -69,10 +69,11 @@ fi
 echo "Creating context directory: $context_path"
 mkdir -p "$context_path"
 
+touch "$context_path/.env"
+
 # Verify creation
 if [[ -d "$context_path" ]]; then
     echo "✓ Successfully created context: $CONTEXT_NAME"
-    echo "  Path: $context_path"
 else
     echo "✗ Failed to create context"
     exit 1
