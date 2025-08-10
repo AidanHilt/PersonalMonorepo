@@ -122,7 +122,7 @@ echo "✓ All environment variables set successfully for context: $CONTEXT_NAME"
 echo
 echo "Variables set:"
 for env_var in "''${ENV_VARS[@]}"; do
-  local var_name="''${env_var%=*}"
+  var_name="''${env_var%=*}"
   echo "  - $var_name"
 done
 '';
