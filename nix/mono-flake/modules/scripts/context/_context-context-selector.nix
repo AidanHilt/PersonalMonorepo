@@ -32,10 +32,10 @@ let
         return 1
       fi
     }
-
   '';
 in
 
 {
   environment.interactiveShellInit = "source ''${context-selector}";
+  environment.shellInit = "source ''${context-selector}";
 }
