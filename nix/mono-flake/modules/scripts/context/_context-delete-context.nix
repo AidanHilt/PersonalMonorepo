@@ -6,6 +6,8 @@ context-delete-context = pkgs.writeShellScriptBin "context-delete-context" ''
 
 set -euo pipefail
 
+source ${contextSelector}
+
 if [[ -z "''${ATILS_CONTEXTS_DIRECTORY}" ]]; then
   echo "Error: ATILS_CONTEXTS_DIRECTORY environment variable is not set"
   echo "Please set it to your desired contexts directory path"
@@ -88,7 +90,11 @@ fi
 in
 
 {
+  imports = [
+    ./_context-context-selector
+  ];
+
   environment.systemPackages = [
-  context-delete-context
+    context-delete-context
   ];
 }
