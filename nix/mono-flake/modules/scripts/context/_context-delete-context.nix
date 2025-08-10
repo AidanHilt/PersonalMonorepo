@@ -43,10 +43,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$CONTEXT_NAME" ]]; then
-  echo
-  context-list-contexts
-  echo
-  read -p "Enter context name to delete:" CONTEXT_NAME
+  _context-context-selector
 fi
 
 # Check if context name is empty
