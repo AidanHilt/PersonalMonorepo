@@ -32,6 +32,8 @@ validate_CONTEXT_NAME() {
     return 0
 }
 
+CONTEXT_NAME=""
+
 while [[ $# -gt 0 ]]; do
   case $1 in
     -n|--name)
