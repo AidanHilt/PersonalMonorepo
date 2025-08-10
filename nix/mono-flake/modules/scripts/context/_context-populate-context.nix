@@ -110,11 +110,15 @@ fi
 # Set each environment variable using dotenvx
 echo "Setting environment variables for context: $CONTEXT_NAME"
 
+if [[ ! -f "''${ATILS_CONTEXTS_DIRECTORY}/''${CONTEXT_NAME}/.env" ]]; then
+  touch "''${ATILS_CONTEXTS_DIRECTORY}/''${CONTEXT_NAME}/.env"
+fi
+
 for env_var in "''${ENV_VARS[@]}"; do
   var_name="''${env_var%=*}"
   var_value="''${env_var#*=}"
 
-  dotenvx set "$var_name" "$var_value";
+  dotenvx set "$var_name" "$var_value" -f "''${ATILS_CONTEXTS_DIRECTORY}/''${CONTEXT_NAME}/.env";
 done
 
 echo
