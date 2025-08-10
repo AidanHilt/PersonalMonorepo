@@ -1,12 +1,14 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
+contextSelector = import ./_context-context-selector;
+
 context-delete-context = pkgs.writeShellScriptBin "context-delete-context" ''
 #!/bin/bash
 
 set -euo pipefail
 
-source ${contextSelector}
+source ${contextSelector.contextSelector}
 
 if [[ -z "''${ATILS_CONTEXTS_DIRECTORY}" ]]; then
   echo "Error: ATILS_CONTEXTS_DIRECTORY environment variable is not set"
@@ -90,10 +92,6 @@ fi
 in
 
 {
-  imports = [
-    ./_context-context-selector
-  ];
-
   environment.systemPackages = [
     context-delete-context
   ];
