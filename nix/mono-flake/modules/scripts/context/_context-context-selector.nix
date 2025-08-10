@@ -29,5 +29,5 @@ let
 in
 
 {
-  environment.shellInit = "source ${context-selector}";
+  environment.interactiveShellInit = "source ${context-selector}";
 }
