@@ -1,5 +1,9 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
+let
+  ATILS_CONFIG_DIRECTORY = "${machine-config.userBase}/${machine-config.username}/.atils";
+in
+
 {
   imports = [
     ./_context-create-context.nix
@@ -12,6 +16,8 @@
   ];
 
   environment.variables = {
-    ATILS_CONFIG_DIRECTORY = "${machine-config.userBase}/${machine-config.username}/.atils";
+    ATILS_CONFIG_DIRECTORY = ATILS_CONFIG_DIRECTORY;
+    ATILS_CONTEXTS_DIRECTORY = "${ATILS_CONFIG_DIRECTORY}/contexts";
+    ATILS_CONTEXTS_CURRENT_CONTEXT_FILE = "${ATILS_CONFIG_DIRECTORY}/contexts/.current-context";
   };
 }
