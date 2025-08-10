@@ -1,4 +1,4 @@
-{}:
+{pkgs, ...}:
 
 let
   context-selector = pkgs.writeText "context-selector.sh" ''
