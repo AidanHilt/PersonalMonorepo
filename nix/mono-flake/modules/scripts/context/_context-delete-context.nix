@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
-contextSelector = import ./_context-context-selector.nix;
+contextSelector = import ./_context-context-selector.nix {};
 
 context-delete-context = pkgs.writeShellScriptBin "context-delete-context" ''
 #!/bin/bash
