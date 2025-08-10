@@ -9,6 +9,7 @@ in
     ./_context-create-context.nix
     ./_context-delete-context.nix
     ./_context-list-contexts.nix
+    ./_context-populate-context.nix
   ];
 
   environment.systemPackages = with pkgs; [

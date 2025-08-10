@@ -52,7 +52,7 @@ if [[ -z "$CONTEXT_NAME" ]]; then
 fi
 
 # Validate the context name
-if ! validate_CONTEXT_NAME "$CONTEXT_NAME"; then
+if ! validate_context_name "$CONTEXT_NAME"; then
   exit 1
 fi
 

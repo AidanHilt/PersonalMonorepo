@@ -11,25 +11,20 @@ if [[ -z "''${ATILS_CONTEXTS_DIRECTORY}" ]]; then
   exit 1
 fi
 
-
-list_contexts() {
-  echo "Available contexts:"
-  if [[ -d "$ATILS_CONTEXTS_DIRECTORY" ]]; then
-    local contexts=($(ls -1 "$ATILS_CONTEXTS_DIRECTORY" 2>/dev/null))
-    if [[ ''${#contexts[@]} -eq 0 ]]; then
-      echo "  (no contexts found)"
-      return 1
-    fi
-    for context in "''${contexts[@]}"; do
-      echo "  - $context"
-    done
-  else
-    echo "  (contexts directory does not exist)"
+echo "Available contexts:"
+if [[ -d "$ATILS_CONTEXTS_DIRECTORY" ]]; then
+  local contexts=($(ls -1 "$ATILS_CONTEXTS_DIRECTORY" 2>/dev/null))
+  if [[ ''${#contexts[@]} -eq 0 ]]; then
+    echo "  (no contexts found)"
     return 1
   fi
-}
-
-list_contexts
+  for context in "''${contexts[@]}"; do
+    echo "  - $context"
+  done
+else
+  echo "  (contexts directory does not exist)"
+  return 1
+fi
 '';
 in
 

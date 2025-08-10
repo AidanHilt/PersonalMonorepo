@@ -67,23 +67,9 @@ if [[ ! -d "$CONTEXT_PATH" ]]; then
   exit 1
 fi
 
-# Show what will be deleted
-echo "Context to delete: $CONTEXT_NAME"
-echo "Path: $CONTEXT_PATH"
-
-# Show directory contents if not empty
-if [[ -n "$(ls -A "$CONTEXT_PATH" 2>/dev/null)" ]]; then
-  echo
-  echo "Directory contents:"
-  ls -la "$CONTEXT_PATH"
-  echo
-  echo "⚠️  WARNING: This directory is not empty!"
-fi
-
 # Confirmation prompt
 echo
-echo "Are you sure you want to delete this context? (y/N)"
-read -r response
+read -p "Are you sure you want to delete this context? (y/N) " response
 case "$response" in
   [yY]|[yY][eE][sS])
     echo "Deleting context..."
@@ -99,14 +85,6 @@ if rm -rf "$CONTEXT_PATH"; then
   echo "✓ Successfully deleted context: $CONTEXT_NAME"
 else
   echo "✗ Failed to delete context directory"
-  exit 1
-fi
-
-# Verify deletion
-if [[ ! -d "$CONTEXT_PATH" ]]; then
-  echo "✓ Context directory removed successfully"
-else
-  echo "✗ Context directory still exists"
   exit 1
 fi
 '';
