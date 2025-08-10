@@ -48,7 +48,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$CONTEXT_NAME" ]]; then
-  read -p "Enter context name:" CONTEXT_NAME
+  read -p "Enter context name: " CONTEXT_NAME
 fi
 
 # Validate the context name

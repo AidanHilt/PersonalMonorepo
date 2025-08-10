@@ -63,8 +63,7 @@ if [[ -z "$CONTEXT_NAME" ]]; then
   echo
   list_contexts
   echo
-  echo "Enter context name to delete:"
-  read -r CONTEXT_NAME
+  read -p "Enter context name to delete:" CONTEXT_NAME
 fi
 
 # Check if context name is empty
