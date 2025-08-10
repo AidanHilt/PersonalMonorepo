@@ -19,7 +19,8 @@ let
         for context in "''${contexts[@]}"; do
           echo "$i. $context"
           ((i++))
-          read -p "Select a context: " CONTEXT_SELECTION
+          echo -n "Select a context: "
+          read CONTEXT_SELECTION
           CONTEXT_NAME=contexts[((CONTEXT_SELECTION - 1))]
           echo "$CONTEXT_NAME"
         done
