@@ -22,23 +22,6 @@ show_usage() {
   echo
 }
 
-list_contexts() {
-  echo "Available contexts:"
-  if [[ -d "$ATILS_CONTEXTS_DIRECTORY" ]]; then
-    local contexts=($(ls -1 "$ATILS_CONTEXTS_DIRECTORY" 2>/dev/null))
-    if [[ ''${#contexts[@]} -eq 0 ]]; then
-      echo "  (no contexts found)"
-      return 1
-    fi
-    for context in "''${contexts[@]}"; do
-      echo "  - $context"
-    done
-  else
-    echo "  (contexts directory does not exist)"
-    return 1
-  fi
-}
-
 CONTEXT_NAME=""
 
 while [[ $# -gt 0 ]]; do
@@ -61,7 +44,7 @@ done
 
 if [[ -z "$CONTEXT_NAME" ]]; then
   echo
-  list_contexts
+  context-list-contexts
   echo
   read -p "Enter context name to delete:" CONTEXT_NAME
 fi
