@@ -62,7 +62,7 @@ while [[ $# -gt 0 ]]; do
           exit 1
         fi
         # Convert to uppercase snake case and store
-        local var_name=$(kebab_to_upper_snake "$1")
+        var_name=$(kebab_to_upper_snake "$1")
         ENV_VARS+=("$var_name=$2")
         shift 2
       else
