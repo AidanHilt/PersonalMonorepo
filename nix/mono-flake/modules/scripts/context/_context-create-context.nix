@@ -14,7 +14,7 @@ if [[ -z "''${ATILS_CONTEXTS_DIRECTORY}" ]]; then
 fi
 
 # Function to validate context name
-validate_CONTEXT_NAME() {
+validate_context_name() {
     local name="$1"
 
     # Check if name is empty
