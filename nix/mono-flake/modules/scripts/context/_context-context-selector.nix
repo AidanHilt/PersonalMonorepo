@@ -19,11 +19,11 @@ let
         for context in "''${contexts[@]}"; do
           echo "$i. $context"
           ((i++))
-          echo -n "Select a context: "
-          read CONTEXT_SELECTION
-          CONTEXT_NAME=contexts[((CONTEXT_SELECTION - 1))]
-          echo "$CONTEXT_NAME"
         done
+        echo -n "Select a context: "
+        read CONTEXT_SELECTION
+        CONTEXT_NAME=contexts[((CONTEXT_SELECTION - 1))]
+        echo "$CONTEXT_NAME"
       else
         echo "  (contexts directory does not exist)"
         return 1
