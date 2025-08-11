@@ -22,7 +22,7 @@ let
         done
         echo -n "Select a context: "
         read CONTEXT_SELECTION
-        if [[ -z "''${ZSH_VERSION+x}" ]]; then
+        if [[ -z "''${ZSH_VERSION-}" ]]; then
           CONTEXT_NAME=''${contexts[$CONTEXT_SELECTION]}
         else
           CONTEXT_NAME=''${contexts[$CONTEXT_SELECTION - 1]}
