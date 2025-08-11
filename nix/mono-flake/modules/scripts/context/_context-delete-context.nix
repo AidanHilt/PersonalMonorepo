@@ -64,7 +64,7 @@ if [[ ! -d "$CONTEXT_PATH" ]]; then
   echo "Error: Context '$CONTEXT_NAME' does not exist at:"
   echo "  $CONTEXT_PATH"
   echo
-  list_contexts
+  context-list-contexts
   exit 1
 fi
 
