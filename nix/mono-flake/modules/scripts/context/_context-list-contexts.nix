@@ -16,7 +16,7 @@ if [[ -d "$ATILS_CONTEXTS_DIRECTORY" ]]; then
   contexts=($(ls -1 "$ATILS_CONTEXTS_DIRECTORY" 2>/dev/null))
   if [[ ''${#contexts[@]} -eq 0 ]]; then
     echo "  (no contexts found)"
-    return 1
+    exit 1
   fi
   for context in "''${contexts[@]}"; do
     echo "  - $context"
