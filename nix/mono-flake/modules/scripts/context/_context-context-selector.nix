@@ -23,9 +23,9 @@ let
         echo -n "Select a context: "
         read CONTEXT_SELECTION
         if [[ -z "''${ZSH_VERSION-}" ]]; then
-          CONTEXT_NAME=''${contexts[$CONTEXT_SELECTION]}
-        else
           CONTEXT_NAME=''${contexts[$CONTEXT_SELECTION - 1]}
+        else
+          CONTEXT_NAME=''${contexts[$CONTEXT_SELECTION]}
         fi
       else
         echo "  (contexts directory does not exist)"
