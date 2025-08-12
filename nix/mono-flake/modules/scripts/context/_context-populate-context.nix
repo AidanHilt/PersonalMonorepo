@@ -1,10 +1,15 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
+contextSelector = import ./_context-context-selector.nix {inherit pkgs;};
+
 context-populate-context = pkgs.writeShellScriptBin "context-populate-context" ''
 #!/bin/bash
 
 set -euo pipefail
+
+source ${contextSelector.contextSelector}
+
 show_usage() {
   echo "Usage: $0 --name <context_name> [--var-name value] [--another-var value2] ..."
   echo
@@ -81,8 +86,7 @@ done
 
 # If no context name provided, prompt user
 if [[ -z "$CONTEXT_NAME" ]]; then
-  context-list-contexts
-  read -p "Enter context name: " CONTEXT_NAME
+  _context-context-selector
 fi
 
 # Check if context name is empty
