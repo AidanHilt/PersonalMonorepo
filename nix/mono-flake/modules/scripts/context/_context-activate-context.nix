@@ -39,6 +39,7 @@ let
         export TG_WORKING_DIR="$PERSONAL_MONOREPO_LOCATION/terragrunt/$CONTEXT_NAME"
 
         if [ -f "$ATILS_CONTEXTS_DIRECTORY/$CONTEXT_NAME/.env" ] && [ ! -s "$ATILS_CONTEXTS_DIRECTORY/$CONTEXT_NAME/.env" ]; then
+          echo "WTF"
           eval "$(dotenvx get -f "$ATILS_CONTEXTS_DIRECTORY/$CONTEXT_NAME/.env" | tr -d '}' | tr -d '{' | sed 's/:/=/g' | sed 's/,/\n/g' | sed 's/^/export /')"
         fi
       }
