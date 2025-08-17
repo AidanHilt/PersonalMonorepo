@@ -26,7 +26,13 @@ let
               ;;
             *)
               echo "Error: Unknown option $1"
-              show_usage
+              echo "Usage: $0 --context <context_name>"
+              echo "     $0 -c <context_name>"
+              echo
+              echo "Options:"
+              echo "  --name, -n  Name of the context to activate"
+              echo "  --help, -h     Show this help message"
+              echo
               exit 1
               ;;
           esac
@@ -36,7 +42,16 @@ let
           _context-context-selector
         fi
 
-        export TG_WORKING_DIR="$PERSONAL_MONOREPO_LOCATION/terragrunt/$CONTEXT_NAME"
+        # Setting up variables related to the current context (i.e. define the current context and its location)
+        export ATILS_CURRENT_CONTEXT="$CONTEXT_NAME"
+        export ATILS_CURRENT_CONTEXT_DIR="$ATILS_CONTEXTS_DIRECTORY/$ATILS_CURRENT_CONTEXT"
+        export ATILS_CURRENT_CONTEXT_SCRIPTS_DIR="$ATILS_CONTEXT_DIR/scripts"
+
+        # Setting up PATH to include custom scripts
+        export PATH="$ATILS_CURRENT_CONTEXT_SCRIPTS_DIR:$PATH"
+
+        # Default values for terragrunt, can be overriden in the file
+        export TG_WORKING_DIR="$PERSONAL_MONOREPO_LOCATION/terragrunt/$ATILS_CURRENT_CONTEXT"
 
         if [ -f "$ATILS_CONTEXTS_DIRECTORY/$CONTEXT_NAME/.env" ] && [ -s "$ATILS_CONTEXTS_DIRECTORY/$CONTEXT_NAME/.env" ]; then
           eval "$(dotenvx get -f "$ATILS_CONTEXTS_DIRECTORY/$CONTEXT_NAME/.env" | tr -d '}' | tr -d '{' | sed 's/:/=/g' | sed 's/,/\n/g' | sed 's/^/export /')"

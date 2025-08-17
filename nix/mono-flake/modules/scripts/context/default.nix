@@ -10,6 +10,7 @@ in
     ./_context-create-context.nix
     ./_context-delete-context.nix
     ./_context-list-contexts.nix
+    ./_context-list-scripts.nix
     ./_context-populate-context.nix
   ];
 
@@ -20,6 +21,5 @@ in
   environment.variables = {
     ATILS_CONFIG_DIRECTORY = ATILS_CONFIG_DIRECTORY;
     ATILS_CONTEXTS_DIRECTORY = "${ATILS_CONFIG_DIRECTORY}/contexts";
-    ATILS_CONTEXTS_CURRENT_CONTEXT_FILE = "${ATILS_CONFIG_DIRECTORY}/contexts/.current-context";
   };
 }
