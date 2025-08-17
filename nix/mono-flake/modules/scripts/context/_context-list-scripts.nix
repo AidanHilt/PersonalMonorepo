@@ -83,7 +83,7 @@ else
 fi
 
 # Header
-echo -e "''${BOLD}Scripts for context ''${BLUE}$(realpath "''$ATILS_CURRENT_CONTEXT")''${NC}''${BOLD}:''${NC}"
+echo -e "''${BOLD}Scripts for context ''${BLUE}$("''$ATILS_CURRENT_CONTEXT")''${NC}''${BOLD}:''${NC}"
 echo
 
 # Find all files and process them
