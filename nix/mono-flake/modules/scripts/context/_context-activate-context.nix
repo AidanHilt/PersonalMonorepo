@@ -45,7 +45,7 @@ let
         # Setting up variables related to the current context (i.e. define the current context and its location)
         export ATILS_CURRENT_CONTEXT="$CONTEXT_NAME"
         export ATILS_CURRENT_CONTEXT_DIR="$ATILS_CONTEXTS_DIRECTORY/$ATILS_CURRENT_CONTEXT"
-        export ATILS_CURRENT_CONTEXT_SCRIPTS_DIR="$ATILS_CONTEXT_DIR/scripts"
+        export ATILS_CURRENT_CONTEXT_SCRIPTS_DIR="$ATILS_CURRENT_CONTEXT_DIR/scripts"
 
         # Setting up PATH to include custom scripts
         export PATH="$ATILS_CURRENT_CONTEXT_SCRIPTS_DIR:$PATH"
