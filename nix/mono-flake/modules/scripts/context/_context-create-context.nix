@@ -57,22 +57,23 @@ if ! validate_context_name "$CONTEXT_NAME"; then
 fi
 
 # Create the full path
-context_path="''${ATILS_CONTEXTS_DIRECTORY}/''${CONTEXT_NAME}"
+CONTEXT_PATH="''${ATILS_CONTEXTS_DIRECTORY}/''${CONTEXT_NAME}"
 
 # Check if directory already exists
-if [[ -d "$context_path" ]]; then
+if [[ -d "$CONTEXT_PATH" ]]; then
   echo "Context already exists, exiting"
   exit 1
 fi
 
 # Create the directory (including parent directories if needed)
-echo "Creating context directory: $context_path"
-mkdir -p "$context_path"
+echo "Creating context directory: $CONTEXT_PATH"
+mkdir -p "$CONTEXT_PATH"
 
-touch "$context_path/.env"
+touch "$CONTEXT_PATH/.env"
+mkdir "$CONTEXT_PATH/scripts"
 
 # Verify creation
-if [[ -d "$context_path" ]]; then
+if [[ -d "$CONTEXT_PATH" ]]; then
     echo "✓ Successfully created context: $CONTEXT_NAME"
 else
     echo "✗ Failed to create context"
