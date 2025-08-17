@@ -5,10 +5,9 @@ context-cd = pkgs.writeText "context-cd" ''
 context-cd () {
   if [[ ! -v ATILS_CURRENT_CONTEXT ]]; then
     echo "No context is currently activated. Please activate one using 'context-activate-context'"
-    exit 1
+  else
+    cd "$ATILS_CURRENT_CONTEXT_DIRECTORY"
   fi
-
-  cd "$ATILS_CURRENT_CONTEXT_DIRECTORY"
 }
 '';
 in
