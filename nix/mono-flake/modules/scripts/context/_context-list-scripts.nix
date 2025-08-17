@@ -85,7 +85,7 @@ fi
 echo -e "''${BOLD}Scripts for context ''${BLUE}"''$ATILS_CURRENT_CONTEXT"''${NC}''${BOLD}:''${NC}"
 echo
 
-if [[ -d "$ATILS_CURRENT_CONTEXT_DIR" ]]; then
+if [ -d "$ATILS_CURRENT_CONTEXT_DIR" ]; then
   files_found=0
   declare -a script_info
 
