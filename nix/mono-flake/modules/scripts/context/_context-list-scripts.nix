@@ -104,7 +104,7 @@ if [[ -d "$ATILS_CURRENT_CONTEXT_SCRIPTS_DIR" ]]; then
     fi
   done < <(find "$ATILS_CURRENT_CONTEXT_SCRIPTS_DIR" -maxdepth 1 -type f -print0 | sort -z)
 else
-  echo -e "''${GRAY}No executable scripts found.''${NC}"
+  echo -e "''${GRAY}No scripts directory found.''${NC}"
   exit 0
 fi
 
