@@ -105,12 +105,6 @@ for info in "''${script_info[@]}"; do
   # Format the line
   printf "  ''${BOLD}%-''${max_name_length}s''${NC}" "$name"
 
-  if [[ -n "$colored_type" ]]; then
-    printf " %-$((max_type_length + 9))s" "$colored_type"  # +9 for color codes
-  else
-    printf " %-''${max_type_length}s" ""
-  fi
-
   if [[ -n "$desc" ]]; then
     echo -e "''${GRAY}$desc''${NC}"
   else
