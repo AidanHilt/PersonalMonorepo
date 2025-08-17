@@ -6,7 +6,7 @@ context-list-scripts = pkgs.writeShellScriptBin "context-list-scripts" ''
 
 set -euo pipefail
 
-if [[ ! -v $ATILS_CURRENT_CONTEXT ]]; then
+if [[ -v ATILS_CURRENT_CONTEXT ]]; then
   echo "No context is currently activated. Please activate one using 'context-activate-context'"
   exit 1
 fi
