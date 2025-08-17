@@ -76,7 +76,7 @@ if [[ -d "$ATILS_CURRENT_CONTEXT_SCRIPTS_DIR" ]]; then
 
     if is_executable "$file"; then
       description=$(get_description "$file")
-      script_info+=("$filename|$description|$file_type")
+      script_info+=("$filename|$description")
     fi
   done < <(find "$ATILS_CURRENT_CONTEXT_SCRIPTS_DIR" -maxdepth 1 -type f -print0 | sort -z)
 else
