@@ -5,12 +5,11 @@ context-list-scripts = pkgs.writeShellScriptBin "context-list-scripts" ''
 #!/bin/bash
 
 set -euo pipefail
-#!/bin/bash
 
-# Pretty list all executable scripts in a directory with descriptions
-# Usage: script-list [directory]
-
-set -euo pipefail
+if [[ ! -v $ATILS_CURRENT_CONTEXT ]]; then
+  echo "No context is currently activated. Please activate one using 'context-activate-context'"
+  exit 1
+fi
 
 # Function to extract first comment line from a file
 get_description() {
