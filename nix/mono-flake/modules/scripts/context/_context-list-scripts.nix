@@ -86,28 +86,25 @@ fi
 echo -e "''${BOLD}Scripts for context ''${BLUE}"''$ATILS_CURRENT_CONTEXT"''${NC}''${BOLD}:''${NC}"
 echo
 
-# Find all files and process them
-files_found=0
-declare -a script_info
+if [[ -d "$ATILS_CURRENT_CONTEXT_DIR" ]]; then
+  files_found=0
+  declare -a script_info
 
-# Collect script information
-while IFS= read -r -d "" file; do
-    filename=''$(basename "$file")
+  while IFS= read -r -d "" file; do
+      filename=''$(basename "$file")
 
-    # Skip hidden files and common non-script files
-    [[ "$filename" =~ ^\. ]] && continue
-    [[ "$filename" =~ \.(txt|md|json|yml|yaml|xml)$ ]] && continue
+      # Skip hidden files and common non-script files
+      [[ "$filename" =~ ^\. ]] && continue
+      [[ "$filename" =~ \.(txt|md|json|yml|yaml|xml)$ ]] && continue
 
-    if is_executable "$file"; then
-        description=$(get_description "$file")
-        file_type=$(get_file_type "$file")
-        script_info+=("$filename|$description|$file_type")
-        ((files_found++))
-    fi
-done < <(find "$ATILS_CURRENT_CONTEXT_SCRIPTS_DIR" -maxdepth 1 -type f -print0 | sort -z)
-
-# Check if any scripts were found
-if [[ $files_found -eq 0 ]]; then
+      if is_executable "$file"; then
+          description=$(get_description "$file")
+          file_type=$(get_file_type "$file")
+          script_info+=("$filename|$description|$file_type")
+          ((files_found++))
+      fi
+  done < <(find "$ATILS_CURRENT_CONTEXT_SCRIPTS_DIR" -maxdepth 1 -type f -print0 | sort -z)
+else
     echo -e "''${GRAY}No executable scripts found.''${NC}"
     exit 0
 fi
