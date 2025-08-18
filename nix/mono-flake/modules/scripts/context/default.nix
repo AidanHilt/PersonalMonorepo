@@ -13,6 +13,7 @@ in
     ./_context-list-contexts.nix
     ./_context-list-scripts.nix
     ./_context-populate-context.nix
+    ./_context-vscode.nix
   ];
 
   environment.systemPackages = with pkgs; [
