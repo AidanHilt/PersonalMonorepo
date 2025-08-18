@@ -58,7 +58,7 @@ let
         fi
 
         if [[ -v KUBECONFIG_CONTEXT ]]; then
-          kubecm context $KUBECONFIG_CONTEXT
+          kubecm switch $KUBECONFIG_CONTEXT
         fi
       }
   '';
