@@ -12,7 +12,6 @@ if [[ ! -v ATILS_CURRENT_CONTEXT ]]; then
 fi
 
 code $ATILS_CURRENT_CONTEXT_DIR
-
 '';
 in
 
