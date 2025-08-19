@@ -58,6 +58,7 @@ in
     syncthing
     terraform
     terragrunt
+    vault
     yarn
     yq
 
