@@ -1,4 +1,0 @@
-sonarr:
-  urlBase: sonarr
-  metrics:
-    enabled: true
