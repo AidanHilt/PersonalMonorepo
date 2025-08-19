@@ -54,7 +54,7 @@ let
         export TG_WORKING_DIR="$PERSONAL_MONOREPO_LOCATION/terragrunt/$ATILS_CURRENT_CONTEXT"
 
         if [ -f "$ATILS_CONTEXTS_DIRECTORY/$CONTEXT_NAME/.env" ] && [ -s "$ATILS_CONTEXTS_DIRECTORY/$CONTEXT_NAME/.env" ]; then
-          eval "$(dotenvx get -f "$ATILS_CONTEXTS_DIRECTORY/$CONTEXT_NAME/.env" | tr -d '}' | tr -d '{' | sed 's/:/=/g' | sed 's/,/\n/g' | sed 's/^/export /')"
+          eval "$(dotenvx get -f "$ATILS_CONTEXTS_DIRECTORY/$CONTEXT_NAME/.env" | tr -d '}' | tr -d '{' | sed 's/,/\n/g'| sed 's/:/=/' | sed 's/^/export /')"
         fi
 
         if [[ -v KUBECONFIG_CONTEXT ]]; then
