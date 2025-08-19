@@ -1,3 +1,5 @@
+dataStorage:
+  enabled: false
 server:
   standalone:
     config: |
