@@ -34,7 +34,8 @@ check_vault_status() {
     print_status "Checking Vault status..."
 
     local status_output
-    if ! status_output=$(vault status -format=json); then
+    status_output=$(vault status -format=json);
+    if [[ -z "$status_output" ]]  then
         print_error "Failed to get Vault status. Is Vault server running at $VAULT_ADDR?"
         exit 1
     fi
