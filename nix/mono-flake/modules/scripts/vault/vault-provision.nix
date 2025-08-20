@@ -8,7 +8,7 @@ vault-provision = pkgs.writeShellScriptBin "vault-provision" ''
 
 set -euo pipefail
 
-#source ${printing-and-output.printing-and-output}
+source ${printing-and-output.printing-and-output}
 
 valid_run="false"
 
