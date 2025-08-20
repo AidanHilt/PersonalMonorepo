@@ -14,6 +14,7 @@ valid_run="false"
 
 if [[ -v TG_WORKING_DIR ]]; then
   valid_run="true"
+  print $valid_run
 fi
 
 if [[ -f vault/terragrunt.hcl ]] || [[ -f terragrunt.hcl ]]; then
