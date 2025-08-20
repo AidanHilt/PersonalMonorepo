@@ -13,13 +13,13 @@ source ${printing-and-output.printing-and-output}
 valid_run="false"
 
 if [[ -v TG_WORKING_DIR ]]; then
-  global valid_run
   valid_run="true"
+  echo "After first if: $valid_run"
 fi
 
 if [[ -f vault/terragrunt.hcl ]] || [[ -f terragrunt.hcl ]]; then
-  global valid_run
   valid_run="true"
+  echo "After second if: $valid_run"
 fi
 
 if valid_run="false"; then
