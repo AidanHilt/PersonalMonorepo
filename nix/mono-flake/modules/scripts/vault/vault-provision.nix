@@ -21,7 +21,7 @@ if [[ "$valid_run" == "false" ]]; then
 fi
 
 if [[ -f vault/terragrunt.hcl ]] || [[ -v TG_WORKING_DIR ]]; then
-  terragrunt apply -terragrunt-include-dirs "''${TG_WORKING_DIR}/vault"
+  terragrunt apply -terragrunt-include-dirs "''${TG_WORKING_DIR}/vault/*"
 else
   terragrunt apply
 fi
