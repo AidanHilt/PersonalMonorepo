@@ -12,11 +12,7 @@ source ${printing-and-output.printing-and-output}
 
 valid_run="false"
 
-if [[ -v TG_WORKING_DIR ]]; then
-  valid_run="true"
-fi
-
-if [[ -f vault/terragrunt.hcl ]] || [[ -f terragrunt.hcl ]]; then
+if [[ -v TG_WORKING_DIR ]] || [[ -f vault/terragrunt.hcl ]] || [[ -f terragrunt.hcl ]]; then
   valid_run="true"
 fi
 
