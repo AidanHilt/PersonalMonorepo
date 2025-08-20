@@ -34,6 +34,10 @@ check_vault_status() {
     print_status "Checking Vault status..."
 
     local status_output
+    if ! status_output=$(vault status -format=json); then
+        print_error "Failed to get Vault status. Is Vault server running at $VAULT_ADDR?"
+        exit 1
+    fi
 
     local sealed
     sealed=$(echo "$status_output" | jq -r '.sealed // true')
