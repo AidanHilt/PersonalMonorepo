@@ -46,13 +46,11 @@ check_vault_status() {
 
   if [[ "$sealed" == "false" ]]; then
     print_status "Vault is already unsealed!"
-    return 0
+    return 1
   elif [[ "$sealed" == "true" ]]; then
     print_status "Vault is sealed - proceeding with unseal operation"
-    return 1
   else
     print_error "Could not determine Vault seal status"
-    exit 1
   fi
 }
 
