@@ -11,9 +11,9 @@ set -euo pipefail
 source ${printing-and-output.printing-and-output}
 
 valid_run="false"
-echo "$TG_WORKING_DIR"
 
 if [[ -v TG_WORKING_DIR ]]; then
+  echo "$TG_WORKING_DIR"
   valid_run="true"
 fi
 
