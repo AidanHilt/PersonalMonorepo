@@ -58,7 +58,7 @@ main() {
               # Save using dotenvx
               local key_name="VAULT_UNSEAL_KEY_$key_index"
 
-              dotenvx -f "$ATILS_CONTEXTS_DIRECTORY/$ATILS_CURRENT_CONTEXT/.env" set "$key_name" "$decoded_key"
+              dotenvx set "$key_name" "$decoded_key" -f "$ATILS_CONTEXTS_DIRECTORY/$ATILS_CURRENT_CONTEXT/.env"
 
               ((key_index++))
           fi
@@ -77,7 +77,7 @@ main() {
       fi
 
       # Save root token using dotenvx
-      dotenvx -f "$ATILS_CONTEXTS_DIRECTORY/$ATILS_CURRENT_CONTEXT/.env" set "VAULT_TOKEN" "$root_token"
+      dotenvx set "VAULT_TOKEN" "$root_token" -f "$ATILS_CONTEXTS_DIRECTORY/$ATILS_CURRENT_CONTEXT/.env"
 
       print_status "Saved VAULT_TOKEN"
     else
