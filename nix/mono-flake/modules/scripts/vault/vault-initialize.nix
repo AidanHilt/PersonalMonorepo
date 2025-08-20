@@ -79,7 +79,7 @@ main() {
       fi
 
       # Save root token using dotenvx
-      if ! dotenvx set "VAULT_TOKEN" "$root_token" >/dev/null 2>&1; then
+      if ! dotenvx -f "$ATILS_CONTEXTS_DIRECTORY/$ATILS_CURRENT_CONTEXT/.env" set "VAULT_TOKEN" "$root_token" >/dev/null 2>&1; then
           print_error "Failed to save VAULT_TOKEN using dotenvx"
           exit 1
       fi
@@ -91,6 +91,8 @@ main() {
     fi
 
     print_status "Vault initialization complete!"
+
+    eval "$(dotenvx get -f "$ATILS_CONTEXTS_DIRECTORY/$ATILS_CURRENT_CONTEXT/.env" | tr -d '}' | tr -d '{' | sed 's/,/\n/g'| sed 's/:/=/' | sed 's/^/export /')"
 }
 main "$@"
 '';
