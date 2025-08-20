@@ -91,8 +91,6 @@ main() {
     fi
 
     print_status "Vault initialization complete!"
-
-    eval "$(dotenvx get -f "$ATILS_CONTEXTS_DIRECTORY/$ATILS_CURRENT_CONTEXT/.env" | tr -d '}' | tr -d '{' | sed 's/,/\n/g'| sed 's/:/=/' | sed 's/^/export /')"
 }
 main "$@"
 '';
