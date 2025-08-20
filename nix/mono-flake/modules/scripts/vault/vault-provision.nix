@@ -8,7 +8,7 @@ vault-provision = pkgs.writeShellScriptBin "vault-provision" ''
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+#source ${printing-and-output.printing-and-output}
 
 valid_run="false"
 
@@ -20,7 +20,6 @@ if [[ "$valid_run" == "false" ]]; then
   print_error 'Please set TG_WORKING_DIR'
 fi
 
-echo "$VAULT_TOKEN"
 terragrunt run apply --all --working-dir "$TG_WORKING_DIR/vault"
 '';
 in
