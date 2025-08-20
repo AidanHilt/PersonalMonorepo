@@ -3,6 +3,7 @@
 {
   imports = [
     ./vault-initialize.nix
+    ./vault-retrieve-token.nix
     ./vault-unseal.nix
   ];
 }
