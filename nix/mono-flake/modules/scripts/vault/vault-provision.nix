@@ -20,7 +20,7 @@ if [[ -f vault/terragrunt.hcl ]] || [[ -f terragrunt.hcl ]]; then
   valid_run="true"
 fi
 
-if [[ eq "$valid_run" "false" ]]; then
+if [[ -eq "$valid_run" "false" ]]; then
   print_error 'Please set TG_WORKING_DIR, or navigate to $TG_WORKING_DIR or $TG_WORKING_DIR/vault'
 fi
 '';
