@@ -1,4 +1,6 @@
-{
+{ pkgs, ... }:
+
+let
   printing-and-output = pkgs.writeText "_printing-and-output" ''
   RED='\033[0;31m'
   GREEN='\033[0;32m'
@@ -18,4 +20,8 @@
     echo -e "''${RED}[ERROR]''${NC} $1"
   }
   '';
+in
+
+{
+  printing-and-output = printing-and-output;
 }

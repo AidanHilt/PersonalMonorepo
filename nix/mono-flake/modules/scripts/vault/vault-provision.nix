@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
-printing-and-output = import ../lib/_printing-and-output.nix;
+printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
 
 vault-provision = pkgs.writeShellScriptBin "vault-provision" ''
 #!/bin/bash
