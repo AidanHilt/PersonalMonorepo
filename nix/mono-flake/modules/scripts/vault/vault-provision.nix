@@ -12,7 +12,7 @@ source ${printing-and-output.printing-and-output}
 
 valid_run=false
 
-if [[ -v TG_WORKING_DIR ]]; then
+if [[ ! -v TG_WORKING_DIR ]]; then
   valid_run=true
 fi
 
