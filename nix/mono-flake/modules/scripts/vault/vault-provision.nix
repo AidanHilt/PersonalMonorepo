@@ -19,6 +19,12 @@ fi
 if [[ "$valid_run" == "false" ]]; then
   print_error 'Please set TG_WORKING_DIR, or navigate to $TG_WORKING_DIR or $TG_WORKING_DIR/vault'
 fi
+
+if [[ -f vault/terragrunt.hcl ]] || [[ -v TG_WORKING_DIR ]]; then
+  terragrunt apply -terragrunt-include-dirs "''${TG_WORKING_DIR}/vault"
+else
+  terragrunt apply
+fi
 '';
 in
 
