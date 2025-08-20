@@ -14,14 +14,13 @@ valid_run="false"
 
 if [[ -v TG_WORKING_DIR ]]; then
   valid_run="true"
-  echo $valid_run
 fi
 
 if [[ -f vault/terragrunt.hcl ]] || [[ -f terragrunt.hcl ]]; then
   valid_run="true"
 fi
 
-if [[ $valid_run="false" ]]; then
+if [[ eq "$valid_run" "false" ]]; then
   print_error 'Please set TG_WORKING_DIR, or navigate to $TG_WORKING_DIR or $TG_WORKING_DIR/vault'
 fi
 '';
