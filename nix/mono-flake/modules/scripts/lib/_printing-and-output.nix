@@ -23,5 +23,5 @@ let
 in
 
 {
-  printing-and-output = printing-and-output
+  printing-and-output = printing-and-output;
 }
