@@ -1,6 +1,4 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
-
-let
+{
   printing-and-output = pkgs.writeText "_printing-and-output" ''
   RED='\033[0;31m'
   GREEN='\033[0;32m'
@@ -20,8 +18,4 @@ let
     echo -e "''${RED}[ERROR]''${NC} $1"
   }
   '';
-in
-
-{
-  printing-and-output = printing-and-output;
 }
