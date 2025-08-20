@@ -13,6 +13,7 @@ source ${printing-and-output.printing-and-output}
 valid_run="false"
 
 if [[ -v TG_WORKING_DIR ]] || [[ -f vault/terragrunt.hcl ]] || [[ -f terragrunt.hcl ]]; then
+  echo "What the actual fuck?"
   valid_run="true"
 fi
 
