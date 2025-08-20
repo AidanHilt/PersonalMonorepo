@@ -1,42 +1,21 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
+printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
+
 vault-unseal = pkgs.writeShellScriptBin "vault-unseal" ''
 #!/bin/bash
 
 set -euo pipefail
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Function to print colored output
-print_status() {
-  echo -e "''${GREEN}[INFO]''${NC} $1"
-}
-
-print_warning() {
-  echo -e "''${YELLOW}[WARN]''${NC} $1"
-}
-
-print_error() {
-  echo -e "''${RED}[ERROR]''${NC} $1"
-}
-
-print_debug() {
-  echo -e "''${BLUE}[DEBUG]''${NC} $1"
-}
+source ${printing-and-output.printing-and-output}
 
 check_vault_status() {
   print_status "Checking Vault status..."
 
-  local status_output
   status_output=$(vault status -format=json || true)
 
-  if [[ -z "$status_output" ]]  then
+  if [[ -z "$status_output" ]];  then
     print_error "Failed to get Vault status. Is Vault server running at $VAULT_ADDR?"
     exit 1
   fi
@@ -51,6 +30,7 @@ check_vault_status() {
     print_status "Vault is sealed - proceeding with unseal operation"
   else
     print_error "Could not determine Vault seal status"
+    return 1
   fi
 }
 
@@ -60,7 +40,7 @@ unseal_with_key() {
   local key_name="$2"
 
   local unseal_output
-  if ! unseal_output=$(vault operator unseal "$key" 2>/dev/null || true); then
+  if ! unseal_output=$(vault operator unseal "$key" 2>/dev/null); then
     print_error "Failed to unseal with $key_name"
     return 1
   fi
