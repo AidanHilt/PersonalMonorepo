@@ -13,11 +13,10 @@ source ${printing-and-output.printing-and-output}
 valid_run="false"
 
 if [[ -v TG_WORKING_DIR ]] || [[ -f vault/terragrunt.hcl ]] || [[ -f terragrunt.hcl ]]; then
-  echo "What the actual fuck?"
   valid_run="true"
 fi
 
-if [[ "$valid_run"="false" ]]; then
+if [[ "$valid_run" == "false" ]]; then
   print_error 'Please set TG_WORKING_DIR, or navigate to $TG_WORKING_DIR or $TG_WORKING_DIR/vault'
 fi
 '';
