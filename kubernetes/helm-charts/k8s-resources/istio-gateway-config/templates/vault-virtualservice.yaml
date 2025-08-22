@@ -11,8 +11,8 @@ spec:
   - internal-gateway
   http:
   - match:
-    rewrite:
-      uri: /
+    uri:
+      prefix: /
     route:
     - destination:
         host: hashi-vault.vault.svc.cluster.local
