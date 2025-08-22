@@ -6,10 +6,7 @@ metadata:
   namespace: istio-system
 spec:
   hosts:
-     - vault.staging-cluster-lb.local
-  # {{- range .Values.hostnames }}
-  #   - vault.staging-cluster-lb.local
-  # {{- end }}
+  - vault.staging-cluster-lb.local
   gateways:
   - internal-gateway
   http:
