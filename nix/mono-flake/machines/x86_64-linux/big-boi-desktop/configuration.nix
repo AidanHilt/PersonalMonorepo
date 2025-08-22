@@ -10,8 +10,10 @@
     ./hardware-configuration.nix
 
     ../../../modules/shared-machine-configs/linux-desktop.nix
-    ../../../modules/roles/nixos/vscode-server.nix
+
+    ../../../modules/roles/nixos/fixed-ip-machine.nix
     ../../../modules/roles/nixos/nvidia.nix
+    ../../../modules/roles/nixos/vscode-server.nix
   ];
 
   boot.loader.grub = {
@@ -20,9 +22,4 @@
     efiInstallAsRemovable = true;
     useOSProber = true;
   };
-
-  users.users."${machine-config.username}".hashedPassword = "$y$j9T$47Fj09DL3ycTvCft06SAE1$FIYj3k6p1wzVOrZI.aLp5s7IBblimqa1/k/ACv9hiC/";
-
-  # Enable networking
-  networking.networkmanager.enable = true;
 }

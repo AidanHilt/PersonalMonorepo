@@ -6,18 +6,18 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://github.com/AidanHilt/PersonalMonorepo
-    path: kubernetes/helm-charts/k8s-resources/metallb-config
-    targetRevision: {{ .Values.gitRevision }}
-    {{- if index .Values "metallb-config" "configuration" "enabled" }}
+  sources:
+    - repoURL: https://github.com/AidanHilt/PersonalMonorepo
+      path: kubernetes/helm-charts/k8s-resources/metallb-config
+      targetRevision: {{ .Values.gitRevision }}
+      {{- if index .Values "metallb-config" "configuration" "enabled" }}
       helm:
         valueFiles:
           - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/metallb-config.yaml"
     - repoURL: {{ .Values.configuration.configurationRepo }}
       targetRevision: {{ .Values.configuration.configurationRevision | default .Values.gitRevision }}
       ref: values
-    {{- end }}
+      {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
   syncPolicy:

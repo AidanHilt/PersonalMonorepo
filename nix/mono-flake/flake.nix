@@ -17,7 +17,7 @@
     nur.url = "github:nix-community/nur";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/feat/stabilizing-desktop-linux";
+      url = "github:aidanhilt/PersonalMonorepo/feat/libvirt-terraform";
       flake = false;
     };
 
@@ -66,6 +66,8 @@
 
       globals = {
         nixConfig = inputs.personalMonorepo + "/nix";
+        personalMonorepoBranch = "feat/libvirt-terraform";
+        personalMonorepoURL = "https://github.com/AidanHilt/PersonalMonorepo";
       };
 
       allSystems = import inputs.systems;

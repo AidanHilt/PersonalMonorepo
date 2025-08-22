@@ -31,6 +31,10 @@
   #   Note that this is not the kubernetes load balancer IP that serves most of our services
   #   That isn't configured here (but maybe we can note it?)
   #   loadBalancerIp = "";
+  # 
+  #   Used for when we need a network interface, we'll assume all our machines only 
+  #   have one we care about
+  #   mainNetworkInterface = "enp0s1";
   # }
 
   # k8s = {

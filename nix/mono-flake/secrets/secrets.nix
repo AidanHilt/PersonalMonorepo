@@ -1,4 +1,5 @@
 let
+  # ==============================================================================
   # Machines that we use for development and management. Needs access to all files
   # ==============================================================================
 
@@ -14,10 +15,12 @@ let
   vm-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFfl8/kJbF4ntoSOq+sHgLPfZI18K6HS2p9iUFzPEtNn noname";
 
   # Real-life desktop machines
+  big-boi-user = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGiYYw10HWq2v6e3vMiZJ8ua5xDhLvR3wc5s3Nm1CTcW aidan@big-boi-desktop";
   big-boi-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAdaXVorsOMM9qbJnrU5lP6jCUKarqVef4M39GDANYGk noname";
 
-  user-machines = [hyperion-user hyperion-system wsl-user wsl-system vm-desktop-system  big-boi-desktop-system];
+  user-machines = [hyperion-user hyperion-system wsl-user wsl-system vm-desktop-system big-boi-desktop-system big-boi-user];
 
+  # ===========================
   # Our various server clusters
   # ===========================
 
@@ -28,9 +31,9 @@ let
   laptop-cluster-machines = [laptop-cluster-1-system laptop-cluster-2-system];
 
   # Our main staging cluster, in the form of NixOS machines running on x86 hardware
-  staging-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIImXssIeNM0HqEu8ZKnpaweicauH4bYNrkwpIX/Hjcwh root@staging-cluster-1";
-  staging-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOYRGHzNc7rYSsxveCvZAicjiPT3NHdOkXmmlH3g7Y/m root@staging-cluster-2";
-  staging-cluster-3-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGoMCDJlMcyrK65E269A1cwJqO9kLMc/uVu7VfK7LcZN root@staging-cluster-3";
+  staging-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILNXEVSajxhQH0nfsG8PpUUVRVA1/oYWu/zw1AjFnLsV noname";
+  staging-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOQlPZeM/t1rAmBTwkMlPXFRrmQFmMj/Q6IZWUF0qsbe noname";
+  staging-cluster-3-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHdtnat3Z5K2otamFawsougAMGpbDKS0hFfHdyl0mtsn noname";
 
   staging-cluster-machines = [staging-cluster-1-system staging-cluster-2-system staging-cluster-3-system];
 in
@@ -44,4 +47,6 @@ in
   "adguardhome.age".publicKeys = user-machines ++ laptop-cluster-machines;
 
   "rke-config-laptop-cluster.age".publicKeys = user-machines ++ laptop-cluster-machines;
+
+  "rke-config-staging-cluster.age".publicKeys = user-machines ++ staging-cluster-machines;
 }

@@ -1,6 +1,6 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
-let 
+let
   constants = import ./_rclone-constants.nix {inherit pkgs machine-config lib;};
 in
 
@@ -13,7 +13,7 @@ in
     pkgs.rclone
   ] ++ wslScripts;
 
-  environment.sessionVariables = constants.environmentVariables;
+  environment.variables = constants.environmentVariables;
 
     # TODO update this so we encrypt files in Google Drive, for extra oomph
   age.secrets.rclone-config = {

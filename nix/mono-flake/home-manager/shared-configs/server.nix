@@ -8,7 +8,7 @@
 
   home.file.".atils/update-config.env" = {
     text = ''
-      UPDATE__FLAKE_LOCATION="github:AidanHilt/PersonalMonorepo/feat/flake-new-machine-improvements?dir=nix/mono-flake"
+      UPDATE__FLAKE_LOCATION="github:AidanHilt/PersonalMonorepo/${globals.personalMonorepoBranch}?dir=nix/mono-flake"
       UPDATE__MACHINE_NAME="${machine-config.hostname}"
     '';
   };

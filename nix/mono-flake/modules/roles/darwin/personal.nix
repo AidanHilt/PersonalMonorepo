@@ -3,7 +3,8 @@
 {
   imports = [
     ./_smb-mount.nix
-    ./_rclone.nix
+
+    ./rclone.nix
 
     ../../scripts/nixos/default.nix
   ];

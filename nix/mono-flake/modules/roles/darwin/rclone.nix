@@ -1,6 +1,13 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
+let
+  constants = import ../universal/_rclone-constants.nix {inherit pkgs machine-config lib;};
+in
 
-lib.mkIf (pkgs.stdenv.isDarwin) {
+{
+  imports = [
+    ../universal/_rclone.nix
+  ];
+
   launchd.agents = {
     rcloneKeepass = {
       serviceConfig = {

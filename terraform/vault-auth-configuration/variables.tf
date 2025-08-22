@@ -10,7 +10,7 @@ variable "vault_token" {
 
 variable "kubeconfig_location" {
   type        = string
-  description = "Where the kubeconfig for our cluster is located. This is assumed to be running locally"
+  description = "Where the kubeconfig for our cluster is located"
   default     = "~/.kube/config"
 }
 

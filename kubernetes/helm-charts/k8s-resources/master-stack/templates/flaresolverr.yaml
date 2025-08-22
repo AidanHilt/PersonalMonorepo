@@ -9,7 +9,7 @@ spec:
   sources:
     - repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
       targetRevision: {{ .Values.gitRevision }}
-      path: kubernetes/helm-charts/flaresolverr
+      path: kubernetes/helm-charts/applications/flaresolverr
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: videos

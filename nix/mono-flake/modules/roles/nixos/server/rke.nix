@@ -7,6 +7,10 @@ let
   rkeConfig = if machine-config.k8s.primaryNode then
     {
       role = "server";
+
+      disable = [
+        "rke2-ingress-nginx"
+      ];
     }
   else
     {
@@ -17,6 +21,7 @@ in
 {
   imports = [
     ./_longhorn.nix
+    ./_rke-bootstrap-resources.nix
   ];
 
   environment.systemPackages = with pkgs; [

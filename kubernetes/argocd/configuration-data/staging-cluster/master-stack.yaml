@@ -1,11 +1,12 @@
 env: staging-cluster
 
-hostname: staging-cluster-lb.local
+hostnames:
+  - staging-cluster-lb.local
 
-gitRevision: staging-cluster-k8s-work
+gitRevision: feat/libvirt-terraform
 
 configuration:
-  configurationRevision: staging-cluster-k8s-work
+  configurationRevision: feat/libvirt-terraform
 
 flaresolverr:
   enabled: true
@@ -46,12 +47,16 @@ kiali:
 
 longhorn:
   enabled: true
+  configuration:
+    enabled: true
 
 metallb:
   enabled: true
 
 metallb-config:
   enabled: true
+  configuration:
+    enabled: true
 
 postgres:
   enabled: true
