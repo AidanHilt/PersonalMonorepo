@@ -12,6 +12,7 @@ spec:
   gateways:
   - internal-gateway
   http:
+  - match:
     route:
     - destination:
         host: hashi-vault.vault.svc.cluster.local
