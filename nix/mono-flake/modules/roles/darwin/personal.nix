@@ -58,4 +58,29 @@
       ];
     };
   };
+
+  nix = {
+    linux-builder = {
+      enable = true;
+      ephemeral = false;
+      systems = ["x86_64-linux" "aarch64-linux"];
+      config.boot.binfmt.emulatedSystems = ["x86_64-linux"];
+      config = {
+        virtualisation = {
+          darwin-builder = {
+            diskSize = 80 * 1024;
+            memorySize = 12 * 1024;
+          };
+          cores = 8;
+        };
+      };
+    };
+
+    settings = {
+      trusted-users = [
+        "aidan"
+        "root"
+      ];
+    };
+  };
 }
