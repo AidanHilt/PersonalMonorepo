@@ -1,33 +1,10 @@
-{ inputs, globals, pkgs, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ...}:
 
-with inputs;
+{
+  imports = [
+    ../../../modules/roles/darwin/darwin-universal.nix
+    ../../../modules/roles/darwin/work.nix
 
-let
-  home-dot-nix = globals.nixConfig + "/home-manager/machine-configs/work-macbook.nix";
-in
-
-darwin.lib.darwinSystem {
-  modules = [
-
-    home-manager.darwinModules.home-manager {
-      home-manager.useGlobalPkgs = true;
-      home-manager.useUserPackages = true;
-      home-manager.backupFileExtension = "bak";
-      home-manager.extraSpecialArgs = { inherit inputs globals pkgs; };
-      home-manager.users.ahilt = import home-dot-nix {inherit inputs globals pkgs; system = pkgs.system; lib = home-manager.lib; };
-      }
-
-    ({ inputs, globals, ... }: {
-      users.users.ahilt = {
-        home = "/Users/ahilt";
-      };
-
-      networking.hostName = "Aidans-MacBook-Pro";
-    })
-
-    ../modules/common.nix
-    ../modules/work.nix
-
+    ../../../modules/roles/universal/development-machine.nix
   ];
-  specialArgs = { inherit inputs globals; };
 }
