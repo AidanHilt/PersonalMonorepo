@@ -14,5 +14,5 @@ server:
         }
       }
       storage "file" {
-        path = "/tmp/data"
+        path = "/vault/data"
       }
