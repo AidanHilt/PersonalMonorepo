@@ -7,12 +7,14 @@ metadata:
 spec:
   hosts:
   {{- range .Values.hostnames }}
-    - vault.{{ . }}
+    - vault.staging-cluster-lb.local
   {{- end }}
   gateways:
   - internal-gateway
   http:
   - match:
+    rewrite:
+      uri: /
     route:
     - destination:
         host: hashi-vault.vault.svc.cluster.local
