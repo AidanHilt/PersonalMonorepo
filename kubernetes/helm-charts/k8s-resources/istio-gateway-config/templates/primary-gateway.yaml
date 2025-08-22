@@ -9,4 +9,10 @@ spec:
         number: 80
         name: http
         protocol: HTTP
-      hosts: {{ .Values.hostnames }}
+      hosts:
+        {{- toYaml .Values.hostnames | nindent 8 }}
+        {{- if index .Values "hashi-vault" "enabled" }}
+        {{- range .Values.hostnames }}
+        - vault.{{ . }}
+        {{- end }}
+        {{- end }}
