@@ -31,4 +31,5 @@ transmission:
 hashi-vault:
   enabled: false
 
-hostname: localhost
+hostnames:
+  - localhost

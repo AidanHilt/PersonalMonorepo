@@ -5,8 +5,7 @@ metadata:
   name: argocd
   namespace: istio-system
 spec:
-  hosts:
-  - "*"
+  hosts: {{ .Values.hostnames }}
   gateways:
   - internal-gateway
   http:

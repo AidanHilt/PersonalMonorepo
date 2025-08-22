@@ -1,7 +1,8 @@
 # Global config
 env: qa-cluster
 
-hostname: localhost
+hostnames:
+  - localhost
 
 # This is the version of Atils resources we are targeting. That means this is the branch that our own Helm charts will use, as well as any of our static config
 # This is also the branch that will be used for configuration (i.e. values files), unless configuration.configurationRevision is set below

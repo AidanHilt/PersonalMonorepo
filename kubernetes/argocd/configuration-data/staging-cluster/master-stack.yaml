@@ -1,6 +1,7 @@
 env: staging-cluster
 
-hostname: staging-cluster-lb.local
+hostnames:
+  - staging-cluster-lb.local
 
 gitRevision: feat/libvirt-terraform
 

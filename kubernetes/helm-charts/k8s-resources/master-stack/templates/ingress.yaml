@@ -62,7 +62,7 @@ spec:
         hashi-vault:
           enabled: {{ index .Values "hashi-vault" "enabled" }}
 
-        hostname: {{ index .Values "hostname" }}
+        hostnames: {{ index .Values "hostnames" }}
 
   destination:
     server: 'https://kubernetes.default.svc'
