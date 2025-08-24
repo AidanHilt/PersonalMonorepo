@@ -1,13 +1,8 @@
 name: Helm Chart CI
 
-on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'kubernetes/helm-charts/**'
-      - '.github/workflows/helm-charts-on-merge.yaml'
-      - '!kubernetes/helm-charts/docs/**'
+
+# TODO Not quite ready to delete yet, but this is just annoying
+on: workflow_dispatch
 
 jobs:
   find-out-changes:
