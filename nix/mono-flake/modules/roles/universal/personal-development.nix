@@ -2,13 +2,17 @@
 
 {
   imports = [
+    ../../scripts/context/default.nix
     ../../scripts/mono-flake/default.nix
     ../../scripts/nixos/default.nix
-    ../../scripts/context/default.nix
+    ../../scripts/system-tasks/default.nix
     ../../scripts/vault/default.nix
   ];
 
   environment.systemPackages = with pkgs; [
-
+    act
+    agenix
+    syncthing
+    vault
   ];
 }

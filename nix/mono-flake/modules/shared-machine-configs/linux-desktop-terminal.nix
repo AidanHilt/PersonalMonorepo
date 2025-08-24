@@ -6,8 +6,7 @@
     ../roles/nixos/rclone.nix
 
     ../roles/universal/development-machine.nix
-    ../roles/universal/linux-admin.nix
-    ../roles/universal/nixos-admin.nix
+    ../roles/universal/personal-development.nix
   ];
 
   programs.nix-ld.enable = true;

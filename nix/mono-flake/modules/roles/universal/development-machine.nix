@@ -41,8 +41,6 @@ in
   };
 
   environment.systemPackages = with pkgs; [
-    act
-    agenix
     cargo
     check-jsonschema
     detect-secrets
@@ -55,10 +53,8 @@ in
     postgresql
     pre-commit
     rustc
-    syncthing
     terraform
     terragrunt
-    vault
     yarn
     yq
 
