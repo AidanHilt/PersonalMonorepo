@@ -26,6 +26,19 @@
       "schedule": [
         "before 6am on monday"
       ]
+    },
+    {
+      "description": "Group all python updates into one PR",
+      "matchManagers": [
+        "pep621",
+        "poetry"
+      ],
+      "groupName": "python-updates",
+      "commitMessageTopic": "Python-related dependencies",
+      "additionalBranchPrefix": "python-",
+      "schedule": [
+        "before 6am on monday"
+      ]
     }
   ]
 }
