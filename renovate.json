@@ -29,7 +29,7 @@
     },
     {
       "description": "Group all python updates into one PR",
-      "matchManagers": [
+      "matchDepTypes": [
         "pep621",
         "poetry"
       ],
