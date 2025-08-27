@@ -16,12 +16,13 @@
   },
   "pep621": {
     "fileMatch": [
-      "atils/*"
+      "atils/pyproject.toml"
     ]
   },
   "poetry": {
     "fileMatch": [
-      "atils/*"
+      "atils/pyproject.toml",
+      "atils/poetry.lock"
     ]
   },
   "packageRules": [
