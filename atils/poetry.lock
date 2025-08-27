@@ -182,26 +182,26 @@ files = [
 
 [[package]]
 name = "check-jsonschema"
-version = "0.30.0"
+version = "0.33.3"
 description = "A jsonschema CLI and pre-commit hook"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "check_jsonschema-0.30.0-py3-none-any.whl", hash = "sha256:c7fb2de2017ab81a85b08c7332d6f074b0565d41d068de25a6e42a8a6a0b723d"},
-    {file = "check_jsonschema-0.30.0.tar.gz", hash = "sha256:c912ef9cf204c17d2e9d832b9088040f1c0c3f178ebda9805a56e5f35b29f5f2"},
+    {file = "check_jsonschema-0.33.3-py3-none-any.whl", hash = "sha256:db4385a4d48b1c79b29c36181e6305c401b956d84e2f8e74f29e5d58a2eaf9cd"},
+    {file = "check_jsonschema-0.33.3.tar.gz", hash = "sha256:8cdb74660b56b748ef768aee9dc0cdfca9e7420e1d5300d0e2792704af53676f"},
 ]
 
 [package.dependencies]
 click = ">=8,<9"
 jsonschema = ">=4.18.0,<5.0"
-regress = ">=0.4.0"
+regress = ">=2024.11.1"
 requests = "<3.0"
-"ruamel.yaml" = "0.18.6"
+"ruamel.yaml" = ">=0.18.10,<0.19.0"
 
 [package.extras]
-dev = ["click-type-test (==1.0.0) ; python_version >= \"3.10\"", "coverage (<8)", "pytest (<9)", "pytest-xdist (<4)", "responses (==0.25.3)"]
-docs = ["furo (==2024.8.6)", "sphinx (<9)", "sphinx-issues (<6)"]
+dev = ["click-type-test (==1.1.0) ; python_version >= \"3.10\"", "coverage (<8)", "identify (>=2.6.9)", "pytest (<9)", "pytest-xdist (<4)", "responses (==0.25.7)"]
+docs = ["furo (==2025.7.19)", "sphinx (<9)", "sphinx-issues (<6)"]
 
 [[package]]
 name = "click"
@@ -1144,18 +1144,18 @@ pyasn1 = ">=0.1.3"
 
 [[package]]
 name = "ruamel-yaml"
-version = "0.18.6"
+version = "0.18.15"
 description = "ruamel.yaml is a YAML parser/emitter that supports roundtrip preservation of comments, seq/map flow style, and map key order"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "ruamel.yaml-0.18.6-py3-none-any.whl", hash = "sha256:57b53ba33def16c4f3d807c0ccbc00f8a6081827e81ba2491691b76882d0c636"},
-    {file = "ruamel.yaml-0.18.6.tar.gz", hash = "sha256:8b27e6a217e786c6fbe5634d8f3f11bc63e0f80f6a5890f28863d9c45aac311b"},
+    {file = "ruamel.yaml-0.18.15-py3-none-any.whl", hash = "sha256:148f6488d698b7a5eded5ea793a025308b25eca97208181b6a026037f391f701"},
+    {file = "ruamel.yaml-0.18.15.tar.gz", hash = "sha256:dbfca74b018c4c3fba0b9cc9ee33e53c371194a9000e694995e620490fd40700"},
 ]
 
 [package.dependencies]
-"ruamel.yaml.clib" = {version = ">=0.2.7", markers = "platform_python_implementation == \"CPython\" and python_version < \"3.13\""}
+"ruamel.yaml.clib" = {version = ">=0.2.7", markers = "platform_python_implementation == \"CPython\" and python_version < \"3.14\""}
 
 [package.extras]
 docs = ["mercurial (>5.7)", "ryd"]
@@ -1469,4 +1469,4 @@ test = ["websockets"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12,<3.13"
-content-hash = "7b88a0d762016d549d2a131167f67cc3ea50e4d3a37b9b468aa48008b5a512a5"
+content-hash = "410df713e91a0c0fdf95e1c9101096c424ffa7702851327f618602ba03f7bab5"
