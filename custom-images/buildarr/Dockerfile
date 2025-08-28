@@ -1,4 +1,4 @@
-FROM python:3.11 AS builder
+FROM python:3.13 AS builder
 
 # Installing our builds tools, I think we need both PDM and Poetry
 
@@ -28,7 +28,7 @@ RUN git clone https://github.com/AidanHilt/buildarr-jellyseerr && \
     cd buildarr-jellyseerr && \
     poetry install && poetry build
 
-FROM python:3.11-alpine
+FROM python:3.13-alpine
 
 COPY --from=builder buildarr/dist /dist
 COPY --from=builder buildarr-radarr/dist /dist

@@ -13,7 +13,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.12,<3.13"
+python = "<3.14"
 mypy = "^1.1.1"
 kubernetes = "^33.0.0"
 argparse = "^1.4.0"
