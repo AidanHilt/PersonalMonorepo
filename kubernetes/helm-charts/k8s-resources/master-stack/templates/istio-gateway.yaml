@@ -61,6 +61,9 @@ spec:
           kiali:
             enabled: {{ index .Values "kiali" "enabled" }}
 
+          longhorn:
+            enabled: {{ index .Values "longhorn" "enabled" }}
+
           prowlarr:
             enabled: {{ index .Values "prowlarr" "enabled" }}
 
