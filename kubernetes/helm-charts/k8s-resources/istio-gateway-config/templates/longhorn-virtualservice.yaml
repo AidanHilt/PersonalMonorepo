@@ -14,10 +14,6 @@ spec:
         prefix: /longhorn/
     rewrite:
       uri: /
-    headers:
-      request:
-        add:
-          X-Forwarded-Prefix: /longhorn/
     route:
     - destination:
         host: longhorn-frontend.longhorn-system.svc.cluster.local
