@@ -13,7 +13,3 @@ serviceAccount:
   annotations:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "-2"
-
-image:
-  repository: aidanhilt/jellyseerr
-  pullPolicy: Always
