@@ -11,7 +11,7 @@ spec:
   http:
   - match:
     - uri:
-        prefix: /longhorn
+        prefix: /longhorn/
     rewrite:
       uri: /
     headers:
