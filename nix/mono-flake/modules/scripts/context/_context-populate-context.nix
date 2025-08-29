@@ -122,6 +122,8 @@ for env_var in "''${ENV_VARS[@]}"; do
   var_name="''${env_var%=*}"
   var_value="''${env_var#*=}"
 
+  echo "$var_value"
+
   dotenvx set "$var_name" "$var_value" -f "''${ATILS_CONTEXTS_DIRECTORY}/''${CONTEXT_NAME}/.env";
 done
 
