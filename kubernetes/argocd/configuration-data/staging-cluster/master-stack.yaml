@@ -3,10 +3,10 @@ env: staging-cluster
 hostnames:
   - staging-cluster-lb.local
 
-gitRevision: feat/libvirt-terraform
+gitRevision: chore/final-super-final-i-really-mean-it-staging-cluster
 
 configuration:
-  configurationRevision: feat/libvirt-terraform
+  configurationRevision: chore/final-super-final-i-really-mean-it-staging-cluster
 
 flaresolverr:
   enabled: true
