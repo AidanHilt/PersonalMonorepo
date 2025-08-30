@@ -7,7 +7,7 @@
     ../../scripts/nixos/default.nix
     ../../scripts/system-tasks/default.nix
     ../../scripts/vault/default.nix
-    ../../scripts/terrgrunt/default.nix
+    ../../scripts/terragrunt/default.nix
   ];
 
   environment.systemPackages = with pkgs; [
