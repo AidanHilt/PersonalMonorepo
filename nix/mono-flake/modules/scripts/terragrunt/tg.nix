@@ -21,28 +21,32 @@ tg() {
   fi
 }
 '';
-
-tgAutoComplete = pkgs.writeText "" ''
-  _tg_complete() {
-    local cur=${COMP_WORDS[COMP_CWORD]}
-    local base_dir="$TG_WORKING_DIR"
-
-    # Only complete first arg (the directory) *if TG_WORKING_DIR is set*
-    if [[ -n "$base_dir" && $COMP_CWORD -eq 1 ]]; then
-      COMPREPLY=($(compgen -d "$base_dir/$cur" | sed "s|$base_dir/||"))
-    else
-      # After the path, or if TG_WORKING_DIR not set, try terragrunt completion if available
-      if declare -F _terragrunt_complete &>/dev/null; then
-        _terragrunt_complete
-      fi
-    fi
-  }
-'';
 in
 
 {
   environment.interactiveShellInit = ''
     source ${tg}
-    complete -F ${tgAutoComplete} tg
+  '';
+
+  environment.etc."zsh/completions/_tg".text = ''
+    _tg_complete() {
+      local -a reply
+      local base_dir="$TG_WORKING_DIR"
+      local cur="$words[CURRENT]"
+
+      # Only complete first arg (the directory) *if TG_WORKING_DIR is set*
+      if [[ -n "$base_dir" && $CURRENT -eq 2 ]]; then
+        # Generate directories under base_dir
+        reply=(''${base_dir}/''${cur}*(/))
+        # Strip base_dir prefix
+        reply=(''${reply#$base_dir/})
+        compadd -a reply
+      else
+        # After the path, or if TG_WORKING_DIR not set, try terragrunt completion if available
+        if whence -w _terragrunt_complete &>/dev/null; then
+          _terragrunt_complete
+        fi
+      fi
+    }
   '';
 }
