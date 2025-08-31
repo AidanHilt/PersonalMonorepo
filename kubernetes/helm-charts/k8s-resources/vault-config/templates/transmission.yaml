@@ -19,7 +19,7 @@ metadata:
 spec:
   type: kv-v2
   mount: videos
-  path: transmission/config
+  path: vpn/config
 
   destination:
     name: transmission-config-secret
