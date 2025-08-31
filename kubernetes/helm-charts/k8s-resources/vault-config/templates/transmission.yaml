@@ -22,7 +22,7 @@ spec:
   path: vpn/config
 
   destination:
-    name: transmission-config-secret
+    name: vpn-config-secret
     create: true
 
   refreshAfter: 30s
