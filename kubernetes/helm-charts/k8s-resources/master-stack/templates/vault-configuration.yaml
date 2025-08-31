@@ -31,6 +31,9 @@ spec:
           sonarr:
             enabled: {{ index .Values "sonarr" "enabled" }}
 
+          transmission:
+            enabled: {{ index .Values "transmission" "enabled" }}
+
           video-stack-configuration:
             enabled: {{ index .Values "video-stack-configuration" "enabled" }}
 

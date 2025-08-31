@@ -16,5 +16,8 @@ radarr:
 sonarr:
   enabled: false
 
+transmission:
+  enabled: false
+
 video-stack-configuration:
   enabled: false
