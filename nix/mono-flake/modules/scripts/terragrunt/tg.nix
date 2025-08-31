@@ -28,27 +28,28 @@ in
     source ${tg}
   '';
 
-  environment.etc."zsh/completions/_tg".text = ''
-  #compdef tg
+  # TODO let's get autocomplete working at some point
+  # environment.etc."zsh/completions/_tg".text = ''
+  # #compdef tg
 
-  _tg_complete() {
-    local -a reply
-    local base_dir="$TG_WORKING_DIR"
-    local cur="$words[CURRENT]"
+  # _tg_complete() {
+  #   local -a reply
+  #   local base_dir="$TG_WORKING_DIR"
+  #   local cur="$words[CURRENT]"
 
-    # Only complete first arg (the directory) *if TG_WORKING_DIR is set*
-    if [[ -n "$base_dir" && $CURRENT -eq 2 ]]; then
-      # Generate directories under base_dir
-      reply=(''${base_dir}/''${cur}*(/))
-      # Strip base_dir prefix
-      reply=(''${reply#$base_dir/})
-      compadd -a reply
-    else
-      # After the path, or if TG_WORKING_DIR not set, try terragrunt completion if available
-      if whence -w _terragrunt_complete &>/dev/null; then
-        _terragrunt_complete
-      fi
-    fi
-  }
-  '';
+  #   # Only complete first arg (the directory) *if TG_WORKING_DIR is set*
+  #   if [[ -n "$base_dir" && $CURRENT -eq 2 ]]; then
+  #     # Generate directories under base_dir
+  #     reply=(''${base_dir}/''${cur}*(/))
+  #     # Strip base_dir prefix
+  #     reply=(''${reply#$base_dir/})
+  #     compadd -a reply
+  #   else
+  #     # After the path, or if TG_WORKING_DIR not set, try terragrunt completion if available
+  #     if whence -w _terragrunt_complete &>/dev/null; then
+  #       _terragrunt_complete
+  #     fi
+  #   fi
+  # }
+  # '';
 }
