@@ -6,18 +6,18 @@ radarr:
 
   externalAuth: true
 
+  postgres:
+    enabled: true
+    setupJob:
+      setupJobServiceAccount: setup-job
+      setupJobSecret: setup-job-config-secret
+
 serviceAccount:
   create: true
   name: radarr
   annotations:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "-2"
-
-postgres:
-  enabled: true
-  setupJob:
-    setupJobServiceAccount: setup-job
-    setupJobSecret: setup-job-config-secret
 
 persistence:
   videos:
