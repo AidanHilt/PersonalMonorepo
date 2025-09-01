@@ -25,6 +25,12 @@ spec:
     name: vpn-config-secret
     create: true
 
+    transformation:
+      templates:
+        vpnConfig:
+          text: |
+            {{ .Secrets.value | regexReplaceAll "\\\\n" "\n" }}
+
   refreshAfter: 30s
 
   vaultAuthRef: transmission-auth
