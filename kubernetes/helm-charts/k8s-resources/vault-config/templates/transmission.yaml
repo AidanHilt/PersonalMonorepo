@@ -29,7 +29,7 @@ spec:
       templates:
         vpnConfig:
           text: |
-            {{`{{ .Secrets.value | regexReplaceAll "\\\\n" "\n" }}`}}
+            {{`{{ .Secrets.value | replace "\\n" "\n" }}`}}
 
   refreshAfter: 30s
 
