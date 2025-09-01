@@ -13,9 +13,13 @@ serviceAccount:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "-2"
 
+postgres:
+  enabled: true
+  setupJob:
+    setupJobServiceAccount: setup-job
+    setupJobSecret: setup-job-config-secret
+
 persistence:
-  config:
-    enabled: true
   videos:
     enabled: true
     type: hostPath
