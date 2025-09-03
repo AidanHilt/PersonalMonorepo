@@ -86,7 +86,11 @@ done
 
 # If no context name provided, prompt user
 if [[ -z "$CONTEXT_NAME" ]]; then
-  _context-context-selector
+  if [[ -z "$ATILS_CURRENT_CONTEXT" ]]; then
+    _context-context-selector
+  else
+    CONTEXT_NAME="$ATILS_CURRENT_CONTEXT"
+  fi
 fi
 
 # Check if context name is empty
