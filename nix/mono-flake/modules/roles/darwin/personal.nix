@@ -46,8 +46,6 @@
         "/Applications/Parsec.app"
         #Spotify
         "/Applications/Spotify.app"
-        #Orbstack
-        "/Applications/OrbStack.app"
         #ActivityMonitor
         "/System/Applications/Utilities/Activity Monitor.app"
         #KeePassXC
