@@ -8,4 +8,6 @@ terraform {
 
 inputs = merge(local.environment_vars.inputs, {
   jellyfin_email = get_env("EMAIL_ADDR")
+  vpn_auth = get_env("VPN_AUTH")
+  vpn_config = get_env("VPN_CONFIG")
 })
