@@ -149,6 +149,8 @@ main() {
 
   print_info "ArgoCD installation completed successfully!"
 }
+
+main "$@"
 '';
 in
 
