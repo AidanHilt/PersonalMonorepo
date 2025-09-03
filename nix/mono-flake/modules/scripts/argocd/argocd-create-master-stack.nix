@@ -1,0 +1,54 @@
+{ inputs, globals, pkgs, machine-config, lib, ...}:
+
+let
+argocd-create-master-stack = pkgs.writeShellScriptBin "argocd-create-master-stack" ''
+#!/bin/bash
+
+set -euo pipefail
+
+if [[ -z "$MONOREPO_BRANCH" ]]; then
+  export MONOREPO_BRANCH=master
+fi
+
+if [[ -z "$CLUSTER_NAME" ]]; then
+  if [[ -z "$ATILS_CURRENT_CONTEXT" ]]; then
+    read -p "Please enter the name of the cluster you want to use" CLUSTER_NAME
+  else
+    export CLUSTER_NAME="$ATILS_CURRENT_CONTEXT"
+  fi
+fi
+
+cat <<EOF | envsubst | kubectl apply -f -
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: master-stack
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/AidanHilt/PersonalMonorepo
+      path: kubernetes/helm-charts/k8s-resources/master-stack
+      targetRevision: $MONOREPO_BRANCH
+      helm:
+        valueFiles:
+          - "$values/kubernetes/argocd/configuration-data/$CLUSTER_NAME/master-stack.yaml"
+    - repoURL: https://github.com/AidanHilt/PersonalMonorepo
+      targetRevision: $MONOREPO_BRANCH
+      ref: values
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+EOF
+'';
+in
+
+{
+  environment.systemPackages = [
+    argocd-create-master-stack
+  ];
+}

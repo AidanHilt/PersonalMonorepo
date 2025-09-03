@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ../../scripts/argocd/default.nix
     ../../scripts/context/default.nix
     ../../scripts/mono-flake/default.nix
     ../../scripts/nixos/default.nix
