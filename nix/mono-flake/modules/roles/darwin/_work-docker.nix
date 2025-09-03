@@ -21,17 +21,19 @@ in
     gen3-edit-values
   ];
 
-  # Launch Colima on startup, so we always have docker working
-  launchd.user.agents.colima-autostart = {
-    path = [ "/bin" "/usr/bin" "/nix/var/nix/profiles/default/bin" ];
-
+  launchd.agents."colima.autostartt" = {
+    command = "${pkgs.colima}/bin/colima start --foreground";
     serviceConfig = {
-      Label = "com.user.colima-autostart";
-      ProgramArguments = [ "colima" "start" ];
+      Label = "com.colima.autostart";
       RunAtLoad = true;
       KeepAlive = true;
+
       StandardOutPath = "/tmp/colima-autostart.log";
       StandardErrorPath = "/tmp/colima-autostart.error.log";
+
+      EnvironmentVariables = {
+        PATH = "${pkgs.colima}/bin:${pkgs.docker}/bin:/usr/bin:/bin:/usr/sbin:/sbin";
+      };
     };
   };
 
