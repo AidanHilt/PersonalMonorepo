@@ -3,5 +3,6 @@
 {
   imports = [
     ./argocd-create-master-stack.nix
+    ./argocd-install-argocd.nix
   ];
 }
