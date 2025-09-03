@@ -63,7 +63,7 @@ install_argocd() {
   kubectl create namespace "''${namespace}" --dry-run=client -o yaml | kubectl apply -f -
 
   # Prepare helm install command
-  local helm_cmd="helm upgrade --install ''${release_name} argo/argo-cd --namespace ''${namespace}"
+  local helm_cmd="helm upgrade --install ''${release_name} argo/argo-cd --namespace ''${namespace} -f 'https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/refs/heads/master/kubernetes/argocd/values.yaml'"
 
   # Add version if ARGOCD_TARGET_VERSION is set
   if [[ -n "''${ARGOCD_TARGET_VERSION:-}" ]]; then
