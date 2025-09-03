@@ -32,7 +32,7 @@ spec:
       targetRevision: $MONOREPO_BRANCH
       helm:
         valueFiles:
-          - "$values/kubernetes/argocd/configuration-data/$CLUSTER_NAME/master-stack.yaml"
+          - "\$values/kubernetes/argocd/configuration-data/$CLUSTER_NAME/master-stack.yaml"
     - repoURL: https://github.com/AidanHilt/PersonalMonorepo
       targetRevision: $MONOREPO_BRANCH
       ref: values
