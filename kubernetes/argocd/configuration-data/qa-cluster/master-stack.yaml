@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: feat/helmification-and-reorg
+gitRevision: chore/final-super-final-i-really-mean-it-staging-cluster
 
 flaresolverr:
   enabled: false
