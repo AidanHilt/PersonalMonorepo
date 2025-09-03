@@ -5,7 +5,6 @@
     ./_smb-mount.nix
 
     ./rclone.nix
-    ./_work-docker.nix
   ];
 
   environment.systemPackages = [
