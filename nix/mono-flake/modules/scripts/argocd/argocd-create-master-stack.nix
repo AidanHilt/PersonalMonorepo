@@ -6,12 +6,12 @@ argocd-create-master-stack = pkgs.writeShellScriptBin "argocd-create-master-stac
 
 set -euo pipefail
 
-if [[ -v MONOREPO_BRANCH ]]; then
+if [[ ! -v MONOREPO_BRANCH ]]; then
   export MONOREPO_BRANCH=master
 fi
 
-if [[ -v CLUSTER_NAME ]]; then
-  if [[ -v ATILS_CURRENT_CONTEXT ]]; then
+if [[ ! -v CLUSTER_NAME ]]; then
+  if [[ ! -v ATILS_CURRENT_CONTEXT ]]; then
     read -p "Please enter the name of the cluster you want to use" CLUSTER_NAME
   else
     export CLUSTER_NAME="$ATILS_CURRENT_CONTEXT"
