@@ -9,8 +9,6 @@ set -euo pipefail
 if [[ ! -v MONOREPO_BRANCH ]]; then
   if [[ -v PERSONAL_MONOREPO_LOCATION ]]; then
     export MONOREPO_BRANCH=$(git -C "$PERSONAL_MONOREPO_LOCATION" branch --show-current)
-    echo "$MONOREPO_BRANCH"
-    exit
   else
     export MONOREPO_BRANCH=master
   fi
