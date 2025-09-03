@@ -25,7 +25,7 @@ check_kubectl() {
     print_error "kubectl is not installed. Please install kubectl first."
     exit 1
   fi
-  print_status "kubectl is installed: $(kubectl version --client --short)"
+  print_status "kubectl is installed: $(kubectl version --client)"
 }
 
 # Check if ArgoCD helm repo is added, if not add it
@@ -112,14 +112,11 @@ get_admin_password() {
     local admin_password
     admin_password=$(kubectl get secret argocd-initial-admin-secret -n "''${namespace}" -o jsonpath="{.data.password}" | base64 -d)
 
-    echo ""
-    print_status "ArgoCD Admin Credentials:"
-    echo "  Username: admin"
-    echo "  Password: ''${admin_password}"
-    echo ""
-    print_status "You can access ArgoCD by port-forwarding:"
-    echo "  kubectl port-forward svc/argocd-server -n ''${namespace} 8080:443"
-    echo "  Then visit: https://localhost:8080"
+    if [[ -v ATILS_CURRENT_CONTEXT ]]; then
+      context-populate-context --argocd-auth-token "$admin_password"
+    else
+      _copy-text-to-clipboard "$admin_password"
+    fi
   else
     print_warn "ArgoCD admin secret not found. It might take a few moments to be created."
     print_status "You can retrieve it later with:"
@@ -155,7 +152,11 @@ main "$@"
 in
 
 {
+  imports = [
+    ../lib/_copy-text-to-clipboard.nix
+  ];
+
   environment.systemPackages = [
-  argocd-install-argocd
+    argocd-install-argocd
   ];
 }
