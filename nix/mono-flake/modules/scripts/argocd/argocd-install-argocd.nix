@@ -16,7 +16,7 @@ check_helm() {
     print_error "Helm is not installed. Please install Helm first."
     exit 1
   fi
-  print_info "Helm is installed: $(helm version --short)"
+  print_status "Helm is installed: $(helm version --short)"
 }
 
 # Check if kubectl is installed
@@ -25,7 +25,7 @@ check_kubectl() {
     print_error "kubectl is not installed. Please install kubectl first."
     exit 1
   fi
-  print_info "kubectl is installed: $(kubectl version --client --short)"
+  print_status "kubectl is installed: $(kubectl version --client --short)"
 }
 
 # Check if ArgoCD helm repo is added, if not add it
@@ -33,15 +33,15 @@ check_and_add_repo() {
   local repo_name="argo"
   local repo_url="https://argoproj.github.io/argo-helm"
 
-  print_info "Checking if ArgoCD Helm repository is added..."
+  print_status "Checking if ArgoCD Helm repository is added..."
 
   if helm repo list | grep -q "^''${repo_name}[[:space:]]"; then
-    print_info "ArgoCD Helm repository is already added"
+    print_status "ArgoCD Helm repository is already added"
   else
-    print_info "Adding ArgoCD Helm repository..."
+    print_status "Adding ArgoCD Helm repository..."
     helm repo add "''${repo_name}" "''${repo_url}"
     if [ $? -eq 0 ]; then
-      print_info "Successfully added ArgoCD Helm repository"
+      print_status "Successfully added ArgoCD Helm repository"
     else
       print_error "Failed to add ArgoCD Helm repository"
       exit 1
@@ -49,7 +49,7 @@ check_and_add_repo() {
   fi
 
   # Update repo to get latest charts
-  print_info "Updating Helm repositories..."
+  print_status "Updating Helm repositories..."
   helm repo update
 }
 
@@ -59,7 +59,7 @@ install_argocd() {
   local release_name="argocd"
 
   # Create namespace if it doesn't exist
-  print_info "Creating namespace \"''${namespace}\" if it doesn't exist..."
+  print_status "Creating namespace \"''${namespace}\" if it doesn't exist..."
   kubectl create namespace "''${namespace}" --dry-run=client -o yaml | kubectl apply -f -
 
   # Prepare helm install command
@@ -67,20 +67,20 @@ install_argocd() {
 
   # Add version if ARGOCD_TARGET_VERSION is set
   if [[ -n "''${ARGOCD_TARGET_VERSION:-}" ]]; then
-    print_info "Installing ArgoCD with version: ''${ARGOCD_TARGET_VERSION}"
+    print_status "Installing ArgoCD with version: ''${ARGOCD_TARGET_VERSION}"
     helm_cmd="''${helm_cmd} --version ''${ARGOCD_TARGET_VERSION}"
   else
-    print_info "Installing ArgoCD with latest version (ARGOCD_TARGET_VERSION not set)"
+    print_status "Installing ArgoCD with latest version (ARGOCD_TARGET_VERSION not set)"
   fi
 
   # Add common configurations
   helm_cmd="''${helm_cmd} --create-namespace --wait --timeout=600s"
 
-  print_info "Executing: ''${helm_cmd}"
+  print_status "Executing: ''${helm_cmd}"
 
   # Execute the helm command
   if eval "''${helm_cmd}"; then
-    print_info "ArgoCD installed successfully!"
+    print_status "ArgoCD installed successfully!"
   else
     print_error "Failed to install ArgoCD"
     exit 1
@@ -91,19 +91,19 @@ install_argocd() {
 wait_for_argocd() {
   local namespace="argocd"
 
-  print_info "Waiting for ArgoCD pods to be ready..."
+  print_status "Waiting for ArgoCD pods to be ready..."
 
   # Wait for all deployments to be ready
   kubectl wait --for=condition=available --timeout=600s deployment --all -n "''${namespace}"
 
-  print_info "ArgoCD is ready!"
+  print_status "ArgoCD is ready!"
 }
 
 # Get ArgoCD admin password
 get_admin_password() {
   local namespace="argocd"
 
-  print_info "Retrieving ArgoCD admin password..."
+  print_status "Retrieving ArgoCD admin password..."
 
   # Wait a bit for the secret to be created
   sleep 5
@@ -113,23 +113,23 @@ get_admin_password() {
     admin_password=$(kubectl get secret argocd-initial-admin-secret -n "''${namespace}" -o jsonpath="{.data.password}" | base64 -d)
 
     echo ""
-    print_info "ArgoCD Admin Credentials:"
+    print_status "ArgoCD Admin Credentials:"
     echo "  Username: admin"
     echo "  Password: ''${admin_password}"
     echo ""
-    print_info "You can access ArgoCD by port-forwarding:"
+    print_status "You can access ArgoCD by port-forwarding:"
     echo "  kubectl port-forward svc/argocd-server -n ''${namespace} 8080:443"
     echo "  Then visit: https://localhost:8080"
   else
     print_warn "ArgoCD admin secret not found. It might take a few moments to be created."
-    print_info "You can retrieve it later with:"
+    print_status "You can retrieve it later with:"
     echo "  kubectl get secret argocd-initial-admin-secret -n ''${namespace} -o jsonpath='{.data.password}' | base64 -d"
   fi
 }
 
 # Main function
 main() {
-  print_info "Starting ArgoCD installation script..."
+  print_status "Starting ArgoCD installation script..."
 
   # Check prerequisites
   check_helm
@@ -147,7 +147,7 @@ main() {
   # Get admin password
   get_admin_password
 
-  print_info "ArgoCD installation completed successfully!"
+  print_status "ArgoCD installation completed successfully!"
 }
 
 main "$@"
