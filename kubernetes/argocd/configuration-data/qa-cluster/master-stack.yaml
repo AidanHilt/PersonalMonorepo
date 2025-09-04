@@ -24,6 +24,9 @@ jellyseerr:
   configuration:
     enabled: true
 
+postgres:
+  enabled: true
+
 prowlarr:
   enabled: true
   configuration:
