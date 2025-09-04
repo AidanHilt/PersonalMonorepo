@@ -4,6 +4,7 @@ let
   terragruntPkgs = import inputs.nixpkgs-terragrunt {system = pkgs.system;};
 
   terragrunt = if ! machine-config ? configSwitches.work then pkgs.terragrunt else terragruntPkgs.terragrunt;
+  terraform = if ! machine-config ? configSwitches.work then pkgs.terraform else terragruntPkgs.terraform;
   # Platform-specific logic or setup
   platform-apps = if pkgs.system == "aarch64-darwin" then with pkgs; [] else with pkgs; [];
 
