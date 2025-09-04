@@ -17,19 +17,6 @@ in
         systemOverlays = platformOverlays.${system} or [];
         patches = [
           (final: prev: {
-            terragrunt = prev.terragrunt.overrideAttrs (oldAttrs: {
-              pname = "terragrunt";
-              version = "0.45.17";
-              vendorHash = "sha256-l9yGP6+Sc1RiRDbtPWI3X07KnUNm7z8Mfe0F89q5B2Y=";
-
-              src = prev.fetchFromGitHub {
-                owner = "gruntwork-io";
-                repo = "terragrunt";
-                rev = "v0.45.17";
-                sha256 = "sha256-mNrRzXj9bcHr8gATa7O4nSxCA6AJeM4TdyMj7GB4QMo=";
-              };
-            });
-
             grub2 = prev.grub2.overrideAttrs (oldAttrs: {
               patches = map (patch:
                 if patch.name or "" == "23_prerequisite_1_key_protector_add_key_protectors_framework.patch"

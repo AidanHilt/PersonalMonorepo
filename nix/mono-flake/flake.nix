@@ -58,6 +58,9 @@
       url = "github:lnl7/nix-darwin/nix-darwin-25.05";
       inputs.nixpkgs.follows = "nixpkgs-darwin";
     };
+
+    # Versioning stuff
+    nixpkgs-terragrunt.url = "github:nixos/nixpkgs/5b3df2be2519b12a4e1f3841dfcac6927908f2f0";
   };
 
   outputs = { self, nixpkgs, darwin, ... }@inputs:
