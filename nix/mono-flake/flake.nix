@@ -60,7 +60,7 @@
     };
 
     # Versioning stuff
-    nixpkgs-terragrunt.url = "github:nixos/nixpkgs/5b3df2be2519b12a4e1f3841dfcac6927908f2f0";
+    nixpkgs-terragrunt.url = "github:nixos/nixpkgs/0024e310e51151ee27d710e1f2fdf5e9c293da0b";
   };
 
   outputs = { self, nixpkgs, darwin, ... }@inputs:
