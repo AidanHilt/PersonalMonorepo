@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
-  terragruntPkgs = import inputs.nixpkgs-terragrunt {};
+  terragruntPkgs = import inputs.nixpkgs-terragrunt {system = pkgs.system};
 
   terragrunt = if machine-config ? configSwitches.work then pkgs.terragrunt else terragruntPkgs.terragrunt;
   # Platform-specific logic or setup
