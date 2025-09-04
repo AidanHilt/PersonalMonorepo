@@ -61,6 +61,7 @@
 
     # Versioning stuff
     nixpkgs-terragrunt.url = "github:nixos/nixpkgs/0024e310e51151ee27d710e1f2fdf5e9c293da0b";
+    nixpkgs-terraform.url = "github:nixos/nixpkgs/0472f3c9c5618c9675fc8dcc9e6ea484a5590d6d";
   };
 
   outputs = { self, nixpkgs, darwin, ... }@inputs:
