@@ -78,7 +78,7 @@
           pname = "terragrunt";
           version = "0.73.0";
 
-          src = inputs.nixpkgs.pkgs.fetchFromGitHub {
+          src = inputs.nixpkgs.fetchFromGitHub {
             owner = "gruntwork-io";
             repo = pname;
             rev = "v${version}";
