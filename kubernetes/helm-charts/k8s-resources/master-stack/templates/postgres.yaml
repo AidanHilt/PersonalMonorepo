@@ -10,8 +10,8 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-    - repoURL: registry-1.docker.io/bitnamicharts
-      chart: postgresql
+    - repoURL: https://cloudnative-pg.github.io/charts
+      chart: cloudnative-pg
       targetRevision: {{ index .Values "postgres" "version" }}
       helm:
         releaseName: postgres
