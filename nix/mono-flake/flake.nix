@@ -73,10 +73,26 @@
       allSystems = import inputs.systems;
       systems = nixpkgs.lib.filter (sys: builtins.pathExists (./machines + "/${sys}")) allSystems;
 
+      terragruntOverlay = final: prev: {
+        terragrunt = prev.terragrunt.overrideAttrs (old: rec {
+          pname = "terragrunt";
+          version = "0.73.0";
+
+          src = inputs.nixpkgs.pkgs.fetchFromGitHub {
+            owner = "gruntwork-io";
+            repo = pname;
+            rev = "v${version}";
+            sha256 = "";
+          };
+        });
+      };
+
       baseOverlays = [
         inputs.nur.overlays.default
         inputs.agenix.overlays.default
         inputs.nix-vscode-extensions.overlays.default
+
+        terragruntOverlay
       ];
 
       platformOverlays = {
