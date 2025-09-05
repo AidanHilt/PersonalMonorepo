@@ -29,4 +29,24 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgres-cluster
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: 'https://github.com/AidanHilt/PersonalMonorepo.git'
+      path: kubernetes/helm-charts/k8s-resources/postgres-clusters/{{ .Values.env }}/cluster.yaml
+      targetRevision: {{ .Values.gitRevision }}
+  destination:
+    server: 'https://kubernetes.default.svc'
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
 {{end}}
