@@ -9,7 +9,7 @@ spec:
   mount: kubernetes
   kubernetes:
     role: postgres
-    serviceAccount: postgres-postgresql
+    serviceAccount: postgres-cluster
 ---
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultStaticSecret
