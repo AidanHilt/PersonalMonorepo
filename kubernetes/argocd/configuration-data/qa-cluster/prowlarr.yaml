@@ -10,6 +10,7 @@ prowlarr:
     enabled: true
     setupJob:
       setupJobServiceAccount: setup-job
+      setupJobSecret:
 
 serviceAccount:
   create: true
