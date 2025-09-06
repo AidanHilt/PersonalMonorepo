@@ -13,5 +13,7 @@ spec:
   superuserSecret:
     name: postgres-config
 
+  enableSuperuserAccess: true
+
   storage:
     size: 1Gi
