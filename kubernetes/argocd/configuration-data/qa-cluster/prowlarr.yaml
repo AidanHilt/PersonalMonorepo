@@ -6,6 +6,9 @@ prowlarr:
 
   externalAuth: true
 
+  postgres:
+    enabled: true
+
 serviceAccount:
   create: true
   name: prowlarr

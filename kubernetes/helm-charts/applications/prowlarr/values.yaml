@@ -53,7 +53,7 @@ prowlarr:
     password: ""
 
     port: 5432
-    host: postgres-postgresql.postgres.svc.cluster.local
+    host: postgres-cluster-rw.postgres.svc.cluster.local
 
     mainDb: prowlarr_main
     logDb: prowlarr_logs
