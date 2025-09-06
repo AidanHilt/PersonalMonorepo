@@ -24,6 +24,7 @@ spec:
   destination:
     name: postgres-config
     create: true
+    type: kubernetes.io/basic-auth
 
   refreshAfter: 30s
 
