@@ -53,7 +53,7 @@ radarr:
     password: ""
 
     port: 5432
-    host: postgres-postgresql.postgres.svc.cluster.local
+    host: postgres-cluster-rw.postgres.svc.cluster.local
 
     mainDb: radarr_main
     logDb: radarr_logs
