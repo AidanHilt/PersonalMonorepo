@@ -69,7 +69,7 @@ radarr:
       # The name of a pre-existing secret containing the MASTER username and password for postgres
       # This user needs to have access to set stuff up for the Prowlarr user. Required if setupJob.enabled
       # is set to true
-      setupJobSecret: ""
+      setupJobSecret: setup-job-config-secret
 
       secretUsernameKey: masterUsername
       secretPasswordKey: masterPassword
