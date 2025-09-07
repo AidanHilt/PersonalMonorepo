@@ -10,7 +10,6 @@ radarr:
     enabled: true
     setupJob:
       setupJobServiceAccount: setup-job
-      setupJobSecret: setup-job-config-secret
 
 serviceAccount:
   create: true
