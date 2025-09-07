@@ -6,7 +6,7 @@ let
   p2n = (inputs.poetry2nix.lib.mkPoetry2Nix { inherit pkgs; });
 
   pypkgs-build-requirements = {
-    argparse = ["setuptools"];
+    #argparse = ["setuptools"];
     click = ["setuptools"];
     asyncio = ["setuptools"];
     shutils = ["setuptools"];

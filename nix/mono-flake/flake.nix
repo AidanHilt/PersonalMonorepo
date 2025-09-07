@@ -17,7 +17,7 @@
     nur.url = "github:nix-community/nur";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/feat/libvirt-terraform";
+      url = "github:aidanhilt/PersonalMonorepo/chore/final-super-final-i-really-mean-it-staging-cluster";
       flake = false;
     };
 

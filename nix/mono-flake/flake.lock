@@ -314,16 +314,16 @@
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1753551323,
-        "narHash": "sha256-p48Dw/0UF0ZsBqq3oShQatDi5XjZ64vG7a3BhipSpzQ=",
+        "lastModified": 1757213064,
+        "narHash": "sha256-qWvzOOfw6ZsWFeZ4vhk4FfTnAxfSYuB5o/4q5ZKbR0U=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "d88ff69b5f12e41a093c51980ef075f8c24d1e25",
+        "rev": "2d4e6c015e23587d07f6ae9c8ee20f3654e720d5",
         "type": "github"
       },
       "original": {
         "owner": "aidanhilt",
-        "ref": "feat/libvirt-terraform",
+        "ref": "chore/final-super-final-i-really-mean-it-staging-cluster",
         "repo": "PersonalMonorepo",
         "type": "github"
       }
