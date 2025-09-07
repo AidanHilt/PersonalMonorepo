@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, machineDir, ...}:
 
 let
-  homeDir = "${machine-config.userBase}/${machine-config.username}"
+  homeDir = "${machine-config.userBase}/${machine-config.username}";
 
   p2n = (inputs.poetry2nix.lib.mkPoetry2Nix { inherit pkgs; });
 
