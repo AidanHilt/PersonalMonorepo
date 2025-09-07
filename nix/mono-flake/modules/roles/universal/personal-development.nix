@@ -2,6 +2,8 @@
 
 {
   imports = [
+    ./_atils.nix
+
     ../../scripts/argocd/default.nix
     ../../scripts/context/default.nix
     ../../scripts/mono-flake/default.nix
