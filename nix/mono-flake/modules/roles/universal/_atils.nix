@@ -5,7 +5,7 @@ let
 
   workspace = inputs.uv2nix.lib.workspace.loadWorkspace { workspaceRoot = globals.nixConfig + "/../atils";};
 
-  overlay = workspace.mkProjectOverlay {
+  overlay = workspace.mkPyprojectOverlay {
     sourcePrefence = "wheel";
   };
 
