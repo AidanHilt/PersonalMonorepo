@@ -3,29 +3,46 @@
 let
   homeDir = "${machine-config.userBase}/${machine-config.username}";
 
-  p2n = (inputs.poetry2nix.lib.mkPoetry2Nix { inherit pkgs; });
+  workspace = inputs.uv2nix.lib.workspace.loadWorkspace { workspaceRoot = globals.nixConfig + "/../atils";};
 
-  pypkgs-build-requirements = {
-    argparse = ["setuptools"];
-    click = ["setuptools"];
-    asyncio = ["setuptools"];
-    shutils = ["setuptools"];
+  overlay = workspace.mkProjectOverlay {
+    sourcePrefence = "wheel";
   };
 
-  p2n-overrides = p2n.defaultPoetryOverrides.extend (self: super:
-    builtins.mapAttrs (package: build-requirements:
-      (builtins.getAttr package super).overridePythonAttrs (old: {
-        buildInputs = (old.buildInputs or [ ]) ++ (builtins.map (pkg: if builtins.isString pkg then builtins.getAttr pkg super else pkg) build-requirements);
-      })
-    ) pypkgs-build-requirements
-  );
+  overrides = final: prev: {};
 
-  atils = p2n.mkPoetryApplication {
-    projectDir = globals.nixConfig + "/../atils";
+  pythonSet =
+    (pkgs.callPackage pyproject-nix.build.packages { inherit python; })
+    .overrideScope (nixpkgs.lib.composeManyExtensions [
+      inputs.pyproject-build-systems.overlays.default
+      overlay
+      overrides
+    ]);
 
-    overrides = p2n-overrides;
-    #preferWheels = true;
-  };
+  projectNameInToml = "atils";
+  thisProjectAsNixPkg = pythonSet.${projectNameInToml};
+
+  appPythonEnv = pythonSet.mkVirtualEnv
+    (thisProjectAsNixPkg.pname + "-env")
+    workspace.deps.default;
+
+  atils = pkgs.stdenv.mkDerivation {
+    pname = thisProjectAsNixPkg.pname;
+    version = thisProjectAsNixPkg.version;
+    src = ./.;
+
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    buildInputs = [ appPythonEnv ];
+
+    installPhase = ''
+      mkdir -p $out/bin
+      cp main.py $out/bin/${thisProjectAsNixPkg.pname}-script
+      chmod +x $out/bin/${thisProjectAsNixPkg.pname}-script
+      makeWrapper ${appPythonEnv}/bin/python $out/bin/${thisProjectAsNixPkg.pname} \
+        --add-flags $out/bin/${thisProjectAsNixPkg.pname}-script
+    '';
+    };
+
 in
 
 {
