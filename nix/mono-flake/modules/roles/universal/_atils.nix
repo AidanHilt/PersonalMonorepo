@@ -33,7 +33,7 @@ in
     atils
   ];
 
-  environment.sessionVariables = {
+  environment.variables = {
     ATILS_INSTALL_DIR="${homeDir}/PersonalMonorepo";
     ATILS_KUBECONFIG_LOCATION="${homeDir}/.kube/";
     ATILS_SCRIPT_INSTALL_DIRECTORY="${homeDir}/PersonalMonorepo/atils";
