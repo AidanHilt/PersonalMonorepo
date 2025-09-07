@@ -12,7 +12,7 @@ let
   overrides = final: prev: {};
 
   pythonSet =
-    (pkgs.callPackage pyproject-nix.build.packages { inherit python; })
+    (pkgs.callPackage inputs.pyproject-nix.build.packages { python = pkgs.python312; })
     .overrideScope (nixpkgs.lib.composeManyExtensions [
       inputs.pyproject-build-systems.overlays.default
       overlay
