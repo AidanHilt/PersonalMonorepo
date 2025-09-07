@@ -24,7 +24,7 @@ let
     projectDir = globals.nixConfig + "/../atils";
 
     overrides = p2n-overrides;
-    #preferWheels = true;
+    preferWheels = true;
   };
 in
 
