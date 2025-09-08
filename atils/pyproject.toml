@@ -25,7 +25,7 @@ dependencies = [
 Homepage = "https://github.com/AidanHilt/PersonalMonorepo/tree/master/atils"
 
 [project.scripts]
-atils = "atils_bin.atils:main"
+atils = "atils:main"
 
 [dependency-groups]
 dev = [
@@ -37,14 +37,12 @@ dev = [
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "atils",
-    "atils_bin",
+    "atils"
 ]
 
 [tool.hatch.build.targets.wheel]
 include = [
-    "atils",
-    "atils_bin",
+    "atils"
 ]
 
 [build-system]
