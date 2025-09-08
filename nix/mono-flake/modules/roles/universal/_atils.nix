@@ -1,6 +1,8 @@
 { inputs, globals, pkgs, machine-config, machineDir, ...}:
 
 let
+  util = inputs.pyproject-nix.build.util;
+
   homeDir = "${machine-config.userBase}/${machine-config.username}";
 
   workspace = inputs.uv2nix.lib.workspace.loadWorkspace { workspaceRoot = globals.nixConfig + "/../atils";};
@@ -28,28 +30,16 @@ let
     (thisProjectAsNixPkg.pname + "-env")
     workspace.deps.default;
 
-  atils = pkgs.stdenv.mkDerivation {
-    pname = thisProjectAsNixPkg.pname;
-    version = thisProjectAsNixPkg.version;
-    src = ./.;
-
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    buildInputs = [ appPythonEnv ];
-
-    installPhase = ''
-      mkdir -p $out/bin
-      cp main.py $out/bin/${thisProjectAsNixPkg.pname}-script
-      chmod +x $out/bin/${thisProjectAsNixPkg.pname}-script
-      makeWrapper ${appPythonEnv}/bin/python $out/bin/${thisProjectAsNixPkg.pname} \
-        --add-flags $out/bin/${thisProjectAsNixPkg.pname}-script
-    '';
-    };
+  atils = util.mkApplication {
+    venv = appPythonEnv;
+    package = thisProjectAsNixPkg;
+  };
 
 in
 
 {
   environment.systemPackages = [
-    atils
+   # atils
   ];
 
   environment.variables = {
