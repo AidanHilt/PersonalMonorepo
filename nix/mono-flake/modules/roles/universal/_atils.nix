@@ -9,7 +9,9 @@ let
     sourcePreference = "wheel";
   };
 
-  overrides = final: prev: {};
+  overrides = pkgs.lib.composeExtensions (inputs.uv2nix_hammer_overrides.overrides pkgs)(
+    final: prev: {}
+  );
 
   pythonSet =
     (pkgs.callPackage inputs.pyproject-nix.build.packages { python = pkgs.python312; })
