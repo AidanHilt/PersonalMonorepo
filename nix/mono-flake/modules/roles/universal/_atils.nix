@@ -41,6 +41,8 @@ in
     atils
   ];
 
+  builtins.trace (builtins.typeOf util.mkApplication)
+
   environment.variables = {
     ATILS_INSTALL_DIR="${homeDir}/PersonalMonorepo";
     ATILS_KUBECONFIG_LOCATION="${homeDir}/.kube/";
