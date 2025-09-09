@@ -24,8 +24,6 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/AidanHilt/PersonalMonorepo/tree/master/atils"
 
-[project.scripts]
-atils = "atils.main:main"
 
 [dependency-groups]
 dev = [
