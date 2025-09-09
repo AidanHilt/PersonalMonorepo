@@ -30,7 +30,7 @@ let
     (thisProjectAsNixPkg.pname + "-env")
     workspace.deps.default;
 
-  atils = util.mkApplication {
+  atils = builtins.trace (builtins.typeOf util.mkApplication) util.mkApplication {
     venv = appPythonEnv;
     package = thisProjectAsNixPkg;
   };
@@ -40,8 +40,6 @@ in
   environment.systemPackages = [
     atils
   ];
-
-  builtins.trace (builtins.typeOf util.mkApplication)
 
   environment.variables = {
     ATILS_INSTALL_DIR="${homeDir}/PersonalMonorepo";
