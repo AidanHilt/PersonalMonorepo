@@ -33,7 +33,7 @@ let
   atils = util.mkApplication {
     venv = appPythonEnv;
     pkg = thisProjectAsNixPkg;
-  } ();
+  } {};
 in
 
 {
