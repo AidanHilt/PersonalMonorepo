@@ -32,8 +32,8 @@ let
 
   atils = util.mkApplication {
     venv = appPythonEnv;
-    pkg = thisProjectAsNixPkg;
-  } {};
+    package = thisProjectAsNixPkg;
+  };
 in
 
 {
