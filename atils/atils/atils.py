@@ -1,8 +1,7 @@
 import sys
 
-from atils import argocd
+from atils import argocd, build, helm, jobs, test
 from atils import atils_kubernetes as kubernetes
-from atils import build, helm, jobs, test
 
 
 def main():
@@ -40,3 +39,6 @@ def main():
     print(f"Unrecognized subcommand: {script_name}")
     print("Valid subcommands are: kubernetes, argocd, build, job, helm")
     sys.exit(1)
+
+
+main()

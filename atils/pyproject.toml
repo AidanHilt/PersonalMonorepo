@@ -24,6 +24,9 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/AidanHilt/PersonalMonorepo/tree/master/atils"
 
+[project.scripts]
+atils = "atils:atils"
+
 [dependency-groups]
 dev = [
     "pytest==8.4.1",
