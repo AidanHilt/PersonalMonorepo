@@ -38,7 +38,7 @@ in
 
 {
   environment.systemPackages = [
-    atils
+    thisProjectAsNixPkg
   ];
 
   environment.variables = {
