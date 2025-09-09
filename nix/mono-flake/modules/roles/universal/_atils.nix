@@ -17,7 +17,7 @@ let
 
   pythonSet =
     (pkgs.callPackage inputs.pyproject-nix.build.packages { python = pkgs.python312; })
-    .overrideScope (pkgs.lib.composeManyExtensions [
+    .overrideScope (pkgs.lib.composeExtensions [
       inputs.pyproject-build-systems.overlays.default
       overlay
       overrides
