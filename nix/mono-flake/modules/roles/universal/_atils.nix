@@ -30,7 +30,7 @@ let
     (thisProjectAsNixPkg.pname + "-env")
     workspace.deps.default;
 
-  atils = builtins.trace (builtins.typeOf util.mkApplication) util.mkApplication {
+  atils = util.mkApplication {
     venv = appPythonEnv;
     package = thisProjectAsNixPkg;
   };
