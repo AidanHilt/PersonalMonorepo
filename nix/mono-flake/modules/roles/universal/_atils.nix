@@ -29,11 +29,16 @@ let
   appPythonEnv = pythonSet.mkVirtualEnv
     (thisProjectAsNixPkg.pname + "-env")
     workspace.deps.default;
+
+  atils = util.mkApplication {
+    venv = appPythonEnv;
+    pkg = thisProjectAsNixPkg;
+  };
 in
 
 {
   environment.systemPackages = [
-   thisProjectAsNixPkg
+    atils
   ];
 
   environment.variables = {
