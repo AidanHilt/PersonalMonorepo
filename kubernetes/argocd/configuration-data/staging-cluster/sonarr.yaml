@@ -25,7 +25,7 @@ persistence:
     mountPath: /videos
     hostPath: /videos
 
-securityContext:
+podSecurityContext:
   fsGroup: 911
 
 initContainers:
