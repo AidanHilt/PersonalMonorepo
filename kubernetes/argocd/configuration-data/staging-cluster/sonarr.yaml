@@ -25,9 +25,6 @@ persistence:
     mountPath: /videos
     hostPath: /videos
 
-podSecurityContext:
-  fsGroup: 911
-
 initContainers:
   init-tv-dir:
     image: busybox
