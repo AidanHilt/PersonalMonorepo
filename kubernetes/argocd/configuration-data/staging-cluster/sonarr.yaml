@@ -32,10 +32,11 @@ initContainers:
   init-tv-dir:
     image: busybox
     command: ["sh", "-c"]
-    args: |
-      mkdir -p /videos/TV
-      chmod 777 /videos/TV
-      chown -R 911 /videos/TV
+    args:
+      - |
+        mkdir -p /videos/TV
+        chmod 777 /videos/TV
+        chown -R 911 /videos/TV
     volumeMounts:
       - name: videos
         mountPath: /videos
