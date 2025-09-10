@@ -31,7 +31,7 @@ securityContext:
 initContainers:
   init-tv-dir:
     image: busybox
-    command: ["sh", "-c", "mkdir -p /videos/TV"]
+    command: ["sh", "-c", "mkdir -p /videos/TV; chown -R 911 /videos/TV"]
     volumeMounts:
       - name: videos
         mountPath: /videos
