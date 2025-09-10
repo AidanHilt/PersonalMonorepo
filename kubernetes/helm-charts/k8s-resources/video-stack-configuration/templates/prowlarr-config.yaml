@@ -39,26 +39,6 @@ stringData:
                   sort: created
                   type: desc
                 secret_fields: {}
-              Badass Torrents:
-                type: badasstorrents
-                enable: false
-                sync_profile: Standard
-                redirect: false
-                priority: 25
-                query_limit: null
-                grab_limit: null
-                tags: []
-                fields:
-                  definitionFile: badasstorrents
-                  baseUrl: null
-                  baseSettings.limitsUnit: Day
-                  torrentBaseSettings.appMinimumSeeders: null
-                  torrentBaseSettings.seedRatio: null
-                  torrentBaseSettings.seedTime: null
-                  torrentBaseSettings.packSeedTime: null
-                  downloadlink: magnet
-                  downloadlink2: .torrent
-                secret_fields: {}
               EZTV:
                 type: eztv
                 enable: true
