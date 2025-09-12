@@ -6,6 +6,7 @@
 
     ../../scripts/argocd/default.nix
     ../../scripts/context/default.nix
+    ../../scripts/job/default.nix
     ../../scripts/mono-flake/default.nix
     ../../scripts/nixos/default.nix
     ../../scripts/system-tasks/default.nix
