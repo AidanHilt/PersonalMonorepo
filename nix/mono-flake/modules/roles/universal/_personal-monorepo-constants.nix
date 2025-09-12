@@ -10,6 +10,6 @@ in
   variables = {
     PERSONAL_MONOREPO_LOCATION = personalMonorepoLocation;
     ATILS_HELM_DIR = atilsHelmDir;
-    ATILS_JOB_DIR = "${atilsHelmChartsDir}/jobs";
+    ATILS_JOB_DIR = "${atilsHelmDir}/jobs";
   };
 }
