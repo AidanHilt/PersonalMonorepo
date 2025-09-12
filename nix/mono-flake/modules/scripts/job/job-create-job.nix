@@ -15,8 +15,8 @@ JOB_DESCRIPTION="A kubernetes job"
 
 usage() {
   echo "Usage: $0 --job-name <name> [--description <description>]"
-  echo "  --job-name    Required. Name of the job"
-  echo "  --description   Optional. Description of the job (default: 'A kubernetes job')"
+  echo "  --job-name    Name of the job"
+  echo "  --description   Description of the job (default: 'A kubernetes job')"
   exit 1
 }
 
@@ -51,8 +51,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$JOB_NAME" ]]; then
-  echo "Error: --job-name is required"
-  usage
+  read -p "Please provide a name for the new job" JOB_NAME
 fi
 
 export JOB_NAME
