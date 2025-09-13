@@ -107,26 +107,7 @@ spec:
             {{- end }}
             {{- if $job.env }}
             env:
-            {{- range $job.env }}
-            - name: {{ .name }}
-              {{- if .value }}
-              value: {{ .value | quote }}
-              {{- else if .valueFrom }}
-              valueFrom:
-                {{- if .valueFrom.secretKeyRef }}
-                secretKeyRef:
-                  name: {{ .valueFrom.secretKeyRef.name }}
-                  key: {{ .valueFrom.secretKeyRef.key }}
-                {{- else if .valueFrom.configMapKeyRef }}
-                configMapKeyRef:
-                  name: {{ .valueFrom.configMapKeyRef.name }}
-                  key: {{ .valueFrom.configMapKeyRef.key }}
-                {{- else if .valueFrom.fieldRef }}
-                fieldRef:
-                  fieldPath: {{ .valueFrom.fieldRef.fieldPath }}
-                {{- end }}
-              {{- end }}
-            {{- end }}
+            {{- $job.env | toYaml | nindent 2 }}
             {{- end }}
             {{- if $job.volumeMounts }}
             volumeMounts:
