@@ -25,12 +25,12 @@ jobs:
         client.authenticate({'Servers': [{'AccessToken': ACCESS_TOKEN, 'address': JELLYFIN_URL}]}, discover=False)
         print('Successfully authenticated with API key')
 
+        sleep(5)
+
         client.jellyfin.add_media_library('Movies', 'movies', '/videos/Movies')
         client.jellyfin.add_media_library('TV Shows', 'tvshows', '/videos/TV')
         print('Added library')
 
-        media_folders = client.jellyfin.virtual_folders()
-        print(json.dumps(media_folders))
         exit(0)
         "
     env:
