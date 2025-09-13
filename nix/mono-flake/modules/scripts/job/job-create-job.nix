@@ -51,7 +51,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$JOB_NAME" ]]; then
-  read -p "Please provide a name for the new job" JOB_NAME
+  read -p "Please provide a name for the new job: " JOB_NAME
 fi
 
 export JOB_NAME
