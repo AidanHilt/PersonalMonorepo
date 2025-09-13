@@ -11,6 +11,8 @@ jobs:
       - |
         pip install jellyfin_apiclient_python && python -c "
         from jellyfin_apiclient_python import JellyfinClient
+        from time import sleep
+
         import json
         import os
 
