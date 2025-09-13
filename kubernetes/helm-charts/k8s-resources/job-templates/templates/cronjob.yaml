@@ -107,7 +107,7 @@ spec:
             {{- end }}
             {{- if $job.env }}
             env:
-            {{- $job.env | toYaml | nindent 2 }}
+            {{- $job.env | toYaml | nindent 14 }}
             {{- end }}
             {{- if $job.volumeMounts }}
             volumeMounts:
