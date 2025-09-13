@@ -53,8 +53,9 @@ jobs:
     command: ["sh", "-c"]
     args:
       - |
-        echo "Running buildarr for sonarr"
-        buildarr run /config/buildarr.yml
+        sleep infinity
+        # echo "Running buildarr for sonarr"
+        # buildarr run /config/buildarr.yml
     volumeMounts:
       - name: config
         mountPath: /config
