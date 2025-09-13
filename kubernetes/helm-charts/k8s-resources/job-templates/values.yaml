@@ -40,12 +40,10 @@ jobs:
       - name: JELLYFIN_URL
         value: http://jellyfin/emby
       - name: ACCESS_TOKEN
-        value:
-          secret:
-            valueFrom:
-              secretKeyRef:
-                name: jellyfin-config-secret
-                key: apiKey
+        valueFrom:
+          secretKeyRef:
+            name: jellyfin-config-secret
+            key: apiKey
   run-buildarr-sonarr:
     namespace: videos
     enabled: true
