@@ -6,7 +6,7 @@ jobs:
       repository: python
       tag: "3.12-alpine"
     serviceAccountName: jellyfin
-    command: ["bash", "-c"]
+    command: ["sh", "-c"]
     args:
       - pip install jellyfin_apiclient_python
       - python
