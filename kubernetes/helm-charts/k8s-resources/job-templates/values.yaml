@@ -50,7 +50,7 @@ jobs:
     image:
       repository: aidanhilt/buildarr
       tag: feat-external-user-1-retry
-    command: ["bash", "-c"]
+    command: ["sh", "-c"]
     args:
       - |
         echo "Running buildarr for sonarr"
