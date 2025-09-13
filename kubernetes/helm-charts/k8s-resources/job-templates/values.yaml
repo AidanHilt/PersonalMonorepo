@@ -16,20 +16,20 @@ jobs:
         import json
         import os
 
-        ACCESS_TOKEN = os.environ["ACCESS_TOKEN"]
-        JELLYFIN_URL = os.environ["JELLYFIN_URL"]
+        ACCESS_TOKEN = os.environ['ACCESS_TOKEN']
+        JELLYFIN_URL = os.environ['JELLYFIN_URL']
 
         client = JellyfinClient()
-        client.config.data["app.name"] = "Aidan's Audacious Configuration Alterator"
-        client.config.data["app.version"] = "0.0.1"
-        client.config.data["auth.ssl"] = True
+        client.config.data['app.name'] = 'Aidan\'s Audacious Configuration Alterator'
+        client.config.data['app.version'] = '0.0.1'
+        client.config.data['auth.ssl'] = True
 
-        client.authenticate({"Servers": [{"AccessToken": ACCESS_TOKEN, "address": JELLYFIN_URL}]}, discover=False)
-        print("Successfully authenticated with API key")
+        client.authenticate({'Servers': [{'AccessToken': ACCESS_TOKEN, 'address': JELLYFIN_URL}]}, discover=False)
+        print('Successfully authenticated with API key')
 
-        client.jellyfin.add_media_library("Movies", "movies", "/videos/Movies")
-        client.jellyfin.add_media_library("Shows", "tvshows", "/videos/TV")
-        print("Added library")
+        client.jellyfin.add_media_library('Movies', 'movies', '/videos/Movies')
+        client.jellyfin.add_media_library('Shows', 'tvshows', '/videos/TV')
+        print('Added library')
 
         exit(0)
         "
