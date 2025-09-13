@@ -1,0 +1,9 @@
+apiVersion: v2
+name: $JOB_NAME
+description: $JOB_DESCRIPTION
+
+type: application
+
+version: 0.0.1
+
+appVersion: "N/A"

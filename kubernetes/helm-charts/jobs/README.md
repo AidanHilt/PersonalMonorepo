@@ -1,0 +1,3 @@
+This is a very interesting area of the repo. You'll likely notice that there is already a `kubernetes/jobs` folder, so why is there a second one under Helm charts? The answer is that the old version relies on the `atils` python script, and uses a custom method of templating. That's a lot of wasted effort, when Helm can do the exact same thing for us, so this is the modern way of doing things. Each job gets a helm chart, with preset values, and then you use the `job` family of scripts to work with them.
+
+We're just going to install these suckers, and then selectively uninstall them to keep the pod around in case of a success.

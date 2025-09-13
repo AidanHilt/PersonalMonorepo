@@ -1,0 +1,63 @@
+jobs:
+  configure-jellyfin:
+    enabled: true
+    image:
+      repository: python
+      tag: "3.12-alpine"
+    serviceAccountName: jellyfin
+    command: ["python", "-c"]
+    args:
+      - |
+        from jellyfin_apiclient_python import JellyfinClient
+        import json
+
+        ACCESS_TOKEN = os.environ("ACCESS_TOKEN")
+        JELLYFIN_URL = os.environ("JELLYFIN_URL")
+
+        client = JellyfinClient()
+
+        client.config.data["app.name"] = "Aidan's Audacious Configuration Alterator"
+        client.config.data["app.version"] = "0.0.1"
+        client.config.data["auth.ssl"] = True
+
+        client.authenticate({"Servers": [{"AccessToken": ACCESS_TOKEN, "address": JELLYFIN_URL}]}, discover=False)
+
+        print("Successfully authenticated with API key")
+
+        client.jellyfin.add_media_library("Movies", "movies", "/videos/Movies")
+        client.jellyfin.add_media_library("TV Shows", "tvshows", "/videos/TV")
+
+        print("Added library")
+
+        media_folders = client.jellyfin.virtual_folders()
+        print(json.dumps(media_folders))
+
+        exit(0)
+    env:
+      - name: JELLYFIN_URL
+        value: jellyfin/emby
+      - name: ACCESS_TOKEN
+        value:
+          secret:
+            valueFrom:
+              secretKeyRef:
+                name: jellyfin-config-secret
+                key: apiKey
+  run-buildarr-sonarr:
+    enabled: true
+    image:
+      repository: aidanhilt/buildarr
+      tag: feat-external-user-1-retry
+    command: ["bash", "-c"]
+    args:
+      - |
+        echo "Running buildarr for sonarr"
+        buildarr run /config/buildarr.yml
+    volumeMounts:
+      - name: config
+        mountPath: /config
+    volumes:
+      - name: config
+        secretName: buildarr-sonarr-config-secret
+    restartPolicy: Never
+    backoffLimit: 1

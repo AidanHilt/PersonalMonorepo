@@ -1,0 +1,28 @@
+image:
+  repository: busybox
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+serviceAccount:
+  create: false
+  automount: true
+  annotations: {}
+  name: ""
+
+command: ["bash", "-c"]
+
+args:
+  - |
+    echo "You haven't filled out the job yet!"
+
+env: {}
+
+volumes: []
+
+volumeMounts: []
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

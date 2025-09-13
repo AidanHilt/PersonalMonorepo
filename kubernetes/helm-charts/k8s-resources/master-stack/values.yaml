@@ -90,6 +90,11 @@ jellyseerr:
   configuration:
     enabled: false
 
+job-templates:
+  enabled: false
+  configuration:
+    enabled: false
+
 kiali:
   enabled: false
   configuration:

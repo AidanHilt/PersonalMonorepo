@@ -32,6 +32,9 @@ istio-base:
 istio-gateway:
   enabled: true
 
+job-templates:
+  enabled: true
+
 jellyfin:
   enabled: true
   configuration:
