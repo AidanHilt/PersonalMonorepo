@@ -22,7 +22,6 @@ spec:
         app.kubernetes.io/component: job
         job-template: {{ $jobName }}
     spec:
-      restartPolicy: {{ $job.restartPolicy | default "Never" }}
       {{- if $job.backoffLimit }}
       backoffLimit: {{ $job.backoffLimit }}
       {{- end }}
@@ -37,6 +36,7 @@ spec:
             app.kubernetes.io/component: job-pod
             job-template: {{ $jobName }}
         spec:
+          restartPolicy: {{ $job.restartPolicy | default "Never" }}
           {{- if $job.serviceAccountName }}
           serviceAccountName: {{ $job.serviceAccountName }}
           {{- end }}
