@@ -22,6 +22,13 @@ spec:
         app.kubernetes.io/component: job
         job-template: {{ $jobName }}
     spec:
+        restartPolicy: {{ $job.restartPolicy | default "Never" }}
+        {{- if $job.backoffLimit }}
+        backoffLimit: {{ $job.backoffLimit }}
+        {{- end }}
+        {{- if $job.activeDeadlineSeconds }}
+        activeDeadlineSeconds: {{ $job.activeDeadlineSeconds }}
+        {{- end }}
       template:
         metadata:
           labels:
@@ -155,12 +162,5 @@ spec:
                 {{- end }}
               {{- end }}
             {{- end }}
-          restartPolicy: {{ $job.restartPolicy | default "Never" }}
-          {{- if $job.backoffLimit }}
-          backoffLimit: {{ $job.backoffLimit }}
-          {{- end }}
-          {{- if $job.activeDeadlineSeconds }}
-          activeDeadlineSeconds: {{ $job.activeDeadlineSeconds }}
-          {{- end }}
 {{- end }}
 {{- end }}
