@@ -19,6 +19,9 @@ jobs:
         ACCESS_TOKEN = os.environ['ACCESS_TOKEN']
         JELLYFIN_URL = os.environ['JELLYFIN_URL']
 
+        print(ACCESS_TOKEN)
+        print(JELLYFIN_URL)
+
         client = JellyfinClient()
         client.config.data['app.name'] = 'Aidan\'s Audacious Configuration Alterator'
         client.config.data['app.version'] = '0.0.1'
@@ -26,8 +29,6 @@ jobs:
 
         client.authenticate({'Servers': [{'AccessToken': ACCESS_TOKEN, 'address': JELLYFIN_URL}]}, discover=False)
         print('Successfully authenticated with API key')
-
-        sleep(10)
 
         client.jellyfin.add_media_library('Movies', 'movies', '/videos/Movies')
         client.jellyfin.add_media_library('TV Shows', 'tvshows', '/videos/TV')
