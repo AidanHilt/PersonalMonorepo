@@ -27,7 +27,7 @@ jobs:
         client.authenticate({'Servers': [{'AccessToken': ACCESS_TOKEN, 'address': JELLYFIN_URL}]}, discover=False)
         print('Successfully authenticated with API key')
 
-        sleep(5)
+        sleep(10)
 
         client.jellyfin.add_media_library('Movies', 'movies', '/videos/Movies')
         client.jellyfin.add_media_library('TV Shows', 'tvshows', '/videos/TV')
