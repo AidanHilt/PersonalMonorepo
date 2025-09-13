@@ -61,6 +61,7 @@ jobs:
         mountPath: /config
     volumes:
       - name: config
-        secretName: buildarr-sonarr-config-secret
+        secret:
+          secretName: buildarr-sonarr-config-secret
     restartPolicy: Never
     backoffLimit: 1
