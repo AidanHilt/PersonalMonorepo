@@ -2,7 +2,7 @@
 
 let
 
-  $FUNCTION_NAME_BASE = pkgs.writeText "$FUNCTION_NAME_BASE.sh" ''
+   = pkgs.writeText ".sh" ''
     context-activate-context () {
 
     }
@@ -11,6 +11,6 @@ in
 
 {
   environment.interactiveShellInit = ''
-    source ${$FUNCTION_NAME_BASE}
+    source ${}
   '';
 }
