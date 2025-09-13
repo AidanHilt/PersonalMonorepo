@@ -6,8 +6,11 @@ jobs:
       repository: python
       tag: "3.12-alpine"
     serviceAccountName: jellyfin
-    command: ["python", "-c"]
+    command: ["bash", "-c"]
     args:
+      - pip install jellyfin_apiclient_python
+      - python
+      - -c
       - |
         from jellyfin_apiclient_python import JellyfinClient
         import json
@@ -62,5 +65,65 @@ jobs:
       - name: config
         secret:
           secretName: buildarr-sonarr-config-secret
+    restartPolicy: Never
+    backoffLimit: 1
+  run-buildarr-radarr:
+    namespace: videos
+    enabled: true
+    image:
+      repository: aidanhilt/buildarr
+      tag: feat-external-user-1-retry
+    command: ["sh", "-c"]
+    args:
+      - |
+        echo "Running buildarr for radarr"
+        buildarr run /config/buildarr.yml
+    volumeMounts:
+      - name: config
+        mountPath: /config
+    volumes:
+      - name: config
+        secret:
+          secretName: buildarr-radarr-config-secret
+    restartPolicy: Never
+    backoffLimit: 1
+  run-buildarr-prowlarr:
+    namespace: videos
+    enabled: true
+    image:
+      repository: aidanhilt/buildarr
+      tag: feat-external-user-1-retry
+    command: ["sh", "-c"]
+    args:
+      - |
+        echo "Running buildarr for prowlarr"
+        buildarr run /config/buildarr.yml
+    volumeMounts:
+      - name: config
+        mountPath: /config
+    volumes:
+      - name: config
+        secret:
+          secretName: buildarr-prowlarr-config-secret
+    restartPolicy: Never
+    backoffLimit: 1
+  run-buildarr-jellyseerr:
+    namespace: videos
+    enabled: true
+    image:
+      repository: aidanhilt/buildarr
+      tag: feat-external-user-1-retry
+    command: ["sh", "-c"]
+    args:
+      - |
+        echo "Running buildarr for jellyseerr"
+        buildarr run /config/buildarr.yml
+    volumeMounts:
+      - name: config
+        mountPath: /config
+    volumes:
+      - name: config
+        secret:
+          secretName: buildarr-jellyseerr-config-secret
     restartPolicy: Never
     backoffLimit: 1

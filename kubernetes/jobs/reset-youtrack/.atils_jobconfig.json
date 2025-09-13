@@ -1,5 +1,0 @@
-{
-  "display_name": "Youtrack Password Reset",
-  "short_description": "Resets YouTrack password",
-  "long_description": "Resets the password for YouTrack running in the cluster. The default password is 'admin'. This job will fail if YouTrack is running"
-}
