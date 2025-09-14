@@ -107,6 +107,11 @@ kyverno:
     enabled: false
   version: "3.5.1"
 
+kyverno-policies:
+  # This is always active if kyverno is active
+  configuration:
+    enabled: true
+
 longhorn:
   enabled: false
   configuration:
