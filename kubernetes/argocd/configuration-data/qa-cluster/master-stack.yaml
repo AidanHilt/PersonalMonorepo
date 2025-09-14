@@ -6,52 +6,55 @@ flaresolverr:
   enabled: false
 
 hashi-vault:
-  enabled: true
+  enabled: false
   configuration:
-    enabled: true
+    enabled: false
 
 vault-secrets-operator:
   configuration:
-    enabled: true
+    enabled: false
 
 jellyfin:
   enabled: false
   configuration:
-    enabled: true
+    enabled: false
 
 jellyseerr:
   enabled: false
   configuration:
-    enabled: true
+    enabled: false
+
+kyverno:
+  enabled: true
 
 postgres:
-  enabled: true
+  enabled: false
 
 prowlarr:
-  enabled: true
+  enabled: false
   configuration:
-    enabled: true
+    enabled: false
 
 radarr:
   enabled: false
   configuration:
-    enabled: true
+    enabled: false
 
 sonarr:
   enabled: false
   configuration:
-    enabled: true
+    enabled: false
 
 transmission:
   enabled: false
   configuration:
-    enabled: true
+    enabled: false
 
 video-stack-configuration:
-  enabled: true
+  enabled: false
   configuration:
-    enabled: true
+    enabled: false
 
 ingress:
-  enabled: true
+  enabled: false
   clusterType: "kind"

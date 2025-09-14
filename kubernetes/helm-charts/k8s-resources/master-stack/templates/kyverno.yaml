@@ -1,0 +1,46 @@
+{{ if index .Values "kyverno" "enabled" }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kyverno
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true,IncludeMutationWebhook=true
+spec:
+  destination:
+    namespace: kyverno
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - chart: kyverno
+      repoURL: https://kyverno.github.io/kyverno
+      targetRevision: {{ index .Values "kyverno" "version" }}
+      helm:
+        releaseName: kyverno
+    {{- if index .Values "kyverno" "configuration" "enabled" }}
+        valueFiles:
+          - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/kyverno.yaml"
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.configuration.configurationRevision | default .Values.gitRevision }}
+      ref: values
+    {{- else }}
+        values: |
+          admissionController:
+            replicas: 3
+          backgroundController:
+            replicas: 3
+          cleanupController:
+            replicas: 3
+          reportsController:
+            replicas: 3
+          webhookLabels:
+            app.kubernetes.io/managed-by: argocd
+    {{- end }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{ end }}

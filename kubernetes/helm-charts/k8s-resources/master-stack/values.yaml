@@ -101,6 +101,12 @@ kiali:
     enabled: false
   version: "1.81.0"
 
+kyverno:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "3.5.1"
+
 longhorn:
   enabled: false
   configuration:
