@@ -1,0 +1,40 @@
+{{- if index .Values "istio-namespace-labeler" "enabled" }}
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: default-istio-injection
+  annotations:
+    policies.kyverno.io/title: Default Istio Injection
+    policies.kyverno.io/description: >-
+      Automatically adds istio-injection=enabled label to new namespaces
+      unless explicitly excluded or disabled.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: add-istio-injection-label
+    match:
+      any:
+      - resources:
+          kinds:
+          - Namespace
+    exclude:
+      any:
+      - resources:
+          names:
+          - kube-system
+          - kube-public
+          - kube-node-lease
+          - istio-system
+          - cert-manager
+          - monitoring
+          - logging
+      - resources:
+          annotations:
+            istio.io/injection-policy: "disabled"
+    mutate:
+      patchStrategicMerge:
+        metadata:
+          labels:
+            +(istio-injection): "enabled"
+{{- end }}

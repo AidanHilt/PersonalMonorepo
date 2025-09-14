@@ -1,0 +1,30 @@
+{{ if index .Values "job-kyverno" "enabled" }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kyverno-policies
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/AidanHilt/PersonalMonorepo
+      path: kubernetes/helm-charts/k8s-resources/kyverno-policies
+      targetRevision: {{ .Values.gitRevision }}
+      {{- if index .Values "kyverno-policies" "configuration" "enabled" }}
+      helm:
+        valueFiles:
+          - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/kyverno-policies.yaml"
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.configuration.configurationRevision | default .Values.gitRevision }}
+      ref: values
+      {{- end }}
+  destination:
+    namespace: kyverno
+    server: 'https://kubernetes.default.svc'
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+{{end}}
