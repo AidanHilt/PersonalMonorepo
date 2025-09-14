@@ -24,9 +24,6 @@ jellyseerr:
   configuration:
     enabled: false
 
-kyverno:
-  enabled: true
-
 postgres:
   enabled: false
 

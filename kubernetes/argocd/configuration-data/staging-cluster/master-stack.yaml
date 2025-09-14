@@ -48,6 +48,9 @@ jellyseerr:
 kiali:
   enabled: true
 
+kyverno:
+  enabled: true
+
 longhorn:
   enabled: true
   configuration:
