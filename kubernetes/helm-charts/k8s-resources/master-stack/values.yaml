@@ -110,7 +110,7 @@ kyverno:
 kyverno-policies:
   # This is always active if kyverno is active
   configuration:
-    enabled: true
+    enabled: false
 
 longhorn:
   enabled: false
