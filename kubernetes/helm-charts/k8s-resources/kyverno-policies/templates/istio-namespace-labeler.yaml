@@ -22,13 +22,10 @@ spec:
       any:
       - resources:
           names:
-          - kube-system
-          - kube-public
-          - kube-node-lease
+          - kube-*
           - istio-system
-          - cert-manager
-          - monitoring
-          - logging
+          - ingress-nginx
+          - local-path-storage
       - resources:
           annotations:
             istio.io/injection-policy: "disabled"
