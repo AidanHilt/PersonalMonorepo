@@ -29,6 +29,15 @@ in
         };
       };
 
+      atils-sync = {
+        wantedBy = [ "timers.target" ];
+        timerConfig = {
+          OnBootSec = "5m";
+          OnUnitActiveSec = "5m";
+          Unit = "atils-sync.service";
+        };
+      };
+
       documents-folder-sync = {
         wantedBy = [ "timers.target" ];
         timerConfig = {
@@ -67,6 +76,19 @@ in
         script = ''
           set -xe
           ${pkgs.rclone}/bin/rclone bisync drive:KeePass $KEEPASS_DIR --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/${machine-config.username}/.config/rclone/rclone.conf
+        '';
+
+        serviceConfig = {
+          Type = "oneshot";
+          User = "root";
+        };
+      };
+
+      atils-sync = {
+        environment = constants.environmentVariables;
+        script = ''
+          set -xe
+          ${pkgs.rclone}/bin/rclone bisync drive:ATILS $ATILS_CONFIG_DIR --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/${machine-config.username}/.config/rclone/rclone.conf
         '';
 
         serviceConfig = {

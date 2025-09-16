@@ -6,6 +6,7 @@ in
 
 {
   environment.systemPackages = with constants; [
+    syncAtilsConfigDir
     syncDownloadAll
     syncKeepass
     syncWallpapers
