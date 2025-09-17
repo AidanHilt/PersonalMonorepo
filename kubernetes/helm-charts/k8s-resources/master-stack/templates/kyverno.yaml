@@ -69,9 +69,8 @@ spec:
 
           echo "=== Kyverno Readiness Check ==="
 
-          echo "Waiting for Kyverno namespace to exist..."
-          kubectl wait --for=condition=Ready namespace/kyverno --timeout=60s 2>/dev/null || \
-            kubectl get namespace kyverno
+          echo "Checking for Kyverno namespace..."
+          kubectl get namespace kyverno
 
           echo "Waiting for Kyverno admission controller deployment..."
           kubectl wait --for=condition=Available deployment/kyverno-admission-controller -n kyverno --timeout=300s
