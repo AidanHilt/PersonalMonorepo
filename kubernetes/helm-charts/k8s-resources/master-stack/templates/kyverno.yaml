@@ -44,4 +44,112 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kyverno-readiness-check
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    spec:
+      serviceAccountName: argocd-application-controller
+      containers:
+      - name: kyverno-readiness-check
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -euo pipefail
+
+          echo "=== Kyverno Readiness Check ==="
+
+          echo "Waiting for Kyverno namespace to exist..."
+          kubectl wait --for=condition=Ready namespace/kyverno --timeout=60s 2>/dev/null || \
+            kubectl get namespace kyverno
+
+          echo "Waiting for Kyverno admission controller deployment..."
+          kubectl wait --for=condition=Available deployment/kyverno-admission-controller -n kyverno --timeout=300s
+
+          echo "Waiting for Kyverno background controller deployment..."
+          kubectl wait --for=condition=Available deployment/kyverno-background-controller -n kyverno --timeout=300s
+
+          echo "Waiting for Kyverno cleanup controller deployment..."
+          kubectl wait --for=condition=Available deployment/kyverno-cleanup-controller -n kyverno --timeout=300s
+
+          echo "Waiting for Kyverno reports controller deployment..."
+          kubectl wait --for=condition=Available deployment/kyverno-reports-controller -n kyverno --timeout=300s
+
+          echo "Verifying Kyverno CRDs are available..."
+          kubectl get crd policies.kyverno.io
+          kubectl get crd clusterpolicies.kyverno.io
+          kubectl get crd policyreports.wgpolicyk8s.io
+          kubectl get crd clusterpolicyreports.wgpolicyk8s.io
+
+          echo "Checking Kyverno webhook configurations..."
+          kubectl get validatingwebhookconfigurations.admissionregistration.k8s.io kyverno-policy-validating-webhook-cfg
+          kubectl get mutatingwebhookconfigurations.admissionregistration.k8s.io kyverno-policy-mutating-webhook-cfg
+          kubectl get validatingwebhookconfigurations.admissionregistration.k8s.io kyverno-resource-validating-webhook-cfg
+          kubectl get mutatingwebhookconfigurations.admissionregistration.k8s.io kyverno-resource-mutating-webhook-cfg
+
+          echo "Testing Kyverno webhook responsiveness..."
+          # Create a test policy to verify webhook is working
+          kubectl apply -f - <<EOF
+          apiVersion: kyverno.io/v1
+          kind: ClusterPolicy
+          metadata:
+            name: test-policy-readiness-check
+          spec:
+            validationFailureAction: enforce
+            background: false
+            rules:
+            - name: test-rule
+              match:
+                any:
+                - resources:
+                    kinds:
+                    - ConfigMap
+                    names:
+                    - kyverno-test-*
+              validate:
+                message: "This is a test policy for readiness check"
+                pattern:
+                  metadata:
+                    labels:
+                      test: "true"
+          EOF
+
+          echo "Waiting for test policy to be ready..."
+          sleep 5
+          kubectl wait --for=condition=Ready clusterpolicy/test-policy-readiness-check --timeout=60s
+
+          echo "Testing policy enforcement..."
+          # This should fail due to missing label
+          if kubectl apply -f - <<EOF
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: kyverno-test-config
+            namespace: default
+          data:
+            test: "data"
+          EOF
+          then
+            echo "ERROR: Policy should have blocked this ConfigMap"
+            exit 1
+          else
+            echo "Policy correctly blocked invalid ConfigMap"
+          fi
+
+          echo "Cleaning up test policy..."
+          kubectl delete clusterpolicy test-policy-readiness-check --ignore-not-found=true
+
+          echo "=== Kyverno is fully ready and functional! ==="
+      restartPolicy: Never
+  backoffLimit: 3
 {{ end }}
