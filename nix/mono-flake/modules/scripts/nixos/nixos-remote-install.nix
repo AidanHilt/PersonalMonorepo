@@ -1,6 +1,8 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
+printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
+
 get-username-from-machine-name = pkgs.writeShellScriptBin "get-username-from-machine-name" ''
 #!/usr/bin/env bash
 
@@ -71,12 +73,7 @@ nixos-remote-install = pkgs.writeShellScriptBin "nixos-remote-install" ''
 
 set -euo pipefail
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+source ${printing-and-output.printing-and-output}
 
 # False by default
 NIXOS_ANYWHERE_ARGS_PROVIDED=0
@@ -85,23 +82,6 @@ IP_ADDRESS_ARG_PROVIDED=0
 POST_INSTALL_IP_ADDRESS_ARG_PROVIDED=0
 CLUSTER_NAME_ARG_PROVIDED=0
 HOMELAB_NODE_ARG_PROVIDED=0
-
-# Function to print colored output
-print_error() {
-  echo -e "''${RED}Error: $1''${NC}" >&2
-}
-
-print_info() {
-  echo -e "''${BLUE}Info: $1''${NC}"
-}
-
-print_success() {
-  echo -e "''${GREEN}Success: $1''${NC}"
-}
-
-print_warning() {
-  echo -e "''${YELLOW}Warning: $1''${NC}"
-}
 
 show_usage() {
   echo "Usage: $0 [OPTIONS]"
@@ -386,14 +366,29 @@ fi
 
 USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
-
 if [ -f ~/.ssh/known_hosts ]; then
   ssh-keygen -R $POST_INSTALL_IP_ADDRESS
 fi
 
 ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
 
-ssh -t "$USERNAME@$POST_INSTALL_IP_ADDRESS" "update"
+RETRY_INTERVALS=(30 60 75 90 105)
+ATTEMPT=1
+
+for interval in "''${RETRY_INTERVALS[@]}"; do
+  if ssh -t "$USERNAME@$POST_INSTALL_IP_ADDRESS" "update"; then
+    print_status "SSH command succeeded on attempt $ATTEMPT"
+    break
+  else
+    if [[ $ATTEMPT -eq ''${#RETRY_INTERVALS[@]} ]]; then
+      print_error "SSH command failed after $ATTEMPT attempts"
+      exit 1
+    fi
+    print_warning "SSH command failed on attempt $ATTEMPT, retrying in ''${interval} seconds..."
+    sleep "$interval"
+    ((ATTEMPT++))
+  fi
+done
 
 if [[ "$HOMELAB_NODE" = true ]]; then
   read -p "Is this the first machine of the cluster? (yes/no): " RESPONSE
