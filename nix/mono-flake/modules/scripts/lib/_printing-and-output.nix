@@ -21,10 +21,6 @@ let
     echo -e "''${RED}[ERROR]''${NC} $1"
   }
 
-  print_info() {
-    echo -e "''${CYAN}[INFO]''${NC} $1"
-  }
-
   print_debug() {
     echo -e "''${BLUE}[DEBUG]''${NC} $1"
   }

@@ -172,13 +172,13 @@ while [[ $# -gt 0 ]]; do
       ;;
     -*)
       print_error "Unknown option: $1"
-      print_info "Use --help to see available options"
+      print_status "Use --help to see available options"
       exit 1
       ;;
     *)
       print_error "Unexpected argument: $1"
-      print_info "Currently only --nixos-anywhere-args is supported"
-      print_info "Use --help to see usage information"
+      print_status "Currently only --nixos-anywhere-args is supported"
+      print_status "Use --help to see usage information"
       exit 1
       ;;
   esac
@@ -187,21 +187,19 @@ done
 # Check if PERSONAL_MONOREPO_LOCATION is set
 if [[ -z "''${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
   print_error "PERSONAL_MONOREPO_LOCATION environment variable is not set"
-  print_info "Please set this variable to point to your personal monorepo location"
+  print_status "Please set this variable to point to your personal monorepo location"
   exit 1
 fi
 
-print_info "Using monorepo location: $PERSONAL_MONOREPO_LOCATION"
+print_status "Using monorepo location: $PERSONAL_MONOREPO_LOCATION"
 
 # Check if mono-flake directory exists
 FLAKE_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake"
 if [[ ! -d "$FLAKE_DIR" ]]; then
   print_error "Directory $FLAKE_DIR does not exist"
-  print_info "Please ensure your mono-flake is located at the expected path"
+  print_status "Please ensure your mono-flake is located at the expected path"
   exit 1
 fi
-
-print_success "Found mono-flake directory"
 
 if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   # Collect machine names from both architectures
@@ -231,7 +229,7 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   # Check if we found any machines
   if [[ ''${#MACHINE_NAMES[@]} -eq 0 ]]; then
     print_error "No machine configurations found in $MACHINES_DIR"
-    print_info "Please ensure you have machine configurations in aarch64-linux or x86_64-linux subdirectories"
+    print_status "Please ensure you have machine configurations in aarch64-linux or x86_64-linux subdirectories"
     exit 1
   fi
 
@@ -239,11 +237,9 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   IFS=$'\n' MACHINE_NAMES=($(sort <<<"''${MACHINE_NAMES[*]}"))
   unset IFS
 
-  print_success "Found ''${#MACHINE_NAMES[@]} machine configuration(s)"
-
   # Present numbered list to user
   echo
-  print_info "Available machine configurations:"
+  print_status "Available machine configurations:"
   for ((i=0; i<''${#MACHINE_NAMES[@]}; i++)); do
     echo "  $((i+1))) ''${MACHINE_NAMES[$i]}"
   done
@@ -263,7 +259,7 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
     fi
   done
 
-  print_success "Selected machine: $SELECTED_MACHINE"
+  print_status "Success: Selected machine: $SELECTED_MACHINE"
 fi
 
 if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
@@ -278,7 +274,6 @@ if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
     print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
   done
 
-  print_success "Target IP address: $IP_ADDRESS"
 fi
 
 # Confirm before running
@@ -293,12 +288,12 @@ echo -n "Continue? (Y/n): "
 read -r confirm
 
 if [[ "$confirm" =~ ^[Nn]$ ]]; then
-  print_info "Operation cancelled by user"
+  print_status "Operation cancelled by user"
   exit 0
 fi
 
 # Run nixos-anywhere
-print_info "Starting nixos-anywhere deployment..."
+print_status "Starting nixos-anywhere deployment..."
 echo
 
 if [[ "$HOMELAB_NODE_ARG_PROVIDED" != true ]]; then
@@ -342,7 +337,7 @@ else
 fi
 
 if [[ $? -eq 0 ]]; then
-  print_success "nixos-anywhere deployment completed successfully!"
+  print_status "Sucess: nixos-anywhere deployment completed successfully!"
 else
   print_error "nixos-anywhere deployment failed"
   exit 1
