@@ -88,7 +88,7 @@ in
         environment = constants.environmentVariables;
         script = ''
           set -xe
-          ${pkgs.rclone}/bin/rclone bisync drive:ATILS $ATILS_CONFIG_DIRECTORY --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/${machine-config.username}/.config/rclone/rclone.conf
+          ${pkgs.rclone}/bin/rclone bisync drive:ATILS $ATILS_CONFIG_DIRECTORY/contexts --exclude= --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync --config /home/${machine-config.username}/.config/rclone/rclone.conf
         '';
 
         serviceConfig = {

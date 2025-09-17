@@ -10,7 +10,7 @@ let
   windowsGHubConfigDir = if machine-config ? rcloneSync.windowsGHubConfigDir then machine-config.rcloneSync.windowsGHubConfigDir else "${windowsHomeDir}/AppData/local/LGHUB";
 
   syncAtilsConfigDir = pkgs.writeShellScriptBin "sync-atils-config" ''
-    rclone bisync drive:Atils $ATILS_CONFIG_DIRECTORY --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
+    rclone bisync drive:Atils $ATILS_CONFIG_DIRECTORY/contexts --drive-skip-gdocs --resilient --create-empty-src-dirs --fix-case --slow-hash-sync-only --resync
   '';
 
   syncWallpapers = pkgs.writeShellScriptBin "sync-wallpapers" ''
