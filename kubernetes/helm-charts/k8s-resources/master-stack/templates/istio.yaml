@@ -152,5 +152,5 @@ spec:
 
               echo "=== Istiod is fully ready and functional! ==="
       restartPolicy: Never
-  backoffLimit: 3a
+  backoffLimit: 3
 {{end}}
