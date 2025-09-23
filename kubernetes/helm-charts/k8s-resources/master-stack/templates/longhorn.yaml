@@ -22,7 +22,13 @@ spec:
           - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/longhorn.yaml"
     - repoURL: {{ .Values.configuration.configurationRepo }}
       targetRevision: {{ .Values.configuration.configurationRevision | default .Values.gitRevision }}
-      ref: values
+      ref: 
+    {{- else }}
+      values: | 
+        serviceAccount:
+          annotations:
+          "helm.sh/hook": pre-install
+          "helm.sh/hook-weight": "-2"
     {{- end }}
   syncPolicy:
     automated:
