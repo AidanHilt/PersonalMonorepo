@@ -14,3 +14,8 @@ defaultSettings:
 
 persistence:
   defaultClassReplicaCount: 2
+
+serviceAccount:
+  annotations:
+  "helm.sh/hook": pre-install
+  "helm.sh/hook-weight": "-2"
