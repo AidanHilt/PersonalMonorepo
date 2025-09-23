@@ -15,7 +15,5 @@ defaultSettings:
 persistence:
   defaultClassReplicaCount: 2
 
-serviceAccount:
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+preUpgradeChecker:
+  jobEnabled: false
