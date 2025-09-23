@@ -33,7 +33,7 @@ let
   # Our main staging cluster, in the form of NixOS machines running on x86 hardware
   staging-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPZtSLziecujeG/lx4Sw2nQ9YL1MdXQnoGk9iZWZj5O5 noname";
   staging-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJlRfoadB2hY2KCxdoQatpNvP6wvlaVNT6WugVs6CyF2 noname";
-  staging-cluster-3-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGn4UjFx3gy4FKMYXHjbf4PC0Rtn6s918L7OgsinnDKf noname";
+  staging-cluster-3-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBLv+CnEg+5r/JBdOy0mRP3PLqHgloe+FyserMZmsJnd noname";
 
   staging-cluster-machines = [staging-cluster-1-system staging-cluster-2-system staging-cluster-3-system];
 in
