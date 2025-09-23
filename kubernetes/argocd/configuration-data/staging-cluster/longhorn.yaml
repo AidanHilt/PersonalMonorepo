@@ -17,5 +17,5 @@ persistence:
 
 serviceAccount:
   annotations:
-  "helm.sh/hook": pre-install
-  "helm.sh/hook-weight": "-2"
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
