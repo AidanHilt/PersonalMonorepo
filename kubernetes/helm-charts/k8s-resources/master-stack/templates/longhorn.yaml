@@ -25,10 +25,8 @@ spec:
       ref: values
     {{- else }}
         values: | 
-          serviceAccount:
-            annotations:
-            "helm.sh/hook": pre-install
-            "helm.sh/hook-weight": "-2"
+          preUpgradeChecker:
+            jobEnabled: false
     {{- end }}
   syncPolicy:
     automated:
