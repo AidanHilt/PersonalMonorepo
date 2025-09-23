@@ -24,11 +24,11 @@ spec:
       targetRevision: {{ .Values.configuration.configurationRevision | default .Values.gitRevision }}
       ref: 
     {{- else }}
-      values: | 
-        serviceAccount:
-          annotations:
-          "helm.sh/hook": pre-install
-          "helm.sh/hook-weight": "-2"
+        values: | 
+          serviceAccount:
+            annotations:
+            "helm.sh/hook": pre-install
+            "helm.sh/hook-weight": "-2"
     {{- end }}
   syncPolicy:
     automated:
