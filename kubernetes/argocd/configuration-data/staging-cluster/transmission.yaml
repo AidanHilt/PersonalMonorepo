@@ -41,3 +41,6 @@ initContainers:
     volumeMounts:
       - name: videos
         mountPath: /videos
+
+nodeSelector:
+  kubernetes.io/hostname: staging-cluster-1

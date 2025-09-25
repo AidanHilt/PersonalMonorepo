@@ -25,3 +25,6 @@ image:
   repository: aidanhilt/jellyfin
   tag: feat-external-user-1-retry
   pullPolicy: Always
+
+nodeSelector:
+  kubernetes.io/hostname: staging-cluster-1
