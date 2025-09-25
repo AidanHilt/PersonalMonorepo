@@ -26,6 +26,7 @@ spec:
           - istio-system
           - ingress-nginx
           - vault
+          - postgres
           - local-path-storage
       - resources:
           annotations:
