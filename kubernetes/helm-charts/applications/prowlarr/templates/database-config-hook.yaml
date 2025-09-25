@@ -3,8 +3,6 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: "{{ .Release.Name }}-postgres-init"
-  label:
-    sidecar.istio.io/inject: false
   annotations:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "0"
@@ -12,6 +10,8 @@ metadata:
 spec:
   template:
     metadata:
+      labels:
+        sidecar.istio.io/inject: false
       name: "{{ .Release.Name }}-postgres-init"
     spec:
       restartPolicy: Never
