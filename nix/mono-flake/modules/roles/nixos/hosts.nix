@@ -19,7 +19,7 @@
     # 3-node VM staging cluster
     # Load balancers
     "192.168.86.22" = ["staging-cluster-node-lb.local"];
-    "192.168.86.23" = ["staging-cluster-lb.local"];
+    "192.168.86.23" = ["staging-cluster-lb.local" "vault.staging-cluster-lb.local"];
 
     #Nodes
     "192.168.86.24" = ["staging-cluster-1.local"];
