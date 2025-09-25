@@ -25,6 +25,7 @@ spec:
           - kube-*
           - istio-system
           - ingress-nginx
+          - vault
           - local-path-storage
       - resources:
           annotations:
