@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       labels:
-        sidecar.istio.io/inject: false
+        sidecar.istio.io/inject: "false"
       name: "{{ .Release.Name }}-postgres-init"
     spec:
       restartPolicy: Never
