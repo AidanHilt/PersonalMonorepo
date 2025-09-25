@@ -11,6 +11,7 @@ metadata:
     app.kubernetes.io/instance: {{ $.Release.Name }}
     app.kubernetes.io/component: job-template
     job-template: {{ $jobName }}
+    sidecar.istio.io/inject: "false"
 spec:
   suspend: true
   schedule: "0 0 1 1 *"
