@@ -3,6 +3,12 @@
 {{/* Append the hardcoded settings */}}
 {{- define "transmission.hardcodedValues" -}}
 
+command:
+  - transmission-daemon
+  - -g /config
+  - -f 
+  - --download-dir= {{ tpl .Values.env.TRANSMISSION_DOWNLOAD_DIR }}
+
 {{- if .Values.transmission.alternateUi.enabled }}
 initContainers:
   custom-webui:

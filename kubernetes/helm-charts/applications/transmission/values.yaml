@@ -5,17 +5,6 @@ image:
   repository: linuxserver/transmission
   pullPolicy: IfNotPresent
 
-# initContainers:
-#   populate-config:
-#     image: dwdraju/alpine-curl-jq
-#     command: ["bash", "-c"]
-#     args:
-#       - |
-#         echo -E "$(jq -r '.["download-dir"] = {{ .Values.env.TRANSMISSION_DOWNLOAD_DIR }}' /config/settings.json)" > /config/settings.json
-#     volumeMounts:
-#       - name: config
-#         mountPath: /config
-
 env:
   # -- Set the container timezone
   TZ: UTC
