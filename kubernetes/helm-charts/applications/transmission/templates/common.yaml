@@ -7,7 +7,7 @@ command:
   - transmission-daemon
   - -g /config
   - -f 
-  - --download-dir= {{ tpl .Values.env.TRANSMISSION_DOWNLOAD_DIR }}
+  - --download-dir= {{ tpl .Values.env.TRANSMISSION_DOWNLOAD_DIR . }}
 
 {{- if .Values.transmission.alternateUi.enabled }}
 initContainers:
