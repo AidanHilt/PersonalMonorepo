@@ -5,16 +5,16 @@ image:
   repository: lscr.io/linuxserver/transmission
   pullPolicy: IfNotPresent
 
-# initContainers:
-#   populate-config:
-#     image: busybox
-#     command: ["bash", "-c"]
-#     args:
-#       - |
-#         echo -E "$(jq -r )"
-#     volumeMounts:
-#       - name: config
-#         mountPath: /config
+initContainers:
+  populate-config:
+    image: busybox
+    command: ["bash", "-c"]
+    args:
+      - |
+        echo -E "$(jq -r '.["download-dir"] = {{ .Values.env.TRANSMISSION_DOWNLOAD_DIR }}' /config/settings.json)" > /config/settings.json
+    volumeMounts:
+      - name: config
+        mountPath: /config
 
 env:
   # -- Set the container timezone
