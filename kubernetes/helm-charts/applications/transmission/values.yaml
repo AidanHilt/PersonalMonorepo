@@ -7,7 +7,7 @@ image:
 
 initContainers:
   populate-config:
-    image: alpine/jq
+    image: dwdraju/alpine-curl-jq
     command: ["bash", "-c"]
     args:
       - |
