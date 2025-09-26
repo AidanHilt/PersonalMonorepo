@@ -2,7 +2,7 @@
 # You should be able to use any of the values you can find here: https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
 #================================================================================================================================================
 image:
-  repository: haugene/transmission-openvpn
+  repository: linuxserver/transmission
   pullPolicy: IfNotPresent
 
 # initContainers:
