@@ -4,9 +4,9 @@ description: A Helm chart to deploy the Transmission BitTorrent client, with opt
 
 type: application
 
-version: 0.2.0
+version: 0.1.0
 
-appVersion: "5.3.2"
+appVersion: "4.0.4"
 
 dependencies:
   - name: common
