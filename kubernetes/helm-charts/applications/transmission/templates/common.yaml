@@ -3,9 +3,13 @@
 {{/* Append the hardcoded settings */}}
 {{- define "transmission.hardcodedValues" -}}
 
+# command:
+#   - bash 
+#   - -c 
+
 command:
-  - bash 
-  - -c 
+  - sleep
+  - infinity
 
 args:
   - | 
