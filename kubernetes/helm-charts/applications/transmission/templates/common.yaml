@@ -18,7 +18,7 @@ command:
 #     cat >> "$S6_SCRIPT" << 'EOF'
 
 #     if [[ -n "${TRANSMISSION_DOWNLOAD_DIR}" ]]; then
-#       echo -E "$(jq -r --argjson downloadDir "${TRANSMISSION_DOWNLOAD_DIR}" '.["download-dir"] = $downloadDir' /config/settings.json)" >/config/settings.json
+#       echo -E "$(jq -r --arg downloadDir "${TRANSMISSION_DOWNLOAD_DIR}" '.["download-dir"] = $downloadDir' /config/settings.json)" >/config/settings.json
 #     fi
 #     EOF
 
