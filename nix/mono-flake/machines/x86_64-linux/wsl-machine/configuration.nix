@@ -4,6 +4,7 @@
 {
   imports = [
     ../../../modules/shared-machine-configs/linux-desktop-terminal.nix
+    ../../../modules/nixos/rclone.nix
   ];
 
   home-manager = {
