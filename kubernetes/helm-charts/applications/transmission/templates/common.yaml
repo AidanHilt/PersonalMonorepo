@@ -7,10 +7,6 @@ command:
   - bash 
   - -c 
 
-# command:
-#   - sleep
-#   - infinity
-
 args:
   - | 
     S6_SCRIPT="/etc/s6-overlay/s6-rc.d/init-transmission-config/run"

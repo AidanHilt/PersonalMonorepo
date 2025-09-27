@@ -13,7 +13,7 @@ serviceAccount:
 
 persistence:
   config:
-    enabled: false
+    enabled: true
     size: 10Gi
   videos:
     enabled: true
