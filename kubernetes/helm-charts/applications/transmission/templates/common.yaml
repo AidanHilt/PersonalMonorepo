@@ -4,7 +4,8 @@
 {{- define "transmission.hardcodedValues" -}}
 
 command:
-  - bash -c 
+  - bash 
+  - -c 
 
 args:
   - | 
