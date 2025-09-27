@@ -4,10 +4,18 @@
 {{- define "transmission.hardcodedValues" -}}
 
 command:
-  - transmission-daemon
-  - -g /config
-  - -f 
-  - --download-dir={{ tpl .Values.env.TRANSMISSION_DOWNLOAD_DIR . }}
+  - bash -c 
+
+args:
+  - | 
+    cat >> "$S6_SCRIPT" << 'EOF'
+
+    if [[ -n "${TRANSMISSION_DOWNLOAD_DIR}" ]]; then
+    echo -E "$(jq -r --argjson downloadDir "${TRANSMISSION_DOWNLOAD_DIR}" '.["download-dir"] = $downloadDir' /config/settings.json)" >/config/settings.json
+    fi
+    EOF
+
+    /init
 
 {{- if .Values.transmission.alternateUi.enabled }}
 initContainers:
