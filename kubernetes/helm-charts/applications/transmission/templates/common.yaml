@@ -9,6 +9,8 @@ command:
 
 args:
   - | 
+    S6_SCRIPT="/etc/s6-overlay/s6-rc.d/init-transmission-config/run"
+    
     cat >> "$S6_SCRIPT" << 'EOF'
 
     if [[ -n "${TRANSMISSION_DOWNLOAD_DIR}" ]]; then
