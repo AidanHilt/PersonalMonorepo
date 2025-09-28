@@ -25,7 +25,7 @@ spec:
             port: 80
             urlBase: /radarr
             apiKey: <path:argocd/data/video_stack_configuration#radarrApiKey>
-            rootFilders:
+            rootFolders:
               - /videos/Movies
 
           sonarr:

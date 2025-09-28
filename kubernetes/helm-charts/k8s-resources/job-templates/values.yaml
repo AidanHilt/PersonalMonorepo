@@ -46,7 +46,7 @@ jobs:
     enabled: true
     image:
       repository: aidanhilt/buildarr
-      tag: feat-external-user-1-retry
+      tag: test
     command: ["sh", "-c"]
     args:
       - |
@@ -66,7 +66,7 @@ jobs:
     enabled: true
     image:
       repository: aidanhilt/buildarr
-      tag: feat-external-user-1-retry
+      tag: test
     command: ["sh", "-c"]
     args:
       - |
@@ -86,7 +86,7 @@ jobs:
     enabled: true
     image:
       repository: aidanhilt/buildarr
-      tag: feat-external-user-1-retry
+      tag: test
     command: ["sh", "-c"]
     args:
       - |
