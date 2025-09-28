@@ -17,20 +17,3 @@ spec:
 
   storage:
     size: 10Gi
-
-  initContainers:
-    - name: wait-for-secret
-      image: bitnami/kubectl:latest
-      command:
-        - /bin/bash
-        - -c
-        - |
-          set -euo pipefail
-          echo "Waiting for secret postgres-config to exist..."
-
-          while ! kubectl get secret postgres-config -n $(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace) 2>/dev/null; do
-            echo "Secret not found, waiting 5 seconds..."
-            sleep 5
-          done
-
-          echo "Secret found! Proceeding with cluster creation."

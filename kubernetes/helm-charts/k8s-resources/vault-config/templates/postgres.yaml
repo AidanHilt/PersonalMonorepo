@@ -25,6 +25,8 @@ spec:
     name: postgres-config
     create: true
     type: kubernetes.io/basic-auth
+    labels:
+      cnpg.io/reload: ""
 
   refreshAfter: 30s
 
