@@ -28,6 +28,7 @@
 
     brews = [
       "docker-credential-helper"
+      "docker-credential-osxkeychain"
     ];
   };
 }
