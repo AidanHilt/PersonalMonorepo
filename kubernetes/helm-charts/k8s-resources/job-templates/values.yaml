@@ -107,6 +107,7 @@ jobs:
     image:
       repository: aidanhilt/buildarr
       tag: test
+      pullPolicy: Always
     command: ["sh", "-c"]
     args:
       - |
