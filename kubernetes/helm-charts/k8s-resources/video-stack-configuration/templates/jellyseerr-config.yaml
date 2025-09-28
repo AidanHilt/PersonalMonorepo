@@ -17,6 +17,7 @@ stringData:
         general:
           application_title: {{ .Values.jellyseerr.title }}
           application_url: null
+          enable_proxy_support: false
           enable_csrf_protection: false
           enable_image_caching: false
           display_language: en
