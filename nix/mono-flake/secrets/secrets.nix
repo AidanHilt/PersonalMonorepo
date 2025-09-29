@@ -31,7 +31,7 @@ let
   laptop-cluster-machines = [laptop-cluster-1-system laptop-cluster-2-system];
 
   # Our main staging cluster, in the form of NixOS machines running on x86 hardware
-  staging-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG1MZf3Ek//Pmon0tamjJBWYhSNVNNdNYNOCoqSJ0oiG noname";
+  staging-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHhzDqg+CseKSEOPwt4SEHQM7HueaCo+qdcDPQldTo93 noname";
   staging-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMlgZCIRJZ0lCK9X/hDggUGGbQ9blJgex7uBHE9svlin noname";
   staging-cluster-3-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF0BnZdXviyiJHJizhHxnSW/3vtR2tZt2RprbX2Fe1ji noname";
 
