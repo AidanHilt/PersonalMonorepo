@@ -46,7 +46,7 @@ spec:
       serviceAccountName: argocd-application-controller
       containers:
         - name: istiod-readiness-check
-          image: registry.suse.com/suse/kubectl:latest
+          image: alpine/kubectl
           command:
             - /bin/bash
             - -c
