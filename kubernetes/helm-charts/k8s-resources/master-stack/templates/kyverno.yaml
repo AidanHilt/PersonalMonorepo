@@ -60,7 +60,7 @@ spec:
       serviceAccountName: argocd-application-controller
       containers:
       - name: kyverno-readiness-check
-        image: bitnami/kubectl:latest
+        image: registry.suse.com/suse/kubectl:latest
         command:
         - /bin/bash
         - -c
