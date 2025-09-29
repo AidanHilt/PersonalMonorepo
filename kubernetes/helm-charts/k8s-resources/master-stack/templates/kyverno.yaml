@@ -62,7 +62,7 @@ spec:
       - name: kyverno-readiness-check
         image: alpine/kubectl
         command:
-        - /bin/bash
+        - /bin/sh
         - -c
         - |
           set -euo pipefail
