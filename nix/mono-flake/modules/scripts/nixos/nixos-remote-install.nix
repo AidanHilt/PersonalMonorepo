@@ -164,15 +164,15 @@ while [[ $# -gt 0 ]]; do
       HOMELAB_NODE_ARG_PROVIDED=true
       shift 1
       ;;
-    --retrieve-kubeconfig)
-      if [[ $# -lt 2 ]]; then
-        print_error "--retrieve-kubeconfig requires a true-false argument"
-        exit 1
-      fi
-      RETRIEVE_KUBECONFIG="$2"
-      RETRIEVE_KUBECONFIG_ARG_PROVIDED=true
-      shift 2
-      ;;
+    # --retrieve-kubeconfig)
+    #   if [[ $# -lt 2 ]]; then
+    #     print_error "--retrieve-kubeconfig requires a true-false argument"
+    #     exit 1
+    #   fi
+    #   RETRIEVE_KUBECONFIG="$2"
+    #   RETRIEVE_KUBECONFIG_ARG_PROVIDED=true
+    #   shift 2
+    #   ;;
     # --cluster-endpoint)
     #   if [[ $# -lt 2 ]]; then
     #     print_error "--cluster-endpoint requires an argument"
