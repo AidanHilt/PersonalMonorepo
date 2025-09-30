@@ -397,16 +397,12 @@ done
 
 if [[ "$HOMELAB_NODE" = true ]]; then
   if [[ $RETRIEVE_KUBECONFIG_ARG_PROVIDED = true ]]; then
-      if [[ $ENDPOINT_ARG_PROVIDED != true ]]; then
-        nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME
-      else
-        nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME --overwrite-ip $ENDPOINT
-      fi
-      ;;
-    *)
-      echo "Skipping kubeconfig retrieval for non-first machine."
-      ;;
-  esac
+    if [[ $ENDPOINT_ARG_PROVIDED != true ]]; then
+      nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME
+    else
+      nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME --overwrite-ip $ENDPOINT
+    fi
+  fi
 fi
 '';
 in
