@@ -65,7 +65,8 @@ stringData:
                 priority: 25
                 query_limit: null
                 grab_limit: null
-                tags: []
+                tags:
+                - "cloudflare"
                 fields:
                   definitionFile: internetarchive
                   baseUrl: null
