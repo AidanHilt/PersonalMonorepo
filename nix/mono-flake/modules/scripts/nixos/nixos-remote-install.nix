@@ -164,24 +164,24 @@ while [[ $# -gt 0 ]]; do
       HOMELAB_NODE_ARG_PROVIDED=true
       shift 1
       ;;
-    # --retrieve-kubeconfig)
-    #   if [[ $# -lt 2 ]]; then
-    #     print_error "--retrieve-kubeconfig requires a true-false argument"
-    #     exit 1
-    #   fi
-    #   RETRIEVE_KUBECONFIG="$2"
-    #   RETRIEVE_KUBECONFIG_ARG_PROVIDED=true
-    #   shift 2
-    #   ;;
-    # --cluster-endpoint)
-    #   if [[ $# -lt 2 ]]; then
-    #     print_error "--cluster-endpoint requires an argument"
-    #     exit 1
-    #   fi
-    #   ENDPOINT="$2"
-    #   ENDPOINT_ARG_PROVIDED=true
-    #   shift 2
-    #   ;;
+    --retrieve-kubeconfig)
+      if [[ $# -lt 2 ]]; then
+        print_error "--retrieve-kubeconfig requires a true-false argument"
+        exit 1
+      fi
+      RETRIEVE_KUBECONFIG="$2"
+      RETRIEVE_KUBECONFIG_ARG_PROVIDED=true
+      shift 2
+      ;;
+    --cluster-endpoint)
+      if [[ $# -lt 2 ]]; then
+        print_error "--cluster-endpoint requires an argument"
+        exit 1
+      fi
+      ENDPOINT="$2"
+      ENDPOINT_ARG_PROVIDED=true
+      shift 2
+      ;;
     -*)
       print_error "Unknown option: $1"
       print_status "Use --help to see available options"
