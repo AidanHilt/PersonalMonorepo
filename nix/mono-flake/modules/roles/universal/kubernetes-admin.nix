@@ -139,7 +139,7 @@ let
       exit 1
   fi
 
-  nix-commit
+  nix-commit --no-push
   update
 '';
 
