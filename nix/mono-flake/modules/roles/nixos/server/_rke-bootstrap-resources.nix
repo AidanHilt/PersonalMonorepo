@@ -137,6 +137,25 @@ spec:
 
   applicationManifest = pkgs.writeText "master-stack.yaml" ''
 apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  creationTimestamp: "2025-09-30T02:49:38Z"
+  generation: 1
+  name: default
+  namespace: argocd
+  resourceVersion: "2058"
+  uid: 5fa1524b-e300-49b4-a252-d96707a90cab
+spec:
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  destinations:
+  - namespace: '*'
+    server: '*'
+  sourceRepos:
+  - '*'
+---
+apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: master-stack
