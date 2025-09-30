@@ -166,7 +166,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --retrieve-kubeconfig)
       RETRIEVE_KUBECONFIG_ARG_PROVIDED=true
-      shift 2
+      shift 1
       ;;
     --cluster-endpoint)
       if [[ $# -lt 2 ]]; then
