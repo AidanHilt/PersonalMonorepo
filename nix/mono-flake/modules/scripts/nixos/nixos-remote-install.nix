@@ -82,6 +82,8 @@ IP_ADDRESS_ARG_PROVIDED=0
 POST_INSTALL_IP_ADDRESS_ARG_PROVIDED=0
 CLUSTER_NAME_ARG_PROVIDED=0
 HOMELAB_NODE_ARG_PROVIDED=0
+RETRIEVE_KUBECONFIG_ARG_PROVIDED=0
+ENDPOINT_ARG_PROVIDED=0
 
 show_usage() {
   echo "Usage: $0 [OPTIONS]"
@@ -153,23 +155,31 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     --homelab-node)
-      if [[ $# -lt 1 ]]; then
-        print_error "INVARIANT VIOLATED"
-        exit 1
-      fi
       HOMELAB_NODE="true"
       HOMELAB_NODE_ARG_PROVIDED=true
       shift 1
       ;;
     --desktop)
-      if [[ $# -lt 1 ]]; then
-        print_error "INVARIANT VIOLATED"
-        exit 1
-      fi
       HOMELAB_NODE="false"
       HOMELAB_NODE_ARG_PROVIDED=true
       shift 1
       ;;
+    --retrieve-kubeconfig)
+      if [[ $# -lt 2 ]]; then
+        print_error "--retrieve-kubeconfig requires a true-false argument"
+        exit 1
+      fi
+      RETRIEVE_KUBECONFIG="$2"
+      RETRIEVE_KUBECONFIG_ARG_PROVIDED=true
+      shift 2
+    --cluster-endpoint)
+      if [[ $# -lt 2 ]]; then
+        print_error "--cluster-endpoint requires an argument"
+        exit 1
+      fi
+      ENDPOINT="$2"
+      ENDPOINT_ARG_PROVIDED=true
+      shift 2
     -*)
       print_error "Unknown option: $1"
       print_status "Use --help to see available options"
@@ -384,13 +394,8 @@ for interval in "''${RETRY_INTERVALS[@]}"; do
 done
 
 if [[ "$HOMELAB_NODE" = true ]]; then
-  read -p "Is this the first machine of the cluster? (yes/no): " RESPONSE
-
-  case "$RESPONSE" in
-    [Yy]|[Yy][Ee][Ss])
-      read -p "(Optional) Provide a cluster endpoint to use in the kubeconfig: " ENDPOINT
-      echo "Running nixos-kubeconfig-retrieval..."
-      if [ -z $ENDPOINT ]; then
+  if [[ $RETRIEVE_KUBECONFIG_ARG_PROVIDED = true ]]; then
+      if [[ $ENDPOINT_ARG_PROVIDED != true ]]; then
         nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME
       else
         nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME --overwrite-ip $ENDPOINT
