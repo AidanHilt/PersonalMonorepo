@@ -45,4 +45,4 @@ initContainers:
         mountPath: /videos
 
 nodeSelector:
-  kubernetes.io/hostname: staging-cluster-1
+  kubernetes.io/hostname: staging-cluster-2
