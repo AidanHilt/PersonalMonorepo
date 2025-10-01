@@ -11,9 +11,9 @@ spec:
   http:
   - match:
     - uri:
-        prefix: /longhorn
+        prefix: /longhorn/
     rewrite:
-      uri: " "
+      uri: /
     route:
     - destination:
         host: longhorn-frontend.longhorn-system.svc.cluster.local

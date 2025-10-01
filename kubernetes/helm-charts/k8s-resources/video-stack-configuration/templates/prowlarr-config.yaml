@@ -39,26 +39,6 @@ stringData:
                   sort: created
                   type: desc
                 secret_fields: {}
-              Badass Torrents:
-                type: badasstorrents
-                enable: false
-                sync_profile: Standard
-                redirect: false
-                priority: 25
-                query_limit: null
-                grab_limit: null
-                tags: []
-                fields:
-                  definitionFile: badasstorrents
-                  baseUrl: null
-                  baseSettings.limitsUnit: Day
-                  torrentBaseSettings.appMinimumSeeders: null
-                  torrentBaseSettings.seedRatio: null
-                  torrentBaseSettings.seedTime: null
-                  torrentBaseSettings.packSeedTime: null
-                  downloadlink: magnet
-                  downloadlink2: .torrent
-                secret_fields: {}
               EZTV:
                 type: eztv
                 enable: true
@@ -77,26 +57,6 @@ stringData:
                   torrentBaseSettings.seedTime: null
                   torrentBaseSettings.packSeedTime: null
                 secret_fields: {}
-              GloDLS:
-                type: glodls
-                enable: true
-                sync_profile: Standard
-                redirect: false
-                priority: 25
-                query_limit: null
-                grab_limit: null
-                tags: []
-                fields:
-                  definitionFile: glodls
-                  baseUrl: null
-                  baseSettings.limitsUnit: Day
-                  torrentBaseSettings.appMinimumSeeders: null
-                  torrentBaseSettings.seedRatio: null
-                  torrentBaseSettings.seedTime: null
-                  torrentBaseSettings.packSeedTime: null
-                  sort: created
-                  type: desc
-                secret_fields: {}
               Internet Archive:
                 type: internetarchive
                 enable: true
@@ -105,7 +65,8 @@ stringData:
                 priority: 25
                 query_limit: null
                 grab_limit: null
-                tags: []
+                tags:
+                - "cloudflare"
                 fields:
                   definitionFile: internetarchive
                   baseUrl: null

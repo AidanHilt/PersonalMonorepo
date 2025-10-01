@@ -42,3 +42,17 @@ variable "jellyfin_email" {
   type        = string
   description = "The email for a default admin user on Jellyfin"
 }
+
+# Probably want to use env vars for these
+
+# TF_VAR_VPN_AUTH
+variable "vpn_auth" {
+  type        = string
+  description = "The authorization string for the VPN"
+}
+
+# TF_VAR_VPN_CONFIG
+variable "vpn_config" {
+  type        = string
+  description = "The config string for the VPN"
+}

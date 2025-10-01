@@ -9,7 +9,7 @@ spec:
   mount: kubernetes
   kubernetes:
     role: postgres
-    serviceAccount: postgres-postgresql
+    serviceAccount: postgres-cluster
 ---
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultStaticSecret
@@ -24,6 +24,9 @@ spec:
   destination:
     name: postgres-config
     create: true
+    type: kubernetes.io/basic-auth
+    labels:
+      cnpg.io/reload: ""
 
   refreshAfter: 30s
 

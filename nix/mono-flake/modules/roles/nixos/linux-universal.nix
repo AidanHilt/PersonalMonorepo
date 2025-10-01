@@ -12,7 +12,7 @@
 
   users.users."${machine-config.username}" = {
     group = "${machine-config.username}";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" ];
     isNormalUser = true;
 
     hashedPassword = pkgs.lib.mkIf (machine-config ? hashedPassword) machine-config.hashedPassword;

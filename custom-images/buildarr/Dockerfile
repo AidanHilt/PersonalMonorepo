@@ -41,7 +41,7 @@ COPY entrypoint.sh /bootstrap.sh
 ENV PUID=1000
 ENV PGID=1000
 
-RUN apk add su-exec tzdata && \
+RUN apk add su-exec tzdata git && \
     python -m pip install wheel && \
     for f in /dist/*.whl; do python -m pip install "$f"; done && \
     rm -r /dist && \

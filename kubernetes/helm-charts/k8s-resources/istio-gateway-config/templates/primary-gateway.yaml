@@ -16,3 +16,8 @@ spec:
         - vault.{{ . }}
         {{- end }}
         {{- end }}
+        {{- if index .Values "jellyseerr" "enabled" }}
+        {{- range .Values.hostnames }}
+        - jellyseerr.{{ . }}
+        {{- end }}
+        {{- end }}

@@ -7,9 +7,10 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - http:
+    - host: jellyseerr.{{ .Values.hostname }}
+      http:
         paths:
-          - path: /jellyseerr
+          - path: /
             pathType: Prefix
             backend:
               service:

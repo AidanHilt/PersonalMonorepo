@@ -119,6 +119,20 @@ spec:
 
     notifications:
       enabled: false
+
+    server:
+      initContainers:
+        - name: wait-for-repo-server
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z argocd-repo-server 8081; do
+                echo "Waiting for argocd-repo-server..."
+                sleep 2
+              done
+              echo "argocd-repo-server is ready"
   '';
 
   applicationManifest = pkgs.writeText "master-stack.yaml" ''
@@ -146,6 +160,14 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+    - Retry=true
+    retry:
+      limit: -1 # Maximum number of retries
+      backoff:
+        duration: 30s # Initial retry interval
+        factor: 2 # Multiplication factor for the backoff
+        maxDuration: 30m # Maximum retry interval
   '';
 
   manifestPath = "/var/lib/rancher/rke2/server/manifests";

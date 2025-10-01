@@ -4,6 +4,8 @@ kind: Application
 metadata:
   name: longhorn
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
 spec:
   destination:
     namespace: longhorn-system
@@ -21,6 +23,10 @@ spec:
     - repoURL: {{ .Values.configuration.configurationRepo }}
       targetRevision: {{ .Values.configuration.configurationRevision | default .Values.gitRevision }}
       ref: values
+    {{- else }}
+        values: | 
+          preUpgradeChecker:
+            jobEnabled: false
     {{- end }}
   syncPolicy:
     automated:

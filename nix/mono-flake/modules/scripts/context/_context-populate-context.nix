@@ -86,7 +86,11 @@ done
 
 # If no context name provided, prompt user
 if [[ -z "$CONTEXT_NAME" ]]; then
-  _context-context-selector
+  if [[ -z "$ATILS_CURRENT_CONTEXT" ]]; then
+    _context-context-selector
+  else
+    CONTEXT_NAME="$ATILS_CURRENT_CONTEXT"
+  fi
 fi
 
 # Check if context name is empty
@@ -121,6 +125,8 @@ fi
 for env_var in "''${ENV_VARS[@]}"; do
   var_name="''${env_var%=*}"
   var_value="''${env_var#*=}"
+
+  echo "$var_value"
 
   dotenvx set "$var_name" "$var_value" -f "''${ATILS_CONTEXTS_DIRECTORY}/''${CONTEXT_NAME}/.env";
 done

@@ -1,0 +1,30 @@
+{{ if index .Values "job-templates" "enabled" }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: job-templates
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/AidanHilt/PersonalMonorepo
+      path: kubernetes/helm-charts/k8s-resources/job-templates
+      targetRevision: {{ .Values.gitRevision }}
+      {{- if index .Values "job-templates" "configuration" "enabled" }}
+      helm:
+        valueFiles:
+          - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/job-templates.yaml"
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.configuration.configurationRevision | default .Values.gitRevision }}
+      ref: values
+      {{- end }}
+  destination:
+    namespace: job-templates
+    server: 'https://kubernetes.default.svc'
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+{{end}}

@@ -1,6 +1,8 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
+printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
+
 get-username-from-machine-name = pkgs.writeShellScriptBin "get-username-from-machine-name" ''
 #!/usr/bin/env bash
 
@@ -71,12 +73,7 @@ nixos-remote-install = pkgs.writeShellScriptBin "nixos-remote-install" ''
 
 set -euo pipefail
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+source ${printing-and-output.printing-and-output}
 
 # False by default
 NIXOS_ANYWHERE_ARGS_PROVIDED=0
@@ -85,23 +82,8 @@ IP_ADDRESS_ARG_PROVIDED=0
 POST_INSTALL_IP_ADDRESS_ARG_PROVIDED=0
 CLUSTER_NAME_ARG_PROVIDED=0
 HOMELAB_NODE_ARG_PROVIDED=0
-
-# Function to print colored output
-print_error() {
-  echo -e "''${RED}Error: $1''${NC}" >&2
-}
-
-print_info() {
-  echo -e "''${BLUE}Info: $1''${NC}"
-}
-
-print_success() {
-  echo -e "''${GREEN}Success: $1''${NC}"
-}
-
-print_warning() {
-  echo -e "''${YELLOW}Warning: $1''${NC}"
-}
+RETRIEVE_KUBECONFIG_ARG_PROVIDED=0
+ENDPOINT_ARG_PROVIDED=0
 
 show_usage() {
   echo "Usage: $0 [OPTIONS]"
@@ -173,32 +155,37 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     --homelab-node)
-      if [[ $# -lt 1 ]]; then
-        print_error "INVARIANT VIOLATED"
-        exit 1
-      fi
       HOMELAB_NODE="true"
       HOMELAB_NODE_ARG_PROVIDED=true
       shift 1
       ;;
     --desktop)
-      if [[ $# -lt 1 ]]; then
-        print_error "INVARIANT VIOLATED"
-        exit 1
-      fi
       HOMELAB_NODE="false"
       HOMELAB_NODE_ARG_PROVIDED=true
       shift 1
       ;;
+    --retrieve-kubeconfig)
+      RETRIEVE_KUBECONFIG_ARG_PROVIDED=true
+      shift 1
+      ;;
+    --cluster-endpoint)
+      if [[ $# -lt 2 ]]; then
+        print_error "--cluster-endpoint requires an argument"
+        exit 1
+      fi
+      ENDPOINT="$2"
+      ENDPOINT_ARG_PROVIDED=true
+      shift 2
+      ;;
     -*)
       print_error "Unknown option: $1"
-      print_info "Use --help to see available options"
+      print_status "Use --help to see available options"
       exit 1
       ;;
     *)
       print_error "Unexpected argument: $1"
-      print_info "Currently only --nixos-anywhere-args is supported"
-      print_info "Use --help to see usage information"
+      print_status "Currently only --nixos-anywhere-args is supported"
+      print_status "Use --help to see usage information"
       exit 1
       ;;
   esac
@@ -207,21 +194,19 @@ done
 # Check if PERSONAL_MONOREPO_LOCATION is set
 if [[ -z "''${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
   print_error "PERSONAL_MONOREPO_LOCATION environment variable is not set"
-  print_info "Please set this variable to point to your personal monorepo location"
+  print_status "Please set this variable to point to your personal monorepo location"
   exit 1
 fi
 
-print_info "Using monorepo location: $PERSONAL_MONOREPO_LOCATION"
+print_status "Using monorepo location: $PERSONAL_MONOREPO_LOCATION"
 
 # Check if mono-flake directory exists
 FLAKE_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake"
 if [[ ! -d "$FLAKE_DIR" ]]; then
   print_error "Directory $FLAKE_DIR does not exist"
-  print_info "Please ensure your mono-flake is located at the expected path"
+  print_status "Please ensure your mono-flake is located at the expected path"
   exit 1
 fi
-
-print_success "Found mono-flake directory"
 
 if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   # Collect machine names from both architectures
@@ -251,7 +236,7 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   # Check if we found any machines
   if [[ ''${#MACHINE_NAMES[@]} -eq 0 ]]; then
     print_error "No machine configurations found in $MACHINES_DIR"
-    print_info "Please ensure you have machine configurations in aarch64-linux or x86_64-linux subdirectories"
+    print_status "Please ensure you have machine configurations in aarch64-linux or x86_64-linux subdirectories"
     exit 1
   fi
 
@@ -259,11 +244,9 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   IFS=$'\n' MACHINE_NAMES=($(sort <<<"''${MACHINE_NAMES[*]}"))
   unset IFS
 
-  print_success "Found ''${#MACHINE_NAMES[@]} machine configuration(s)"
-
   # Present numbered list to user
   echo
-  print_info "Available machine configurations:"
+  print_status "Available machine configurations:"
   for ((i=0; i<''${#MACHINE_NAMES[@]}; i++)); do
     echo "  $((i+1))) ''${MACHINE_NAMES[$i]}"
   done
@@ -283,7 +266,7 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
     fi
   done
 
-  print_success "Selected machine: $SELECTED_MACHINE"
+  print_status "Success: Selected machine: $SELECTED_MACHINE"
 fi
 
 if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
@@ -298,7 +281,6 @@ if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
     print_error "Invalid IP address format. Please enter a valid IPv4 address (e.g., 192.168.1.100)"
   done
 
-  print_success "Target IP address: $IP_ADDRESS"
 fi
 
 # Confirm before running
@@ -313,12 +295,12 @@ echo -n "Continue? (Y/n): "
 read -r confirm
 
 if [[ "$confirm" =~ ^[Nn]$ ]]; then
-  print_info "Operation cancelled by user"
+  print_status "Operation cancelled by user"
   exit 0
 fi
 
 # Run nixos-anywhere
-print_info "Starting nixos-anywhere deployment..."
+print_status "Starting nixos-anywhere deployment..."
 echo
 
 if [[ "$HOMELAB_NODE_ARG_PROVIDED" != true ]]; then
@@ -362,15 +344,13 @@ else
 fi
 
 if [[ $? -eq 0 ]]; then
-  print_success "nixos-anywhere deployment completed successfully!"
+  print_status "Sucess: nixos-anywhere deployment completed successfully!"
 else
   print_error "nixos-anywhere deployment failed"
   exit 1
 fi
 
-if [[ "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" = true ]]; then
-  termdown 30 --no-bell --title "Waiting for machine to reboot"
-else
+if [[ ! "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" = true ]]; then
   output_message="Enter the IP address of the machine after rebooting: "
   while true; do
     echo -n $output_message
@@ -386,32 +366,38 @@ fi
 
 USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
-
 if [ -f ~/.ssh/known_hosts ]; then
   ssh-keygen -R $POST_INSTALL_IP_ADDRESS
 fi
 
 ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
 
-ssh -t "$USERNAME@$POST_INSTALL_IP_ADDRESS" "update"
+RETRY_INTERVALS=(30 60 75 90 105)
+ATTEMPT=1
+
+for interval in "''${RETRY_INTERVALS[@]}"; do
+  if ssh -t "$USERNAME@$POST_INSTALL_IP_ADDRESS" "update"; then
+    print_status "SSH command succeeded on attempt $ATTEMPT"
+    break
+  else
+    if [[ $ATTEMPT -eq ''${#RETRY_INTERVALS[@]} ]]; then
+      print_error "SSH command failed after $ATTEMPT attempts"
+      exit 1
+    fi
+    print_warning "SSH command failed on attempt $ATTEMPT, retrying in ''${interval} seconds..."
+    sleep "$interval"
+    ((ATTEMPT++))
+  fi
+done
 
 if [[ "$HOMELAB_NODE" = true ]]; then
-  read -p "Is this the first machine of the cluster? (yes/no): " RESPONSE
-
-  case "$RESPONSE" in
-    [Yy]|[Yy][Ee][Ss])
-      read -p "(Optional) Provide a cluster endpoint to use in the kubeconfig: " ENDPOINT
-      echo "Running nixos-kubeconfig-retrieval..."
-      if [ -z $ENDPOINT ]; then
-        nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME
-      else
-        nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME --overwrite-ip $ENDPOINT
-      fi
-      ;;
-    *)
-      echo "Skipping kubeconfig retrieval for non-first machine."
-      ;;
-  esac
+  if [[ $RETRIEVE_KUBECONFIG_ARG_PROVIDED = true ]]; then
+    if [[ $ENDPOINT_ARG_PROVIDED != true ]]; then
+      nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME
+    else
+      nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME --overwrite-ip $ENDPOINT
+    fi
+  fi
 fi
 '';
 in

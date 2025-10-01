@@ -18,7 +18,9 @@ let
   cd $PERSONAL_MONOREPO_LOCATION
   git add nix/*
   git commit -m "Nix commit"
-  git push
+  if [[  $1 != "--no-push" ]]; then
+    git push
+  fi
 '';
 
   reset-docker = pkgs.writeShellScriptBin "reset-docker" ''

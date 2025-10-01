@@ -4,10 +4,9 @@ kind: Application
 metadata:
   name: istio-gateway
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-9"
 spec:
-  destination:
-    namespace: istio-system
-    server: https://kubernetes.default.svc
   project: default
   sources:
     - repoURL: 'https://istio-release.storage.googleapis.com/charts'
@@ -60,6 +59,9 @@ spec:
 
           kiali:
             enabled: {{ index .Values "kiali" "enabled" }}
+
+          longhorn:
+            enabled: {{ index .Values "longhorn" "enabled" }}
 
           prowlarr:
             enabled: {{ index .Values "prowlarr" "enabled" }}

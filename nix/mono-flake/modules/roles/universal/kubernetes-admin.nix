@@ -139,7 +139,7 @@ let
       exit 1
   fi
 
-  nix-commit
+  nix-commit --no-push
   update
 '';
 
@@ -166,7 +166,9 @@ in
     # REASON We need to access config, which is not available in the let statement
     (pkgs.writeShellScriptBin "sync-kubeconfig" ''
       KUBECONFIG=''${KUBECONFIG:-$HOME/.kube/config}
-      mkdir $(dirname $KUBECONFIG)
+      if [[ ! -d $(dirname $KUBECONFIG) ]]; then
+        mkdir $(dirname $KUBECONFIG)
+      fi
       cp ${config.age.secrets.kubeconfig.path} $KUBECONFIG
       chmod 600 $KUBECONFIG
     '')

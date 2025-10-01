@@ -4,6 +4,8 @@ kind: Application
 metadata:
   name: istio
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
 spec:
   destination:
     namespace: istio-system
@@ -28,4 +30,127 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: istiod-readiness-check
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    spec:
+      serviceAccountName: argocd-application-controller
+      containers:
+        - name: istiod-readiness-check
+          image: alpine/kubectl
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -euo pipefail
+
+              echo "=== Istiod Readiness Check ==="
+
+
+              echo "Checking for istio-system namespace..."
+              kubectl get namespace istio-system
+
+              echo "Verifying Istio CRDs are available..."
+              kubectl get crd gateways.networking.istio.io
+              kubectl get crd virtualservices.networking.istio.io
+              kubectl get crd destinationrules.networking.istio.io
+              kubectl get crd serviceentries.networking.istio.io
+              kubectl get crd sidecars.networking.istio.io
+              kubectl get crd authorizationpolicies.security.istio.io
+              kubectl get crd peerauthentications.security.istio.io
+              kubectl get crd requestauthentications.security.istio.io
+              kubectl get crd envoyfilters.networking.istio.io
+
+              echo "Waiting for istiod deployment to be ready..."
+              kubectl wait --for=condition=Available deployment/istiod -n istio-system --timeout=300s
+
+              echo "Checking istiod pod readiness..."
+              kubectl wait --for=condition=Ready pod -l app=istiod -n istio-system --timeout=300s
+
+              echo "Verifying istiod service is available..."
+              kubectl get service istiod -n istio-system
+
+              echo "Checking istiod webhook configurations..."
+              kubectl get validatingwebhookconfigurations.admissionregistration.k8s.io istiod-default-validator
+              kubectl get mutatingwebhookconfigurations.admissionregistration.k8s.io istio-sidecar-injector
+
+              echo "Testing istiod webhook responsiveness..."
+              # Test webhook by checking injection capability
+              kubectl get mutatingwebhookconfigurations istio-sidecar-injector -o jsonpath='{.webhooks[0].clientConfig.service.name}' | grep -q istiod
+
+              echo "Verifying istiod can communicate with Kubernetes API..."
+              # Check istiod logs for any critical errors
+              kubectl logs -l app=istiod -n istio-system --tail=50 | grep -E "(error|Error|ERROR)" | grep -v "ignorable" || echo "No critical errors found in istiod logs"
+
+              echo "Testing sidecar injection capability..."
+              # Create a test namespace with injection enabled
+              kubectl apply -f - <<EOF
+              apiVersion: v1
+              kind: Namespace
+              metadata:
+                name: istio-test-injection
+                labels:
+                  istio-injection: enabled
+              EOF
+
+              echo "Creating test deployment to verify injection..."
+              kubectl apply -f - <<EOF
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: test-injection
+                namespace: istio-test-injection
+              spec:
+                replicas: 1
+                selector:
+                  matchLabels:
+                    app: test-injection
+                template:
+                  metadata:
+                    labels:
+                      app: test-injection
+                  spec:
+                    containers:
+                    - name: test
+                      image: nginx:alpine
+                      ports:
+                      - containerPort: 80
+              EOF
+
+              echo "Waiting for test pod to be ready with sidecar..."
+              kubectl wait --for=condition=Ready pod -l app=test-injection -n istio-test-injection --timeout=120s
+
+              echo "Verifying sidecar injection occurred..."
+              CONTAINER_COUNT=$(kubectl get pod -l app=test-injection -n istio-test-injection -o jsonpath='{.items[0].spec.containers[*].name}' | wc -w)
+              if [[ $CONTAINER_COUNT -ge 2 ]]; then
+                echo "SUCCESS: Sidecar injection is working (found $CONTAINER_COUNT containers)"
+              else
+                echo "ERROR: Sidecar injection failed (only found $CONTAINER_COUNT container)"
+                exit 1
+              fi
+
+              echo "Checking if istio-proxy container exists..."
+              kubectl get pod -l app=test-injection -n istio-test-injection -o jsonpath='{.items[0].spec.containers[*].name}' | grep -q istio-proxy
+
+              echo "Cleaning up test resources..."
+              kubectl delete namespace istio-test-injection --ignore-not-found=true
+
+              echo "Verifying istiod readiness endpoint..."
+              # Port-forward and check readiness (if possible)
+              ISTIOD_POD=$(kubectl get pod -l app=istiod -n istio-system -o jsonpath='{.items[0].metadata.name}')
+              kubectl exec "$ISTIOD_POD" -n istio-system -- curl -f http://localhost:8080/ready --max-time 10 || \
+                echo "WARNING: Could not verify readiness endpoint directly"
+
+              echo "=== Istiod is fully ready and functional! ==="
+      restartPolicy: Never
+  backoffLimit: 3
 {{end}}

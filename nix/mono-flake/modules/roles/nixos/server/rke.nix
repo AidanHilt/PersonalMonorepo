@@ -7,10 +7,6 @@ let
   rkeConfig = if machine-config.k8s.primaryNode then
     {
       role = "server";
-
-      disable = [
-        "rke2-ingress-nginx"
-      ];
     }
   else
     {
@@ -54,6 +50,7 @@ in
       "--write-kubeconfig-mode=0640"
       "--advertise-address=${machine-config.networking.address}"
       "--tls-san=${clusterEndpoint}"
+      "--ingress-controller=none"
     ];
   } // rkeConfig;
 

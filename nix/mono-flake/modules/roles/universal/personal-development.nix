@@ -2,11 +2,15 @@
 
 {
   imports = [
+    ./_atils.nix
+
+    ../../scripts/argocd/default.nix
     ../../scripts/context/default.nix
     ../../scripts/mono-flake/default.nix
     ../../scripts/nixos/default.nix
     ../../scripts/system-tasks/default.nix
     ../../scripts/vault/default.nix
+    ../../scripts/terragrunt/default.nix
   ];
 
   environment.systemPackages = with pkgs; [

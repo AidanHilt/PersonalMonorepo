@@ -4,6 +4,7 @@
 image:
   repository: fallenbagel/jellyseerr
   pullPolicy: IfNotPresent
+  tag: 2.7.3
 
 service:
   main:

@@ -37,7 +37,7 @@ stringData:
           chmod_folder: drwxr-xr-x
           chown_group: null
           root_folders:
-            delete_unmanaged: false
+            delete_unmanaged: true
             {{- with .Values.radarr.rootFolders }}
             definitions:
               {{- toYaml . | nindent 14 }}

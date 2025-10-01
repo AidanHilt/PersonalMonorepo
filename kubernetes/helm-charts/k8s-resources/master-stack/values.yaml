@@ -90,11 +90,27 @@ jellyseerr:
   configuration:
     enabled: false
 
+job-templates:
+  enabled: false
+  configuration:
+    enabled: false
+
 kiali:
   enabled: false
   configuration:
     enabled: false
   version: "1.81.0"
+
+kyverno:
+  enabled: false
+  configuration:
+    enabled: false
+  version: "3.5.1"
+
+kyverno-policies:
+  # This is always active if kyverno is active
+  configuration:
+    enabled: false
 
 longhorn:
   enabled: false
@@ -117,7 +133,7 @@ postgres:
   enabled: false
   configuration:
     enabled: false
-  version: "15.2.5"
+  version: "0.26.0"
 
 prometheus:
   enabled: false
