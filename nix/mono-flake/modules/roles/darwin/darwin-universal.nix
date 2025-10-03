@@ -24,7 +24,7 @@
 
   users.users."${machine-config.username}".uid = 501;
 
-  system.defaults = {
+  system./usr/bin/defaults = {
     dock = {
       expose-group-apps = true;
       show-recents = false;
@@ -63,6 +63,14 @@
         ''
           /usr/bin/defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -bool true
           /usr/bin/defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerDrag -bool true
+
+          # Set for external/Bluetooth trackpad
+          /usr/bin/defaults write com.apple.AppleMultitouchTrackpad Dragging -bool false
+          /usr/bin/defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Dragging -bool false
+
+          # Sometimes it's in accessibility settings
+          /usr/bin/defaults write com.apple.AppleMultitouchTrackpad DragLock -bool false
+          /usr/bin/defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad DragLock -bool false
           /usr/bin/killall Dock
         ''
       ];
