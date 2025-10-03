@@ -64,7 +64,7 @@ if [ -n "$PODS_WITH_PVC" ]; then
   POD_NAME=$(echo "$PODS_WITH_PVC" | head -n 1)
   print_status "Found pod $POD_NAME mounting PVC, attaching ephemeral debug container"
 
-  CONTAINER_NAME=$(kubectl get pod "''$POD_NAME" -n "''$NAMESPACE" -o jsonpath='{.spec.containers[?(@.volumeMounts[*].name=="pvc")].name}' | awk '{print $1}')
+  CONTAINER_NAME=$(kubectl get pod "''$POD_NAME" -n "''$NAMESPACE" -o jsonpath='{.spec.containers[0].name}')
 
   kubectl debug -n "$NAMESPACE" "$POD_NAME" -it \
     --image=busybox \
