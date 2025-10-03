@@ -3,12 +3,13 @@
 let
 printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
 
-k8s-pvc-manager = pkgs.writeShellScriptBin "k8s-pvc-manager" ''
+pvc-manager = pkgs.writeShellScriptBin "pvc-manager" ''
 #!/bin/bash
 
 set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
+
 NAMESPACE=""
 PVC_NAME=""
 
@@ -30,7 +31,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-NAMESPACE="''${NAMESPACE:-default}"
+if [ -z "''$NAMESPACE" ]; then
+  CURRENT_NAMESPACE=$(kubectl config view --minify --output 'jsonpath={..namespace}')
+  NAMESPACE="''${CURRENT_NAMESPACE:-default}"
+fi
 
 if [ -z "''$PVC_NAME" ]; then
   read -p "Enter PVC name: " PVC_NAME
@@ -107,6 +111,6 @@ in
 
 {
   environment.systemPackages = [
-    k8s-pvc-manager
+    pvc-manager
   ];
 }

@@ -18,6 +18,7 @@ usage() {
   echo "Usage: $0 [OPTIONS] [SCRIPT_NAME]"
   echo "Options:"
   echo "  -n, --name SCRIPT_NAME   Script name (skips interactive input)"
+  echo "  -d, --out-dir OUT_DIR    Output dir (skips interactive input)"
   echo "  -h, --help        Show this help message"
   echo ""
   echo "Environment variables:"
