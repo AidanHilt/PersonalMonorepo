@@ -111,6 +111,14 @@ fi
 if [[ ! -d "$OUTPUT_DIR" ]]; then
   echo "Creating output directory: $OUTPUT_DIR"
   mkdir -p "$OUTPUT_DIR"
+  cat << 'EOF'
+{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  imports = [
+
+  ];
+}
+EOF > "$OUTPUT_DIR/default.nix"
 fi
 
 select_directory

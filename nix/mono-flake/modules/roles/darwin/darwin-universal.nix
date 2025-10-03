@@ -51,7 +51,6 @@
     trackpad = {
       Clicking = true;
       TrackpadRightClick = true;
-      #TrackpadThreeFingerDrag = true;
     };
 
     CustomSystemPreferences = {
