@@ -66,7 +66,6 @@ if [ -n "''$PODS_WITH_PVC" ]; then
 
   kubectl debug -n "''$NAMESPACE" "''$POD_NAME" -it \
     --image=busybox \
-    --target="''$POD_NAME" \
     -- sh -c "mount | grep /pvc || true; exec sh"
 else
   print_status "No pods found mounting PVC, creating debug pod"
