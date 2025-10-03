@@ -24,7 +24,7 @@
 
   users.users."${machine-config.username}".uid = 501;
 
-  system./usr/bin/defaults = {
+  system.defaults = {
     dock = {
       expose-group-apps = true;
       show-recents = false;
