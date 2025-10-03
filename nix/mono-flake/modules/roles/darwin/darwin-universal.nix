@@ -41,8 +41,23 @@
 
     NSGlobalDomain = {
       "com.apple.swipescrolldirection" = false;
-      "com.apple.trackpad.threeFingerSwipeGesture" = 1;
     };
+
+    system.activationScripts.postActivation.text = ''
+      # Set for built-in trackpad
+      defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -bool true
+      defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerDrag -bool true
+
+      # Set for external/Bluetooth trackpad
+      defaults write com.apple.AppleMultitouchTrackpad Dragging -bool false
+      defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Dragging -bool false
+
+      # Sometimes it's in accessibility settings
+      defaults write com.apple.AppleMultitouchTrackpad DragLock -bool false
+      defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad DragLock -bool false
+
+      echo "Trackpad three-finger drag settings applied"
+    '';
 
     screencapture = {
       location = "/Users/${machine-config.username}/Desktop/screenshots";
