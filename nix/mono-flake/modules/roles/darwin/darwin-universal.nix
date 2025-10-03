@@ -56,7 +56,7 @@
 
     CustomSystemPreferences = {
       "com.apple.AppleMultitouchTrackpad" = {
-        TrackpadThreeFingerDrag = 1;
+        TrackpadThreeFingerDrag = 0;
       };
     };
   };
