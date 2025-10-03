@@ -41,6 +41,9 @@
 
     NSGlobalDomain = {
       "com.apple.swipescrolldirection" = false;
+      "com.apple.AppleMultitouchTrackpad" = {
+        TrackpadThreeFingerDrag = 1;
+      };
     };
 
     screencapture = {
@@ -51,7 +54,7 @@
     trackpad = {
       Clicking = true;
       TrackpadRightClick = true;
-      TrackpadThreeFingerDrag = true;
+      #TrackpadThreeFingerDrag = true;
     };
   };
 
