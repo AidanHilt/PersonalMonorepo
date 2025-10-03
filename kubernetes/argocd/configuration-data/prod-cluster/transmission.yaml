@@ -1,0 +1,48 @@
+transmission:
+  alternateUi:
+    enabled: true
+
+serviceAccount:
+  create: true
+  name: transmission
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"
+
+env:
+  TRANSMISSION_WEB_HOME: /custom/flood-for-transmission
+  TRANSMISSION_DOWNLOAD_DIR: /videos/downloads
+  TRANSMISSION_INCOMPLETE_DIR: /videos/downloads/incomplete
+
+persistence:
+  videos:
+    enabled: true
+    type: hostPath
+    mountPath: /videos
+    hostPath: /videos
+  config:
+    enabled: true
+    size: 1Gi
+
+vpn:
+  enabled: true
+  authSecret: vpn-config-secret
+  configFileSecret: vpn-config-secret
+  scripts:
+    up: |-
+      #!/bin/bash
+      echo "connected" > /shared/vpnstatus
+    down: |-
+      #!/bin/bash
+      echo "disconnected" > /shared/vpnstatus
+
+initContainers:
+  fix-permissions:
+    image: busybox
+    command: ["sh", "-c", "chmod -R 777 /videos"]
+    volumeMounts:
+      - name: videos
+        mountPath: /videos
+
+nodeSelector:
+  kubernetes.io/hostname: staging-cluster-2

@@ -1,0 +1,22 @@
+prowlarr:
+  urlBase: prowlarr
+
+  configSecret:
+    existingSecret: prowlarr-config-secret
+
+  externalAuth: true
+
+  postgres:
+    enabled: true
+    setupJob:
+      setupJobServiceAccount: setup-job
+
+serviceAccount:
+  create: true
+  name: prowlarr
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"
+
+nodeSelector:
+  kubernetes.io/hostname: staging-cluster-2

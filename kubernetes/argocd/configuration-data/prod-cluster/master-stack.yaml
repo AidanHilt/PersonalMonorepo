@@ -1,18 +1,93 @@
-env: prod-cluster
+env: staging-cluster
 
-gitRevision: master
+hostnames:
+  - staging-cluster-lb.local
+
+gitRevision: chore/pre-cutover-cleanup-and-setup
 
 configuration:
-  configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
-  configurationDirectory: kubernetes/argocd/configuration-data
-  configurationRevision: master
+  configurationRevision: chore/pre-cutover-cleanup-and-setup
 
-crafty-server:
+flaresolverr:
+  enabled: true
+
+gateways:
+  enabled: true
+
+hashi-vault:
+  enabled: true
+  configuration:
+    enabled: true
+
+vault-secrets-operator:
+  configuration:
+    enabled: true
+
+istio:
+  enabled: true
+
+istio-base:
+  enabled: true
+
+istio-gateway:
+  enabled: true
+
+job-templates:
+  enabled: true
+
+jellyfin:
   enabled: true
   configuration:
     enabled: true
 
 jellyseerr:
+  enabled: true
+  configuration:
+    enabled: true
+
+kiali:
+  enabled: true
+
+kyverno:
+  enabled: true
+
+longhorn:
+  enabled: true
+  configuration:
+    enabled: true
+
+metallb:
+  enabled: true
+
+metallb-config:
+  enabled: true
+  configuration:
+    enabled: true
+
+postgres:
+  enabled: true
+
+prowlarr:
+  enabled: true
+  configuration:
+    enabled: true
+
+radarr:
+  enabled: true
+  configuration:
+    enabled: true
+
+sonarr:
+  enabled: true
+  configuration:
+    enabled: true
+
+transmission:
+  enabled: true
+  configuration:
+    enabled: true
+
+video-stack-configuration:
   enabled: true
   configuration:
     enabled: true

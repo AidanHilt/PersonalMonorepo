@@ -1,0 +1,42 @@
+sonarr:
+  urlBase: sonarr
+
+  configSecret:
+    existingSecret: sonarr-config-secret
+
+  externalAuth: true
+
+  postgres:
+    enabled: true
+    setupJob:
+      setupJobServiceAccount: setup-job
+
+serviceAccount:
+  create: true
+  name: sonarr
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"
+
+persistence:
+  videos:
+    enabled: true
+    type: hostPath
+    mountPath: /videos
+    hostPath: /videos
+
+initContainers:
+  init-tv-dir:
+    image: busybox
+    command: ["sh", "-c"]
+    args:
+      - |
+        mkdir -p /videos/TV
+        chmod 777 /videos/TV
+        chown -R 911 /videos/TV
+    volumeMounts:
+      - name: videos
+        mountPath: /videos
+
+nodeSelector:
+  kubernetes.io/hostname: staging-cluster-2
