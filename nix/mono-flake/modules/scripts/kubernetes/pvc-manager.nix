@@ -64,12 +64,34 @@ if [ -n "$PODS_WITH_PVC" ]; then
   POD_NAME=$(echo "$PODS_WITH_PVC" | head -n 1)
   print_status "Found pod $POD_NAME mounting PVC, attaching ephemeral debug container"
 
-  CONTAINER_NAME=$(kubectl get pod "''$POD_NAME" -n "''$NAMESPACE" -o jsonpath='{.spec.containers[0].name}')
+  EPHEMERAL_CONTAINER_NAME="pvc-manager-$(date)"
 
-  kubectl debug -n "$NAMESPACE" "$POD_NAME" -it \
-    --image=busybox \
-    --target=$CONTAINER_NAME
-    -- sh -c "mount | grep /pvc || true; exec sh"
+  VOLUME_NAME=$(kubectl get pod "''$POD_NAME" -n "''$NAMESPACE" -o json | jq -r --arg pvc "''$PVC_NAME" '
+    .spec.volumes[] |
+    select(.persistentVolumeClaim.claimName == $pvc) |
+    .name
+  ' | head -n 1)
+
+  kubectl patch pod "''$POD_NAME" -n "''$NAMESPACE" --subresource=ephemeralcontainers --type=strategic -p "{
+    \"spec\": {
+      \"ephemeralContainers\": [{
+        \"name\": \"''$EPHEMERAL_CONTAINER_NAME\",
+        \"image\": \"busybox\",
+        \"command\": [\"sleep\", \"infinity\"],
+        \"stdin\": true,
+        \"tty\": true,
+        \"volumeMounts\": [{
+          \"name\": \"''$VOLUME_NAME\",
+          \"mountPath\": \"/pvc\"
+        }]
+      }]
+    }
+  }"
+
+  print_status "Waiting for ephemeral container to be ready"
+  sleep 2
+
+  kubectl exec -n "''$NAMESPACE" -it "''$POD_NAME" -c "''$EPHEMERAL_CONTAINER_NAME" -- sh
 else
   print_status "No pods found mounting PVC, creating debug pod"
 
