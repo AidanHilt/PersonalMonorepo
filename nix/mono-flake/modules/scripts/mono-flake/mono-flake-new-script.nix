@@ -46,7 +46,7 @@ select_directory() {
   done < <(find "$OUTPUT_DIR" -type d -not -path "$OUTPUT_DIR" -print0 | sort -z)
 
   if [[ ''${#dirs[@]} -eq 0 ]]; then
-    selected_dir="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/scripts"
+    SELECTED_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/scripts"
   else
     echo "$i) Create new directory"
     echo "0) Exit"
@@ -58,9 +58,9 @@ select_directory() {
       exit 0
     elif [[ "$choice" == "$i" ]]; then
       read -p "Enter new directory name: " new_dir
-      selected_dir="$new_dir"
+      SELECTED_DIR="$new_dir"
     elif [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -lt "$i" ]]; then
-      selected_dir="''${dirs[$((choice-1))]}"
+      SELECTED_DIR="''${dirs[$((choice-1))]}"
     else
       echo "Invalid selection"
       exit 1
@@ -111,13 +111,6 @@ fi
 if [[ ! -d "$OUTPUT_DIR" ]]; then
   echo "Creating output directory: $OUTPUT_DIR"
   mkdir -p "$OUTPUT_DIR"
-  cat << 'EOF' > "$OUTPUT_DIR/default.nix"
-{ inputs, globals, pkgs, machine-config, lib, ...}:
-{
- imports = [
- ];
-}
-EOF
 fi
 
 select_directory
@@ -146,7 +139,7 @@ if [[ ! "$SCRIPT_NAME" =~ \.nix$ ]]; then
 fi
 
 # Define output file path
-OUTPUT_FILE="$OUTPUT_DIR/$selected_dir/$SCRIPT_NAME"
+OUTPUT_FILE="$OUTPUT_DIR/$SELECTED_DIR/$SCRIPT_NAME"
 
 # Check if output file already exists
 if [[ -f "$OUTPUT_FILE" ]]; then
@@ -163,10 +156,16 @@ if [[ -f "$OUTPUT_FILE" ]]; then
   esac
 fi
 
-target_dir="$(dirname "$OUTPUT_FILE")"
-if [[ ! -d "$target_dir" ]]; then
-  echo "Creating directory: $target_dir"
-  mkdir -p "$target_dir"
+TARGET_DIR="$(dirname "$OUTPUT_FILE")"
+if [[ ! -d "$TARGET_DIR" ]]; then
+  echo "Creating directory: $TARGET_DIR"
+  mkdir -p "$TARGET_DIR"  cat << 'EOF' > "$TARGET_DIR/default.nix"
+{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+ imports = [
+ ];
+}
+EOF
 fi
 
 # Export the script name as environment variable for envsubst
