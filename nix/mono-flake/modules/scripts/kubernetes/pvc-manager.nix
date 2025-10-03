@@ -64,7 +64,7 @@ if [ -n "$PODS_WITH_PVC" ]; then
   POD_NAME=$(echo "$PODS_WITH_PVC" | head -n 1)
   print_status "Found pod $POD_NAME mounting PVC, attaching ephemeral debug container"
 
-  EPHEMERAL_CONTAINER_NAME="pvc-manager-$(date)"
+  EPHEMERAL_CONTAINER_NAME="pvc-manager-$(date +%s)"
 
   VOLUME_NAME=$(kubectl get pod "''$POD_NAME" -n "''$NAMESPACE" -o json | jq -r --arg pvc "''$PVC_NAME" '
     .spec.volumes[] |
