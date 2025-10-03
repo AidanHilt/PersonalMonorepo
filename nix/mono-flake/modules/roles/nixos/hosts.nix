@@ -1,30 +1,32 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
+let
+  dnsConstants = import ../universal/_hosts.nix;
+
+  # Convert hosts map to dnsmasq address entries
+  # Each IP can have multiple hostnames
+  dnsmasqAddresses = lib.flatten (
+    lib.mapAttrsToList (ip: hostnames:
+      map (hostname: "address=/${hostname}/${ip}") hostnames
+    ) dnsConstants.dnsHosts
+  );
+in
 {
-  networking.hosts = {
-    "192.168.86.5" = ["big-boi-desktop.local"];
-    # Current "prod" setup
-    "192.168.86.2" = ["optiplex-node.local" "crafty.optiplex.local"];
-    "192.168.86.3" = ["gaming-pc-node.local" "crafty.gaming-pc-node.local"];
+  services.dnsmasq = {
+    enable = true;
+    settings = {
 
-    # 2-node laptop cluster
-    # Load balancers
-    "192.168.86.18" = ["laptop-cluster-node-lb.local"];
-    "192.168.86.19" = ["laptop-cluster-lb.local"];
+      server = [
+        "8.8.8.8"
+        "8.8.4.4"
+      ];
 
-    # Nodes
-    "192.168.86.20" = ["laptop-cluster-1.local"];
-    "192.168.86.21" = ["laptop-cluster-2.local"];
+      domain = "local";
+      expand-hosts = true;
 
-    # 3-node VM staging cluster
-    # Load balancers
-    "192.168.86.22" = ["staging-cluster-node-lb.local"];
-    "192.168.86.23" = ["staging-cluster-lb.local" "vault.staging-cluster-lb.local"];
-
-    #Nodes
-    "192.168.86.24" = ["staging-cluster-1.local"];
-    "192.168.86.25" = ["staging-cluster-2.local"];
-    "192.168.86.26" = ["staging-cluster-3.local"];
+      address = dnsmasqAddresses;
+    };
   };
 
+  networking.hosts = dnsConstants.dnsHosts;
 }
