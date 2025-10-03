@@ -41,6 +41,7 @@
 
     NSGlobalDomain = {
       "com.apple.swipescrolldirection" = false;
+      "com.apple.trackpad.threeFingerSwipeGesture" = 1;
     };
 
     screencapture = {
@@ -62,6 +63,10 @@
       '';
     };
   };
+
+  environment.systemPath = [
+    "/opt/homebrew/bin"
+  ];
 
   homebrew = {
     enable = true;
