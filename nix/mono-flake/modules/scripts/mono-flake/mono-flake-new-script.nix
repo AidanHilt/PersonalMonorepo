@@ -30,6 +30,25 @@ usage() {
   exit 1
 }
 
+# Add import file to our default.nix
+add_import_to_nix() {
+  FILEPATH="$1"
+  FILENAME="$2"
+
+  IMPORT_LINE="./''${FILENAME}"
+
+  awk -v import="  ''${IMPORT_LINE}" '
+    /imports = \[/ {
+      print
+      print import
+      next
+    }
+    { print }
+  ' "''$FILEPATH" > "''${FILEPATH}.tmp"
+
+  mv "''${FILEPATH}.tmp" "''$FILEPATH"
+}
+
 # Function to select directory interactively
 select_directory() {
   echo "Available directories in $OUTPUT_DIR:"
@@ -75,6 +94,10 @@ while [[ $# -gt 0 ]]; do
       SCRIPT_NAME="$2"
       shift 2
       ;;
+    -d|--out-dir)
+      SELECTED_DIR="$2"
+      shift 2
+      ;;
     -h|--help)
       usage
       ;;
@@ -113,7 +136,9 @@ if [[ ! -d "$OUTPUT_DIR" ]]; then
   mkdir -p "$OUTPUT_DIR"
 fi
 
-select_directory
+if [[ ! -v SELECTED_DIR ]]; then
+  select_directory
+fi
 
 # Get script name (interactive or from argument)
 if [[ -z "$SCRIPT_NAME" ]]; then
@@ -159,7 +184,8 @@ fi
 TARGET_DIR="$(dirname "$OUTPUT_FILE")"
 if [[ ! -d "$TARGET_DIR" ]]; then
   echo "Creating directory: $TARGET_DIR"
-  mkdir -p "$TARGET_DIR"  cat << 'EOF' > "$TARGET_DIR/default.nix"
+  mkdir -p "$TARGET_DIR"
+  cat << 'EOF' > "$TARGET_DIR/default.nix"
 { inputs, globals, pkgs, machine-config, lib, ...}:
 {
  imports = [
@@ -181,6 +207,8 @@ fi
 # Process template with envsubst
 echo "Processing template..."
 envsubst < "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+
+add_import_to_nix "$TARGET_DIR/default.nix" "$SCRIPT_NAME_FULL"
 
 echo "Success! Script created at: $OUTPUT_FILE"
 echo ""
