@@ -62,7 +62,7 @@ in
     serviceConfig.RunAtLoad = true;
   };
 
-  environment.etc = builtins.listToAttrs (builtins.map (domain: {
+  environment.etc = (builtins.map (domain: {
       name = "resolver/${domain}";
       value = {
         enable = true;
@@ -71,5 +71,5 @@ in
           nameserver 127.0.0.1
           '';
       };
-  }) (builtins.attrNames dnsmasqAddresses));
+  }));
 }
