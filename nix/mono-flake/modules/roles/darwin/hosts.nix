@@ -67,8 +67,8 @@ in
       value = {
         enable = true;
         text = ''
-          port ${toString cfg.port}
-          nameserver ${cfg.bind}
+          port 53
+          nameserver 127.0.0.1
           '';
       };
   }) (builtins.attrNames dnsmasqAddresses));
