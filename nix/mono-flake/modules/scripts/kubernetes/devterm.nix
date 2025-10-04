@@ -9,7 +9,7 @@ devterm = pkgs.writeShellScriptBin "devterm" ''
 set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
-IMAGE="atils-debug:latest"
+IMAGE="aidanhilt/atils-debug:latest"
 NAMESPACE=""
 COMMAND="zsh"
 
