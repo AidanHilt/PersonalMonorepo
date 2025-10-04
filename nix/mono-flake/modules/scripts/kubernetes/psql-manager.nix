@@ -70,7 +70,7 @@ kubectl run "''${POD_NAME}" \
   --restart=Never \
   --env="PGPASSWORD=''${PASSWORD}" \
   --env="PGUSER=''${USERNAME}" \
-  --env="PGHOST=''${POSTGRES_ENDPOINT} \
+  --env="PGHOST=''${POSTGRES_ENDPOINT}" \
   --env="PGDATABASE=''${DATABASE}" \
   --command -- sleep infinity
 
