@@ -2,10 +2,14 @@
 
 let
 
+add_import_to_nix = import ../lib/add_import_to_nix.nix;
+
 mono-flake-new-script = pkgs.writeShellScriptBin "mono-flake-new-script" ''
 #!/bin/bash
 
 set -euo pipefail
+
+source ${add_import_to_nix}
 
 # Default values
 SCRIPT_NAME=""
@@ -31,24 +35,6 @@ usage() {
   exit 1
 }
 
-# Add import file to our default.nix
-add_import_to_nix() {
-  FILEPATH="$1"
-  FILENAME="$2"
-
-  IMPORT_LINE="./''${FILENAME}"
-
-  awk -v import="  ''${IMPORT_LINE}" '
-    /imports = \[/ {
-      print
-      print import
-      next
-    }
-    { print }
-  ' "''$FILEPATH" > "''${FILEPATH}.tmp"
-
-  mv "''${FILEPATH}.tmp" "''$FILEPATH"
-}
 
 # Function to select directory interactively
 select_directory() {

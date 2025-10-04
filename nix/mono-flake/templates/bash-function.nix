@@ -3,7 +3,7 @@
 let
 
   $FUNCTION_NAME_BASE = pkgs.writeText "$FUNCTION_NAME_BASE.sh" ''
-    context-activate-context () {
+    $FUNCTION_NAME_BASE () {
 
     }
   '';

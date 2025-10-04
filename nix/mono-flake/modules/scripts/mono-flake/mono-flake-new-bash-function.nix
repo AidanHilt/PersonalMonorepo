@@ -2,6 +2,8 @@
 
 let
 
+add_import_to_nix = import ../lib/add_import_to_nix.nix;
+
 mono-flake-new-bash-function = pkgs.writeShellScriptBin "mono-flake-new-bash-function" ''
 #!/bin/bash
 
