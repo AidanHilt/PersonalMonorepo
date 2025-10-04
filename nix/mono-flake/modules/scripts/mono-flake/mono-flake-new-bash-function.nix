@@ -160,10 +160,10 @@ if [[ -f "$OUTPUT_FILE" ]]; then
   esac
 fi
 
-target_dir="$(dirname "$OUTPUT_FILE")"
-if [[ ! -d "$target_dir" ]]; then
-  echo "Creating directory: $target_dir"
-  mkdir -p "$target_dir"
+TARGET_DIR="$(dirname "$OUTPUT_FILE")"
+if [[ ! -d "$TARGET_DIR" ]]; then
+  echo "Creating directory: $TARGET_DIR"
+  mkdir -p "$TARGET_DIR"
 fi
 
 # Export the function name as environment variable for envsubst
