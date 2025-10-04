@@ -91,7 +91,9 @@ if [[ ! -d "$OUTPUT_DIR" ]]; then
   mkdir -p "$OUTPUT_DIR"
 fi
 
-select-directory
+if [[ ! -v SELECTED_DIR ]]; then
+  select-directory
+fi
 
 # Get function name (interactive or from argument)
 if [[ -z "$FUNCTION_NAME" ]]; then

@@ -2,14 +2,16 @@
 
 let
 
-#add-import-to-nix = import ../lib/add-import-to-nix.nix {inherit pkgs;};
+add-import-to-nix = import ../lib/add-import-to-nix.nix {inherit pkgs;};
+select-directory = (import ../lib/select-directory.nix {inherit pkgs;}).select-directory;
 
 mono-flake-new-script = pkgs.writeShellScriptBin "mono-flake-new-script" ''
 #!/bin/bash
 
 set -euo pipefail
 
-# source ''${add-import-to-nix}
+source ${add-import-to-nix}
+source ${select-directory}
 
 # Default values
 SCRIPT_NAME=""
@@ -124,7 +126,7 @@ if [[ ! -d "$OUTPUT_DIR" ]]; then
 fi
 
 if [[ ! -v SELECTED_DIR ]]; then
-  select_directory
+  select-directory
 fi
 
 # Get script name (interactive or from argument)
