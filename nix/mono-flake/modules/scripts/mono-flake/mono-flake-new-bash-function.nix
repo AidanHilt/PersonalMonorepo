@@ -190,7 +190,9 @@ fi
 echo "Processing template..."
 envsubst < "$TEMPLATE_FILE" > "$OUTPUT_FILE"
 
-add-import-to-nix "$TARGET_DIR/default.nix" "$FUNCTION_NAME_FULL"
+if [[ $TEMPLATE_FILE = "$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/bash-function.nix" ]]; then
+  add-import-to-nix "$TARGET_DIR/default.nix" "$FUNCTION_NAME_FULL"
+fi
 
 echo "Success! function created at: $OUTPUT_FILE"
 echo ""
