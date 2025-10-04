@@ -66,7 +66,7 @@ print_status "Launching psql client pod: ''${POD_NAME}"
 
 kubectl run "''${POD_NAME}" \
   -n "''${NAMESPACE}" \
-  --image=atils-postgres-client:latest \
+  --image=alpine/psql:latest \
   --restart=Never \
   --env="PGPASSWORD=''${PASSWORD}" \
   --command -- sleep infinity
