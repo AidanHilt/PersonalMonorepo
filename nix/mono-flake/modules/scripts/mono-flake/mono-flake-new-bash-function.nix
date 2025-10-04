@@ -180,6 +180,8 @@ fi
 echo "Processing template..."
 envsubst < "$TEMPLATE_FILE" > "$OUTPUT_FILE"
 
+add_import_to_nix "$TARGET_DIR/default.nix" "$FUNCTION_NAME_FULL"
+
 echo "Success! function created at: $OUTPUT_FILE"
 echo ""
 '';
