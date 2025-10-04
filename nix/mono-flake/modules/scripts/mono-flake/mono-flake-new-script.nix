@@ -9,7 +9,7 @@ mono-flake-new-script = pkgs.writeShellScriptBin "mono-flake-new-script" ''
 
 set -euo pipefail
 
-#source ${add-import-to-nix}
+# source ''${add-import-to-nix}
 
 # Default values
 SCRIPT_NAME=""
