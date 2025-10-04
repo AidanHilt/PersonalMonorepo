@@ -1,4 +1,4 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ... }:
 
 let
 
