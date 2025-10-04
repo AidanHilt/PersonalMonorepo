@@ -117,7 +117,7 @@ if [[ ! "$FUNCTION_NAME" =~ \.nix$ ]]; then
 fi
 
 # Define output file path
-OUTPUT_FILE="$OUTPUT_DIR/$selected_dir/$FUNCTION_NAME"
+OUTPUT_FILE="$OUTPUT_DIR/$SELECTED_DIR/$FUNCTION_NAME"
 
 # Check if output file already exists
 if [[ -f "$OUTPUT_FILE" ]]; then
