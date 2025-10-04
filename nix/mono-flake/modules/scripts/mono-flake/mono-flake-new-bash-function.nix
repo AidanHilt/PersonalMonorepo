@@ -22,6 +22,8 @@ usage() {
   echo "Usage: $0 [OPTIONS] [FUNCTION_NAME]"
   echo "Options:"
   echo "  -n, --name FUNCTION_NAME   function name (skips interactive input)"
+  echo "  -d, --out-dir OUT_DIR    Output dir (skips interactive input)"
+  echo "  -s, --script-function  Use a template optimized for scripts
   echo "  -h, --help        Show this help message"
   echo ""
   echo "Environment variables:"
@@ -78,6 +80,14 @@ while [[ $# -gt 0 ]]; do
     -n|--name)
       FUNCTION_NAME="$2"
       shift 2
+      ;;
+    -d|--out-dir)
+      SELECTED_DIR="$2"
+      shift 2
+      ;;
+    -s|--script-function)
+      TEMPLATE_FILE="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/bash-script-function.nix"
+      shift 1
       ;;
     -h|--help)
       usage
