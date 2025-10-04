@@ -77,7 +77,7 @@ kubectl wait --for=condition=ready pod/"''${POD_NAME}" -n "''${NAMESPACE}" --tim
 print_status "Connecting to database ''${DATABASE} at ''${POSTGRES_ENDPOINT}"
 
 kubectl exec -it "''${POD_NAME}" -n "''${NAMESPACE}" -- \
-  psql -h "''${POSTGRES_ENDPOINT}" -U "''${USERNAME}" -d "''${DATABASE}"
+  psql -h "''${POSTGRES_ENDPOINT}" -U "''${USERNAME}" -d "''${DATABASE}" || true
 
 print_status "Cleaning up pod ''${POD_NAME}"
 kubectl delete pod "''${POD_NAME}" -n "''${NAMESPACE}" --wait=false
