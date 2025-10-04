@@ -14,7 +14,7 @@ SECRET_NAME="postgres-config"
 NAMESPACE="postgres"
 USERNAME_KEY="username"
 PASSWORD_KEY="password"
-POSTGRES_ENDPOINT="ostgres-cluster-rw.postgres.svc.cluster.local"
+POSTGRES_ENDPOINT="postgres-cluster-rw.postgres.svc.cluster.local"
 DATABASE="postgres"
 
 while [[ $# -gt 0 ]]; do
