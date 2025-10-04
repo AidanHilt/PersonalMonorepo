@@ -24,7 +24,5 @@ let
 in
 
 {
-  environment.interactiveShellInit = ''
-    source ${add_import_to_nix}
-  '';
+  add_import_to_nix = add_import_to_nix;
 }

@@ -9,6 +9,8 @@ mono-flake-new-bash-function = pkgs.writeShellScriptBin "mono-flake-new-bash-fun
 
 set -euo pipefail
 
+source ${add_import_to_nix}
+
 # Default values
 FUNCTION_NAME=""
 
