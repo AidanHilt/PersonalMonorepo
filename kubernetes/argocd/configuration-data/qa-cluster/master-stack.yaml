@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: chore/final-super-final-i-really-mean-it-staging-cluster
+gitRevision: chore/pre-cutover-cleanup-and-setup
 
 flaresolverr:
   enabled: false
