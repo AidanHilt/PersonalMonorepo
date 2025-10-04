@@ -1,4 +1,4 @@
-{ pkgs, ...}:
+{ pkgs, ...  }:
 
 let
   add-import-to-nix = pkgs.writeText "add-import-to-nix.sh" ''
