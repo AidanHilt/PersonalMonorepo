@@ -79,6 +79,11 @@ print_status "Connecting to database ''${DATABASE} at ''${POSTGRES_ENDPOINT}"
 kubectl exec -it "''${POD_NAME}" -n "''${NAMESPACE}" -- \
   psql -h "''${POSTGRES_ENDPOINT}" -U "''${USERNAME}" -d "''${DATABASE}" || true
 
+if [[ $? != 0 ]]; then
+  print_warning "Was not able to connect directly, dropping into a bash shell to allow manual retries"
+  kubectl exec -it "''${POD_NAME}" -n "''${NAMESPACE}" -- sh || true
+fi
+
 print_status "Cleaning up pod ''${POD_NAME}"
 kubectl delete pod "''${POD_NAME}" -n "''${NAMESPACE}" --wait=false
 '';
