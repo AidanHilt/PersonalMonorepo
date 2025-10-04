@@ -9,9 +9,10 @@
 
   networking.hostName = "nixos-bootstrap";
 
-  environment.systemPackages = [
-    pkgs.git
-    pkgs.vim
+  environment.systemPackages = with pkgs;[
+    git
+    vim
+    zfs
   ];
 
   services.openssh = {

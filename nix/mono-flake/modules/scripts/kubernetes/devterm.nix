@@ -56,7 +56,7 @@ kubectl wait --for=condition=ready pod/"''${POD_NAME}" -n "''${NAMESPACE}" --tim
 
 print_status "Executing ''${COMMAND} in pod"
 
-kubectl exec -it "''${POD_NAME}" -n "''${NAMESPACE}" -- "''${COMMAND}"
+kubectl exec -it "''${POD_NAME}" -n "''${NAMESPACE}" -- "''${COMMAND}" || true
 
 print_status "Cleaning up pod ''${POD_NAME}"
 kubectl delete pod "''${POD_NAME}" -n "''${NAMESPACE}" --wait=false 2>/dev/null

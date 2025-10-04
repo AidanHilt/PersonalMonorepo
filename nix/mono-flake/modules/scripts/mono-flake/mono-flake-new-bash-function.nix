@@ -11,7 +11,7 @@ set -euo pipefail
 FUNCTION_NAME=""
 
 TEMPLATE_FILE="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/bash-function.nix"
-OUTPUT_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/functions"
+OUTPUT_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/scripts"
 
 # Function to display usage
 usage() {
