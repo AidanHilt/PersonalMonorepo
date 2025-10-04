@@ -195,7 +195,7 @@ fi
 echo "Processing template..."
 envsubst < "$TEMPLATE_FILE" > "$OUTPUT_FILE"
 
-add_import_to_nix "$TARGET_DIR/default.nix" "$SCRIPT_NAME_FULL"
+add-import-to-nix "$TARGET_DIR/default.nix" "$SCRIPT_NAME_FULL"
 
 echo "Success! Script created at: $OUTPUT_FILE"
 echo ""
