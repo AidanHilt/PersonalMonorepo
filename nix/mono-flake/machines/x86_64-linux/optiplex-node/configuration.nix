@@ -8,5 +8,8 @@
   imports = [
     ./disko.nix
     ./hardware-configuration.nix
+
+    ../../../modules/roles/nixos/linux-universal.nix
+    ../../../modules/shared-machine-configs/homelab-node.nix
   ];
 }
