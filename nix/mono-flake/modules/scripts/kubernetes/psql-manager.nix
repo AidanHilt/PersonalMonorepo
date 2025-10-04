@@ -69,6 +69,9 @@ kubectl run "''${POD_NAME}" \
   --image=alpine/psql:latest \
   --restart=Never \
   --env="PGPASSWORD=''${PASSWORD}" \
+  --env="PGUSER=''${USERNAME}" \
+  --env="PGPASSWORD=''${PASSWORD}" \
+  --env="PGDATABASE=''${DATABASE}" \
   --command -- sleep infinity
 
 print_status "Waiting for pod to be ready"
