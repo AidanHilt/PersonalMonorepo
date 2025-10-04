@@ -10,10 +10,10 @@ spec:
   stopDelay: 300
   primaryUpdateStrategy: unsupervised
 
-  # superuserSecret:
-  #   name: postgres-config
+  superuserSecret:
+    name: postgres-config
 
-  # enableSuperuserAccess: true
+  enableSuperuserAccess: true
 
   storage:
     size: 1Gi
