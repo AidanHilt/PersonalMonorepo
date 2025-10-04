@@ -2,7 +2,6 @@
 
 {
   imports = [
-    ./add_import_to_nix.nix
     ./_copy-text-to-clipboard.nix
     ./_generate-desktop-files.nix
     ./_generate-homelab-node-files.nix
