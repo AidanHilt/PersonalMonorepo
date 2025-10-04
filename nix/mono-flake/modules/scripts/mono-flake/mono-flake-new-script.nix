@@ -2,7 +2,7 @@
 
 let
 
-add_import_to_nix = import ../lib/add_import_to_nix.nix;
+add_import_to_nix = import ../lib/add_import_to_nix.nix {inherit pkgs;};
 
 mono-flake-new-script = pkgs.writeShellScriptBin "mono-flake-new-script" ''
 #!/bin/bash
