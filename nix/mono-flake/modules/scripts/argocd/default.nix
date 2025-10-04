@@ -2,6 +2,7 @@
 
 {
   imports = [
+  ./pee.nix
     ./argocd-create-master-stack.nix
     ./argocd-install-argocd.nix
   ];
