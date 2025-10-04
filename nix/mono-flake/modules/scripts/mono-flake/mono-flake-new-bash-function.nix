@@ -2,14 +2,14 @@
 
 let
 
-add_import_to_nix = import ../lib/add_import_to_nix.nix;
+add-import-to-nix = import ../lib/add-import-to-nix.nix;
 
 mono-flake-new-bash-function = pkgs.writeShellScriptBin "mono-flake-new-bash-function" ''
 #!/bin/bash
 
 set -euo pipefail
 
-source ${add_import_to_nix}
+source ${add-import-to-nix}
 
 # Default values
 FUNCTION_NAME=""
