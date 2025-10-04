@@ -6,9 +6,9 @@ let
     FILEPATH="$1"
     FILENAME="$2"
 
-    IMPORT-LINE="./''${FILENAME}"
+    export IMPORT_LINE="./''${FILENAME}"
 
-    awk -v import="  ''${IMPORT-LINE}" '
+    awk -v import="  ''${IMPORT_LINE}" '
       /imports = \[/ {
         print
         print import
