@@ -2,7 +2,7 @@
 
 let
 
-add-import-to-nix = import ../lib/add-import-to-nix.nix {inherit pkgs;}.add-import-to-nix;
+add-import-to-nix = (import ../lib/add-import-to-nix.nix {inherit pkgs;}).add-import-to-nix;
 select-directory = (import ../lib/select-directory.nix {inherit pkgs;}).select-directory;
 
 mono-flake-new-script = pkgs.writeShellScriptBin "mono-flake-new-script" ''
