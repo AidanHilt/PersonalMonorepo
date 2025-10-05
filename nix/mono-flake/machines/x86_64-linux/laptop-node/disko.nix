@@ -4,7 +4,7 @@
   disko.devices = {
     disk = {
       main = {
-        device = "/dev/disk/by-uuid/85bd05ad-81eb-4109-add4-04c7e085d78f";
+        device = "/dev/disk/by-uuid/d6b62338-5bbd-4314-9e1c-bcb2e61e49e3";
         type = "disk";
         content = {
           type = "gpt";
