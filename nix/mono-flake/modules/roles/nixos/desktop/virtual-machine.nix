@@ -29,8 +29,8 @@ let
   else {
     # useNetworkd = true;
     # networkmanager.enable = lib.mkForce false;
-    interfaces.${machine-config.networking.mainNetworkInterface}.useDHCP = false;
-    interfaces.br0.useDHCP = true;
+    interfaces.${machine-config.networking.mainNetworkInterface}.useDHCP = true;
+    #interfaces.br0.useDHCP = true;
    
     bridges = {
       "br0" = {
