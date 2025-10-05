@@ -36,6 +36,10 @@ let
   staging-cluster-3-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAKlIyOATYZgX8Z3BYVjmwepbFFjSGf9kmh/bF+CcVpr noname";
 
   staging-cluster-machines = [staging-cluster-1-system staging-cluster-2-system staging-cluster-3-system];
+
+  # Prod cluster! These are x86 machines (for now) running NixOS. Their config should closely match the staging cluster
+
+  prod-cluster-machines = [];
 in
 {
   "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
@@ -49,4 +53,6 @@ in
   "rke-config-laptop-cluster.age".publicKeys = user-machines ++ laptop-cluster-machines;
 
   "rke-config-staging-cluster.age".publicKeys = user-machines ++ staging-cluster-machines;
+
+  "rke-config-prod-cluster.age".publicKeys = user-machines ++ prod-cluster-machines;
 }

@@ -24,4 +24,6 @@
     efiInstallAsRemovable = true;
     useOSProber = true;
   };
+
+  services.logind.lidSwitch = "ignore";
 }
