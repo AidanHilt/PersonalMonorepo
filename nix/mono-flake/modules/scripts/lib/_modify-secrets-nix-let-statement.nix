@@ -63,7 +63,7 @@ else
         head -n $((in_line - 1)) "$filename"
 
         # Add the new key-value pair with proper indentation
-        echo "  ''${key} = \"''${value};\""
+        echo "  ''${key} = \"''${value}\";"
 
         # Print the "in" line and everything after
         tail -n +''${in_line} "$filename"
