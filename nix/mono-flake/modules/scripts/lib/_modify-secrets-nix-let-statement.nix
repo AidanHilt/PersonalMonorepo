@@ -57,7 +57,6 @@ else
     # Key doesn't exist - add it before the "in" line
     echo "Key '$key' not found - adding new entry..."
 
-
     # Add the new key-value pair with a blank line before "in"
     {
         # Print everything up to (but not including) the "in" line
