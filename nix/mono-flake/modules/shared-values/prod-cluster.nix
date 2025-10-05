@@ -13,6 +13,6 @@
   };
 
   k8s = {
-    clusterName = "staging-cluster";
+    clusterName = "prod-cluster";
   };
 }

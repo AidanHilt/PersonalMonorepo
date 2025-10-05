@@ -55,7 +55,6 @@ spec:
 
               echo "=== Istiod Readiness Check ==="
 
-
               echo "Checking for istio-system namespace..."
               kubectl get namespace istio-system
 
