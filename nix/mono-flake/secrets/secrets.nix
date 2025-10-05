@@ -39,9 +39,8 @@ let
 
   # Prod cluster! These are x86 machines (for now) running NixOS. Their config should closely match the staging cluster
 
-  prod-cluster-machines = [laptop-node-1-system];
-
-  laptop-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDtDTWguj0A0FrxZCFlcM+3yPkroahDkJZZjjN19N1// noname";
+  prod-cluster-machines = [laptop-node-system];
+  laptop-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFDxp3dzra/vV7xS4ybtV13gFLJL91w0fIkTYhesXRNB noname";
 in
 {
   "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
