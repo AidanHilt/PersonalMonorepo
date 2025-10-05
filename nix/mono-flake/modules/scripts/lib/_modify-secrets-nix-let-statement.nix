@@ -50,22 +50,22 @@ if [ -n "$key_line" ]; then
     # Key exists - calculate actual line number and update it
     actual_key_line=$((let_line + key_line - 1))
     echo "Key '$key' found at line $actual_key_line - updating..."
-    
+
     # Update the existing key
     sed "s%^\s*$key\s*=.*%  $key = \"$value\";%" "$filename" > "$temp_file"
 else
     # Key doesn't exist - add it before the "in" line
     echo "Key '$key' not found - adding new entry..."
-    
-    
+
+
     # Add the new key-value pair with a blank line before "in"
     {
         # Print everything up to (but not including) the "in" line
         head -n $((in_line - 1)) "$filename"
-        
+
         # Add the new key-value pair with proper indentation
-        echo "  ''${key} = ''${value};"
-        
+        echo "  ''${key} = \"''${value};\""
+
         # Print the "in" line and everything after
         tail -n +''${in_line} "$filename"
     } > "$temp_file"
