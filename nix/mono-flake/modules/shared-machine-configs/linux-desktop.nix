@@ -4,7 +4,7 @@
   imports = [
     ../roles/nixos/linux-universal.nix
 
-#    ../roles/nixos/desktop/gaming.nix
+    ../roles/nixos/desktop/gaming.nix
     ../roles/nixos/desktop/plasma-desktop.nix
     #../roles/nixos/desktop/virtual-machine.nix
     ../roles/nixos/desktop/docker.nix
