@@ -9,5 +9,6 @@
 
   networking = {
     address = "192.168.86.6";
+    mainNetworkInterface = "enp0s20f0u2c2";
   };
 }
