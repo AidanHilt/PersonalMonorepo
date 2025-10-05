@@ -1,8 +1,6 @@
 {
   username = "aidan";
 
-  hashedPassword = "$y$j9T$DyVME0er7DkVB1COSv8ca1$kjBax/3mYwsK2di4XFqsYSCoE3Ueok6yhjhMo4Q0pu/";
-
   networking = {
     fixedIp = true;
 
@@ -10,7 +8,11 @@
     nameservers = [ "192.168.86.3" ];
     prefixLength = 24;
 
-    address = "192.168.86.40";
-    mainNetworkInterface = "enp4s0";
+    loadBalancerIp = "192.168.86.3";
+    mainNetworkInterface = "ens3";
+  };
+
+  k8s = {
+    clusterName = "staging-cluster";
   };
 }

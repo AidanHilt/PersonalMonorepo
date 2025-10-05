@@ -3,13 +3,14 @@
     # =================
     # Personal Machines
     # =================
-    "192.168.86.5" = ["big-boi-desktop.local"];
+    "192.168.86.40" = ["big-boi-desktop.local"];
 
     # ===================
     # 3-node prod cluster
     # ===================
-    "192.168.86.2" = ["optiplex-node.local" "crafty.optiplex.local"];
-    "192.168.86.3" = ["gaming-pc-node.local" "crafty.gaming-pc-node.local"];
+    "192.168.86.4" = ["optiplex-node.local"];
+    "192.168.86.5" = ["gaming-pc-node.local"];
+    "192.168.86.6" = ["laptop-node.local"];
 
     # =====================
     # 2-node laptop cluster
@@ -28,6 +29,10 @@
   };
 
   wildcardEntries = [
+    "address=/*.prod-cluster-node-lb.local/192.168.86.3"
+    # This is different from the usual convention, because 192.168.86.2 (optiplex-node) is what was used in the old setup
+    "address=/*.prod-cluster-lb.local/192.168.86.2"
+
     "address=/*.staging-cluster-node-lb.local/192.168.86.22"
     "address=/*.staging-cluster-lb.local/192.168.86.23"
 
