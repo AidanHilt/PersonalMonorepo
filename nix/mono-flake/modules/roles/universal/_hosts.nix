@@ -24,8 +24,6 @@
     "192.168.86.24" = ["staging-cluster-1.local"];
     "192.168.86.25" = ["staging-cluster-2.local"];
     "192.168.86.26" = ["staging-cluster-3.local"];
-
-
   };
 
   wildcardEntries = [
