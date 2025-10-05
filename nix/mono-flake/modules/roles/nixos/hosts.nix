@@ -27,6 +27,4 @@ in
       address = dnsmasqAddresses;
     };
   };
-
-  networking.hosts = dnsConstants.dnsHosts;
 }
