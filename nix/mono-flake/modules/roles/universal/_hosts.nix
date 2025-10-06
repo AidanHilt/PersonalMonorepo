@@ -26,15 +26,12 @@
     "192.168.86.26" = ["staging-cluster-3.fart"];
   };
 
-  wildcardEntries = [
-    "address=/*.prod-cluster-node-lb.fart/192.168.86.3"
-    # This is different from the usual convention, because 192.168.86.2 (optiplex-node) is what was used in the old setup
-    "address=/*.prod-cluster-lb.fart/192.168.86.13"
-
-    "address=/*.staging-cluster-node-lb.fart/192.168.86.22"
-    "address=/*.staging-cluster-lb.fart/192.168.86.23"
-
-    "address=/*.laptop-cluster-node-lb.fart/192.168.86.18"
-    "address=/*.laptop-cluster-lb.fart/192.168.86.19"
-  ];
+  wildcardEntries = {
+    "*.prod-cluster-node-lb.fart" = "192.168.86.3";
+    "*.prod-cluster-lb.fart" = "192.168.86.13";
+    "*.staging-cluster-node-lb.fart" = "192.168.86.22";
+    "*.staging-cluster-lb.fart" = "192.168.86.23";
+    "*.laptop-cluster-node-lb.fart" = "192.168.86.18";
+    "*.laptop-cluster-lb.fart" = "192.168.86.19";
+  };
 }

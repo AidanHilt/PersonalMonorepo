@@ -19,28 +19,28 @@ in
     dnsmasq
   ];
 
-    launchd.daemons.dnsmasq = {
-      serviceConfig.WorkingDirectory = "/etc/dnsmasq";
+  launchd.daemons.dnsmasq = {
+    serviceConfig.WorkingDirectory = "/etc/dnsmasq";
 
-      serviceConfig.ProgramArguments = [
-        "${pkgs.dnsmasq}/bin/dnsmasq"
-        "--listen-address=127.0.0.1"
-        "--port=53"
-        "--keep-in-foreground"
-      ] ++ (mapA (domain: addr: "--address=/${domain}/${addr}") dnsmasqAddresses);
+    serviceConfig.ProgramArguments = [
+      "${pkgs.dnsmasq}/bin/dnsmasq"
+      "--listen-address=127.0.0.1"
+      "--port=53"
+      "--keep-in-foreground"
+    ] ++ (mapA (domain: addr: "--address=/${domain}/${addr}") dnsmasqAddresses);
 
-      serviceConfig.KeepAlive = true;
-      serviceConfig.RunAtLoad = true;
+    serviceConfig.KeepAlive = true;
+    serviceConfig.RunAtLoad = true;
+  };
+
+  environment.etc = builtins.listToAttrs (builtins.map (domain: {
+    name = "resolver/${domain}";
+    value = {
+      enable = true;
+      text = ''
+        port 53
+        nameserver 127.0.0.1
+        '';
     };
-
-    environment.etc = builtins.listToAttrs (builtins.map (domain: {
-      name = "resolver/${domain}";
-      value = {
-        enable = true;
-        text = ''
-          port 53
-          nameserver 127.0.0.1
-          '';
-      };
-    }) (builtins.attrNames dnsmasqAddresses));
+  }) (builtins.attrNames dnsmasqAddresses));
 }
