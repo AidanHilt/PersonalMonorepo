@@ -50,7 +50,7 @@ in
   "rclone-config.age".publicKeys = user-machines;
   "kubeconfig.age".publicKeys = user-machines;
 
-  "adguardhome.age".publicKeys = user-machines ++ laptop-cluster-machines ++ staging-cluster-machines;
+  "adguardhome.age".publicKeys = user-machines ++ laptop-cluster-machines ++ staging-cluster-machines ++ prod-cluster-machines;
 
   "rke-config-laptop-cluster.age".publicKeys = user-machines ++ laptop-cluster-machines;
 
