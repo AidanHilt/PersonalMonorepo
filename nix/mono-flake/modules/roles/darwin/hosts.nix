@@ -20,7 +20,7 @@ in
   ];
 
   launchd.daemons.dnsmasq = {
-    serviceConfig.WorkingDirectory = "/etc/dnsmasq";
+    serviceConfig.WorkingDirectory = "/var/empty";
 
     serviceConfig.ProgramArguments = [
       "${pkgs.dnsmasq}/bin/dnsmasq"
