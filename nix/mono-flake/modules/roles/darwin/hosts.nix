@@ -10,6 +10,8 @@ let
       ) dnsConstants.dnsHosts
     )
   );
+
+  mapA = f: attrs: with builtins; attrValues (mapAttrs f attrs);
 in
 
 {
