@@ -29,7 +29,7 @@
   wildcardEntries = [
     "address=/*.prod-cluster-node-lb.local/192.168.86.3"
     # This is different from the usual convention, because 192.168.86.2 (optiplex-node) is what was used in the old setup
-    "address=/*.prod-cluster-lb.local/192.168.86.2"
+    "address=/*.prod-cluster-lb.local/192.168.86.23"
 
     "address=/*.staging-cluster-node-lb.local/192.168.86.22"
     "address=/*.staging-cluster-lb.local/192.168.86.23"
