@@ -17,8 +17,28 @@ in
     dnsmasq
   ];
 
-  services.dnsmasq = {
-    enable = true;
-    addresses = dnsmasqAddresses;
-  };
+    launchd.daemons.dnsmasq = {
+      serviceConfig.workingDirectory = "/etc/dnsmasq";
+
+      serviceConfig.ProgramArguments = [
+        "${pkgs.dnsmasq}/bin/dnsmasq"
+        "--listen-address=${cfg.bind}"
+        "--port=${toString cfg.port}"
+        "--keep-in-foreground"
+      ] ++ (mapA (domain: addr: "--address=/${domain}/${addr}") dnsmasqAddresses);
+
+      serviceConfig.KeepAlive = true;
+      serviceConfig.RunAtLoad = true;
+    };
+
+    environment.etc = builtins.listToAttrs (builtins.map (domain: {
+      name = "resolver/${domain}";
+      value = {
+        enable = true;
+        text = ''
+          port 53
+          nameserver 127.0.0.1
+          '';
+      };
+    }) (builtins.attrNames dnsmasqAddresses));
 }
