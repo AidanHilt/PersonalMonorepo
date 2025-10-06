@@ -22,8 +22,8 @@ in
 
       serviceConfig.ProgramArguments = [
         "${pkgs.dnsmasq}/bin/dnsmasq"
-        "--listen-address=${cfg.bind}"
-        "--port=${toString cfg.port}"
+        "--listen-address=127.0.0.1"
+        "--port=53"
         "--keep-in-foreground"
       ] ++ (mapA (domain: addr: "--address=/${domain}/${addr}") dnsmasqAddresses);
 
