@@ -12,6 +12,8 @@ let
   );
 
   mapA = f: attrs: with builtins; attrValues (mapAttrs f attrs);
+
+  addressArgs =
 in
 
 {
@@ -27,7 +29,8 @@ in
       "--listen-address=127.0.0.1"
       "--port=53"
       "--keep-in-foreground"
-    ] ++ (mapA (domain: addr: "--address=/${domain}/${addr}") dnsmasqAddresses) ++ (mapA (domain: addr: "--address=/${domain}/${addr}") dnsconstants.wildcardEntries);;
+    ] ++ (mapA (domain: addr: "--address=/${domain}/${addr}") dnsmasqAddresses)
+    ++ (mapA (domain: addr: "--address=/${domain}/${addr}") dnsconstants.wildcardEntries);
 
     serviceConfig.KeepAlive = true;
     serviceConfig.RunAtLoad = true;
