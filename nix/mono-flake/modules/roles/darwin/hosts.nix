@@ -28,7 +28,7 @@ in
       "--port=53"
       "--keep-in-foreground"
     ] ++ (mapA (domain: addr: "--address=/${domain}/${addr}") dnsmasqAddresses)
-    ++ (mapA (domain: addr: "--address=/${(lib.string.removePrefix "*." domain)}/${addr}") dnsConstants.wildcardEntries);
+    ++ (mapA (domain: addr: "--address=/${(lib.strings.removePrefix "*." domain)}/${addr}") dnsConstants.wildcardEntries);
 
     serviceConfig.KeepAlive = true;
     serviceConfig.RunAtLoad = true;
