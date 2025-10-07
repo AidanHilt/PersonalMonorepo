@@ -1,7 +1,7 @@
 env: staging-cluster
 
 hostnames:
-  - prod-cluster-lb.local
+  - prod-cluster-lb.lan
 
 gitRevision: chore/pre-cutover-cleanup-and-setup
 
