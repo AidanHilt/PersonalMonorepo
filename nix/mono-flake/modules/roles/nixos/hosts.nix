@@ -29,7 +29,7 @@ let
           existingDomains = groups.${entry.ip} or [];
         in
         groups // {
-          ${entry.ip} = existingDomains ++ [ entry.domain ];
+          entry.ip = existingDomains ++ [ entry.domain ];
         };
     in
     builtins.foldl' addToGroups {} parsed;

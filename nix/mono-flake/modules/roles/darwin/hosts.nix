@@ -43,5 +43,16 @@ in
         nameserver 127.0.0.1
         '';
     };
-  }) (builtins.attrNames dnsmasqAddresses));
+  }) (builtins.attrNames dnsmasqAddresses)); #++
+
+  # builtins.listToAttrs (builtins.map (domain: {
+  #   name = "resolver/${domain}";
+  #   value = {
+  #     enable = true;
+  #     text = ''
+  #       port 53
+  #       nameserver 127.0.0.1
+  #       '';
+  #   };
+  # }) (builtins.attrNames dnsConstants.wildcardEntries));
 }
