@@ -28,7 +28,7 @@
 
   wildcardEntries = {
     "*.prod-cluster-node-lb.lan" = "192.168.86.3";
-    "*.prod-cluster-lb.lan" = "192.168.86.13";
+    "prod-cluster-lb.lan" = "192.168.86.13";
     "*.staging-cluster-node-lb.lan" = "192.168.86.22";
     "*.staging-cluster-lb.lan" = "192.168.86.23";
     "*.laptop-cluster-node-lb.lan" = "192.168.86.18";
