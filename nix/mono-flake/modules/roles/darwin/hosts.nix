@@ -13,9 +13,7 @@ let
 
   mapA = f: attrs: with builtins; attrValues (mapAttrs f attrs);
 
-  addressArgs =
 in
-
 {
   environment.systemPackages = with pkgs; [
     dnsmasq
