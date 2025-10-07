@@ -1,12 +1,9 @@
 env: staging-cluster
 
 hostnames:
-  - staging-cluster-lb.local
+  - prod-cluster-lb.local
 
 gitRevision: chore/pre-cutover-cleanup-and-setup
-
-configuration:
-  configurationRevision: chore/pre-cutover-cleanup-and-setup
 
 flaresolverr:
   enabled: true
