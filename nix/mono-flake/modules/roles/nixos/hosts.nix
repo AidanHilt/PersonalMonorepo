@@ -7,5 +7,5 @@ let
   # Each IP can have multiple hostnames
 in
 {
-  networking.hosts = dnsConstants.dnsHosts // dnsConstants.wildcardEntries;
+  networking.hosts = dnsConstants.dnsHosts ++ dnsConstants.wildcardEntries;
 }
