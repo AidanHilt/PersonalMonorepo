@@ -25,11 +25,15 @@
     "192.168.86.25" = ["staging-cluster-2.lan"];
     "192.168.86.26" = ["staging-cluster-3.lan"];
 
-    "*.prod-cluster-node-lb.lan" = ["192.168.86.3"];
-    "*.prod-cluster-lb.lan" = ["192.168.86.23"];
-    "*.staging-cluster-node-lb.lan" = ["192.168.86.22"];
-    "*.staging-cluster-lb.lan" = ["192.168.86.23"];
-    "*.laptop-cluster-node-lb.lan" = ["192.168.86.18"];
-    "*.laptop-cluster-lb.lan" = ["192.168.86.19"];
+    # =========================
+    # Load Balancers (wildcard)
+    # =========================
+
+    "192.168.86.3"=["*.prod-cluster-node-lb.lan"];
+    "192.168.86.23"=["*.prod-cluster-lb.lan"];
+    "192.168.86.22"=["*.staging-cluster-node-lb.lan"];
+    "192.168.86.23"=["*.staging-cluster-lb.lan"];
+    "192.168.86.18"=["*.laptop-cluster-node-lb.lan"];
+    "192.168.86.19"=["*.laptop-cluster-lb.lan"];
   };
 }
