@@ -8,7 +8,7 @@
     nameservers = [ "192.168.86.3" ];
     prefixLength = 24;
 
-    loadBalancerIp = "192.168.86.13";
+    loadBalancerIp = "192.168.86.12";
   };
 
   k8s = {

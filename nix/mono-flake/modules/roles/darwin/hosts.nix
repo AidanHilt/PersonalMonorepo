@@ -27,20 +27,9 @@ in
       "--listen-address=127.0.0.1"
       "--port=53"
       "--keep-in-foreground"
-    ] ++ (mapA (domain: addr: "--address=/${domain}/${addr}") dnsmasqAddresses);
+    ] ++ (mapA (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}") dnsmasqAddresses);
 
     serviceConfig.KeepAlive = true;
     serviceConfig.RunAtLoad = true;
   };
-
-  environment.etc = builtins.listToAttrs (builtins.map (domain: {
-    name = "resolver/${domain}";
-    value = {
-      enable = true;
-      text = ''
-        port 53
-        nameserver 127.0.0.1
-        '';
-    };
-  }) (builtins.attrNames dnsmasqAddresses));
 }

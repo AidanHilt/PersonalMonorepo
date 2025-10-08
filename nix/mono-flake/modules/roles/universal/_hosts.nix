@@ -12,6 +12,9 @@
     "192.168.86.5" = ["gaming-pc-node.lan"];
     "192.168.86.6" = ["laptop-node.lan"];
 
+    "192.168.86.12" = ["*.prod-cluster-node-lb.lan"];
+    "192.168.86.13" = ["*.prod-cluster-lb.lan"];
+
     # =====================
     # 2-node laptop cluster
     # =====================
@@ -28,12 +31,9 @@
     # =========================
     # Load Balancers (wildcard)
     # =========================
-
-    "192.168.86.3"=["*.prod-cluster-node-lb.lan"];
-    "192.168.86.13"=["*.prod-cluster-lb.lan"];
-    "192.168.86.22"=["*.staging-cluster-node-lb.lan"];
-    "192.168.86.23"=["*.staging-cluster-lb.lan"];
-    "192.168.86.18"=["*.laptop-cluster-node-lb.lan"];
-    "192.168.86.19"=["*.laptop-cluster-lb.lan"];
+    "192.168.86.22" = ["*.staging-cluster-node-lb.lan"];
+    "192.168.86.23" = ["*.staging-cluster-lb.lan"];
+    "192.168.86.18" = ["*.laptop-cluster-node-lb.lan"];
+    "192.168.86.19" = ["*.laptop-cluster-lb.lan"];
   };
 }
