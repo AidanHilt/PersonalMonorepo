@@ -34,7 +34,7 @@ in
   };
 
   environment.etc = builtins.listToAttrs (builtins.map (domain: {
-    name = "resolver/${domain}";
+    name = "resolver/${lib.strings.removePrefix "*." domain}";
     value = {
       enable = true;
       text = ''
