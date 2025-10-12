@@ -18,7 +18,7 @@
 
   age.secrets.adguardhome = {
     file = ../../../../secrets/adguardhome.age;
-    path = "/var/lib/private/AdGuardHome/AdGuardHome.yaml";
+    path = "/var/lib/AdGuardHome/AdGuardHome.yaml";
     symlink = false;
     owner = machine-config.username;
     group = machine-config.username;
