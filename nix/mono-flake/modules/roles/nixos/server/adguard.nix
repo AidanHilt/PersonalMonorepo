@@ -1,8 +1,8 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 {
-  environment.systemPackages = [
-    pkgs.adguardhome
+  environment.systemPackages = with pkgs;[
+    adguardhome
   ];
 
   services.adguardhome = {
@@ -20,5 +20,7 @@
     file = ../../../../secrets/adguardhome.age;
     path = "/var/lib/private/AdGuardHome/AdGuardHome.yaml";
     symlink = false;
+    owner = machine-config.username;
+    group = machine-config.username;
   };
 }

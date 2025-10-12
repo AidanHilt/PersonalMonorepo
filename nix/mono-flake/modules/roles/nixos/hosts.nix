@@ -3,6 +3,7 @@
 let
   dnsConstants = import ../universal/_hosts.nix;
 in
+
 {
   networking.hosts = dnsConstants.dnsHosts;
 }
