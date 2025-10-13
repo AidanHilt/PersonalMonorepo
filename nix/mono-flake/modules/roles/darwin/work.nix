@@ -14,6 +14,7 @@ in
 {
   environment.systemPackages = with pkgs; [
     awscli2
+    google-cloud-sdk
     helm-docs
 
     gen3-helm-install
