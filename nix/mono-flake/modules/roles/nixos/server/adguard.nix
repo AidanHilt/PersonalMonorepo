@@ -20,7 +20,5 @@
     file = ../../../../secrets/adguardhome.age;
     path = "/var/lib/AdGuardHome/AdGuardHome.yaml";
     symlink = false;
-    owner = machine-config.username;
-    group = machine-config.username;
   };
 }
