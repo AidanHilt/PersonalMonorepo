@@ -237,6 +237,38 @@
         "type": "github"
       }
     },
+    "nixpkgs-terraform": {
+      "locked": {
+        "lastModified": 1708570020,
+        "narHash": "sha256-UT8NGKeOAhuanSvIb4hOcbe6PI+VX0gFIRUWkZeNXgI=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "0472f3c9c5618c9675fc8dcc9e6ea484a5590d6d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "0472f3c9c5618c9675fc8dcc9e6ea484a5590d6d",
+        "type": "github"
+      }
+    },
+    "nixpkgs-terragrunt": {
+      "locked": {
+        "lastModified": 1687393238,
+        "narHash": "sha256-nuvP5CRwEXfagpgBQjD8Ui+J6eFN4EM6NPng9wd1NLY=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "0024e310e51151ee27d710e1f2fdf5e9c293da0b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "0024e310e51151ee27d710e1f2fdf5e9c293da0b",
+        "type": "github"
+      }
+    },
     "nixpkgs_2": {
       "locked": {
         "lastModified": 1757068644,
@@ -383,6 +415,8 @@
         "nix-vscode-extensions": "nix-vscode-extensions",
         "nixpkgs": "nixpkgs",
         "nixpkgs-darwin": "nixpkgs-darwin",
+        "nixpkgs-terraform": "nixpkgs-terraform",
+        "nixpkgs-terragrunt": "nixpkgs-terragrunt",
         "nur": "nur",
         "personalMonorepo": "personalMonorepo",
         "plasma-manager": "plasma-manager",
