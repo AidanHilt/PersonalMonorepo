@@ -53,7 +53,7 @@ sonarr:
     password: ""
 
     port: 5432
-    host: postgres-postgresql.postgres.svc.cluster.local
+    host: postgres-cluster-rw.postgres.svc.cluster.local
 
     mainDb: sonarr_main
     logDb: sonarr_logs
@@ -69,7 +69,7 @@ sonarr:
       # The name of a pre-existing secret containing the MASTER username and password for postgres
       # This user needs to have access to set stuff up for the Prowlarr user. Required if setupJob.enabled
       # is set to true
-      setupJobSecret: ""
+      setupJobSecret: setup-job-config-secret
 
       secretUsernameKey: masterUsername
       secretPasswordKey: masterPassword
@@ -85,7 +85,7 @@ sonarr:
         # -- image repository
         repository: ghcr.io/onedr0p/exportarr
         # -- image tag
-        tag: v1.5.3
+        tag: v2.3.0
         # -- image pull policy
         pullPolicy: IfNotPresent
       env:

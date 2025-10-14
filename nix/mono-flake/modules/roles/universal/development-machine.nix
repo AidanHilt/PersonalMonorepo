@@ -23,7 +23,9 @@ let
   cd $PERSONAL_MONOREPO_LOCATION
   git add nix/*
   git commit -m "Nix commit"
-  git push
+  if [[  $1 != "--no-push" ]]; then
+    git push
+  fi
 '';
 
   reset-docker = pkgs.writeShellScriptBin "reset-docker" ''
@@ -46,8 +48,6 @@ in
   };
 
   environment.systemPackages = with pkgs; [
-    act
-    agenix
     cargo
     check-jsonschema
     detect-secrets
@@ -60,10 +60,8 @@ in
     postgresql
     pre-commit
     rustc
-    syncthing
     terraform
     terragrunt
-    vault
     yarn
     yq
 

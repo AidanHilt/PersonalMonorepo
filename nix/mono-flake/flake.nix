@@ -17,12 +17,31 @@
     nur.url = "github:nix-community/nur";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/feat/libvirt-terraform";
+      url = "github:aidanhilt/PersonalMonorepo/chore/final-super-final-i-really-mean-it-staging-cluster";
       flake = false;
     };
 
-    poetry2nix = {
-      url = "github:nix-community/poetry2nix";
+    # Python utilities
+    pyproject-nix = {
+      url = "github:pyproject-nix/pyproject.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    uv2nix = {
+      url = "github:pyproject-nix/uv2nix";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    pyproject-build-systems = {
+      url = "github:pyproject-nix/build-system-pkgs";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.uv2nix.follows = "uv2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    uv2nix_hammer_overrides = {
+      url = "github:TyberiusPrime/uv2nix_hammer_overrides";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -70,7 +89,7 @@
 
       globals = {
         nixConfig = inputs.personalMonorepo + "/nix";
-        personalMonorepoBranch = "feat/libvirt-terraform";
+        personalMonorepoBranch = "chore/final-super-final-i-really-mean-it-staging-cluster";
         personalMonorepoURL = "https://github.com/AidanHilt/PersonalMonorepo";
       };
 

@@ -14,3 +14,6 @@ defaultSettings:
 
 persistence:
   defaultClassReplicaCount: 2
+
+preUpgradeChecker:
+  jobEnabled: false

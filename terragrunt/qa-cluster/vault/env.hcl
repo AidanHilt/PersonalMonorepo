@@ -1,4 +1,5 @@
 inputs = {
-  vault_url   = "http://127.0.0.1:8200/"
-  vault_token = "root"
+  vault_url = get_env("VAULT_ADDR")
+  vault_token = get_env("VAULT_TOKEN")
+  kubeconfig_context = "kind-kind"
 }

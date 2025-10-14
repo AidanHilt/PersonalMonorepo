@@ -1,21 +1,24 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
- awsSignIn = pkgs.writeShellScriptBin "aws-signin" ''
-  aws sso login --profile my-sso
-  export AWS_PROFILE=csoc
- '';
+  gen3-helm-install = pkgs.writeShellScriptBin "gen3-helm-install" ''
+  cd ~/Gen3Repos/gen3-helm/helm/gen3 && helm dependency update && helm dependency build
+  helm upgrade --install gen3 ~/Gen3Repos/gen3-helm/helm/gen3 -f ~/.gen3/local-values.yaml
+  '';
+
+  gen3-edit-values = pkgs.writeShellScriptBin "gen3-edit-values" ''
+  vi ~/.gen3/local-values.yaml
+  '';
 in
 
 {
-  imports = [
-    ./_work-docker.nix
-  ];
+  environment.systemPackages = with pkgs; [
+    awscli2
+    google-cloud-sdk
+    helm-docs
 
-  environment.systemPackages = [
-    pkgs.awscli2
-    pkgs.helm-docs
-    awsSignIn
+    gen3-helm-install
+    gen3-edit-values
   ];
 
   homebrew = {

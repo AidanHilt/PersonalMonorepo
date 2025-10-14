@@ -3,6 +3,23 @@
 {{/* Append the hardcoded settings */}}
 {{- define "transmission.hardcodedValues" -}}
 
+command:
+  - bash 
+  - -c 
+
+args:
+  - | 
+    S6_SCRIPT="/etc/s6-overlay/s6-rc.d/init-transmission-config/run"
+    
+    cat >> "$S6_SCRIPT" << 'EOF'
+
+    if [[ -n "${TRANSMISSION_DOWNLOAD_DIR}" ]]; then
+      echo -E "$(jq -r --arg downloadDir "${TRANSMISSION_DOWNLOAD_DIR}" '.["download-dir"] = $downloadDir' /config/settings.json)" >/config/settings.json
+    fi
+    EOF
+
+    /init
+
 {{- if .Values.transmission.alternateUi.enabled }}
 initContainers:
   custom-webui:

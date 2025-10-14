@@ -1,13 +1,8 @@
 name: Helm Chart CI
 
-on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'kubernetes/helm-charts/**'
-      - '.github/workflows/helm-charts-on-merge.yaml'
-      - '!kubernetes/helm-charts/docs/**'
+
+# TODO Not quite ready to delete yet, but this is just annoying
+on: workflow_dispatch
 
 jobs:
   find-out-changes:
@@ -15,11 +10,11 @@ jobs:
     outputs:
       changed_directories: ${{ steps.set-output.outputs.changed_directories }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@v42.0.7
+        uses: tj-actions/changed-files@v42.1.0
         with:
           dir_names: true
           json: true
@@ -41,7 +36,7 @@ jobs:
       - find-out-changes
     steps:
       - name: Set up Helm
-        uses: azure/setup-helm@v4.2.0
+        uses: azure/setup-helm@v4.3.1
       - uses: actions/checkout@v3
       - name: Add Helm library repos
         run: helm repo add bjws https://bjw-s.github.io/helm-charts/

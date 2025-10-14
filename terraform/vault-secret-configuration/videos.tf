@@ -99,3 +99,18 @@ resource "vault_kv_secret_v2" "jellyseerr_config" {
     }
   )
 }
+
+#=====
+# VPN
+#=====
+resource "vault_kv_secret_v2" "vpn_config" {
+  mount = vault_mount.kv-videos.path
+  name = "vpn/config"
+
+  data_json = jsonencode(
+    {
+      VPN_AUTH   = var.vpn_auth
+      vpnConfig = var.vpn_config
+    }
+  )
+}

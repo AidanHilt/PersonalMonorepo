@@ -5,8 +5,6 @@
     ./_smb-mount.nix
 
     ./rclone.nix
-
-    ../../scripts/nixos/default.nix
   ];
 
   environment.systemPackages = [
@@ -23,7 +21,6 @@
       "keepassxc"
       "spotify"
       "tor-browser"
-      "orbstack"
       "postman"
       "utm"
       "prismlauncher"
@@ -49,8 +46,6 @@
         "/Applications/Parsec.app"
         #Spotify
         "/Applications/Spotify.app"
-        #Orbstack
-        "/Applications/OrbStack.app"
         #ActivityMonitor
         "/System/Applications/Utilities/Activity Monitor.app"
         #KeePassXC

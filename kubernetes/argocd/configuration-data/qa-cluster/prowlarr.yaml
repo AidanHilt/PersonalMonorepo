@@ -6,6 +6,11 @@ prowlarr:
 
   externalAuth: true
 
+  postgres:
+    enabled: true
+    setupJob:
+      setupJobServiceAccount: setup-job
+
 serviceAccount:
   create: true
   name: prowlarr

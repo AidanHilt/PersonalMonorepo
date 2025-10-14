@@ -15,11 +15,11 @@ jobs:
     outputs:
       changed_directories: ${{ steps.set-output.outputs.changed_directories }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@v42.0.7
+        uses: tj-actions/changed-files@v42.1.0
         with:
           dir_names: true
           json: true
@@ -41,7 +41,7 @@ jobs:
     needs:
       - generate-matrix
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Get image repo
         run: |
           source ${{ matrix.dir }}/config.env

@@ -5,6 +5,7 @@ jellyseerr:
   hostname: jellyseerr
   port: 5055
   apiKey: ""
+  urlBase: /
   image: fallenbagel/jellyseerr
   version: 1.9.2
   title: Jellyseerr

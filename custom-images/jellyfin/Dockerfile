@@ -1,4 +1,4 @@
-FROM jellyfin/jellyfin:10.10.5
+FROM jellyfin/jellyfin:10.10.7
 
 RUN apt-get update && apt-get install -y sqlite3 gettext jq
 

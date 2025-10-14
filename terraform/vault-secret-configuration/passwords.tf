@@ -24,7 +24,7 @@ resource "random_password" "jellyfin_api_key" {
 }
 
 resource "random_password" "jellyseerr_api_key" {
-  length  = 68
+  length  = 64
   special = false
   upper   = false
 }
