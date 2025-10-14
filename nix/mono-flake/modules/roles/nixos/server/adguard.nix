@@ -20,6 +20,6 @@
     file = ../../../../secrets/adguardhome.age;
     path = "/var/lib/AdGuardHome/AdGuardHome.yaml";
     symlink = false;
-    mode = "777";
+    mode = "744";
   };
 }
