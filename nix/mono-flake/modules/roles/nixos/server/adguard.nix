@@ -22,5 +22,6 @@
     symlink = false;
     owner = machine-config.username;
     group = machine-config.username;
+    mode = "700";
   };
 }
