@@ -4,19 +4,32 @@ kind: Application
 metadata:
   name: ingress
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
 spec:
   project: default
-  source:
-    repoURL: https://github.com/kubernetes/ingress-nginx.git
-    targetRevision: HEAD
-    path: deploy/static/provider/{{ .Values.ingress.clusterType }}
+  sources:
+    - repoURL: 'https://kubernetes.github.io/ingress-nginx'
+      targetRevision: {{ index .Values "ingress" "version" }}
+      chart: ingress-nginx
+      helm:
+        releaseName: ingress
+    {{- if index .Values "ingress" "configuration" "enabled" }}
+        valueFiles:
+          - "$values/{{ .Values.configuration.configurationDirectory }}/{{ .Values.env }}/ingress.yaml"
+    - repoURL: {{ .Values.configuration.configurationRepo }}
+      targetRevision: {{ .Values.configuration.configurationRevision | default .Values.gitRevision }}
+      ref: values
+    {{- end }}
   destination:
-    server: https://kubernetes.default.svc
+    server: 'https://kubernetes.default.svc'
     namespace: ingress-nginx
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
