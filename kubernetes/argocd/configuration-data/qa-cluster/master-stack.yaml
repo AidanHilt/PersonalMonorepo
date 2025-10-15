@@ -15,7 +15,7 @@ vault-secrets-operator:
     enabled: true
 
 jellyfin:
-  enabled: false
+  enabled: true
   configuration:
     enabled: false
 
@@ -31,17 +31,17 @@ postgres:
   enabled: true
 
 prowlarr:
-  enabled: false
+  enabled: true
   configuration:
     enabled: false
 
 radarr:
-  enabled: false
+  enabled: true
   configuration:
     enabled: false
 
 sonarr:
-  enabled: false
+  enabled: true
   configuration:
     enabled: false
 
