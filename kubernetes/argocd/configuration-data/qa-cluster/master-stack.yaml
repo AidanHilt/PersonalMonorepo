@@ -12,7 +12,7 @@ hashi-vault:
 
 vault-secrets-operator:
   configuration:
-    enabled: false
+    enabled: true
 
 jellyfin:
   enabled: false
