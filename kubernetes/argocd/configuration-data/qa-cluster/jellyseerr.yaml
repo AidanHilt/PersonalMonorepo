@@ -2,9 +2,14 @@ jellyseerr:
   configSecret:
     existingSecret: jellyseerr-config-secret
 
+  postgres:
+    enabled: true
+    setupJob:
+      setupJobServiceAccount: setup-job
+
 persistence:
   config:
-    enabled: true
+    enabled: false
     mountPath: /app/config
 
 serviceAccount:

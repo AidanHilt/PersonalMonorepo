@@ -6,7 +6,7 @@ flaresolverr:
   enabled: false
 
 hashi-vault:
-  enabled: false
+  enabled: true
   configuration:
     enabled: false
 
@@ -20,9 +20,9 @@ jellyfin:
     enabled: false
 
 jellyseerr:
-  enabled: false
+  enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 postgres:
   enabled: true
