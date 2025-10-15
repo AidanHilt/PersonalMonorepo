@@ -46,7 +46,7 @@ sonarr:
     enabled: true
 
 transmission:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
 
