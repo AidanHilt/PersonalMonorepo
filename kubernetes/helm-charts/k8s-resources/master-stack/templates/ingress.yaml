@@ -8,7 +8,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/kubernetes/ingress-nginx.git
-    targetRevision: cf998c707ba72d9fea108c5aa7191fc2a09fd365
+    targetRevision: main
     path: deploy/static/provider/{{ .Values.ingress.clusterType }}
   destination:
     server: https://kubernetes.default.svc
