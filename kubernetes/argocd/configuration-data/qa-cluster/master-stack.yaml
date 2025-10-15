@@ -54,4 +54,6 @@ video-stack-configuration:
 
 ingress:
   enabled: true
+  configuration:
+    enabled: true
   clusterType: "kind"
