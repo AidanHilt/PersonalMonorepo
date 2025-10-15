@@ -8,7 +8,7 @@ flaresolverr:
 hashi-vault:
   enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 vault-secrets-operator:
   configuration:
