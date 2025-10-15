@@ -24,6 +24,9 @@ jellyseerr:
   configuration:
     enabled: true
 
+job-templates:
+  enabled: true
+
 postgres:
   enabled: true
 
