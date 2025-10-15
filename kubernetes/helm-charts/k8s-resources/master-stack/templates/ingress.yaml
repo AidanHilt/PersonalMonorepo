@@ -8,7 +8,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/AidanHilt/PersonalMonorepo.git
-    targetRevision: main
+    targetRevision: {{ .Values.gitRevision }}
     path: kubernetes/ingress-nginx/{{ .Values.ingress.clusterType }}
   destination:
     server: https://kubernetes.default.svc
