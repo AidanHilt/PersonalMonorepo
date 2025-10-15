@@ -3,7 +3,7 @@ env: qa-cluster
 gitRevision: chore/pre-cutover-cleanup-and-setup
 
 flaresolverr:
-  enabled: false
+  enabled: true
 
 hashi-vault:
   enabled: true
@@ -17,7 +17,7 @@ vault-secrets-operator:
 jellyfin:
   enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 jellyseerr:
   enabled: true
@@ -33,22 +33,22 @@ postgres:
 prowlarr:
   enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 radarr:
   enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 sonarr:
   enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 transmission:
   enabled: false
   configuration:
-    enabled: false
+    enabled: true
 
 video-stack-configuration:
   enabled: true
