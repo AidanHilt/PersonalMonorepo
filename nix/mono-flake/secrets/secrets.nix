@@ -41,12 +41,8 @@ let
   laptop-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAwilocb+pCiqq38V2srqTlCcgfQrOaZTBOo+YiEl+M noname";
   optiplex-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG317PrIuG+kkTtZzfh98G4of4qcHx1xFWWCim8GtgmQ noname";
 
-<<<<<<< HEAD
-  prod-cluster-machines = [];
-=======
   prod-cluster-machines = [laptop-node-system optiplex-node-system];
 
->>>>>>> refs/remotes/origin/chore/pre-cutover-cleanup-and-setup
 in
 {
   "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
