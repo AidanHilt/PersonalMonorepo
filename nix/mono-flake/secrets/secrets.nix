@@ -42,6 +42,7 @@ let
 
   prod-cluster-machines = [laptop-node-system];
 
+  optiplex-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPcaaXqPsDqrrgekkWr16WMUe+nENoTIaq7DAvP92HFA noname";
 in
 {
   "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
