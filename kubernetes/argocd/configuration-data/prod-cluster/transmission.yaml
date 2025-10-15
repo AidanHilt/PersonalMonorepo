@@ -45,4 +45,4 @@ initContainers:
         mountPath: /videos
 
 nodeSelector:
-  kubernetes.io/hostname: staging-cluster-2
+  kubernetes.io/hostname: gaming-pc-node

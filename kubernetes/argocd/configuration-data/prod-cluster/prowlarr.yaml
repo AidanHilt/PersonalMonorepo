@@ -19,4 +19,4 @@ serviceAccount:
     "helm.sh/hook-weight": "-2"
 
 nodeSelector:
-  kubernetes.io/hostname: staging-cluster-2
+  kubernetes.io/hostname: gaming-pc-node

@@ -38,8 +38,15 @@ let
   staging-cluster-machines = [staging-cluster-1-system staging-cluster-2-system staging-cluster-3-system];
 
   # Prod cluster! These are x86 machines (for now) running NixOS. Their config should closely match the staging cluster
+  laptop-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAwilocb+pCiqq38V2srqTlCcgfQrOaZTBOo+YiEl+M noname";
+  optiplex-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPcaaXqPsDqrrgekkWr16WMUe+nENoTIaq7DAvP92HFA noname";
 
+<<<<<<< HEAD
   prod-cluster-machines = [];
+=======
+  prod-cluster-machines = [laptop-node-system optiplex-node-system];
+
+>>>>>>> refs/remotes/origin/chore/pre-cutover-cleanup-and-setup
 in
 {
   "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
@@ -48,7 +55,7 @@ in
   "rclone-config.age".publicKeys = user-machines;
   "kubeconfig.age".publicKeys = user-machines;
 
-  "adguardhome.age".publicKeys = user-machines ++ laptop-cluster-machines ++ staging-cluster-machines;
+  "adguardhome.age".publicKeys = user-machines ++ laptop-cluster-machines ++ staging-cluster-machines ++ prod-cluster-machines;
 
   "rke-config-laptop-cluster.age".publicKeys = user-machines ++ laptop-cluster-machines;
 

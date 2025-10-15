@@ -10,21 +10,19 @@
     ./hardware-configuration.nix
 
     ../../../modules/shared-machine-configs/linux-desktop.nix
+
+    ../../../modules/roles/nixos/fixed-ip-machine.nix
     ../../../modules/roles/nixos/vscode-server.nix
+
+    ../../../modules/roles/universal/personal-development.nix
   ];
 
-  home-manager = {
-    useGlobalPkgs = true;
-    useUserPackages = true;
-    backupFileExtension = "bak";
-    extraSpecialArgs = { inherit inputs globals pkgs machine-config; };
-    users.${machine-config.username} = import ./home.nix {inherit inputs globals pkgs machine-config; system = pkgs.system; lib = inputs.home-manager.lib; };
+  boot.loader.grub = {
+    enable = true;
+    efiSupport = true;
+    efiInstallAsRemovable = true;
+    useOSProber = true;
   };
 
-  boot.loader.grub.enable = true;
-  boot.loader.grub.efiSupport = true;
-  boot.loader.grub.efiInstallAsRemovable = true;
-
-  # Enable networking
-  networking.networkmanager.enable = true;
+  services.logind.lidSwitch = "ignore";
 }
