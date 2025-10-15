@@ -53,7 +53,7 @@ transmission:
 video-stack-configuration:
   enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 ingress:
   enabled: true

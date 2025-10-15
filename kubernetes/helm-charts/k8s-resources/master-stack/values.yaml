@@ -166,4 +166,6 @@ transmission:
 video-stack-configuration:
   enabled: false
   configuration:
-    enabled: false
+    # This SHOULD be the default behavior, as we normally expect to read from vault
+    # TODO create a better interface for this
+    enabled: true
