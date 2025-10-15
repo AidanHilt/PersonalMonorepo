@@ -1,4 +1,4 @@
-env: staging-cluster
+env: prod-cluster
 
 hostnames:
   - prod-cluster-lb.lan
