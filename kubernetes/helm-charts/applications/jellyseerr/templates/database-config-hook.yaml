@@ -1,0 +1,56 @@
+{{- if and .Values.jellyseerr.postgres.enabled .Values.jellyseerr.postgres.setupJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-postgres-init"
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        sidecar.istio.io/inject: "false"
+      name: "{{ .Release.Name }}-postgres-init"
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: postgres-init
+        image: "aidanhilt/atils-postgres-client"
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - psql -v password=$JELLYSEERR_USER_PASSWORD -f /mnt/setup.sql
+        env:
+        {{ if .Values.jellyseerr.postgres.enabled }}
+        {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
+        - name: PGHOST
+          value: {{ .Values.jellyseerr.postgres.host }}
+        - name: PGPORT
+          value: {{ .Values.jellyseerr.postgres.port | quote }}
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.jellyseerr.postgres.setupJob.setupJobSecret }}
+              key: {{ .Values.jellyseerr.postgres.setupJob.secretUsernameKey }}
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.jellyseerr.postgres.setupJob.setupJobSecret }}
+              key: {{ .Values.jellyseerr.postgres.setupJob.secretPasswordKey }}
+        - name: JELLYSEERR_USER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.jellyseerr.configSecret.existingSecret | default $defaultSecretName}}
+              key: postgresPassword
+        {{ end }}
+        volumeMounts:
+        - name: postgres-init-script
+          mountPath: /mnt/setup.sql
+          subPath: setup.sql
+      volumes:
+      - name: postgres-init-script
+        configMap:
+          name: jellyseerr-postgres-init
+{{- end }}
