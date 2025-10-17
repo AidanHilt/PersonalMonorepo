@@ -3,7 +3,7 @@
 {
   imports = [
     # ../../../home-manager/shared-configs/desktop-terminal.nix
-    # ../../../home-manager/shared-configs/server.nix
+    ../../../home-manager/shared-configs/server.nix
   ];
 
   home.stateVersion = "24.11";
