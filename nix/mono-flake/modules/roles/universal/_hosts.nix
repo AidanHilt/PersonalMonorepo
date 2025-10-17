@@ -8,12 +8,12 @@
     # ===================
     # 3-node prod cluster
     # ===================
+    "192.168.86.2" = ["*.prod-cluster-node-lb.lan"];
+    "192.168.86.3" = ["*.prod-cluster-lb.lan"];
+
     "192.168.86.4" = ["optiplex-node.lan"];
     "192.168.86.5" = ["gaming-pc-node.lan"];
     "192.168.86.6" = ["laptop-node.lan"];
-
-    "192.168.86.12" = ["*.prod-cluster-node-lb.lan"];
-    "192.168.86.13" = ["*.prod-cluster-lb.lan"];
 
     # =====================
     # 2-node laptop cluster
