@@ -39,7 +39,7 @@ let
 
   # Prod cluster! These are x86 machines (for now) running NixOS. Their config should closely match the staging cluster
   laptop-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAwilocb+pCiqq38V2srqTlCcgfQrOaZTBOo+YiEl+M noname";
-  optiplex-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA7XAzdkI/XwK3bDqIjTZ5dVLFHyydhbb4/Y1GBpv3+V noname";
+  optiplex-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICjerdOUN7KvpYel2ab/DwY2UTO6wJ5FV6v4TL+BfR/7 noname";
 
   prod-cluster-machines = [laptop-node-system optiplex-node-system];
 
