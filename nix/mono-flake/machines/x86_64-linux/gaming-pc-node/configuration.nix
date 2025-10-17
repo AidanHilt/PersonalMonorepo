@@ -12,4 +12,12 @@
     ../../../modules/roles/nixos/linux-universal.nix
     ../../../modules/shared-machine-configs/homelab-node.nix
   ];
+
+  boot.loader.grub = {
+    enable = true;
+    efiSupport = true;
+    efiInstallAsRemovable = true;
+  };
+
+  networking.hostId = "8425e349";
 }

@@ -1,6 +1,21 @@
+jellyseerr:
+  configSecret:
+    existingSecret: jellyseerr-config-secret
+
+  postgres:
+    enabled: true
+    setupJob:
+      setupJobServiceAccount: setup-job
+
 persistence:
   config:
     enabled: true
-    accessMode: ReadWriteOnce
-    size: 1Gi
     mountPath: /app/config
+    size: 10Gi
+
+serviceAccount:
+  create: true
+  name: jellyseerr
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"

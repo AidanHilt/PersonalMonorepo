@@ -7,9 +7,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/kubernetes/ingress-nginx.git
-    targetRevision: HEAD
-    path: deploy/static/provider/{{ .Values.ingress.clusterType }}
+    repoURL: https://github.com/AidanHilt/PersonalMonorepo.git
+    targetRevision: {{ .Values.gitRevision }}
+    path: kubernetes/ingress-nginx/{{ .Values.ingress.clusterType }}
   destination:
     server: https://kubernetes.default.svc
     namespace: ingress-nginx

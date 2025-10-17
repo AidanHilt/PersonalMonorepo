@@ -9,14 +9,36 @@ env:
       secretKeyRef:
         name: {{ .Values.jellyseerr.configSecret.existingSecret | default $defaultSecretName }}
         key: apiKey
+  {{ if .Values.jellyseerr.postgres.enabled }}
+  - name: DB_TYPE
+    value: postgres
+  - name: DB_HOST
+    value: {{ .Values.jellyseerr.postgres.host }}
+  - name: DB_NAME
+    value: {{ .Values.jellyseerr.postgres.dbName }}
+  - name: DB_PORT
+    value: {{ .Values.jellyseerr.postgres.port | quote }}
+  - name: DB_USER
+    value: {{ .Values.jellyseerr.postgres.username }}
+  - name: DB_PASS
+    valueFrom:
+      secretKeyRef:
+        name: jellyseerr-config-secret
+        key: postgresPassword
+  {{ end }}
 
 {{- if eq .Values.jellyseerr.configSecret.existingSecret "" }}
 secrets:
   config-secret:
     enabled: true
     stringData:
+      {{- if .Values.radarr.postgres.enabled }}
+      postgresPassword: {{ .Values.jellyseerr.postgres.password | quote }}
+      postgresMasterPassword: {{ index (lookup "v1" "Secret" "postgres" "postgres-postgresql") "data" "postgres-password" | b64dec | quote }}
+      {{- end }}
       apiKey: {{ .Values.jellyseerr.apiKey | default (randAlphaNum 32 | lower) | quote }}
 {{- end }}
+
 
 {{- end -}}
 {{- $_ := mergeOverwrite .Values (include "jellyseerr.harcodedValues" . | fromYaml) -}}
