@@ -43,6 +43,7 @@ let
 
   prod-cluster-machines = [laptop-node-system optiplex-node-system];
 
+  gaming-pc-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEH0SAuxiARjNDT1fhcq6lAeT0ImDtbnQ2124uc/1/v6 noname";
 in
 {
   "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
