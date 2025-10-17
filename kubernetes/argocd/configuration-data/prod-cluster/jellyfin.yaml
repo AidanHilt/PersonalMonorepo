@@ -19,7 +19,7 @@ persistence:
     enabled: true
     type: hostPath
     mountPath: /videos
-    hostPath: /videos
+    hostPath: /storagePool/videoData/Videos/
 
 image:
   repository: aidanhilt/jellyfin

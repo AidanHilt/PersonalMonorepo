@@ -9,8 +9,9 @@ jellyseerr:
 
 persistence:
   config:
-    enabled: false
+    enabled: true
     mountPath: /app/config
+    size: 10Gi
 
 serviceAccount:
   create: true
