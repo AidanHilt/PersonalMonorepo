@@ -7,7 +7,7 @@
     fixedIp = true;
 
     defaultGateway = "192.168.86.1";
-    nameservers = [ "192.168.86.3" ];
+    nameservers = [ "192.168.86.2" ];
     prefixLength = 24;
 
     address = "192.168.86.40";
