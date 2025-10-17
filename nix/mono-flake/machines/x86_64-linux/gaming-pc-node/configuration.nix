@@ -19,5 +19,5 @@
     efiInstallAsRemovable = true;
   };
 
-  networking.hostId = "gaming-pc-node";
+  networking.hostId = "8425e349";
 }
