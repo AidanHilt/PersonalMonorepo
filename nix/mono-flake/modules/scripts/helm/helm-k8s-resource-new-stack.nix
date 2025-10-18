@@ -10,16 +10,12 @@ set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
 
-OUTPUT_DIR=""
+OUTPUT_DIR="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources"
 CHART_NAME=""
 STACK_NAME=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --output-dir)
-      OUTPUT_DIR="$2"
-      shift 2
-      ;;
     --chart-name)
       CHART_NAME="$2"
       shift 2
@@ -34,11 +30,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-if [[ -z "''${OUTPUT_DIR}" ]]; then
-  print_error "--output-dir must be provided"
-  exit 1
-fi
 
 if [[ -z "''${CHART_NAME}" ]]; then
   CHART_NAME="$(select-directory)"
