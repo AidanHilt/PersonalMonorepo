@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: chore/pre-cutover-cleanup-and-setup
+gitRevision: project-appocalypse/helm-chart-refactor
 
 flaresolverr:
   enabled: true
