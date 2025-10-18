@@ -10,15 +10,18 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-        - "*"
-        # {{- toYaml .Values.hostnames | nindent 8 }}
-        # {{- if index .Values "hashi-vault" "enabled" }}
-        # {{- range .Values.hostnames }}
-        # - vault.{{ . }}
-        # {{- end }}
-        # {{- end }}
-        # {{- if index .Values "jellyseerr" "enabled" }}
-        # {{- range .Values.hostnames }}
-        # - jellyseerr.{{ . }}
-        # {{- end }}
-        # {{- end }}
+        {{- toYaml .Values.hostnames | nindent 8 }}
+        {{- if index .Values "hashi-vault" "enabled" }}
+        {{- range .Values.hostnames }}
+          {{- if not (regexMatch "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$" .) }}
+        - vault.{{ . }}
+          {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- if index .Values "jellyseerr" "enabled" }}
+        {{- range .Values.hostnames }}
+          {{- if not (regexMatch "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$" .) }}
+        - jellyseerr.{{ . }}
+          {{- end }}
+        {{- end }}
+        {{- end }}
