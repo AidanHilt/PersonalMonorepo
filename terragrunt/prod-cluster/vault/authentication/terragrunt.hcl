@@ -6,6 +6,4 @@ terraform {
   source = "../../../../terraform/vault-auth-configuration"
 }
 
-inputs = merge(local.environment_vars.inputs, {
-  kubeconfig_context = "new-prod-cluster"
-})
+inputs = merge(local.environment_vars.inputs, {})
