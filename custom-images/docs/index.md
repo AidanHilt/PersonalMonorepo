@@ -1,5 +1,0 @@
-# Custom Images
-Because we're hardcore homelab people here, we will from time to time need to create and build custom container images. This is where we store the Dockerfiles for those images. Note that this isn't where all of our Dockerfiles or images live. For example, the Dockerfile for Toolshed, our IDP, lives in the `toolshed` directory, since it relies exclusively on resources that live there. However, there are other custom images, like `atils-ci`, that doesn't have a clear home otherwise, and so it ends up here.
-
-## Images
-`atils-ci`: Universal image for all of our CI. The reason we build this image is because we want it to have `atils` installed, to use all of our `.atils_buildconfig.json` files. which we spent a lot of time making very pretty. Plus, this will make it easier to standardize commands and scripts for local development, as well as CI.

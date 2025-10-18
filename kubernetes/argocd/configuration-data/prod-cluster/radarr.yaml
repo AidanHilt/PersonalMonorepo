@@ -1,0 +1,42 @@
+radarr:
+  urlBase: radarr
+
+  configSecret:
+    existingSecret: radarr-config-secret
+
+  externalAuth: true
+
+  postgres:
+    enabled: true
+    setupJob:
+      setupJobServiceAccount: setup-job
+
+serviceAccount:
+  create: true
+  name: radarr
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"
+
+persistence:
+  videos:
+    enabled: true
+    type: hostPath
+    mountPath: /videos
+    hostPath: /storagePool/videoData/Videos/
+
+initContainers:
+  init-tv-dir:
+    image: busybox
+    command: ["sh", "-c"]
+    args:
+      - |
+        mkdir -p /videos/Movies
+        chmod 777 /videos/Movies
+        chown -R 911 /videos/Movies
+    volumeMounts:
+      - name: videos
+        mountPath: /videos
+
+nodeSelector:
+  kubernetes.io/hostname: gaming-pc-node

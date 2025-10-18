@@ -43,6 +43,7 @@ in
         user_pref("extensions.enabledScopes", 15);
         user_pref("browser.startup.page", 3);
         user_pref("browser.aboutConfig.showWarning", false)
+        user_pref("browser.fixup.domainwhitelist.lan", true)
       '';
     };
   };

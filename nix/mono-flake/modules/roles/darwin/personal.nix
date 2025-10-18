@@ -4,6 +4,7 @@
   imports = [
     ./_smb-mount.nix
 
+    ./hosts.nix
     ./rclone.nix
   ];
 

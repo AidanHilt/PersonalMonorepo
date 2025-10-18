@@ -17,7 +17,7 @@
     nur.url = "github:nix-community/nur";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/chore/final-super-final-i-really-mean-it-staging-cluster";
+      url = "github:aidanhilt/PersonalMonorepo/chore/pre-cutover-cleanup-and-setup";
       flake = false;
     };
 
@@ -89,7 +89,7 @@
 
       globals = {
         nixConfig = inputs.personalMonorepo + "/nix";
-        personalMonorepoBranch = "chore/final-super-final-i-really-mean-it-staging-cluster";
+        personalMonorepoBranch = "chore/pre-cutover-cleanup-and-setup";
         personalMonorepoURL = "https://github.com/AidanHilt/PersonalMonorepo";
       };
 

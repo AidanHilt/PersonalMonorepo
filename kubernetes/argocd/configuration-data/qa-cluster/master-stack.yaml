@@ -1,57 +1,62 @@
 env: qa-cluster
 
-gitRevision: chore/final-super-final-i-really-mean-it-staging-cluster
+gitRevision: chore/pre-cutover-cleanup-and-setup
 
 flaresolverr:
-  enabled: false
+  enabled: true
 
 hashi-vault:
-  enabled: false
+  enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 vault-secrets-operator:
   configuration:
-    enabled: false
+    enabled: true
 
 jellyfin:
-  enabled: false
+  enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 jellyseerr:
-  enabled: false
+  enabled: true
   configuration:
-    enabled: false
+    enabled: true
+
+job-templates:
+  enabled: true
 
 postgres:
-  enabled: false
+  enabled: true
 
 prowlarr:
-  enabled: false
+  enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 radarr:
-  enabled: false
+  enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 sonarr:
-  enabled: false
+  enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 transmission:
-  enabled: false
+  enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 video-stack-configuration:
-  enabled: false
+  enabled: true
   configuration:
-    enabled: false
+    enabled: true
 
 ingress:
   enabled: true
+  configuration:
+    enabled: true
   clusterType: "kind"

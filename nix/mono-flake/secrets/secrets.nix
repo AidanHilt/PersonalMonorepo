@@ -36,6 +36,14 @@ let
   staging-cluster-3-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAKlIyOATYZgX8Z3BYVjmwepbFFjSGf9kmh/bF+CcVpr noname";
 
   staging-cluster-machines = [staging-cluster-1-system staging-cluster-2-system staging-cluster-3-system];
+
+  # Prod cluster! These are x86 machines (for now) running NixOS. Their config should closely match the staging cluster
+  laptop-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAwilocb+pCiqq38V2srqTlCcgfQrOaZTBOo+YiEl+M noname";
+  optiplex-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICjerdOUN7KvpYel2ab/DwY2UTO6wJ5FV6v4TL+BfR/7 noname";
+
+  prod-cluster-machines = [laptop-node-system optiplex-node-system];
+
+  gaming-pc-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOfwBzV5uvJlEQgNk/uYloYY1sP+IuwZK67Zaj3M713i noname";
 in
 {
   "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
@@ -44,9 +52,11 @@ in
   "rclone-config.age".publicKeys = user-machines;
   "kubeconfig.age".publicKeys = user-machines;
 
-  "adguardhome.age".publicKeys = user-machines ++ laptop-cluster-machines ++ staging-cluster-machines;
+  "adguardhome.age".publicKeys = user-machines ++ laptop-cluster-machines ++ staging-cluster-machines ++ prod-cluster-machines;
 
   "rke-config-laptop-cluster.age".publicKeys = user-machines ++ laptop-cluster-machines;
 
   "rke-config-staging-cluster.age".publicKeys = user-machines ++ staging-cluster-machines;
+
+  "rke-config-prod-cluster.age".publicKeys = user-machines ++ prod-cluster-machines;
 }

@@ -51,17 +51,43 @@
     trackpad = {
       Clicking = true;
       TrackpadRightClick = true;
-      TrackpadThreeFingerDrag = true;
+    };
+
+    CustomSystemPreferences = {
+      "com.apple.AppleMultitouchTrackpad" = {
+        TrackpadThreeFingerDrag = 0;
+      };
     };
   };
 
-  system.activationScripts = {
-    postActivation = {
-      text = ''
-        ${pkgs.defaultbrowser}/bin/defaultbrowser firefox
-      '';
+  launchd.user.agents.fix-trackpad = {
+    serviceConfig = {
+      ProgramArguments = [
+        "${pkgs.bash}/bin/bash"
+        "-c"
+        ''
+          /usr/bin/defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -bool true
+          /usr/bin/defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerDrag -bool true
+
+          # Set for external/Bluetooth trackpad
+          /usr/bin/defaults write com.apple.AppleMultitouchTrackpad Dragging -bool false
+          /usr/bin/defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Dragging -bool false
+
+          # Sometimes it's in accessibility settings
+          /usr/bin/defaults write com.apple.AppleMultitouchTrackpad DragLock -bool false
+          /usr/bin/defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad DragLock -bool false
+          /usr/bin/killall Dock
+        ''
+      ];
+      RunAtLoad = true;
+      StandardErrorPath = "/tmp/trackpad-fix.err";
+      StandardOutPath = "/tmp/trackpad-fix.out";
     };
   };
+
+  environment.systemPath = [
+    "/opt/homebrew/bin"
+  ];
 
   homebrew = {
     enable = true;

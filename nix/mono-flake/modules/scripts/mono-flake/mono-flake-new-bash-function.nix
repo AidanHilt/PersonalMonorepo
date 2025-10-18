@@ -2,22 +2,30 @@
 
 let
 
+add-import-to-nix = (import ../lib/add-import-to-nix.nix {inherit pkgs;}).add-import-to-nix;
+select-directory = (import ../lib/select-directory.nix {inherit pkgs;}).select-directory;
+
 mono-flake-new-bash-function = pkgs.writeShellScriptBin "mono-flake-new-bash-function" ''
 #!/bin/bash
 
 set -euo pipefail
 
+source ${add-import-to-nix}
+source ${select-directory}
+
 # Default values
 FUNCTION_NAME=""
 
 TEMPLATE_FILE="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/bash-function.nix"
-OUTPUT_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/functions"
+OUTPUT_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/scripts"
 
 # Function to display usage
 usage() {
   echo "Usage: $0 [OPTIONS] [FUNCTION_NAME]"
   echo "Options:"
   echo "  -n, --name FUNCTION_NAME   function name (skips interactive input)"
+  echo "  -d, --out-dir OUT_DIR    Output dir (skips interactive input)"
+  echo "  -s, --script-function  Use a template optimized for scripts
   echo "  -h, --help        Show this help message"
   echo ""
   echo "Environment variables:"
@@ -30,50 +38,20 @@ usage() {
   exit 1
 }
 
-# Function to select directory interactively
-select_directory() {
-  echo "Available directories in $OUTPUT_DIR:"
-  local dirs=()
-  local i=1
-
-  # Find all directories (including subdirectories)
-  while IFS= read -r -d "" dir; do
-    # Get relative path from modules directory
-    rel_path="''${dir#$OUTPUT_DIR/}"
-    dirs+=("$rel_path")
-    echo "$i) $rel_path"
-    ((i++))
-  done < <(find "$OUTPUT_DIR" -type d -not -path "$OUTPUT_DIR" -print0 | sort -z)
-
-  if [[ ''${#dirs[@]} -eq 0 ]]; then
-    selected_dir="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/functions"
-  else
-    echo "$i) Create new directory"
-    echo "0) Exit"
-
-    read -p "Select directory (number): " choice
-
-    if [[ "$choice" == "0" ]]; then
-      echo "Exiting..."
-      exit 0
-    elif [[ "$choice" == "$i" ]]; then
-      read -p "Enter new directory name: " new_dir
-      selected_dir="$new_dir"
-    elif [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -lt "$i" ]]; then
-      selected_dir="''${dirs[$((choice-1))]}"
-    else
-      echo "Invalid selection"
-      exit 1
-    fi
-  fi
-}
-
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
     -n|--name)
       FUNCTION_NAME="$2"
       shift 2
+      ;;
+    -d|--out-dir)
+      SELECTED_DIR="$2"
+      shift 2
+      ;;
+    -s|--script-function)
+      TEMPLATE_FILE="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/bash-script-function.nix"
+      shift 1
       ;;
     -h|--help)
       usage
@@ -113,7 +91,9 @@ if [[ ! -d "$OUTPUT_DIR" ]]; then
   mkdir -p "$OUTPUT_DIR"
 fi
 
-select_directory
+if [[ ! -v SELECTED_DIR ]]; then
+  select-directory
+fi
 
 # Get function name (interactive or from argument)
 if [[ -z "$FUNCTION_NAME" ]]; then
@@ -139,7 +119,7 @@ if [[ ! "$FUNCTION_NAME" =~ \.nix$ ]]; then
 fi
 
 # Define output file path
-OUTPUT_FILE="$OUTPUT_DIR/$selected_dir/$FUNCTION_NAME"
+OUTPUT_FILE="$OUTPUT_DIR/$SELECTED_DIR/$FUNCTION_NAME"
 
 # Check if output file already exists
 if [[ -f "$OUTPUT_FILE" ]]; then
@@ -156,10 +136,10 @@ if [[ -f "$OUTPUT_FILE" ]]; then
   esac
 fi
 
-target_dir="$(dirname "$OUTPUT_FILE")"
-if [[ ! -d "$target_dir" ]]; then
-  echo "Creating directory: $target_dir"
-  mkdir -p "$target_dir"
+TARGET_DIR="$(dirname "$OUTPUT_FILE")"
+if [[ ! -d "$TARGET_DIR" ]]; then
+  echo "Creating directory: $TARGET_DIR"
+  mkdir -p "$TARGET_DIR"
 fi
 
 # Export the function name as environment variable for envsubst
@@ -175,6 +155,10 @@ fi
 # Process template with envsubst
 echo "Processing template..."
 envsubst < "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+
+if [[ $TEMPLATE_FILE = "$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/bash-function.nix" ]]; then
+  add-import-to-nix "$TARGET_DIR/default.nix" "$FUNCTION_NAME_FULL"
+fi
 
 echo "Success! function created at: $OUTPUT_FILE"
 echo ""

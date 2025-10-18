@@ -2,10 +2,16 @@
 
 let
 
+add-import-to-nix = (import ../lib/add-import-to-nix.nix {inherit pkgs;}).add-import-to-nix;
+select-directory = (import ../lib/select-directory.nix {inherit pkgs;}).select-directory;
+
 mono-flake-new-script = pkgs.writeShellScriptBin "mono-flake-new-script" ''
 #!/bin/bash
 
 set -euo pipefail
+
+source ${add-import-to-nix}
+source ${select-directory}
 
 # Default values
 SCRIPT_NAME=""
@@ -18,6 +24,7 @@ usage() {
   echo "Usage: $0 [OPTIONS] [SCRIPT_NAME]"
   echo "Options:"
   echo "  -n, --name SCRIPT_NAME   Script name (skips interactive input)"
+  echo "  -d, --out-dir OUT_DIR    Output dir (skips interactive input)"
   echo "  -h, --help        Show this help message"
   echo ""
   echo "Environment variables:"
@@ -29,6 +36,7 @@ usage() {
   echo "  $0 -n my-script     # Named argument"
   exit 1
 }
+
 
 # Function to select directory interactively
 select_directory() {
@@ -46,7 +54,7 @@ select_directory() {
   done < <(find "$OUTPUT_DIR" -type d -not -path "$OUTPUT_DIR" -print0 | sort -z)
 
   if [[ ''${#dirs[@]} -eq 0 ]]; then
-    selected_dir="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/scripts"
+    SELECTED_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/scripts"
   else
     echo "$i) Create new directory"
     echo "0) Exit"
@@ -58,9 +66,9 @@ select_directory() {
       exit 0
     elif [[ "$choice" == "$i" ]]; then
       read -p "Enter new directory name: " new_dir
-      selected_dir="$new_dir"
+      SELECTED_DIR="$new_dir"
     elif [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -lt "$i" ]]; then
-      selected_dir="''${dirs[$((choice-1))]}"
+      SELECTED_DIR="''${dirs[$((choice-1))]}"
     else
       echo "Invalid selection"
       exit 1
@@ -73,6 +81,10 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     -n|--name)
       SCRIPT_NAME="$2"
+      shift 2
+      ;;
+    -d|--out-dir)
+      SELECTED_DIR="$2"
       shift 2
       ;;
     -h|--help)
@@ -113,7 +125,9 @@ if [[ ! -d "$OUTPUT_DIR" ]]; then
   mkdir -p "$OUTPUT_DIR"
 fi
 
-select_directory
+if [[ ! -v SELECTED_DIR ]]; then
+  select-directory
+fi
 
 # Get script name (interactive or from argument)
 if [[ -z "$SCRIPT_NAME" ]]; then
@@ -139,7 +153,7 @@ if [[ ! "$SCRIPT_NAME" =~ \.nix$ ]]; then
 fi
 
 # Define output file path
-OUTPUT_FILE="$OUTPUT_DIR/$selected_dir/$SCRIPT_NAME"
+OUTPUT_FILE="$OUTPUT_DIR/$SELECTED_DIR/$SCRIPT_NAME"
 
 # Check if output file already exists
 if [[ -f "$OUTPUT_FILE" ]]; then
@@ -156,10 +170,17 @@ if [[ -f "$OUTPUT_FILE" ]]; then
   esac
 fi
 
-target_dir="$(dirname "$OUTPUT_FILE")"
-if [[ ! -d "$target_dir" ]]; then
-  echo "Creating directory: $target_dir"
-  mkdir -p "$target_dir"
+TARGET_DIR="$(dirname "$OUTPUT_FILE")"
+if [[ ! -d "$TARGET_DIR" ]]; then
+  echo "Creating directory: $TARGET_DIR"
+  mkdir -p "$TARGET_DIR"
+  cat << 'EOF' > "$TARGET_DIR/default.nix"
+{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+ imports = [
+ ];
+}
+EOF
 fi
 
 # Export the script name as environment variable for envsubst
@@ -175,6 +196,8 @@ fi
 # Process template with envsubst
 echo "Processing template..."
 envsubst < "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+
+add-import-to-nix "$TARGET_DIR/default.nix" "$SCRIPT_NAME_FULL"
 
 echo "Success! Script created at: $OUTPUT_FILE"
 echo ""
