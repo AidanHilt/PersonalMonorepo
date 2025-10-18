@@ -1,0 +1,49 @@
+{{- range $vaultConfigName, $vaultConfig := .Values }}
+{{- if $vaultConfig.enabled }}
+---
+{{- $resourceName := $vaultConfig.resourceName | default $vaultConfigName}}
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: {{ $resourceName }}-auth
+  namespace: {{ $vaultConfig.namespace }}
+spec:
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: {{ $resourceName }}
+    serviceAccount: {{ $resourceName }}
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: {{ $resourceName }}-config-secret
+  namespace: {{ $vaultConfig.namespace }}
+spec:
+  type: kv-v2
+  mount: {{ $vaultConfig.namespace }}
+  path: {{ $resourceName }}/config
+
+  destination:
+    name: {{ $resourceName }}-config-secret
+    create: true
+
+    {{- if $vaultConfig.destination }}
+    {{ toYaml $vaultConfig.destination | nindent 4}}
+    {{- end }}
+
+  refreshAfter: 30s
+
+  vaultAuthRef: {{ $resourceName }}-auth
+
+{{ $serviceAccountEnabled := and (hasKey $vaultConfig "serviceAccount") ($vaultConfig.serviceAccount.enabled) | default false}}
+{{- if (get (default (dict) $vaultConfig.serviceAccount) "enabled") | default false }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $resourceName }}
+  namespace: {{ $vaultConfig.serviceAccount.namespace }}
+{{- end }}
+{{- end }}
+{{- end }}

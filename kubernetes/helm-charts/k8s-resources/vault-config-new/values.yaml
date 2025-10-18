@@ -1,0 +1,41 @@
+jellyfin:
+  enabled: false
+
+jellyseerr:
+  enabled: false
+
+postgres:
+  enabled: false
+
+  destination:
+    type: kubernetes.io/basic-auth
+    labels:
+      cnpg.io/reload: ""
+
+prowlarr:
+  enabled: false
+
+radarr:
+  enabled: false
+
+sonarr:
+  enabled: false
+
+transmission:
+  enabled: false
+
+  destination:
+    transformation:
+      templates:
+        vpnConfig:
+          text: |
+            {{`{{ .Secrets.vpnConfig | replace "\\n" "\n" }}`}}
+
+video-stack-configuration:
+  enabled: false
+
+  resourceName: setup-job
+
+  serviceAccount:
+    enabled: true
+    namespace: videos
