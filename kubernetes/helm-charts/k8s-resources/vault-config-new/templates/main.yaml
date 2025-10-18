@@ -12,7 +12,7 @@ spec:
   mount: kubernetes
   kubernetes:
     role: {{ $resourceName }}
-    serviceAccount: {{ $resourceName }}
+    serviceAccount: {{ $vaultConfig.serviceAccount.name | default $resourceName }}
 ---
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultStaticSecret
@@ -36,13 +36,13 @@ spec:
 
   vaultAuthRef: {{ $resourceName }}-auth
 
-{{ $serviceAccountEnabled := and (hasKey $vaultConfig "serviceAccount") ($vaultConfig.serviceAccount.enabled) | default false}}
+{{ $serviceAccountEnabled := and (hasKey $vaultConfig "serviceAccount") ($vaultConfig.serviceAccount.create) | default false}}
 {{- if (get (default (dict) $vaultConfig.serviceAccount) "enabled") | default false }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ $resourceName }}
+  name: {{ $vaultConfig.serviceAccount.name | default $resourceName }}
   namespace: {{ $vaultConfig.serviceAccount.namespace }}
 {{- end }}
 {{- end }}

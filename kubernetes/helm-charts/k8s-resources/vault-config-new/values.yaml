@@ -15,6 +15,9 @@ postgres:
     labels:
       cnpg.io/reload: ""
 
+  serviceAccount:
+    name: postgres-cluster
+
 prowlarr:
   enabled: false
   namespace: videos
@@ -45,5 +48,5 @@ video-stack-configuration:
   resourceName: setup-job
 
   serviceAccount:
-    enabled: true
+    create: true
     namespace: videos
