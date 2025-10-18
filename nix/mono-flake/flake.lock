@@ -323,16 +323,16 @@
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1759461741,
-        "narHash": "sha256-Hm4Egsmxcy5VAul3YN/CxDLdrRQDIaPbboeViZT+k4E=",
+        "lastModified": 1760825901,
+        "narHash": "sha256-8nblpfjRYyg7BuGZxAgRm93bN4UrsnA462vGFSgWJPI=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "351334b7da9f9c62ce2b38f59fda6a148a5931f0",
+        "rev": "653583a24628be8a4ad0cf32b747647b4e0d8341",
         "type": "github"
       },
       "original": {
         "owner": "aidanhilt",
-        "ref": "chore/pre-cutover-cleanup-and-setup",
+        "ref": "project-appocalypse/helm-chart-refactor",
         "repo": "PersonalMonorepo",
         "type": "github"
       }
