@@ -2,8 +2,6 @@
 
 {
   imports = [
-    ./_atils.nix
-
     ../../scripts/argocd/default.nix
     ../../scripts/context/default.nix
     ../../scripts/helm/default.nix
