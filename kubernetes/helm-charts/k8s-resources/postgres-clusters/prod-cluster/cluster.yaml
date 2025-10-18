@@ -4,8 +4,8 @@ metadata:
   name: postgres-cluster
   namespace: postgres
 spec:
-  description: "Central Postgres cluster for qa-cluster"
-  instances: 1
+  description: "Central Postgres cluster for prod-cluster"
+  instances: 2
   startDelay: 300
   stopDelay: 300
   primaryUpdateStrategy: unsupervised
@@ -16,4 +16,4 @@ spec:
   enableSuperuserAccess: true
 
   storage:
-    size: 1Gi
+    size: 10Gi
