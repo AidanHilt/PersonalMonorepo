@@ -3,7 +3,7 @@ env: prod-cluster
 hostnames:
   - prod-cluster-lb.lan
 
-gitRevision: chore/pre-cutover-cleanup-and-setup
+gitRevision: project-appocalypse/helm-chart-refactor
 
 flaresolverr:
   enabled: true
