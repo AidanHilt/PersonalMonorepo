@@ -10,11 +10,11 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-        {{- range .Values.hostnames }}
-          {{- if not (regexMatch "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$" .) }}
-        - {{ . }}
-          {{- end }}
-        {{- end }}
+        # {{- range .Values.hostnames }}
+        #   {{- if not (regexMatch "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$" .) }}
+        # - {{ . }}
+        #   {{- end }}
+        # {{- end }}
         {{- toYaml .Values.hostnames | nindent 8 }}
         {{- if index .Values "hashi-vault" "enabled" }}
         {{- range .Values.hostnames }}

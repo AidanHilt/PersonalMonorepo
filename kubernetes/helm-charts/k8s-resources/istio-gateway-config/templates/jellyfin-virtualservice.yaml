@@ -5,7 +5,10 @@ metadata:
   name: jellyfin
   namespace: istio-system
 spec:
-  hosts: {{ .Values.hostnames }}
+  {{- with .Values.hostnames }}
+  hosts:
+    {{- toYaml . | nindent 2 }}
+  {{- end }}
   gateways:
     - internal-gateway
   http:
