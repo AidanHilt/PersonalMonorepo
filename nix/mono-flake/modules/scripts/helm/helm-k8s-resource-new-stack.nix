@@ -2,6 +2,8 @@
 
 let
 printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
+select-directory = import ../lib/select-directory.nix { inherit pkgs; };
+
 
 helm-k8s-resource-new-stack = pkgs.writeShellScriptBin "helm-k8s-resource-new-stack" ''
 #!/bin/bash
@@ -9,6 +11,7 @@ helm-k8s-resource-new-stack = pkgs.writeShellScriptBin "helm-k8s-resource-new-st
 set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
+source ${select-directory}
 
 OUTPUT_DIR="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources"
 CHART_NAME=""
