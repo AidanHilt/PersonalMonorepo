@@ -11,7 +11,7 @@ set -euo pipefail
 source ${printing-and-output.printing-and-output}
 
 show_help() {
-   "Usage: $0 [OPTIONS]"
+  "Usage: $0 [OPTIONS]"
   echo ""
   echo "OPTIONS:"
   echo "  --chart-name NAME    Name of the helm chart to create"
@@ -59,6 +59,8 @@ mkdir -p "$DEST_DIR"
 
 print_debug "Copying files from $SOURCE_DIR to $DEST_DIR"
 cp -r "$SOURCE_DIR"/* "$DEST_DIR"
+
+export CHART_NAME
 
 print_debug "Running envsubst on all files in $DEST_DIR"
 find "$DEST_DIR" -type f | while read -r FILE; do
