@@ -96,6 +96,8 @@ resource "vault_kv_secret_v2" "jellyseerr_config" {
   data_json = jsonencode(
     {
       apiKey   = random_password.jellyseerr_api_key.result
+      postgresUsername = var.postgres_jellyseerr_username
+      postgresPassword = random_password.postgres_jellyseerr_password.result
     }
   )
 }

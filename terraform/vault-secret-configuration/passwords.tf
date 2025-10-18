@@ -48,6 +48,11 @@ resource "random_password" "postgres_radarr_password" {
   override_special = "!#$%*()-_=+[]{}:?"
 }
 
+resource "random_password" "postgres_jellyseerr_password" {
+  length = 64
+  override_special = "!#$%*()-_=+[]{}?"
+}
+
 resource "random_password" "jellyfin_password" {
   length = 64
   override_special = "!#$%*()-_=+[]{}?"

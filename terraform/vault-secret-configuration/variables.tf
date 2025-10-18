@@ -26,6 +26,12 @@ variable "postgres_radarr_username" {
   default     = "radarr_user"
 }
 
+variable "postgres_jellyseerr_username" {
+  type        = string
+  description = "The username for the jellyseerr user"
+  default     = "jellyseerr_user"
+}
+
 variable "postgres_master_username" {
   type        = string
   description = "The username for the postgres master user"
