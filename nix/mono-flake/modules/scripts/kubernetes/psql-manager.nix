@@ -10,7 +10,22 @@ set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
 
-SECRET_NAME="postgres-config"
+show_help() {
+  print_status "Usage: $0 [OPTIONS]"
+  print_status ""
+  print_status "Reads a secret from a Kubernetes cluster and launches a pod that connects using those credentials."
+  print_status ""
+  print_status "OPTIONS:"
+  print_status "  --secret-name NAME      Name of the Kubernetes secret to retrieve"
+  print_status "  --namespace NAMESPACE   Kubernetes namespace containing the secret"
+  print_status "  --username-key KEY      Key in the secret containing the username"
+  print_status "  --password-key KEY      Key in the secret containing the password"
+  print_status "  --postgres-endpoint URL PostgreSQL endpoint URL"
+  print_status "  --database NAME         Database name to connect to"
+  print_status "  --help                  Show this help message"
+}
+
+SECRET_NAME="postgres-config-secret"
 NAMESPACE="postgres"
 USERNAME_KEY="username"
 PASSWORD_KEY="password"
@@ -42,6 +57,10 @@ while [[ $# -gt 0 ]]; do
     --database)
       DATABASE="$2"
       shift 2
+      ;;
+    --help)
+      show_help
+      exit
       ;;
     *)
       print_error "Unknown argument: $1"
