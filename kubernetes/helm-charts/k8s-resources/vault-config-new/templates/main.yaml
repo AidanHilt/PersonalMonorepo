@@ -37,7 +37,7 @@ spec:
 
   vaultAuthRef: {{ $resourceName }}-auth
 
-{{- if (get (default (dict) $vaultConfig.serviceAccount) "enabled") | default false }}
+{{- if (get (default (dict) $vaultConfig.serviceAccount) "create") | default false }}
 ---
 apiVersion: v1
 kind: ServiceAccount

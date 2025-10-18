@@ -8,7 +8,7 @@ spec:
   method: kubernetes
   mount: kubernetes
   kubernetes:
-    role: setup_job
+    role: setup-job
     serviceAccount: setup-job
 ---
 apiVersion: secrets.hashicorp.com/v1beta1
@@ -19,7 +19,7 @@ metadata:
 spec:
   type: kv-v2
   mount: videos
-  path: setup_job/config
+  path: setup-job/config
 
   destination:
     name: setup-job-config-secret
