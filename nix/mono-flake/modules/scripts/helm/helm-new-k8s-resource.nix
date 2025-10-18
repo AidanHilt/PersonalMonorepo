@@ -11,7 +11,7 @@ set -euo pipefail
 source ${printing-and-output.printing-and-output}
 
 show_help() {
-  echo "Usage: $0 [OPTIONS]"
+   "Usage: $0 [OPTIONS]"
   echo ""
   echo "OPTIONS:"
   echo "  --chart-name NAME    Name of the helm chart to create"
@@ -54,13 +54,13 @@ if [[ ! -d "$SOURCE_DIR" ]]; then
   exit 1
 fi
 
-print_status "Creating destination directory: $DEST_DIR"
+print_debug "Creating destination directory: $DEST_DIR"
 mkdir -p "$DEST_DIR"
 
-print_status "Copying files from $SOURCE_DIR to $DEST_DIR"
+print_debug "Copying files from $SOURCE_DIR to $DEST_DIR"
 cp -r "$SOURCE_DIR"/* "$DEST_DIR"
 
-print_status "Running envsubst on all files in $DEST_DIR"
+print_debug "Running envsubst on all files in $DEST_DIR"
 find "$DEST_DIR" -type f | while read -r FILE; do
   envsubst < "$FILE" > "$FILE.tmp"
   mv "$FILE.tmp" "$FILE"
