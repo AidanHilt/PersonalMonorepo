@@ -6,6 +6,7 @@
 
     ../../scripts/argocd/default.nix
     ../../scripts/context/default.nix
+    ../../scripts/helm/default.nix
     ../../scripts/kubernetes/default.nix
     ../../scripts/mono-flake/default.nix
     ../../scripts/nixos/default.nix
