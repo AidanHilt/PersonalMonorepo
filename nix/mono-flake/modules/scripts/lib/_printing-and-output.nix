@@ -10,11 +10,23 @@ let
   NC='\033[0m' # No Color
 
   print_status() {
-    echo -e "''${GREEN}[INFO]''${NC} $1"
+    if [[ ! -v ATILS_LOG_LEVEL ]]; then
+      ATILS_LOG_LEVEL="INFO"
+    fi
+
+    if [[ $ATILS_LOG_LEVEL = "DEBUG" ]] || [[ $ATILS_LOG_LEVEL = "INFO" ]]; then
+      echo -e "''${GREEN}[INFO]''${NC} $1"
+    fi
   }
 
   print_warning() {
-    echo -e "''${YELLOW}[WARN]''${NC} $1"
+    if [[ ! -v ATILS_LOG_LEVEL ]]; then
+      ATILS_LOG_LEVEL="INFO"
+    fi
+
+    if [[ $ATILS_LOG_LEVEL = "DEBUG" ]] || [[ $ATILS_LOG_LEVEL = "INFO" ]] || [[ $ATILS_LOG_LEVEL = "WARN" ]]; then
+      echo -e "''${YELLOW}[WARN]''${NC} $1"
+    fi
   }
 
   print_error() {
@@ -22,7 +34,13 @@ let
   }
 
   print_debug() {
-    echo -e "''${BLUE}[DEBUG]''${NC} $1"
+    if [[ ! -v ATILS_LOG_LEVEL ]]; then
+      ATILS_LOG_LEVEL="INFO"
+    fi
+
+    if [[ $ATILS_LOG_LEVEL = "DEBUG" ]]; then
+      echo -e "''${BLUE}[DEBUG]''${NC} $1"
+    fi
   }
   '';
 in
