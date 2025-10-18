@@ -2,7 +2,7 @@ env: prod-cluster
 
 hostnames:
   - prod-cluster-lb.lan
-  - "192.168.86.3"
+  - "*.*.*.*"
 
 gitRevision: project-appocalypse/helm-chart-refactor
 
