@@ -2,7 +2,7 @@
 {{- if $vaultConfig.enabled }}
 ---
 {{- $resourceName := $vaultConfig.resourceName | default $vaultConfigName}}
-{{- $serviceAccountName := $vaultConfig.serviceAccount.name | default $resourceName }}
+{{- $serviceAccountName := ($vaultConfig.serviceAccount).name | default $resourceName }}
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultAuth
 metadata:
@@ -37,7 +37,6 @@ spec:
 
   vaultAuthRef: {{ $resourceName }}-auth
 
-{{ $serviceAccountEnabled := and (hasKey $vaultConfig "serviceAccount") ($vaultConfig.serviceAccount.create) | default false}}
 {{- if (get (default (dict) $vaultConfig.serviceAccount) "enabled") | default false }}
 ---
 apiVersion: v1
