@@ -11,7 +11,7 @@ helm-k8s-resource-new-stack = pkgs.writeShellScriptBin "helm-k8s-resource-new-st
 set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
-source ${select-directory}
+source ${select-directory.select-directory}
 
 OUTPUT_DIR="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources"
 CHART_NAME=""
