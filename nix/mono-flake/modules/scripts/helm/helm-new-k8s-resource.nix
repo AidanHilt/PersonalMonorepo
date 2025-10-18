@@ -19,11 +19,16 @@ show_help() {
 }
 
 CHART_NAME=""
+RESOURCE_TYPE=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
     --chart-name)
       CHART_NAME="$2"
+      shift 2
+      ;;
+    --resource-type)
+      RESOURCE_TYPE="$2"
       shift 2
       ;;
     --help)
@@ -60,7 +65,17 @@ mkdir -p "$DEST_DIR"
 print_debug "Copying files from $SOURCE_DIR to $DEST_DIR"
 cp -r "$SOURCE_DIR"/* "$DEST_DIR"
 
+if [[ -z "$RESOURCE_TYPE" ]]; then
+  read -p "Enter resource type: " RESOURCE_TYPE
+fi
+
+if [[ -z "$RESOURCE_TYPE" ]]; then
+  print_error "Resource type cannot be empty"
+  exit 1
+fi
+
 export CHART_NAME
+export RESOURCE_TYPE
 
 print_debug "Running envsubst on all files in $DEST_DIR"
 find "$DEST_DIR" -type f | while read -r FILE; do
