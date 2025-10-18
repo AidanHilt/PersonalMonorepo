@@ -77,6 +77,10 @@
       url = "github:lnl7/nix-darwin/nix-darwin-25.05";
       inputs.nixpkgs.follows = "nixpkgs-darwin";
     };
+
+    # Versioning stuff
+    nixpkgs-terragrunt.url = "github:nixos/nixpkgs/0024e310e51151ee27d710e1f2fdf5e9c293da0b";
+    nixpkgs-terraform.url = "github:nixos/nixpkgs/0472f3c9c5618c9675fc8dcc9e6ea484a5590d6d";
   };
 
   outputs = { self, nixpkgs, darwin, ... }@inputs:
@@ -91,6 +95,7 @@
 
       allSystems = import inputs.systems;
       systems = nixpkgs.lib.filter (sys: builtins.pathExists (./machines + "/${sys}")) allSystems;
+
 
       baseOverlays = [
         inputs.nur.overlays.default

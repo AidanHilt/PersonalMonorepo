@@ -4,6 +4,8 @@ let
   lib = nixpkgs.lib;
 
   discovery = import ./discovery.nix { inherit nixpkgs darwin inputs; };
+
+  pkgs = import inputs.nixpkgs;
 in
 
 {
@@ -16,7 +18,7 @@ in
         patches = [
           (final: prev: {
             grub2 = prev.grub2.overrideAttrs (oldAttrs: {
-              patches = map (patch: 
+              patches = map (patch:
                 if patch.name or "" == "23_prerequisite_1_key_protector_add_key_protectors_framework.patch"
                   then patch // { hash = "sha256-5aFHzc5qXBNLEc6yzI17AH6J7EYogcXdLxk//1QgumY="; }
                 else if patch.name or "" == "23_CVE-2024-49504.patch"
