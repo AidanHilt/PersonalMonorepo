@@ -78,7 +78,7 @@ spec:
           hashi-vault:
             enabled: {{ index .Values "hashi-vault" "enabled" }}
 
-          hostnames: {{ index .Values "hostnames" }}
+          hostnames: {{ index .Values "hostnames" | toYaml }}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: argocd

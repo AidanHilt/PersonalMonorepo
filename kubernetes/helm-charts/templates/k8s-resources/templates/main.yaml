@@ -1,5 +1,5 @@
 {{- range $${RESOURCE_TYPE}Name, $$RESOURCE_TYPE := .Values }}
-{{- if $$RESOURCE_TYPE.enabled | default true }}
+{{- if $$RESOURCE_TYPE.enabled }}
 apiVersion:
 kind:
 metadata:

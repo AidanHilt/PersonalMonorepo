@@ -1,0 +1,11 @@
+{{- range $appName, $app := .Values }}
+{{- if $app.enabled | default true }}
+apiVersion:
+kind:
+metadata:
+  name:
+  namespace:
+spec:
+---
+{{- end }}
+{{- end }}

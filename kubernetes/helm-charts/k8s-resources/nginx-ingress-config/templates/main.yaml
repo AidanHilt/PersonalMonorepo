@@ -1,0 +1,11 @@
+{{- range $ingressName, $ingress := .Values }}
+{{- if $ingress.enabled | default true }}
+apiVersion:
+kind:
+metadata:
+  name:
+  namespace:
+spec:
+---
+{{- end }}
+{{- end }}
