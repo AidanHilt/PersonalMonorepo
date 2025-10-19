@@ -1,0 +1,65 @@
+crafty-server:
+  enabled: false
+
+grafana:
+  enabled: false
+  prefixes:
+    - /grafana
+    - /grafana/
+  rewrite:
+    uri: /
+  destinationSvc: prometheus-grafana.monitoring.svc.cluster.local
+
+jellyfin:
+  enabled: false
+  prefixes:
+    - /emby
+  destinationSvc: jellyfin.videos.svc.cluster.local
+
+jellyseerr:
+  enabled: false
+  subdomain: jellyseerr
+  destinationSvc: jellyseerr.videos.svc.cluster.local
+
+kiali:
+  enabled: false
+  prefixes:
+    - /kiali
+  destinationSvc: kiali.istio-system.svc.cluster.local
+  destinationPort: 200001
+
+longhorn:
+  enabled: false
+
+prowlarr:
+  enabled: false
+  prefixes:
+    - /prowlarr
+  destinationSvc: prowlarr.videos.svc.cluster.local
+
+radarr:
+  enabled: false
+  prefixes:
+    - /radarr
+  destinationSvc: radarr.videos.svc.cluster.local
+
+sonarr:
+  enabled: false
+  prefixes:
+    - /prowlarr
+  destinationSvc: sonarr.videos.svc.cluster.local
+
+transmission:
+  enabled: false
+  prefixes:
+    - /transmission
+  destinationSvc: transmission.videos.svc.cluster.local
+
+hashi-vault:
+  enabled: false
+  subdomain: vault
+  destinationSvc: hashi-vault.vault.svc.cluster.local
+  destinationPort: 8200
+
+hostnames:
+  - localhost

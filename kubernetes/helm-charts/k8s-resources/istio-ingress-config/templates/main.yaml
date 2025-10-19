@@ -1,0 +1,43 @@
+{{- range $ingressName, $ingress := .Values }}
+{{- if ne $ingressName "hostnames" }}
+{{- if $ingress.enabled }}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ $ingressName }}
+  namespace: {{ $ingress.namespace | default "istio-system" }}
+spec:
+{{- with $.Values.hostnames }}
+  hosts:
+  {{- range . }}
+    {{- if $ingress.subdomain }}
+      {{- if not (regexMatch "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$" .) }}
+    - {{ $ingress.subdomain }}.{{ . }}
+      {{- end }}
+    {{- else }}
+    - {{ . }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+  gateways:
+    - internal-gateway
+  http:
+    - match:
+      {{- $prefixes := $ingress.prefixes | default (list "/") }}
+      {{- range $prefixes }}
+        - uri:
+            prefix: {{ . }}
+      {{- end }}
+      {{- with $ingress.rewrite }}
+      rewrite:
+        {{- toYaml . | nindent 7}}
+      {{- end }}
+      route:
+        - destination:
+            host: {{ $ingress.destinationSvc }}
+            port:
+              number: {{ $ingress.destinationPort | default 80}}
+---
+{{- end }}
+{{- end }}
+{{- end }}
