@@ -1,3 +1,13 @@
+argocd:
+  # This breaks the rule we have going here, BUT, if you're running this,
+  # it's probably with ArgoCD, so we should be able to access it no matter
+  # what
+  enabled: true
+  prefixes:
+    - /argocd
+  destinationSvc: argocd-server.argocd.svc.cluster.local
+
+# TODO Migrate this to istio
 crafty-server:
   enabled: false
 
