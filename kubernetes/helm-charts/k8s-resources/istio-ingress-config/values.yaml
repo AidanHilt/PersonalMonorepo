@@ -34,6 +34,7 @@ longhorn:
     - /longhorn/
   rewrite:
     uri: /
+  destinationSvc: longhorn-frontend.longhorn-system.svc.cluster.local
 
 prowlarr:
   enabled: false
