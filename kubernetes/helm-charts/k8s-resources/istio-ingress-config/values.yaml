@@ -30,6 +30,10 @@ kiali:
 
 longhorn:
   enabled: false
+  prefixes:
+    - /longhorn/
+  rewrite:
+    uri: /
 
 prowlarr:
   enabled: false
