@@ -51,7 +51,7 @@ radarr:
 sonarr:
   enabled: false
   prefixes:
-    - /prowlarr
+    - /sonarr
   destinationSvc: sonarr.videos.svc.cluster.local
 
 transmission:
