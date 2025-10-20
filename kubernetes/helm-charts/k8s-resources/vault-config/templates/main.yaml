@@ -1,5 +1,5 @@
 {{- range $vaultConfigName, $vaultConfig := .Values }}
-{{- if $vaultConfig.enabled }}
+{{- if and $vaultConfig.enabled $vaultConfig.namespace }}
 ---
 {{- $resourceName := $vaultConfig.resourceName | default $vaultConfigName}}
 {{- $serviceAccountName := ($vaultConfig.serviceAccount).name | default $resourceName }}
