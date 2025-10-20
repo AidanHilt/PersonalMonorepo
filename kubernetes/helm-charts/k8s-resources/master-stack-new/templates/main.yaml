@@ -1,11 +1,104 @@
 {{- range $appName, $app := .Values }}
-{{- if $app.enabled | default true }}
-apiVersion:
-kind:
+{{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration")}}
+{{- if not (has $appName $excludedNames) }}
+{{- if $app.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
 metadata:
-  name:
-  namespace:
+  name: {{ $appName }}
+  namespace: argocd
+  annotations:
+  {{- if $app.syncWave }}
+    argocd.argoproj.io/sync-wave: {{ $app.syncWave }}
+  {{- end }}
+  {{- if $app.syncOptions }}
+    argocd.argoproj.io/compare-options: {{ $app.syncOptions }}
+  {{- end }}
 spec:
+  project: default
+  sources:
+    - repoURL: {{ $app.repo | default $.Values.defaultGitRepo }}
+      targetRevision: {{ $app.version | default $.Values.gitRevision }}
+    {{- with $app.gitPath }}
+      path: {{ tpl . $ }}
+    {{- end }}
+    {{- with $app.chart }}
+      chart: {{ . }}
+    {{- end }}
+    {{- if not $app.secureValues }}
+      helm:
+        {{- if $app.defaultValues }}
+        values:
+          {{- $app.defaultValues | toYaml | indent 8 }}
+        {{- end }}
+        releaseName: {{ $appName }}
+      {{- if $app.configuration.enabled }}
+        valueFiles:
+          - "$values/{{ $.Values.configuration.configurationDirectory }}/{{ $.Values.env }}/{{ $appName }}.yaml"
+    - repoURL: {{ $.Values.configuration.configurationRepo }}
+      targetRevision: {{ $.Values.configuration.configurationRevision | default $.Values.gitRevision }}
+      ref: values
+      {{- end }}
+    {{- else }}
+      plugin:
+        name: argocd-vault-plugin-helm
+      env:
+        - name: HELM_VALUES
+          value:
+            {{- $app.secureValues | toYaml | indent 8 }}
+    {{- end }}
+  {{- if $app.destinationNamespace }}
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: {{ $app.destinationNamespace }}
+  {{- end }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
 ---
+{{- range $subAppName, $subApp := $app.dependentApps }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $subAppName }}
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: {{ $subApp.repo | default ($app.repo | default $.Values.defaultGitRepo) }}
+      {{- if $subApp.useGitRevision }}
+      targetRevision: {{ $subApp.version | default $.Values.gitRevision }}
+      {{- else }}
+      targetRevision: {{ $subApp.version | default $app.version }}
+      {{- end }}
+    {{- with $subApp.gitPath }}
+      path: {{ tpl . $ }}
+    {{- end }}
+    {{- with $subApp.chart }}
+      chart: {{ . }}
+    {{- end }}
+
+      helm:
+        releaseName: {{ $subAppName }}
+    {{- if ($subApp.configuration).enabled }}
+        valueFiles:
+          - "$values/{{ $.Values.configuration.configurationDirectory }}/{{ $.Values.env }}/{{ $subAppName }}.yaml"
+    - repoURL: {{ $.Values.configuration.configurationRepo }}
+      targetRevision: {{ $.Values.configuration.configurationRevision | default $.Values.gitRevision }}
+      ref: values
+    {{- end }}
+  {{- if $subApp.destinationNamespace }}
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: {{ $subApp.destinationNamespace }}
+  {{- end }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
