@@ -1,6 +1,6 @@
 {{- range $vaultConfigName, $vaultConfig := .Values }}
 # This guards against auto-generated values, which I'm too lazy to specialize
-{{- if and $vaultConfig.enabled (ne $vaultConfig "hostnames") }}
+{{- if and (ne $vaultConfigName "hostnames") $vaultConfig.enabled }}
 ---
 {{- $resourceName := $vaultConfig.resourceName | default $vaultConfigName}}
 {{- $serviceAccountName := ($vaultConfig.serviceAccount).name | default $resourceName }}
