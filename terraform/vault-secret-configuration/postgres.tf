@@ -9,7 +9,7 @@ resource "vault_mount" "kv-postgres" {
 # Create a KV v2 secret to store the Prowlarr API key
 resource "vault_kv_secret_v2" "postgres_config" {
   mount = vault_mount.kv-postgres.path
-  name  = "postgres-config"
+  name  = "postgres/config"
 
   data_json = jsonencode(
     {

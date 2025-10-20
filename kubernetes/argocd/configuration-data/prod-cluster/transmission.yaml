@@ -19,7 +19,7 @@ persistence:
     enabled: true
     type: hostPath
     mountPath: /videos
-    hostPath: /videos
+    hostPath: /storagePool/videoData/Videos/
   config:
     enabled: true
     size: 1Gi

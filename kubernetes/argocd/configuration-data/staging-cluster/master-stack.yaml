@@ -2,16 +2,11 @@ env: staging-cluster
 
 hostnames:
   - staging-cluster-lb.lan
+  - 192.168.86.23
 
-gitRevision: chore/final-super-final-i-really-mean-it-staging-cluster
-
-configuration:
-  configurationRevision: chore/final-super-final-i-really-mean-it-staging-cluster
+gitRevision: master
 
 flaresolverr:
-  enabled: true
-
-gateways:
   enabled: true
 
 hashi-vault:
@@ -19,17 +14,7 @@ hashi-vault:
   configuration:
     enabled: true
 
-vault-secrets-operator:
-  configuration:
-    enabled: true
-
 istio:
-  enabled: true
-
-istio-base:
-  enabled: true
-
-istio-gateway:
   enabled: true
 
 job-templates:
@@ -45,9 +30,6 @@ jellyseerr:
   configuration:
     enabled: true
 
-kiali:
-  enabled: true
-
 kyverno:
   enabled: true
 
@@ -58,11 +40,10 @@ longhorn:
 
 metallb:
   enabled: true
-
-metallb-config:
-  enabled: true
-  configuration:
-    enabled: true
+  dependentApps:
+    metallb-config:
+      configuration:
+        enabled: true
 
 postgres:
   enabled: true

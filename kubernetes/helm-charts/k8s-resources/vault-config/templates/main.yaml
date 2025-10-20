@@ -1,36 +1,49 @@
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: role-tokenreview-binding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:auth-delegator
-subjects:
-  - kind: ServiceAccount
-    name: hashi-vault
-    namespace: vault
-  - kind: ServiceAccount
-    name: argocd-repo-server
-    namespace: argocd
+{{- range $vaultConfigName, $vaultConfig := .Values }}
+{{- if $vaultConfig.enabled }}
 ---
-kind: Secret
-apiVersion: v1
+{{- $resourceName := $vaultConfig.resourceName | default $vaultConfigName}}
+{{- $serviceAccountName := ($vaultConfig.serviceAccount).name | default $resourceName }}
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
 metadata:
-  name: argocd-vault-plugin-credentials
-  namespace: argocd
-type: Opaque
-stringData:
-  AVP_AUTH_TYPE: k8s
-  AVP_K8S_ROLE: argocd
-  AVP_TYPE: vault
-  VAULT_ADDR: http://hashi-vault.vault.svc.cluster.local:8200
+  name: {{ $resourceName }}-auth
+  namespace: {{ $vaultConfig.namespace }}
+spec:
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: {{ $resourceName }}
+    serviceAccount: {{ $serviceAccountName }}
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: {{ $resourceName }}-config-secret
+  namespace: {{ $vaultConfig.namespace }}
+spec:
+  type: kv-v2
+  mount: {{ $vaultConfig.namespace }}
+  path: {{ $resourceName }}/config
+
+  destination:
+    name: {{ $resourceName }}-config-secret
+    create: true
+
+    {{- if $vaultConfig.destination }}
+    {{ toYaml $vaultConfig.destination | nindent 4}}
+    {{- end }}
+
+  refreshAfter: 30s
+
+  vaultAuthRef: {{ $resourceName }}-auth
+
+{{- if (get (default (dict) $vaultConfig.serviceAccount) "create") | default false }}
 ---
 apiVersion: v1
-kind: Secret
+kind: ServiceAccount
 metadata:
-  name: vault-sa-token
-  namespace: vault
-  annotations:
-    kubernetes.io/service-account.name: hashi-vault
-type: kubernetes.io/service-account-token
+  name: {{ $serviceAccountName }}
+  namespace: {{ $vaultConfig.serviceAccount.namespace }}
+{{- end }}
+{{- end }}
+{{- end }}

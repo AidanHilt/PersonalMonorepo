@@ -1,0 +1,11 @@
+{{- range $${RESOURCE_TYPE}Name, $$RESOURCE_TYPE := .Values }}
+{{- if $$RESOURCE_TYPE.enabled }}
+apiVersion:
+kind:
+metadata:
+  name:
+  namespace:
+spec:
+---
+{{- end }}
+{{- end }}

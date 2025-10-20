@@ -63,7 +63,7 @@ in
     terraform
     terragrunt
     yarn
-    yq
+    yq-go
 
     argocd-commit
     nix-commit

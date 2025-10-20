@@ -16,7 +16,7 @@ in
     vrrpInstances.adguardhome = {
       interface = interface;
       priority = 100;
-      virtualRouterId = 81;
+      virtualRouterId = machine-config.networking.virtualRouterId;
       virtualIps = [{ addr = machine-config.networking.loadBalancerIp; }];
     };
   };

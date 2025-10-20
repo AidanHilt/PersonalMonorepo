@@ -1,23 +1,52 @@
 jellyfin:
   enabled: false
+  namespace: videos
 
 jellyseerr:
   enabled: false
+  namespace: videos
 
 postgres:
   enabled: false
+  namespace: postgres
+
+  destination:
+    type: kubernetes.io/basic-auth
+    labels:
+      cnpg.io/reload: ""
+
+  serviceAccount:
+    name: postgres-cluster
 
 prowlarr:
   enabled: false
+  namespace: videos
 
 radarr:
   enabled: false
+  namespace: videos
 
 sonarr:
   enabled: false
+  namespace: videos
 
 transmission:
   enabled: false
+  namespace: videos
+
+  destination:
+    transformation:
+      templates:
+        vpnConfig:
+          text: |
+            {{`{{ .Secrets.vpnConfig | replace "\\n" "\n" }}`}}
 
 video-stack-configuration:
   enabled: false
+  namespace: videos
+
+  resourceName: setup-job
+
+  serviceAccount:
+    create: true
+    namespace: videos

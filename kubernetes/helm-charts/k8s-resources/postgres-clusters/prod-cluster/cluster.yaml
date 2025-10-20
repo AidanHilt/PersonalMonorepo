@@ -1,0 +1,19 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-cluster
+  namespace: postgres
+spec:
+  description: "Central Postgres cluster for prod-cluster"
+  instances: 2
+  startDelay: 300
+  stopDelay: 300
+  primaryUpdateStrategy: unsupervised
+
+  superuserSecret:
+    name: postgres-config-secret
+
+  enableSuperuserAccess: true
+
+  storage:
+    size: 10Gi

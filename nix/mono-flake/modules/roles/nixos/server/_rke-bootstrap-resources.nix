@@ -145,7 +145,7 @@ spec:
   project: default
   sources:
     - repoURL: https://github.com/AidanHilt/PersonalMonorepo
-      path: kubernetes/helm-charts/k8s-resources/master-stack
+      path: kubernetes/helm-charts/k8s-resources/master-stack-new
       targetRevision: ${globals.personalMonorepoBranch}
       helm:
         valueFiles:

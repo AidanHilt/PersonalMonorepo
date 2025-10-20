@@ -1,0 +1,143 @@
+{{- range $appName, $app := .Values }}
+{{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration")}}
+{{- if not (has $appName $excludedNames) }}
+{{- if $app.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $appName }}
+  namespace: argocd
+  annotations:
+  {{- if $app.syncWave }}
+    argocd.argoproj.io/sync-wave: "{{ $app.syncWave }}"
+  {{- end }}
+  {{- if $app.syncOptions }}
+    argocd.argoproj.io/compare-options: "{{ $app.syncOptions }}"
+  {{- end }}
+spec:
+  project: default
+  sources:
+    - repoURL: {{ $app.repo | default $.Values.defaultGitRepo }}
+      targetRevision: {{ $app.version | default $.Values.gitRevision }}
+    {{- with $app.gitPath }}
+      path: {{ tpl . $ }}
+    {{- end }}
+    {{- with $app.chart }}
+      chart: {{ . }}
+    {{- end }}
+    {{- $isHelmChart := and (not (hasKey $app "secureValues")) (or (not (hasKey $app "helmChart")) $app.helmChart) }}
+    {{- if $isHelmChart }}
+      helm:
+        {{- if $app.defaultValues }}
+        values:
+          {{- $app.defaultValues | toYaml | indent 8 }}
+        {{- end }}
+        releaseName: {{ $appName }}
+      {{- if ($app.configuration).enabled }}
+        valueFiles:
+          - "$values/{{ $.Values.configuration.configurationDirectory }}/{{ $.Values.env }}/{{ $appName }}.yaml"
+    - repoURL: {{ $.Values.configuration.configurationRepo }}
+      targetRevision: {{ $.Values.configuration.configurationRevision | default $.Values.gitRevision }}
+      ref: values
+      {{- end }}
+    {{- else if $app.secureValues }}
+      plugin:
+        name: argocd-vault-plugin-helm
+      env:
+        - name: HELM_VALUES
+          value:
+            {{- $app.secureValues | toYaml | indent 8 }}
+    {{- end }}
+  destination:
+    server: 'https://kubernetes.default.svc'
+  {{- if $app.destinationNamespace }}
+    namespace: {{ $app.destinationNamespace }}
+  {{- end }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      {{- if $app.serverSideApply }}
+      - ServerSideApply=true
+      {{- end }}
+---
+{{- range $subAppName, $subApp := $app.dependentApps }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $subAppName }}
+  namespace: argocd
+  annotations:
+  {{- $syncWave := $subApp.syncWave | default $app.syncWave }}
+  {{- $syncOptions := $subApp.syncOptions | default $app.syncOptions }}
+  {{- if $syncWave }}
+    argocd.argoproj.io/sync-wave: "{{ $syncWave }}"
+  {{- end }}
+  {{- if $syncOptions }}
+    argocd.argoproj.io/compare-options: "{{ $syncOptions }}"
+  {{- end }}
+spec:
+  project: default
+  sources:
+    - repoURL: {{ $subApp.repo | default $app.repo }}
+    {{- if $subApp.useDefaultGitRevision }}
+      targetRevision: {{ $.Values.gitRevision }}
+    {{- else }}
+      targetRevision: {{ $subApp.version | default $app.version }}
+    {{- end }}
+    {{- with $subApp.gitPath }}
+      path: {{ tpl . $ }}
+    {{- end }}
+    {{- with $subApp.chart }}
+      chart: {{ . }}
+    {{- end }}
+    {{- $isHelmChart := and (not (hasKey $subApp "secureValues")) (or (not (hasKey $subApp "helmChart")) $subApp.helmChart ) }}
+    {{- if $isHelmChart }}
+      helm:
+        {{- if or $subApp.defaultValues $subApp.followMasterConfig }}
+        values:
+          {{- with $subApp.defaultValues }}
+          {{- toYaml . | indent 8 }}
+          {{- end }}
+          {{- if $subApp.followMasterConfig }}
+          {{- include "generateEnabledValues" $ | toYaml | indent 8 }}
+          {{- end }}
+        {{- end }}
+        releaseName: {{ $subAppName }}
+      {{- if ($subApp.configuration).enabled }}
+        valueFiles:
+          - "$values/{{ $.Values.configuration.configurationDirectory }}/{{ $.Values.env }}/{{ $subAppName }}.yaml"
+    - repoURL: {{ $.Values.configuration.configurationRepo }}
+      targetRevision: {{ $.Values.configuration.configurationRevision | default $.Values.gitRevision }}
+      ref: values
+      {{- end }}
+    {{- else if $subApp.secureValues }}
+      plugin:
+        name: argocd-vault-plugin-helm
+      env:
+        - name: HELM_VALUES
+          value:
+            {{- $subApp.secureValues | toYaml | indent 8 }}
+    {{- end }}
+  destination:
+    server: 'https://kubernetes.default.svc'
+  {{- $destinationNamespace := $subApp.destinationNamespace | default $app.destinationNamespace }}
+  {{- if $destinationNamespace }}
+    namespace: {{ $destinationNamespace }}
+  {{- end }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      {{- if $subApp.serverSideApply }}
+      - ServerSideApply=true
+      {{- end }}
+---
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

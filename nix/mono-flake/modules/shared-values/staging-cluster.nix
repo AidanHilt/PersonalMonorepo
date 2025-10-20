@@ -7,11 +7,12 @@
     fixedIp = true;
 
     defaultGateway = "192.168.86.1";
-    nameservers = [ "192.168.86.3" ];
+    nameservers = [ "192.168.86.2" ];
     prefixLength = 24;
 
     loadBalancerIp = "192.168.86.22";
     mainNetworkInterface = "ens3";
+    virtualRouterId = 82;
   };
 
   k8s = {

@@ -1,16 +1,12 @@
 env: qa-cluster
 
-gitRevision: chore/pre-cutover-cleanup-and-setup
+gitRevision: project-appocalypse/helm-chart-refactor
 
 flaresolverr:
   enabled: true
 
 hashi-vault:
   enabled: true
-  configuration:
-    enabled: true
-
-vault-secrets-operator:
   configuration:
     enabled: true
 
@@ -55,8 +51,5 @@ video-stack-configuration:
   configuration:
     enabled: true
 
-ingress:
+nginx:
   enabled: true
-  configuration:
-    enabled: true
-  clusterType: "kind"

@@ -11,7 +11,7 @@ spec:
   primaryUpdateStrategy: unsupervised
 
   superuserSecret:
-    name: postgres-config
+    name: postgres-config-secret
 
   enableSuperuserAccess: true
 
