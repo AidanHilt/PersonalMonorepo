@@ -87,14 +87,14 @@ resource "vault_kubernetes_auth_backend_role" "radarr_reader" {
 #============================
 
 resource "vault_policy" "setup_job_reader" {
-  name   = "setup_job"
+  name   = "setup-job"
 
   policy = <<EOT
-path "videos/data/setup_job/*" {
+path "videos/data/setup-job/*" {
   capabilities = ["read", "list"]
 }
 
-path "videos/setup_job/*" {
+path "videos/setup-job/*" {
   capabilities = ["read", "list"]
 }
 EOT
@@ -102,7 +102,7 @@ EOT
 
 resource "vault_kubernetes_auth_backend_role" "setup_job_reader" {
   backend                          = "kubernetes"
-  role_name                        = "setup_job"
+  role_name                        = "setup-job"
   bound_service_account_names      = ["setup-job"]
   bound_service_account_namespaces = ["videos"]
   token_ttl                        = 3600
