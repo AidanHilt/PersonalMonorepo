@@ -4,6 +4,9 @@ env: qa-cluster
 hostnames:
   - localhost
 
+# The default repo we read from for applications that use a git provider
+defaultGitRepo: https://github.com/AidanHilt/PersonalMonorepo
+
 # This is the version of Atils resources we are targeting. That means this is the branch that our own Helm charts will use, as well as any of our static config
 # This is also the branch that will be used for configuration (i.e. values files), unless configuration.configurationRevision is set below
 gitRevision: master
@@ -18,154 +21,241 @@ configuration:
 
 crafty-server:
   enabled: false
+  repo: oci://oci.trueforge.org/truecharts/crafty-4
+  chart: mychart
+  destinationNamespace: crafty
+  version: "9.2.2"
   configuration:
     enabled: false
-  version: "9.2.2"
 
 flaresolverr:
   enabled: false
+  gitPath: kubernetes/helm-charts/applications/flaresolverr
+  destinationNamespace: videos
   configuration:
     enabled: false
-
-grafana-dashboards:
-  enabled: false
-
-grafana-datasources:
-  enabled: false
-
-grafana-loki:
-  enabled: false
-  configuration:
-    enabled: false
-  version: "5.47.1"
-
-grafana-promtail:
-  enabled: false
-  configuration:
-    enabled: false
-  version: "6.15.5"
 
 hashi-vault:
   enabled: false
-  configuration:
-    enabled: false
+  repo: https://helm.releases.hashicorp.com
+  chart: vault
   version: "0.30.1"
-
-vault-secrets-operator:
-  # No enabled flag, because this is always deployed when Vault is enabled
+  destinationNamespace: vault
   configuration:
     enabled: false
-  version: "0.5.2"
+  dependentApps:
+    vault-secrets-operator:
+      repo: https://helm.releases.hashicorp.com
+      chart: vault-secrets-operator
+      version: "0.5.2"
+      configuration:
+        enabled: false
 
-ingress:
+nginx:
   enabled: false
-  # Should be set to either "kind", or "baremetal" (RKE2 is baremetal). This will let us deploy the right type of ingress based on the environment
-  clusterType: "kind"
+  gitPath: kubernetes/ingress-nginx/kind
+  destinationNamespace: ingress-nginx
+  dependentApps:
+    ingress-config:
+      repo: https://github.com/AidanHilt/PersonalMonorepo
+      useDefaultGitRevision: true
+      gitPath: kubernetes/helm-charts/k8s-resources/nginx-ingress-config
+      destinationNamespace: ""
+      # Generates a mirror of the enabled status and hostname config as the config for this app
+      followMasterConfig: true
 
 istio:
   enabled: false
+  repo: https://istio-release.storage.googleapis.com/charts
+  chart: istiod
+  version: "1.21.0"
+  destinationNamespace: istio-system
   configuration:
     enabled: false
-  version: "1.21.0"
-
-istio-base:
-  enabled: false
-  configuration:
-    enabled: false
-  version: "1.21.0"
-
-istio-gateway:
-  enabled: false
-  configuration:
-    enabled: false
-  version: "1.21.0"
+  dependentApps:
+    istio-base:
+      chart: base
+      configuration:
+        enabled: false
+    istio-gateway:
+      chart: gateway
+      configuration:
+        enabled: false
+    kiali:
+      repo: https://kiali.org/helm-charts
+      chart: kiali-operator
+      configuration:
+        enabled: false
+      version: "1.81.0"
+    ingress-config:
+      repo: https://github.com/AidanHilt/PersonalMonorepo
+      useDefaultGitRevision: true
+      gitPath: kubernetes/helm-charts/k8s-resources/istio-ingress-config
+      destinationNamespace: ""
+      # Generates a mirror of the enabled status and hostname config as the config for this app
+      followMasterConfig: true
 
 jellyfin:
   enabled: false
+  gitPath: kubernetes/helm-charts/applications/jellyfin
+  destinationNamespace: videos
   configuration:
     enabled: false
 
 jellyseerr:
   enabled: false
+  gitPath: kubernetes/helm-charts/applications/jellyseerr
+  destinationNamespace: videos
   configuration:
     enabled: false
 
 job-templates:
   enabled: false
+  gitPath: kubernetes/helm-charts/k8s-resources/job-templates
+  destinationNamespace: job-templates
   configuration:
     enabled: false
-
-kiali:
-  enabled: false
-  configuration:
-    enabled: false
-  version: "1.81.0"
 
 kyverno:
   enabled: false
-  configuration:
-    enabled: false
+  repo: https://kyverno.github.io/kyverno
+  chart: kyverno
   version: "3.5.1"
-
-kyverno-policies:
-  # This is always active if kyverno is active
+  destinationNamespace: kyverno
   configuration:
     enabled: false
+  syncOptions: ServerSideDiff=true,IncludeMutationWebhook=true
+  syncWave: "-8"
+  serverSideApply: true
+  defaultValues: |
+    admissionController:
+      replicas: 3
+    backgroundController:
+      replicas: 3
+    cleanupController:
+      replicas: 3
+    reportsController:
+      replicas: 3
+    webhookLabels:
+      app.kubernetes.io/managed-by: argocd
+  dependentApps:
+    kyverno-policies:
+      repo: https://github.com/AidanHilt/PersonalMonorepo
+      gitPath: kubernetes/helm-charts/k8s-resources/kyverno-policies
+      useDefaultGitRevision: true
+      configuration:
+        enabled: false
 
 longhorn:
   enabled: false
+  repo: https://charts.longhorn.io
+  chart: longhorn
+  destinationNamespace: longhorn-system
+  version: "1.8.0"
+  syncWave: "-10"
+  defaultValues: |
+    preUpgradeChecker:
+      jobEnabled: false
   configuration:
     enabled: false
-  version: "1.8.0"
 
 metallb:
   enabled: false
-  configuration:
-    enabled: false
+  repo: https://metallb.github.io/metallb
+  chart: metallb
+  destinationNamespace: metallb-system
   version: "0.14.3"
-
-metallb-config:
-  enabled: false
+  syncWave: "-10"
   configuration:
     enabled: false
+  dependentApps:
+    metallb-config:
+      repo: https://github.com/AidanHilt/PersonalMonorepo
+      gitPath: kubernetes/helm-charts/k8s-resources/metallb-config
+      useDefaultGitRevision: true
+      configuration:
+        enabled: false
 
 postgres:
   enabled: false
-  configuration:
-    enabled: false
+  repo: https://cloudnative-pg.github.io/charts
+  chart: cloudnative-pg
+  destinationNamespace: postgres
   version: "0.26.0"
-
-prometheus:
-  enabled: false
   configuration:
     enabled: false
+  serverSideApply: true
+  dependentApps:
+    postgres-cluster:
+      repo: https://github.com/AidanHilt/PersonalMonorepo
+      gitPath: kubernetes/helm-charts/k8s-resources/postgres-clusters/{{ $.Values.env }}
+      helmChart: false
+      useDefaultGitRevision: true
 
 prowlarr:
   enabled: false
+  gitPath: kubernetes/helm-charts/applications/prowlarr
+  destinationNamespace: videos
   configuration:
     enabled: false
 
 radarr:
   enabled: false
+  gitPath: kubernetes/helm-charts/applications/radarr
+  destinationNamespace: videos
   configuration:
     enabled: false
 
-service-monitors:
-  enabled: false
-
 sonarr:
   enabled: false
+  gitPath: kubernetes/helm-charts/applications/sonarr
+  destinationNamespace: videos
   configuration:
     enabled: false
 
 transmission:
   enabled: false
+  gitPath: kubernetes/helm-charts/applications/transmission
+  destinationNamespace: videos
   configuration:
     enabled: false
 
 video-stack-configuration:
   enabled: false
-  configuration:
-    # This SHOULD be the default behavior, as we normally expect to read from vault
-    # TODO create a better interface for this
-    enabled: true
+  secureValues: |
+    prowlarr:
+      port: 80
+      urlBase: /prowlarr
+      apiKey: <path:argocd/data/video_stack_configuration#prowlarrApiKey>
+
+    radarr:
+      port: 80
+      urlBase: /radarr
+      apiKey: <path:argocd/data/video_stack_configuration#radarrApiKey>
+      rootFolders:
+        - /videos/Movies
+
+    sonarr:
+      port: 80
+      urlBase: /sonarr
+      apiKey: <path:argocd/data/video_stack_configuration#sonarrApiKey>
+      rootFolders:
+        - /videos/TV
+
+    jellyseerr:
+      hostname: jellyseerr
+      urlBase: /
+      port: 80
+      apiKey: <path:argocd/data/video_stack_configuration#jellyseerrApiKey>
+      jellyfin:
+        hostname: jellyfin
+        url_base: /emby
+        port: 80
+        username: <path:argocd/data/video_stack_configuration#jellyfinUsername>
+        password: <path:argocd/data/video_stack_configuration#jellyfinPassword>
+        emailAddress: <path:argocd/data/video_stack_configuration#jellyfinEmail>
+
+    transmission:
+      port: 80
+  gitPath: kubernetes/helm-charts/applications/video-stack-configuration
+  destinationNamespace: videos

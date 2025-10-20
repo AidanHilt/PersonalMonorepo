@@ -1,9 +1,0 @@
-apiVersion: v2
-name: vault-config-new
-description: A chart to repeatably create kubernetes resources not tied to an application.
-
-type: application
-
-version: 0.0.1
-
-appVersion: "N/A"
