@@ -66,7 +66,7 @@ istio:
     enabled: false
   dependentApps:
     istio-base:
-      chart: istio-base
+      chart: base
       configuration:
         enabled: false
     istio-gateway:
