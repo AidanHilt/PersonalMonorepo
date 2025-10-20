@@ -51,10 +51,16 @@ hashi-vault:
       configuration:
         enabled: false
 
-ingress:
+nginx:
   enabled: false
-  # Should be set to either "kind", or "baremetal" (RKE2 is baremetal). This will let us deploy the right type of ingress based on the environment
-  clusterType: "kind"
+  gitPath: kubernetes/ingress-nginx/kind
+  destinationNamespace: ingress-nginx
+  dependentApps:
+    ingress-config:
+      gitPath: kubernetes/helm-charts/k8s-resources/nginx-ingress-config
+      destinationNamespace: ""
+      # Generates a mirror of the enabled status and hostname config as the config for this app
+      followMasterConfig: true
 
 istio:
   enabled: false
@@ -79,6 +85,11 @@ istio:
       configuration:
         enabled: false
       version: "1.81.0"
+    ingress-config:
+      gitPath: kubernetes/helm-charts/k8s-resources/istio-ingress-config
+      destinationNamespace: ""
+      # Generates a mirror of the enabled status and hostname config as the config for this app
+      followMasterConfig: true
 
 jellyfin:
   enabled: false

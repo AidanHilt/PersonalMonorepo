@@ -92,9 +92,14 @@ spec:
     {{- $isHelmChart := and (not (hasKey $subApp "secureValues")) (or (not (hasKey $subApp "helmChart")) $subApp.helmChart ) }}
     {{- if $isHelmChart }}
       helm:
-        {{- if $subApp.defaultValues }}
+        {{- if or $subApp.defaultValues $subApp.followMasterConfig }}
         values:
-          {{- $subApp.defaultValues | toYaml | indent 8 }}
+          {{- with $subApp.defaultValues }}
+          {{- toYaml . | indent 8 }}
+          {{- end }}
+          {{- if $subApp.followMasterConfig }}
+          {{- include "generateEnabledValues" $ | toYaml | indent 8 }}
+          {{- end }}
         {{- end }}
         releaseName: {{ $subAppName }}
       {{- if ($subApp.configuration).enabled }}
