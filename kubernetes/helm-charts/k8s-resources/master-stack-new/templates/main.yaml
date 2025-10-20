@@ -32,7 +32,7 @@ spec:
           {{- $app.defaultValues | toYaml | indent 8 }}
         {{- end }}
         releaseName: {{ $appName }}
-      {{- if $app.configuration.enabled }}
+      {{- if ($app.configuration).enabled }}
         valueFiles:
           - "$values/{{ $.Values.configuration.configurationDirectory }}/{{ $.Values.env }}/{{ $appName }}.yaml"
     - repoURL: {{ $.Values.configuration.configurationRepo }}
@@ -90,7 +90,7 @@ spec:
           {{- $subApp.defaultValues | toYaml | indent 8 }}
         {{- end }}
         releaseName: {{ $subAppName }}
-      {{- if $subApp.configuration.enabled }}
+      {{- if ($subApp.configuration).enabled }}
         valueFiles:
           - "$values/{{ $.Values.configuration.configurationDirectory }}/{{ $.Values.env }}/{{ $subAppName }}.yaml"
     - repoURL: {{ $.Values.configuration.configurationRepo }}
