@@ -139,7 +139,7 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: master-stack
+  name: master-stack-new
   namespace: argocd
 spec:
   project: default
