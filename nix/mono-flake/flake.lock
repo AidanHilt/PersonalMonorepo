@@ -323,16 +323,16 @@
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1760816619,
-        "narHash": "sha256-4lvAtt68jWkPrWtkONDxY1RoBl2ZXuHqmnwhtD9whRs=",
+        "lastModified": 1760997323,
+        "narHash": "sha256-fhbdfBbRKWTqvR5UlCTG3YTXU1poNsGvAXjznamYdfk=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "7b20519b8bc1b4a453e3a0b73676a4d5d213bf17",
+        "rev": "c895a52d1da4e8adc280ff3f4e7161d1e0be77e4",
         "type": "github"
       },
       "original": {
         "owner": "aidanhilt",
-        "ref": "master",
+        "ref": "project-appocalypse/helm-chart-refactor",
         "repo": "PersonalMonorepo",
         "type": "github"
       }
