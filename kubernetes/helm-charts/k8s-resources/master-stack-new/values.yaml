@@ -172,6 +172,7 @@ postgres:
     postgres-cluster:
       repo: https://github.com/AidanHilt/PersonalMonorepo
       gitPath: kubernetes/helm-charts/k8s-resources/postgres-clusters/{{ $.Values.env }}
+      helmChart: false
       useGitRevision: true
 
 prowlarr:

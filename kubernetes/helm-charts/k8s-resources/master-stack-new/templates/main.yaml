@@ -25,7 +25,8 @@ spec:
     {{- with $app.chart }}
       chart: {{ . }}
     {{- end }}
-    {{- if not $app.secureValues }}
+    {{- $isHelmChart := and (not (hasKey $app "secureValues")) (or (not (hasKey $app "helmChart")) $app.helmChart) }}
+    {{- if $isHelmChart }}
       helm:
         {{- if $app.defaultValues }}
         values:
@@ -39,7 +40,7 @@ spec:
       targetRevision: {{ $.Values.configuration.configurationRevision | default $.Values.gitRevision }}
       ref: values
       {{- end }}
-    {{- else }}
+    {{- else if $app.secureValues }}
       plugin:
         name: argocd-vault-plugin-helm
       env:
@@ -83,7 +84,8 @@ spec:
     {{- with $subApp.chart }}
       chart: {{ . }}
     {{- end }}
-    {{- if not $subApp.secureValues }}
+    {{- $isHelmChart := and (not (hasKey $subApp "secureValues")) (or (not (hasKey $subApp "helmChart")) $subApp.helmChart ) }}
+    {{- if $isHelmChart }}
       helm:
         {{- if $subApp.defaultValues }}
         values:
@@ -97,7 +99,7 @@ spec:
       targetRevision: {{ $.Values.configuration.configurationRevision | default $.Values.gitRevision }}
       ref: values
       {{- end }}
-    {{- else }}
+    {{- else if $subApp.secureValues }}
       plugin:
         name: argocd-vault-plugin-helm
       env:
