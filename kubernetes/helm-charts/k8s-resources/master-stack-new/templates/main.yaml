@@ -9,10 +9,10 @@ metadata:
   namespace: argocd
   annotations:
   {{- if $app.syncWave }}
-    argocd.argoproj.io/sync-wave: {{ $app.syncWave }}
+    argocd.argoproj.io/sync-wave: "{{ $app.syncWave }}"
   {{- end }}
   {{- if $app.syncOptions }}
-    argocd.argoproj.io/compare-options: {{ $app.syncOptions }}
+    argocd.argoproj.io/compare-options: "{{ $app.syncOptions }}"
   {{- end }}
 spec:
   project: default
@@ -67,11 +67,13 @@ metadata:
   name: {{ $subAppName }}
   namespace: argocd
   annotations:
-  {{- if $subApp.syncWave }}
-    argocd.argoproj.io/sync-wave: {{ $subApp.syncWave }}
+  {{- $syncWave := $subApp.syncWave | default $app.syncWave }}
+  {{- $syncOptions := $subApp.syncOptions | default $app.syncOptions }}
+  {{- if $syncWave }}
+    argocd.argoproj.io/sync-wave: "{{ $syncWave }}"
   {{- end }}
-  {{- if $subApp.syncOptions }}
-    argocd.argoproj.io/compare-options: {{ $subApp.syncOptions }}
+  {{- if $syncOptions }}
+    argocd.argoproj.io/compare-options: "{{ $syncOptions }}"
   {{- end }}
 spec:
   project: default
