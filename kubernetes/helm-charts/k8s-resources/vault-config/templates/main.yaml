@@ -1,6 +1,6 @@
 {{- range $vaultConfigName, $vaultConfig := .Values }}
 # This guards against auto-generated values, which I'm too lazy to specialize
-{{- if and (or ne $vaultConfigName "hostnames" (ne $vaultConfigName "job-templates") ) $vaultConfig.enabled }}
+{{- if and (and (ne $vaultConfigName "hostnames") $vaultConfig.enabled) $vaultConfig.secretDestinationNamespace }}
 ---
 {{- $resourceName := $vaultConfig.resourceName | default $vaultConfigName}}
 {{- $serviceAccountName := ($vaultConfig.serviceAccount).name | default $resourceName }}
@@ -8,7 +8,7 @@ apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultAuth
 metadata:
   name: {{ $resourceName }}-auth
-  namespace: {{ $vaultConfig.namespace }}
+  namespace: {{ $vaultConfig.secretDestinationNamespace }}
 spec:
   method: kubernetes
   mount: kubernetes
@@ -20,10 +20,10 @@ apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultStaticSecret
 metadata:
   name: {{ $resourceName }}-config-secret
-  namespace: {{ $vaultConfig.namespace }}
+  namespace: {{ $vaultConfig.secretDestinationNamespace }}
 spec:
   type: kv-v2
-  mount: {{ $vaultConfig.namespace }}
+  mount: {{ $vaultConfig.secretDestinationNamespace }}
   path: {{ $resourceName }}/config
 
   destination:
