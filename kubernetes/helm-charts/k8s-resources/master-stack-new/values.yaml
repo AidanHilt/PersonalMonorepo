@@ -169,6 +169,7 @@ postgres:
   version: "0.26.0"
   configuration:
     enabled: false
+  serverSideApply: true
   dependentApps:
     postgres-cluster:
       repo: https://github.com/AidanHilt/PersonalMonorepo
