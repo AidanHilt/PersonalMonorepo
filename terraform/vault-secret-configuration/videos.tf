@@ -60,7 +60,7 @@ resource "vault_kv_secret_v2" "radarr_config" {
 #===============
 resource "vault_kv_secret_v2" "setup_job_config" {
   mount = vault_mount.kv-videos.path
-  name  = "setup_job/config"
+  name  = "setup-job/config"
 
   data_json = jsonencode(
     {

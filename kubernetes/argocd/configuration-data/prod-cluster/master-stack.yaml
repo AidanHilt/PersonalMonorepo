@@ -4,7 +4,7 @@ hostnames:
   - prod-cluster-lb.lan
   - 192.168.86.3
 
-gitRevision: project-appocalypse/helm-chart-refactor
+gitRevision: master
 
 flaresolverr:
   enabled: true

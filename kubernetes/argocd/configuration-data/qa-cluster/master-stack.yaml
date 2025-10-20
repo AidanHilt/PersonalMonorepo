@@ -10,10 +10,6 @@ hashi-vault:
   configuration:
     enabled: true
 
-vault-secrets-operator:
-  configuration:
-    enabled: true
-
 jellyfin:
   enabled: true
   configuration:
@@ -55,8 +51,5 @@ video-stack-configuration:
   configuration:
     enabled: true
 
-ingress:
+nginx:
   enabled: true
-  configuration:
-    enabled: true
-  clusterType: "kind"
