@@ -47,9 +47,9 @@ spec:
           value:
             {{- $app.secureValues | toYaml | indent 8 }}
     {{- end }}
-  {{- if $app.destinationNamespace }}
   destination:
     server: 'https://kubernetes.default.svc'
+  {{- if $app.destinationNamespace }}
     namespace: {{ $app.destinationNamespace }}
   {{- end }}
   syncPolicy:
