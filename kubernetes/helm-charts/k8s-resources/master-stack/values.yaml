@@ -48,6 +48,7 @@ hashi-vault:
       repo: https://helm.releases.hashicorp.com
       chart: vault-secrets-operator
       version: "0.5.2"
+      followMasterConfig: true
       configuration:
         enabled: false
 
