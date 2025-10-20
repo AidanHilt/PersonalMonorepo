@@ -43,10 +43,10 @@ spec:
     {{- else if $app.secureValues }}
       plugin:
         name: argocd-vault-plugin-helm
-      env:
-        - name: HELM_VALUES
-          value:
-            {{- $app.secureValues | toYaml | indent 8 }}
+        env:
+          - name: HELM_VALUES
+            value:
+              {{- $app.secureValues | toYaml | indent 12 }}
     {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'

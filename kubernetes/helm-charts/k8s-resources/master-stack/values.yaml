@@ -51,6 +51,12 @@ hashi-vault:
       followMasterConfig: true
       configuration:
         enabled: false
+    vault-config:
+      repo: https://github.com/AidanHilt/PersonalMonorepo
+      gitPath: kubernetes/helm-charts/k8s-resources/vault-config
+      useDefaultGitRevision: true
+      configuration:
+        enabled: false
 
 nginx:
   enabled: false
