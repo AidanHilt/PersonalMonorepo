@@ -1,6 +1,6 @@
 {{- range $ingressName, $ingress := .Values }}
 {{- if ne $ingressName "hostnames" }}
-{{- if and $ingress.enabled $ingress.namespace }}
+{{- if and $ingress.enabled $ingress.destinationSvc }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
