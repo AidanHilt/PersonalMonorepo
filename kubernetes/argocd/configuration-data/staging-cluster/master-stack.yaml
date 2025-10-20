@@ -2,8 +2,9 @@ env: staging-cluster
 
 hostnames:
   - staging-cluster-lb.lan
+  - 192.168.86.23
 
-gitRevision: project-appocalypse/helm-chart-refactor
+gitRevision: master
 
 flaresolverr:
   enabled: true

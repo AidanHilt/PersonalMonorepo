@@ -9,25 +9,12 @@ gitRevision: master
 flaresolverr:
   enabled: true
 
-gateways:
-  enabled: true
-
 hashi-vault:
   enabled: true
   configuration:
     enabled: true
 
-vault-secrets-operator:
-  configuration:
-    enabled: true
-
 istio:
-  enabled: true
-
-istio-base:
-  enabled: true
-
-istio-gateway:
   enabled: true
 
 job-templates:
@@ -43,9 +30,6 @@ jellyseerr:
   configuration:
     enabled: true
 
-kiali:
-  enabled: true
-
 kyverno:
   enabled: true
 
@@ -56,11 +40,10 @@ longhorn:
 
 metallb:
   enabled: true
-
-metallb-config:
-  enabled: true
-  configuration:
-    enabled: true
+  dependentApps:
+    metallb-config:
+      configuration:
+        enabled: true
 
 postgres:
   enabled: true
