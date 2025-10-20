@@ -12,6 +12,7 @@
 
     loadBalancerIp = "192.168.86.22";
     mainNetworkInterface = "ens3";
+    virtualRouterId = 82;
   };
 
   k8s = {
