@@ -39,6 +39,10 @@ longhorn:
 
 metallb:
   enabled: true
+  dependentApps:
+    metallb-config:
+      configuration:
+        enabled: true
 
 postgres:
   enabled: true
