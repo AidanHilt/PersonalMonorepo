@@ -111,7 +111,8 @@ spec:
     {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
-  {{- if $subApp.destinationNamespace }}
+  {{- $destinationNamespace := $subApp.destinationNamespace | default $app.destinationNamespace }}
+  {{- if $destinationNamespace }}
     namespace: {{ $subApp.destinationNamespace }}
   {{- end }}
   syncPolicy:
