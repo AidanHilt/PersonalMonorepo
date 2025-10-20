@@ -89,6 +89,7 @@ istio:
       version: "1.81.0"
     ingress-config:
       repo: https://github.com/AidanHilt/PersonalMonorepo
+      useDefaultGitRevision: true
       gitPath: kubernetes/helm-charts/k8s-resources/istio-ingress-config
       destinationNamespace: ""
       # Generates a mirror of the enabled status and hostname config as the config for this app
