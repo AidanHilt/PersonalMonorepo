@@ -8,9 +8,6 @@ gitRevision: project-appocalypse/helm-chart-refactor
 flaresolverr:
   enabled: true
 
-gateways:
-  enabled: true
-
 hashi-vault:
   enabled: true
   configuration:
