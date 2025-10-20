@@ -57,6 +57,7 @@ nginx:
   destinationNamespace: ingress-nginx
   dependentApps:
     ingress-config:
+      repo: https://github.com/AidanHilt/PersonalMonorepo
       gitPath: kubernetes/helm-charts/k8s-resources/nginx-ingress-config
       destinationNamespace: ""
       # Generates a mirror of the enabled status and hostname config as the config for this app
