@@ -65,40 +65,57 @@ kind: Application
 metadata:
   name: {{ $subAppName }}
   namespace: argocd
+  annotations:
+  {{- if $subApp.syncWave }}
+    argocd.argoproj.io/sync-wave: {{ $subApp.syncWave }}
+  {{- end }}
+  {{- if $subApp.syncOptions }}
+    argocd.argoproj.io/compare-options: {{ $subApp.syncOptions }}
+  {{- end }}
 spec:
   project: default
   sources:
-    - repoURL: {{ $subApp.repo | default ($app.repo | default $.Values.defaultGitRepo) }}
-      {{- if $subApp.useGitRevision }}
+    - repoURL: {{ $subApp.repo | default $.Values.defaultGitRepo }}
       targetRevision: {{ $subApp.version | default $.Values.gitRevision }}
-      {{- else }}
-      targetRevision: {{ $subApp.version | default $app.version }}
-      {{- end }}
     {{- with $subApp.gitPath }}
       path: {{ tpl . $ }}
     {{- end }}
     {{- with $subApp.chart }}
       chart: {{ . }}
     {{- end }}
-
+    {{- if not $subApp.secureValues }}
       helm:
+        {{- if $subApp.defaultValues }}
+        values:
+          {{- $subApp.defaultValues | toYaml | indent 8 }}
+        {{- end }}
         releaseName: {{ $subAppName }}
-    {{- if ($subApp.configuration).enabled }}
+      {{- if $subApp.configuration.enabled }}
         valueFiles:
           - "$values/{{ $.Values.configuration.configurationDirectory }}/{{ $.Values.env }}/{{ $subAppName }}.yaml"
     - repoURL: {{ $.Values.configuration.configurationRepo }}
       targetRevision: {{ $.Values.configuration.configurationRevision | default $.Values.gitRevision }}
       ref: values
+      {{- end }}
+    {{- else }}
+      plugin:
+        name: argocd-vault-plugin-helm
+      env:
+        - name: HELM_VALUES
+          value:
+            {{- $subApp.secureValues | toYaml | indent 8 }}
     {{- end }}
-  {{- if $subApp.destinationNamespace }}
   destination:
     server: 'https://kubernetes.default.svc'
+  {{- if $subApp.destinationNamespace }}
     namespace: {{ $subApp.destinationNamespace }}
   {{- end }}
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
 ---
 {{- end }}
 {{- end }}
