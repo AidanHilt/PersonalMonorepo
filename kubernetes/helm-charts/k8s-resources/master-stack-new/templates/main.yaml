@@ -59,6 +59,9 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      {{- if $app.serverSideApply }}
+      - ServerSideApply=true
+      {{- end }}
 ---
 {{- range $subAppName, $subApp := $app.dependentApps }}
 apiVersion: argoproj.io/v1alpha1
@@ -121,6 +124,9 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      {{- if $subApp.serverSideApply }}
+      - ServerSideApply=true
+      {{- end }}
 ---
 {{- end }}
 {{- end }}

@@ -111,6 +111,7 @@ kyverno:
     enabled: false
   syncOptions: ServerSideDiff=true,IncludeMutationWebhook=true
   syncWave: "-8"
+  serverSideApply: true
   defaultValues: |
     admissionController:
       replicas: 3
