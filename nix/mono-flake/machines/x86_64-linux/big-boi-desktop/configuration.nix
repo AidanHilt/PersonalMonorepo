@@ -14,6 +14,7 @@
     ../../../modules/roles/nixos/fixed-ip-machine.nix
     ../../../modules/roles/nixos/nvidia.nix
     ../../../modules/roles/nixos/vscode-server.nix
+    ../../../modules/roles/nixos/virtual-machine.nix
 
     ../../../modules/roles/universal/personal-development.nix
   ];
