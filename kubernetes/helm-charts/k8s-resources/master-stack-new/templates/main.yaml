@@ -78,8 +78,8 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: {{ $subApp.repo | default $.Values.defaultGitRepo }}
-      targetRevision: {{ $subApp.version | default $.Values.gitRevision }}
+    - repoURL: {{ $subApp.repo | default $app.repo }}
+      targetRevision: {{ $subApp.version | default $app.version }}
     {{- with $subApp.gitPath }}
       path: {{ tpl . $ }}
     {{- end }}

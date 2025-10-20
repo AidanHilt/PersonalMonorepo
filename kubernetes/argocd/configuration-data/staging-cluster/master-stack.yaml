@@ -3,10 +3,7 @@ env: staging-cluster
 hostnames:
   - staging-cluster-lb.lan
 
-gitRevision: chore/final-super-final-i-really-mean-it-staging-cluster
-
-configuration:
-  configurationRevision: chore/final-super-final-i-really-mean-it-staging-cluster
+gitRevision: project-appocalypse/helm-chart-refactor
 
 flaresolverr:
   enabled: true
