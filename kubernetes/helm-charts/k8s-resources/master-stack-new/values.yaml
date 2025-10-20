@@ -142,7 +142,7 @@ kyverno:
     kyverno-policies:
       repo: https://github.com/AidanHilt/PersonalMonorepo
       gitPath: kubernetes/helm-charts/k8s-resources/kyverno-policies
-      useGitRevision: true
+      useDefaultGitRevision: true
       configuration:
         enabled: false
 
@@ -172,7 +172,7 @@ metallb:
     metallb-config:
       repo: https://github.com/AidanHilt/PersonalMonorepo
       gitPath: kubernetes/helm-charts/k8s-resources/metallb-config]
-      useGitRevision: true
+      useDefaultGitRevision: true
       configuration:
         enabled: false
 
@@ -190,7 +190,7 @@ postgres:
       repo: https://github.com/AidanHilt/PersonalMonorepo
       gitPath: kubernetes/helm-charts/k8s-resources/postgres-clusters/{{ $.Values.env }}
       helmChart: false
-      useGitRevision: true
+      useDefaultGitRevision: true
 
 prowlarr:
   enabled: false
