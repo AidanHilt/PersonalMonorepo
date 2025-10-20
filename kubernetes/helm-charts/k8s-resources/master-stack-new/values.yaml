@@ -29,7 +29,7 @@ crafty-server:
 
 flaresolverr:
   enabled: false
-  gitPath: kubernetes/helm-charts/flaresolverr
+  gitPath: kubernetes/helm-charts/applications/flaresolverr
   configuration:
     enabled: false
 
