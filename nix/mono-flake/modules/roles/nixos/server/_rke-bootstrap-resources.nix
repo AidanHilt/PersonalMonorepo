@@ -139,13 +139,13 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: master-stack-new
+  name: master-stack
   namespace: argocd
 spec:
   project: default
   sources:
     - repoURL: https://github.com/AidanHilt/PersonalMonorepo
-      path: kubernetes/helm-charts/k8s-resources/master-stack
+      path: kubernetes/helm-charts/k8s-resources/master-stack-new
       targetRevision: ${globals.personalMonorepoBranch}
       helm:
         valueFiles:
