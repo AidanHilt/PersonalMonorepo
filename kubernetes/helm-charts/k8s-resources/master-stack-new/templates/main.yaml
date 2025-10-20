@@ -82,7 +82,11 @@ spec:
   project: default
   sources:
     - repoURL: {{ $subApp.repo | default $app.repo }}
+    {{- if $subApp.useDefaultGitRevision }}
+      targetRevision: {{ $.Values.gitRevision }}
+    {{- else }}
       targetRevision: {{ $subApp.version | default $app.version }}
+    {{- end }}
     {{- with $subApp.gitPath }}
       path: {{ tpl . $ }}
     {{- end }}
