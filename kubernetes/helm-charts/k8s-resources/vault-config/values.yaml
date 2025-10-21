@@ -1,14 +1,14 @@
 jellyfin:
   enabled: false
-  namespace: videos
+  secretDestinationNamespace: videos
 
 jellyseerr:
   enabled: false
-  namespace: videos
+  secretDestinationNamespace: videos
 
 postgres:
   enabled: false
-  namespace: postgres
+  secretDestinationNamespace: postgres
 
   destination:
     type: kubernetes.io/basic-auth
@@ -20,19 +20,19 @@ postgres:
 
 prowlarr:
   enabled: false
-  namespace: videos
+  secretDestinationNamespace: videos
 
 radarr:
   enabled: false
-  namespace: videos
+  secretDestinationNamespace: videos
 
 sonarr:
   enabled: false
-  namespace: videos
+  secretDestinationNamespace: videos
 
 transmission:
   enabled: false
-  namespace: videos
+  secretDestinationNamespace: videos
 
   destination:
     transformation:
@@ -43,7 +43,7 @@ transmission:
 
 video-stack-configuration:
   enabled: false
-  namespace: videos
+  secretDestinationNamespace: videos
 
   resourceName: setup-job
 
