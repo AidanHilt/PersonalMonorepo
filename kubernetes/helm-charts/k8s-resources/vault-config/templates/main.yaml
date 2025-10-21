@@ -1,5 +1,5 @@
 {{- range $vaultConfigName, $vaultConfig := .Values }}
-{{- if and (and (ne $vaultConfigName "hostnames") ($vaultConfig).enabled) $vaultConfig.secretDestinationNamespace }}
+{{- if and (and (ne $vaultConfigName "hostnames") $vaultConfig.enabled) $vaultConfig.secretDestinationNamespace }}
 ---
 {{- $resourceName := $vaultConfig.resourceName | default $vaultConfigName}}
 {{- $serviceAccountName := ($vaultConfig.serviceAccount).name | default $resourceName }}
