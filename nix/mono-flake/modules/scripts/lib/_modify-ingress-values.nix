@@ -29,7 +29,5 @@ let
 in
 
 {
-  environment.interactiveShellInit = ''
-    source ${_modify-ingress-values}
-  '';
+  _modify-ingress-values = _modify-ingress-values;
 }

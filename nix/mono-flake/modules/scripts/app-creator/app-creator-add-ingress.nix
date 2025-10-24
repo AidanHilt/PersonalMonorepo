@@ -2,6 +2,7 @@
 
 let
 printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
+_modify-ingress-values = import ../_modify-ingress-values.nix { inherit pkgs; };
 
 app-creator-add-ingress = pkgs.writeShellScriptBin "app-creator-add-ingress" ''
 #!/bin/bash
@@ -9,6 +10,7 @@ app-creator-add-ingress = pkgs.writeShellScriptBin "app-creator-add-ingress" ''
 set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
+source ${_modify-ingress-values._modify-ingress-values}
 
 _modify-ingress-values
 
