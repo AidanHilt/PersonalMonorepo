@@ -12,8 +12,6 @@ set -euo pipefail
 source ${printing-and-output.printing-and-output}
 source ''${modify-ingress-values.modify-ingress-values}
 
-_modify-ingress-values
-
 read -p "Enter the name of the app: " APP_NAME
 
 print_status "Enter prefixes (one per line, press Enter on empty line to finish):"
@@ -47,12 +45,14 @@ while true; do
   print_warning "Namespace cannot be empty"
 done
 
-read -p "Enter destination service name (do not provide full domain name): " SERVICE_NAME
+read -p "Enter destination service name (default $APP_NAME): " svc_name
+SERVICE_NAME=''${svc_name:-$APP_NAME}
+
 
 read -p "Enter destination port (default: 80): " port
 DESTINATION_PORT=''${port:-80}
 
-
+ISTIO_YQ_STRING=".$APP_NAME.destinationSvc=\"$SERVICE_NAME.$NAMESPACE.svc.cluster.local\""
 '';
 in
 
