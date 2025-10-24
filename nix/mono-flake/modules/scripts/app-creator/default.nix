@@ -1,4 +1,6 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 {
- imports = [];
+ imports = [
+    ./app-creator-add-ingress.nix
+ ];
 }
