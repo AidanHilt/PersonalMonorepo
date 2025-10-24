@@ -52,7 +52,7 @@ SERVICE_NAME=''${svc_name:-$APP_NAME}
 read -p "Enter destination port (default: 80): " port
 DESTINATION_PORT=''${port:-80}
 
-ISTIO_YQ_STRING=".$APP_NAME.destinationSvc=\"$SERVICE_NAME.$NAMESPACE.svc.cluster.local\""
+ISTIO_YQ_STRING=".$APP_NAME.enabled=false | .$APP_NAME.destinationSvc=\"$SERVICE_NAME.$NAMESPACE.svc.cluster.local\""
 '';
 in
 
