@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ../../scripts/app-creator/default.nix
     ../../scripts/argocd/default.nix
     ../../scripts/context/default.nix
     ../../scripts/helm/default.nix
