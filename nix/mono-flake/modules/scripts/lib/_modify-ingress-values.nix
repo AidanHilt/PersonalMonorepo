@@ -22,8 +22,6 @@ let
       cat "$TEMP_REST"
     } > "$FILE_NAME"
 
-    cat "$FILE_NAME" | awk '/^[^ ]/ && NR!=1 {print ""} {print}' > "$FILE_NAME"
-
     rm "$TEMP_HOSTNAMES" "$TEMP_REST"
     }
   '';
