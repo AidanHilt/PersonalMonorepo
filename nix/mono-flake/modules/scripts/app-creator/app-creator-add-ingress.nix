@@ -12,8 +12,8 @@ set -euo pipefail
 source ${printing-and-output.printing-and-output}
 source ${modify-ingress-values.modify-ingress-values}
 
-ISTIO_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/k8s-resources/istio-ingress-config/values.yaml
-NGINX_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/k8s-resources/nginx-ingress-config/values.yaml
+ISTIO_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/istio-ingress-config/values.yaml
+NGINX_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/nginx-ingress-config/values.yaml
 
 read -p "Enter the name of the app: " APP_NAME
 
