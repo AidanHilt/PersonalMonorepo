@@ -21,7 +21,7 @@ fi
 
 print_debug "Applying yq transformation to $FILENAME"
 
-cat "''${FILENAME}" | yq --yaml-output "\"''${YQ_STRING}\"" > "''${TMP_FILE}"
+cat "''${FILENAME}" | yq --yaml-output "''${YQ_STRING}" > "''${TMP_FILE}"
 mv "''${TMP_FILE}" "''${FILENAME}"
 '';
 in
