@@ -8,7 +8,7 @@ _edit-yaml-in-place = pkgs.writeShellScriptBin "_edit-yaml-in-place" ''
 
 set -euo pipefail
 
-source ''${printing-and-output.printing-and-output}
+source ${printing-and-output.printing-and-output}
 
 FILENAME="$1"
 YQ_STRING="$2"
