@@ -54,6 +54,8 @@ SERVICE_NAME=''${svc_name:-$APP_NAME}
 read -p "Enter destination port (default: 80): " port
 DESTINATION_PORT=''${port:-80}
 
+export PREFIXES_JSON=$(printf '%s\n' "''${PREFIXES[@]}" | jq -R . | jq -s .)
+
 ISTIO_YQ_STRING=".$APP_NAME.enabled=false | .$APP_NAME.prefixes=env(PREFIXES_JSON) | .$APP_NAME.destinationSvc=\"$SERVICE_NAME.$NAMESPACE.svc.cluster.local\""
 _modify-ingress-values $ISTIO_YQ_STRING $ISTIO_VALUES_FILE
 '';

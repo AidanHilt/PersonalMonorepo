@@ -6,6 +6,8 @@ let
     local yq_string="$1"
     local filename="$2"
 
+    echo "This do make sense"
+
     yq -P eval "$yq_string" -i "$filename"
 
     echo "This don't make sense"
