@@ -1,29 +1,28 @@
 { pkgs, ... }:
 
 let
-
   modify-ingress-values = pkgs.writeText "modify-ingress-values" ''
-    _modify-ingress-values() {
-      local yq_string="$1"
-      local filename="$2"
+  _modify-ingress-values() {
+    local yq_string="$1"
+    local filename="$2"
 
-      yq eval "$yq_string" -i "$filename"
+    yq eval "$yq_string" -i "$filename"
 
-      local TEMP_HOSTNAMES=$(mktemp)
-      local TEMP_REST=$(mktemp)
+    local TEMP_HOSTNAMES=$(mktemp)
+    local TEMP_REST=$(mktemp)
 
-      yq eval '.hostnames' "$filename" > "$TEMP_HOSTNAMES"
-      yq eval 'del(.hostnames) | to_entries | sort_by(.key) | from_entries' "$filename" > "$TEMP_REST"
+    yq eval '.hostnames' "$filename" > "$TEMP_HOSTNAMES"
+    yq eval 'del(.hostnames) | to_entries | sort_by(.key) | from_entries' "$filename" > "$TEMP_REST"
 
-      {
-        echo "hostnames:"
-        sed 's/^/  /' "$TEMP_HOSTNAMES"
-        echo ""
-        echo ""
-        cat "$TEMP_REST"
-      } > "$filename"
+    {
+      echo "hostnames:"
+      sed 's/^/  /' "$TEMP_HOSTNAMES"
+      echo ""
+      echo ""
+      cat "$TEMP_REST"
+    } > "$filename"
 
-      rm "$TEMP_HOSTNAMES" "$TEMP_REST"
+    rm "$TEMP_HOSTNAMES" "$TEMP_REST"
     }
   '';
 in
