@@ -21,7 +21,7 @@ fi
 
 print_status "Applying yq transformation to PRINT_DEBUGFILENAME}"
 
-yq "''${YQ_STRING}" "''${FILENAME}" > "''${TMP_FILE}"
+cat "''${FILENAME}" | yq --yaml-output "\"''${YQ_STRING}\"" > "''${TMP_FILE}"
 mv "''${TMP_FILE}" "''${FILENAME}"
 '';
 in
