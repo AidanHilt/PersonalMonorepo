@@ -8,6 +8,8 @@ let
 
     yq -P eval "$yq_string" -i "$filename"
 
+    echo "This don't make sense"
+
     local TEMP_HOSTNAMES=$(mktemp)
     local TEMP_REST=$(mktemp)
 
