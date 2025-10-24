@@ -2,7 +2,7 @@
 
 let
 
-  _modify-ingress-values = pkgs.writeText "_modify-ingress-values.sh" ''
+  modify-ingress-values = pkgs.writeText "_modify-ingress-values.sh" ''
     _modify-ingress-values() {
       local yq_string="$1"
       local filename="$2"
@@ -29,5 +29,5 @@ let
 in
 
 {
-  _modify-ingress-values = _modify-ingress-values;
+  modify-ingress-values = modify-ingress-values;
 }
