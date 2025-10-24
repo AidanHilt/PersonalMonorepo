@@ -19,7 +19,7 @@ if [[ -z "''${FILENAME}" || -z "''${YQ_STRING}" ]]; then
   exit 1
 fi
 
-print_status "Applying yq transformation to PRINT_DEBUGFILENAME}"
+print_debug "Applying yq transformation to $FILENAME"
 
 cat "''${FILENAME}" | yq --yaml-output "\"''${YQ_STRING}\"" > "''${TMP_FILE}"
 mv "''${TMP_FILE}" "''${FILENAME}"
