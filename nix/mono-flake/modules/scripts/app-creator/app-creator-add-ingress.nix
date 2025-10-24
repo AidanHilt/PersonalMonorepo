@@ -2,7 +2,7 @@
 
 let
 printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
-modify-ingress-values = import ../_modify-ingress-values.nix { inherit pkgs; };
+modify-ingress-values = import ../lib/_modify-ingress-values.nix { inherit pkgs; };
 
 app-creator-add-ingress = pkgs.writeShellScriptBin "app-creator-add-ingress" ''
 #!/bin/bash
