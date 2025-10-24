@@ -10,7 +10,7 @@ app-creator-add-ingress = pkgs.writeShellScriptBin "app-creator-add-ingress" ''
 set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
-source ''${modify-ingress-values.modify-ingress-values}
+source ${modify-ingress-values.modify-ingress-values}
 
 ISTIO_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/k8s-resources/istio-ingress-config/values.yaml
 NGINX_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/k8s-resources/nginx-ingress-config/values.yaml
