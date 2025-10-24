@@ -6,11 +6,7 @@ let
     local YQ_STRING="$1"
     local FILE_NAME="$2"
 
-    echo "This do make sense"
-
     eval "yq -P eval '$YQ_STRING' -i \"$FILE_NAME\""
-
-    echo "This don't make sense"
 
     local TEMP_HOSTNAMES=$(mktemp)
     local TEMP_REST=$(mktemp)
@@ -26,7 +22,7 @@ let
       cat "$TEMP_REST"
     } > "$FILE_NAME"
 
-    cat "$FILE_NAME" | sed '/^[a-zA-Z]/s/^/\n/' > "$FILE_NAME"
+    cat "$FILE_NAME" | awk '/^[^ ]/ && NR!=1 {print ""} {print}' > "$FILE_NAME"
 
     rm "$TEMP_HOSTNAMES" "$TEMP_REST"
     }
