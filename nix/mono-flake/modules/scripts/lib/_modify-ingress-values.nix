@@ -6,7 +6,7 @@ let
     local yq_string="$1"
     local filename="$2"
 
-    yq eval "$yq_string" -i "$filename"
+    yq -P eval "$yq_string" -i "$filename"
 
     local TEMP_HOSTNAMES=$(mktemp)
     local TEMP_REST=$(mktemp)
