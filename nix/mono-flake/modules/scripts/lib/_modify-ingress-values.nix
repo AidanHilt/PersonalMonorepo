@@ -26,7 +26,7 @@ let
       cat "$TEMP_REST"
     } > "$FILE_NAME"
 
-    cat "$FILE_NAME | sed '/^[a-zA-Z]/s/^/\n/' > "$FILE_NAME"
+    cat "$FILE_NAME" | sed '/^[a-zA-Z]/s/^/\n/' > "$FILE_NAME"
 
     rm "$TEMP_HOSTNAMES" "$TEMP_REST"
     }
