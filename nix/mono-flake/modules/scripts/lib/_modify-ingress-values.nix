@@ -8,7 +8,7 @@ let
 
     echo "This do make sense"
 
-    yq -P eval '$yq_string' -i "$filename"
+    eval "yq -P eval '$yq_string' -i \"$filename\""
 
     echo "This don't make sense"
 
