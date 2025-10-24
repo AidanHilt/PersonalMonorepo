@@ -10,7 +10,7 @@ app-creator-add-ingress = pkgs.writeShellScriptBin "app-creator-add-ingress" ''
 set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
-#source ${modify-ingress-values.modify-ingress-values}
+source ''${modify-ingress-values.modify-ingress-values}
 
 _modify-ingress-values
 
