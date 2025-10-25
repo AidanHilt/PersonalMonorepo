@@ -126,7 +126,7 @@ export PREFIXES_JSON=$(printf '%s\n' "''${PREFIXES[@]}" | jq -R . | jq -s .)
 
 ROUTE_CONFIG_STRING=""
 
-if [[ ''${#PREFIXES[@]} -ge 0 ]]; then
+if [[ ''${#PREFIXES[@]} -gt 0 ]]; then
   ROUTE_CONFIG_STRING+="| .$APP_NAME.prefixes=env(PREFIXES_JSON) "
 fi
 
