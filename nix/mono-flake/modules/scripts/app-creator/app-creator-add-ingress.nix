@@ -125,7 +125,7 @@ if [[ ''${#PREFIXES[@]} -ge 0 ]]; then
 fi
 
 if [[ ! -z "$SUBDOMAIN" ]]; then
-  "| .$APP_NAME.subdomain=\"$SUBDOMAIN\""
+  ISTIO_YQ_STRING+="| .$APP_NAME.subdomain=\"$SUBDOMAIN\""
 fi
 
 ISTIO_YQ_STRING+="| .$APP_NAME.destinationSvc=\"$SERVICE_NAME.$NAMESPACE.svc.cluster.local\""
