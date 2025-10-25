@@ -31,7 +31,7 @@ show_help () {
   echo "OPTIONS:"
   echo "  --app-name, -a: The name of the app to create ingress for"
   echo "  --namespace, -n: The namespace the app will live in. Needed to properly route requests"
-  echo "  --service-name, -n: The name of the kubernetes service associated with this app"
+  echo "  --service-name, -s: The name of the kubernetes service associated with this app"
   echo "  --port, -p: The port number used by the service. Defaults to 80"
   echo "  --prefix, -r: A prefix used for path-based routing. Can be provided multiple times"
   echo "  --subdomain, -d: The subdomain this app is to be served on"
@@ -78,7 +78,7 @@ if [[ -z "$APP_NAME" ]]; then
   read -p "Enter the name of the app: " APP_NAME
 fi
 
-if [[ ''${#PREFIXES[@]} -eq 0 ]]; then
+if [[ ''${#PREFIXES[@]} -eq 0 && -z "$SUBDOMAIN" ]]; then
   print_status "Enter prefixes (one per line, press Enter on empty line to finish):"
   while true; do
     read -p "Prefix: " prefix
