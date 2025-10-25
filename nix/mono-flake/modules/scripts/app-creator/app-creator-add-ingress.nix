@@ -112,7 +112,7 @@ if [[ -z "$SERVICE_NAME" ]]; then
   SERVICE_NAME=''${svc_name:-$APP_NAME}
 fi
 
-if [[ -z "$DESTINATION_PORT" ]]l then
+if [[ -z "$DESTINATION_PORT" ]]; then
   read -p "Enter destination port (default: 80): " port
   DESTINATION_PORT=''${port:-80}
 fi
