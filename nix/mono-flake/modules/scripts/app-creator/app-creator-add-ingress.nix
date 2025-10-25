@@ -72,9 +72,8 @@ if [[ -z "$APP_NAME" ]]; then
   read -p "Enter the name of the app: " APP_NAME
 fi
 
-if [[ -z "$PREFIXES" ]]; then
+if [[ ''${#PREFIXES[@]} -eq 0 ]]; then
   print_status "Enter prefixes (one per line, press Enter on empty line to finish):"
-  PREFIXES=()
   while true; do
     read -p "Prefix: " prefix
     if [[ -z "$prefix" ]]; then
