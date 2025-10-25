@@ -26,9 +26,15 @@ show_help () {
   echo "Usage: $0 [OPTIONS]"
   echo ""
   # Description goes here
-  echo ""
+  echo "Create ingress resources for both istio and nginx"
   echo ""
   echo "OPTIONS:"
+  echo "  --app-name, -a: The name of the app to create ingress for"
+  echo "  --namespace, -n: The namespace the app will live in. Needed to properly route requests"
+  echo "  --service-name, -n: The name of the kubernetes service associated with this app"
+  echo "  --port, -p: The port number used by the service. Defaults to 80"
+  echo "  --prefix, -r: A prefix used for path-based routing. Can be provided multiple times"
+  echo "  --subdomain, -d: The subdomain this app is to be served on"
 }
 
 while [[ $# -gt 0 ]]; do
