@@ -48,7 +48,7 @@ while [[ $# -gt 0 ]]; do
     shift 2
     ;;
     --service-name|-s)
-    SERIVCE_NAME="$2"
+    SERVICE_NAME="$2"
     shift 2
     ;;
     --port|-p)
