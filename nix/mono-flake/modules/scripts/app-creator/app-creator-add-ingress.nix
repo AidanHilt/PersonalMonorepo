@@ -113,6 +113,7 @@ if [[ -z "$NAMESPACE" ]]; then
 fi
 
 if [[ -z "$SERVICE_NAME" ]]; then
+  echo "$SERVICE_NAME"
   read -p "Enter destination service name (default $APP_NAME): " svc_name
   SERVICE_NAME=''${svc_name:-$APP_NAME}
 fi
