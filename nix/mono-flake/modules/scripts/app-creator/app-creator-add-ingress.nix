@@ -118,12 +118,22 @@ fi
 
 export PREFIXES_JSON=$(printf '%s\n' "''${PREFIXES[@]}" | jq -R . | jq -s .)
 
-ISTIO_YQ_STRING=".$APP_NAME.enabled=false | .$APP_NAME.prefixes=env(PREFIXES_JSON) | .$APP_NAME.destinationSvc=\"$SERVICE_NAME.$NAMESPACE.svc.cluster.local\""
+ISTIO_YQ_STRING=".$APP_NAME.enabled=false "
+
+if [[ ''${#PREFIXES[@]} -ge 0 ]]; then
+  ISTIO_YQ_STRING+="| .$APP_NAME.prefixes=env(PREFIXES_JSON) "
+fi
+
+if [[ ! -z "$SUBDOMAIN" ]]; then
+  "| .$APP_NAME.subdomain=\"$SUBDOMAIN\""
+fi
+
+ISTIO_YQ_STRING+="| .$APP_NAME.destinationSvc=\"$SERVICE_NAME.$NAMESPACE.svc.cluster.local\""
+
 _modify-ingress-values "$ISTIO_YQ_STRING" "$ISTIO_VALUES_FILE"
 
 
 NGINX_YQ_STRING=".$APP_NAME.enabled=false | .$APP_NAME.namespace=\"$NAMESPACE\" | .$APP_NAME.prefixes=env(PREFIXES_JSON) | .$APP_NAME.destinationSvc=\"$SERVICE_NAME\""
-echo "$NGINX_YQ_STRING"
 _modify-ingress-values "$NGINX_YQ_STRING" "$NGINX_VALUES_FILE"
 '';
 in
