@@ -111,13 +111,10 @@ fi
 read -p "Would you like to configure the destination secret? (y/N): " configure_dest
 
 if [[ "$configure_dest" == "y" ]]; then
-  TEMP_FILE=$(mktemp)
-  echo "destination:" > "$TEMP_FILE"
+  DESTINATION_FILE=$(mktemp)
+  echo "destination:" > "$DESTINATION_FILE"
 
-  $EDITOR "$TEMP_FILE"
-
-  destination_config=$(yq eval '.destination' "$TEMP_FILE")
-  rm "$TEMP_FILE"
+  $EDITOR "$DESTINATION_FILE"
 fi
 
 YQ_STRING=".\"$secret_name\".enabled=false | .\"$secret_name\".secretDestinationNamespace = \"$destination_namespace\""
@@ -139,8 +136,7 @@ if [[ "$configure_sa" == "y" ]]; then
 fi
 
 if [[ -n "$destination_config" && "$destination_config" != "null" ]]; then
-  ESCAPED_DEST=$(echo "$destination_config" | yq eval -o=json)
-  YQ_STRING="$YQ_STRING | \"$secret_name\".destination += $ESCAPED_DEST"
+  YQ_STRING="$YQ_STRING | \"$secret_name\".destination = load("$DESTINATION_FILE")"
 fi
 
 SECRET_VALUES_FILE="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/vault-config/values.yaml"
