@@ -15,10 +15,15 @@ source ${modify-secret-values}
 show_help () {
   echo "Usage: $0 [OPTIONS]"
   echo ""
-  # Description goes here
-  echo ""
+  echo "Add a new secret to the vault-config chart"
   echo ""
   echo "OPTIONS:"
+  echo "--secret-name: The name of the secret"
+  echo "--destination-namespace: The destination namespace for the secret"
+  echo "--resource-name: Override for the resource name"
+  echo "--service-account-create: Takes no arguments. If provided, set service account create to true"
+  echo "--service-account-name: The name of the service account"
+  echo ""
 }
 
 secret_name=""
@@ -122,10 +127,10 @@ if [[ -n "$resource_name" ]]; then
 fi
 
 if [[ "$configure_sa" == "y" ]]; then
-  YQ_STRING="$YQ_STRING | .secrets.\"$secret_name\".serviceAccount.name = \"$service_account_name\""
+  YQ_STRING="$YQ_STRING | .secrets.\"$secret_name\".serviceAccount.create = true"
 
-  if [[ -n "$service_account_create" ]]; then
-    YQ_STRING="$YQ_STRING | .secrets.\"$secret_name\".serviceAccount.create = true"
+  if [[ -n "$service_account_name" ]]; then
+    YQ_STRING="$YQ_STRING | .secrets.\"$secret_name\".serviceAccount.name = \"$service_account_name\""
   fi
 
   if [[ -n "$service_account_namespace" ]]; then
