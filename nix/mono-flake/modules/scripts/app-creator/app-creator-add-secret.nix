@@ -2,7 +2,7 @@
 
 let
 printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
-modify-secret-values = import ../lib/_modify-secret-values.nix { inherit pkgs; }.script;
+modify-secret-values = (import ../lib/_modify-secret-values.nix { inherit pkgs; }).script;
 
 app-creator-add-secret = pkgs.writeShellScriptBin "app-creator-add-secret" ''
 #!/bin/bash
