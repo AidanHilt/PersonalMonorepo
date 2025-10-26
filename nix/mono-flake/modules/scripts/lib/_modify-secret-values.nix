@@ -13,5 +13,5 @@ let
 in
 
 {
-  script = _modify-secret-values
+  script = _modify-secret-values;
 }
