@@ -120,27 +120,27 @@ if [[ "$configure_dest" == "y" ]]; then
   rm "$TEMP_FILE"
 fi
 
-YQ_STRING="\"$secret_name\".enabled=false \"$secret_name\".destination.namespace = \"$destination_namespace\""
+YQ_STRING="\"$secret_name\".enabled=false | \"$secret_name\".destination.namespace = \"$destination_namespace\""
 
 if [[ -n "$resource_name" ]]; then
-  YQ_STRING="$YQ_STRING | .secrets.\"$secret_name\".destination.name = \"$resource_name\""
+  YQ_STRING="$YQ_STRING | .\"$secret_name\".destination.name = \"$resource_name\""
 fi
 
 if [[ "$configure_sa" == "y" ]]; then
-  YQ_STRING="$YQ_STRING | .secrets.\"$secret_name\".serviceAccount.create = true"
+  YQ_STRING="$YQ_STRING | .\"$secret_name\".serviceAccount.create = true"
 
   if [[ -n "$service_account_name" ]]; then
-    YQ_STRING="$YQ_STRING | .secrets.\"$secret_name\".serviceAccount.name = \"$service_account_name\""
+    YQ_STRING="$YQ_STRING | .\"$secret_name\".serviceAccount.name = \"$service_account_name\""
   fi
 
   if [[ -n "$service_account_namespace" ]]; then
-    YQ_STRING="$YQ_STRING | .secrets.\"$secret_name\".serviceAccount.namespace = \"$service_account_namespace\""
+    YQ_STRING="$YQ_STRING | .\"$secret_name\".serviceAccount.namespace = \"$service_account_namespace\""
   fi
 fi
 
 if [[ -n "$destination_config" && "$destination_config" != "null" ]]; then
   ESCAPED_DEST=$(echo "$destination_config" | yq eval -o=json)
-  YQ_STRING="$YQ_STRING | .secrets.\"$secret_name\".destination += $ESCAPED_DEST"
+  YQ_STRING="$YQ_STRING | \"$secret_name\".destination += $ESCAPED_DEST"
 fi
 
 SECRET_VALUES_FILE="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/vault-config/values.yaml"
