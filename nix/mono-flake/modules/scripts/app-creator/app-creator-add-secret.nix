@@ -78,7 +78,7 @@ if [[ -z "$resource_name" ]]; then
   read -p "Enter the resource name (optional): " resource_name
 fi
 
-read -p "Would you like to configure the service account? (y/n): " configure_sa
+read -p "Would you like to configure the service account? (y/N): " configure_sa
 
 if [[ "$configure_sa" == "y" ]]; then
   SA_DEFAULT="$secret_name"
@@ -92,7 +92,7 @@ if [[ "$configure_sa" == "y" ]]; then
   fi
 
   if [[ -z "$service_account_create" ]]; then
-    read -p "Should the service account be created? (y/n) [n]: " sa_create_input
+    read -p "Should the service account be created? (y/N): " sa_create_input
     if [[ "$sa_create_input" == "y" ]]; then
       service_account_create="true"
     fi
@@ -103,7 +103,7 @@ if [[ "$configure_sa" == "y" ]]; then
   fi
 fi
 
-read -p "Would you like to configure the destination secret? (y/n): " configure_dest
+read -p "Would you like to configure the destination secret? (y/N): " configure_dest
 
 if [[ "$configure_dest" == "y" ]]; then
   TEMP_FILE=$(mktemp)
@@ -138,7 +138,7 @@ if [[ -n "$destination_config" && "$destination_config" != "null" ]]; then
   YQ_STRING="$YQ_STRING | .secrets.\"$secret_name\".destination += $ESCAPED_DEST"
 fi
 
-SECRET_VALUES_FILE="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/vault-config"
+SECRET_VALUES_FILE="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/vault-config/values.yaml"
 
 print_debug "Executing yq modification with string: $YQ_STRING"
 _modify-secret-values "$YQ_STRING" "$SECRET_VALUES_FILE"
