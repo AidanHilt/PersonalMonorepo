@@ -2,6 +2,7 @@
 
 let
 printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
+modify-master-stack-values = (import ../lib/_modify-master-stack-values.nix { inherit pkgs; }).script;
 
 app-creator-create-app = pkgs.writeShellScriptBin "app-creator-create-app" ''
 #!/bin/bash
@@ -9,6 +10,7 @@ app-creator-create-app = pkgs.writeShellScriptBin "app-creator-create-app" ''
 set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
+source ${modify-master-stack-values}
 
 # show_help () {
 #   echo "Usage: $0 [OPTIONS]"
