@@ -137,8 +137,6 @@ fi
 
 if [[ -v "DESTINATION_FILE" ]]; then
   YQ_STRING="$YQ_STRING | \"$secret_name\" += load(\"$DESTINATION_FILE\")"
-
-  rm "$DESTINATION_FILE"
 fi
 
 SECRET_VALUES_FILE="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/vault-config/values.yaml"
@@ -146,6 +144,10 @@ echo "$YQ_STRING"
 
 print_debug "Executing yq modification with string: $YQ_STRING"
 _modify-secret-values "$YQ_STRING" "$SECRET_VALUES_FILE"
+
+if [[ -v "$DESTINATION_FILE" ]]; then
+  rm "$DESTINATION_FILE"
+fi
 
 print_status "Secret configuration completed successfully"
 '';
