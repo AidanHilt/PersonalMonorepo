@@ -144,6 +144,7 @@ if [[ -n "$destination_config" && "$destination_config" != "null" ]]; then
 fi
 
 SECRET_VALUES_FILE="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/vault-config/values.yaml"
+echo "$YQ_STRING"
 
 print_debug "Executing yq modification with string: $YQ_STRING"
 _modify-secret-values "$YQ_STRING" "$SECRET_VALUES_FILE"
