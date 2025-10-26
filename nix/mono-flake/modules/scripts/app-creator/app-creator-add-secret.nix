@@ -135,8 +135,10 @@ if [[ "$configure_sa" == "y" ]]; then
   fi
 fi
 
-if [[ -n "$destination_config" && "$destination_config" != "null" ]]; then
+if [[ -n "$DESTINATION_FILE" ]]; then
   YQ_STRING="$YQ_STRING | \"$secret_name\".destination = load("$DESTINATION_FILE")"
+
+  rm "$DESTINATION_FILE"
 fi
 
 SECRET_VALUES_FILE="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/vault-config/values.yaml"
