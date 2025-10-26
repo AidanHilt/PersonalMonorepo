@@ -129,7 +129,7 @@ if [[ "$input_default_values" == "y" ]]; then
 
   TEMP_YAML_FILE=$(mktemp)
   echo "$DEFAULT_VALUES_CONTENT" > "$TEMP_YAML_FILE"
-  YQ_STRING="$YQ_STRING | .\"$app_name\" += load_str(\"$TEMP_YAML_FILE\")"
+  YQ_STRING="$YQ_STRING | .\"$app_name\" += load(\"$TEMP_YAML_FILE\")"
 fi
 
 read -p "Would you like to input secure values to read from Vault?  (y/n): " input_secure_values
