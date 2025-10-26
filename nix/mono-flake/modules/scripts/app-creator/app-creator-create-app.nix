@@ -47,7 +47,7 @@ echo "1) Git-based"
 echo "2) External Helm chart"
 read -p "Enter your choice (1 or 2): " app_type
 
-YQ_STRING=".applications.\"$app_name\".enabled=false"
+YQ_STRING=".\"$app_name\".enabled=false"
 
 if [[ "$app_type" == "1" ]]; then
   print_debug "Creating git-based app"
@@ -56,27 +56,27 @@ if [[ "$app_type" == "1" ]]; then
 
   if [[ -n "$git_repo" ]]; then
     print_debug "Git repository set to: $git_repo"
-    YQ_STRING="$YQ_STRING | .repo = \"$git_repo\""
+    YQ_STRING="$YQ_STRING | .\"$app_name\".repo = \"$git_repo\""
   fi
 
   read -p "Enter git path: " git_path
   print_debug "Git path set to: $git_path"
-  YQ_STRING="$YQ_STRING | .gitPath = \"$git_path\""
+  YQ_STRING="$YQ_STRING | .\"$app_name\".gitPath = \"$git_path\""
 
 elif [[ "$app_type" == "2" ]]; then
   print_debug "Creating external Helm chart app"
 
   read -p "Enter Helm repository URL: " helm_repo
   print_debug "Helm repository set to: $helm_repo"
-  YQ_STRING="$YQ_STRING | .repo = \"$helm_repo\""
+  YQ_STRING="$YQ_STRING | .\"$app_name\".repo = \"$helm_repo\""
 
   read -p "Enter chart name: " chart_name
   print_debug "Chart name set to: $chart_name"
-  YQ_STRING="$YQ_STRING | .chart = \"$chart_name\""
+  YQ_STRING="$YQ_STRING | .\"$app_name\".chart = \"$chart_name\""
 
   read -p "Enter chart version: " chart_version
   print_debug "Chart version set to: $chart_version"
-  YQ_STRING="$YQ_STRING | .version = \"$chart_version\""
+  YQ_STRING="$YQ_STRING | .\"$app_name\".version = \"$chart_version\""
 
 else
   print_error "Invalid choice. Please select 1 or 2"
@@ -85,7 +85,7 @@ fi
 
 read -p "Enter namespace: " namespace
 print_debug "Namespace set to: $namespace"
-YQ_STRING="$YQ_STRING | .destinationNamespace = \"$namespace\""
+YQ_STRING="$YQ_STRING | .\"$app_name\".destinationNamespace = \"$namespace\""
 
 read -p "Do you want to set ArgoCD sync options? (y/n): " set_sync_options
 
@@ -96,21 +96,21 @@ if [[ "$set_sync_options" == "y" ]]; then
 
   if [[ -n "$sync_options" ]]; then
     print_debug "Sync options set to: $sync_options"
-    YQ_STRING="$YQ_STRING | .syncOptions = \"$sync_options\""
+    YQ_STRING="$YQ_STRING | .\"$app_name\".syncOptions = \"$sync_options\""
   fi
 
   read -p "Enter sync wave (optional, press enter to skip): " sync_wave
 
   if [[ -n "$sync_wave" ]]; then
     print_debug "Sync wave set to: $sync_wave"
-    YQ_STRING="$YQ_STRING | .syncWave = $sync_wave"
+    YQ_STRING="$YQ_STRING | .\"$app_name\".syncWave = $sync_wave"
   fi
 
   read -p "Enable serverSideApply? (y/n, default: n): " server_side_apply
 
   if [[ "$server_side_apply" == "y" ]]; then
     print_debug "serverSideApply enabled"
-    YQ_STRING="$YQ_STRING | .serverSideApply = true"
+    YQ_STRING="$YQ_STRING | .\"$app_name\".serverSideApply = true"
   fi
 fi
 
@@ -129,7 +129,7 @@ if [[ "$input_default_values" == "y" ]]; then
 
   TEMP_YAML_FILE=$(mktemp)
   echo "$DEFAULT_VALUES_CONTENT" > "$TEMP_YAML_FILE"
-  YQ_STRING="$YQ_STRING | .defaultValues = load(\"$TEMP_YAML_FILE\").defaultValues"
+  YQ_STRING="$YQ_STRING | .\"$app_name\".defaultValues = load(\"$TEMP_YAML_FILE\").defaultValues"
 fi
 
 read -p "Would you like to input secure values (for Vault integration)? (y/n): " input_secure_values
@@ -147,7 +147,7 @@ if [[ "$input_secure_values" == "y" ]]; then
 
   TEMP_SECURE_YAML_FILE=$(mktemp)
   echo "$SECURE_VALUES_CONTENT" > "$TEMP_SECURE_YAML_FILE"
-  YQ_STRING="$YQ_STRING | .secureValues = load(\"$TEMP_SECURE_YAML_FILE\").secureValues"
+  YQ_STRING="$YQ_STRING | .\"$app_name\".secureValues = load(\"$TEMP_SECURE_YAML_FILE\").secureValues"
 fi
 
 print_debug "Constructed yq string: $YQ_STRING"
