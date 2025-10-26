@@ -135,7 +135,7 @@ if [[ "$configure_sa" == "y" ]]; then
   fi
 fi
 
-if [[ -n "$DESTINATION_FILE" ]]; then
+if [[ -v "DESTINATION_FILE" ]]; then
   YQ_STRING="$YQ_STRING | \"$secret_name\".destination = load("$DESTINATION_FILE")"
 
   rm "$DESTINATION_FILE"
