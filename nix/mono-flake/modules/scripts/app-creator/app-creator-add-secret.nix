@@ -120,7 +120,7 @@ if [[ "$configure_dest" == "y" ]]; then
   rm "$TEMP_FILE"
 fi
 
-YQ_STRING=".\"$secret_name\".enabled=false | .\"$secret_name\"secretDestinationNamespace = \"$destination_namespace\""
+YQ_STRING=".\"$secret_name\".enabled=false | .\"$secret_name\".secretDestinationNamespace = \"$destination_namespace\""
 
 if [[ -n "$resource_name" ]]; then
   YQ_STRING="$YQ_STRING | .\"$secret_name\".destination.name = \"$resource_name\""
