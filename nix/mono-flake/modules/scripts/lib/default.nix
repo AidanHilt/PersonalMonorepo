@@ -2,7 +2,6 @@
 
 {
   imports = [
-    ./_modify-secret-values.nix
     ./_edit-yaml-in-place.nix
     ./_copy-text-to-clipboard.nix
     ./_generate-desktop-files.nix
