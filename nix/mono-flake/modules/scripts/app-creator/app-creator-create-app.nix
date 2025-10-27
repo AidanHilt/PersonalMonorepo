@@ -12,101 +12,187 @@ set -euo pipefail
 source ${printing-and-output.printing-and-output}
 source ${modify-master-stack-values}
 
-# show_help () {
-#   echo "Usage: $0 [OPTIONS]"
-#   echo ""
-#   # Description goes here
-#   echo ""
-#   echo ""
-#   echo "OPTIONS:"
-# }
+show_help () {
+  echo "Usage: $0 [OPTIONS]"
+  echo ""
+  echo "Create a new app by editing the values file in the master-stack chart"
+  echo ""
+  echo "OPTIONS:"
+  echo "--repo: The repository to read from"
+  echo "--git-path: The path to read from in git repositories"
+  echo "--chart-name: The name of the chart to read from the repository"
+  echo "--version: The version tag to try and pull for the chart"
+  echo "--namespace: The target namespace to deploy the app's resources"
+  echo "--sync-options: ArgoCD sync options"
+  echo "--sync-wave: A numerical representation of the ArgoCD sync wave to use"
+  echo "--server-side-apply: Enable server-side apply"
+  echo "--skip-default-values: Don't prompt the user for default values"
+  echo "--skip-secure-values: Don't prompt the user for secure values"
+}
 
-# while [[ $# -gt 0 ]]; do
-#   case $1 in
-#     --<>|-<>)
+app_type=""
+repo=""
+git_path=""
+chart_name=""
+version=""
+namespace=""
+sync_options=""
+sync_wave=""
+server_side_apply=""
+skip_default_values=false
+skip_secure_values=false
 
-#     shift 2
-#     ;;
-#     --help|-h)
-#     show_help
-#     exit 0
-#     ;;
-#     *)
-#     print_error "Unknown option: $1"
-#     exit 1
-#     ;;
-#   esac
-# done
+set_sync_options=""
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --repo|-r)
+    repo="$2"
+    shift 2
+    ;;
+    --chart-name|-c)
+    chart_name="$2"
+    app_type=2
+    shift 2
+    ;;
+    --git-path|-g)
+    git_path="$2"
+    app_type=1
+    shift 2
+    ;;
+    --version|-v)
+    version="$2"
+    shift 2
+    ;;
+    --namespace|-n)
+    namespace="$2"
+    shift 2
+    ;;
+    --sync-options|-s)
+    sync_options="$2"
+    set_sync_options="n"
+    shift 2
+    ;;
+    --sync-wave|-w)
+    sync_wave="$2"
+    set_sync_options="n"
+    shift 2
+    ;;
+    --server-side-apply)
+    server_side_apply=true
+    set_sync_options="n"
+    shift 1
+    ;;
+    --skip-default-values)
+    input_default_values=false
+    shift 1
+    ;;
+    --skip-secure-values|-<>)
+    skip_secure_values=true
+    shift 1
+    ;;
+    --help|-h)
+    show_help
+    exit 0
+    ;;
+    *)
+    print_error "Unknown option: $1"
+    exit 1
+    ;;
+  esac
+done
 
 read -p "Enter the name of your app: " app_name
 
 print_debug "App name set to: $app_name"
 
-echo "Select app type:"
-echo "1) Git-based"
-echo "2) External Helm chart"
-read -p "Enter your choice (1 or 2): " app_type
+if [[ ! -n "$app_type" ]]; then
+  echo "Select app type:"
+  echo "1) Git-based"
+  echo "2) External Helm chart"
+  read -p "Enter your choice (1 or 2): " app_type
+fi
 
 YQ_STRING=".\"$app_name\".enabled=false"
 
 if [[ "$app_type" == "1" ]]; then
   print_debug "Creating git-based app"
 
-  read -p "Enter git repository URL (optional, press enter to skip): " git_repo
-
-  if [[ -n "$git_repo" ]]; then
-    print_debug "Git repository set to: $git_repo"
-    YQ_STRING="$YQ_STRING | .\"$app_name\".repo = \"$git_repo\""
+  if [[ ! -n "$repo" ]]; then
+    read -p "Enter git repository URL (optional, press enter to skip): " repo
   fi
 
-  read -p "Enter git path: " git_path
-  print_debug "Git path set to: $git_path"
-  YQ_STRING="$YQ_STRING | .\"$app_name\".gitPath = \"$git_path\""
+  if [[ -n "$repo" ]]; then
+    print_debug "Git repository set to: $repo"
+    YQ_STRING="$YQ_STRING | .\"$app_name\".repo = \"$repo\""
+  fi
+
+  if [[ ! -n "$git_path" ]]; then
+    read -p "Enter git path: " git_path
+    print_debug "Git path set to: $git_path"
+    YQ_STRING="$YQ_STRING | .\"$app_name\".gitPath = \"$git_path\""
+  fi
 
 elif [[ "$app_type" == "2" ]]; then
   print_debug "Creating external Helm chart app"
 
-  read -p "Enter Helm repository URL: " helm_repo
-  print_debug "Helm repository set to: $helm_repo"
-  YQ_STRING="$YQ_STRING | .\"$app_name\".repo = \"$helm_repo\""
+  if [[ ! -n "$repo" ]]; then
+    read -p "Enter Helm repository URL: " repo
+    print_debug "Helm repository set to: $repo"
+    YQ_STRING="$YQ_STRING | .\"$app_name\".repo = \"$repo\""
+  fi
 
-  read -p "Enter chart name: " chart_name
-  print_debug "Chart name set to: $chart_name"
-  YQ_STRING="$YQ_STRING | .\"$app_name\".chart = \"$chart_name\""
+  if [[ ! -n "$chart_name" ]]; then
+    read -p "Enter chart name: " chart_name
+    print_debug "Chart name set to: $chart_name"
+    YQ_STRING="$YQ_STRING | .\"$app_name\".chart = \"$chart_name\""
+  fi
 
-  read -p "Enter chart version: " chart_version
-  print_debug "Chart version set to: $chart_version"
-  YQ_STRING="$YQ_STRING | .\"$app_name\".version = \"$chart_version\""
+  if [[ ! -n "$version" ]]; then
+    read -p "Enter chart version: " version
+    print_debug "Chart version set to: $version"
+    YQ_STRING="$YQ_STRING | .\"$app_name\".version = \"$version\""
+  fi
 
 else
   print_error "Invalid choice. Please select 1 or 2"
   exit 1
 fi
 
-read -p "Enter namespace: " namespace
-print_debug "Namespace set to: $namespace"
-YQ_STRING="$YQ_STRING | .\"$app_name\".destinationNamespace = \"$namespace\""
+if [[ ! -n "$namespace" ]]; then
+  read -p "Enter namespace: " namespace
+  print_debug "Namespace set to: $namespace"
+  YQ_STRING="$YQ_STRING | .\"$app_name\".destinationNamespace = \"$namespace\""
+fi
 
-read -p "Do you want to set ArgoCD sync options? (y/n): " set_sync_options
+if [[ ! -n "$set_sync_options" ]]; then
+  read -p "Do you want to set ArgoCD sync options? (y/n): " set_sync_options
+fi
 
 if [[ "$set_sync_options" == "y" ]]; then
   print_debug "Configuring ArgoCD sync options"
 
-  read -p "Enter sync options (optional, press enter to skip): " sync_options
+  if [[ ! -n "$sync_options" ]]; then
+    read -p "Enter sync options (optional, press enter to skip): " sync_options
+  fi
 
-  if [[ -n "$sync_options" ]]; then
+  if [[ ! -n "$sync_options" ]]; then
     print_debug "Sync options set to: $sync_options"
     YQ_STRING="$YQ_STRING | .\"$app_name\".syncOptions = \"$sync_options\""
   fi
 
-  read -p "Enter sync wave (optional, press enter to skip): " sync_wave
-
-  if [[ -n "$sync_wave" ]]; then
-    print_debug "Sync wave set to: $sync_wave"
-    YQ_STRING="$YQ_STRING | .\"$app_name\".syncWave = $sync_wave"
+  if [[ ! -n "$sync_wave" ]]; then
+    read -p "Enter sync wave (optional, press enter to skip): " sync_wave
   fi
 
-  read -p "Enable serverSideApply? (y/n, default: n): " server_side_apply
+  if [[ ! -n "$sync_wave" ]]; then
+    print_debug "Sync wave set to: $sync_wave"
+    YQ_STRING="$YQ_STRING | .\"$app_name\".syncWave = \"$sync_wave\""
+  fi
+
+  if [[ ! -n "server_side_apply" ]]; then
+    read -p "Enable serverSideApply? (y/n, default: n): " server_side_apply
+  fi
 
   if [[ "$server_side_apply" == "y" ]]; then
     print_debug "serverSideApply enabled"
@@ -114,7 +200,10 @@ if [[ "$set_sync_options" == "y" ]]; then
   fi
 fi
 
-read -p "Would you like to input default values? (y/n): " input_default_values
+
+if [[ ! -n "$input_default_values" ]]; then
+  read -p "Would you like to input default values? (y/n): " input_default_values
+fi
 
 if [[ "$input_default_values" == "y" ]]; then
   print_debug "Opening editor for default values"
@@ -132,7 +221,9 @@ if [[ "$input_default_values" == "y" ]]; then
   YQ_STRING="$YQ_STRING | .\"$app_name\" += load(\"$TEMP_YAML_FILE\")"
 fi
 
-read -p "Would you like to input secure values to read from Vault?  (y/n): " input_secure_values
+if [[ ! -n "$input_secure_values" ]]; then
+  read -p "Would you like to input secure values to read from Vault?  (y/n): " input_secure_values
+fi
 
 if [[ "$input_secure_values" == "y" ]]; then
   print_debug "Opening editor for secure values (Vault references)"
