@@ -85,7 +85,7 @@ while [[ $# -gt 0 ]]; do
     shift 2
     ;;
     --server-side-apply)
-    server_side_apply=true
+    server_side_apply=y
     set_sync_options="n"
     shift 1
     ;;
@@ -191,28 +191,28 @@ if [[ "$set_sync_options" == "y" ]]; then
     read -p "Enter sync options (optional, press enter to skip): " sync_options
   fi
 
-  if [[ -n "$sync_options" ]]; then
-    print_debug "Sync options set to: $sync_options"
-    YQ_STRING="$YQ_STRING | .\"$app_name\".syncOptions = \"$sync_options\""
-  fi
-
   if [[ -z "$sync_wave" ]]; then
     read -p "Enter sync wave (optional, press enter to skip): " sync_wave
-  fi
-
-  if [[ -n "$sync_wave" ]]; then
-    print_debug "Sync wave set to: $sync_wave"
-    YQ_STRING="$YQ_STRING | .\"$app_name\".syncWave = \"$sync_wave\""
   fi
 
   if [[ -z "server_side_apply" ]]; then
     read -p "Enable serverSideApply? (y/n, default: n): " server_side_apply
   fi
+fi
 
-  if [[ "$server_side_apply" == "y" ]]; then
-    print_debug "serverSideApply enabled"
-    YQ_STRING="$YQ_STRING | .\"$app_name\".serverSideApply = true"
-  fi
+if [[ -n "$sync_options" ]]; then
+  print_debug "Sync options set to: $sync_options"
+  YQ_STRING="$YQ_STRING | .\"$app_name\".syncOptions = \"$sync_options\""
+fi
+
+if [[ "$server_side_apply" == "y" ]]; then
+  print_debug "serverSideApply enabled"
+  YQ_STRING="$YQ_STRING | .\"$app_name\".serverSideApply = true"
+fi
+
+if [[ -n "$sync_wave" ]]; then
+  print_debug "Sync wave set to: $sync_wave"
+  YQ_STRING="$YQ_STRING | .\"$app_name\".syncWave = \"$sync_wave\""
 fi
 
 
