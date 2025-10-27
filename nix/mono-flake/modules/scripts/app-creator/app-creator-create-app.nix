@@ -110,7 +110,7 @@ done
 
 echo "$app_name"
 
-if [[ -z "app_name" ]]; then
+if [[ -z "$app_name" ]]; then
   read -p "Enter the name of your app: " app_name
 fi
 
