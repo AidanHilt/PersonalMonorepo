@@ -43,7 +43,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: {{ $serviceAccountName }}
-  namespace: {{ $vaultConfig.serviceAccount.namespace }}
+  namespace: {{ $vaultConfig.serviceAccount.namespace | default $vaultConfig.secretDestinationNamespace }}
 {{- end }}
 {{- end }}
 {{- end }}

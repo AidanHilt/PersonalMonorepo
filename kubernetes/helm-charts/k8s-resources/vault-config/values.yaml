@@ -49,4 +49,3 @@ video-stack-configuration:
 
   serviceAccount:
     create: true
-    namespace: videos
