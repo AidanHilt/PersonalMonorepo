@@ -108,8 +108,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-echo "$app_name"
-
 if [[ -z "$app_name" ]]; then
   read -p "Enter the name of your app: " app_name
 fi
@@ -259,8 +257,6 @@ fi
 print_debug "Constructed yq string: $YQ_STRING"
 
 TARGET_FILE="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/master-stack/values.yaml"
-
-echo "$YQ_STRING"
 
 _modify-master-stack-values "$YQ_STRING" "$TARGET_FILE"
 
