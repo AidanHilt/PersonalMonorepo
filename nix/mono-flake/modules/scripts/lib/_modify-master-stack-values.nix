@@ -13,7 +13,7 @@ let
       local TEMP_REST=$(mktemp)
 
       yq eval 'pick(["env", "hostnames", "defaultGitRepo", "gitRevision", "configuration"])' "$FILE_NAME" > "$TEMP_HEADER"
-      yq eval 'del(.env) | del(.hostnames) | del(.defaultGitRepo) | del(.gitRevision) | to_entries | sort_by(.key) | from_entries' "$FILE_NAME" > "$TEMP_REST"
+      yq eval 'del(.env) | del(.hostnames) | del(.defaultGitRepo) | del(.gitRevision) | del(.configuration) | to_entries | sort_by(.key) | from_entries' "$FILE_NAME" > "$TEMP_REST"
 
       {
         cat "$TEMP_HEADER"
