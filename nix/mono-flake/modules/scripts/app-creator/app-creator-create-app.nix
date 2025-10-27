@@ -140,8 +140,9 @@ if [[ "$app_type" == "1" ]]; then
   if [[ -z "$git_path" ]]; then
     read -p "Enter git path: " git_path
     print_debug "Git path set to: $git_path"
-    YQ_STRING="$YQ_STRING | .\"$app_name\".gitPath = \"$git_path\""
   fi
+
+YQ_STRING="$YQ_STRING | .\"$app_name\".gitPath = \"$git_path\""
 
 elif [[ "$app_type" == "2" ]]; then
   print_debug "Creating external Helm chart app"
@@ -149,20 +150,23 @@ elif [[ "$app_type" == "2" ]]; then
   if [[ -z "$repo" ]]; then
     read -p "Enter Helm repository URL: " repo
     print_debug "Helm repository set to: $repo"
-    YQ_STRING="$YQ_STRING | .\"$app_name\".repo = \"$repo\""
   fi
+
+YQ_STRING="$YQ_STRING | .\"$app_name\".repo = \"$repo\""
 
   if [[ -z "$chart_name" ]]; then
     read -p "Enter chart name: " chart_name
     print_debug "Chart name set to: $chart_name"
-    YQ_STRING="$YQ_STRING | .\"$app_name\".chart = \"$chart_name\""
   fi
+
+YQ_STRING="$YQ_STRING | .\"$app_name\".chart = \"$chart_name\""
 
   if [[ -z "$version" ]]; then
     read -p "Enter chart version: " version
     print_debug "Chart version set to: $version"
-    YQ_STRING="$YQ_STRING | .\"$app_name\".version = \"$version\""
   fi
+
+YQ_STRING="$YQ_STRING | .\"$app_name\".version = \"$version\""
 
 else
   print_error "Invalid choice. Please select 1 or 2"
@@ -172,8 +176,9 @@ fi
 if [[ -z "$namespace" ]]; then
   read -p "Enter namespace: " namespace
   print_debug "Namespace set to: $namespace"
-  YQ_STRING="$YQ_STRING | .\"$app_name\".destinationNamespace = \"$namespace\""
 fi
+
+YQ_STRING="$YQ_STRING | .\"$app_name\".destinationNamespace = \"$namespace\""
 
 if [[ -z "$set_sync_options" ]]; then
   read -p "Do you want to set ArgoCD sync options? (y/n): " set_sync_options
@@ -186,7 +191,7 @@ if [[ "$set_sync_options" == "y" ]]; then
     read -p "Enter sync options (optional, press enter to skip): " sync_options
   fi
 
-  if [[ -z "$sync_options" ]]; then
+  if [[ -n "$sync_options" ]]; then
     print_debug "Sync options set to: $sync_options"
     YQ_STRING="$YQ_STRING | .\"$app_name\".syncOptions = \"$sync_options\""
   fi
@@ -195,7 +200,7 @@ if [[ "$set_sync_options" == "y" ]]; then
     read -p "Enter sync wave (optional, press enter to skip): " sync_wave
   fi
 
-  if [[ -z "$sync_wave" ]]; then
+  if [[ -n "$sync_wave" ]]; then
     print_debug "Sync wave set to: $sync_wave"
     YQ_STRING="$YQ_STRING | .\"$app_name\".syncWave = \"$sync_wave\""
   fi
