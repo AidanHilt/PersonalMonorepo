@@ -39,8 +39,8 @@ namespace=""
 sync_options=""
 sync_wave=""
 server_side_apply=""
-skip_default_values=false
-skip_secure_values=false
+input_default_values=""
+input_secure_values=""
 
 set_sync_options=""
 
@@ -88,7 +88,7 @@ while [[ $# -gt 0 ]]; do
     shift 1
     ;;
     --skip-secure-values)
-    skip_secure_values=true
+    input_secure_values=false
     shift 1
     ;;
     --help|-h)
