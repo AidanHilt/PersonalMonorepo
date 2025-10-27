@@ -155,7 +155,6 @@ in
 
     # Dependencies for update-kubeconfig
     age
-    yq
     jq
 
     clear-namespace

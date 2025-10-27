@@ -8,7 +8,7 @@ _edit-yaml-in-place = pkgs.writeShellScriptBin "_edit-yaml-in-place" ''
 
 set -euo pipefail
 
-source ''${printing-and-output.printing-and-output}
+source ${printing-and-output.printing-and-output}
 
 FILENAME="$1"
 YQ_STRING="$2"
@@ -19,7 +19,7 @@ if [[ -z "''${FILENAME}" || -z "''${YQ_STRING}" ]]; then
   exit 1
 fi
 
-print_status "Applying yq transformation to PRINT_DEBUGFILENAME}"
+print_debug "Applying yq transformation to $FILENAME"
 
 yq "''${YQ_STRING}" "''${FILENAME}" > "''${TMP_FILE}"
 mv "''${TMP_FILE}" "''${FILENAME}"
