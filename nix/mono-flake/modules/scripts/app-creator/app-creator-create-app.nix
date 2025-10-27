@@ -87,7 +87,7 @@ while [[ $# -gt 0 ]]; do
     input_default_values=false
     shift 1
     ;;
-    --skip-secure-values|-<>)
+    --skip-secure-values)
     skip_secure_values=true
     shift 1
     ;;
