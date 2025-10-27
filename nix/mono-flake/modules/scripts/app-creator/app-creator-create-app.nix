@@ -18,6 +18,7 @@ show_help () {
   echo "Create a new app by editing the values file in the master-stack chart"
   echo ""
   echo "OPTIONS:"
+  echo "--app-name: The name of the app"
   echo "--repo: The repository to read from"
   echo "--git-path: The path to read from in git repositories"
   echo "--chart-name: The name of the chart to read from the repository"
@@ -107,6 +108,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+echo "$app_name"
 
 if [[ -z "app_name" ]]; then
   read -p "Enter the name of your app: " app_name
