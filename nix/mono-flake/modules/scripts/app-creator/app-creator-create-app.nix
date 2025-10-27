@@ -255,6 +255,8 @@ print_debug "Constructed yq string: $YQ_STRING"
 
 TARGET_FILE="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/master-stack/values.yaml"
 
+echo "$YQ_STRING"
+
 _modify-master-stack-values "$YQ_STRING" "$TARGET_FILE"
 
 print_status "Application '$app_name' configuration added to master stack"
