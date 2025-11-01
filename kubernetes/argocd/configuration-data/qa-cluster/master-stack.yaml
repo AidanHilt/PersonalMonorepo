@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: project-appocalypse/helm-chart-refactor
+gitRevision: project-appocalypse/new-terraform
 
 flaresolverr:
   enabled: true
