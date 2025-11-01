@@ -265,5 +265,5 @@ video-stack-configuration:
 
     transmission:
       port: 80
-  gitPath: kubernetes/helm-charts/applications/video-stack-configuration
+  gitPath: kubernetes/helm-charts/k8s-resources/video-stack-configuration
   destinationNamespace: videos
