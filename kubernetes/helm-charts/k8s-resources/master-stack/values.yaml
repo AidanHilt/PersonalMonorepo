@@ -60,6 +60,7 @@ hashi-vault:
 
 nginx:
   enabled: false
+  helmChart: false
   gitPath: kubernetes/ingress-nginx/kind
   destinationNamespace: ingress-nginx
   dependentApps:
