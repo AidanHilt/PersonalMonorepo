@@ -9,6 +9,10 @@ hashi-vault:
   enabled: true
   configuration:
     enabled: true
+  dependentApps:
+    vault-secrets-operator:
+      configuration:
+        enabled: true
 
 jellyfin:
   enabled: true
