@@ -40,6 +40,8 @@ transmission:
   enabled: false
   secretDestinationNamespace: videos
   resourceName: vpn
+  serviceAccount:
+    name: transmission
 
   destination:
     transformation:
