@@ -48,7 +48,7 @@ transmission:
       templates:
         vpnConfig:
           text: |
-            {{`{{ .Secrets.vpnConfig | replace "\\n" "\n" }}`}}
+            {{ .Secrets.vpnConfig | replace "\\n" "\n" }}
 
 video-stack-configuration:
   enabled: false
