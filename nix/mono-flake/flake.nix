@@ -17,7 +17,7 @@
     nur.url = "github:nix-community/nur";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/project-appocalypse/helm-chart-refactor";
+      url = "github:aidanhilt/PersonalMonorepo/master";
       flake = false;
     };
 
@@ -89,7 +89,7 @@
 
       globals = {
         nixConfig = inputs.personalMonorepo + "/nix";
-        personalMonorepoBranch = "project-appocalypse/helm-chart-refactor";
+        personalMonorepoBranch = "master";
         personalMonorepoURL = "https://github.com/AidanHilt/PersonalMonorepo";
       };
 

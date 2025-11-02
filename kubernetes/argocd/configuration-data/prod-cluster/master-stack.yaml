@@ -4,7 +4,7 @@ hostnames:
   - prod-cluster-lb.lan
   - 192.168.86.3
 
-gitRevision: project-appocalypse/prod-terraform-migration
+gitRevision: master
 
 flaresolverr:
   enabled: true
@@ -51,9 +51,6 @@ metallb:
 
 postgres:
   enabled: true
-  dependentApps:
-    postgres-cluster:
-      version: project-appocalypse/prod-terraform-migration
 
 prowlarr:
   enabled: true

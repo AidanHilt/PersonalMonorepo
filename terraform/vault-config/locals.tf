@@ -68,9 +68,10 @@ locals {
       }
     },
     {
-      name      = "vpn"
-      namespace = "videos"
-      mount     = "videos"
+      name            = "vpn"
+      namespace       = "videos"
+      mount           = "videos"
+      service_account = "transmission"
       data  = {
         VPN_AUTH  = {
           value = var.vpn_auth
