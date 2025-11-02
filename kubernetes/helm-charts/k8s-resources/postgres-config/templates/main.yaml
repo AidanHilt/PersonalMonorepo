@@ -26,15 +26,15 @@ spec:
   storage:
     size: {{ $cluster.storage | default "10Gi" }}
 ---
-{{- if $cluster.roles }}
-{{- range $cluster.roles }}
+{{- if $cluster.databases }}
+{{- range $dbName, $db := $cluster.databases }}
 apiVersion: postgresql.cnpg.io/v1
 kind: Database
 metadata:
-  name: {{ . }}
+  name: {{ $db.dbName | default $dbName }}
 spec:
-  name: {{ . }}
-  owner: {{ . }}
+  name: {{ $db.dbName | default $dbName }}
+  owner: {{ $db.owner | default $dbName }}
   cluster:
     name: postgres-cluster
 {{- end }}

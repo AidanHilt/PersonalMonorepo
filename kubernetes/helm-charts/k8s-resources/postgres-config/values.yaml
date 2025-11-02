@@ -2,4 +2,9 @@ qa-cluster:
   enabled: false
   roles:
     - prowlarr
+  databases:
+    - prowlarr_main:
+        owner: prowlarr
+    - prowlarr_logs:
+        owner: prowlarr
   storage: 1Gi
