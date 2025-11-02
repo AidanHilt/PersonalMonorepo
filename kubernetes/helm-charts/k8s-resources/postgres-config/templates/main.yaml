@@ -25,9 +25,9 @@ spec:
 
   storage:
     size: {{ $cluster.storage | default "10Gi" }}
----
 {{- if $cluster.databases }}
 {{- range $dbName, $db := $cluster.databases }}
+---
 apiVersion: postgresql.cnpg.io/v1
 kind: Database
 metadata:
