@@ -67,12 +67,12 @@ spec:
     transformation:
       templates:
         username:
-          text: {{ printf "{{ get .Secrets \"%s\" }}" (.Values.vaultConfig.postgresSecret.usernameKey | default "postgresUsername") | quote }}
+          text: {{ printf "{{ get .Secrets \"%s\" }}" ($vaultConfig.postgresSecret.usernameKey | default "postgresUsername") | quote }}
         password:
-          text: {{ printf "{{ get .Secrets \"%s\" }}" (.Values.vaultConfig.postgresSecret.passwordKey | default "postgresPassword") | quote }}
+          text: {{ printf "{{ get .Secrets \"%s\" }}" ($vaultConfig.postgresSecret.passwordKey | default "postgresPassword") | quote }}
       excludes:
-        - {{  .Values.vaultConfig.postgresSecret.usernameKey | default "postgresUsername"}}
-        - {{  .Values.vaultConfig.postgresSecret.passwordKey | default "postgresPassword" }}
+        - {{  $vaultConfig.postgresSecret.usernameKey | default "postgresUsername"}}
+        - {{  $vaultConfig.postgresSecret.passwordKey | default "postgresPassword" }}
 
   refreshAfter: 30s
 
