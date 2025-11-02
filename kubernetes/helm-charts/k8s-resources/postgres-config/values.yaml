@@ -1,0 +1,5 @@
+qa-cluster:
+  enabled: false
+  roles:
+    - prowlarr
+  storage: 1Gi

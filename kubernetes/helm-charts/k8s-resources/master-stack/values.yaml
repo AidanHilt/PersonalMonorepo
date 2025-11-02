@@ -196,8 +196,10 @@ postgres:
   dependentApps:
     postgres-cluster:
       repo: https://github.com/AidanHilt/PersonalMonorepo
-      gitPath: kubernetes/helm-charts/k8s-resources/postgres-clusters/{{ $.Values.env }}
-      helmChart: false
+      gitPath: kubernetes/helm-charts/k8s-resources/postgres-config/
+      defaultValues: |
+        {{ $.Values.env }}:
+          enabled: true
       useDefaultGitRevision: true
 
 prowlarr:
