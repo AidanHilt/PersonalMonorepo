@@ -39,6 +39,7 @@ sonarr:
 transmission:
   enabled: false
   secretDestinationNamespace: videos
+  resourceName: vpn
 
   destination:
     transformation:
