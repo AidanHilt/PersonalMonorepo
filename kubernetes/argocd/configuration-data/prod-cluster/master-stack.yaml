@@ -51,6 +51,9 @@ metallb:
 
 postgres:
   enabled: true
+  dependentApps:
+    postgres-cluster:
+      version: project-appocalypse/prod-terraform-migration
 
 prowlarr:
   enabled: true
