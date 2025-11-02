@@ -32,7 +32,7 @@ env:
   - name: RADARR__POSTGRES__PASSWORD
     valueFrom:
       secretKeyRef:
-        name: radarr-config-secret
+        name: {{ .Values.radarr.configSecret.existingSecret | default $defaultSecretName }}
         key: postgresPassword
   {{ end }}
 

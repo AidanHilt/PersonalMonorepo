@@ -112,7 +112,7 @@ resource "vault_kv_secret_v2" "vpn_config" {
   data_json = jsonencode(
     {
       VPN_AUTH   = var.vpn_auth
-      vpnConfig = var.vpn_config
+      vpnConfig  = var.vpn_config
     }
   )
 }

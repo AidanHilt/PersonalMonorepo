@@ -30,3 +30,30 @@ variable "auth_secret_namespace" {
   description = "The namespace of the secret that stores the service account token used to run kubernetes auth"
   default     = "vault"
 }
+
+# Probably want to use env vars for these
+
+# TF_VAR_VPN_AUTH
+variable "vpn_auth" {
+  type        = string
+  description = "The authorization string for the VPN"
+}
+
+# TF_VAR_VPN_CONFIG
+variable "vpn_config" {
+  type        = string
+  description = "The config string for the VPN"
+}
+
+# TF_VAR_JELLYFIN_EMAIL
+variable "jellyfin_email" {
+  type        = string
+  description = "The email to use for jellyfin"
+}
+
+# TF_VAR_JELLYFIN_USERNAME
+variable "jellyfin_username" {
+  type        = string
+  description = "The username of the main administrator account for jellyfin"
+  default     = "admin"
+}
