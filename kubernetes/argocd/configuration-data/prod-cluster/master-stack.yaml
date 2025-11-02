@@ -4,7 +4,7 @@ hostnames:
   - prod-cluster-lb.lan
   - 192.168.86.3
 
-gitRevision: master
+gitRevision: project-appocalypse/prod-terraform-migration
 
 flaresolverr:
   enabled: true
