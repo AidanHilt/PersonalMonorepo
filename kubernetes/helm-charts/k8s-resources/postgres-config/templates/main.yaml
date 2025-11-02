@@ -31,7 +31,7 @@ spec:
 apiVersion: postgresql.cnpg.io/v1
 kind: Database
 metadata:
-  name: {{ $db.dbName | default $dbName }}
+  name: {{ $dbName }}
 spec:
   name: {{ $db.dbName | default $dbName }}
   owner: {{ $db.owner | default $dbName }}
