@@ -55,7 +55,7 @@ metadata:
   namespace: {{ $vaultConfig.postgresSecret.namespace | default "postgres" }}
 spec:
   type: kv-v2
-  mount: {{ $vaultConfig.postgresSecret.namespace | default "postgres" }}
+  mount: {{ $vaultConfig.secretDestinationNamespace }}
   path: {{ $resourceName }}/config
 
   destination:
