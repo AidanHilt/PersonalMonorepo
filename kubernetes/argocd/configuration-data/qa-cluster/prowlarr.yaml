@@ -9,7 +9,7 @@ prowlarr:
   postgres:
     enabled: true
     setupJob:
-      setupJobServiceAccount: setup-job
+      enabled: false
 
 serviceAccount:
   create: true
@@ -19,4 +19,4 @@ serviceAccount:
     "helm.sh/hook-weight": "-2"
 persistence:
   config:
-    enabled: true
+    enabled: false

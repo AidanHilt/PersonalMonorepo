@@ -60,6 +60,7 @@ hashi-vault:
 
 nginx:
   enabled: false
+  helmChart: false
   gitPath: kubernetes/ingress-nginx/kind
   destinationNamespace: ingress-nginx
   dependentApps:
@@ -195,8 +196,10 @@ postgres:
   dependentApps:
     postgres-cluster:
       repo: https://github.com/AidanHilt/PersonalMonorepo
-      gitPath: kubernetes/helm-charts/k8s-resources/postgres-clusters/{{ $.Values.env }}
-      helmChart: false
+      gitPath: kubernetes/helm-charts/k8s-resources/postgres-config/
+      defaultValues: |
+        {{ $.Values.env }}:
+          enabled: true
       useDefaultGitRevision: true
 
 prowlarr:
@@ -264,5 +267,5 @@ video-stack-configuration:
 
     transmission:
       port: 80
-  gitPath: kubernetes/helm-charts/applications/video-stack-configuration
+  gitPath: kubernetes/helm-charts/k8s-resources/video-stack-configuration
   destinationNamespace: videos

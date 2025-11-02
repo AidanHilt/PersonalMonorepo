@@ -21,14 +21,20 @@ postgres:
 prowlarr:
   enabled: false
   secretDestinationNamespace: videos
+  postgresSecret:
+    enabled: true
 
 radarr:
   enabled: false
   secretDestinationNamespace: videos
+  postgresSecret:
+    enabled: true
 
 sonarr:
   enabled: false
   secretDestinationNamespace: videos
+  postgresSecret:
+    enabled: true
 
 transmission:
   enabled: false

@@ -30,7 +30,7 @@ spec:
       helm:
         {{- if $app.defaultValues }}
         values:
-          {{- $app.defaultValues | toYaml | indent 8 }}
+          {{ tpl $app.defaultValues $ | toYaml | indent 8 }}
         {{- end }}
         releaseName: {{ $appName }}
       {{- if ($app.configuration).enabled }}
@@ -99,7 +99,7 @@ spec:
         {{- if or $subApp.defaultValues $subApp.followMasterConfig }}
         values:
           {{- with $subApp.defaultValues }}
-          {{- toYaml . | indent 8 }}
+          {{- tpl . $ | toYaml | indent 8 }}
           {{- end }}
           {{- if $subApp.followMasterConfig }}
           {{- include "generateEnabledValues" $ | toYaml | indent 8 }}

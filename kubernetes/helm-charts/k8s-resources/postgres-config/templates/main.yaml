@@ -1,0 +1,44 @@
+{{- range $clusterName, $cluster := .Values }}
+{{- if $cluster.enabled | default false }}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-cluster
+  namespace: postgres
+spec:
+  description: "The primary postgres cluster for this kubernetes cluster"
+  instances: {{ $cluster.replicas | default 1 }}
+  startDelay: 300
+  stopDelay: 300
+  primaryUpdateStrategy: unsupervised
+
+{{- if $cluster.roles }}
+  managed:
+    roles:
+{{- range $cluster.roles }}
+      - name: {{ . }}
+        login: true
+        passwordSecret:
+          name: {{ . }}-postgres-user
+{{- end }}
+{{- end }}
+
+  storage:
+    size: {{ $cluster.storage | default "10Gi" }}
+{{- if $cluster.databases }}
+{{- range $dbName, $db := $cluster.databases }}
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: {{ $dbName }}
+spec:
+  name: {{ $db.dbName | default $dbName }}
+  owner: {{ $db.owner | default $dbName }}
+  cluster:
+    name: postgres-cluster
+{{- end }}
+{{- end }}
+
+{{- end }}
+{{- end }}

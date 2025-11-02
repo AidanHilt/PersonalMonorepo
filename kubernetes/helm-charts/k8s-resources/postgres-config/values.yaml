@@ -1,0 +1,26 @@
+qa-cluster:
+  enabled: false
+  roles:
+    - prowlarr
+    - sonarr
+    - radarr
+  databases:
+    prowlarr-main:
+      dbName: prowlarr_main
+      owner: prowlarr
+    prowlarr-logs:
+      dbName: prowlarr_logs
+      owner: prowlarr
+    sonarr-main:
+      dbName: sonarr_main
+      owner: sonarr
+    sonarr-logs:
+      dbName: sonarr_logs
+      owner: sonarr
+    radarr-main:
+      dbName: radarr_main
+      owner: radarr
+    radarr-logs:
+      dbName: radarr_logs
+      owner: radarr
+  storage: 1Gi
