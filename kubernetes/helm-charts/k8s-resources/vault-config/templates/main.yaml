@@ -45,5 +45,39 @@ metadata:
   name: {{ $serviceAccountName }}
   namespace: {{ $vaultConfig.serviceAccount.namespace | default $vaultConfig.secretDestinationNamespace }}
 {{- end }}
+
+{{- if (get (default (dict) $vaultConfig.postgresSecret) "postgresSecret" "enabled") | default false }}
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: {{ $resourceName }}-postgres-user
+  namespace: {{ $vaultConfig.postgresSecret.namespace | default "postgres" }}
+spec:
+  type: kv-v2
+  mount: {{ $vaultConfig.postgresSecret.namespace | default "postgres" }}
+  path: {{ $resourceName }}/config
+
+  destination:
+    name: {{ $resourceName }}-postgres-user
+    create: true
+    type: kubernetes.io/basic-auth
+    labels:
+      cnpg.io/reload: ""
+    transformation:
+      templates:
+        username:
+          text: {{ printf "{{ get .Secrets \"%s\" }}" (.Values.vaultConfig.postgresSecret.usernameKey | default "postgresUsername") | quote }}
+        password:
+          text: {{ printf "{{ get .Secrets \"%s\" }}" (.Values.vaultConfig.postgresSecret.passwordKey | default "postgresPassword") | quote }}
+      excludes:
+        - {{  .Values.vaultConfig.postgresSecret.usernameKey | default "postgresUsername"}}
+        - {{  .Values.vaultConfig.postgresSecret.passwordKey | default "postgresPassword" }}
+
+  refreshAfter: 30s
+
+  vaultAuthRef: postgres-auth
+{{- end }}
+
 {{- end }}
 {{- end }}
