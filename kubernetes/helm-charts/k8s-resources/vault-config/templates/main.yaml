@@ -46,7 +46,7 @@ metadata:
   namespace: {{ $vaultConfig.serviceAccount.namespace | default $vaultConfig.secretDestinationNamespace }}
 {{- end }}
 
-{{- if (get (default (dict) $vaultConfig.postgresSecret) "postgresSecret" "enabled") | default false }}
+{{- if (get (default (dict) $vaultConfig.postgresSecret) "postgresSecret.enabled") | default false }}
 ---
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultStaticSecret
