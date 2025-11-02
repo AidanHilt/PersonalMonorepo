@@ -6,6 +6,11 @@ radarr:
 
   externalAuth: true
 
+  postgres:
+    enabled: true
+    setupJob:
+      enabled: false
+
 serviceAccount:
   create: true
   name: radarr
@@ -15,7 +20,7 @@ serviceAccount:
 
 persistence:
   config:
-    enabled: true
+    enabled: false
   videos:
     enabled: true
     type: hostPath
