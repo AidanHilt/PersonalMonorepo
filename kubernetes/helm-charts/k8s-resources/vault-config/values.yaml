@@ -39,13 +39,16 @@ sonarr:
 transmission:
   enabled: false
   secretDestinationNamespace: videos
+  resourceName: vpn
+  serviceAccount:
+    name: transmission
 
   destination:
     transformation:
       templates:
         vpnConfig:
           text: |
-            {{`{{ .Secrets.vpnConfig | replace "\\n" "\n" }}`}}
+            {{ .Secrets.vpnConfig | replace "\\n" "\n" }}
 
 video-stack-configuration:
   enabled: false

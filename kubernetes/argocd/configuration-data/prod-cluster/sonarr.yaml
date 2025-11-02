@@ -9,7 +9,7 @@ sonarr:
   postgres:
     enabled: true
     setupJob:
-      setupJobServiceAccount: setup-job
+      enabled: false
 
 serviceAccount:
   create: true
