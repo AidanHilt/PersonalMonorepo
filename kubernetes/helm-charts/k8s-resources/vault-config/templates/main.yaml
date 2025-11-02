@@ -76,7 +76,7 @@ spec:
 
   refreshAfter: 30s
 
-  vaultAuthRef: postgres-auth
+  vaultAuthRef: {{ $resourceName }}-auth
 ---
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultAuth
