@@ -3,8 +3,8 @@ qa-cluster:
   roles:
     - prowlarr
   databases:
-    - prowlarr_main:
-        owner: prowlarr
-    - prowlarr_logs:
-        owner: prowlarr
+    prowlarr_main:
+      owner: prowlarr
+    prowlarr_logs:
+      owner: prowlarr
   storage: 1Gi
