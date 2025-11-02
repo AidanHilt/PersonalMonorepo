@@ -24,3 +24,58 @@ qa-cluster:
       dbName: radarr_logs
       owner: radarr
   storage: 1Gi
+
+staging-cluster:
+  enabled: false
+  roles:
+    - prowlarr
+    - sonarr
+    - radarr
+  databases:
+    prowlarr-main:
+      dbName: prowlarr_main
+      owner: prowlarr
+    prowlarr-logs:
+      dbName: prowlarr_logs
+      owner: prowlarr
+    sonarr-main:
+      dbName: sonarr_main
+      owner: sonarr
+    sonarr-logs:
+      dbName: sonarr_logs
+      owner: sonarr
+    radarr-main:
+      dbName: radarr_main
+      owner: radarr
+    radarr-logs:
+      dbName: radarr_logs
+      owner: radarr
+  storage: 1Gi
+
+prod-cluster:
+  enabled: false
+  replicas: 2
+  roles:
+    - prowlarr
+    - sonarr
+    - radarr
+  databases:
+    prowlarr-main:
+      dbName: prowlarr_main
+      owner: prowlarr
+    prowlarr-logs:
+      dbName: prowlarr_logs
+      owner: prowlarr
+    sonarr-main:
+      dbName: sonarr_main
+      owner: sonarr
+    sonarr-logs:
+      dbName: sonarr_logs
+      owner: sonarr
+    radarr-main:
+      dbName: radarr_main
+      owner: radarr
+    radarr-logs:
+      dbName: radarr_logs
+      owner: radarr
+  storage: 50Gi
