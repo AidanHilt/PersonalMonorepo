@@ -30,7 +30,7 @@ spec:
       helm:
         {{- if $app.defaultValues }}
         values:
-          {{- $app.defaultValues | toYaml | indent 8 }}
+          {{- tpl $app.defaultValues | toYaml | indent 8 }}
         {{- end }}
         releaseName: {{ $appName }}
       {{- if ($app.configuration).enabled }}
