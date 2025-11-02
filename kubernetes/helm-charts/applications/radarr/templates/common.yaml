@@ -25,7 +25,10 @@ env:
   - name: RADARR__POSTGRES__PORT
     value: {{ .Values.radarr.postgres.port | quote }}
   - name: RADARR__POSTGRES__USER
-    value: {{ .Values.radarr.postgres.username }}
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.radarr.configSecret.existingSecret | default $defaultSecretName }}
+        key: postgresUsername
   - name: RADARR__POSTGRES__PASSWORD
     valueFrom:
       secretKeyRef:
