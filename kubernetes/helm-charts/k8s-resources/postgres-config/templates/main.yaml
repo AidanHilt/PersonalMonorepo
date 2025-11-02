@@ -17,6 +17,7 @@ spec:
     roles:
 {{- range $cluster.roles }}
       - name: {{ . }}
+        login: true
         passwordSecret:
           name: {{ . }}-postgres-user
 {{- end }}
