@@ -44,17 +44,16 @@ put_secret_in_array() {
 
   print_debug "Checking for secret named $name"
   local index
-  index=$(hcledit -f "$file_path" attribute get locals.secret_definitions --json 2>/dev/null \
-    | jq -r '.[] | .name' | grep -n "^$name$" | cut -d: -f1)
+  index=$(hcl2json "$file_path" | jq -r '.locals[0].secret_definitions[] | .name' | grep -n "^$name$" | cut -d: -f1)
 
   if [ -z "$index" ]; then
     print_debug "Secret $name not found, adding new entry"
-    hcledit -f "$file_path" attribute append locals.secret_definitions "{ name = \"$name\", $key = \"$value\" }"
+    hcledit -u -f "$file_path" attribute append locals.secret_definitions "{ name = \"$name\", $key = \"$value\" }"
     print_info "Secret $name added to array"
   else
     index=$((index - 1))
     print_debug "Secret $name found at index $index, updating"
-    hcledit -f "$file_path" attribute set locals.secret_definitions[$index]."$key" "$value"
+    hcledit -u -f "$file_path" attribute set locals.secret_definitions[$index]."$key" "$value"
     print_info "Secret $name updated"
   fi
 }
