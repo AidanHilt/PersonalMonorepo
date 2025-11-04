@@ -6,7 +6,7 @@ printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
 app-creator-add-terraform-secret = pkgs.writeShellScriptBin "app-creator-add-terraform-secret" ''
 #!/bin/bash
 
-#set -euo pipefail
+set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
 
@@ -44,7 +44,7 @@ put_secret_in_array() {
 
   print_debug "Checking for secret named $name"
   local index
-  index=$(hcl2json "$file_path" | jq -r '.locals[0].secret_definitions[] | .name' | grep -n "^$name$" | cut -d: -f1)
+  index=$(hcl2json "$file_path" | jq -r '.locals[0].secret_definitions[] | .name' | grep -n "^$name$" | cut -d: -f1 || true)
   echo "$?"
   echo "$index"
 
