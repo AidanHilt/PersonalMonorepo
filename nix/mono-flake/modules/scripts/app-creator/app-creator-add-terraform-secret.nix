@@ -6,7 +6,7 @@ printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
 app-creator-add-terraform-secret = pkgs.writeShellScriptBin "app-creator-add-terraform-secret" ''
 #!/bin/bash
 
-set -euo pipefail
+#set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
 
