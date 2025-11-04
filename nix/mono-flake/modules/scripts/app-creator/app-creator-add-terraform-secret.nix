@@ -45,6 +45,7 @@ put_secret_in_array() {
   print_debug "Checking for secret named $name"
   local index
   index=$(hcl2json "$file_path" | jq -r '.locals[0].secret_definitions[] | .name' | grep -n "^$name$" | cut -d: -f1)
+  echo "$index"
 
   if [ -z "$index" ]; then
     print_debug "Secret $name not found, adding new entry"
