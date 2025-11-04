@@ -88,8 +88,8 @@ main() {
     add_keys="$(get_input "Add another key? (y/n)" "n")"
   done
 
-  LOCAL_FILE="‘''${PERSONAL_MONOREPO_LOCATION}/terraform/vault-config/locals.tf"
-  print_debug "Updating locals.tf at $LOCAL_FILE"
+  LOCAL_FILE="‘''${PERSONAL_MONOREPO_LOCATION}/terraform/vault-config/locals.tf.json"
+  print_debug "Updating locals.tf.json at $LOCAL_FILE"
 
   # for entry in "‘''${SECRET_KEYS[@]}"; do
   #   key_name="$(cut -d'|' -f1 <<< "$entry")"
@@ -114,7 +114,7 @@ main() {
     ' "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
 
 
-  print_info "Secret definition for $SECRET_NAME added to locals.tf"
+  print_status "Secret definition for $SECRET_NAME added to locals.tf.json"
 }
 
 main "$@"
