@@ -108,9 +108,9 @@ main() {
     --arg mount "$SECRET_MOUNT" \
     --arg pg "$POSTGRES_SECRET" \
     '
-    .locals.secret_definitions[$name].namespace = $ns
-    | .locals.secret_definitions[$name].mount = $mount
-    | .locals.secret_definitions[$name].postgres_secret = $pg
+    .locals[0].secret_definitions[$name].namespace = $ns
+    | .locals[0].secret_definitions[$name].mount = $mount
+    | .locals[0].secret_definitions[$name].postgres_secret = $pg
     ' "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
 
 
