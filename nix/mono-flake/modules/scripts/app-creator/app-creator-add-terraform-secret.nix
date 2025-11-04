@@ -44,7 +44,7 @@ put_secret_in_array() {
 
   print_debug "Checking for secret named $name"
   local index
-  index=$(hcledit -f "$file_path" select locals.secret_definitions --json 2>/dev/null \
+  index=$(hcledit -f "$file_path" attribute get locals.secret_definitions --json 2>/dev/null \
     | jq -r '.[] | .name' | grep -n "^$name$" | cut -d: -f1)
 
   if [ -z "$index" ]; then
