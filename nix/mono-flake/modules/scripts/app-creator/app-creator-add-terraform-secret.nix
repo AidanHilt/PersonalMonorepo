@@ -102,9 +102,17 @@ main() {
   #   fi
   # done
 
-  hcledit -f "$LOCAL_FILE" attribute set "locals.secret_definitions.''${SECRET_NAME}.namespace" "$SECRET_NAMESPACE"
-  hcledit -f "$LOCAL_FILE" attribute set "locals.secret_definitions.''${SECRET_NAME}.mount" "$SECRET_MOUNT"
-  hcledit -f "$LOCAL_FILE" attribute set "locals.secret_definitions.''${SECRET_NAME}.postgres_secret" "$POSTGRES_SECRET"
+  jq \
+    --arg name "$SECRET_NAME" \
+    --arg ns "$SECRET_NAMESPACE" \
+    --arg mount "$SECRET_MOUNT" \
+    --arg pg "$POSTGRES_SECRET" \
+    '
+    .locals.secret_definitions[$name].namespace = $ns
+    | .locals.secret_definitions[$name].mount = $mount
+    | .locals.secret_definitions[$name].postgres_secret = $pg
+    ' "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
+
 
   print_info "Secret definition for $SECRET_NAME added to locals.tf"
 }
