@@ -19,13 +19,18 @@ show_help () {
   echo "OPTIONS:"
 }
 
+SECRET_NAME=""
+SECRET_NAMESPACE=""
+SECRET_MOUNT=""
+POSTGRES_SECRET=false
+
 parse_args() {
   for arg in "$@"; do
     case "$arg" in
       --secret-name=*) SECRET_NAME="‘''${arg#*=}" ;;
       --secret-namespace=*) SECRET_NAMESPACE="‘''${arg#*=}" ;;
       --secret-mount=*) SECRET_MOUNT="‘''${arg#*=}" ;;
-      --postgres-secret=*) POSTGRES_SECRET="‘''${arg#*=}" ;;
+      --postgres-secret=*) POSTGRES_SECRET="true" ;;
     esac
   done
 }
