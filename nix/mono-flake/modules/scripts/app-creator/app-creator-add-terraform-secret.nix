@@ -8,7 +8,7 @@ app-creator-add-terraform-secret = pkgs.writeShellScriptBin "app-creator-add-ter
 
 set -euo pipefail
 
-source ''${printing-and-output.printing-and-output}
+source ${printing-and-output.printing-and-output}
 
 show_help () {
   echo "Usage: $0 [OPTIONS]"
