@@ -35,6 +35,32 @@ parse_args() {
   done
 }
 
+put_secret_in_array() {
+  local name="$1"
+  local key="$2"
+  local value="$3"
+
+  check_env_var "PERSONAL_MONOREPO_LOCATION"
+  local file_path="''${PERSONAL_MONOREPO_LOCATION}/terraform/vault-config/locals.tf"
+
+  print_debug "Checking for secret named $name"
+  local index
+  index=$(hcledit -f "$file_path" select locals.secret_definitions --json 2>/dev/null \
+    | jq -r '.[] | .name' | grep -n "^$name$" | cut -d: -f1)
+
+  if [ -z "$index" ]; then
+    print_debug "Secret $name not found, adding new entry"
+    hcledit -f "$file_path" attribute append locals.secret_definitions "{ name = \"$name\", $key = \"$value\" }"
+    print_info "Secret $name added to array"
+  else
+    index=$((index - 1))
+    print_debug "Secret $name found at index $index, updating"
+    hcledit -f "$file_path" attribute set locals.secret_definitions[$index]."$key" "$value"
+    print_info "Secret $name updated"
+  fi
+}
+
+
 get_input() {
   local prompt="$1"
   local default="$2"
@@ -102,9 +128,9 @@ main() {
     fi
   done
 
-  hcledit -f "$LOCAL_FILE" attribute set "locals.secret_definitions.''${SECRET_NAME}.namespace" "$SECRET_NAMESPACE"
-  hcledit -f "$LOCAL_FILE" attribute set "locals.secret_definitions.''${SECRET_NAME}.mount" "$SECRET_MOUNT"
-  hcledit -f "$LOCAL_FILE" attribute set "locals.secret_definitions.''${SECRET_NAME}.postgres_secret" "$POSTGRES_SECRET"
+  put_secret_in_array "$SECRET_NAME" "namespace" "$SECRET_NAMESPACE"
+  #hcledit -f "$LOCAL_FILE" attribute set "locals.secret_definitions.''${SECRET_NAME}.mount" "$SECRET_MOUNT"
+  #hcledit -f "$LOCAL_FILE" attribute set "locals.secret_definitions.''${SECRET_NAME}.postgres_secret" "$POSTGRES_SECRET"
 
   print_info "Secret definition for $SECRET_NAME added to locals.tf"
 }
