@@ -37,8 +37,7 @@ parse_args() {
 
 get_input() {
   local prompt="$1"
-  local var_name="$2"
-  local default="$3"
+  local default="$2"
   local value
   if [ -n "$default" ]; then
     read -r -p "$prompt [$default]: " value
