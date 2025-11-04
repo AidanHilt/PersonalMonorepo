@@ -95,16 +95,16 @@ main() {
     key_name="$(cut -d'|' -f1 <<< "$entry")"
     is_pg_password="$(cut -d'|' -f2 <<< "$entry")"
     key_value="$(cut -d'|' -f3 <<< "$entry")"
-    HCLEDIT_PATH="locals.secret_definitions.‘''${SECRET_NAME}.keys.‘''${key_name}"
+    HCLEDIT_PATH="locals.secret_definitions.‘''${SECRET_NAME}.datahcl.‘''${key_name}"
     hcledit -f "$LOCAL_FILE" attribute set "$HCLEDIT_PATH.is_postgres_password" "$is_pg_password"
     if [ -n "$key_value" ]; then
       hcledit -f "$LOCAL_FILE" attribute set "$HCLEDIT_PATH.value" "$key_value"
     fi
   done
 
-  hcledit -f "$LOCAL_FILE" attribute set "locals.secret_definitions.‘''${SECRET_NAME}.namespace" "$SECRET_NAMESPACE"
-  hcledit -f "$LOCAL_FILE" attribute set "locals.secret_definitions.‘''${SECRET_NAME}.mount" "$SECRET_MOUNT"
-  hcledit -f "$LOCAL_FILE" attribute set "locals.secret_definitions.‘''${SECRET_NAME}.postgres_secret" "$POSTGRES_SECRET"
+  hcledit -f "$LOCAL_FILE" attribute set "locals.secret_definitions.''${SECRET_NAME}.namespace" "$SECRET_NAMESPACE"
+  hcledit -f "$LOCAL_FILE" attribute set "locals.secret_definitions.''${SECRET_NAME}.mount" "$SECRET_MOUNT"
+  hcledit -f "$LOCAL_FILE" attribute set "locals.secret_definitions.''${SECRET_NAME}.postgres_secret" "$POSTGRES_SECRET"
 
   print_info "Secret definition for $SECRET_NAME added to locals.tf"
 }
