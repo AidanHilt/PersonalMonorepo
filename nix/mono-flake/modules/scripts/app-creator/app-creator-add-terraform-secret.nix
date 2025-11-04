@@ -40,7 +40,6 @@ put_secret_in_array() {
   local key="$2"
   local value="$3"
 
-  check_env_var "PERSONAL_MONOREPO_LOCATION"
   local file_path="''${PERSONAL_MONOREPO_LOCATION}/terraform/vault-config/locals.tf"
 
   print_debug "Checking for secret named $name"
