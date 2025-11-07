@@ -105,9 +105,9 @@ for entry in "''${SECRET_KEYS[@]}"; do
   is_pg_password="$(cut -d'|' -f2 <<< "$entry")"
   key_value="$(cut -d'|' -f3 <<< "$entry")"
   HCLEDIT_PATH=".locals.secret_definitions.''${SECRET_NAME}.data.''${key_name}"
-  jq "$LOCAL_FILE" "$HCLEDIT_PATH.is_postgres_password=$is_pg_password"
+  echo "jq \"$LOCAL_FILE\" \"$HCLEDIT_PATH.is_postgres_password=$is_pg_password\""
   if [ -n "$key_value" ]; then
-    jq "$LOCAL_FILE" attribute set "$HCLEDIT_PATH.value=$key_value"
+    echo "jq \"$LOCAL_FILE\" attribute set \"$HCLEDIT_PATH.value=$key_value\""
   fi
 done
 
