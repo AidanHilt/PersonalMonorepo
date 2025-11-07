@@ -14,9 +14,13 @@ show_help () {
   echo "Usage: $0 [OPTIONS]"
   echo ""
   # Description goes here
-  echo ""
+  echo "Add a secret to terraform"
   echo ""
   echo "OPTIONS:"
+  echo "--secret-name NAME The name of the secret to add"
+  echo "--secret-namespace NAMESPACE The namespace to deploy the secret into"
+  echo "--secret-mount MOUNT The Vault mount to store this secret in"
+  echo "--postgres-secret [true|false] Whether this secret is a postgres user, in which case extra permissions are needed"
 }
 
 get_input() {

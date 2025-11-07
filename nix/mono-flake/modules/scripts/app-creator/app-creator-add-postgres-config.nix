@@ -13,10 +13,10 @@ source ${printing-and-output.printing-and-output}
 show_help () {
   echo "Usage: $0 [OPTIONS]"
   echo ""
-  # Description goes here
-  echo ""
-  echo ""
+  echo "Add postgres configuration (roles and DBs) to helm chart"
   echo "OPTIONS:"
+  echo "  --username USERNAME Add a username to the postgres config. Can be provided multiple times"
+  echo "  --database DB_NAME USERNAME Add a database to the postgres config. Can be provided multiple times"
 }
 
 declare -A USERS_TO_DBS
