@@ -19,11 +19,6 @@ show_help () {
   echo "OPTIONS:"
 }
 
-SECRET_NAME=""
-SECRET_NAMESPACE=""
-SECRET_MOUNT=""
-POSTGRES_SECRET=false
-
 parse_args() {
   for arg in "$@"; do
     case "$arg" in
@@ -63,6 +58,11 @@ add_secret_key() {
 
 main() {
   parse_args "$@"
+
+  SECRET_NAME=""
+  SECRET_NAMESPACE=""
+  SECRET_MOUNT=""
+  POSTGRES_SECRET=false
 
   if [ -z "$SECRET_NAME" ]; then
     SECRET_NAME="$(get_input "Enter secret name" "")"
