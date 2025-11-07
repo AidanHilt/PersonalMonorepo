@@ -69,6 +69,8 @@ while [[ $# -gt 0 ]]; do
       POSTGRES_SECRET="true"
       shift 2
       ;;
+  esac
+done
 
 
 if [ -z "$SECRET_NAME" ]; then
