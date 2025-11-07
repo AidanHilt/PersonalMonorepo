@@ -91,16 +91,16 @@ main() {
   LOCAL_FILE="''${PERSONAL_MONOREPO_LOCATION}/terraform/vault-config/locals.tf.json"
   print_debug "Updating locals.tf.json at $LOCAL_FILE"
 
-  # for entry in "‘''${SECRET_KEYS[@]}"; do
-  #   key_name="$(cut -d'|' -f1 <<< "$entry")"
-  #   is_pg_password="$(cut -d'|' -f2 <<< "$entry")"
-  #   key_value="$(cut -d'|' -f3 <<< "$entry")"
-  #   HCLEDIT_PATH="locals.secret_definitions.‘''${SECRET_NAME}.datahcl.‘''${key_name}"
-  #   hcledit -f "$LOCAL_FILE" attribute set "$HCLEDIT_PATH.is_postgres_password" "$is_pg_password"
-  #   if [ -n "$key_value" ]; then
-  #     hcledit -f "$LOCAL_FILE" attribute set "$HCLEDIT_PATH.value" "$key_value"
-  #   fi
-  # done
+  for entry in "‘''${SECRET_KEYS[@]}"; do
+    key_name="$(cut -d'|' -f1 <<< "$entry")"
+    is_pg_password="$(cut -d'|' -f2 <<< "$entry")"
+    key_value="$(cut -d'|' -f3 <<< "$entry")"
+    HCLEDIT_PATH=".locals.secret_definitions.‘''${SECRET_NAME}.data.‘''${key_name}"
+    jq "$LOCAL_FILE" "$HCLEDIT_PATH.is_postgres_password=$is_pg_password"
+    if [ -n "$key_value" ]; then
+      jq "$LOCAL_FILE" attribute set "$HCLEDIT_PATH.value" "$key_value"
+    fi
+  done
 
   jq \
     --arg name "$SECRET_NAME" \
