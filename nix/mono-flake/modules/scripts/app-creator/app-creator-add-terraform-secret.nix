@@ -36,6 +36,14 @@ add_secret_key() {
   local key_name is_pg_password set_value key_value
   key_name="$(get_input "Enter key name" "")"
   is_pg_password="$(get_input "Is this a postgres password? (y/n)" "n")"
+  case $is_pg_password in
+    [Yy]*)
+      is_pg_password=true
+      ;;
+    *)
+      is_pg_password=false
+      ;;
+  esac
   set_value="$(get_input "Set a value for this key? (y/n)" "n")"
   if [ "$set_value" = "y" ]; then
     key_value="$(get_input "Enter value for $key_name" "")"
