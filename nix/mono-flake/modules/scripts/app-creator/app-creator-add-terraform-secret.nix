@@ -77,6 +77,14 @@ while [[ $# -gt 0 ]]; do
       POSTGRES_SECRET="true"
       shift 2
       ;;
+      --help|-h)
+      show_help
+      exit 0
+      ;;
+      *)
+      print_error "Unknown option: $2"
+      exit 1
+      ;;
   esac
 done
 
