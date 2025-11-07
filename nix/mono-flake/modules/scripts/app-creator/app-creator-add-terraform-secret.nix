@@ -123,7 +123,7 @@ for entry in "''${SECRET_KEYS[@]}"; do
   HCLEDIT_PATH=".locals[0].secret_definitions.''${SECRET_NAME}.data.''${key_name}"
   jq "$HCLEDIT_PATH.is_postgres_password=$is_pg_password" "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
   if [ -n "$key_value" ]; then
-    jq "$HCLEDIT_PATH.value=$key_value" "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
+    jq "$HCLEDIT_PATH.value=\"$key_value\"" "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
   fi
 done
 
