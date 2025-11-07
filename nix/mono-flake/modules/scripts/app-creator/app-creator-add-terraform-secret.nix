@@ -86,7 +86,15 @@ if [ -z "$SECRET_MOUNT" ]; then
 fi
 
 if [ -z "$POSTGRES_SECRET" ]; then
-  POSTGRES_SECRET="$(get_input "Does the secret contain postgres creds? (y/n)" "n")"
+  ANSWER="$(get_input "Does the secret contain postgres creds? (y/n)" "n")"
+  case $ANSWER in
+    [Yy]*)
+      POSTGRES_SECRET=true
+      ;;
+    *)
+      POSTGRES_SECRET=false
+      ;;
+  esac
 fi
 
 print_debug "Collecting secret keys"
