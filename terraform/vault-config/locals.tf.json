@@ -1,0 +1,130 @@
+{
+  "locals": [
+    {
+      "secret_definitions": {
+        "jellyfin": {
+          "data": {
+            "apiKey": {},
+            "password": {
+              "postgres_password": true
+            },
+            "username": {
+              "value": "${var.jellyfin_username}"
+            }
+          },
+          "mount": "videos",
+          "namespace": "videos"
+        },
+        "jellyseerr": {
+          "data": {
+            "apiKey": {}
+          },
+          "mount": "videos",
+          "namespace": "videos"
+        },
+        "postgres": {
+          "data": {
+            "password": {
+              "postgres_password": true
+            },
+            "username": {
+              "value": "postgres"
+            }
+          },
+          "mount": "postgres",
+          "namespace": "postgres",
+          "service_account": "postgres-cluster"
+        },
+        "prowlarr": {
+          "data": {
+            "apiKey": {},
+            "postgresPassword": {
+              "postgres_password": true
+            },
+            "postgresUsername": {
+              "value": "prowlarr"
+            }
+          },
+          "mount": "videos",
+          "namespace": "videos",
+          "postgres_secret": true
+        },
+        "radarr": {
+          "data": {
+            "apiKey": {},
+            "postgresPassword": {
+              "postgres_password": true
+            },
+            "postgresUsername": {
+              "value": "radarr"
+            }
+          },
+          "mount": "videos",
+          "namespace": "videos",
+          "postgres_secret": true
+        },
+        "sonarr": {
+          "data": {
+            "apiKey": {},
+            "postgresPassword": {
+              "postgres_password": true
+            },
+            "postgresUsername": {
+              "value": "sonarr"
+            }
+          },
+          "mount": "videos",
+          "namespace": "videos",
+          "postgres_secret": true
+        },
+        "video_stack_configuration": {
+          "auth": {
+            "path": "",
+            "role_name": "argocd"
+          },
+          "data": {
+            "jellyfinEmail": {
+              "value": "${var.jellyfin_email}"
+            },
+            "jellyfinPassword": {
+              "key_name": "jellyfin-password"
+            },
+            "jellyfinUsername": {
+              "value": "${var.jellyfin_username}"
+            },
+            "jellyseerrApiKey": {
+              "key_name": "jellyseerr-apiKey"
+            },
+            "prowlarrApiKey": {
+              "key_name": "prowlarr-apiKey"
+            },
+            "radarrApiKey": {
+              "key_name": "radarr-apiKey"
+            },
+            "sonarrApiKey": {
+              "key_name": "sonarr-apiKey"
+            }
+          },
+          "mount": "argocd",
+          "namespace": "argocd",
+          "path": "video_stack_configuration",
+          "service_account": "argocd-repo-server"
+        },
+        "vpn": {
+          "data": {
+            "VPN_AUTH": {
+              "value": "${var.vpn_auth}"
+            },
+            "vpnConfig": {
+              "value": "${var.vpn_config}"
+            }
+          },
+          "mount": "videos",
+          "namespace": "videos",
+          "service_account": "transmission"
+        }
+      },
+      "unique_mounts": "${toset([\n  for key, secret in local.secret_definitions : secret.mount\n  ])}"
+    }
+  ]
+}
