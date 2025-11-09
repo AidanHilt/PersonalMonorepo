@@ -29,10 +29,10 @@ echo " You are now creating the ingress"
 echo "========================================="
 app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE"
 
-declare -a SECRET_NAMES
-declare -a SECRET_NAMESPACES
-declare -a SERVICE_ACCOUNT_NAMES
-declare -a POSTGRES_SECRETS
+SECRET_NAMES=()
+SECRET_NAMESPACES=()
+SERVICE_ACCOUNT_NAMES=()
+POSTGRES_SECRETS=()
 
 read -p "Would you like to add any secrets? (y/n): " add_secrets
 
