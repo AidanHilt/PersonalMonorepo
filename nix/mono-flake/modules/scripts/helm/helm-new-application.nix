@@ -3,7 +3,7 @@
 let
 printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
 
-helm-new-k8s-resource = pkgs.writeShellScriptBin "helm-new-k8s-resource" ''
+helm-new-application = pkgs.writeShellScriptBin "helm-new-application" ''
 #!/bin/bash
 
 set -euo pipefail
@@ -76,6 +76,6 @@ in
 
 {
   environment.systemPackages = [
-    helm-new-k8s-resource
+    helm-new-application
   ];
 }
