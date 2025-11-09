@@ -60,3 +60,5 @@ nginx:
 
 paperless-ngx:
   enabled: true
+  configuration:
+    enabled: true
