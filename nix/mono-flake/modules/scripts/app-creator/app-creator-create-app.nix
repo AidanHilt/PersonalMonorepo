@@ -74,7 +74,7 @@ if [[ "$add_secrets" =~ ^[Yy]$ ]]; then
     app-creator-add-secret --secret-name "''${SECRET_NAMES[$i]}" --destination-namespace "''${SECRET_NAMESPACES[$i]}" --service-account-name "''${SERVICE_ACCOUNT_NAMES[$i]}"
 
     echo "========================================="
-    echo " You are addign terraform secrets"
+    echo " You are adding terraform secrets"
     echo "========================================="
     app-creator-add-terraform-secret --secret-name "''${SECRET_NAMES[$i]}" --secret-namespace "''${SECRET_NAMESPACES[$i]}" --postgres-secret "''${POSTGRES_SECRETS[$i]}"
   done
