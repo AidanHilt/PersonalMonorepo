@@ -22,10 +22,20 @@ show_help () {
 read -p "Enter app name: " APP_NAME
 read -p "Enter app namespace: " NAMESPACE
 
-print_debug "Creating ArgoCD app for $APP_NAME in namespace $NAMESPACE"
+read -p "Create a new helm chart? (y/n): " HELM_CHART
+if [[ "$HELM_CHART" =~ ^[Yy]$ ]]; then
+  helm-new-application --chart-name $APP_NAME
+fi
+
+echo "========================================="
+echo " You are now creating the ArgoCD app"
+echo "========================================="
 app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --skip-default-values --skip-secure-values
 
 print_debug "Adding ingress for $APP_NAME"
+echo "========================================="
+echp " You are now creating the ingress"
+echo "========================================="
 app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE"
 
 declare -a SECRET_NAMES
