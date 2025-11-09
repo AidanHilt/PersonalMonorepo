@@ -10,15 +10,6 @@ set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
 
-show_help () {
-  echo "Usage: $0 [OPTIONS]"
-  echo ""
-  # Description goes here
-  echo ""
-  echo ""
-  echo "OPTIONS:"
-}
-
 read -p "Enter app name: " APP_NAME
 read -p "Enter app namespace: " NAMESPACE
 
