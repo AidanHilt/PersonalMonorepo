@@ -7,5 +7,6 @@
     ./app-creator-add-argocd-app.nix
     ./app-creator-add-secret.nix
     ./app-creator-add-ingress.nix
+    ./app-creator-create-app.nix
  ];
 }
