@@ -1,7 +1,6 @@
 hostnames:
   - localhost
 
-
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -53,6 +52,7 @@ paperless-ngx:
   prefixes:
     - /paperless
   destinationSvc: paperless-ngx.paperless.svc.cluster.local
+  destinationPort: 8000
 prowlarr:
   enabled: false
   prefixes:
