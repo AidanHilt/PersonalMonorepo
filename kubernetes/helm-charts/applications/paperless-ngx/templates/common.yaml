@@ -40,7 +40,7 @@ env:
     secretKeyRef:
       name: {{ .auth.existingSecret | default (printf "%s-redis" $.Release.Name) }}
       key: {{ .auth.existingSecretPasswordKey | default "redis-password" }}
-  PAPERLESS_REDIS: redis://$(A_REDIS_PASSWORD)@{{ $.Release.Name }}-redis
+  PAPERLESS_REDIS: redis://{{ .auth.username | default "default" }}:$(A_REDIS_PASSWORD)@{{ $.Release.Name }}-redis
   {{- end }}
   {{- end }}
 {{- end -}}
