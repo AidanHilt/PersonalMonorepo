@@ -3,6 +3,7 @@
 env:
   PAPERLESS_TIME_ZONE: {{ .Values.env.TZ }}
   PAPERLESS_PORT: {{ quote .Values.service.main.ports.http.port }}
+  PAPERLESS_FORCE_SCRIPT_NAME: /paperless
 
   {{- with .Values.ingress.main }}
   {{- if and .enabled .hosts }}
