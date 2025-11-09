@@ -170,9 +170,7 @@ nginx:
       followMasterConfig: true
 paperless-ngx:
   enabled: false
-  repo: oci://ghcr.io/gabe565/charts/paperless-ngx
-  chart: paperless-ngx
-  version: 0.24.1
+  gitPath: kubernetes/helm-charts/applications/paperless-ngx
   destinationNamespace: paperless
   configuration:
     enabled: false
