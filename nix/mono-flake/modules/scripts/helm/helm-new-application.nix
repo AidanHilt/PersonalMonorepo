@@ -48,7 +48,7 @@ if [[ -z "$CHART_NAME" ]]; then
 fi
 
 SOURCE_DIR="''${PERSONAL_MONOREPO_LOCATION}/kubernetes/helm-charts/templates/application"
-DEST_DIR="''${PERSONAL_MONOREPO_LOCATION}/kubernetes/helm-charts/application/''${CHART_NAME}"
+DEST_DIR="''${PERSONAL_MONOREPO_LOCATION}/kubernetes/helm-charts/applications/''${CHART_NAME}"
 
 if [[ ! -d "$SOURCE_DIR" ]]; then
   print_error "Source directory does not exist: $SOURCE_DIR"
