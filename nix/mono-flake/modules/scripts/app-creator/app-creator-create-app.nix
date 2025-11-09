@@ -25,7 +25,7 @@ app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --ski
 
 print_debug "Adding ingress for $APP_NAME"
 echo "========================================="
-echp " You are now creating the ingress"
+echo " You are now creating the ingress"
 echo "========================================="
 app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE"
 
