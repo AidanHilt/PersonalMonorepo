@@ -1,60 +1,51 @@
 jellyfin:
   enabled: false
   secretDestinationNamespace: videos
-
 jellyseerr:
   enabled: false
   secretDestinationNamespace: videos
-
+paperless-ngx:
+  enabled: false
+  secretDestinationNamespace: paperless
 postgres:
   enabled: false
   secretDestinationNamespace: postgres
-
   destination:
     type: kubernetes.io/basic-auth
     labels:
       cnpg.io/reload: ""
-
   serviceAccount:
     name: postgres-cluster
-
 prowlarr:
   enabled: false
   secretDestinationNamespace: videos
   postgresSecret:
     enabled: true
-
 radarr:
   enabled: false
   secretDestinationNamespace: videos
   postgresSecret:
     enabled: true
-
 sonarr:
   enabled: false
   secretDestinationNamespace: videos
   postgresSecret:
     enabled: true
-
 transmission:
   enabled: false
   secretDestinationNamespace: videos
   resourceName: vpn
   serviceAccount:
     name: transmission
-
   destination:
     transformation:
       templates:
         vpnConfig:
           text: |
             {{ .Secrets.vpnConfig | replace "\\n" "\n" }}
-
 video-stack-configuration:
   enabled: false
   secretDestinationNamespace: videos
-
   resourceName: setup-job
-
   serviceAccount:
     create: true

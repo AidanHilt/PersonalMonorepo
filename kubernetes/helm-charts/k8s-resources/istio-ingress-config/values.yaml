@@ -1,3 +1,7 @@
+hostnames:
+  - localhost
+
+
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -6,11 +10,9 @@ argocd:
   prefixes:
     - /argocd
   destinationSvc: argocd-server.argocd.svc.cluster.local
-
 # TODO Migrate this to istio
 crafty-server:
   enabled: false
-
 grafana:
   enabled: false
   prefixes:
@@ -19,25 +21,26 @@ grafana:
   rewrite:
     uri: /
   destinationSvc: prometheus-grafana.monitoring.svc.cluster.local
-
+hashi-vault:
+  enabled: false
+  subdomain: vault
+  destinationSvc: hashi-vault.vault.svc.cluster.local
+  destinationPort: 8200
 jellyfin:
   enabled: false
   prefixes:
     - /emby
   destinationSvc: jellyfin.videos.svc.cluster.local
-
 jellyseerr:
   enabled: false
   subdomain: jellyseerr
   destinationSvc: jellyseerr.videos.svc.cluster.local
-
 kiali:
   enabled: false
   prefixes:
     - /kiali
   destinationSvc: kiali.istio-system.svc.cluster.local
   destinationPort: 20001
-
 longhorn:
   enabled: false
   prefixes:
@@ -45,36 +48,28 @@ longhorn:
   rewrite:
     uri: /
   destinationSvc: longhorn-frontend.longhorn-system.svc.cluster.local
-
+paperless-ngx:
+  enabled: false
+  prefixes:
+    - /paperless
+  destinationSvc: paperless-ngx.paperless.svc.cluster.local
 prowlarr:
   enabled: false
   prefixes:
     - /prowlarr
   destinationSvc: prowlarr.videos.svc.cluster.local
-
 radarr:
   enabled: false
   prefixes:
     - /radarr
   destinationSvc: radarr.videos.svc.cluster.local
-
 sonarr:
   enabled: false
   prefixes:
     - /sonarr
   destinationSvc: sonarr.videos.svc.cluster.local
-
 transmission:
   enabled: false
   prefixes:
     - /transmission
   destinationSvc: transmission.videos.svc.cluster.local
-
-hashi-vault:
-  enabled: false
-  subdomain: vault
-  destinationSvc: hashi-vault.vault.svc.cluster.local
-  destinationPort: 8200
-
-hostnames:
-  - localhost
