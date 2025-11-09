@@ -5,6 +5,9 @@ env:
   PAPERLESS_PORT: {{ quote .Values.service.main.ports.http.port }}
   PAPERLESS_FORCE_SCRIPT_NAME: /paperless
 
+  PAPERLESS_ADMIN_USER: admin
+  PAPERLESS_ADMIN_PASSWORD: admin
+
   {{- with .Values.ingress.main }}
   {{- if and .enabled .hosts }}
   PAPERLESS_URL: http{{ if .tls }}s{{ end }}://{{ (first .hosts).host }}
