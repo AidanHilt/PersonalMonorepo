@@ -83,6 +83,8 @@ if [[ -z "$resource_name" ]]; then
   read -p "Enter the resource name (optional): " resource_name
 fi
 
+configure_sa="n"
+
 read -p "Would you like to configure the service account? (y/N): " configure_sa
 
 if [[ "$configure_sa" == "y" ]]; then
