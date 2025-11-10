@@ -19,11 +19,14 @@ env:
   PAPERLESS_DBENGINE: postgresql
   PAPERLESS_DBHOST: {{ $.Release.Name }}-postgresql
   PAPERLESS_DBNAME: {{ .auth.database }}
-  PAPERLESS_DBUSER: {{ default "postgres" .auth.username }}
+  PAPERLESS_DBUSER:
+    secretKeyRef:
+      name: {{ .auth.existingSecret | default (printf "%s-postgresql" $.Release.Name) }}
+      key: {{ .auth.usernameKey | default "postgresUsername" }}
   PAPERLESS_DBPASS:
     secretKeyRef:
       name: {{ .auth.existingSecret | default (printf "%s-postgresql" $.Release.Name) }}
-      key: {{ if not .auth.password }}postgres-{{ end }}password
+      key: {{ .auth.passwordKey | default "postgresPassword" }}
   {{- end }}
   {{- else if .Values.mariadb.enabled }}
   {{- with .Values.mariadb}}

@@ -1,12 +1,12 @@
 persistence:
   data:
-    enabled: false
+    enabled: true
     retain: true
     mountPath: /usr/src/paperless/data
     accessMode: ReadWriteOnce
     size: 1Gi
   media:
-    enabled: false
+    enabled: true
     retain: true
     mountPath: /usr/src/paperless/media
     accessMode: ReadWriteOnce
@@ -23,3 +23,15 @@ persistence:
     mountPath: /usr/src/paperless/consume
     accessMode: ReadWriteOnce
     size: 4Gi
+
+postgresql:
+  enabled: true
+  auth:
+    existingSecret: paperless-ngx-config-secret
+
+serviceAccount:
+  create: true
+  name: paperless-ngx
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"
