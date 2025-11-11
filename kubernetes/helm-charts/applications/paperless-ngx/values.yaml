@@ -88,6 +88,8 @@ persistence:
 # @default -- See [values.yaml](./values.yaml)
 postgresql:
   enabled: false
+  subchart:
+    enabled: false
   host: postgres-cluster-rw.postgres.svc.cluster.local
   auth:
     database: paperless
@@ -104,6 +106,8 @@ postgresql:
 # @default -- See [values.yaml](./values.yaml)
 mariadb:
   enabled: false
+  subchart:
+    enabled: false
   auth:
     database: paperless
     username: paperless
