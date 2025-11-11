@@ -88,6 +88,7 @@ persistence:
 # @default -- See [values.yaml](./values.yaml)
 postgresql:
   enabled: false
+  host: postgres-cluster-rw.postgres.svc.cluster.local
   auth:
     database: paperless
     postgresPassword: changeme

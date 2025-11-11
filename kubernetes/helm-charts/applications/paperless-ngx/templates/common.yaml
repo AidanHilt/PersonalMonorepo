@@ -17,7 +17,7 @@ env:
   {{- if .Values.postgresql.enabled }}
   {{- with .Values.postgresql }}
   PAPERLESS_DBENGINE: postgresql
-  PAPERLESS_DBHOST: {{ $.Release.Name }}-postgresql
+  PAPERLESS_DBHOST: {{ .host | default "$.Release.Name-postgres" }}
   PAPERLESS_DBNAME: {{ .auth.database }}
   PAPERLESS_DBUSER:
     secretKeyRef:

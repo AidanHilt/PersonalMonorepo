@@ -19,24 +19,14 @@ dependencies:
   - name: postgres
     version: 0.11.5
     repository: oci://registry-1.docker.io/cloudpirates
-    condition: postgresql.enabled
+    condition: postgresql.subchart.enabled
   - name: mariadb
     version: 0.6.0
     repository: oci://registry-1.docker.io/cloudpirates
-    condition: mariadb.enabled
+    condition: mariadb.subchart.enabled
   - name: redis
     repository: oci://registry-1.docker.io/cloudpirates
     version: 0.14.0
     condition: redis.enabled
 sources:
   - https://github.com/paperless-ngx/paperless-ngx
-annotations:
-  artifacthub.io/alternativeName: paperless
-  artifacthub.io/changes: |-
-    - kind: fixed
-      description: Allow for custom db secrets name
-  artifacthub.io/links: |-
-    - name: App Source
-      url: https://github.com/paperless-ngx/paperless-ngx
-    - name: Chart Source
-      url: https://github.com/gabe565/charts/tree/main/charts/paperless-ngx
