@@ -58,7 +58,7 @@ video-stack-configuration:
 nginx:
   enabled: true
 
-paperless-ngx:
+paperless:
   enabled: true
   configuration:
     enabled: true

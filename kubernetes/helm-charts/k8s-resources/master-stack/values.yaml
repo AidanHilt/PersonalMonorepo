@@ -168,7 +168,7 @@ nginx:
       destinationNamespace: ""
       # Generates a mirror of the enabled status and hostname config as the config for this app
       followMasterConfig: true
-paperless-ngx:
+paperless:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/paperless-ngx
   destinationNamespace: paperless
