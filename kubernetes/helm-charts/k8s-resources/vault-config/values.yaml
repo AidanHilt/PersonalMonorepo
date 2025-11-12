@@ -4,9 +4,10 @@ jellyfin:
 jellyseerr:
   enabled: false
   secretDestinationNamespace: videos
-paperless-ngx:
+paperless:
   enabled: false
   secretDestinationNamespace: paperless
+  resourceName: paperless-ngx
   postgresSecret:
     enabled: true
 postgres:
