@@ -27,7 +27,7 @@ persistence:
 postgresql:
   enabled: true
   auth:
-    existingSecret: paperless-ngx-config-secret
+    existingSecret: paperless-config-secret
 
 serviceAccount:
   create: true
