@@ -4,6 +4,7 @@ qa-cluster:
     - prowlarr
     - sonarr
     - radarr
+    - paperless-ngx
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -23,14 +24,16 @@ qa-cluster:
     radarr-logs:
       dbName: radarr_logs
       owner: radarr
+    paperless:
+      owner: paperless-ngx
   storage: 1Gi
-
 staging-cluster:
   enabled: false
   roles:
     - prowlarr
     - sonarr
     - radarr
+    - paperless-ngx
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -50,8 +53,9 @@ staging-cluster:
     radarr-logs:
       dbName: radarr_logs
       owner: radarr
+    paperless:
+      owner: paperless-ngx
   storage: 1Gi
-
 prod-cluster:
   enabled: false
   replicas: 2
@@ -59,6 +63,7 @@ prod-cluster:
     - prowlarr
     - sonarr
     - radarr
+    - paperless-ngx
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -78,4 +83,6 @@ prod-cluster:
     radarr-logs:
       dbName: radarr_logs
       owner: radarr
+    paperless:
+      owner: paperless-ngx
   storage: 50Gi
