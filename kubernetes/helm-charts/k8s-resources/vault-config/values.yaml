@@ -7,7 +7,6 @@ jellyseerr:
 paperless:
   enabled: false
   secretDestinationNamespace: paperless
-  resourceName: paperless-ngx
   postgresSecret:
     enabled: true
 postgres:
