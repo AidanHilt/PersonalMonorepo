@@ -1,6 +1,6 @@
 env: qa-cluster
 
-gitRevision: project-appocalypse/new-app-wrapper
+gitRevision: project-appocalypse/it-tools
 
 flaresolverr:
   enabled: false
