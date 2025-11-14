@@ -11,11 +11,6 @@ paperless:
     name: paperless-ngx
   postgresSecret:
     enabled: true
-paperless-redis:
-  enabled: false
-  secretDestinationNamespace: paperless
-  serviceAccount:
-    name: paperless-ngx
 postgres:
   enabled: false
   secretDestinationNamespace: postgres
