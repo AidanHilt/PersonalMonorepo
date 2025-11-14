@@ -66,7 +66,7 @@ paperless:
   namespace: paperless
   prefixes:
     - /paperless
-  destinationSvc: paperless-ngx
+  destinationSvc: paperless-paperless-ngx
   destinationPort: 8000
 prowlarr:
   enabled: false

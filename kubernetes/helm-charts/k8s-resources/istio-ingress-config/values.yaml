@@ -47,11 +47,11 @@ longhorn:
   rewrite:
     uri: /
   destinationSvc: longhorn-frontend.longhorn-system.svc.cluster.local
-paperless-ngx:
+paperless:
   enabled: false
   prefixes:
     - /paperless
-  destinationSvc: paperless-ngx.paperless.svc.cluster.local
+  destinationSvc: paperless-paperless-ngx.paperless.svc.cluster.local
   destinationPort: 8000
 prowlarr:
   enabled: false
