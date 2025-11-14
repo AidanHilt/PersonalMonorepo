@@ -17,6 +17,7 @@
   environment.systemPackages = with pkgs; [
     act
     agenix
+    cloud-provider-kind
     hcl2json
     hcledit
     syncthing
