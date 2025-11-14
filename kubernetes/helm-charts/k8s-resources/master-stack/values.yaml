@@ -13,6 +13,8 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
+
+# Global config
 # Service-specific config
 crafty-server:
   enabled: false
@@ -80,6 +82,12 @@ istio:
       destinationNamespace: ""
       # Generates a mirror of the enabled status and hostname config as the config for this app
       followMasterConfig: true
+it-tools:
+  enabled: false
+  repo: https://charts.jeffresc.dev
+  chart: it-tools
+  version: 0.1.4
+  destinationNamespace: misc
 jellyfin:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/jellyfin

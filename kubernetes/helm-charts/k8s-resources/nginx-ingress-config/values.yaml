@@ -1,6 +1,7 @@
 hostnames:
   - localhost
 
+
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -43,6 +44,12 @@ hashi-vault:
   subdomain: vault
   destinationSvc: hashi-vault
   destinationPort: 8200
+it-tools:
+  enabled: false
+  namespace: misc
+  prefixes:
+    - /it-tools
+  destinationSvc: it-tools
 jellyfin:
   enabled: false
   namespace: videos

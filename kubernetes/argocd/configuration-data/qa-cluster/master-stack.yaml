@@ -59,6 +59,9 @@ nginx:
   enabled: true
 
 paperless:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
+
+it-tools:
+  enabled: true
