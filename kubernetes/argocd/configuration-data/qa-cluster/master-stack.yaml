@@ -64,7 +64,7 @@ paperless:
     enabled: true
 
 metallb:
-  enabled: false
+  enabled: true
 
 it-tools:
   enabled: true
