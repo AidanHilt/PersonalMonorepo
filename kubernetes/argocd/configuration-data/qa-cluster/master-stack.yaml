@@ -55,8 +55,8 @@ video-stack-configuration:
   configuration:
     enabled: true
 
-nginx:
-  enabled: true
+# nginx:
+#   enabled: true
 
 paperless:
   enabled: false
@@ -65,3 +65,9 @@ paperless:
 
 it-tools:
   enabled: true
+
+istio:
+  enabled: true
+  dependentApps:
+    kiali:
+      enabled: false
