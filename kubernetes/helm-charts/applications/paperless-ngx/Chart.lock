@@ -1,0 +1,15 @@
+dependencies:
+- name: common
+  repository: https://bjw-s-labs.github.io/helm-charts/
+  version: 1.5.1
+- name: postgres
+  repository: oci://registry-1.docker.io/cloudpirates
+  version: 0.11.5
+- name: mariadb
+  repository: oci://registry-1.docker.io/cloudpirates
+  version: 0.6.0
+- name: redis
+  repository: oci://registry-1.docker.io/cloudpirates
+  version: 0.14.0
+digest: sha256:368e2b42fc2de5b997d49b93026c4af175287eb931cc69351334758bae2b77d8
+generated: "2025-11-11T09:32:45.562837-05:00"

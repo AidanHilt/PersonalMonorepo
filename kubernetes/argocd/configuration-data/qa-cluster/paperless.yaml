@@ -1,0 +1,41 @@
+persistence:
+  data:
+    enabled: true
+    retain: true
+    mountPath: /usr/src/paperless/data
+    accessMode: ReadWriteOnce
+    size: 1Gi
+  media:
+    enabled: true
+    retain: true
+    mountPath: /usr/src/paperless/media
+    accessMode: ReadWriteOnce
+    size: 8Gi
+  export:
+    enabled: true
+    retain: true
+    mountPath: /usr/src/paperless/export
+    accessMode: ReadWriteOnce
+    size: 1Gi
+  consume:
+    enabled: true
+    retain: true
+    mountPath: /usr/src/paperless/consume
+    accessMode: ReadWriteOnce
+    size: 4Gi
+
+postgresql:
+  enabled: true
+  auth:
+    existingSecret: paperless-config-secret
+
+redis:
+  auth:
+    existingSecret: paperless-config-secret
+
+serviceAccount:
+  create: true
+  name: paperless-ngx
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"

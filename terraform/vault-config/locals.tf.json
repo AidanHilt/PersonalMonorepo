@@ -122,6 +122,21 @@
           "mount": "videos",
           "namespace": "videos",
           "service_account": "transmission"
+        },
+        "paperless": {
+          "namespace": "paperless",
+          "mount": "paperless",
+          "postgres_secret": "true",
+          "service_account": "paperless-ngx",
+          "data": {
+            "postgresUsername": {
+              "value": "paperless"
+            },
+            "postgresPassword": {
+              "postgres_password": true
+            },
+            "redis-password": {}
+          }
         }
       },
       "unique_mounts": "${toset([\n  for key, secret in local.secret_definitions : secret.mount\n  ])}"

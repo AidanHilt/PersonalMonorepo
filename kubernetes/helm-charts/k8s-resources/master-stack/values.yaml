@@ -1,16 +1,12 @@
 # Global config
 env: qa-cluster
-
 hostnames:
   - localhost
-
 # The default repo we read from for applications that use a git provider
 defaultGitRepo: https://github.com/AidanHilt/PersonalMonorepo
-
 # This is the version of Atils resources we are targeting. That means this is the branch that our own Helm charts will use, as well as any of our static config
 # This is also the branch that will be used for configuration (i.e. values files), unless configuration.configurationRevision is set below
 gitRevision: master
-
 configuration:
   configurationRepo: https://github.com/AidanHilt/PersonalMonorepo
   configurationDirectory: kubernetes/argocd/configuration-data
@@ -18,28 +14,25 @@ configuration:
   configurationRevision: ""
 
 # Service-specific config
-
 crafty-server:
   enabled: false
   repo: oci://oci.trueforge.org/truecharts/crafty-4
   chart: mychart
   destinationNamespace: crafty
-  version: "9.2.2"
+  version: 9.2.2
   configuration:
     enabled: false
-
 flaresolverr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/flaresolverr
   destinationNamespace: videos
   configuration:
     enabled: false
-
 hashi-vault:
   enabled: false
   repo: https://helm.releases.hashicorp.com
   chart: vault
-  version: "0.30.1"
+  version: 0.30.1
   destinationNamespace: vault
   configuration:
     enabled: false
@@ -47,7 +40,7 @@ hashi-vault:
     vault-secrets-operator:
       repo: https://helm.releases.hashicorp.com
       chart: vault-secrets-operator
-      version: "0.5.2"
+      version: 0.5.2
       configuration:
         enabled: false
     vault-config:
@@ -57,26 +50,11 @@ hashi-vault:
       followMasterConfig: true
       configuration:
         enabled: false
-
-nginx:
-  enabled: false
-  helmChart: false
-  gitPath: kubernetes/ingress-nginx/kind
-  destinationNamespace: ingress-nginx
-  dependentApps:
-    ingress-config:
-      repo: https://github.com/AidanHilt/PersonalMonorepo
-      useDefaultGitRevision: true
-      gitPath: kubernetes/helm-charts/k8s-resources/nginx-ingress-config
-      destinationNamespace: ""
-      # Generates a mirror of the enabled status and hostname config as the config for this app
-      followMasterConfig: true
-
 istio:
   enabled: false
   repo: https://istio-release.storage.googleapis.com/charts
   chart: istiod
-  version: "1.21.0"
+  version: 1.21.0
   destinationNamespace: istio-system
   configuration:
     enabled: false
@@ -94,7 +72,7 @@ istio:
       chart: kiali-operator
       configuration:
         enabled: false
-      version: "1.81.0"
+      version: 1.81.0
     ingress-config:
       repo: https://github.com/AidanHilt/PersonalMonorepo
       useDefaultGitRevision: true
@@ -102,33 +80,29 @@ istio:
       destinationNamespace: ""
       # Generates a mirror of the enabled status and hostname config as the config for this app
       followMasterConfig: true
-
 jellyfin:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/jellyfin
   destinationNamespace: videos
   configuration:
     enabled: false
-
 jellyseerr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/jellyseerr
   destinationNamespace: videos
   configuration:
     enabled: false
-
 job-templates:
   enabled: false
   gitPath: kubernetes/helm-charts/k8s-resources/job-templates
   destinationNamespace: job-templates
   configuration:
     enabled: false
-
 kyverno:
   enabled: false
   repo: https://kyverno.github.io/kyverno
   chart: kyverno
-  version: "3.5.1"
+  version: 3.5.1
   destinationNamespace: kyverno
   configuration:
     enabled: false
@@ -153,26 +127,24 @@ kyverno:
       useDefaultGitRevision: true
       configuration:
         enabled: false
-
 longhorn:
   enabled: false
   repo: https://charts.longhorn.io
   chart: longhorn
   destinationNamespace: longhorn-system
-  version: "1.8.0"
+  version: 1.8.0
   syncWave: "-10"
   defaultValues: |
     preUpgradeChecker:
       jobEnabled: false
   configuration:
     enabled: false
-
 metallb:
   enabled: false
   repo: https://metallb.github.io/metallb
   chart: metallb
   destinationNamespace: metallb-system
-  version: "0.14.3"
+  version: 0.14.3
   syncWave: "-10"
   configuration:
     enabled: false
@@ -183,13 +155,31 @@ metallb:
       useDefaultGitRevision: true
       configuration:
         enabled: false
-
+nginx:
+  enabled: false
+  helmChart: false
+  gitPath: kubernetes/ingress-nginx/kind
+  destinationNamespace: ingress-nginx
+  dependentApps:
+    ingress-config:
+      repo: https://github.com/AidanHilt/PersonalMonorepo
+      useDefaultGitRevision: true
+      gitPath: kubernetes/helm-charts/k8s-resources/nginx-ingress-config
+      destinationNamespace: ""
+      # Generates a mirror of the enabled status and hostname config as the config for this app
+      followMasterConfig: true
+paperless:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/paperless-ngx
+  destinationNamespace: paperless
+  configuration:
+    enabled: false
 postgres:
   enabled: false
   repo: https://cloudnative-pg.github.io/charts
   chart: cloudnative-pg
   destinationNamespace: postgres
-  version: "0.26.0"
+  version: 0.26.0
   configuration:
     enabled: false
   serverSideApply: true
@@ -201,35 +191,30 @@ postgres:
         {{ $.Values.env }}:
           enabled: true
       useDefaultGitRevision: true
-
 prowlarr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/prowlarr
   destinationNamespace: videos
   configuration:
     enabled: false
-
 radarr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/radarr
   destinationNamespace: videos
   configuration:
     enabled: false
-
 sonarr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/sonarr
   destinationNamespace: videos
   configuration:
     enabled: false
-
 transmission:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/transmission
   destinationNamespace: videos
   configuration:
     enabled: false
-
 video-stack-configuration:
   enabled: false
   secureValues: |

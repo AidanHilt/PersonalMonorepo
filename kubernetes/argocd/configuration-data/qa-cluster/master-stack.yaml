@@ -1,9 +1,9 @@
 env: qa-cluster
 
-gitRevision: master
+gitRevision: project-appocalypse/new-app-wrapper
 
 flaresolverr:
-  enabled: true
+  enabled: false
 
 hashi-vault:
   enabled: true
@@ -15,45 +15,50 @@ hashi-vault:
         enabled: true
 
 jellyfin:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 jellyseerr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 job-templates:
-  enabled: true
+  enabled: false
 
 postgres:
   enabled: true
 
 prowlarr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 radarr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 sonarr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 transmission:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 video-stack-configuration:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 nginx:
   enabled: true
+
+paperless:
+  enabled: true
+  configuration:
+    enabled: true

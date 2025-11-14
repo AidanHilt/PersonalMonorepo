@@ -1,3 +1,6 @@
+hostnames:
+  - localhost
+
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -7,52 +10,50 @@ argocd:
   prefixes:
     - /argocd
   destinationSvc: argocd-server
-
 crafty-server:
   enabled: false
   namespace: crafty
   subdomain: crafty
   destinationSvc: crafty-server-crafty-4
-
   annotations:
     nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
     nginx.ingress.kubernetes.io/proxy-redirect-from: "off"
-
     nginx.ingress.kubernetes.io/proxy-set-headers: |
       Upgrade $http_upgrade
       Connection $http_connection
       X-Forwarded-Proto https
       X-Forwarded-For $proxy_add_x_forwarded_for
       Host $http_host
-
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
     nginx.ingress.kubernetes.io/proxy-buffering: "off"
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
     nginx.ingress.kubernetes.io/send-timeout: "3600"
-
 grafana:
   enabled: false
   namespace: monitoring
   prefixes:
     - /grafana
   destinationSvc: prometheus-grafana
-
+hashi-vault:
+  enabled: false
+  namespace: vault
+  subdomain: vault
+  destinationSvc: hashi-vault
+  destinationPort: 8200
 jellyfin:
   enabled: false
   namespace: videos
   prefixes:
     - /emby
   destinationSvc: jellyfin
-
 jellyseerr:
   enabled: false
   namespace: videos
   subdomain: jellyseerr
   destinationSvc: jellyseerr
-
 kiali:
   enabled: false
   namespace: istio-system
@@ -60,41 +61,34 @@ kiali:
     - /kiali
   destinationSvc: kiali
   destinationPort: 20000
-
+paperless:
+  enabled: false
+  namespace: paperless
+  prefixes:
+    - /paperless
+  destinationSvc: paperless-paperless-ngx
+  destinationPort: 8000
 prowlarr:
   enabled: false
   namespace: videos
   prefixes:
     - /prowlarr
   destinationSvc: prowlarr
-
 radarr:
   enabled: false
   namespace: videos
   prefixes:
     - /radarr
   destinationSvc: radarr
-
 sonarr:
   enabled: false
   namespace: videos
   prefixes:
     - /sonarr
   destinationSvc: sonarr
-
 transmission:
   enabled: false
   namespace: videos
   prefixes:
     - /transmission
   destinationSvc: transmission
-
-hashi-vault:
-  enabled: false
-  namespace: vault
-  subdomain: vault
-  destinationSvc: hashi-vault
-  destinationPort: 8200
-
-hostnames:
-  - localhost
