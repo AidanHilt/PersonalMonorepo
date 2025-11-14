@@ -61,7 +61,7 @@ kiali:
     - /kiali
   destinationSvc: kiali
   destinationPort: 20000
-paperless-ngx:
+paperless:
   enabled: false
   namespace: paperless
   prefixes:
