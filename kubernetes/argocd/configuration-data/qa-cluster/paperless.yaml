@@ -29,6 +29,10 @@ postgresql:
   auth:
     existingSecret: paperless-config-secret
 
+redis:
+  auth:
+    existingSecret: paperless-config-secret
+
 serviceAccount:
   create: true
   name: paperless-ngx
