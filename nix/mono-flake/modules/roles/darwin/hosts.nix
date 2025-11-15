@@ -22,6 +22,8 @@ in
   launchd.daemons.dnsmasq = {
     serviceConfig.WorkingDirectory = "/var/empty";
 
+    serviceConfig.Program = "${pkgs.dnsmasq}/bin/dnsmasq";
+
     serviceConfig.ProgramArguments = [
       "${pkgs.dnsmasq}/bin/dnsmasq"
       "--listen-address=127.0.0.1"
@@ -29,16 +31,12 @@ in
       "--keep-in-foreground"
     ] ++ (mapA (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}") dnsmasqAddresses);
 
-    serviceConfig.KeepAlive = {
-      PathState = {
-        "/nix/store" = true;
-      };
-    };
-serviceConfig.RunAtLoad = false;
+    serviceConfig.KeepAlive = true;
+    serviceConfig.RunAtLoad = true;
 
-serviceConfig.WatchPaths = [
-  "${pkgs.dnsmasq}/bin/dnsmasq"
-];
+    # serviceConfig.WatchPaths = [
+    #   "${pkgs.dnsmasq}/bin/dnsmasq"
+    # ];
   };
 
   environment.etc = builtins.listToAttrs (builtins.map (domain: {
