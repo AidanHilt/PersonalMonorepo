@@ -31,8 +31,8 @@ in
 
     serviceConfig.KeepAlive = {
       PathState = {
-      "/nix/store" = true;
-    };
+        "${pkgs.dnsmasq}/bin/dnsmasq" = true;
+      };
     };
     serviceConfig.RunAtLoad = true;
   };
