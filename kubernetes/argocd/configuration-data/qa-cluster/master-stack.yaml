@@ -1,5 +1,8 @@
 env: qa-cluster
 
+hostnames:
+  - qa-cluster-lb.lan
+
 gitRevision: project-appocalypse/it-tools
 
 flaresolverr:
