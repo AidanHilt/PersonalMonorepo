@@ -33,7 +33,7 @@ in
           while [ ! -x "${pkgs.dnsmasq}/bin/dnsmasq" ]; do
             sleep 5
           done
-          exec "${pkgs.dnsmasq}/bin/dnsmasq" --listen-address=127.0.0.1 --port=53 --keep-in-foreground ${addressArgs}
+          exec "${pkgs.dnsmasq}/bin/dnsmasq" --listen-address=127.0.0.1 --port=53 --keep-in-foreground
         ''
       ];
       KeepAlive = true;
