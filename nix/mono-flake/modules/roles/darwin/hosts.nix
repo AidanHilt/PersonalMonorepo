@@ -22,6 +22,8 @@ in
     dnsmasq
   ];
 
+  networking.hosts
+
   launchd.daemons.dnsmasq = {
     serviceConfig = {
       WorkingDirectory = "/var/empty";
