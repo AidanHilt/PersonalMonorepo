@@ -13,10 +13,12 @@ let
 
   mapA = f: attrs: with builtins; attrValues (mapAttrs f attrs);
 
-  addressArgs = lib.concatLists (
-    lib.mapAttrsToList (ip: domains:
-      map (domain: "--address=/${lib.strings.removePrefix "*." domain}/${ip}") domains
-    ) dnsConstants.dnsHosts
+addressArgs = lib.concatStringsSep " " (
+    lib.concatLists (
+      lib.mapAttrsToList (ip: domains:
+        map (domain: "--address=/${lib.strings.removePrefix "*." domain}/${ip}") domains
+      ) dnsHosts
+    )
   );
 in
 {
