@@ -17,7 +17,7 @@ addressArgs = lib.concatStringsSep " " (
     lib.concatLists (
       lib.mapAttrsToList (ip: domains:
         map (domain: "--address=/${lib.strings.removePrefix "*." domain}/${ip}") domains
-      ) dnsHosts
+      ) dnsConstants.dnsHosts
     )
   );
 in
