@@ -19,26 +19,30 @@ in
     dnsmasq
   ];
 
-  launchd.daemons.dnsmasq = {
-  serviceConfig = {
-    WorkingDirectory = "/var/empty";
-    Program = "/bin/sh";
-    ProgramArguments = [
-      "/bin/sh"
-      "-c"
-      ''
-        # Wait for nix store to be available
-        while [ ! -x "${pkgs.dnsmasq}/bin/dnsmasq" ]; do
-          sleep 5
-        done
-        exec "${pkgs.dnsmasq}/bin/dnsmasq" --listen-address=127.0.0.1 --port=53 --keep-in-foreground ${lib.concatMapStringsSep " " (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}") dnsmasqAddresses}
-      ''
-    ];
-    KeepAlive = true;
-    RunAtLoad = true;
-    ThrottleInterval = 30;
+  launchd.daemons.dnsmasq =
+  let
+    addressArgs = lib.concatMapStringsSep " "
+      (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}")
+      dnsmasqAddresses;
+  in {
+    serviceConfig = {
+      WorkingDirectory = "/var/empty";
+      Program = "/bin/sh";
+      ProgramArguments = [
+        "/bin/sh"
+        "-c"
+        ''
+          while [ ! -x "${pkgs.dnsmasq}/bin/dnsmasq" ]; do
+            sleep 5
+          done
+          exec "${pkgs.dnsmasq}/bin/dnsmasq" --listen-address=127.0.0.1 --port=53 --keep-in-foreground ${addressArgs}
+        ''
+      ];
+      KeepAlive = true;
+      RunAtLoad = true;
+      ThrottleInterval = 30;
+    };
   };
-};
 
   environment.etc = builtins.listToAttrs (builtins.map (domain: {
     name = "resolver/${lib.strings.removePrefix "*." domain}";
