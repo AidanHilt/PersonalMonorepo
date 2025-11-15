@@ -32,6 +32,7 @@ in
 
     serviceConfig.KeepAlive = true;
     serviceConfig.RunAtLoad = true;
+    serviceConfig.ThrottleInterval = 5;
   };
 
   environment.etc = builtins.listToAttrs (builtins.map (domain: {
