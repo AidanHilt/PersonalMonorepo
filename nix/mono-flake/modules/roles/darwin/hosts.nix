@@ -13,18 +13,16 @@ let
 
   mapA = f: attrs: with builtins; attrValues (mapAttrs f attrs);
 
+  addressArgs = lib.concatMapStringsSep " "
+    (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}")
+    dnsmasqAddresses;
 in
 {
   environment.systemPackages = with pkgs; [
     dnsmasq
   ];
 
-  launchd.daemons.dnsmasq =
-  let
-    addressArgs = lib.concatMapStringsSep " "
-      (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}")
-      dnsmasqAddresses;
-  in {
+  launchd.daemons.dnsmasq = {
     serviceConfig = {
       WorkingDirectory = "/var/empty";
       Program = "/bin/sh";
