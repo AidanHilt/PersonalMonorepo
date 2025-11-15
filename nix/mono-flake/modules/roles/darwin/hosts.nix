@@ -22,7 +22,7 @@ in
     dnsmasq
   ];
 
-  networking.hosts = {};
+  networking = {};
 
   launchd.daemons.dnsmasq = {
     serviceConfig = {
