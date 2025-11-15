@@ -8,7 +8,7 @@
   ];
 
   launchd.agents."colima.autostartt" = {
-    command = "${pkgs.colima}/bin/colima start --foreground --cpu 4 --memory 8 --network-address";
+    command = "${pkgs.colima}/bin/colima start --foreground --cpu 4 --memory 8";
     serviceConfig = {
       Label = "com.colima.autostart";
       RunAtLoad = true;
