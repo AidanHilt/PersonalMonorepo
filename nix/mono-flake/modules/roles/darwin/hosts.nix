@@ -13,6 +13,14 @@ let
 
   mapA = f: attrs: with builtins; attrValues (mapAttrs f attrs);
 
+  dnsmasqWrapper = pkgs.writeShellScript "dnsmasq-wrapper" ''
+    # Wait for nix store to be available
+    while [ ! -x "${pkgs.dnsmasq}/bin/dnsmasq" ]; do
+      sleep 5
+    done
+    exec "${pkgs.dnsmasq}/bin/dnsmasq" "$@"
+  '';
+
 in
 {
   environment.systemPackages = with pkgs; [
@@ -22,7 +30,7 @@ in
   launchd.daemons.dnsmasq = {
     serviceConfig.WorkingDirectory = "/var/empty";
 
-    serviceConfig.Program = "${pkgs.dnsmasq}/bin/dnsmasq";
+    serviceConfig.Program = "${dnsmasqWrapper}";
 
     serviceConfig.ProgramArguments = [
       "--listen-address=127.0.0.1"
@@ -30,11 +38,8 @@ in
       "--keep-in-foreground"
     ] ++ (mapA (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}") dnsmasqAddresses);
 
-    serviceConfig.KeepAlive = {
-      Crashed = true;
-    };
+    serviceConfig.KeepAlive = true;
     serviceConfig.RunAtLoad = true;
-    serviceConfig.ThrottleInterval = 5;
   };
 
   environment.etc = builtins.listToAttrs (builtins.map (domain: {
