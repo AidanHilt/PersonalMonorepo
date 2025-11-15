@@ -31,10 +31,14 @@ in
 
     serviceConfig.KeepAlive = {
       PathState = {
-        "${pkgs.dnsmasq}/bin/dnsmasq" = true;
+        "/nix/store" = true;
       };
     };
-    serviceConfig.RunAtLoad = true;
+serviceConfig.RunAtLoad = false;
+
+serviceConfig.WatchPaths = [
+  "${pkgs.dnsmasq}/bin/dnsmasq"
+];
   };
 
   environment.etc = builtins.listToAttrs (builtins.map (domain: {
