@@ -29,7 +29,11 @@ in
       "--keep-in-foreground"
     ] ++ (mapA (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}") dnsmasqAddresses);
 
-    serviceConfig.KeepAlive = true;
+    serviceConfig.KeepAlive = {
+      PathState = {
+      "/nix/store" = true;
+    };
+    };
     serviceConfig.RunAtLoad = true;
   };
 
