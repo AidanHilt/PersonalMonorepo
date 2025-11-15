@@ -15,7 +15,7 @@ let
 
   addressArgs = lib.concatMapStringsSep " "
     (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}")
-    dnsmasqAddresses;
+    dnsConstants.dnsHosts;
 in
 {
   environment.systemPackages = with pkgs; [
@@ -35,7 +35,7 @@ in
           while [ ! -x "${pkgs.dnsmasq}/bin/dnsmasq" ]; do
             sleep 5
           done
-          exec "${pkgs.dnsmasq}/bin/dnsmasq" --listen-address=127.0.0.1 --port=53 --keep-in-foreground
+          exec "${pkgs.dnsmasq}/bin/dnsmasq" --listen-address=127.0.0.1 --port=53 --keep-in-foreground ${addressArgs}
         ''
       ];
       KeepAlive = true;
