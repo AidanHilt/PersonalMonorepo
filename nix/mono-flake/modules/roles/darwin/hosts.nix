@@ -19,7 +19,22 @@ in
     dnsmasq
   ];
 
-launchd.daemons.dnsmasq = {
+  launchd.daemons.dnsmasq = {
+    serviceConfig.WorkingDirectory = "/var/empty";
+
+    serviceConfig.Program = "${pkgs.dnsmasq}/bin/dnsmasq";
+
+    serviceConfig.ProgramArguments = [
+      "--listen-address=127.0.0.1"
+      "--port=53"
+      "--keep-in-foreground"
+    ] ++ (mapA (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}") dnsmasqAddresses);
+
+    serviceConfig.KeepAlive = true;
+    serviceConfig.RunAtLoad = true;
+  };
+
+  launchd.daemons.dnsmasq = {
   serviceConfig = {
     WorkingDirectory = "/var/empty";
     Program = "/bin/sh";
@@ -31,7 +46,7 @@ launchd.daemons.dnsmasq = {
         while [ ! -x "${pkgs.dnsmasq}/bin/dnsmasq" ]; do
           sleep 5
         done
-        exec "${pkgs.dnsmasq}/bin/dnsmasq" --listen-address=127.0.0.1 --port=53 --keep-in-foreground ${lib.concatMapStringsSep " " (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}") dnsmasqAddresses}
+        exec "${pkgs.dnsmasq}/bin/dnsmasq" --listen-address=127.0.0.1 --port=53 --keep-in-foreground ${mapA (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}") dnsmasqAddresses}
       ''
     ];
     KeepAlive = true;
