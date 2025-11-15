@@ -30,7 +30,9 @@ in
       "--keep-in-foreground"
     ] ++ (mapA (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}") dnsmasqAddresses);
 
-    serviceConfig.KeepAlive = true;
+    serviceConfig.KeepAlive = {
+      Crashed = true;
+    };
     serviceConfig.RunAtLoad = true;
     serviceConfig.ThrottleInterval = 5;
   };
