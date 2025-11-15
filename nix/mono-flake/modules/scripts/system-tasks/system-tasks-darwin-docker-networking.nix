@@ -8,7 +8,7 @@ system-tasks-darwin-docker-networking = pkgs.writeShellScriptBin "system-tasks-d
 
 set -euo pipefail
 
-export colima_host_ip=$(ifconfig -i bridge100 | grep "inet " | cut -d' ' -f6)
+export colima_host_ip=$(ifconfig bridge100 | grep "inet " | cut -d' ' -f2)
 echo $colima_host_ip
 export colima_vm_ip=$(colima list | grep docker | awk '{print $8}')
 echo $colima_vm_ip
