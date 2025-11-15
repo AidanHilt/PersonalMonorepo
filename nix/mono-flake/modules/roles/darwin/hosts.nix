@@ -25,7 +25,6 @@ in
     serviceConfig.Program = "${pkgs.dnsmasq}/bin/dnsmasq";
 
     serviceConfig.ProgramArguments = [
-      "${pkgs.dnsmasq}/bin/dnsmasq"
       "--listen-address=127.0.0.1"
       "--port=53"
       "--keep-in-foreground"
@@ -33,10 +32,6 @@ in
 
     serviceConfig.KeepAlive = true;
     serviceConfig.RunAtLoad = true;
-
-    # serviceConfig.WatchPaths = [
-    #   "${pkgs.dnsmasq}/bin/dnsmasq"
-    # ];
   };
 
   environment.etc = builtins.listToAttrs (builtins.map (domain: {
