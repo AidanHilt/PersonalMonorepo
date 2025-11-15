@@ -13,34 +13,32 @@ let
 
   mapA = f: attrs: with builtins; attrValues (mapAttrs f attrs);
 
-  dnsmasqWrapper = pkgs.writeShellScript "dnsmasq-wrapper" ''
-    # Wait for nix store to be available
-    while [ ! -x "${pkgs.dnsmasq}/bin/dnsmasq" ]; do
-      sleep 5
-    done
-    exec "${pkgs.dnsmasq}/bin/dnsmasq" "$@"
-  '';
-
 in
 {
   environment.systemPackages = with pkgs; [
     dnsmasq
   ];
 
-  launchd.daemons.dnsmasq = {
-    serviceConfig.WorkingDirectory = "/var/empty";
-
-    serviceConfig.Program = "${dnsmasqWrapper}";
-
-    serviceConfig.ProgramArguments = [
-      "--listen-address=127.0.0.1"
-      "--port=53"
-      "--keep-in-foreground"
-    ] ++ (mapA (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}") dnsmasqAddresses);
-
-    serviceConfig.KeepAlive = true;
-    serviceConfig.RunAtLoad = true;
+launchd.daemons.dnsmasq = {
+  serviceConfig = {
+    WorkingDirectory = "/var/empty";
+    Program = "/bin/sh";
+    ProgramArguments = [
+      "/bin/sh"
+      "-c"
+      ''
+        # Wait for nix store to be available
+        while [ ! -x "${pkgs.dnsmasq}/bin/dnsmasq" ]; do
+          sleep 5
+        done
+        exec "${pkgs.dnsmasq}/bin/dnsmasq" --listen-address=127.0.0.1 --port=53 --keep-in-foreground ${lib.concatMapStringsSep " " (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}") dnsmasqAddresses}
+      ''
+    ];
+    KeepAlive = true;
+    RunAtLoad = true;
+    ThrottleInterval = 30;
   };
+};
 
   environment.etc = builtins.listToAttrs (builtins.map (domain: {
     name = "resolver/${lib.strings.removePrefix "*." domain}";
