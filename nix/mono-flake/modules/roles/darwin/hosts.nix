@@ -13,9 +13,11 @@ let
 
   mapA = f: attrs: with builtins; attrValues (mapAttrs f attrs);
 
-  addressArgs = lib.concatMapStringsSep " "
-    (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}")
-    dnsConstants.dnsHosts;
+  addressArgs = lib.concatLists (
+    lib.mapAttrsToList (ip: domains:
+      map (domain: "--address=/${lib.strings.removePrefix "*." domain}/${ip}") domains
+    ) dnsConstants.dnsHosts
+  );
 in
 {
   environment.systemPackages = with pkgs; [
