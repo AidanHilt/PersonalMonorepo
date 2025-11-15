@@ -65,13 +65,13 @@ paperless:
 
 metallb:
   enabled: true
-
-it-tools:
-  enabled: true
   dependentApps:
     metallb-config:
       configuration:
         enabled: true
+
+it-tools:
+  enabled: true
 
 istio:
   enabled: true
