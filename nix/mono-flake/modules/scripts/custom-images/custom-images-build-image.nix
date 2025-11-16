@@ -67,12 +67,12 @@ AARCH64_RESULT=$(nix build "$FLAKE_DIR#packages.aarch64-linux.$IMAGE_NAME" --pri
 
 print_debug "Loading x86_64 image into docker..."
 docker load < "$X86_RESULT"
-X86_IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -1)
+X86_IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$IMAGE_NAME")
 docker tag "$X86_IMAGE" "$IMAGE_NAME:x86_64"
 
 print_debug "Loading aarch64 image into docker..."
 docker load < "$AARCH64_RESULT"
-AARCH64_IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -1)
+AARCH64_IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$IMAGE_NAME")
 docker tag "$AARCH64_IMAGE" "$IMAGE_NAME:aarch64"
 
 print_debug "Creating multi-arch manifest..."
