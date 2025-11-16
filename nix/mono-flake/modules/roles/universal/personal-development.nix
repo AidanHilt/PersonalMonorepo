@@ -5,6 +5,7 @@
     ../../scripts/app-creator/default.nix
     ../../scripts/argocd/default.nix
     ../../scripts/context/default.nix
+    ../../scripts/custom-images/default.nix
     ../../scripts/helm/default.nix
     ../../scripts/kubernetes/default.nix
     ../../scripts/mono-flake/default.nix
