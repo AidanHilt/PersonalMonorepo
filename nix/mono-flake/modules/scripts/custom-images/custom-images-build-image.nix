@@ -101,6 +101,10 @@ modify_and_load_image() {
 X86_TAG=$(modify_and_load_image "$X86_RESULT" "x86_64")
 AARCH64_TAG=$(modify_and_load_image "$AARCH64_RESULT" "aarch64")
 
+docker push "$X86_TAG"
+docker push "$AARCH64_TAG"
+
+
 MULTI_ARCH_TAG=$(echo "$X86_TAG" | sed 's/:x86_64-/:/')
 
 print_debug "Creating multi-arch manifest..."
