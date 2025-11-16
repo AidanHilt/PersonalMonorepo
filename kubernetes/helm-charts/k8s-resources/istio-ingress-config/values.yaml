@@ -32,7 +32,6 @@ it-tools:
   rewrite:
     uri: /
   destinationSvc: it-tools.misc.svc.cluster.local
-  destinationPort: 8080
 jellyfin:
   enabled: false
   prefixes:
