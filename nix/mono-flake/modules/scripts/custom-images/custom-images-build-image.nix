@@ -67,6 +67,8 @@ AARCH64_RESULT=$(nix build "$FLAKE_DIR#packages.aarch64-linux.$IMAGE_NAME" --pri
 
 TEMP_DIR=$(mktemp -d)
 
+echo "$TEMP_DIR"
+
 modify_and_load_image() {
   local IMAGE_PATH="$1"
   local ARCH="$2"
@@ -95,7 +97,6 @@ modify_and_load_image() {
   docker load < "$MODIFIED_IMAGE"
 
   LOADED_TAG=$(jq -r '.[0].RepoTags[0]' "$WORK_DIR/manifest.json")
-  echo "$LOADED_TAG"
 }
 
 X86_TAG=$(modify_and_load_image "$X86_RESULT" "x86_64")
@@ -106,6 +107,8 @@ echo "$AARCH64_TAG"
 
 docker push "$X86_TAG"
 docker push "$AARCH64_TAG"
+
+echo "Pushed somehow"
 
 MULTI_ARCH_TAG=$(echo "$X86_TAG" | sed 's/:x86_64-/:/')
 
