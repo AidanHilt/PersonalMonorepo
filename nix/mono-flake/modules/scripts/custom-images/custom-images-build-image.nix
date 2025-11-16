@@ -99,28 +99,19 @@ AARCH64_RESULT=$(nix build "$FLAKE_DIR#packages.aarch64-linux.$IMAGE_NAME" --pri
 
 TEMP_DIR=$(mktemp -d)
 
-echo "$TEMP_DIR"
-
-echo "WTF"
 
 modify_and_load_image "$X86_RESULT" "x86_64" X86_TAG
 modify_and_load_image "$AARCH64_RESULT" "aarch64" AARCH64_TAG
 
-echo "Ok?"
-
-echo "$X86_TAG"
-echo "$AARCH64_TAG"
-
 docker push "$X86_TAG"
 docker push "$AARCH64_TAG"
-
-echo "Pushed somehow"
 
 MULTI_ARCH_TAG=$(echo "$X86_TAG" | sed 's/:x86_64-/:/')
 
 print_debug "Creating multi-arch manifest..."
 docker manifest rm "$MULTI_ARCH_TAG" 2>/dev/null || true
 docker manifest create "$MULTI_ARCH_TAG" "$X86_TAG" "$AARCH64_TAG"
+docker push "$MULTI_ARCH_TAG"
 
 print_status "Multi-arch image $MULTI_ARCH_TAG created successfully!"
 '';
