@@ -65,21 +65,50 @@ X86_RESULT=$(nix build "$FLAKE_DIR#packages.x86_64-linux.$IMAGE_NAME" --print-ou
 print_debug "Building aarch64-linux image..."
 AARCH64_RESULT=$(nix build "$FLAKE_DIR#packages.aarch64-linux.$IMAGE_NAME" --print-out-paths --no-link)
 
-print_debug "Loading x86_64 image into docker..."
-docker load < "$X86_RESULT"
-X86_IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$IMAGE_NAME")
-docker tag "$X86_IMAGE" "$IMAGE_NAME:x86_64"
+TEMP_DIR=$(mktemp -d)
 
-print_debug "Loading aarch64 image into docker..."
-docker load < "$AARCH64_RESULT"
-AARCH64_IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$IMAGE_NAME")
-docker tag "$AARCH64_IMAGE" "$IMAGE_NAME:aarch64"
+modify_and_load_image() {
+  local IMAGE_PATH="$1"
+  local ARCH="$2"
+  local WORK_DIR="$TEMP_DIR/$ARCH"
+
+  mkdir -p "$WORK_DIR"
+
+  print_debug "Extracting $ARCH image..."
+  tar -xf "$IMAGE_PATH" -C "$WORK_DIR"
+
+  print_debug "Modifying $ARCH manifest..."
+  jq --arg arch "$ARCH" '
+    .[0].RepoTags = [
+      .[0].RepoTags[0] |
+      sub("^"; "aidanhilt/") |
+      sub(":"; ":" + $arch + "-")
+    ]
+  ' "$WORK_DIR/manifest.json" > "$WORK_DIR/manifest.json.tmp"
+  mv "$WORK_DIR/manifest.json.tmp" "$WORK_DIR/manifest.json"
+
+  MODIFIED_IMAGE="$WORK_DIR/modified.tar"
+  tar -cf "$MODIFIED_IMAGE" -C "$WORK_DIR" .
+
+  print_debug "Loading modified $ARCH image..."
+  docker load < "$MODIFIED_IMAGE"
+
+  LOADED_TAG=$(jq -r '.[0].RepoTags[0]' "$WORK_DIR/manifest.json")
+  echo "$LOADED_TAG"
+}
+
+X86_TAG=$(modify_and_load_image "$X86_RESULT" "x86_64")
+AARCH64_TAG=$(modify_and_load_image "$AARCH64_RESULT" "aarch64")
+
+rm -rf "$TEMP_DIR"
+
+MULTI_ARCH_TAG=$(echo "$X86_TAG" | sed 's/:x86_64-/:/')
 
 print_debug "Creating multi-arch manifest..."
-docker manifest rm "$IMAGE_NAME:latest" 2>/dev/null || true
-docker manifest create "$IMAGE_NAME:latest" "$IMAGE_NAME:x86_64" "$IMAGE_NAME:aarch64"
+docker manifest rm "$MULTI_ARCH_TAG" 2>/dev/null || true
+docker manifest create "$MULTI_ARCH_TAG" "$X86_TAG" "$AARCH64_TAG"
 
-print_status "Multi-arch image $IMAGE_NAME:latest created successfully!"
+print_status "Multi-arch image $MULTI_ARCH_TAG created successfully!"
 '';
 in
 
