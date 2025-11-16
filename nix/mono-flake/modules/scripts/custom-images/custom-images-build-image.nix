@@ -86,11 +86,9 @@ modify_and_load_image() {
     ]
   ' "$WORK_DIR/manifest.json" > "$WORK_DIR/manifest.json.tmp"
 
-  rm "$WORK_DIR/manifest.json"
-  ls "$WORK_DIR"
-  mv "$WORK_DIR/manifest.json.tmp" "$WORK_DIR/manifest.json"
+  mv -f "$WORK_DIR/manifest.json.tmp" "$WORK_DIR/manifest.json"
 
-  MODIFIED_IMAGE="$WORK_DIR/modified.tar"
+  MODIFIED_IMAGE="$TEMP_DIR/modified.tar"
   tar -cf "$MODIFIED_IMAGE" -C "$WORK_DIR" .
 
   print_debug "Loading modified $ARCH image..."
