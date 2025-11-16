@@ -67,8 +67,6 @@ AARCH64_RESULT=$(nix build "$FLAKE_DIR#packages.aarch64-linux.$IMAGE_NAME" --pri
 
 TEMP_DIR=$(mktemp -d)
 
-echo "$TEMP_DIR"
-
 modify_and_load_image() {
   local IMAGE_PATH="$1"
   local ARCH="$2"
@@ -89,6 +87,7 @@ modify_and_load_image() {
   ' "$WORK_DIR/manifest.json" > "$WORK_DIR/manifest.json.tmp"
 
   rm "$WORK_DIR/manifest.json"
+  ls "$WORK_DIR"
   mv "$WORK_DIR/manifest.json.tmp" "$WORK_DIR/manifest.json"
 
   MODIFIED_IMAGE="$WORK_DIR/modified.tar"
