@@ -8,7 +8,7 @@
   outputs = { self, nixpkgs }:
     let
       # Support multiple systems
-      systems = [ "x86_64-linux" "aarch64-linux" ];
+      systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
 
       forAllSystems = nixpkgs.lib.genAttrs systems;
 
@@ -72,23 +72,5 @@
 
     in {
       packages = forAllSystems buildImagesForSystem;
-
-      # Convenience outputs for loading images
-      apps = forAllSystems (system:
-        let
-          pkgs = pkgsFor system;
-          imagePackages = self.packages.${system};
-          # Filter out 'all' and 'default' from apps
-          actualImages = builtins.removeAttrs imagePackages ["all" "default"];
-        in
-          builtins.mapAttrs (name: image: {
-            type = "app";
-            program = toString (pkgs.writeShellScript "load-${name}" ''
-              echo "Loading ${name} image for ${system}..."
-              docker load < ${image}
-              echo "Image ${name} loaded successfully!"
-            '');
-          }) actualImages
-      );
     };
 }
