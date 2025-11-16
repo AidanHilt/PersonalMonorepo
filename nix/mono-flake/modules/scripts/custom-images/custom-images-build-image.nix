@@ -28,6 +28,7 @@ done
 modify_and_load_image() {
   local IMAGE_PATH="$1"
   local ARCH="$2"
+  local VAR_NAME="$3"
   local WORK_DIR="$TEMP_DIR/$ARCH"
 
   mkdir -p "$WORK_DIR"
@@ -51,6 +52,9 @@ modify_and_load_image() {
 
   print_debug "Loading modified $ARCH image..."
   docker load < "$MODIFIED_IMAGE"
+
+  local LOADED_TAG=$(jq -r '.[0].RepoTags[0]' "$WORK_DIR/manifest.json")
+  eval "$VAR_NAME='$LOADED_TAG'"
 }
 
 if [[ -z "$IMAGE_NAME" ]]; then
@@ -99,8 +103,8 @@ echo "$TEMP_DIR"
 
 echo "WTF"
 
-X86_TAG=$(modify_and_load_image "$X86_RESULT" "x86_64")
-AARCH64_TAG=$(modify_and_load_image "$AARCH64_RESULT" "aarch64")
+modify_and_load_image "$X86_RESULT" "x86_64" X86_TAG
+modify_and_load_image "$AARCH64_RESULT" "aarch64" AARCH64_TAG
 
 echo "Ok?"
 
