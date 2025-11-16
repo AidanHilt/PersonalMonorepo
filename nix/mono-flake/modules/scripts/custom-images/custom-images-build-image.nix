@@ -95,8 +95,6 @@ modify_and_load_image() {
 
   print_debug "Loading modified $ARCH image..."
   docker load < "$MODIFIED_IMAGE"
-
-  LOADED_TAG=$(jq -r '.[0].RepoTags[0]' "$WORK_DIR/manifest.json")
 }
 
 X86_TAG=$(modify_and_load_image "$X86_RESULT" "x86_64")
