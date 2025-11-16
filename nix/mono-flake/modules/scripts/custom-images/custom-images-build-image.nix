@@ -102,6 +102,8 @@ echo "WTF"
 X86_TAG=$(modify_and_load_image "$X86_RESULT" "x86_64")
 AARCH64_TAG=$(modify_and_load_image "$AARCH64_RESULT" "aarch64")
 
+echo "Ok?"
+
 echo "$X86_TAG"
 echo "$AARCH64_TAG"
 
