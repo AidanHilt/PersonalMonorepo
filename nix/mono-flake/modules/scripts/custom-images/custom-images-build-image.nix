@@ -25,6 +25,34 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+modify_and_load_image() {
+  local IMAGE_PATH="$1"
+  local ARCH="$2"
+  local WORK_DIR="$TEMP_DIR/$ARCH"
+
+  mkdir -p "$WORK_DIR"
+
+  print_debug "Extracting $ARCH image..."
+  tar -xf "$IMAGE_PATH" -C "$WORK_DIR"
+
+  print_debug "Modifying $ARCH manifest..."
+  jq --arg arch "$ARCH" '
+    .[0].RepoTags = [
+      .[0].RepoTags[0] |
+      sub("^"; "aidanhilt/") |
+      sub(":"; ":" + $arch + "-")
+    ]
+  ' "$WORK_DIR/manifest.json" > "$WORK_DIR/manifest.json.tmp"
+
+  mv -f "$WORK_DIR/manifest.json.tmp" "$WORK_DIR/manifest.json"
+
+  MODIFIED_IMAGE="$TEMP_DIR/modified.tar"
+  tar -cf "$MODIFIED_IMAGE" -C "$WORK_DIR" .
+
+  print_debug "Loading modified $ARCH image..."
+  docker load < "$MODIFIED_IMAGE"
+}
+
 if [[ -z "$IMAGE_NAME" ]]; then
   IMAGES_DIR="$PERSONAL_MONOREPO_LOCATION/nix/custom-images/images"
 
@@ -69,33 +97,7 @@ TEMP_DIR=$(mktemp -d)
 
 echo "$TEMP_DIR"
 
-modify_and_load_image() {
-  local IMAGE_PATH="$1"
-  local ARCH="$2"
-  local WORK_DIR="$TEMP_DIR/$ARCH"
-
-  mkdir -p "$WORK_DIR"
-
-  print_debug "Extracting $ARCH image..."
-  tar -xf "$IMAGE_PATH" -C "$WORK_DIR"
-
-  print_debug "Modifying $ARCH manifest..."
-  jq --arg arch "$ARCH" '
-    .[0].RepoTags = [
-      .[0].RepoTags[0] |
-      sub("^"; "aidanhilt/") |
-      sub(":"; ":" + $arch + "-")
-    ]
-  ' "$WORK_DIR/manifest.json" > "$WORK_DIR/manifest.json.tmp"
-
-  mv -f "$WORK_DIR/manifest.json.tmp" "$WORK_DIR/manifest.json"
-
-  MODIFIED_IMAGE="$TEMP_DIR/modified.tar"
-  tar -cf "$MODIFIED_IMAGE" -C "$WORK_DIR" .
-
-  print_debug "Loading modified $ARCH image..."
-  docker load < "$MODIFIED_IMAGE"
-}
+echo "WTF"
 
 X86_TAG=$(modify_and_load_image "$X86_RESULT" "x86_64")
 AARCH64_TAG=$(modify_and_load_image "$AARCH64_RESULT" "aarch64")
