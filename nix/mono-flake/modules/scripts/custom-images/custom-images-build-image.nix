@@ -117,8 +117,8 @@ SANITIZED_BRANCH="''${CURRENT_BRANCH//\//_}"
 echo "$BRANCH_BUILD"
 
 if [[ "$BRANCH_BUILD" = true ]]; then
-  X86_TAG=$(echo "$X86_TAG" | sed 's/:.*/:x86_64-$SANITIZED_BRANCH/')
-  AARCH64_TAG=$(echo "$AARCH64_TAG" | sed 's/:.*/:aarch64-$SANITIZED_BRANCH/')
+  X86_TAG=$(echo "$X86_TAG" | sed "s/:.*/:x86_64-$SANITIZED_BRANCH/")
+  AARCH64_TAG=$(echo "$AARCH64_TAG" | sed "s/:.*/:aarch64-$SANITIZED_BRANCH/")
 fi
 
 echo "$X86_TAG"
