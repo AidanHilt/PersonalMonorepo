@@ -121,7 +121,7 @@ if [[ "$BRANCH_BUILD" = true ]]; then
   AARCH64_TAG_NEW=$(echo "$AARCH64_TAG" | sed "s/:.*/:aarch64-$SANITIZED_BRANCH/")
 
   docker tag "$X86_TAG" "$X86_TAG_NEW"
-  docker tag "$AARCH64_TAG" "AARCH64_TAG_NEW"
+  docker tag "$AARCH64_TAG" "$AARCH64_TAG_NEW"
 
   X86_TAG="$X86_TAG_NEW"
   AARCH64_TAG="AARCH64_TAG_NEW"
