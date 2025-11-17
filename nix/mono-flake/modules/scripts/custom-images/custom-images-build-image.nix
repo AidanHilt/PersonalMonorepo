@@ -124,7 +124,7 @@ if [[ "$BRANCH_BUILD" = true ]]; then
   docker tag "$AARCH64_TAG" "$AARCH64_TAG_NEW"
 
   X86_TAG="$X86_TAG_NEW"
-  AARCH64_TAG="AARCH64_TAG_NEW"
+  AARCH64_TAG="$AARCH64_TAG_NEW"
 fi
 
 docker push "$X86_TAG"
