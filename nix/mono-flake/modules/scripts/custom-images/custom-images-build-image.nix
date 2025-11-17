@@ -134,6 +134,7 @@ MULTI_ARCH_TAG=$(echo "$X86_TAG" | sed 's/:x86_64-/:/')
 
 print_debug "Creating multi-arch manifest..."
 docker manifest rm "$MULTI_ARCH_TAG" 2>/dev/null || true
+echo "docker manifest create $MULTI_ARCH_TAG $X86_TAG $AARCH64_TAG"
 docker manifest create "$MULTI_ARCH_TAG" "$X86_TAG" "$AARCH64_TAG"
 
 docker push "$MULTI_ARCH_TAG"
