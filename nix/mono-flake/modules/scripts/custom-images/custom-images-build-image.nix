@@ -114,7 +114,7 @@ modify_and_load_image "$AARCH64_RESULT" "aarch64" AARCH64_TAG
 CURRENT_BRANCH=$(git -C "$PERSONAL_MONOREPO_LOCATION" rev-parse --abbrev-ref HEAD)
 SANITIZED_BRANCH="''${CURRENT_BRANCH//\//_}"
 
-if [[ "$BRANCH_BUILD" = true ]];
+if [[ "$BRANCH_BUILD" = true ]]; then
   X86_TAG=$(echo "$X86_TAG" | sed 's/:.*/:x86_64-$SANITIZED_BRANCH/')
   AARCH64_TAG=$(echo "$AARCH64_TAG" | sed 's/:.*/:aarch64-$SANITIZED_BRANCH/')
 fi
