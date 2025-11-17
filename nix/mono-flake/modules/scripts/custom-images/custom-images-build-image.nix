@@ -11,12 +11,21 @@ set -euo pipefail
 source ${printing-and-output.printing-and-output}
 
 IMAGE_NAME=""
+IMAGE_TAG="latest"
+BRANCH_BUILD=true
 
 while [[ $# -gt 0 ]]; do
   case $1 in
     --image-name)
       IMAGE_NAME="$2"
       shift 2
+      ;;
+    --image-tag)
+      IMAGE_TAG="$2"
+      shift 2
+      ;;
+    --version-build)
+      BRANCH_BUILD=false
       ;;
     *)
       print_error "Unknown argument: $1"
@@ -99,9 +108,16 @@ AARCH64_RESULT=$(nix build "$FLAKE_DIR#packages.aarch64-linux.$IMAGE_NAME" --pri
 
 TEMP_DIR=$(mktemp -d)
 
-
 modify_and_load_image "$X86_RESULT" "x86_64" X86_TAG
 modify_and_load_image "$AARCH64_RESULT" "aarch64" AARCH64_TAG
+
+CURRENT_BRANCH=$(git -C "$PERSONAL_MONOREPO_LOCATION" rev-parse --abbrev-ref HEAD)
+SANITIZED_BRANCH="''${CURRENT_BRANCH//\//_}"
+
+if [[ "$BRANCH_BUILD" = true ]];
+  X86_TAG=$(echo "$X86_TAG" | sed 's/:.*/:x86_64-$SANITIZED_BRANCH/')
+  AARCH64_TAG=$(echo "$AARCH64_TAG" | sed 's/:.*/:aarch64-$SANITIZED_BRANCH/')
+fi
 
 docker push "$X86_TAG"
 docker push "$AARCH64_TAG"
@@ -111,6 +127,7 @@ MULTI_ARCH_TAG=$(echo "$X86_TAG" | sed 's/:x86_64-/:/')
 print_debug "Creating multi-arch manifest..."
 docker manifest rm "$MULTI_ARCH_TAG" 2>/dev/null || true
 docker manifest create "$MULTI_ARCH_TAG" "$X86_TAG" "$AARCH64_TAG"
+
 docker push "$MULTI_ARCH_TAG"
 
 print_status "Multi-arch image $MULTI_ARCH_TAG created successfully!"
