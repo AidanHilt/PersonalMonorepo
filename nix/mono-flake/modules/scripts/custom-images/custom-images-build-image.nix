@@ -115,6 +115,7 @@ CURRENT_BRANCH=$(git -C "$PERSONAL_MONOREPO_LOCATION" rev-parse --abbrev-ref HEA
 SANITIZED_BRANCH="''${CURRENT_BRANCH//\//_}"
 
 if [[ "$BRANCH_BUILD" = true ]]; then
+  echo "What?"
   X86_TAG=$(echo "$X86_TAG" | sed 's/:.*/:x86_64-$SANITIZED_BRANCH/')
   AARCH64_TAG=$(echo "$AARCH64_TAG" | sed 's/:.*/:aarch64-$SANITIZED_BRANCH/')
 fi
