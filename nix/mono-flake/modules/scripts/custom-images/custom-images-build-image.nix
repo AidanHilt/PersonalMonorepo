@@ -137,7 +137,7 @@ docker manifest rm "$MULTI_ARCH_TAG" 2>/dev/null || true
 echo "docker manifest create $MULTI_ARCH_TAG $X86_TAG $AARCH64_TAG"
 docker manifest create "$MULTI_ARCH_TAG" "$X86_TAG" "$AARCH64_TAG"
 
-docker push "$MULTI_ARCH_TAG"
+docker manifest push "$MULTI_ARCH_TAG"
 
 print_status "Multi-arch image $MULTI_ARCH_TAG created successfully!"
 '';
