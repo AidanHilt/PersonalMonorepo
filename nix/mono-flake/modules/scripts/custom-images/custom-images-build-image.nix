@@ -22,7 +22,7 @@ show_help () {
   echo "OPTIONS:"
   echo "--image-name The name of the image to build. Must exist in the flake"
   echo "--image-tag The tag to use for the image. Defaults to the local personal monorepo branch"
-  echo "--version-build Basically means we're doing a "real" build
+  echo "--version-build Basically means we're doing a "real" build"
 }
 
 while [[ $# -gt 0 ]]; do
