@@ -1,18 +1,17 @@
 { pkgs, tag }:
-
 let
-  it-tools = pkgs.fetchFromGithub {
-    owner = "Corentin Thomasset";
-    repo = "it-tools";
-    rev = "main";
-    ref = "";
-  };
+  it-tools = pkgs.it-tools.overrideAttrs ( oldAttrs: {
+    buildPhase = ''
+      runHook preBuild
+      export BASE_URL=/it-tools
+
+      pnpm build
+
+      runHook postBuild
+    '';
+  });
 in
-
 {
-  # Return the config for dockerTools.buildImage
-  # name and tag are set automatically by the flake
-
   copyToRoot = pkgs.buildEnv {
     name = "image-root";
     paths = [ pkgs.bash pkgs.curl ];
