@@ -60,6 +60,8 @@ modify_and_load_image() {
   print_debug "Extracting $ARCH image..."
   tar -xf "$IMAGE_PATH" -C "$WORK_DIR" --no-same-permissions
 
+  chmod -R 755 "$WORK_DIR"
+
   print_debug "Modifying $ARCH manifest..."
   jq --arg arch "$ARCH" '
     .[0].RepoTags = [
