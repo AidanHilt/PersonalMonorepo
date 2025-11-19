@@ -58,7 +58,7 @@ modify_and_load_image() {
   mkdir -p "$WORK_DIR"
 
   print_debug "Extracting $ARCH image..."
-  tar -xf "$IMAGE_PATH" -C "$WORK_DIR"
+  tar -xf "$IMAGE_PATH" -C "$WORK_DIR" --no-same-permissions
 
   print_debug "Modifying $ARCH manifest..."
   jq --arg arch "$ARCH" '
