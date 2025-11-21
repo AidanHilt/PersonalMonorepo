@@ -29,8 +29,6 @@ it-tools:
   enabled: false
   prefixes:
     - /it-tools
-  rewrite:
-    uri: /
   destinationSvc: it-tools.misc.svc.cluster.local
 jellyfin:
   enabled: false
