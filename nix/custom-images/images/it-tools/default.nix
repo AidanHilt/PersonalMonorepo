@@ -43,11 +43,11 @@ let
     server {
       listen 80;
       server_name localhost;
-      root ${pkgs.it-tools}/lib/;
+      root ${it-tools}/lib/;
       index index.html;
       
       location /it-tools/ {
-        alias ${pkgs.it-tools}/lib/;
+        alias ${it-tools}/lib/;
         try_files $uri $uri/ /it-tools/index.html;
       }
 
