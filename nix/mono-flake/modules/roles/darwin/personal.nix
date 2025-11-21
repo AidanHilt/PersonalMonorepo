@@ -59,6 +59,7 @@
     linux-builder = {
       enable = true;
       ephemeral = false;
+      supportedFeatures = [ "kvm" "benchmark" "big-parallel" ];
       systems = ["x86_64-linux" "aarch64-linux"];
       config.boot.binfmt.emulatedSystems = ["x86_64-linux"];
       config = {

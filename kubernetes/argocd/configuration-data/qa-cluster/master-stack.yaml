@@ -1,6 +1,10 @@
 env: qa-cluster
 
-gitRevision: project-appocalypse/new-app-wrapper
+hostnames:
+  - qa-cluster-lb.lan
+  - "172.18.255.200"
+
+gitRevision: project-appocalypse/it-tools
 
 flaresolverr:
   enabled: false
@@ -55,10 +59,25 @@ video-stack-configuration:
   configuration:
     enabled: true
 
-nginx:
-  enabled: true
-
 paperless:
+  enabled: false
+  configuration:
+    enabled: true
+
+metallb:
+  enabled: true
+  dependentApps:
+    metallb-config:
+      configuration:
+        enabled: true
+
+it-tools:
   enabled: true
   configuration:
     enabled: true
+
+istio:
+  enabled: true
+  dependentApps:
+    kiali:
+      enabled: false

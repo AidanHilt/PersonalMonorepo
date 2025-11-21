@@ -13,24 +13,39 @@ let
 
   mapA = f: attrs: with builtins; attrValues (mapAttrs f attrs);
 
+addressArgs = lib.concatStringsSep " " (
+    lib.concatLists (
+      lib.mapAttrsToList (ip: domains:
+        map (domain: "--address=/${lib.strings.removePrefix "*." domain}/${ip}") domains
+      ) dnsConstants.dnsHosts
+    )
+  );
 in
 {
   environment.systemPackages = with pkgs; [
     dnsmasq
   ];
 
+  networking = {};
+
   launchd.daemons.dnsmasq = {
-    serviceConfig.WorkingDirectory = "/var/empty";
-
-    serviceConfig.ProgramArguments = [
-      "${pkgs.dnsmasq}/bin/dnsmasq"
-      "--listen-address=127.0.0.1"
-      "--port=53"
-      "--keep-in-foreground"
-    ] ++ (mapA (domain: addr: "--address=/${lib.strings.removePrefix "*." domain}/${addr}") dnsmasqAddresses);
-
-    serviceConfig.KeepAlive = true;
-    serviceConfig.RunAtLoad = true;
+    serviceConfig = {
+      WorkingDirectory = "/var/empty";
+      Program = "/bin/sh";
+      ProgramArguments = [
+        "/bin/sh"
+        "-c"
+        ''
+          while [ ! -x "${pkgs.dnsmasq}/bin/dnsmasq" ]; do
+            sleep 5
+          done
+          exec "${pkgs.dnsmasq}/bin/dnsmasq" --listen-address=127.0.0.1 --port=53 --keep-in-foreground ${addressArgs}
+        ''
+      ];
+      KeepAlive = true;
+      RunAtLoad = true;
+      ThrottleInterval = 30;
+    };
   };
 
   environment.etc = builtins.listToAttrs (builtins.map (domain: {

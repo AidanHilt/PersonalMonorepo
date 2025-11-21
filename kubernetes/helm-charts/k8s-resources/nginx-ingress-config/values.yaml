@@ -43,6 +43,13 @@ hashi-vault:
   subdomain: vault
   destinationSvc: hashi-vault
   destinationPort: 8200
+it-tools:
+  enabled: false
+  namespace: misc
+  prefixes:
+    - /it-tools
+  destinationSvc: it-tools
+  destinationPort: 8080
 jellyfin:
   enabled: false
   namespace: videos
