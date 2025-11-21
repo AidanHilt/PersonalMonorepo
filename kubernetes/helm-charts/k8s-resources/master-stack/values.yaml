@@ -13,7 +13,6 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-
 # Global config
 bentopdf:
   enabled: false
@@ -170,19 +169,6 @@ metallb:
       useDefaultGitRevision: true
       configuration:
         enabled: false
-nginx:
-  enabled: false
-  helmChart: false
-  gitPath: kubernetes/ingress-nginx/kind
-  destinationNamespace: ingress-nginx
-  dependentApps:
-    ingress-config:
-      repo: https://github.com/AidanHilt/PersonalMonorepo
-      useDefaultGitRevision: true
-      gitPath: kubernetes/helm-charts/k8s-resources/nginx-ingress-config
-      destinationNamespace: ""
-      # Generates a mirror of the enabled status and hostname config as the config for this app
-      followMasterConfig: true
 paperless:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/paperless-ngx
