@@ -13,6 +13,8 @@ bentopdf:
   enabled: false
   prefixes:
     - /bento
+  rewrite:
+    uri: /
   destinationSvc: bentopdf.misc.svc.cluster.local
   destinationPort: 8080
 # TODO Migrate this to istio
