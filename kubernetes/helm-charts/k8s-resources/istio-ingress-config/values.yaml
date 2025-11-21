@@ -28,6 +28,7 @@ hashi-vault:
 it-tools:
   enabled: false
   prefixes:
+    - /it-tools/
     - /it-tools
   destinationSvc: it-tools.misc.svc.cluster.local
 jellyfin:
