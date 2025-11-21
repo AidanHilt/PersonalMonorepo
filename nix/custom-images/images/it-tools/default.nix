@@ -43,15 +43,15 @@ let
     server {
       listen 80;
       server_name localhost;
-      root ${it-tools}/lib/;
+      root ${pkgs.it-tools}/lib/;
       index index.html;
       
       location /it-tools/ {
-        alias ${it-tools}/lib/
+        alias ${pkgs.it-tools}/lib/;
         try_files $uri $uri/ /it-tools/index.html;
       }
 
-      location = /it-tools {
+      location /it-tools {
         return 301 /it-tools/;
       }
     }
@@ -66,7 +66,7 @@ in
 {
   copyToRoot = pkgs.buildEnv {
     name = "image-root";
-    paths = [ it-tools pkgs.nginx pkgs.fakeNss rootfs ];
+    paths = [ pkgs.fakeNss rootfs ];
   };
 
   runAsRoot = ''
