@@ -2,6 +2,7 @@ env: qa-cluster
 
 hostnames:
   - qa-cluster-lb.lan
+  - "172.18.255.200"
 
 gitRevision: project-appocalypse/it-tools
 
