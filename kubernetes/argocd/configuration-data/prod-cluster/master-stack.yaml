@@ -21,6 +21,9 @@ hashi-vault:
 istio:
   enabled: true
 
+it-tools:
+  enabled: true
+
 job-templates:
   enabled: true
 

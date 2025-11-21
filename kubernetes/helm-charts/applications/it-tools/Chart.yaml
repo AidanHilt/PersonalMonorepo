@@ -6,7 +6,7 @@ type: application
 
 version: 0.0.3
 
-appVersion: "2024.10.22-7ca5933"
+appVersion: "v0.1.4"
 
 dependencies:
   - name: common
