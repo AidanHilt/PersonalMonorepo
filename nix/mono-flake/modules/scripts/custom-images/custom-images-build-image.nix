@@ -157,6 +157,7 @@ docker manifest push "$MULTI_ARCH_TAG"
 print_debug "Creating latest tag"
 if [[ "$BRANCH_BUILD" != true ]]; then
   MULTI_ARCH_TAG=$(echo "$MULTI_ARCH_TAG" | sed 's/\(.*\):.*/\1/')
+  MUTLI_ARCH_TAG="$MULTI_ARCH_TAG:latest"
   docker manifest rm "$MULTI_ARCH_TAG" 2>/dev/null || true
   docker manifest create "$MULTI_ARCH_TAG" "$X86_TAG" "$AARCH64_TAG"
 
