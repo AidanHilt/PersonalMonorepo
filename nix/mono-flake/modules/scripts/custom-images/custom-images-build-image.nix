@@ -156,10 +156,11 @@ docker manifest push "$MULTI_ARCH_TAG"
 
 print_debug "Creating latest tag"
 if [[ "$BRANCH_BUILD" != true ]]; then
-  docker manifest rm "latest" 2>/dev/null || true
-  docker manifest create "latest" "$X86_TAG" "$AARCH64_TAG"
+  MULTI_ARCH_TAG=$(echo "$MULTI_ARCH_TAG" | sed 's/\(.*\):.*/\1/')
+  docker manifest rm "$MULTI_ARCH_TAG" 2>/dev/null || true
+  docker manifest create "$MULTI_ARCH_TAG" "$X86_TAG" "$AARCH64_TAG"
 
-  docker manifest push "latest"
+  docker manifest push "$MULTI_ARCH_TAG"
 fi
 
 print_status "Multi-arch image $MULTI_ARCH_TAG created successfully!"
