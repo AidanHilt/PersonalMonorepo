@@ -11,8 +11,7 @@ argocd:
   destinationSvc: argocd-server.argocd.svc.cluster.local
 bentopdf:
   enabled: false
-  prefixes:
-    - /bento
+  subdomain: bento
   rewrite:
     uri: /
   destinationSvc: bentopdf.misc.svc.cluster.local
