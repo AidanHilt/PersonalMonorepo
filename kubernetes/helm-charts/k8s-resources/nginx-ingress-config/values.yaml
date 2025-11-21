@@ -1,6 +1,7 @@
 hostnames:
   - localhost
 
+
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -10,6 +11,12 @@ argocd:
   prefixes:
     - /argocd
   destinationSvc: argocd-server
+bentopdf:
+  enabled: false
+  namespace: misc
+  prefixes:
+    - /bento
+  destinationSvc: bentopdf
 crafty-server:
   enabled: false
   namespace: crafty

@@ -4,10 +4,13 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/it-tools
+gitRevision: project-appocalypse/bentopdf
 
 flaresolverr:
   enabled: false
+
+bentopdf:
+  enabled: true
 
 hashi-vault:
   enabled: true
@@ -72,7 +75,7 @@ metallb:
         enabled: true
 
 it-tools:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 

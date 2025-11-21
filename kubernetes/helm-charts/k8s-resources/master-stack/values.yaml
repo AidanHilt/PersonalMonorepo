@@ -13,6 +13,14 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
+
+# Global config
+bentopdf:
+  enabled: false
+  repo: https://kriegalex.github.io/k8s-charts/
+  chart: bentopdf
+  version: 1.0.1
+  destinationNamespace: misc
 # Global config
 # Service-specific config
 crafty-server:
