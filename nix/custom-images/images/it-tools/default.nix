@@ -66,7 +66,7 @@ in
 {
   copyToRoot = pkgs.buildEnv {
     name = "image-root";
-    paths = [ pkgs.it-tools pkgs.nginx pkgs.fakeNss rootfs pkgs.zsh pkgs.coreutils-full pkgs.vim ];
+    paths = [ it-tools pkgs.nginx pkgs.fakeNss rootfs ];
   };
 
   runAsRoot = ''
