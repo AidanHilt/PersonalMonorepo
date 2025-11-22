@@ -5,5 +5,5 @@
 
 
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "$CHART_NAME.harcodedValues" . | fromYaml) -}}
+{{- $UNDERSCORE := mergeOverwrite .Values (include "$CHART_NAME.harcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

@@ -5,5 +5,5 @@
 
 
 {{- end -}}
-{{- /run/current-system/sw/bin/envsubst := mergeOverwrite .Values (include "flashpaper.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "flashpaper.harcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}
