@@ -13,7 +13,6 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-
 # Global config
 # Global config
 bentopdf:
@@ -40,7 +39,7 @@ flaresolverr:
     enabled: false
 flashpaper:
   enabled: false
-  gitPath: kubernetes/helm-charts/application/flashpaper
+  gitPath: kubernetes/helm-charts/applications/flashpaper/
   destinationNamespace: misc
 hashi-vault:
   enabled: false
