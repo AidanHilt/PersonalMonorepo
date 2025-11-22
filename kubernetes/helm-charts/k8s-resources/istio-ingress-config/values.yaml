@@ -1,6 +1,7 @@
 hostnames:
   - localhost
 
+
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -90,3 +91,9 @@ transmission:
   prefixes:
     - /transmission
   destinationSvc: transmission.videos.svc.cluster.local
+your-spotify:
+  enabled: false
+  prefixes:
+    - /your-spotify
+  destinationSvc: your-spotify.misc.svc.cluster.local
+  destinationPort: "8080"

@@ -1,0 +1,9 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "your-spotify.harcodedValues" -}}
+
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "your-spotify.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}
