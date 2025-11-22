@@ -57,8 +57,6 @@ let
           eval "$(dotenvx get -f "$ATILS_CONTEXTS_DIRECTORY/$CONTEXT_NAME/.env" | tr -d '}' | tr -d '{' | sed 's/,/\n/g'| sed 's/:/=/' | sed 's/^/export /')"
         fi
 
-        eval $(age -i ~/.ssh/id_ed25519 -d "$ATILS_CONTEXTS_DIRECTORY/keepass-password")
-
         if [[ -v KUBECONFIG_CONTEXT ]]; then
           kubecm switch $KUBECONFIG_CONTEXT -s
         fi
