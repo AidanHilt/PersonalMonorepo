@@ -45,7 +45,7 @@ SECRET_PATH="$secret_path"
 
 print_debug "Retrieving $KEY_NAME from $SECRET_PATH"
 
-result=$(echo "$KEEPASS_PASSWORD" | keepassxc-cli show -s -k "$KEEPASS_KEY_FILE_PATH" -a "$KEY_NAME" "$SECRET_PATH" "$KEEPASS_DB_PATH")
+result=$(echo "$KEEPASS_PASSWORD" | keepassxc-cli show -s -k "$KEEPASS_KEY_FILE_PATH" -a "$KEY_NAME" "$KEEPASS_DB_PATH" "$SECRET_PATH")
 
 echo "$result"
 '';
