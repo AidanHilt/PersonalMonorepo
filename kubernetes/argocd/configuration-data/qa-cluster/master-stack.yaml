@@ -4,7 +4,7 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/bentopdf
+gitRevision: project-appocalypse/flash-paper
 
 flaresolverr:
   enabled: false
@@ -78,6 +78,9 @@ it-tools:
   enabled: false
   configuration:
     enabled: true
+
+flashpaper:
+  enabled: false
 
 istio:
   enabled: true
