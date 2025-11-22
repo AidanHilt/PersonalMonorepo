@@ -19,6 +19,10 @@ bentopdf:
 # TODO Migrate this to istio
 crafty-server:
   enabled: false
+flashpaper:
+  enabled: false
+  subdomain: ots
+  destinationSvc: flashpaper.misc.svc.cluster.local
 grafana:
   enabled: false
   prefixes:
