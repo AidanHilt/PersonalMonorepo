@@ -14,6 +14,7 @@ configuration:
   configurationRevision: ""
 
 # Global config
+# Global config
 bentopdf:
   enabled: false
   repo: https://kriegalex.github.io/k8s-charts/
@@ -36,6 +37,10 @@ flaresolverr:
   destinationNamespace: videos
   configuration:
     enabled: false
+flashpaper:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/flashpaper/
+  destinationNamespace: misc
 hashi-vault:
   enabled: false
   repo: https://helm.releases.hashicorp.com

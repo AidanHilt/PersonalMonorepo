@@ -1,0 +1,14 @@
+apiVersion: v2
+name: flashpaper
+description: A Helm chart for installing and managing flashpaper. Based on the bjw-s library chart
+
+type: application
+
+version: 0.0.3
+
+appVersion: "v2"
+
+dependencies:
+  - name: common
+    repository: https://bjw-s-labs.github.io/helm-charts/
+    version: 1.5.1
