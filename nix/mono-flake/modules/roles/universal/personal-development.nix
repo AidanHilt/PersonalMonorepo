@@ -7,6 +7,7 @@
     ../../scripts/context/default.nix
     ../../scripts/custom-images/default.nix
     ../../scripts/helm/default.nix
+    ../../scripts/keepass/default.nix
     ../../scripts/kubernetes/default.nix
     ../../scripts/mono-flake/default.nix
     ../../scripts/nixos/default.nix
