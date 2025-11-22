@@ -45,7 +45,7 @@ SECRET_PATH="$secret_path"
 
 print_debug "Retrieving $KEY_NAME from $SECRET_PATH"
 
-result=$(echo "$KEEPASS_PASSWORD" | keepassxc-cli show -s -a "$KEY_NAME" "$SECRET_PATH")
+result=$(echo "$KEEPASS_PASSWORD" | keepassxc-cli show -s -k "$KEEPASS_KEY_FILE_PATH" -a "$KEY_NAME" "$SECRET_PATH" "$KEEPASS_DB_PATH")
 
 echo "$result"
 '';
@@ -55,4 +55,9 @@ in
   environment.systemPackages = [
     keepass-retrieve-secret
   ];
+
+  environment.variables = {
+    KEEPASS_KEY_FILE_PATH = "${machine-config.userBase}/${machine-config.username}/KeePass/MasterDatabase.key";
+    KEEPASS_DB_PATH = "${machine-config.userBase}/${machine-config.username}/KeePass/MasterDatabase.kdbx";
+  };
 }
