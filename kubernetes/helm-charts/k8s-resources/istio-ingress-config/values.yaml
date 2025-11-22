@@ -9,6 +9,13 @@ argocd:
   prefixes:
     - /argocd
   destinationSvc: argocd-server.argocd.svc.cluster.local
+bentopdf:
+  enabled: false
+  subdomain: bento
+  rewrite:
+    uri: /
+  destinationSvc: bentopdf.misc.svc.cluster.local
+  destinationPort: 8080
 # TODO Migrate this to istio
 crafty-server:
   enabled: false

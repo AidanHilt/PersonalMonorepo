@@ -138,12 +138,11 @@ fi
 ISTIO_YQ_STRING=".$APP_NAME.enabled=false ''${ROUTE_CONFIG_STRING}"
 ISTIO_YQ_STRING+="| .$APP_NAME.destinationSvc=\"$SERVICE_NAME.$NAMESPACE.svc.cluster.local\""
 
+if [[ "$DESTINATION_PORT" != 80 ]]; then
+  ISTIO_YQ_STRING+="| .$APP_NAME.destinationPort=\"$DESTINATION_PORT\""
+fi
+
 _modify-ingress-values "$ISTIO_YQ_STRING" "$ISTIO_VALUES_FILE"
-
-NGINX_YQ_STRING=".$APP_NAME.enabled=false | .$APP_NAME.namespace=\"$NAMESPACE\" ''${ROUTE_CONFIG_STRING}"
-NGINX_YQ_STRING+="| .$APP_NAME.destinationSvc=\"$SERVICE_NAME\""
-
-_modify-ingress-values "$NGINX_YQ_STRING" "$NGINX_VALUES_FILE"
 '';
 in
 
