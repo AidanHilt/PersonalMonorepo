@@ -57,6 +57,10 @@ let
           eval "$(dotenvx get -f "$ATILS_CONTEXTS_DIRECTORY/$CONTEXT_NAME/.env" | tr -d '}' | tr -d '{' | sed 's/,/\n/g'| sed 's/:/=/' | sed 's/^/export /')"
         fi
 
+        if [ -f "$ATILS_CONTENTS_DIRECTORY/.env ] && [ -s "$ATILS_CONTEXTS_DIRECTORY/.env" ]; then
+          eval "$(dotenvx get -f "$ATILS_CONTEXTS_DIRECTORY/.env" | tr -d '}' | tr -d '{' | sed 's/,/\n/g'| sed 's/:/=/' | sed 's/^/export /')"
+        fi
+
         if [[ -v KUBECONFIG_CONTEXT ]]; then
           kubecm switch $KUBECONFIG_CONTEXT -s
         fi
