@@ -80,7 +80,7 @@ it-tools:
     enabled: true
 
 flashpaper:
-  enabled: false
+  enabled: true
 
 istio:
   enabled: true
