@@ -35,7 +35,7 @@ if [[ -z "$secret_path" ]]; then
   exit 1
 fi
 
-if [[ -z "$KEEPASS_PASSWORD" ]]; then
+if [[ ! -v KEEPASS_PASSWORD ]]; then
   print_debug "KEEPASS_PASSWORD not set, decrypting..."
   eval $(age -i ~/.ssh/id_ed25519 -d "$ATILS_CONFIG_DIRECTORY/keepass-password")
 fi
