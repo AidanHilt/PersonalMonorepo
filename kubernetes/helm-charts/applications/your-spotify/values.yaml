@@ -18,6 +18,8 @@ additionalContainers:
         containerPort: 3000
 
 service:
+  main:
+    enabled: false
   api:
     ports:
       backend:
