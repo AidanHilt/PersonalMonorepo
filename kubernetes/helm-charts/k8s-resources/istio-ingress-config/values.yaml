@@ -97,5 +97,5 @@ your-spotify:
     your-spotify-api:
       enabled: true
       subdomain: spotify
-      destinationSvc: your-spotify-frontend.your-spotify.svc.cluster.local
-      destinationPort: "3000"
+      destinationSvc: your-spotify-backend.your-spotify.svc.cluster.local
+      destinationPort: "8080"
