@@ -90,9 +90,6 @@ transmission:
   destinationSvc: transmission.videos.svc.cluster.local
 your-spotify:
   enabled: false
-  prefixes:
-    - /your-spotify
-  rewrite:
-    uri: /
+  subdomain: spotify
   destinationSvc: your-spotify-frontend.misc.svc.cluster.local
   destinationPort: "3000"
