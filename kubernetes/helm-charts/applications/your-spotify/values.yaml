@@ -2,12 +2,32 @@
 # You should be able to use any of the values you can find here: https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
 #================================================================================================================================================
 image:
-  repository:
+  repository: yooooomi/your_spotify_server
   pullPolicy: IfNotPresent
 
+additionalContainers:
+  frontend:
+    name: frontend
+    image: yooooomi/your_spotify_client
+    imagePullPolicy: IfNotPresent
+    env:
+      - name: API_ENDPOINT
+        value: localhost:8080
+    ports:
+      - name: http
+        containerPort: 3000
+
 service:
-  main:
+  api:
     ports:
       http:
-        port: 80
-        targetPort:
+        port: 8080
+        targetPort: 8080
+  frontend:
+    ports:
+      http:
+        port: 3000
+        targetPort: 3000
+
+mongodb:
+  enabled: true

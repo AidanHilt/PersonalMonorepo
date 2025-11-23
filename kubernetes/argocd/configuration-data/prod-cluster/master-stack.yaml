@@ -79,3 +79,8 @@ video-stack-configuration:
   enabled: true
   configuration:
     enabled: true
+
+your-spotify:
+  enabled: true
+  configuration:
+    enabled: true
