@@ -38,7 +38,7 @@ spec:
             port:
               number: {{ $ingress.destinationPort | default 80}}
 ---
-{{- range $subIngressName, $subIngress := $app.dependentIngresses }}
+{{- range $subIngressName, $subIngress := $ingress.dependentIngresses }}
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
