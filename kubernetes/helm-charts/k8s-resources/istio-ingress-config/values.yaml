@@ -92,5 +92,7 @@ your-spotify:
   enabled: false
   prefixes:
     - /your-spotify
+  rewrite:
+    uri: /
   destinationSvc: your-spotify-frontend.misc.svc.cluster.local
   destinationPort: "3000"
