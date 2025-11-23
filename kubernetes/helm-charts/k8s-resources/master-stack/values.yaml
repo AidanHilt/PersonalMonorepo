@@ -13,7 +13,6 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-
 # Global config
 # Global config
 # Global config
@@ -265,4 +264,4 @@ video-stack-configuration:
 your-spotify:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/your-spotify
-  destinationNamespace: misc
+  destinationNamespace: your-spotify

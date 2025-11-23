@@ -55,4 +55,4 @@ video-stack-configuration:
     create: true
 your-spotify:
   enabled: false
-  secretDestinationNamespace: misc
+  secretDestinationNamespace: your-spotify

@@ -91,5 +91,5 @@ transmission:
 your-spotify:
   enabled: false
   subdomain: spotify
-  destinationSvc: your-spotify-frontend.misc.svc.cluster.local
+  destinationSvc: your-spotify-frontend.your-spotify.svc.cluster.local
   destinationPort: "3000"
