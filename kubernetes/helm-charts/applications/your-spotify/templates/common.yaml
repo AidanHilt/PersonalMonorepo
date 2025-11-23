@@ -14,7 +14,7 @@ env:
   - name: API_ENDPOINT
     value: http://spotify-api.prod-cluster-lb.lan
   - name: CLIENT_ENDPOINT
-    value: http://spotify.prod-cluster-lb.lan
+    value: http://spotify-api.prod-cluster-lb.lan
   - name: SPOTIFY_PUBLIC
     valueFrom:
       secretKeyRef:
