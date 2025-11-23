@@ -29,5 +29,14 @@ service:
       frontend:
         port: 3000
 
+#=============================
+# Application-specific config
+#=============================
+yourSpotify:
+
+#===============
+# Subchart(s)
+#===============
+
 mongodb:
   enabled: true
