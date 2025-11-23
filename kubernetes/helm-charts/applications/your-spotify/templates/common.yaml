@@ -11,6 +11,8 @@ env:
         key: mongodbPassword
   - name: MONGO_ENDPOINT
     value: mongodb://admin:$(MONGO_PASSWORD):{{ .Release.Name }}-mongodb:27017/your_spotify
+  - name: API_ENDPOINT
+    value: localhost:8080
   - name: CLIENT_ENDPOINT
     value: localhost:3000
   - name: SPOTIFY_PUBLIC
