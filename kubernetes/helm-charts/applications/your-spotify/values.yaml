@@ -20,12 +20,12 @@ additionalContainers:
 service:
   api:
     ports:
-      http:
+      backend:
         port: 8080
         targetPort: 8080
   frontend:
     ports:
-      http:
+      frontend:
         port: 3000
         targetPort: 3000
 
