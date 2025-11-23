@@ -18,7 +18,7 @@ env:
       secretKeyRef:
         name: {{ .Values.yourSpotify.configSecret.existingSecret | default $defaultSecretName }}
         key: spotifyPublic
-  - name: SPOTIFY_PRIVATE
+  - name: SPOTIFY_SECRET
     valueFrom:
       secretKeyRef:
         name: {{ .Values.yourSpotify.configSecret.existingSecret | default $defaultSecretName }}
