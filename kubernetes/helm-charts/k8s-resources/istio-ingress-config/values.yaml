@@ -93,4 +93,4 @@ your-spotify:
   prefixes:
     - /your-spotify
   destinationSvc: your-spotify-frontend.misc.svc.cluster.local
-  destinationPort: "8080"
+  destinationPort: "3000"
