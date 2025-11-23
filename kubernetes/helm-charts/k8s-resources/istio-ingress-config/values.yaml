@@ -93,3 +93,9 @@ your-spotify:
   subdomain: spotify
   destinationSvc: your-spotify-frontend.your-spotify.svc.cluster.local
   destinationPort: "3000"
+  dependentIngresses:
+    your-spotify-api:
+      enabled: true
+      subdomain: spotify
+      destinationSvc: your-spotify-frontend.your-spotify.svc.cluster.local
+      destinationPort: "3000"

@@ -12,7 +12,7 @@ additionalContainers:
     imagePullPolicy: IfNotPresent
     env:
       - name: API_ENDPOINT
-        value: localhost:8080
+        value: http://spotify-api.prod-cluster-lb.lan
     ports:
       - name: frontend
         containerPort: 3000

@@ -12,9 +12,9 @@ env:
   - name: MONGO_ENDPOINT
     value: mongodb://admin:$(MONGO_PASSWORD)@{{ .Release.Name }}-mongodb:27017
   - name: API_ENDPOINT
-    value: localhost:8080
+    value: http://spotify-api.prod-cluster-lb.lan
   - name: CLIENT_ENDPOINT
-    value: localhost:3000
+    value: http://spotify.prod-cluster-lb.lan
   - name: SPOTIFY_PUBLIC
     valueFrom:
       secretKeyRef:
