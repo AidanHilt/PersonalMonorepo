@@ -56,3 +56,5 @@ video-stack-configuration:
 your-spotify:
   enabled: false
   secretDestinationNamespace: your-spotify
+  serviceAccount:
+    name: default
