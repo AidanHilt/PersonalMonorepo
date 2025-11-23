@@ -20,7 +20,7 @@ additionalContainers:
 service:
   main:
     enabled: false
-  backend:
+  api:
     ports:
       backend:
         port: 8080
@@ -40,9 +40,9 @@ yourSpotify:
   spotifyPrivate: ""
 
   mongodbPassword: "admin"
+
 #===============
 # Subchart(s)
 #===============
-
 mongodb:
   enabled: true
