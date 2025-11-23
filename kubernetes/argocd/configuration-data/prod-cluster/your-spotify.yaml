@@ -1,4 +1,4 @@
 mongodb:
   auth:
     existingSecret: your-spotify-config-secret
-    existingSecretPasswordKey: mongodb_password
+    existingSecretPasswordKey: mongodbPassword

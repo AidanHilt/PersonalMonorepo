@@ -33,7 +33,13 @@ service:
 # Application-specific config
 #=============================
 yourSpotify:
+  configSecret:
+    existingSecret: ""
 
+  spotifyPublic: ""
+  spotifyPrivate: ""
+
+  mongodbPassword: "admin"
 #===============
 # Subchart(s)
 #===============
