@@ -9,17 +9,17 @@ env:
     value: localhost:3000
 
 
-{{- if eq .Values.yourSpotify.configSecret.existingSecret "" }}
-secrets:
-  config-secret:
-    enabled: true
-    stringData:
-      {{- if .Values.yourSpotify.postgres.enabled }}
-      postgresPassword: {{ .Values.yourSpotify.postgres.password | quote }}
-      postgresMasterPassword: {{ index (lookup "v1" "Secret" "postgres" "postgres-postgresql") "data" "postgres-password" | b64dec | quote }}
-      {{- end }}
-      apiKey: {{ .Values.yourSpotify.apiKey | default (randAlphaNum 32 | lower) | quote }}
-{{- end }}
+# {{- if eq .Values.yourSpotify.configSecret.existingSecret "" }}
+# secrets:
+#   config-secret:
+#     enabled: true
+#     stringData:
+#       {{- if .Values.yourSpotify.postgres.enabled }}
+#       postgresPassword: {{ .Values.yourSpotify.postgres.password | quote }}
+#       postgresMasterPassword: {{ index (lookup "v1" "Secret" "postgres" "postgres-postgresql") "data" "postgres-password" | b64dec | quote }}
+#       {{- end }}
+#       apiKey: {{ .Values.yourSpotify.apiKey | default (randAlphaNum 32 | lower) | quote }}
+# {{- end }}
 
 {{- end -}}
 {{- $_ := mergeOverwrite .Values (include "your-spotify.harcodedValues" . | fromYaml) -}}
