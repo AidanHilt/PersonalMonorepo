@@ -20,7 +20,7 @@ additionalContainers:
 service:
   api:
     ports:
-      backend:
+      http:
         port: 8080
         targetPort: 8080
   frontend:
