@@ -1,7 +1,6 @@
 hostnames:
   - localhost
 
-
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -13,8 +12,6 @@ argocd:
 bentopdf:
   enabled: false
   subdomain: bento
-  rewrite:
-    uri: /
   destinationSvc: bentopdf.misc.svc.cluster.local
   destinationPort: 8080
 # TODO Migrate this to istio
@@ -95,5 +92,5 @@ your-spotify:
   enabled: false
   prefixes:
     - /your-spotify
-  destinationSvc: your-spotify.misc.svc.cluster.local
+  destinationSvc: your-spotify-frontend.misc.svc.cluster.local
   destinationPort: "8080"
