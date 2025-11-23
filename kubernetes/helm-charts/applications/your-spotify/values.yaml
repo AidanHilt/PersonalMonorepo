@@ -20,7 +20,7 @@ additionalContainers:
 service:
   main:
     enabled: false
-  backend:
+  api:
     ports:
       backend:
         port: 8080
