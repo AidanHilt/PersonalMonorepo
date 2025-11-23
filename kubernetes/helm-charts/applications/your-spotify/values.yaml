@@ -21,7 +21,6 @@ service:
   main:
     enabled: false
   api:
-    enabled: true
     ports:
       backend:
         port: 8080
