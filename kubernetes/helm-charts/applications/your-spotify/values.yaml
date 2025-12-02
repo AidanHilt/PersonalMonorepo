@@ -20,11 +20,13 @@ additionalContainers:
 service:
   main:
     enabled: false
-  api:
+  backend:
+    nameOverride: backend
     ports:
       backend:
         port: 8080
   frontend:
+    nameOverride: frontend
     ports:
       frontend:
         port: 3000
