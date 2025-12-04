@@ -4,7 +4,7 @@ hostnames:
   - prod-cluster-lb.lan
   - 192.168.86.3
 
-gitRevision: master
+gitRevision: project-appocalypse/your_spotify
 
 flaresolverr:
   enabled: true
@@ -76,6 +76,11 @@ transmission:
     enabled: true
 
 video-stack-configuration:
+  enabled: true
+  configuration:
+    enabled: true
+
+your-spotify:
   enabled: true
   configuration:
     enabled: true

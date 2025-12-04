@@ -53,3 +53,9 @@ video-stack-configuration:
   resourceName: setup-job
   serviceAccount:
     create: true
+your-spotify:
+  enabled: false
+  secretDestinationNamespace: your-spotify
+  mount: misc
+  serviceAccount:
+    name: default

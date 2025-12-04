@@ -19,4 +19,15 @@ spec:
               {{- end }}
             {{- end }}
           {{- end }}
+          {{- if and (ne $key "hostnames") $value.enabled $value.dependentIngresses }}
+            {{- range $depKey, $depValue := $value.dependentIngresses }}
+              {{- if $depValue.subdomain }}
+                {{- range $.Values.hostnames }}
+                  {{- if not (regexMatch "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$" .) }}
+        - {{ $depValue.subdomain }}.{{ . }}
+                  {{- end }}
+                {{- end }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
         {{- end }}

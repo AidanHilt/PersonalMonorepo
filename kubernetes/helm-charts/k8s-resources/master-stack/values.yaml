@@ -15,6 +15,7 @@ configuration:
 
 # Global config
 # Global config
+# Global config
 bentopdf:
   enabled: false
   repo: https://kriegalex.github.io/k8s-charts/
@@ -260,3 +261,7 @@ video-stack-configuration:
       port: 80
   gitPath: kubernetes/helm-charts/k8s-resources/video-stack-configuration
   destinationNamespace: videos
+your-spotify:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/your-spotify
+  destinationNamespace: your-spotify

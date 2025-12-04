@@ -12,8 +12,6 @@ argocd:
 bentopdf:
   enabled: false
   subdomain: bento
-  rewrite:
-    uri: /
   destinationSvc: bentopdf.misc.svc.cluster.local
   destinationPort: 8080
 # TODO Migrate this to istio
@@ -90,3 +88,14 @@ transmission:
   prefixes:
     - /transmission
   destinationSvc: transmission.videos.svc.cluster.local
+your-spotify:
+  enabled: false
+  subdomain: spotify
+  destinationSvc: your-spotify-frontend.your-spotify.svc.cluster.local
+  destinationPort: "3000"
+  dependentIngresses:
+    your-spotify-api:
+      enabled: true
+      subdomain: spotify-api
+      destinationSvc: your-spotify-backend.your-spotify.svc.cluster.local
+      destinationPort: "8080"

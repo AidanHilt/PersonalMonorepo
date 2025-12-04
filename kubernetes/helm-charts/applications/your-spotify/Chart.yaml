@@ -1,0 +1,18 @@
+apiVersion: v2
+name: your-spotify
+description: A Helm chart for installing and managing your-spotify. Based on the bjw-s library chart
+
+type: application
+
+version: 0.0.3
+
+appVersion: "1.14.0"
+
+dependencies:
+  - name: common
+    repository: https://bjw-s-labs.github.io/helm-charts/
+    version: 1.5.1
+  - name: mongodb
+    repository: oci://registry-1.docker.io/cloudpirates
+    version: 0.6.4
+    condition: mongodb.enabled

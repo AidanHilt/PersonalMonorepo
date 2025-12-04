@@ -1,7 +1,7 @@
 {{- range $vaultConfigName, $vaultConfig := .Values }}
 {{- if and (and (ne $vaultConfigName "hostnames") $vaultConfig.enabled) $vaultConfig.secretDestinationNamespace }}
 ---
-{{- $resourceName := $vaultConfig.resourceName | default $vaultConfigName}}
+{{- $resourceName := $vaultConfig.resourceName | default $vaultConfigName }}
 {{- $serviceAccountName := ($vaultConfig.serviceAccount).name | default $resourceName }}
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultAuth
@@ -22,7 +22,7 @@ metadata:
   namespace: {{ $vaultConfig.secretDestinationNamespace }}
 spec:
   type: kv-v2
-  mount: {{ $vaultConfig.secretDestinationNamespace }}
+  mount: {{ $vaultConfig.mount | default $vaultConfig.secretDestinationNamespace }}
   path: {{ $resourceName }}/config
 
   destination:
