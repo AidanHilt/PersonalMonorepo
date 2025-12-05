@@ -27,9 +27,11 @@ qa-cluster:
       owner: radarr
     paperless:
       owner: paperless
-    lidarr_main:
+    lidarr-main:
+      dbName: lidarr_main
       owner: lidarr
-    lidarr_logs:
+    lidarr-logs:
+      dbName: lidarr_logs
       owner: lidarr
   storage: 1Gi
 staging-cluster:
@@ -61,9 +63,11 @@ staging-cluster:
       owner: radarr
     paperless:
       owner: paperless
-    lidarr_main:
+    lidarr-main:
+      dbName: lidarr_main
       owner: lidarr
-    lidarr_logs:
+    lidarr-logs:
+      dbName: lidarr_logs
       owner: lidarr
   storage: 1Gi
 prod-cluster:
@@ -96,8 +100,10 @@ prod-cluster:
       owner: radarr
     paperless:
       owner: paperless
-    lidarr_main:
+    lidarr-main:
+      dbName: lidarr_main
       owner: lidarr
-    lidarr_logs:
+    lidarr-logs:
+      dbName: lidarr_logs
       owner: lidarr
   storage: 50Gi
