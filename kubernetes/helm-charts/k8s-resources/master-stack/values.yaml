@@ -13,7 +13,6 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-
 # Global config
 # Global config
 # Global config
@@ -249,6 +248,11 @@ video-stack-configuration:
       apiKey: <path:argocd/data/video_stack_configuration#sonarrApiKey>
       rootFolders:
         - /videos/TV
+
+    lidarr:
+      port: 80
+      urlBase: /lidarr
+      apiKey: <path:argocd/data/video_stack_configuration#lidarrApiKey>
 
     jellyseerr:
       hostname: jellyseerr
