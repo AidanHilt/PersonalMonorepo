@@ -1,7 +1,6 @@
 hostnames:
   - localhost
 
-
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -59,7 +58,7 @@ kiali:
 lidarr:
   enabled: false
   prefixes:
-    - /ingress
+    - /lidarr
   destinationSvc: lidarr.music.svc.cluster.local
 longhorn:
   enabled: false
