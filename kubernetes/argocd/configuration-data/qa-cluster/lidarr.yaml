@@ -1,0 +1,19 @@
+prowlarr:
+  urlBase: prowlarr
+
+  configSecret:
+    existingSecret: prowlarr-config-secret
+
+  externalAuth: true
+
+  postgres:
+    enabled: true
+    setupJob:
+      enabled: false
+
+serviceAccount:
+  create: true
+  name: lidarr
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"
