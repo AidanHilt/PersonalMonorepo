@@ -121,3 +121,34 @@ jobs:
           secretName: buildarr-jellyseerr-config-secret
     restartPolicy: Never
     backoffLimit: 1
+  configure-lidarr:
+    namespace: music
+    enabled: true
+    image:
+      repository: alpine/kubectl
+      tag: latest
+    command: ["sh", "-c"]
+    args:
+      - |
+        # (method, route, payload)
+        apiCall() {
+            curl \
+                -s \
+                -X "$1" \
+                -H "Content-Type: application/json" \
+                -H "X-Api-Key: $API_KEY" \
+                -d "$3" \
+                "$LIDARR_URL/api/v1/$2"
+        }
+
+        apiCallSilent "POST" "command" '{"name":"InstallPlugin","githubUrl":"'$PLUGIN_URL'"}'
+    env:
+      - name: LIDAR_URL
+        value: http://lidarr/lidarr
+      - name: PLUGIN_URL
+        value: https://github.com/TypNull/Tubifarry
+      - name: API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: lidarr-config-secret
+            key: apiKey
