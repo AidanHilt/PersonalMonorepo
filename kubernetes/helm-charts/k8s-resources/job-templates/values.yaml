@@ -144,7 +144,7 @@ jobs:
         apiCall "POST" "command" '{"name":"InstallPlugin","githubUrl":"'$PLUGIN_URL'"}'
         sleep infinity
     env:
-      - name: LIDAR_URL
+      - name: LIDARR_URL
         value: http://lidarr/lidarr
       - name: PLUGIN_URL
         value: https://github.com/TypNull/Tubifarry
