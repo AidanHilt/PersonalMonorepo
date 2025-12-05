@@ -32,7 +32,7 @@ jellyseerr:
     enabled: true
 
 job-templates:
-  enabled: false
+  enabled: true
 
 postgres:
   enabled: true
