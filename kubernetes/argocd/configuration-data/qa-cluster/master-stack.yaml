@@ -7,7 +7,7 @@ hostnames:
 gitRevision: project-appocalypse/music
 
 flaresolverr:
-  enabled: false
+  enabled: true
 
 bentopdf:
   enabled: false
