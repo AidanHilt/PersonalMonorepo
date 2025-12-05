@@ -38,7 +38,7 @@ postgres:
   enabled: true
 
 prowlarr:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
 
