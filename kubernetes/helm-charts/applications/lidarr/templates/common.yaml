@@ -4,32 +4,32 @@
 {{- define "lidarr.harcodedValues" -}}
 env:
   {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
-  - name: lidarr__AUTH__APIKEY
+  - name: LIDARR__AUTH__APIKEY
     valueFrom:
       secretKeyRef:
         name: {{ .Values.lidarr.configSecret.existingSecret | default $defaultSecretName }}
         key: apiKey
-  - name: lidarr__SERVER__URLBASE
+  - name: LIDARR__SERVER__URLBASE
     value: {{ .Values.lidarr.urlBase }}
   {{- if .Values.lidarr.externalAuth }}
-  - name: lidarr__AUTH__METHOD
+  - name: LIDARR__AUTH__METHOD
     value: External
   {{- end }}
   {{- if .Values.lidarr.postgres.enabled }}
-  - name: lidarr__POSTGRES__HOST
+  - name: LIDARR__POSTGRES__HOST
     value: {{ .Values.lidarr.postgres.host }}
-  - name: lidarr__POSTGRES__MAINDB
+  - name: LIDARR__POSTGRES__MAINDB
     value: {{ .Values.lidarr.postgres.mainDb }}
-  - name: lidarr__POSTGRES__LOGDB
+  - name: LIDARR__POSTGRES__LOGDB
     value: {{ .Values.lidarr.postgres.logDb }}
-  - name: lidarr__POSTGRES__PORT
+  - name: LIDARR__POSTGRES__PORT
     value: {{ .Values.lidarr.postgres.port | quote }}
-  - name: lidarr__POSTGRES__USER
+  - name: LIDARR__POSTGRES__USER
     valueFrom:
       secretKeyRef:
         name: {{ .Values.lidarr.configSecret.existingSecret | default $defaultSecretName }}
         key: postgresUsername
-  - name: lidarr__POSTGRES__PASSWORD
+  - name: LIDARR__POSTGRES__PASSWORD
     valueFrom:
       secretKeyRef:
         name: {{ .Values.lidarr.configSecret.existingSecret | default $defaultSecretName}}
