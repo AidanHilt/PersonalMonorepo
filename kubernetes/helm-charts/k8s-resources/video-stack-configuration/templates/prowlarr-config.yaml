@@ -173,6 +173,7 @@ stringData:
               {{- $prowlarrUrl := printf "http://%s%s" .Values.prowlarr.hostname .Values.prowlarr.urlBase }}
               {{- $sonarrUrl := printf "http://%s%s" .Values.sonarr.hostname .Values.sonarr.urlBase }}
               {{- $radarrUrl := printf "http://%s%s" .Values.radarr.hostname .Values.radarr.urlBase }}
+              {{- $lidarrUrl := printf "http://%s%s" .Values.lidarr.hostname .Values.lidarr.urlBase }}
               Radarr:
                 type: radarr
                 prowlarr_url: {{ $prowlarrUrl }}
@@ -193,6 +194,14 @@ stringData:
                 tags: []
                 instance_name: null
                 api_key: {{ .Values.radarr.apiKey }}
+              Lidarr:
+                type: lidarr
+                prowlarr_url: {{ $prowlarrUrl }}
+                base_url: {{ $lidarrUrl }}
+                sync_level: full-sync
+                tags: []
+                instance_name: null
+                api_key: {{ .Values.lidarr.apiKey }}
               Sonarr:
                 type: sonarr
                 prowlarr_url: {{ $prowlarrUrl }}

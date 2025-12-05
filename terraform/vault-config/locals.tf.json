@@ -103,6 +103,9 @@
             },
             "sonarrApiKey": {
               "key_name": "sonarr-apiKey"
+            },
+            "lidarrApiKey": {
+              "key_name": "lidarr-apiKey"
             }
           },
           "mount": "argocd",
@@ -137,6 +140,37 @@
             },
             "redis-password": {}
           }
+        },
+        "your-spotify": {
+          "namespace": "your-spotify",
+          "mount": "misc",
+          "postgres_secret": "true",
+          "service_account": "default",
+          "data": {
+            "spotifyPublic": {
+              "value": "${var.spotify_public}"
+            },
+            "spotifyPrivate": {
+              "value": "${var.spotify_private}"
+            },
+            "mongodbPassword": {}
+          }
+        },
+        "lidarr": {
+          "data": {
+            "apiKey": {
+              "is_postgres_password": false
+            },
+            "postgresPassword": {
+              "is_postgres_password": true
+            },
+            "postgresUsername": {
+              "value": "lidarr"
+            }
+          },
+          "namespace": "music",
+          "mount": "music",
+          "postgres_secret": "true"
         }
       },
       "unique_mounts": "${toset([\n  for key, secret in local.secret_definitions : secret.mount\n  ])}"

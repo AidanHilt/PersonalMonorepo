@@ -142,7 +142,7 @@ jobs:
         }
 
         apiCall "POST" "command" '{"name":"InstallPlugin","githubUrl":"'$PLUGIN_URL'"}'
-        sleep infinity
+
     env:
       - name: LIDARR_URL
         value: http://lidarr/lidarr
