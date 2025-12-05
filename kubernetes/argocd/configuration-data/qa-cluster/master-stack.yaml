@@ -48,17 +48,17 @@ lidarr:
     enabled: true
 
 radarr:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
 
 sonarr:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
 
 transmission:
-  enabled: false
+  enabled: true
   configuration:
     enabled: true
 
