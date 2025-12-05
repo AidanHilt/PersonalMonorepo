@@ -141,7 +141,7 @@ jobs:
                 "$LIDARR_URL/api/v1/$2"
         }
 
-        apiCallSilent "POST" "command" '{"name":"InstallPlugin","githubUrl":"'$PLUGIN_URL'"}'
+        apiCall "POST" "command" '{"name":"InstallPlugin","githubUrl":"'$PLUGIN_URL'"}'
     env:
       - name: LIDAR_URL
         value: http://lidarr/lidarr
