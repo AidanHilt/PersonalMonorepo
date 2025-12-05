@@ -170,7 +170,7 @@ stringData:
           applications:
             delete_unmanaged: false
             definitions:
-              {{- $prowlarrUrl := printf "http://%s.svc.cluster.local%s" .Values.prowlarr.hostname .Values.prowlarr.urlBase }}
+              {{- $prowlarrUrl := printf "http://%s.videos.svc.cluster.local%s" .Values.prowlarr.hostname .Values.prowlarr.urlBase }}
               {{- $sonarrUrl := printf "http://%s%s" .Values.sonarr.hostname .Values.sonarr.urlBase }}
               {{- $radarrUrl := printf "http://%s%s" .Values.radarr.hostname .Values.radarr.urlBase }}
               {{- $lidarrUrl := printf "http://%s%s" .Values.lidarr.hostname .Values.lidarr.urlBase }}
