@@ -1,8 +1,8 @@
-prowlarr:
-  urlBase: prowlarr
+lidarr:
+  urlBase: lidarr
 
   configSecret:
-    existingSecret: prowlarr-config-secret
+    existingSecret: lidarr-config-secret
 
   externalAuth: true
 
