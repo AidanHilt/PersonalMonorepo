@@ -1,6 +1,7 @@
 hostnames:
   - localhost
 
+
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -55,6 +56,11 @@ kiali:
     - /kiali
   destinationSvc: kiali.istio-system.svc.cluster.local
   destinationPort: 20001
+lidarr:
+  enabled: false
+  prefixes:
+    - /ingress
+  destinationSvc: lidarr.music.svc.cluster.local
 longhorn:
   enabled: false
   prefixes:

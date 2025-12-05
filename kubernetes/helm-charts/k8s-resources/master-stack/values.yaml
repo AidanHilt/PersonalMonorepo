@@ -13,6 +13,8 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
+
+# Global config
 # Global config
 # Global config
 # Global config
@@ -147,6 +149,10 @@ kyverno:
       useDefaultGitRevision: true
       configuration:
         enabled: false
+lidarr:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/lidarr
+  destinationNamespace: music
 longhorn:
   enabled: false
   repo: https://charts.longhorn.io

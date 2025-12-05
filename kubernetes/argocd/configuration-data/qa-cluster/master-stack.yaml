@@ -4,13 +4,13 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/flash-paper
+gitRevision: project-appocalypse/music
 
 flaresolverr:
   enabled: false
 
 bentopdf:
-  enabled: true
+  enabled: false
 
 hashi-vault:
   enabled: true
@@ -39,6 +39,11 @@ postgres:
 
 prowlarr:
   enabled: false
+  configuration:
+    enabled: true
+
+lidarr:
+  enabled: true
   configuration:
     enabled: true
 
@@ -80,7 +85,7 @@ it-tools:
     enabled: true
 
 flashpaper:
-  enabled: true
+  enabled: false
 
 istio:
   enabled: true

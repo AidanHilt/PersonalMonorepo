@@ -1,0 +1,29 @@
+{{- if .Values.lidarr.postgres.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lidarr-postgres-init
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-1"
+data:
+  setup.sql: |-
+    -- Create user if not exists
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT FROM pg_catalog.pg_user WHERE usename = '{{ .Values.lidarr.postgres.username }}') THEN
+        CREATE USER {{ .Values.lidarr.postgres.username }};
+      END IF;
+    END $$;
+
+    -- Create databases if not exists
+    CREATE DATABASE {{ .Values.lidarr.postgres.mainDb }};
+    CREATE DATABASE {{ .Values.lidarr.postgres.logDb }};
+
+    -- Grant user ownership permissions on the table
+    ALTER DATABASE {{ .Values.lidarr.postgres.mainDb }} OWNER TO {{ .Values.lidarr.postgres.username }};
+    ALTER DATABASE {{ .Values.lidarr.postgres.logDb }} OWNER TO {{ .Values.lidarr.postgres.username }};
+
+
+    -- Setup login
+    ALTER USER {{ .Values.lidarr.postgres.username }} WITH PASSWORD :'password';
+{{- end }}

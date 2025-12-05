@@ -1,0 +1,97 @@
+#================================================================================================================================================
+# You should be able to use any of the values you can find here: https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
+#================================================================================================================================================
+image:
+  repository: linuxserver/lidarr
+  pullPolicy: IfNotPresent
+
+service:
+  main:
+    ports:
+      http:
+        port: 80
+        targetPort: 8686
+
+probes:
+  liveness:
+    enabled: true
+    custom: true
+    spec:
+      exec:
+        command:
+          - /usr/bin/env
+          - bash
+          - -c
+          - curl --fail localhost:8686/api/v1/system/status?apiKey=$lidarr__AUTH__APIKEY
+      failureThreshold: 2
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 10
+
+persistence:
+  config:
+    enabled: false
+
+#================================
+# lidarr specific configuration
+#================================
+lidarr:
+  apiKey: ""
+  urlBase: /
+  timezone: "Etc/UTC"
+
+  # Note: If this is set, the field apiKey won't have any effect
+  configSecret:
+    existingSecret: ""
+
+  # Settings to control using an external Postgres DB
+  postgres:
+    enabled: false
+
+    username: lidarr_user
+    password: ""
+
+    port: 5432
+    host: postgres-cluster-rw.postgres.svc.cluster.local
+
+    mainDb: lidarr_main
+    logDb: lidarr_logs
+
+    # True if we want to run a hook after install to get the DB set up, false otherwise
+    setupJob:
+      enabled: true
+
+      # This probably doesn't matter in your setup, but you may need to change this if you're
+      # using some kind of external secrets operator that authenticates with service accounts
+      setupJobServiceAccount: default
+
+      # The name of a pre-existing secret containing the MASTER username and password for postgres
+      # This user needs to have access to set stuff up for the lidarr user. Required if setupJob.enabled
+      # is set to true
+      setupJobSecret: setup-job-config-secret
+
+      secretUsernameKey: masterUsername
+      secretPasswordKey: masterPassword
+
+  metrics:
+    enabled: false
+    serviceMonitor:
+      interval: 3m
+      scrapeTimeout: 1m
+      labels: {}
+    exporter:
+      image:
+        # -- image repository
+        repository: ghcr.io/onedr0p/exportarr
+        # -- image tag
+        tag: v2.3.0
+        # -- image pull policy
+        pullPolicy: IfNotPresent
+      env:
+        # -- metrics port
+        port: 9794
+        # -- Set to true to enable gathering of additional metrics (slow)
+        additionalMetrics: false
+        # -- Set to true to enable gathering unknown queue items
+        unknownQueueItems: false

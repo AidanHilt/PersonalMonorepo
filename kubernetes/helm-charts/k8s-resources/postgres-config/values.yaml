@@ -5,6 +5,7 @@ qa-cluster:
     - sonarr
     - radarr
     - paperless
+    - lidarr
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -26,6 +27,10 @@ qa-cluster:
       owner: radarr
     paperless:
       owner: paperless
+    lidarr_main:
+      owner: lidarr
+    lidarr_logs:
+      owner: lidarr
   storage: 1Gi
 staging-cluster:
   enabled: false
@@ -34,6 +39,7 @@ staging-cluster:
     - sonarr
     - radarr
     - paperless
+    - lidarr
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -55,6 +61,10 @@ staging-cluster:
       owner: radarr
     paperless:
       owner: paperless
+    lidarr_main:
+      owner: lidarr
+    lidarr_logs:
+      owner: lidarr
   storage: 1Gi
 prod-cluster:
   enabled: false
@@ -64,6 +74,7 @@ prod-cluster:
     - sonarr
     - radarr
     - paperless
+    - lidarr
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -85,4 +96,8 @@ prod-cluster:
       owner: radarr
     paperless:
       owner: paperless
+    lidarr_main:
+      owner: lidarr
+    lidarr_logs:
+      owner: lidarr
   storage: 50Gi

@@ -4,6 +4,9 @@ jellyfin:
 jellyseerr:
   enabled: false
   secretDestinationNamespace: videos
+lidarr:
+  enabled: false
+  secretDestinationNamespace: music
 paperless:
   enabled: false
   secretDestinationNamespace: paperless
