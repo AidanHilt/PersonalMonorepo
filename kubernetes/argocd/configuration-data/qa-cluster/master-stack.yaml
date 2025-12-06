@@ -6,6 +6,9 @@ hostnames:
 
 gitRevision: project-appocalypse/music
 
+blackcandy:
+  enabled: true
+
 flaresolverr:
   enabled: true
 
