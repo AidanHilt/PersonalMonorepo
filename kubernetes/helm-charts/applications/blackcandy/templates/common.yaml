@@ -5,6 +5,8 @@
 env:
   - name: MEDIA_PATH
     value: /media
+  - name: SECRET_KEY_BASE
+    value: {{ .Values.blackcandy.password }}
 
 {{- end -}}
 {{- $_ := mergeOverwrite .Values (include "blackcandy.harcodedValues" . | fromYaml) -}}
