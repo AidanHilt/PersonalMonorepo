@@ -16,11 +16,7 @@ bentopdf:
   destinationPort: 8080
 blackcandy:
   enabled: false
-  prefixes:
-    - /blackcandy
-    - /blackcandy/
-  rewrite:
-    uri: /
+  subdomain: blackcandy
   destinationSvc: blackcandy.music.svc.cluster.local
 # TODO Migrate this to istio
 crafty-server:
