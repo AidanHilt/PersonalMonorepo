@@ -25,7 +25,7 @@ stringData:
                 query_limit: null
                 grab_limit: null
                 tags:
-                - "cloudflare"
+                  - cloudflare
                 fields:
                   definitionFile: 1337x
                   baseUrl: null
@@ -34,10 +34,73 @@ stringData:
                   torrentBaseSettings.seedRatio: null
                   torrentBaseSettings.seedTime: null
                   torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
+                  uploader: ''
                   downloadlink: iTorrents.org
                   downloadlink2: magnet
+                  disablesort: false
                   sort: created
                   type: desc
+                secret_fields: {}
+              BT.etree:
+                type: btetree
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags:
+                  - cloudflare
+                fields:
+                  definitionFile: btetree
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
+                  sort: created
+                secret_fields: {}
+              EBookBay:
+                type: ebookbay
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags: []
+                fields:
+                  definitionFile: ebookbay
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
+                secret_fields: {}
+              ExtraTorrent.st:
+                type: extratorrent-st
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags:
+                  - cloudflare
+                fields:
+                  definitionFile: extratorrent-st
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
                 secret_fields: {}
               EZTV:
                 type: eztv
@@ -56,6 +119,29 @@ stringData:
                   torrentBaseSettings.seedRatio: null
                   torrentBaseSettings.seedTime: null
                   torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
+                secret_fields: {}
+              iDope:
+                type: idope
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags:
+                  - cloudflare
+                fields:
+                  definitionFile: idope
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
+                  itorrents-links: false
+                  sort: created desc
                 secret_fields: {}
               Internet Archive:
                 type: internetarchive
@@ -66,7 +152,7 @@ stringData:
                 query_limit: null
                 grab_limit: null
                 tags:
-                - "cloudflare"
+                  - cloudflare
                 fields:
                   definitionFile: internetarchive
                   baseUrl: null
@@ -75,8 +161,71 @@ stringData:
                   torrentBaseSettings.seedRatio: null
                   torrentBaseSettings.seedTime: null
                   torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
                   titleOnly: true
                   noMagnet: false
+                  sort: created
+                  type: desc
+                secret_fields: {}
+              Isohunt2:
+                type: isohunt2
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags: []
+                fields:
+                  definitionFile: isohunt2
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
+                  category: All
+                  sort: created
+                secret_fields: {}
+              kickasstorrents.to:
+                type: kickasstorrents-to
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags:
+                  - cloudflare
+                fields:
+                  definitionFile: kickasstorrents-to
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
+                secret_fields: {}
+              kickasstorrents.ws:
+                type: kickasstorrents-ws
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags: []
+                fields:
+                  definitionFile: kickasstorrents-ws
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
                   sort: created
                   type: desc
                 secret_fields: {}
@@ -97,6 +246,7 @@ stringData:
                   torrentBaseSettings.seedRatio: null
                   torrentBaseSettings.seedTime: null
                   torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
                   downloadlink: magnet
                   downloadlink2: iTorrents.org
                   sort: created
@@ -118,8 +268,30 @@ stringData:
                   torrentBaseSettings.seedRatio: null
                   torrentBaseSettings.seedTime: null
                   torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
                   sort: created
                   type: desc
+                secret_fields: {}
+              Magnet Cat:
+                type: magnetcat
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags: []
+                fields:
+                  definitionFile: magnetcat
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
+                  cat-id: All categories
+                  sort: created
                 secret_fields: {}
               The Pirate Bay:
                 type: thepiratebay
@@ -138,6 +310,28 @@ stringData:
                   torrentBaseSettings.seedRatio: null
                   torrentBaseSettings.seedTime: null
                   torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
+                  uploader: ''
+                secret_fields: {}
+              TorrentGalaxyClone:
+                type: torrentgalaxyclone
+                enable: true
+                sync_profile: Standard
+                redirect: false
+                priority: 25
+                query_limit: null
+                grab_limit: null
+                tags: []
+                fields:
+                  definitionFile: torrentgalaxyclone
+                  baseUrl: null
+                  baseSettings.limitsUnit: Day
+                  torrentBaseSettings.appMinimumSeeders: null
+                  torrentBaseSettings.seedRatio: null
+                  torrentBaseSettings.seedTime: null
+                  torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
+                  uploader: ''
                 secret_fields: {}
               YTS:
                 type: yts
@@ -156,7 +350,9 @@ stringData:
                   torrentBaseSettings.seedRatio: null
                   torrentBaseSettings.seedTime: null
                   torrentBaseSettings.packSeedTime: null
+                  torrentBaseSettings.preferMagnetUrl: false
                 secret_fields: {}
+
           proxies:
             delete_unmanaged: false
             definitions:
