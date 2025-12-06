@@ -18,6 +18,7 @@ blackcandy:
   enabled: false
   prefixes:
     - /blackcandy
+    - /blackcandy/
   rewrite:
     uri: /
   destinationSvc: blackcandy.music.svc.cluster.local
