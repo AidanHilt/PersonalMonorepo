@@ -7,7 +7,7 @@ prowlarr:
   externalAuth: true
 
   postgres:
-    enabled: true
+    enabled: false
     setupJob:
       enabled: false
 
