@@ -1,0 +1,11 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "blackcandy.harcodedValues" -}}
+env:
+  - name: MEDIA_PATH
+    value: /media
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "blackcandy.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}

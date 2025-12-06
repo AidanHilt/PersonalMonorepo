@@ -13,6 +13,8 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
+
+# Global config
 # Global config
 # Global config
 # Global config
@@ -23,6 +25,10 @@ bentopdf:
   chart: bentopdf
   version: 1.0.1
   destinationNamespace: misc
+blackcandy:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/blackcandy
+  destinationNamespace: music
 # Global config
 # Service-specific config
 crafty-server:

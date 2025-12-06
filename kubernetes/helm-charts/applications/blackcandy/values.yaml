@@ -1,0 +1,13 @@
+#================================================================================================================================================
+# You should be able to use any of the values you can find here: https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
+#================================================================================================================================================
+image:
+  repository: ghcr.io/blackcandy-org/blackcandy
+  pullPolicy: IfNotPresent
+
+service:
+  main:
+    ports:
+      http:
+        port: 80
+        targetPort: 80
