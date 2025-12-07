@@ -17,3 +17,15 @@ serviceAccount:
   annotations:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "-2"
+
+persistence:
+  music:
+    enabled: true
+    type: hostPath
+    mountPath: /music
+    hostPath: /storagePool/videoData/Music
+  downloads:
+    enabled: true
+    type: hostPath
+    mountPath: /downloads
+    hostPath: /storagePool/videoData/downloads
