@@ -45,12 +45,22 @@ longhorn:
   configuration:
     enabled: true
 
+lidarr:
+  enabled: true
+  configuration:
+    enabled: true
+
 metallb:
   enabled: true
   dependentApps:
     metallb-config:
       configuration:
         enabled: true
+
+navidrome:
+  enabled: true
+  configuration:
+    enabled: true
 
 postgres:
   enabled: true

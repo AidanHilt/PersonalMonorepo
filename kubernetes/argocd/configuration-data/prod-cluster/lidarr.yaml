@@ -1,0 +1,19 @@
+lidarr:
+  urlBase: lidarr
+
+  configSecret:
+    existingSecret: lidarr-config-secret
+
+  externalAuth: true
+
+  postgres:
+    enabled: false
+    setupJob:
+      enabled: false
+
+serviceAccount:
+  create: true
+  name: lidarr
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"
