@@ -1,5 +1,6 @@
 persistence:
   data:
+    accessMode: ReadWriteOnce
     enabled: true
     size: 2Gi
   music:
