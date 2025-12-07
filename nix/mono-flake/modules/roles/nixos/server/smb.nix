@@ -28,6 +28,7 @@ in
         "read only" = "no";
         "guest ok" = "no";
         "create mask" = "0644";
+        "valid users" = "aidan";
         "directory mask" = "0755";
         "force user" = "aidan";
         "force group" = "aidan";
