@@ -22,7 +22,7 @@ let
         inherit system;
         specialArgs = {
           inherit machine-config inputs globals;
-          # This is only used in _home-manager.nix, to allow it to correctly import the right home.nix. This means our home-manager imports are defined in one place, 
+          # This is only used in _home-manager.nix, to allow it to correctly import the right home.nix. This means our home-manager imports are defined in one place,
           # and it's infinitely flexible. Not 100% on it being worth it, but as long as its just me using it, we should be good
           machineDir = "${system}/${name}";
         };
@@ -31,6 +31,7 @@ let
           inputs.home-manager.${moduleType}.home-manager
           inputs.agenix.${moduleType}.default
           {nixpkgs.pkgs = pkgsFor.${system};}
+          inputs.comin.${moduleType}.comin
         ] ++ platformModules;
       };
     };

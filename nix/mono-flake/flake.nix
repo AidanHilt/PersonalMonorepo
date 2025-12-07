@@ -21,27 +21,8 @@
       flake = false;
     };
 
-    # Python utilities
-    pyproject-nix = {
-      url = "github:pyproject-nix/pyproject.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    uv2nix = {
-      url = "github:pyproject-nix/uv2nix";
-      inputs.pyproject-nix.follows = "pyproject-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    pyproject-build-systems = {
-      url = "github:pyproject-nix/build-system-pkgs";
-      inputs.pyproject-nix.follows = "pyproject-nix";
-      inputs.uv2nix.follows = "uv2nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    uv2nix_hammer_overrides = {
-      url = "github:TyberiusPrime/uv2nix_hammer_overrides";
+    comin = {
+      url = "github:nlewo/comin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -89,13 +70,12 @@
 
       globals = {
         nixConfig = inputs.personalMonorepo + "/nix";
-        personalMonorepoBranch = "master";
+        personalMonorepoBranch = "project-appocalypse/music";
         personalMonorepoURL = "https://github.com/AidanHilt/PersonalMonorepo";
       };
 
       allSystems = import inputs.systems;
       systems = nixpkgs.lib.filter (sys: builtins.pathExists (./machines + "/${sys}")) allSystems;
-
 
       baseOverlays = [
         inputs.nur.overlays.default

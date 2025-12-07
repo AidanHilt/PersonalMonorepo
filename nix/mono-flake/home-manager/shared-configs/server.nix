@@ -6,12 +6,12 @@
     ../modules/zsh.nix
   ];
 
-  home.file.".atils/update-config.env" = {
-    text = ''
-      UPDATE__FLAKE_LOCATION="github:AidanHilt/PersonalMonorepo/${globals.personalMonorepoBranch}?dir=nix/mono-flake"
-      UPDATE__MACHINE_NAME="${machine-config.hostname}"
-    '';
-  };
+  # home.file.".atils/update-config.env" = {
+  #   text = ''
+  #     UPDATE__FLAKE_LOCATION="github:AidanHilt/PersonalMonorepo/${globals.personalMonorepoBranch}?dir=nix/mono-flake"
+  #     UPDATE__MACHINE_NAME="${machine-config.hostname}"
+  #   '';
+  # };
 
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
