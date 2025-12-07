@@ -21,7 +21,8 @@ in
         "map to guest" = "bad user";
       };
       # In order to enable this, must set user password w/ smbpasswd utility
-      "storagePool" = {
+      # smbpasswd -a aidan
+      "storagepool" = {
         "path" = "/storagePool";
         "browseable" = "yes";
         "read only" = "no";
