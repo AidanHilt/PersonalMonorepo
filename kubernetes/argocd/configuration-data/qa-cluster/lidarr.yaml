@@ -19,4 +19,4 @@ serviceAccount:
     "helm.sh/hook-weight": "-2"
 persistence:
   config:
-    enabled: true
+    enabled: false
