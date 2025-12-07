@@ -20,6 +20,7 @@ in
         "guest account" = "nobody";
         "map to guest" = "bad user";
       };
+      # In order to enable this, must set user password w/ smbpasswd utility
       "storagePool" = {
         "path" = "/storagePool";
         "browseable" = "yes";
