@@ -5,6 +5,8 @@
 env:
   - name: ND_BASEURL
     value: {{ .Values.navidrome.baseUrl }}
+  - name: ND_MUSICFOLDER
+    value: {{ .Values.navidrome.musicFolder }}
 
 {{- end -}}
 {{- $_ := mergeOverwrite .Values (include "navidrome.harcodedValues" . | fromYaml) -}}

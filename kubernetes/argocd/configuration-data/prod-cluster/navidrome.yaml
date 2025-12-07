@@ -1,2 +1,12 @@
+persistence:
+  data:
+    enabled: true
+    size: 2Gi
+  music:
+    enabled: true
+    type: hostPath
+    mountPath: /music
+    hostPath: /storagePool/videoData/Music
+
 navidrome:
   baseUrl: /music
