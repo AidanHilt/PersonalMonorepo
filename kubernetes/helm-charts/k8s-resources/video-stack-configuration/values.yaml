@@ -29,6 +29,14 @@ prowlarr:
   apiKey: ""
   loggingLevel: INFO
 
+lidarr:
+  hostname: lidarr.music.svc.cluster.local
+  port: 8686
+  urlBase: /
+  enabled: true
+  apiKey: ""
+  loggingLevel: INFO
+
 radarr:
   hostname: radarr
   port: 7878

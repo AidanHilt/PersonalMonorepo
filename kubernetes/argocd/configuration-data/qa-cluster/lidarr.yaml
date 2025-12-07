@@ -1,8 +1,8 @@
-prowlarr:
-  urlBase: prowlarr
+lidarr:
+  urlBase: lidarr
 
   configSecret:
-    existingSecret: prowlarr-config-secret
+    existingSecret: lidarr-config-secret
 
   externalAuth: true
 
@@ -13,10 +13,7 @@ prowlarr:
 
 serviceAccount:
   create: true
-  name: prowlarr
+  name: lidarr
   annotations:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "-2"
-persistence:
-  config:
-    enabled: false

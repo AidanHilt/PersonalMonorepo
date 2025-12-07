@@ -1,0 +1,113 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "lidarr.harcodedValues" -}}
+env:
+  {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
+  - name: LIDARR__AUTH__APIKEY
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.lidarr.configSecret.existingSecret | default $defaultSecretName }}
+        key: apiKey
+  - name: LIDARR__SERVER__URLBASE
+    value: {{ .Values.lidarr.urlBase }}
+  {{- if .Values.lidarr.externalAuth }}
+  - name: LIDARR__AUTH__METHOD
+    value: External
+  {{- end }}
+  {{- if .Values.lidarr.postgres.enabled }}
+  - name: LIDARR__POSTGRES__HOST
+    value: {{ .Values.lidarr.postgres.host }}
+  - name: LIDARR__POSTGRES__MAINDB
+    value: {{ .Values.lidarr.postgres.mainDb }}
+  - name: LIDARR__POSTGRES__LOGDB
+    value: {{ .Values.lidarr.postgres.logDb }}
+  - name: LIDARR__POSTGRES__PORT
+    value: {{ .Values.lidarr.postgres.port | quote }}
+  - name: LIDARR__POSTGRES__USER
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.lidarr.configSecret.existingSecret | default $defaultSecretName }}
+        key: postgresUsername
+  - name: LIDARR__POSTGRES__PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.lidarr.configSecret.existingSecret | default $defaultSecretName}}
+        key: postgresPassword
+  {{- end }}
+
+
+{{- if eq .Values.lidarr.configSecret.existingSecret "" }}
+secrets:
+  config-secret:
+    enabled: true
+    stringData:
+      {{- if .Values.lidarr.postgres.enabled }}
+      postgresPassword: {{ .Values.lidarr.postgres.password | quote }}
+      postgresUsername: {{ .Values.lidarr.postgres.username | quote }}
+      {{- end }}
+      apiKey: {{ .Values.lidarr.apiKey | default (randAlphaNum 32 | lower) | quote }}
+{{- end }}
+
+{{ if not .Values.persistence.config.enabled }}
+persistence:
+  config:
+    enabled: true
+    mountPath: /config
+    type: emptyDir
+{{ end }}
+
+{{ if .Values.lidarr.metrics.enabled }}
+additionalContainers:
+  exporter:
+    name: exporter
+    image: "{{ .Values.lidarr.metrics.exporter.image.repository }}:{{ .Values.lidarr.metrics.exporter.image.tag }}"
+    imagePullPolicy: {{ .Values.lidarr.metrics.exporter.image.pullPolicy }}
+    args: ["lidarr"]
+    env:
+      - name: URL
+        value: "http://localhost"
+      - name: CONFIG
+        value: "/config/config.xml"
+      - name: PORT
+        value: "{{ .Values.lidarr.metrics.exporter.env.port }}"
+      - name: ENABLE_ADDITIONAL_METRICS
+        value: "{{ .Values.lidarr.metrics.exporter.env.additionalMetrics }}"
+      - name: ENABLE_UNKNOWN_QUEUE_ITEMS
+        value: "{{ .Values.lidarr.metrics.exporter.env.unknownQueueItems }}"
+    ports:
+      - name: metrics
+        containerPort: {{ .Values.lidarr.metrics.exporter.env.port }}
+    volumeMounts:
+      - name: config
+        mountPath: /config
+        readOnly: true
+        {{ if .Values.persistence.config.subPath }}
+        subPath: {{ .Values.persistence.config.subPath }}
+        {{ end }}
+
+service:
+  metrics:
+    enabled: true
+    ports:
+      metrics:
+        enabled: true
+        protocol: TCP
+        port: 80
+        targetPort: {{ .Values.lidarr.metrics.exporter.env.port }}
+
+serviceMonitor:
+  main:
+    enabled: true
+    serviceName: '{{ include "bjw-s.common.lib.chart.names.fullname" $ }}-metrics'
+    endpoints:
+    - port: metrics
+      scheme: http
+      path: /metrics
+      interval: {{ .Values.lidarr.metrics.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.lidarr.metrics.serviceMonitor.scrapeTimeout }}
+{{ end }}
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "lidarr.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}

@@ -13,6 +13,23 @@ source ${printing-and-output.printing-and-output}
 NAMESPACE=""
 PVC_NAME=""
 
+show_help() {
+  cat << EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Options:
+  -n, --namespace NAMESPACE
+                       Kubernetes namespace to use
+  -p, --pvc PVC_NAME   Persistent Volume Claim name
+  -h, --help           Display this help message and exit
+
+Example:
+  $(basename "$0") -n production -p my-data-pvc
+  $(basename "$0") --namespace staging --pvc app-storage
+
+EOF
+}
+
 while [[ $# -gt 0 ]]; do
   case $1 in
     -n|--namespace)
@@ -23,9 +40,13 @@ while [[ $# -gt 0 ]]; do
       PVC_NAME="$2"
       shift 2
       ;;
+    -h|--help)
+      show_help
+      exit 0
+      ;;
     *)
       print_error "Unknown option: $1"
-      print_status "Usage: $0 [-n|--namespace NAMESPACE] [-p|--pvc PVC_NAME]"
+      echo "Use -h or --help for usage information"
       exit 1
       ;;
   esac

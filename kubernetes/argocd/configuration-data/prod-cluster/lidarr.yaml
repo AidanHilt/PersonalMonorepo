@@ -1,0 +1,43 @@
+lidarr:
+  urlBase: lidarr
+
+  configSecret:
+    existingSecret: lidarr-config-secret
+
+  externalAuth: true
+
+  postgres:
+    enabled: false
+    setupJob:
+      enabled: false
+
+serviceAccount:
+  create: true
+  name: lidarr
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"
+
+initContainers:
+  init-tv-dir:
+    image: busybox
+    command: ["sh", "-c"]
+    args:
+      - |
+        chmod 777 /music
+        chown -R 911 /music
+    volumeMounts:
+      - name: music
+        mountPath: /music
+
+persistence:
+  music:
+    enabled: true
+    type: hostPath
+    mountPath: /music
+    hostPath: /storagePool/videoData/Music
+  downloads:
+    enabled: true
+    type: hostPath
+    mountPath: /downloads
+    hostPath: /storagePool/videoData/downloads

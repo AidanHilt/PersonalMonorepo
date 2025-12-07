@@ -121,3 +121,35 @@ jobs:
           secretName: buildarr-jellyseerr-config-secret
     restartPolicy: Never
     backoffLimit: 1
+  configure-lidarr:
+    namespace: music
+    enabled: true
+    image:
+      repository: alpine/kubectl
+      tag: latest
+    command: ["sh", "-c"]
+    args:
+      - |
+        # (method, route, payload)
+        apiCall() {
+            curl \
+                -s \
+                -X "$1" \
+                -H "Content-Type: application/json" \
+                -H "X-Api-Key: $API_KEY" \
+                -d "$3" \
+                "$LIDARR_URL/api/v1/$2"
+        }
+
+        apiCall "POST" "downloadclient" '{"enable":true,"protocol":"torrent","priority":1,"removeCompletedDownloads":true,"removeFailedDownloads":true,"name":"Transmission","fields":[{"name":"host","value":"transmission.videos.svc.cluster.local"},{"name":"port","value":"80"},{"name":"useSsl","value":false},{"name":"urlBase","value":"/transmission/"},{"name":"username"},{"name":"password"},{"name":"musicCategory","value":"lidarr"},{"name":"musicImportedCategory"},{"name":"musicDirectory"},{"name":"recentMusicPriority","value":0},{"name":"olderMusicPriority","value":0},{"name":"addPaused","value":false}],"implementationName":"Transmission","implementation":"Transmission","configContract":"TransmissionSettings","infoLink":"https://wiki.servarr.com/lidarr/supported#transmission","tags":[]}'
+        apiCall "POST" "rootFolder" "{\"defaultQualityProfileId\":1,\"defaultMetadataProfileId\":1,\"defaultMonitorOption\":\"all\",\"defaultNewItemMonitorOption\":\"all\",\"defaultTags\":[],\"name\":\"Main\",\"path\":\"/$ROOT_FOLDER/\"}"
+    env:
+      - name: LIDARR_URL
+        value: http://lidarr/lidarr
+      - name: ROOT_FOLDER
+        value: music
+      - name: API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: lidarr-config-secret
+            key: apiKey

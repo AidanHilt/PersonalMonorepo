@@ -1,0 +1,14 @@
+apiVersion: v2
+name: navidrome
+description: A Helm chart for installing and managing navidrome. Based on the bjw-s library chart
+
+type: application
+
+version: 0.0.3
+
+appVersion: "0.59.0"
+
+dependencies:
+  - name: common
+    repository: https://bjw-s-labs.github.io/helm-charts/
+    version: 1.5.1

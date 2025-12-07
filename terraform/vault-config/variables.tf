@@ -57,3 +57,15 @@ variable "jellyfin_username" {
   description = "The username of the main administrator account for jellyfin"
   default     = "admin"
 }
+
+variable "spotify_public" {
+  type        = string
+  description = "Public key for spotify app, used by your_spotify"
+  default     = ""
+}
+
+variable "spotify_private" {
+  type        = string
+  description = "Private key for spotify app, used by your_spotify"
+  default     = ""
+}

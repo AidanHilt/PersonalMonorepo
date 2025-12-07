@@ -1,0 +1,56 @@
+{{- if and .Values.lidarr.postgres.enabled .Values.lidarr.postgres.setupJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-postgres-init"
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        sidecar.istio.io/inject: "false"
+      name: "{{ .Release.Name }}-postgres-init"
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: postgres-init
+        image: "aidanhilt/atils-postgres-client"
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - psql -v password=$lidarr_USER_PASSWORD -f /mnt/setup.sql
+        env:
+        {{ if .Values.lidarr.postgres.enabled }}
+        {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
+        - name: PGHOST
+          value: {{ .Values.lidarr.postgres.host }}
+        - name: PGPORT
+          value: {{ .Values.lidarr.postgres.port | quote }}
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.lidarr.postgres.setupJob.setupJobSecret }}
+              key: {{ .Values.lidarr.postgres.setupJob.secretUsernameKey }}
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.lidarr.postgres.setupJob.setupJobSecret }}
+              key: {{ .Values.lidarr.postgres.setupJob.secretPasswordKey }}
+        - name: lidarr_USER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.lidarr.configSecret.existingSecret | default $defaultSecretName }}
+              key: postgresPassword
+        {{ end }}
+        volumeMounts:
+        - name: postgres-init-script
+          mountPath: /mnt/setup.sql
+          subPath: setup.sql
+      volumes:
+      - name: postgres-init-script
+        configMap:
+          name: lidarr-postgres-init
+{{- end }}

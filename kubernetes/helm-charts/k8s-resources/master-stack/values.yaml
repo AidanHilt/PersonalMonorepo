@@ -13,8 +13,7 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-# Global config
-# Global config
+
 # Global config
 bentopdf:
   enabled: false
@@ -22,8 +21,6 @@ bentopdf:
   chart: bentopdf
   version: 1.0.1
   destinationNamespace: misc
-# Global config
-# Service-specific config
 crafty-server:
   enabled: false
   repo: oci://oci.trueforge.org/truecharts/crafty-4
@@ -147,6 +144,10 @@ kyverno:
       useDefaultGitRevision: true
       configuration:
         enabled: false
+lidarr:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/lidarr
+  destinationNamespace: music
 longhorn:
   enabled: false
   repo: https://charts.longhorn.io
@@ -175,6 +176,10 @@ metallb:
       useDefaultGitRevision: true
       configuration:
         enabled: false
+navidrome:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/navidrome
+  destinationNamespace: music
 paperless:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/paperless-ngx
@@ -243,6 +248,11 @@ video-stack-configuration:
       apiKey: <path:argocd/data/video_stack_configuration#sonarrApiKey>
       rootFolders:
         - /videos/TV
+
+    lidarr:
+      port: 80
+      urlBase: /lidarr
+      apiKey: <path:argocd/data/video_stack_configuration#lidarrApiKey>
 
     jellyseerr:
       hostname: jellyseerr

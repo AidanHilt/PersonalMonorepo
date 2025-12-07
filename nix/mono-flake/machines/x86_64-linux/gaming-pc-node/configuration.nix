@@ -10,6 +10,7 @@
     ./hardware-configuration.nix
 
     ../../../modules/roles/nixos/linux-universal.nix
+    ../../../modules/roles/nixos/server/smb.nix
     ../../../modules/shared-machine-configs/homelab-node.nix
   ];
 

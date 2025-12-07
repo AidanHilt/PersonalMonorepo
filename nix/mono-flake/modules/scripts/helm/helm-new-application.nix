@@ -63,6 +63,7 @@ cp -r "$SOURCE_DIR"/* "$DEST_DIR"
 
 export CHART_NAME
 export UNDERSCORE="\$_"
+export name="\$name"
 
 print_debug "Running envsubst on all files in $DEST_DIR"
 find "$DEST_DIR" -type f | while read -r FILE; do

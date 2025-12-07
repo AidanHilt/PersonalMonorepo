@@ -11,8 +11,6 @@ serviceAccount:
 
 env:
   TRANSMISSION_WEB_HOME: /custom/flood-for-transmission
-  TRANSMISSION_DOWNLOAD_DIR: /videos/downloads
-  TRANSMISSION_INCOMPLETE_DIR: /videos/downloads/incomplete
 
 persistence:
   videos:
@@ -20,6 +18,11 @@ persistence:
     type: hostPath
     mountPath: /videos
     hostPath: /storagePool/videoData/Videos/
+  downloads:
+    enabled: true
+    type: hostPath
+    mountPath: /downloads
+    hostPath: /storagePool/videoData/downloads
   config:
     enabled: true
     size: 1Gi

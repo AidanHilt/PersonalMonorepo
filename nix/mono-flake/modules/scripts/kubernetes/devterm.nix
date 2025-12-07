@@ -13,6 +13,23 @@ IMAGE="aidanhilt/atils-debug:latest"
 NAMESPACE=""
 COMMAND="zsh"
 
+show_help() {
+  cat << EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Options:
+  --image IMAGE        Docker/container image to use
+  --namespace NAMESPACE
+                       Kubernetes namespace to target
+  --command COMMAND    Command to execute
+  --help               Display this help message and exit
+
+Example:
+  $(basename "$0") --image myapp:latest --namespace production --command "npm start"
+
+EOF
+}
+
 while [[ $# -gt 0 ]]; do
   case $1 in
     --image)
@@ -27,8 +44,13 @@ while [[ $# -gt 0 ]]; do
       COMMAND="$2"
       shift 2
       ;;
+    --help)
+      show_help
+      exit 0
+      ;;
     *)
       print_error "Unknown argument: $1"
+      echo "Use --help for usage information"
       exit 1
       ;;
   esac
