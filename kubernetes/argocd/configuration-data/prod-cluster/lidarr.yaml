@@ -18,6 +18,18 @@ serviceAccount:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "-2"
 
+initContainers:
+  init-tv-dir:
+    image: busybox
+    command: ["sh", "-c"]
+    args:
+      - |
+        chmod 777 /music
+        chown -R 911 /music
+    volumeMounts:
+      - name: videos
+        mountPath: /videos
+
 persistence:
   music:
     enabled: true
