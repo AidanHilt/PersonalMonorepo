@@ -27,8 +27,8 @@ initContainers:
         chmod 777 /music
         chown -R 911 /music
     volumeMounts:
-      - name: videos
-        mountPath: /videos
+      - name: music
+        mountPath: /music
 
 persistence:
   music:
