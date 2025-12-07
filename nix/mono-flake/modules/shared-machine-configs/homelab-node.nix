@@ -5,6 +5,7 @@
     ../roles/nixos/server/adguard.nix
     ../roles/nixos/server/keepalived.nix
     ../roles/nixos/server/rke.nix
+    ../roles/nixos/server/gitops-updater.nix
 
     ../roles/nixos/fixed-ip-machine.nix
   ];
