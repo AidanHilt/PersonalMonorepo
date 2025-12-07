@@ -15,22 +15,12 @@ configuration:
 
 
 # Global config
-# Global config
-# Global config
-# Global config
-# Global config
 bentopdf:
   enabled: false
   repo: https://kriegalex.github.io/k8s-charts/
   chart: bentopdf
   version: 1.0.1
   destinationNamespace: misc
-blackcandy:
-  enabled: false
-  gitPath: kubernetes/helm-charts/applications/blackcandy
-  destinationNamespace: music
-# Global config
-# Service-specific config
 crafty-server:
   enabled: false
   repo: oci://oci.trueforge.org/truecharts/crafty-4
@@ -186,6 +176,10 @@ metallb:
       useDefaultGitRevision: true
       configuration:
         enabled: false
+navidrome:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/navidrome
+  destinationNamespace: music
 paperless:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/paperless-ngx

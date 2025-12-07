@@ -1,12 +1,12 @@
 apiVersion: v2
-name: blackcandy
-description: A Helm chart for installing and managing blackcandy. Based on the bjw-s library chart
+name: navidrome
+description: A Helm chart for installing and managing navidrome. Based on the bjw-s library chart
 
 type: application
 
 version: 0.0.3
 
-appVersion: "3.1.0"
+appVersion: "0.59.0"
 
 dependencies:
   - name: common

@@ -1,6 +1,7 @@
 hostnames:
   - localhost
 
+
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -14,10 +15,6 @@ bentopdf:
   subdomain: bento
   destinationSvc: bentopdf.misc.svc.cluster.local
   destinationPort: 8080
-blackcandy:
-  enabled: false
-  subdomain: blackcandy
-  destinationSvc: blackcandy.music.svc.cluster.local
 # TODO Migrate this to istio
 crafty-server:
   enabled: false
@@ -71,6 +68,11 @@ longhorn:
   rewrite:
     uri: /
   destinationSvc: longhorn-frontend.longhorn-system.svc.cluster.local
+navidrome:
+  enabled: false
+  prefixes:
+    - /music
+  destinationSvc: navidrome.music.svc.cluster.local
 paperless:
   enabled: false
   prefixes:
