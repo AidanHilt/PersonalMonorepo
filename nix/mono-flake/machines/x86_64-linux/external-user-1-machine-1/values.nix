@@ -21,5 +21,6 @@
 
   k8s = {
     clusterName = "prod-cluster";
+    clusterEndpoint = "192.168.86.40";
   };
 }
