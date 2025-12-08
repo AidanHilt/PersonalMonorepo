@@ -1,0 +1,14 @@
+persistence:
+  config:
+    enabled: true
+    size: 2Gi
+  books:
+    enabled: true
+    type: hostPath
+    mountPath: /books
+    hostPath: /storagePool/Books/ebooks
+  audiobooks:
+    enabled: true
+    type: hostPath
+    mountPath: /audiobooks
+    hostPath: /storagePool/Books/audiobooks

@@ -4,7 +4,12 @@ hostnames:
   - prod-cluster-lb.lan
   - 192.168.86.3
 
-gitRevision: master
+gitRevision: project-appocalypse/audiobookshelf
+
+audiobookshelf:
+  enabled: true
+  configuration:
+    enabled: true
 
 flaresolverr:
   enabled: true
