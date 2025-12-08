@@ -10,6 +10,11 @@ argocd:
   prefixes:
     - /argocd
   destinationSvc: argocd-server.argocd.svc.cluster.local
+audiobookshelf:
+  enabled: false
+  prefixes:
+    - /audiobookshelf
+  destinationSvc: audiobookshelf.books.svc.cluster.local
 bentopdf:
   enabled: false
   subdomain: bento
