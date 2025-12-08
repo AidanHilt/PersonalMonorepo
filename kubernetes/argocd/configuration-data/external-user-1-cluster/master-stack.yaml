@@ -15,6 +15,9 @@ hashi-vault:
   configuration:
     enabled: true
 
+istio:
+  enabled: true
+
 jellyfin:
   enabled: true
   configuration:
