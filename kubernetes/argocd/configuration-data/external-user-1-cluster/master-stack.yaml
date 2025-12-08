@@ -25,6 +25,13 @@ jellyseerr:
   configuration:
     enabled: true
 
+metallb:
+  enabled: true
+  dependentApps:
+    metallb-config:
+      configuration:
+        enabled: true
+
 prowlarr:
   enabled: true
   configuration:
