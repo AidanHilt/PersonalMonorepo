@@ -274,7 +274,7 @@ if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
     echo -n "Enter the IP address of the machine you are trying to install NixOS on: "
     read -r IP_ADDRESS
 
-    if ipcalc -c "$POST_INSTALL_IP_ADDRESS" > /dev/null 2>&1; then
+    if ipcalc -c "$IP_ADDRESS" > /dev/null 2>&1; then
       break
     fi
 
