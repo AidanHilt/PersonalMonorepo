@@ -7,6 +7,11 @@ persistence:
     type: hostPath
     mountPath: /books
     hostPath: /storagePool/Books/ebooks
+  metadata:
+    enabled: true
+    type: hostPath
+    mountPath: /metadata
+    hostPath: /storagePool/Books/metadata
   audiobooks:
     enabled: true
     type: hostPath
