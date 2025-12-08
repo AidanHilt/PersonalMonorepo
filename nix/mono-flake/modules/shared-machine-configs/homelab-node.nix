@@ -1,9 +1,12 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
+let
+  imports = if machine-config.networking.loadBalancer or false == false then [] else [ ../roles/nixos/server/keepalived.nix ];
+in
+
 {
   imports = [
     ../roles/nixos/server/adguard.nix
-    ../roles/nixos/server/keepalived.nix
     ../roles/nixos/server/rke.nix
     ../roles/nixos/server/gitops-updater.nix
 
