@@ -1,6 +1,6 @@
 env: external-user-1-cluster
 
-gitRevision: feat/external-user-1-retry
+gitRevision: feat/external-user-1-final-retry
 
 longhorn:
   enabled: true
@@ -12,10 +12,6 @@ flaresolverr:
 
 hashi-vault:
   enabled: true
-  configuration:
-    enabled: true
-
-vault-secrets-operator:
   configuration:
     enabled: true
 
@@ -53,7 +49,3 @@ video-stack-configuration:
   enabled: true
   configuration:
     enabled: true
-
-ingress:
-  enabled: true
-  clusterType: "baremetal"

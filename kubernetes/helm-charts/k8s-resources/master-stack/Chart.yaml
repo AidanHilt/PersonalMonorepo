@@ -1,5 +1,5 @@
 apiVersion: v2
-name: master-stack-new
+name: master-stack
 description: A chart to repeatably create kubernetes resources not tied to an application.
 
 type: application
