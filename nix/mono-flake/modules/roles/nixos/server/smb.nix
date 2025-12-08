@@ -26,9 +26,9 @@ in
         "browseable" = "yes";
         "read only" = "no";
         "guest ok" = "no";
-        "create mask" = "0644";
+        "create mask" = "0777";
         "valid users" = "aidan";
-        "directory mask" = "0755";
+        "directory mask" = "0777";
         "force user" = "aidan";
         "force group" = "aidan";
       };
