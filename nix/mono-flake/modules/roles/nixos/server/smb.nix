@@ -23,6 +23,7 @@ in
       # smbpasswd -a aidan
       "storagepool" = {
         "path" = "/storagePool";
+        "writeable" = "yes";
         "browseable" = "yes";
         "read only" = "no";
         "guest ok" = "no";
