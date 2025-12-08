@@ -4,7 +4,10 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: master
+gitRevision: project-appocalypse/audio-bookshelf
+
+audiobookshelf:
+  enabled: true
 
 navidrome:
   enabled: true
