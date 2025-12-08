@@ -4,7 +4,7 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/audio-bookshelf
+gitRevision: project-appocalypse/audiobookshelf
 
 audiobookshelf:
   enabled: true
