@@ -21,7 +21,7 @@ jellyfin:
     enabled: true
 
 jellyseerr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
