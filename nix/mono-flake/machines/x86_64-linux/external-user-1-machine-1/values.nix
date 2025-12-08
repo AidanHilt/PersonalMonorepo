@@ -1,11 +1,7 @@
 {
-  hashedPassword = "$y$j9T$4pKwnpW6t2PRzRC6pdcXA0$Y.f6EEaq.kbUzqzrrnWDxQiXgbSbdcLWGjtuFlDp.F6";
-
-
-}
-
-{
   username = "admin";
+
+  hashedPassword = "$y$j9T$waeAyKsn3wxtrkoBkZ4qR/$hPuMTBz4v7EAwq65TaDj4jcjMfJtBuIqOr.Kbr1Xh90";
 
   k8s = {
     primaryNode = true;

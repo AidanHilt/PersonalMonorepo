@@ -43,6 +43,11 @@ let
   gaming-pc-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOfwBzV5uvJlEQgNk/uYloYY1sP+IuwZK67Zaj3M713i noname";
 
   prod-cluster-machines = [laptop-node-system optiplex-node-system gaming-pc-node-system];
+
+  #External user 1
+
+
+  external-user-1-machines = [external-user-1-machine-1-system];
 in
 {
   "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
@@ -58,4 +63,6 @@ in
   "rke-config-staging-cluster.age".publicKeys = user-machines ++ staging-cluster-machines;
 
   "rke-config-prod-cluster.age".publicKeys = user-machines ++ prod-cluster-machines;
+
+  "rke-config-external-user-1-cluster.age".publicKeys = user-machines ++ external-user-1-machines;
 }
