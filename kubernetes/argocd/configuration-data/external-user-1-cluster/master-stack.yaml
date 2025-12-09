@@ -89,9 +89,6 @@ video-stack-configuration:
 
     lidarr:
       enabled: false
-      port: 80
-      urlBase: /lidarr
-      apiKey: <path:argocd/data/video_stack_configuration#lidarrApiKey>
 
     jellyseerr:
       hostname: jellyseerr
