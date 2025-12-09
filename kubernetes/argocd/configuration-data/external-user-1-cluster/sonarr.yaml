@@ -27,16 +27,16 @@ persistence:
 securityContext:
   runAsUser: 0
   runAsGroup: 0
-# initContainers:
-#   init-tv-dir:
-#     image: busybox
-#     command: ["sh", "-c", "mkdir -p /videos/TV"]
-#     volumeMounts:
-#       - name: videos
-#         mountPath: /videos
-#   fix-permissions:
-#     image: busybox
-#     command: ["sh", "-c", "chmod -R 777 /videos"]
-#     volumeMounts:
-#       - name: videos
-#         mountPath: /videos
+initContainers:
+  init-tv-dir:
+    image: busybox
+    command: ["sh", "-c", "mkdir -p /videos/TV"]
+    volumeMounts:
+      - name: videos
+        mountPath: /videos
+  fix-permissions:
+    image: busybox
+    command: ["sh", "-c", "chmod -R 777 /videos"]
+    volumeMounts:
+      - name: videos
+        mountPath: /videos

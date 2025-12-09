@@ -67,5 +67,44 @@ transmission:
 
 video-stack-configuration:
   enabled: true
-  configuration:
-    enabled: true
+  secureValues: |
+    prowlarr:
+      port: 80
+      urlBase: /prowlarr
+      apiKey: <path:argocd/data/video_stack_configuration#prowlarrApiKey>
+
+    radarr:
+      port: 80
+      urlBase: /radarr
+      apiKey: <path:argocd/data/video_stack_configuration#radarrApiKey>
+      rootFolders:
+        - /videos/Movies
+
+    sonarr:
+      port: 80
+      urlBase: /sonarr
+      apiKey: <path:argocd/data/video_stack_configuration#sonarrApiKey>
+      rootFolders:
+        - /videos/TV
+
+    lidarr:
+      enabled: false
+      port: 80
+      urlBase: /lidarr
+      apiKey: <path:argocd/data/video_stack_configuration#lidarrApiKey>
+
+    jellyseerr:
+      hostname: jellyseerr
+      urlBase: /
+      port: 80
+      apiKey: <path:argocd/data/video_stack_configuration#jellyseerrApiKey>
+      jellyfin:
+        hostname: jellyfin
+        url_base: /emby
+        port: 80
+        username: <path:argocd/data/video_stack_configuration#jellyfinUsername>
+        password: <path:argocd/data/video_stack_configuration#jellyfinPassword>
+        emailAddress: <path:argocd/data/video_stack_configuration#jellyfinEmail>
+
+    transmission:
+      port: 80
