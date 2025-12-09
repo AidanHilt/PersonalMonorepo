@@ -22,11 +22,6 @@ persistence:
     mountPath: /videos
     hostPath: /externalStorage/videos
 
-# I know I know, but I needed to get this working, and on RKE it looks like everything is owned by root. Long-term, we'll need to figure this out,
-# but it's fine for a first pass
-securityContext:
-  runAsUser: 0
-  runAsGroup: 0
 initContainers:
   init-tv-dir:
     image: busybox
