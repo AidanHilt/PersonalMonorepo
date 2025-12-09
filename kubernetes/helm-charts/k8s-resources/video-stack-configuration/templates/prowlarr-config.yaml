@@ -378,7 +378,7 @@ stringData:
                 tags: []
                 instance_name: null
                 api_key: {{ .Values.radarr.apiKey }}
-          {{- if .Values.lidarr.enabled | default true }}
+          {{- if .Values.lidarr.enabled }}
               Lidarr:
                 type: lidarr
                 prowlarr_url: {{ $prowlarrUrl }}
