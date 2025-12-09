@@ -17,6 +17,9 @@ hashi-vault:
 
 istio:
   enabled: true
+  dependentApps:
+    kiali:
+      enabled: false
 
 jellyfin:
   enabled: true
