@@ -20,3 +20,6 @@ csi:
   provisionerReplicaCount: 1
   resizerReplicaCount: 1
   snapshotterReplicaCount: 1
+
+preUpgradeChecker:
+  jobEnabled: false

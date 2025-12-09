@@ -5,11 +5,6 @@ hostnames:
 
 gitRevision: feat/external-user-1-final-retry
 
-longhorn:
-  enabled: true
-  configuration:
-    enabled: true
-
 flaresolverr:
   enabled: true
 
@@ -35,6 +30,11 @@ jellyfin:
 
 jellyseerr:
   enabled: false
+  configuration:
+    enabled: true
+
+longhorn:
+  enabled: true
   configuration:
     enabled: true
 

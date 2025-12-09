@@ -17,7 +17,7 @@ persistence:
 
 vpn:
   enabled: true
-  authSecret: vpn-auth-secret
+  authSecret: vpn-config-secret
   configFileSecret: vpn-config-secret
   scripts:
     up: |-
