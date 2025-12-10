@@ -22,14 +22,7 @@
       "strings": true
     }
   },
-  "[helm]": {
-    "yaml.validate": false
-  },
-  "files.associations": {
-    "**/templates/**/*.yaml": "helm",
-    "**/templates/**/*.yml": "helm",
-    "**/templates/**/*.tpl": "helm"
-  },
+  "yaml.validate": false,
   "aws.suppressPrompts": {
     "codeWhispererNewWelcomeMessage": true
   },
