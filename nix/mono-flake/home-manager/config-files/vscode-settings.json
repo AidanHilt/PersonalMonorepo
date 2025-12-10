@@ -22,6 +22,14 @@
       "strings": true
     }
   },
+  "[helm]": {
+    "yaml.validate": false
+  },
+  "files.associations": {
+    "**/templates/**/*.yaml": "helm",
+    "**/templates/**/*.yml": "helm",
+    "**/templates/**/*.tpl": "helm"
+  },
   "aws.suppressPrompts": {
     "codeWhispererNewWelcomeMessage": true
   },
@@ -35,11 +43,6 @@
   "githubPullRequests.pullBranch": "never",
   "security.workspace.trust.untrustedFiles": "open",
   "workbench.colorTheme": "Default Dark+",
-  "yaml.schemas": {
-    "kubernetes": [
-      "!/**/templates/**/*.yaml"
-    ]
-  },
   "yaml.customTags": [
     "!And",
     "!And sequence",
