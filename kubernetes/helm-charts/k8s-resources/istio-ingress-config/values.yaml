@@ -23,6 +23,7 @@ calibre-web:
   enabled: false
   prefixes:
     - /calibre-web
+    - /calibre-web/
   rewrite:
     uri: /
   destinationSvc: calibre-web.books.svc.cluster.local
