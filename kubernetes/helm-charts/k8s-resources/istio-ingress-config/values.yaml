@@ -23,10 +23,11 @@ calibre-web:
   enabled: false
   prefixes:
     - /calibre-web
-    - /calibre-web/
-  rewrite:
-    uri: /
   destinationSvc: calibre-web.books.svc.cluster.local
+  headers:
+    request:
+      add:
+        X-Script-Name: /calibre-web
 # TODO Migrate this to istio
 crafty-server:
   enabled: false

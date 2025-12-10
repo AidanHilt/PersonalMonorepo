@@ -37,6 +37,10 @@ spec:
             host: {{ $ingress.destinationSvc }}
             port:
               number: {{ $ingress.destinationPort | default 80}}
+        {{- with $ingress.headers }}
+          headers:
+            {{- toYaml . | nindent 7 }}
+        {{- end }}
 ---
 {{- range $subIngressName, $subIngress := $ingress.dependentIngresses }}
 apiVersion: networking.istio.io/v1alpha3
