@@ -11,6 +11,11 @@ audiobookshelf:
   configuration:
     enabled: true
 
+calibre-web:
+  enabled: true
+  configuration:
+    enabled: true
+
 flaresolverr:
   enabled: true
 

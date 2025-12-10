@@ -17,3 +17,6 @@ persistence:
     type: hostPath
     mountPath: /audiobooks
     hostPath: /storagePool/Books/audiobooks
+
+nodeSelector:
+  kubernetes.io/hostname: gaming-pc-node
