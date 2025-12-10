@@ -37,7 +37,6 @@
   "workbench.colorTheme": "Default Dark+",
   "yaml.schemas": {
     "kubernetes": [
-      "/*.yaml",
       "!/**/templates/**/*.yaml"
     ]
   },
