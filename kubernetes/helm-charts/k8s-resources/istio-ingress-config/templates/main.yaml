@@ -39,7 +39,7 @@ spec:
               number: {{ $ingress.destinationPort | default 80}}
         {{- with $ingress.headers }}
           headers:
-            {{- toYaml . | nindent 7 }}
+            {{- toYaml . | nindent 12 }}
         {{- end }}
 ---
 {{- range $subIngressName, $subIngress := $ingress.dependentIngresses }}
