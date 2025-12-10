@@ -38,7 +38,7 @@
   "yaml.schemas": {
     "kubernetes": [
       "/*.yaml",
-      "!kubernetes/helm-charts/**/**/templates/**/*.yaml"
+      "!kubernetes/helm-charts/**/"
     ]
   },
   "yaml.customTags": [
