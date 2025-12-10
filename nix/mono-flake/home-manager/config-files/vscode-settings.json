@@ -35,7 +35,12 @@
   "githubPullRequests.pullBranch": "never",
   "security.workspace.trust.untrustedFiles": "open",
   "workbench.colorTheme": "Default Dark+",
-  "yaml.validate": false,
+  "yaml.schemas": {
+    "kubernetes": [
+      "/*.yaml",
+      "!/**/templates/**/*.yaml"
+    ]
+  },
   "yaml.customTags": [
     "!And",
     "!And sequence",
