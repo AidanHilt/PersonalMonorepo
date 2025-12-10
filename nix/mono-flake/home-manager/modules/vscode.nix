@@ -42,6 +42,7 @@ in
         redhat.vscode-yaml
         shd101wyy.markdown-preview-enhanced
         slevesque.vscode-zipexplorer
+        tim-koehler.helm-intellisense
         timonwong.shellcheck
         wholroyd.jinja
       ] ++ platformSpecificExtensions;
