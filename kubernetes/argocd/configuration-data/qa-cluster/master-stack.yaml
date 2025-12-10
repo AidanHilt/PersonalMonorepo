@@ -9,6 +9,9 @@ gitRevision: project-appocalypse/audiobookshelf
 audiobookshelf:
   enabled: true
 
+calibre-web:
+  enabled: true
+
 navidrome:
   enabled: false
   configuration:

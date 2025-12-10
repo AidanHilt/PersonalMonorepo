@@ -20,6 +20,11 @@ bentopdf:
   subdomain: bento
   destinationSvc: bentopdf.misc.svc.cluster.local
   destinationPort: 8080
+calibre-web:
+  enabled: false
+  prefixes:
+    - /calibre-web
+  destinationSvc: calibre-web.books.svc.cluster.local
 # TODO Migrate this to istio
 crafty-server:
   enabled: false
