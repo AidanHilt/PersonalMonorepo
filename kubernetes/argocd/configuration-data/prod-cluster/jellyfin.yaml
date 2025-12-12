@@ -21,5 +21,10 @@ persistence:
     mountPath: /videos
     hostPath: /storagePool/videoData/Videos/
 
+image:
+  repository: aidanhilt/jellyfin
+  tag: feat-external-user-1-retry
+  pullPolicy: Always
+
 nodeSelector:
   kubernetes.io/hostname: gaming-pc-node
