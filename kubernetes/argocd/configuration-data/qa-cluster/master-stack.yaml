@@ -6,16 +6,8 @@ hostnames:
 
 gitRevision: project-appocalypse/audiobookshelf
 
-audiobookshelf:
+homepage:
   enabled: true
-
-calibre-web:
-  enabled: true
-
-navidrome:
-  enabled: false
-  configuration:
-    enabled: true
 
 flaresolverr:
   enabled: false
@@ -43,10 +35,10 @@ jellyseerr:
     enabled: true
 
 job-templates:
-  enabled: true
+  enabled: false
 
 postgres:
-  enabled: true
+  enabled: false
 
 prowlarr:
   enabled: false

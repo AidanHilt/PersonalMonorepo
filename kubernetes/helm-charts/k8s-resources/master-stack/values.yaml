@@ -16,6 +16,7 @@ configuration:
 
 # Global config
 # Global config
+# Global config
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -71,6 +72,10 @@ hashi-vault:
       followMasterConfig: true
       configuration:
         enabled: false
+homepage:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/homepage
+  destinationNamespace: misc
 istio:
   enabled: false
   repo: https://istio-release.storage.googleapis.com/charts
