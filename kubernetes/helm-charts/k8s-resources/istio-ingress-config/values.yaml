@@ -1,6 +1,7 @@
 hostnames:
   - localhost
 
+
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -31,6 +32,11 @@ calibre-web:
 # TODO Migrate this to istio
 crafty-server:
   enabled: false
+dashy:
+  enabled: false
+  prefixes:
+    - /dashy
+  destinationSvc: dashy.dashy.svc.cluster.local
 flashpaper:
   enabled: false
   subdomain: ots

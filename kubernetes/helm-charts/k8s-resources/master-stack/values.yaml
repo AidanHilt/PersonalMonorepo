@@ -16,6 +16,7 @@ configuration:
 
 # Global config
 # Global config
+# Global config
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -39,6 +40,12 @@ crafty-server:
   version: 9.2.2
   configuration:
     enabled: false
+dashy:
+  enabled: false
+  repo: https://vyrtualsynthese.github.io/selfhosted-helmcharts/
+  chart: dashy
+  version: 1.0.0
+  destinationNamespace: dashy
 flaresolverr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/flaresolverr

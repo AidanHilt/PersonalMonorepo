@@ -4,13 +4,16 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/audiobookshelf
+gitRevision: project-appocalypse/dashy
+
+dashy:
+  enabled: true
 
 audiobookshelf:
-  enabled: true
+  enabled: false
 
 calibre-web:
-  enabled: true
+  enabled: false
 
 navidrome:
   enabled: false
@@ -43,10 +46,10 @@ jellyseerr:
     enabled: true
 
 job-templates:
-  enabled: true
+  enabled: false
 
 postgres:
-  enabled: true
+  enabled: false
 
 prowlarr:
   enabled: false
