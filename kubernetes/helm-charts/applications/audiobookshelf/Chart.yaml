@@ -1,0 +1,14 @@
+apiVersion: v2
+name: audiobookshelf
+description: A Helm chart for installing and managing audiobookshelf. Based on the bjw-s library chart
+
+type: application
+
+version: 0.0.3
+
+appVersion: "2.31.0"
+
+dependencies:
+  - name: common
+    repository: https://bjw-s-labs.github.io/helm-charts/
+    version: 1.5.1

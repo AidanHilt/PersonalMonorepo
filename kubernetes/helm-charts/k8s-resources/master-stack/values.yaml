@@ -15,12 +15,22 @@ configuration:
 
 
 # Global config
+# Global config
+audiobookshelf:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/audiobookshelf
+  destinationNamespace: books
+# Global config
 bentopdf:
   enabled: false
   repo: https://kriegalex.github.io/k8s-charts/
   chart: bentopdf
   version: 1.0.1
   destinationNamespace: misc
+calibre-web:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/calibre-web
+  destinationNamespace: books
 crafty-server:
   enabled: false
   repo: oci://oci.trueforge.org/truecharts/crafty-4

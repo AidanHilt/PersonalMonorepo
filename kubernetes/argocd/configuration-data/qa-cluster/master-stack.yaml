@@ -4,15 +4,21 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: master
+gitRevision: project-appocalypse/audiobookshelf
+
+audiobookshelf:
+  enabled: true
+
+calibre-web:
+  enabled: true
 
 navidrome:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 flaresolverr:
-  enabled: true
+  enabled: false
 
 bentopdf:
   enabled: false
@@ -43,32 +49,32 @@ postgres:
   enabled: true
 
 prowlarr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 lidarr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 radarr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 sonarr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 transmission:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 video-stack-configuration:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 

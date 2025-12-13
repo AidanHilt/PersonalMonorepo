@@ -1,0 +1,9 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "audiobookshelf.harcodedValues" -}}
+
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "audiobookshelf.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}

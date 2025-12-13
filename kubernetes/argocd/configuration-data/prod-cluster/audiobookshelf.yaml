@@ -1,0 +1,22 @@
+persistence:
+  config:
+    enabled: true
+    size: 2Gi
+  books:
+    enabled: true
+    type: hostPath
+    mountPath: /books
+    hostPath: /storagePool/Books/ebooks
+  metadata:
+    enabled: true
+    type: hostPath
+    mountPath: /metadata
+    hostPath: /storagePool/Books/metadata
+  audiobooks:
+    enabled: true
+    type: hostPath
+    mountPath: /audiobooks
+    hostPath: /storagePool/Books/audiobooks
+
+nodeSelector:
+  kubernetes.io/hostname: gaming-pc-node

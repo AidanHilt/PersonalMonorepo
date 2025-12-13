@@ -1,0 +1,23 @@
+persistence:
+  config:
+    enabled: true
+    size: 2Gi
+  books:
+    enabled: true
+    type: hostPath
+    mountPath: /books
+    hostPath: /storagePool/Books/ebooks
+
+initContainers:
+  init-tv-dir:
+    image: busybox
+    command: ["sh", "-c"]
+    args:
+      - |
+        chmod 777 /books
+    volumeMounts:
+      - name: books
+        mountPath: /books
+
+nodeSelector:
+  kubernetes.io/hostname: gaming-pc-node
