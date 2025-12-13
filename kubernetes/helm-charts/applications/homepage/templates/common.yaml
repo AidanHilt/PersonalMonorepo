@@ -1,9 +1,0 @@
-{{- include "bjw-s.common.loader.init" . }}
-
-{{/* Append the hardcoded settings */}}
-{{- define "homepage.harcodedValues" -}}
-
-
-{{- end -}}
-{{- $_ := mergeOverwrite .Values (include "homepage.harcodedValues" . | fromYaml) -}}
-{{ include "bjw-s.common.loader.generate" . }}

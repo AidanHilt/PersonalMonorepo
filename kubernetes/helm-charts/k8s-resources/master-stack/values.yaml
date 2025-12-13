@@ -13,7 +13,6 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-
 # Global config
 # Global config
 # Global config
@@ -74,7 +73,9 @@ hashi-vault:
         enabled: false
 homepage:
   enabled: false
-  gitPath: kubernetes/helm-charts/applications/homepage
+  repo: https://jameswynn.github.io/helm-charts
+  chart: homepage
+  version: 2.1.0
   destinationNamespace: misc
 istio:
   enabled: false
