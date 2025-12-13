@@ -36,6 +36,7 @@ dashy:
   prefixes:
     - /
   destinationSvc: dashy.dashy.svc.cluster.local
+  destinationPort: 8080
 flashpaper:
   enabled: false
   subdomain: ots
