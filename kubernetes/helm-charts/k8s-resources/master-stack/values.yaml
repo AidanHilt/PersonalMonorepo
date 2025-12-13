@@ -77,6 +77,10 @@ homepage:
   chart: homepage
   version: 2.1.0
   destinationNamespace: misc
+  defaultValues: |
+    env:
+    - name: HOMEPAGE_ALLOWED_HOSTS
+      value: {{ join "," .Values.hostnames }}
 istio:
   enabled: false
   repo: https://istio-release.storage.googleapis.com/charts
