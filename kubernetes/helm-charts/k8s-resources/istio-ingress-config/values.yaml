@@ -14,7 +14,6 @@ audiobookshelf:
   prefixes:
     - /audiobookshelf
   destinationSvc: audiobookshelf.books.svc.cluster.local
-  destinationPort: 3000
 bentopdf:
   enabled: false
   subdomain: bento
@@ -54,6 +53,7 @@ homepage:
   prefixes:
     - /
   destinationSvc: homepage.misc.svc.cluster.local
+  destinationPort: 3000
 it-tools:
   enabled: false
   prefixes:
