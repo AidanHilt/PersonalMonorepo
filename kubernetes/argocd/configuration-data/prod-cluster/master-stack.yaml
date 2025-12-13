@@ -4,12 +4,10 @@ hostnames:
   - prod-cluster-lb.lan
   - 192.168.86.3
 
-gitRevision: project-appocalypse/audiobookshelf
+gitRevision: master
 
-audiobookshelf:
+bentopdf:
   enabled: true
-  configuration:
-    enabled: true
 
 calibre-web:
   enabled: true
@@ -17,6 +15,9 @@ calibre-web:
     enabled: true
 
 flaresolverr:
+  enabled: true
+
+flashpaper:
   enabled: true
 
 hashi-vault:
@@ -30,6 +31,9 @@ hashi-vault:
 
 istio:
   enabled: true
+  dependentApps:
+    kiali:
+      enabled: false
 
 it-tools:
   enabled: true
@@ -101,6 +105,6 @@ video-stack-configuration:
     enabled: true
 
 your-spotify:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
