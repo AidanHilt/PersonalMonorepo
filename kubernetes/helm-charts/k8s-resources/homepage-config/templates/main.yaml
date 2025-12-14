@@ -39,7 +39,7 @@ data:
       {{- $_ := set $grouped $groupName (append $currentList $finalEntry) }}
     {{- end }}
   {{- end }}
-  services.yaml:
+  services.yaml: |
     {{- toYaml $grouped | nindent 4 }}
   settings.yaml: ""
   widgets.yaml: ""
