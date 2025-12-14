@@ -11,34 +11,34 @@ data:
   {{- $grouped := dict }}
   {{- range $key, $value := .Values }}
     {{- if and (ne $key "hostnames") $value.enabled }}
-      {{- $groupName := $value.group | default "Uncategorized" }}
-      {{- $entryName := $value.nameOverride | default $key }}
-      {{- $entry := dict }}
-
       {{- if or $value.subdomains $value.prefixes }}
-      {{- if $value.subdomains }}
-        {{- $_ := set $entry "href" (printf "http://%s.%s" (index $value.subdomains 0) $defaultHostname) }}
-      {{- else }}
-        {{- $prefix := "" }}
-        {{- if $value.prefixes }}
-          {{- $prefix = index $value.prefixes 0 | trimPrefix "/" }}
-        {{- end }}
-        {{- $_ := set $entry "href" (printf "http://%s/%s" $defaultHostname $prefix) }}
-      {{- end }}
-      {{- end }}
+        {{- $groupName := $value.group | default "Uncategorized" }}
+        {{- $entryName := $value.nameOverride | default $key }}
+        {{- $entry := dict }}
 
-      {{- range $k, $v := $value }}
-        {{- if and (ne $k "subdomains") (ne $k "enabled") (ne $k "prefixes") (ne $k "group") }}
-          {{- $_ := set $entry $k $v }}
+        {{- if $value.subdomains }}
+          {{- $_ := set $entry "href" (printf "http://%s.%s" (index $value.subdomains 0) $defaultHostname) }}
+        {{- else }}
+          {{- $prefix := "" }}
+          {{- if $value.prefixes }}
+            {{- $prefix = index $value.prefixes 0 | trimPrefix "/" }}
+          {{- end }}
+          {{- $_ := set $entry "href" (printf "http://%s/%s" $defaultHostname $prefix) }}
         {{- end }}
-      {{- end }}
 
-      {{- if not (hasKey $grouped $groupName) }}
-        {{- $_ := set $grouped $groupName list }}
+        {{- range $k, $v := $value }}
+          {{- if and (ne $k "subdomains") (ne $k "enabled") (ne $k "prefixes") (ne $k "group") }}
+            {{- $_ := set $entry $k $v }}
+          {{- end }}
+        {{- end }}
+
+        {{- if not (hasKey $grouped $groupName) }}
+          {{- $_ := set $grouped $groupName list }}
+        {{- end }}
+        {{- $currentList := index $grouped $groupName }}
+        {{- $finalEntry := dict $entryName $entry }}
+        {{- $_ := set $grouped $groupName (append $currentList $finalEntry) }}
       {{- end }}
-      {{- $currentList := index $grouped $groupName }}
-      {{- $finalEntry := dict $entryName $entry }}
-      {{- $_ := set $grouped $groupName (append $currentList $finalEntry) }}
     {{- end }}
   {{- end }}
   services.yaml: |
