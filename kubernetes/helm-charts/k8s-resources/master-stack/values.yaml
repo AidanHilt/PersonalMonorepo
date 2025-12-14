@@ -81,6 +81,13 @@ homepage:
     env:
     - name: HOMEPAGE_ALLOWED_HOSTS
       value: {{ join "," .Values.hostnames }}
+  dependentApps:
+    homepage-config:
+      repo: https://github.com/AidanHilt/PersonalMonorepo
+      gitPath: kubernetes/helm-charts/k8s-resources/homepage-config
+      useDefaultGitRevision: true
+      configuration:
+        enabled: false
 istio:
   enabled: false
   repo: https://istio-release.storage.googleapis.com/charts
