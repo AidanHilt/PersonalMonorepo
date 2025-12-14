@@ -9,7 +9,7 @@ argocd:
   prefixes:
     - /argocd
   group: "Cluster Management"
-  icon: argocd.png
+  icon: sh-argocd
   nameOverride: ArgoCD
   description: Deployment management for all mah stuff
 audiobookshelf:
