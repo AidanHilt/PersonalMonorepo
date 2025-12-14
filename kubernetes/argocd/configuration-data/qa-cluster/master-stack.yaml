@@ -13,7 +13,7 @@ flaresolverr:
   enabled: false
 
 bentopdf:
-  enabled: false
+  enabled: true
 
 hashi-vault:
   enabled: true

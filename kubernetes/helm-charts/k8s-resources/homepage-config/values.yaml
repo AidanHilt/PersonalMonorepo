@@ -17,90 +17,147 @@ audiobookshelf:
   prefixes:
     - /audiobookshelf
   group: "Books and Reading"
+  icon: sh-audiobookshelf
+  nameOverride: AudioBookshelf
+  description: Utility for streaming audiobooks, with a limited ebook reader
 bentopdf:
   enabled: false
   subdomain: bento
   group: "Tools and Utilities"
+  icon: https://bentopdf.com/en/images/favicon.svg
+  nameOverride: BentoPDF
+  description: Set of utilities for managing and editing PDFs
 calibre-web:
   enabled: false
   prefixes:
     - /calibre-web
   group: "Books and Reading"
+  icon:
+  nameOverride:
+  description:
 flashpaper:
   enabled: false
   subdomain: ots
   group: "Tools and Utilities"
+  icon:
+  nameOverride:
+  description:
 grafana:
   enabled: false
   prefixes:
     - /grafana
     - /grafana/
   group: "Cluster Management"
+  icon:
+  nameOverride:
+  description:
 hashi-vault:
   enabled: false
   subdomain: vault
   group: "Cluster Management"
+  icon:
+  nameOverride:
+  description:
 it-tools:
   enabled: false
   prefixes:
     - /it-tools/
     - /it-tools
   group: "Tools and Utilities"
+  icon:
+  nameOverride:
+  description:
 jellyfin:
   enabled: false
   prefixes:
     - /emby
   group: "Videos"
+  icon:
+  nameOverride:
+  description:
 jellyseerr:
   enabled: false
   subdomain: jellyseerr
   group: "Videos"
+  icon:
+  nameOverride:
+  description:
 kiali:
   enabled: false
   prefixes:
     - /kiali
   group: "Cluster Management"
+  icon:
+  nameOverride:
+  description:
 lidarr:
   enabled: false
   prefixes:
     - /lidarr
   group: "Music"
+  icon:
+  nameOverride:
+  description:
 longhorn:
   enabled: false
   prefixes:
     - /longhorn/
   group: "Cluster Management"
+  icon:
+  nameOverride:
+  description:
 navidrome:
   enabled: false
   prefixes:
     - /music
   group: Music
+  icon:
+  nameOverride:
+  description:
 paperless:
   enabled: false
   prefixes:
     - /paperless
   group: "Personal Management"
+  icon:
+  nameOverride:
+  description:
 prowlarr:
   enabled: false
   prefixes:
     - /prowlarr
   group: "Download Management"
+  icon:
+  nameOverride:
+  description:
 radarr:
   enabled: false
   prefixes:
     - /radarr
   group: Videos
+  icon:
+  nameOverride:
+  description:
 sonarr:
   enabled: false
   prefixes:
     - /sonarr
   group: Videos
+  icon:
+  nameOverride:
+  description:
 transmission:
   enabled: false
   prefixes:
     - /transmission
   group: "Download Management"
+  icon:
+  nameOverride:
+  description:
 your-spotify:
   enabled: false
   subdomain: spotify
   group: "Personal Management"
+  icon:
+  nameOverride:
+  description:
