@@ -22,7 +22,9 @@ data:
         {{- if $value.prefixes }}
           {{- $prefix = index $value.prefixes 0 | trimPrefix "/" }}
         {{- end }}
+        {{- if ne $prefix "" }}
         {{- $_ := set $entry "href" (printf "http://%s/%s" $defaultHostname $prefix) }}
+        {{- end }}
       {{- end }}
 
       {{- range $k, $v := $value }}
