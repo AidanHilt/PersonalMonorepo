@@ -81,6 +81,8 @@ homepage:
     env:
     - name: HOMEPAGE_ALLOWED_HOSTS
       value: {{ join "," .Values.hostnames }}
+    config:
+      useExistingConfigMap: homepage-config
   dependentApps:
     homepage-config:
       repo: https://github.com/AidanHilt/PersonalMonorepo
