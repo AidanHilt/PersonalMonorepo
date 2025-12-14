@@ -32,132 +32,132 @@ calibre-web:
   prefixes:
     - /calibre-web
   group: "Books and Reading"
-  icon:
-  nameOverride:
-  description:
+  icon: sh-calibre-web
+  nameOverride: Calibre-Web
+  description: Ebook management server
 flashpaper:
   enabled: false
   subdomain: ots
   group: "Tools and Utilities"
-  icon:
-  nameOverride:
-  description:
+  icon: https://flashpaper.io/img/logo.png
+  nameOverride: FlashPaper
+  description: Create encrypted one-time links
 grafana:
   enabled: false
   prefixes:
     - /grafana
     - /grafana/
   group: "Cluster Management"
-  icon:
-  nameOverride:
-  description:
+  icon: sh-grafana
+  nameOverride: Grafana
+  description: Grafana, for viewing observability metrics
 hashi-vault:
   enabled: false
   subdomain: vault
   group: "Cluster Management"
-  icon:
-  nameOverride:
-  description:
+  icon: sh-hashicorp-vault
+  nameOverride: Hashicorp Vault
+  description: Secrets management for the cluster
 it-tools:
   enabled: false
   prefixes:
     - /it-tools/
     - /it-tools
   group: "Tools and Utilities"
-  icon:
-  nameOverride:
-  description:
+  icon: sh-it-tools
+  nameOverride: IT Tools
+  description: Set of utilities to assist with small IT-related tasks
 jellyfin:
   enabled: false
   prefixes:
     - /emby
   group: "Videos"
-  icon:
-  nameOverride:
-  description:
+  icon: sh-jellyfin
+  nameOverride: Jellyfin
+  description: Self-hosted media server for videos
 jellyseerr:
   enabled: false
   subdomain: jellyseerr
   group: "Videos"
-  icon:
-  nameOverride:
-  description:
+  icon: sh-jellyseerr
+  nameOverride: Jellyseerr
+  description: Media request manager for movies and TV
 kiali:
   enabled: false
   prefixes:
     - /kiali
   group: "Cluster Management"
-  icon:
-  nameOverride:
-  description:
+  icon: ""
+  nameOverride: Kiali
+  description: Observability platform for istio
 lidarr:
   enabled: false
   prefixes:
     - /lidarr
   group: "Music"
-  icon:
-  nameOverride:
-  description:
+  icon: sh-lidarr
+  nameOverride: Lidarr
+  description: Self-hosted music collection manager
 longhorn:
   enabled: false
   prefixes:
     - /longhorn/
   group: "Cluster Management"
-  icon:
-  nameOverride:
-  description:
+  icon: sh-rancher-longhorn
+  nameOverride: Longhorn
+  description: CSI driver for kubernetes cluster
 navidrome:
   enabled: false
   prefixes:
     - /music
   group: Music
-  icon:
-  nameOverride:
-  description:
+  icon: sh-navidrome
+  nameOverride: Navidrome
+  description: Self-hosted music player
 paperless:
   enabled: false
   prefixes:
     - /paperless
   group: "Personal Management"
-  icon:
-  nameOverride:
-  description:
+  icon: sh-paperless-ngx
+  nameOverride: Paperless-ngx
+  description: Self-hosted document management system
 prowlarr:
   enabled: false
   prefixes:
     - /prowlarr
   group: "Download Management"
-  icon:
-  nameOverride:
-  description:
+  icon: sh-prowlarr
+  nameOverride: Prowlarr
+  description: Indexer manager
 radarr:
   enabled: false
   prefixes:
     - /radarr
   group: Videos
-  icon:
-  nameOverride:
-  description:
+  icon: sh-radarr
+  nameOverride: Radarr
+  description: Self-hosted movie collection manager
 sonarr:
   enabled: false
   prefixes:
     - /sonarr
   group: Videos
-  icon:
-  nameOverride:
-  description:
+  icon: sh-sonarr
+  nameOverride: Sonarr
+  description: Self-hosted tv series collection manager
 transmission:
   enabled: false
   prefixes:
     - /transmission
   group: "Download Management"
-  icon:
-  nameOverride:
-  description:
+  icon: sh-transmission
+  nameOverride: Transmission
+  description: Self-hosted web-based BitTorrent client
 your-spotify:
   enabled: false
   subdomain: spotify
   group: "Personal Management"
-  icon:
-  nameOverride:
-  description:
+  icon: sh-your-spotify
+  nameOverride: Your Spotify
+  description: Spotify usage tracker
