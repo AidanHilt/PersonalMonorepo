@@ -11,13 +11,13 @@ data:
   {{- $grouped := dict }}
   {{- range $key, $value := .Values }}
     {{- if and (ne $key "hostnames") $value.enabled }}
-      {{- if or $value.subdomains $value.prefixes }}
+      {{- if or $value.subdomain $value.prefixes }}
         {{- $groupName := $value.group | default "Uncategorized" }}
         {{- $entryName := $value.nameOverride | default $key }}
         {{- $entry := dict }}
 
-        {{- if $value.subdomains }}
-          {{- $_ := set $entry "href" (printf "http://%s.%s" (index $value.subdomains 0) $defaultHostname) }}
+        {{- if $value.subdomain }}
+          {{- $_ := set $entry "href" (printf "http://%s.%s" $value.subdomain $defaultHostname) }}
         {{- else }}
           {{- $prefix := "" }}
           {{- if $value.prefixes }}
@@ -27,7 +27,7 @@ data:
         {{- end }}
 
         {{- range $k, $v := $value }}
-          {{- if and (ne $k "subdomains") (ne $k "enabled") (ne $k "prefixes") (ne $k "group") }}
+          {{- if and (ne $k "subdomain") (ne $k "enabled") (ne $k "prefixes") (ne $k "group") }}
             {{- $_ := set $entry $k $v }}
           {{- end }}
         {{- end }}
