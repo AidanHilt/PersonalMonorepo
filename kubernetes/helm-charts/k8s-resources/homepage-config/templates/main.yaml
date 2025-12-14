@@ -13,7 +13,7 @@ data:
     {{- if and (ne $key "hostnames") $value.enabled }}
       {{- $groupName := $value.group | default "Uncategorized" }}
       {{- $entryName := $value.nameOverride | default $key }}
-      {{- $entry := dict}}
+      {{- $entry := dict }}
 
       {{- if $value.subdomains }}
         {{- $_ := set $entry "href" (printf "http://%s.%s" (index $value.subdomains 0) $defaultHostname) }}
@@ -40,6 +40,16 @@ data:
     {{- end }}
   {{- end }}
   services.yaml: |
-    {{- toYaml $grouped | nindent 4 }}
+    {{- range $groupName, $services := $grouped }}
+    - {{ $groupName }}:
+    {{- range $services }}
+      {{- range $serviceName, $serviceData := . }}
+      - {{ $serviceName }}:
+        {{- range $key, $value := $serviceData }}
+          {{ $key }}: {{ $value }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
   settings.yaml: ""
   widgets.yaml: ""
