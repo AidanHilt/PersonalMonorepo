@@ -88,8 +88,8 @@ homepage:
       repo: https://github.com/AidanHilt/PersonalMonorepo
       gitPath: kubernetes/helm-charts/k8s-resources/homepage-config
       useDefaultGitRevision: true
-      configuration:
-        enabled: false
+      # Generates a mirror of the enabled status and hostname config as the config for this app
+      followMasterConfig: true
 istio:
   enabled: false
   repo: https://istio-release.storage.googleapis.com/charts
