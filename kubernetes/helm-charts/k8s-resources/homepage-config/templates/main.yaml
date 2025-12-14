@@ -15,6 +15,7 @@ data:
       {{- $entryName := $value.nameOverride | default $key }}
       {{- $entry := dict }}
 
+      {{- if or $value.subdomains $value.prefixes }}
       {{- if $value.subdomains }}
         {{- $_ := set $entry "href" (printf "http://%s.%s" (index $value.subdomains 0) $defaultHostname) }}
       {{- else }}
@@ -22,9 +23,8 @@ data:
         {{- if $value.prefixes }}
           {{- $prefix = index $value.prefixes 0 | trimPrefix "/" }}
         {{- end }}
-        {{- if ne $prefix "" }}
         {{- $_ := set $entry "href" (printf "http://%s/%s" $defaultHostname $prefix) }}
-        {{- end }}
+      {{- end }}
       {{- end }}
 
       {{- range $k, $v := $value }}
