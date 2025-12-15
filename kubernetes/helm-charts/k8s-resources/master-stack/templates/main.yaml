@@ -64,6 +64,7 @@ spec:
       {{- end }}
 ---
 {{- range $subAppName, $subApp := $app.dependentApps }}
+{{- if $subApp.enabled | default true }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -137,6 +138,7 @@ spec:
       - ServerSideApply=true
       {{- end }}
 ---
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
