@@ -64,7 +64,8 @@ spec:
       {{- end }}
 ---
 {{- range $subAppName, $subApp := $app.dependentApps }}
-{{- if $subApp.enabled | default true }}
+{{- $enabled := ternary $subApp.enabled true (hasKey $subApp "enabled") }}
+{{- if $enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
