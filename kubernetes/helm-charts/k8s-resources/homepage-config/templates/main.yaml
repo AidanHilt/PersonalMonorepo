@@ -53,5 +53,6 @@ data:
       {{- end }}
     {{- end }}
     {{- end }}
-  settings.yaml: ""
+  settings.yaml: |
+    {{- .Values.settings | toYaml | nindent 4 }}
   widgets.yaml: ""

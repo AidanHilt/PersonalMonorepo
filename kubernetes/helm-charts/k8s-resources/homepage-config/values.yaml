@@ -161,3 +161,7 @@ your-spotify:
   icon: sh-your-spotify
   nameOverride: Your Spotify
   description: Spotify usage tracker
+
+settings:
+  title: "ARH Homepage"
+  description: "The front page of this website"
