@@ -36,8 +36,8 @@ spec:
           env:
           - name: HOMEPAGE_ALLOWED_HOSTS
             value: {{ $hostname }}
-            config:
-              useExistingConfigMap: homepage-config-{{ $safeHostname }}
+          config:
+            useExistingConfigMap: homepage-config-{{ $safeHostname }}
         releaseName: "{{ $appName }}-{{ $safeHostname }}"
       {{- if ($app.configuration).enabled }}
         valueFiles:
