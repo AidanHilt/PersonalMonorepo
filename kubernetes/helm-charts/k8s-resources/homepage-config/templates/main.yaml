@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: homepage-config-{{ .Release.Name }}
+  name: {{ .Release.Name }}
 data:
   bookmarks.yaml: ""
   docker.yaml: ""
