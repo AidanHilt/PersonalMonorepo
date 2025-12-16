@@ -38,7 +38,7 @@ spec:
             value: {{ $hostname }}
             config:
               useExistingConfigMap: homepage-config-{{ $safeHostname }}
-        releaseName: "{{ $appName }}-{{ $hostname }}"
+        releaseName: "{{ $appName }}-{{ $safeHostname }}"
       {{- if ($app.configuration).enabled }}
         valueFiles:
           - "$values/{{ $.Values.configuration.configurationDirectory }}/{{ $.Values.env }}/{{ $appName }}.yaml"
