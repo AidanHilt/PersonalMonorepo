@@ -5,10 +5,11 @@
 {{- $enabled := ternary $subApp.enabled true (hasKey $subApp "enabled") }}
 {{- if $enabled }}
 {{- range $hostname := .Values.hostnames }}
+{{- $safeHostname := $hostname | replace "." "-" }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: "{{ $appName }}-{{ $hostname }}"
+  name: "{{ $appName }}-{{ $safeHostname }}"
   namespace: argocd
   annotations:
   {{- if $app.syncWave }}
@@ -36,7 +37,7 @@ spec:
           - name: HOMEPAGE_ALLOWED_HOSTS
             value: {{ $hostname }}
             config:
-              useExistingConfigMap: homepage-config-{{ $hostname }}
+              useExistingConfigMap: homepage-config-{{ $safeHostname }}
         releaseName: "{{ $appName }}-{{ $hostname }}"
       {{- if ($app.configuration).enabled }}
         valueFiles:
