@@ -36,4 +36,5 @@ spec:
           headers:
             {{- toYaml . | nindent 12 }}
         {{- end }}
+---
 {{- end }}
