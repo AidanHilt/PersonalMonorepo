@@ -141,5 +141,6 @@ spec:
       {{- if $subApp.serverSideApply }}
       - ServerSideApply=true
       {{- end }}
+---
 {{- end }}
 {{- end }}
