@@ -1,11 +1,14 @@
-{{- range $appName, $app := .Values }}
-{{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration" "homepage")}}
-{{- if not (has $appName $excludedNames) }}
-{{- if $app.enabled }}
+{{- $app := .Values.homepage }}
+{{- $appName := "homepage" }}
+{{- $subAppName := "homepage-config" }}
+{{- $subApp := index $app "dependentApps" "homepage-config" }}
+{{- $enabled := ternary $subApp.enabled true (hasKey $subApp "enabled") }}
+{{- if $enabled }}
+{{- range $hostname := .Values.hostnames }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: {{ $appName }}
+  name: "{{ $appName }}-{{ $hostname }}"
   namespace: argocd
   annotations:
   {{- if $app.syncWave }}
@@ -28,10 +31,12 @@ spec:
     {{- $isHelmChart := and (not (hasKey $app "secureValues")) (or (not (hasKey $app "helmChart")) $app.helmChart) }}
     {{- if $isHelmChart }}
       helm:
-        {{- if $app.defaultValues }}
-        values:
-          {{ tpl $app.defaultValues $ | toYaml | indent 8 }}
-        {{- end }}
+        values: |
+          env:
+          - name: HOMEPAGE_ALLOWED_HOSTS
+            value: {{ $hostname }}
+            config:
+              useExistingConfigMap: homepage-config-{{ $hostname }}
         releaseName: {{ $appName }}
       {{- if ($app.configuration).enabled }}
         valueFiles:
@@ -63,13 +68,10 @@ spec:
       - ServerSideApply=true
       {{- end }}
 ---
-{{- range $subAppName, $subApp := $app.dependentApps }}
-{{- $enabled := ternary $subApp.enabled true (hasKey $subApp "enabled") }}
-{{- if and (ne $subAppName "homepage-config") $enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: {{ $subAppName }}
+  name: "{{ $subAppName }}-{{ $hostname }}"
   namespace: argocd
   annotations:
   {{- $syncWave := $subApp.syncWave | default $app.syncWave }}
@@ -138,9 +140,5 @@ spec:
       {{- if $subApp.serverSideApply }}
       - ServerSideApply=true
       {{- end }}
----
-{{- end }}
-{{- end }}
-{{- end }}
 {{- end }}
 {{- end }}

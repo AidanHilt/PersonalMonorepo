@@ -14,8 +14,6 @@ configuration:
   configurationRevision: ""
 
 # Global config
-# Global config
-# Global config
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -71,18 +69,15 @@ hashi-vault:
       followMasterConfig: true
       configuration:
         enabled: false
+# Note that this one isn't managed in main, but in homepage-config.yaml. This is because we need
+# to make a deployment and ingress for each hostname, since we can't just build links using the
+# hostname as a variable
 homepage:
   enabled: false
   repo: https://jameswynn.github.io/helm-charts
   chart: homepage
   version: 2.1.0
   destinationNamespace: misc
-  defaultValues: |
-    env:
-    - name: HOMEPAGE_ALLOWED_HOSTS
-      value: {{ join "," .Values.hostnames }}
-    config:
-      useExistingConfigMap: homepage-config
   dependentApps:
     homepage-config:
       repo: https://github.com/AidanHilt/PersonalMonorepo
