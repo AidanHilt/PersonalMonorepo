@@ -107,7 +107,16 @@ spec:
           {{- tpl . $ | toYaml | indent 8 }}
           {{- end }}
           {{- if $subApp.followMasterConfig }}
-          {{- include "generateEnabledValues" $ | toYaml | indent 8 }}
+          {{- range $key, $value := .Values }}
+          {{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration")}}
+          {{- if eq $key "hostnames" }}
+          {{ $key }}:
+            - {{ $hostname }}
+          {{- else if not (has $key $excludedNames) }}
+          {{ $key }}:
+            enabled: {{ if hasKey $value "enabled" }}{{ $value.enabled }}{{ else }}false{{ end }}
+          {{- end }}
+          {{- end }}
           {{- end }}
         {{- end }}
         releaseName: "{{ $subAppName }}-{{ $safeHostname }}"
