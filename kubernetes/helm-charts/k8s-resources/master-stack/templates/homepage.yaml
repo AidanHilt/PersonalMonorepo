@@ -102,10 +102,7 @@ spec:
     {{- if $isHelmChart }}
       helm:
         {{- if or $subApp.defaultValues $subApp.followMasterConfig }}
-        values:
-          {{- with $subApp.defaultValues }}
-          {{- tpl . $ | toYaml | indent 8 }}
-          {{- end }}
+        values: |
           {{- if $subApp.followMasterConfig }}
           {{- range $key, $value := $.Values }}
           {{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration")}}
