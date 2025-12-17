@@ -29,6 +29,9 @@ hashi-vault:
       configuration:
         enabled: true
 
+homepage:
+  enabled: true
+
 istio:
   enabled: true
   dependentApps:

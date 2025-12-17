@@ -2,6 +2,7 @@
 {
  imports = [
     ./app-creator-add-argocd-app.nix
+    ./app-creator-add-homepage-link.nix
     ./app-creator-add-postgres-config.nix
     ./app-creator-add-terraform-secret.nix
     ./app-creator-add-argocd-app.nix

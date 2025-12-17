@@ -1,0 +1,40 @@
+{{- $ingressName := "homepage" }}
+{{- $ingress := .Values.homepage }}
+{{- range $hostname := .Values.hostnames }}
+{{- $safeHostname := $hostname | replace "." "-" }}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: "{{ $ingressName }}-{{ $safeHostname }}"
+  namespace: {{ $ingress.namespace | default "istio-system" }}
+spec:
+  hosts:
+    - {{ $hostname }}
+  gateways:
+    - internal-gateway
+  http:
+    - match:
+      {{- $prefixes := $ingress.prefixes | default (list "/") }}
+      {{- range $prefixes }}
+        - uri:
+            prefix: {{ . }}
+      {{- end }}
+      {{- with $ingress.rewrite }}
+      rewrite:
+        {{- toYaml . | nindent 7}}
+      {{- end }}
+      route:
+        - destination:
+            {{- $parts := splitList "." $ingress.destinationSvc }}
+            {{- $firstPart := index $parts 0 }}
+            {{- $rest := slice $parts 1 | join "." }}
+            {{- $newSvc := printf "%s-%s.%s" $firstPart $safeHostname $rest }}
+            host: {{ $newSvc }}
+            port:
+              number: {{ $ingress.destinationPort | default 80}}
+        {{- with $ingress.headers }}
+          headers:
+            {{- toYaml . | nindent 12 }}
+        {{- end }}
+---
+{{- end }}

@@ -1,6 +1,6 @@
 {{- range $ingressName, $ingress := .Values }}
 {{- if ne $ingressName "hostnames" }}
-{{- if and $ingress.enabled $ingress.destinationSvc }}
+{{- if and $ingress.enabled $ingress.destinationSvc (ne $ingressName "homepage") }}
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
