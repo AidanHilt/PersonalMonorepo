@@ -56,19 +56,17 @@ print_debug "Adding ingress for $APP_NAME"
 INGRESS_ARGS=""
 if [[ ''${#PREFIXES[@]} -gt 0 ]]; then
   for prefix in "''${PREFIXES[@]}"; do
-    echo "$prefix"
     INGRESS_ARGS+="--prefix $prefix "
   done
 else
   INGRESS_ARGS="--subdomain $SUBDOMAIN"
 fi
-echo "$INGRESS_ARGS"
 app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" $INGRESS_ARGS
 
 print_debug "Adding homepage link for $APP_NAME"
 HOMEPAGE_ARGS=""
 if [[ ''${#PREFIXES[@]} ]]; then
-  HOMEPAGE_ARGS="--prefix ''${prefixes[0]}"
+  HOMEPAGE_ARGS="--prefix ''${PREFIXES[0]}"
 else
   HOMEPAGE_ARGS="--subdomain $SUBDOMAIN"
 fi
