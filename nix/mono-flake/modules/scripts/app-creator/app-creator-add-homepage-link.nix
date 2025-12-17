@@ -124,8 +124,8 @@ fi
 
 ROUTE_CONFIG_STRING=""
 
-if [[ ! -z "$PREFIXES" ]]; then
-  ROUTE_CONFIG_STRING+="| .$APP_NAME.prefixes=[\"$PREFIXES\"] "
+if [[ ! -z "$PREFIX" ]]; then
+  ROUTE_CONFIG_STRING+="| .$APP_NAME.prefixes=[\"$PREFIX\"] "
 fi
 
 if [[ ! -z "$SUBDOMAIN" ]]; then
