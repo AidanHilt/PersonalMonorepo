@@ -113,7 +113,7 @@ if [[ -z "$DESCRIPTION" ]]; then
 fi
 
 if [[ -z "$DISPLAY_NAME" ]]; then
-  DEFAULT_DISPLAY_NAME=$(echo "$APP_NAME" | sed 's/-/ /g; s/\b\(.\)/\u\1/g')
+  DEFAULT_DISPLAY_NAME=$(echo "$APP_NAME" | tr '-' ' ' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2))}1')
   read -p "Enter a display name with proper formatting (default: $DEFAULT_DISPLAY_NAME): " display_name
   DISPLAY_NAME=''${display_name:-$DEFAULT_DISPLAY_NAME}
 
