@@ -42,7 +42,7 @@ while true; do
   PREFIXES+=("$prefix")
 done
 
-if [[ ''${#PREFIXES[@]} ]] ; then
+if [[ ''${#PREFIXES[@]} -eq 0 ]] ; then
   while true; do
     read -p "Enter subdomain: " SUBDOMAIN
     if [[ -n "$SUBDOMAIN" ]]; then
