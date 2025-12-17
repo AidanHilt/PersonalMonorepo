@@ -133,7 +133,6 @@ if [[ ! -z "$SUBDOMAIN" ]]; then
 fi
 
 HOMEPAGE_YQ_STRING=".$APP_NAME.enabled=false ''${ROUTE_CONFIG_STRING}"
-HOMEPAGE_YQ_STRING+="| .$APP_NAME.destinationSvc=\"$SERVICE_NAME.$NAMESPACE.svc.cluster.local\""
 
 if [[ "$DESTINATION_PORT" != 80 ]]; then
   HOMEPAGE_YQ_STRING+="| .$APP_NAME.destinationPort=\"$DESTINATION_PORT\""
