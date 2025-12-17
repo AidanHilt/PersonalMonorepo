@@ -20,6 +20,7 @@ DESCRIPTION=""
 GROUP=""
 ICON=""
 SUBDOMAIN=""
+DISPLAY_NAME=""
 
 show_help () {
   echo "Usage: $0 [OPTIONS]"
@@ -58,8 +59,12 @@ while [[ $# -gt 0 ]]; do
     PREFIX="$2"
     shift 2
     ;;
-    --subdomain|-d)
+    --subdomain|-s)
     SUBDOMAIN="$2"
+    shift 2
+    ;;
+    --display-name|-n)
+    DISPLAY_NAME="$2"
     shift 2
     ;;
     --help|-h)
@@ -107,6 +112,13 @@ if [[ -z "$DESCRIPTION" ]]; then
   done
 fi
 
+if [[ -z "$DISPLAY_NAME" ]]; then
+  DEFAULT_DISPLAY_NAME=$(echo "$APP_NAME" | sed 's/-/ /g; s/\b\(.\)/\u\1/g')
+  read -p "Enter a display name with proper formatting (default: $DEFAULT_DISPLAY_NAME): " display_name
+  DISPLAY_NAME=''${display_name:-$DEFAULT_DISPLAY_NAME}
+
+fi
+
 if [[ -z "$ICON" ]]; then
   read -p "Enter a path for the icon. See https://gethomepage.dev/configs/services/#icons (default sh-$APP_NAME): " svc_name
   SERVICE_NAME=''${svc_name:-sh-$APP_NAME}
@@ -133,6 +145,10 @@ if [[ ! -z "$SUBDOMAIN" ]]; then
 fi
 
 HOMEPAGE_YQ_STRING=".$APP_NAME.enabled=false ''${ROUTE_CONFIG_STRING}"
+HOMEPAGE_YQ_STRING+=".$APP_NAME.description=$DESCRIPTION"
+HOMEPAGE_YQ_STRING+=".$APP_NAME.icon=$ICON"
+HOMEPAGE_YQ_STRING+=".$APP_NAME.group=$GROUP"
+
 
 _modify-ingress-values "$HOMEPAGE_YQ_STRING" "$HOMEPAGE_VALUES_FILE"
 '';
