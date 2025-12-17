@@ -61,7 +61,7 @@ if [[ ''${#PREFIXES[@]} ]]; then
 else
   INGRESS_ARGS="--subdomain $SUBDOMAIN"
 fi
-app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" "$INGRESS_ARGS"
+app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" $INGRESS_ARGS
 
 print_debug "Adding homepage link for $APP_NAME"
 HOMEPAGE_ARGS=""
@@ -70,7 +70,7 @@ if [[ ''${#PREFIXES[@]} ]]; then
 else
   HOMEPAGE_ARGS="--subdomain $SUBDOMAIN"
 fi
-app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" "$HOMEPAGE_ARGS"
+app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" $HOMEPAGE_ARGS
 
 SECRET_NAMES=()
 SECRET_NAMESPACES=()
