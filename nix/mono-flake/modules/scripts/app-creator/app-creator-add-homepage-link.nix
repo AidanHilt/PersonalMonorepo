@@ -134,10 +134,6 @@ fi
 
 HOMEPAGE_YQ_STRING=".$APP_NAME.enabled=false ''${ROUTE_CONFIG_STRING}"
 
-if [[ "$DESTINATION_PORT" != 80 ]]; then
-  HOMEPAGE_YQ_STRING+="| .$APP_NAME.destinationPort=\"$DESTINATION_PORT\""
-fi
-
 _modify-ingress-values "$HOMEPAGE_YQ_STRING" "$HOMEPAGE_VALUES_FILE"
 '';
 in
