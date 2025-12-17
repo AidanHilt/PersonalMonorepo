@@ -61,6 +61,7 @@ if [[ ''${#PREFIXES[@]} ]]; then
 else
   INGRESS_ARGS="--subdomain $SUBDOMAIN"
 fi
+echo "$INGRESS_ARGS"
 app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" $INGRESS_ARGS
 
 print_debug "Adding homepage link for $APP_NAME"
