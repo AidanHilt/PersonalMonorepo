@@ -4,7 +4,7 @@ let
 printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
 modify-ingress-values = import ../lib/_modify-ingress-values.nix { inherit pkgs; };
 
-app-creator-add-ingress = pkgs.writeShellScriptBin "app-creator-add-ingress" ''
+app-creator-add-homepage-link = pkgs.writeShellScriptBin "app-creator-add-homepage-link" ''
 #!/bin/bash
 
 set -euo pipefail
@@ -12,13 +12,13 @@ set -euo pipefail
 source ${printing-and-output.printing-and-output}
 source ${modify-ingress-values.modify-ingress-values}
 
-ISTIO_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/istio-ingress-config/values.yaml
+HOMEPAGE_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/homepage-config/values.yaml
 
 APP_NAME=""
-PREFIXES=()
-NAMESPACE=""
-SERVICE_NAME=""
-DESTINATION_PORT=""
+PREFIX=""
+DESCRIPTION=""
+GROUP=""
+ICON=""
 SUBDOMAIN=""
 
 show_help () {
@@ -29,11 +29,11 @@ show_help () {
   echo ""
   echo "OPTIONS:"
   echo "  --app-name, -a: The name of the app to create ingress for"
-  echo "  --namespace, -n: The namespace the app will live in. Needed to properly route requests"
-  echo "  --service-name, -s: The name of the kubernetes service associated with this app"
-  echo "  --port, -p: The port number used by the service. Defaults to 80"
   echo "  --prefix, -r: A prefix used for path-based routing. Can be provided multiple times"
-  echo "  --subdomain, -d: The subdomain this app is to be served on"
+  echo "  --subdomain, -s: The subdomain this app is to be served on"
+  echo "  --description, -d: A short blurb about the app to display on the homepage"
+  echo "  --group, -g: The group this app belongs under on the homepage"
+  echo "  --icon, -i: The icon to use. Can be a URL, or following this guide: https://gethomepage.dev/configs/services/#icons"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -42,20 +42,20 @@ while [[ $# -gt 0 ]]; do
     APP_NAME="$2"
     shift 2
     ;;
-    --namespace|-n)
-    NAMESPACE="$2"
+    --description|-d)
+    DESRIPTION="$2"
     shift 2
     ;;
-    --service-name|-s)
-    SERVICE_NAME="$2"
+    --group|-g)
+    GROUP="$2"
     shift 2
     ;;
-    --port|-p)
-    DESTINATION_PORT="$2"
+    --icon|-i)
+    ICON="$2"
     shift 2
     ;;
     --prefix|-r)
-    PREFIXES+=("$2")
+    PREFIX="$2")
     shift 2
     ;;
     --subdomain|-d)
@@ -77,7 +77,7 @@ if [[ -z "$APP_NAME" ]]; then
   read -p "Enter the name of the app: " APP_NAME
 fi
 
-if [[ ''${#PREFIXES[@]} -eq 0 && -z "$SUBDOMAIN" ]]; then
+if [[ -z $PREFIX && -z "$SUBDOMAIN" ]]; then
   print_status "Enter prefixes (one per line, press Enter on empty line to finish):"
   while true; do
     read -p "Prefix: " prefix
@@ -91,7 +91,7 @@ if [[ ''${#PREFIXES[@]} -eq 0 && -z "$SUBDOMAIN" ]]; then
   done
 fi
 
-if [[ ''${#PREFIXES[@]} -eq 0 && -z "$SUBDOMAIN" ]] ; then
+if [[ -z $PREFIXES && -z "$SUBDOMAIN" ]] ; then
   while true; do
     read -p "Enter subdomain: " SUBDOMAIN
     if [[ -n "$SUBDOMAIN" ]]; then
@@ -101,25 +101,29 @@ if [[ ''${#PREFIXES[@]} -eq 0 && -z "$SUBDOMAIN" ]] ; then
   done
 fi
 
-if [[ -z "$NAMESPACE" ]]; then
+if [[ -z "$DESCRIPTION" ]]; then
   while true; do
-    read -p "Enter namespace: " NAMESPACE
-    if [[ -n "$NAMESPACE" ]]; then
+    read -p "Enter a short description of the app: " DESCRIPTION
+    if [[ -n "$DESCRIPTION" ]]; then
       break
     fi
-    print_warning "Namespace cannot be empty"
+    print_warning "Description cannot be empty"
   done
 fi
 
-if [[ -z "$SERVICE_NAME" ]]; then
-  echo "$SERVICE_NAME"
-  read -p "Enter destination service name (default $APP_NAME): " svc_name
-  SERVICE_NAME=''${svc_name:-$APP_NAME}
+if [[ -z "$ICON" ]]; then
+  read -p "Enter destination service name (default sh-$APP_NAME): " svc_name
+  SERVICE_NAME=''${svc_name:-sh-$APP_NAME}
 fi
 
-if [[ -z "$DESTINATION_PORT" ]]; then
-  read -p "Enter destination port (default: 80): " port
-  DESTINATION_PORT=''${port:-80}
+if [[ -z "$GROUP" ]]; then
+  while true; do
+    read -p "Enter the group name of the app: " GROUP
+    if [[ -n "$GROUP" ]]; then
+      break
+    fi
+    print_warning "Group cannot be empty"
+  done
 fi
 
 export PREFIXES_JSON=$(printf '%s\n' "''${PREFIXES[@]}" | jq -R . | jq -s .)
@@ -134,19 +138,19 @@ if [[ ! -z "$SUBDOMAIN" ]]; then
   ROUTE_CONFIG_STRING+="| .$APP_NAME.subdomain=\"$SUBDOMAIN\""
 fi
 
-ISTIO_YQ_STRING=".$APP_NAME.enabled=false ''${ROUTE_CONFIG_STRING}"
-ISTIO_YQ_STRING+="| .$APP_NAME.destinationSvc=\"$SERVICE_NAME.$NAMESPACE.svc.cluster.local\""
+HOMEPAGE_YQ_STRING=".$APP_NAME.enabled=false ''${ROUTE_CONFIG_STRING}"
+HOMEPAGE_YQ_STRING+="| .$APP_NAME.destinationSvc=\"$SERVICE_NAME.$NAMESPACE.svc.cluster.local\""
 
 if [[ "$DESTINATION_PORT" != 80 ]]; then
-  ISTIO_YQ_STRING+="| .$APP_NAME.destinationPort=\"$DESTINATION_PORT\""
+  HOMEPAGE_YQ_STRING+="| .$APP_NAME.destinationPort=\"$DESTINATION_PORT\""
 fi
 
-_modify-ingress-values "$ISTIO_YQ_STRING" "$ISTIO_VALUES_FILE"
+_modify-ingress-values "$HOMEPAGE_YQ_STRING" "$HOMEPAGE_VALUES_FILE"
 '';
 in
 
 {
   environment.systemPackages = [
-    app-creator-add-ingress
+    app-creator-add-homepage-link
   ];
 }
