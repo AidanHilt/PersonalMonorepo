@@ -108,7 +108,7 @@ if [[ -z "$DESCRIPTION" ]]; then
 fi
 
 if [[ -z "$ICON" ]]; then
-  read -p "Enter destination service name (default sh-$APP_NAME): " svc_name
+  read -p "Enter a path for the icon. See https://gethomepage.dev/configs/services/#icons (default sh-$APP_NAME): " svc_name
   SERVICE_NAME=''${svc_name:-sh-$APP_NAME}
 fi
 
