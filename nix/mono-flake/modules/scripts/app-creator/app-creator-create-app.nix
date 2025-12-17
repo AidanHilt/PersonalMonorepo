@@ -70,7 +70,7 @@ if [[ ''${#PREFIXES[@]} ]]; then
 else
   HOMEPAGE_ARGS="--subdomain $SUBDOMAIN"
 fi
-app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" $HOMEPAGE_ARGS
+app-creator-add-homepage-link --app-name "$APP_NAME" --namespace "$NAMESPACE" $HOMEPAGE_ARGS
 
 SECRET_NAMES=()
 SECRET_NAMESPACES=()
