@@ -23,11 +23,54 @@ echo " You are now creating the ArgoCD app"
 echo "========================================="
 app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --skip-default-values --skip-secure-values
 
+echo "=========================================="
+echo " You are now defining ingress for the app
+echo "=========================================="
+
+PREFIXES=()
+SUBDOMAIN=""
+
+print_status "Enter prefixes (one per line, press Enter on empty line to finish):"
+while true; do
+  read -p "Prefix: " prefix
+  if [[ -z "$prefix" ]]; then
+    break
+  fi
+  if [[ ! "$prefix" =~ ^/ ]]; then
+    prefix="/$prefix"
+  fi
+  PREFIXES+=("$prefix")
+done
+
+if [[ ''${#PREFIXES[@]} ]] ; then
+  while true; do
+    read -p "Enter subdomain: " SUBDOMAIN
+    if [[ -n "$SUBDOMAIN" ]]; then
+      break
+    fi
+    print_warning "Subdomain cannot be empty"
+  done
+fi
+
 print_debug "Adding ingress for $APP_NAME"
-echo "========================================="
-echo " You are now creating the ingress"
-echo "========================================="
-app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE"
+INGRESS_ARGS=""
+if [[ ''${#PREFIXES[@]} ]]; then
+  for prefix in "''${prefixes[@]}"; do
+    INGRESS_ARGS+="--prefix $prefix "
+  done
+else
+  INGRESS_ARGS="--subdomain $SUBDOMAIN"
+fi
+app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" "$INGRESS_ARGS"
+
+print_debug "Adding homepage link for $APP_NAME"
+HOMEPAGE_ARGS=""
+if [[ ''${#PREFIXES[@]} ]]; then
+  HOMEPAGE_ARGS="--prefix ''${prefixes[0]}"
+else
+  HOMEPAGE_ARGS="--subdomain $SUBDOMAIN"
+fi
+app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" "$HOMEPAGE_ARGS"
 
 SECRET_NAMES=()
 SECRET_NAMESPACES=()
