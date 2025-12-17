@@ -87,7 +87,7 @@ if [[ -z $PREFIX && -z "$SUBDOMAIN" ]]; then
   read -p "Enter prefix or leave blank: " PREFIX
 fi
 
-if [[ -z $PREFIXES && -z "$SUBDOMAIN" ]] ; then
+if [[ -z $PREFIX && -z "$SUBDOMAIN" ]] ; then
   while true; do
     read -p "Enter subdomain: " SUBDOMAIN
     if [[ -n "$SUBDOMAIN" ]]; then
@@ -122,12 +122,10 @@ if [[ -z "$GROUP" ]]; then
   done
 fi
 
-export PREFIXES_JSON=$(printf '%s\n' "''${PREFIXES[@]}" | jq -R . | jq -s .)
-
 ROUTE_CONFIG_STRING=""
 
-if [[ ''${#PREFIXES[@]} -gt 0 ]]; then
-  ROUTE_CONFIG_STRING+="| .$APP_NAME.prefixes=env(PREFIXES_JSON) "
+if [[ ! -z "$PREFIXES" ]]; then
+  ROUTE_CONFIG_STRING+="| .$APP_NAME.prefixes=[\"$PREFIXES\"] "
 fi
 
 if [[ ! -z "$SUBDOMAIN" ]]; then
