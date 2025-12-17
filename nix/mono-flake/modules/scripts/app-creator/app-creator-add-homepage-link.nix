@@ -55,7 +55,7 @@ while [[ $# -gt 0 ]]; do
     shift 2
     ;;
     --prefix|-r)
-    PREFIX="$2")
+    PREFIX="$2"
     shift 2
     ;;
     --subdomain|-d)
@@ -74,21 +74,17 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$APP_NAME" ]]; then
-  read -p "Enter the name of the app: " APP_NAME
+  while true; do
+    read -p "Enter the name of the app: " APP_NAME
+    if [[ -n "$APP_NAME" ]]; then
+      break
+    fi
+    print_warning "App name cannot be empty"
+  done
 fi
 
 if [[ -z $PREFIX && -z "$SUBDOMAIN" ]]; then
-  print_status "Enter prefixes (one per line, press Enter on empty line to finish):"
-  while true; do
-    read -p "Prefix: " prefix
-    if [[ -z "$prefix" ]]; then
-      break
-    fi
-    if [[ ! "$prefix" =~ ^/ ]]; then
-      prefix="/$prefix"
-    fi
-    PREFIXES+=("$prefix")
-  done
+  read -p "Enter prefix or leave blank: " PREFIX
 fi
 
 if [[ -z $PREFIXES && -z "$SUBDOMAIN" ]] ; then
