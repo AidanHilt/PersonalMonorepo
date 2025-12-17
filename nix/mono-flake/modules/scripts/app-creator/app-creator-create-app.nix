@@ -54,7 +54,7 @@ fi
 
 print_debug "Adding ingress for $APP_NAME"
 INGRESS_ARGS=""
-if [[ ''${#PREFIXES[@]} ]]; then
+if [[ ''${#PREFIXES[@]} -gt 0 ]]; then
   for prefix in "''${prefixes[@]}"; do
     INGRESS_ARGS+="--prefix $prefix "
   done
