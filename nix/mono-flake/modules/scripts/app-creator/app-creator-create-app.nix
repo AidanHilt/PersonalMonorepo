@@ -24,13 +24,13 @@ echo "========================================="
 app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --skip-default-values --skip-secure-values
 
 echo "=========================================="
-echo " You are now defining ingress for the app
+echo " You are now defining ingress for the app"
 echo "=========================================="
 
 PREFIXES=()
 SUBDOMAIN=""
 
-print_status "Enter prefixes (one per line, press Enter on empty line to finish):"
+print_status "Enter prefixes (one per line, press Enter on empty line to finish): "
 while true; do
   read -p "Prefix: " prefix
   if [[ -z "$prefix" ]]; then
