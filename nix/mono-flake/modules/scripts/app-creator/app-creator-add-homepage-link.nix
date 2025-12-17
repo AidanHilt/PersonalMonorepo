@@ -121,7 +121,7 @@ fi
 
 if [[ -z "$ICON" ]]; then
   read -p "Enter a path for the icon. See https://gethomepage.dev/configs/services/#icons (default sh-$APP_NAME): " svc_name
-  SERVICE_NAME=''${svc_name:-sh-$APP_NAME}
+  ICON=''${svc_name:-sh-$APP_NAME}
 fi
 
 if [[ -z "$GROUP" ]]; then
