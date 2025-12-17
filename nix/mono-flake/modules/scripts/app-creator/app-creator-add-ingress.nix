@@ -55,7 +55,7 @@ while [[ $# -gt 0 ]]; do
     shift 2
     ;;
     --prefix|-r)
-    PREFIXES+=("$2")
+    PREFIXES+="$2"
     shift 2
     ;;
     --subdomain|-d)
