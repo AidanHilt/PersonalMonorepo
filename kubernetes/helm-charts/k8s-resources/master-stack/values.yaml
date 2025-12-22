@@ -13,7 +13,6 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -201,7 +200,7 @@ metallb:
         enabled: false
 n8n:
   enabled: false
-  repo: oci://8gears.container-registry.com/library/
+  repo: oci://8gears.container-registry.com/
   chart: n8n
   version: 2.0.1
   destinationNamespace: n8n
