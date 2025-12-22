@@ -29,6 +29,7 @@ show_help () {
   echo "--server-side-apply: Enable server-side apply"
   echo "--skip-default-values: Don't prompt the user for default values"
   echo "--skip-secure-values: Don't prompt the user for secure values"
+  echp "--app-type: 1 for a git-based app, 2 for an external helm chart."
 }
 
 app_type=""
@@ -96,6 +97,10 @@ while [[ $# -gt 0 ]]; do
     --skip-secure-values)
     input_secure_values=false
     shift 1
+    ;;
+    --app-type)
+    app_type="$2"
+    shift 2
     ;;
     --help|-h)
     show_help
