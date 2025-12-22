@@ -13,12 +13,11 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-# Global config
+
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
   destinationNamespace: books
-# Global config
 bentopdf:
   enabled: false
   repo: https://kriegalex.github.io/k8s-charts/
@@ -200,6 +199,12 @@ metallb:
       useDefaultGitRevision: true
       configuration:
         enabled: false
+n8n:
+  enabled: false
+  repo: oci://8gears.container-registry.com/library/
+  chart: n8n
+  version: 2.0.1
+  destinationNamespace: n8n
 navidrome:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/navidrome
@@ -251,6 +256,12 @@ transmission:
   destinationNamespace: videos
   configuration:
     enabled: false
+ubrr:
+  enabled: false
+  repo: https://test.com
+  chart: ubrr
+  version: 1.0.0
+  destinationNamespace: ubrr
 video-stack-configuration:
   enabled: false
   secureValues: |

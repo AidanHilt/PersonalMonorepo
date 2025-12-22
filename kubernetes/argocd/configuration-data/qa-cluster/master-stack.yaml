@@ -7,13 +7,13 @@ hostnames:
 gitRevision: master
 
 homepage:
-  enabled: true
+  enabled: false
 
 flaresolverr:
   enabled: false
 
 bentopdf:
-  enabled: true
+  enabled: false
 
 hashi-vault:
   enabled: true
@@ -95,3 +95,6 @@ istio:
   dependentApps:
     kiali:
       enabled: false
+
+n8n:
+  enabled: true

@@ -9,6 +9,11 @@ lidarr:
   secretDestinationNamespace: music
   postgresSecret:
     enabled: true
+n8n-config:
+  enabled: false
+  secretDestinationNamespace: n8n
+  postgresSecret:
+    enabled: true
 paperless:
   enabled: false
   secretDestinationNamespace: paperless

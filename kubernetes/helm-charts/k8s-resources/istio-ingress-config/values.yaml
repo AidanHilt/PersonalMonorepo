@@ -1,6 +1,7 @@
 hostnames:
   - localhost
 
+
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -87,6 +88,10 @@ longhorn:
   rewrite:
     uri: /
   destinationSvc: longhorn-frontend.longhorn-system.svc.cluster.local
+n8n:
+  enabled: false
+  subdomain: n8n
+  destinationSvc: n8n.n8n.svc.cluster.local
 navidrome:
   enabled: false
   prefixes:
