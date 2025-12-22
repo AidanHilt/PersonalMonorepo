@@ -44,8 +44,10 @@ cd "$PERSONAL_MONOREPO_LOCATION" || {
   exit 1
 }
 
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-print_debug "Current branch: $CURRENT_BRANCH"
+if [ -z "$CURRENT_BRANCH" ]; then
+  CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+  print_debug "Current branch: $CURRENT_BRANCH"
+fi
 
 if ! kubectl get application master-stack -n argocd &>/dev/null; then
   print_debug "master-stack application does not exist in argocd namespace"
