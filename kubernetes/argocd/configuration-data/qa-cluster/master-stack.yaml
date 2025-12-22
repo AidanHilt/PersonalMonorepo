@@ -4,7 +4,7 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: master
+gitRevision: project-appocalypse/n8n
 
 homepage:
   enabled: false
