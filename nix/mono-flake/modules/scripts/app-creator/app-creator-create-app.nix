@@ -14,14 +14,16 @@ read -p "Enter app name: " APP_NAME
 read -p "Enter app namespace: " NAMESPACE
 
 read -p "Create a new helm chart? (y/n): " HELM_CHART
+APP_TYPE=2
 if [[ "$HELM_CHART" =~ ^[Yy]$ ]]; then
   helm-new-application --chart-name $APP_NAME
+  APP_TYPE=1
 fi
 
 echo "======================================"
 echo " You are now creating the ArgoCD app"
 echo "======================================"
-app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --skip-default-values --skip-secure-values
+app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --skip-default-values --skip-secure-values --app-type "$APP_TYPE"
 
 echo "=========================================="
 echo " You are now defining ingress for the app"
