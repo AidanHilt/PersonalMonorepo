@@ -67,7 +67,7 @@ app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" $INGRESS
 
 print_debug "Adding homepage link for $APP_NAME"
 HOMEPAGE_ARGS=""
-if [[ ''${#PREFIXES[@]} ]]; then
+if [[ ''${#PREFIXES[@]} -gt 0 ]]; then
   HOMEPAGE_ARGS="--prefix ''${PREFIXES[0]}"
 else
   HOMEPAGE_ARGS="--subdomain $SUBDOMAIN"
