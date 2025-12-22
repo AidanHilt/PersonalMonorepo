@@ -3,12 +3,41 @@
 let
 printing-and-output = import ../lib/_printing-and-output.nix { inherit pkgs; };
 
-argocd-match-master-stack = pkgs.writeShellScriptBin "argocd-match-master-stack" ''
+argocd-update-master-stack-revision = pkgs.writeShellScriptBin "argocd-update-master-stack-revision" ''
 #!/bin/bash
 
 set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
+
+GIT_BRANCH=""
+
+show_help () {
+  echo "Usage: $0 [OPTIONS]"
+  echo ""
+  echo "Update master-stack in the current kubernetes cluster. Defaults to current personal monorepo branch"
+  echo ""
+  echo "OPTIONS:"
+  echo "--master: Syncs back to the master branch"
+  echo "--branch-name: Name a branch to sync to"
+}
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --master|-m)
+    CURRENT_BRANCH="master"
+    shift 1
+    ;;
+    --branch-name|-b)
+    CURRENT_BRANCH="$2"
+    shift 2
+    ;;
+    --help|-h)
+    show_help
+    exit 0
+    ;;
+  esac
+done
 
 cd "$PERSONAL_MONOREPO_LOCATION" || {
   print_error "Failed to change directory to $PERSONAL_MONOREPO_LOCATION"
@@ -40,6 +69,6 @@ in
 
 {
   environment.systemPackages = [
-    argocd-match-master-stack
+    argocd-update-master-stack-revision
   ];
 }

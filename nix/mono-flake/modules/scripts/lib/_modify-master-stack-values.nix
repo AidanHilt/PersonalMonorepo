@@ -16,10 +16,10 @@ let
       yq eval 'del(.env) | del(.hostnames) | del(.defaultGitRepo) | del(.gitRevision) | del(.configuration) | to_entries | sort_by(.key) | from_entries' "$FILE_NAME" | sed '/^# Global config$/d' > "$TEMP_REST"
 
       {
+        echo "# Global config"
         cat "$TEMP_HEADER"
         echo ""
         echo ""
-        echo "# Global config"
         cat "$TEMP_REST"
       } > "$FILE_NAME"
 
