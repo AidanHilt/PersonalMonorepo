@@ -22,7 +22,10 @@ let
         cat "$TEMP_REST"
       } > "$FILE_NAME"
 
-      rm "$TEMP_HEADER" "$TEMP_REST"
+      echo "$TEMP_HEADER"
+      echo "$TEMP_REST"
+
+      #rm "$TEMP_HEADER" "$TEMP_REST"
     }
   '';
 in

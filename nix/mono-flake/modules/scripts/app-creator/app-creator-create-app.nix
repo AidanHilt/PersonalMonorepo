@@ -18,9 +18,9 @@ if [[ "$HELM_CHART" =~ ^[Yy]$ ]]; then
   helm-new-application --chart-name $APP_NAME
 fi
 
-echo "========================================="
+echo "======================================"
 echo " You are now creating the ArgoCD app"
-echo "========================================="
+echo "======================================"
 app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --skip-default-values --skip-secure-values
 
 echo "=========================================="
