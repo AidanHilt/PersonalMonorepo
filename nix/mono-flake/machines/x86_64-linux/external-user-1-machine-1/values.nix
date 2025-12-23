@@ -8,7 +8,7 @@
   };
 
   networking = {
-    fixedIp = true;
+    fixedIp = false;
     loadbalancer = false;
 
     address = "192.168.86.40";
