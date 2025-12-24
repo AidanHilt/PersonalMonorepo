@@ -97,6 +97,6 @@ istio:
       enabled: false
 
 n8n:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
