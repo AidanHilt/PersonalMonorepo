@@ -14,20 +14,65 @@ read -p "Enter app name: " APP_NAME
 read -p "Enter app namespace: " NAMESPACE
 
 read -p "Create a new helm chart? (y/n): " HELM_CHART
+APP_TYPE=2
 if [[ "$HELM_CHART" =~ ^[Yy]$ ]]; then
   helm-new-application --chart-name $APP_NAME
+  APP_TYPE=1
 fi
 
-echo "========================================="
+echo "======================================"
 echo " You are now creating the ArgoCD app"
-echo "========================================="
-app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --skip-default-values --skip-secure-values
+echo "======================================"
+app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --skip-default-values --skip-secure-values --app-type "$APP_TYPE"
+
+echo "=========================================="
+echo " You are now defining ingress for the app"
+echo "=========================================="
+
+PREFIXES=()
+SUBDOMAIN=""
+
+print_status "Enter prefixes (one per line, press Enter on empty line to finish): "
+while true; do
+  read -p "Prefix: " prefix
+  if [[ -z "$prefix" ]]; then
+    break
+  fi
+  if [[ ! "$prefix" =~ ^/ ]]; then
+    prefix="/$prefix"
+  fi
+  PREFIXES+=("$prefix")
+done
+
+if [[ ''${#PREFIXES[@]} -eq 0 ]] ; then
+  while true; do
+    read -p "Enter subdomain: " SUBDOMAIN
+    if [[ -n "$SUBDOMAIN" ]]; then
+      break
+    fi
+    print_warning "Subdomain cannot be empty"
+  done
+fi
 
 print_debug "Adding ingress for $APP_NAME"
-echo "========================================="
-echo " You are now creating the ingress"
-echo "========================================="
-app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE"
+INGRESS_ARGS=""
+if [[ ''${#PREFIXES[@]} -gt 0 ]]; then
+  for prefix in "''${PREFIXES[@]}"; do
+    INGRESS_ARGS+="--prefix $prefix "
+  done
+else
+  INGRESS_ARGS="--subdomain $SUBDOMAIN"
+fi
+app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" $INGRESS_ARGS
+
+print_debug "Adding homepage link for $APP_NAME"
+HOMEPAGE_ARGS=""
+if [[ ''${#PREFIXES[@]} -gt 0 ]]; then
+  HOMEPAGE_ARGS="--prefix ''${PREFIXES[0]}"
+else
+  HOMEPAGE_ARGS="--subdomain $SUBDOMAIN"
+fi
+app-creator-add-homepage-link --app-name "$APP_NAME" $HOMEPAGE_ARGS
 
 SECRET_NAMES=()
 SECRET_NAMESPACES=()

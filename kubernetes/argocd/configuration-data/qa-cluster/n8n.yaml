@@ -1,0 +1,5 @@
+main:
+  config:
+    n8n:
+      secure:
+        cookie: false

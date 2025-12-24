@@ -4,16 +4,16 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: master
+gitRevision: project-appocalypse/n8n
 
 homepage:
-  enabled: true
+  enabled: false
 
 flaresolverr:
   enabled: false
 
 bentopdf:
-  enabled: true
+  enabled: false
 
 hashi-vault:
   enabled: true
@@ -95,3 +95,8 @@ istio:
   dependentApps:
     kiali:
       enabled: false
+
+n8n:
+  enabled: false
+  configuration:
+    enabled: true

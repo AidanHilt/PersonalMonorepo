@@ -4,6 +4,6 @@
   imports = [
     ./argocd-create-master-stack.nix
     ./argocd-install-argocd.nix
-    ./argocd-match-master-stack.nix
+    ./argocd-update-master-stack-revision.nix
   ];
 }
