@@ -98,3 +98,5 @@ istio:
 
 n8n:
   enabled: true
+  configuration:
+    enabled: true
