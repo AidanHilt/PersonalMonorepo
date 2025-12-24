@@ -19,10 +19,5 @@
     prefixLength = 24;
   };
 
-  k8s = {
-    clusterName = "prod-cluster";
-    clusterEndpoint = "192.168.86.56";
-  };
-
   adguardhome.enabled = false;
 }
