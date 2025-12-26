@@ -7,7 +7,7 @@ qa-cluster:
     - paperless
     - lidarr
     - n8n
-    - firefly
+    - firefly-iii
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -38,7 +38,7 @@ qa-cluster:
     n8n:
       owner: n8n
     firefly:
-      owner: firefly
+      owner: firefly-iii
   storage: 1Gi
 staging-cluster:
   enabled: false
@@ -49,7 +49,7 @@ staging-cluster:
     - paperless
     - lidarr
     - n8n
-    - firefly
+    - firefly-iii
   databases:
     prowlarr-main:
       dbName: prowlarr_main
