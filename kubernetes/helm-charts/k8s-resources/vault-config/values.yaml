@@ -1,3 +1,6 @@
+firefly-iii-config:
+  enabled: false
+  secretDestinationNamespace: finance
 jellyfin:
   enabled: false
   secretDestinationNamespace: videos

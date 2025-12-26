@@ -13,6 +13,7 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
+
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -35,6 +36,12 @@ crafty-server:
   version: 9.2.2
   configuration:
     enabled: false
+firefly-iii:
+  enabled: false
+  repo: https://firefly-iii.github.io/kubernetes/
+  chart: firefly-iii-stack
+  version: 0.9.1
+  destinationNamespace: finance
 flaresolverr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/flaresolverr

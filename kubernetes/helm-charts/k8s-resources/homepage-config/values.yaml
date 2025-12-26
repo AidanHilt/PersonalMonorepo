@@ -36,6 +36,12 @@ calibre-web:
   icon: sh-calibre-web
   nameOverride: Calibre-Web
   description: Ebook management server
+firefly-iii:
+  enabled: false
+  subdomain: firefly
+  description: Personal finance
+  icon: sh-firefly-iii
+  group: Finance
 flashpaper:
   enabled: false
   subdomain: ots

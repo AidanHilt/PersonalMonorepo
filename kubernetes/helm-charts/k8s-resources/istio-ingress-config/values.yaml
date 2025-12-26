@@ -32,6 +32,10 @@ calibre-web:
 # TODO Migrate this to istio
 crafty-server:
   enabled: false
+firefly-iii:
+  enabled: false
+  subdomain: firefly
+  destinationSvc: firefly-iii.finance.svc.cluster.local
 flashpaper:
   enabled: false
   subdomain: ots
