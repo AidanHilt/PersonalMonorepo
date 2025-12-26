@@ -1,4 +1,4 @@
-firefly-iii-config:
+firefly-iii:
   enabled: false
   secretDestinationNamespace: finance
 jellyfin:

@@ -1,2 +1,15 @@
 firefly-db:
   enabled: false
+
+firefly-iii:
+  config:
+    env:
+      DB_HOST: postgres-cluster-rw.postgres.svc.cluster.local
+      DB_CONNECTION: pgsql
+      DB_PORT: "5432"
+      DB_DATABASE: firefly
+      DB_USERNAME: firefly
+      DEFAULT_LANGUAGE: "en_US"
+      DEFAULT_LOCALE: "equal"
+      TZ: "America/New_York"
+      TRUSTED_PROXIES: "**"
