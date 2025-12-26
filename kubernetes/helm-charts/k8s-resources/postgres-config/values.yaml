@@ -92,7 +92,7 @@ prod-cluster:
     - paperless
     - lidarr
     - n8n
-    - firefly
+    - firefly-iii
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -123,5 +123,5 @@ prod-cluster:
     n8n:
       owner: n8n
     firefly:
-      owner: firefly
+      owner: firefly-iii
   storage: 50Gi
