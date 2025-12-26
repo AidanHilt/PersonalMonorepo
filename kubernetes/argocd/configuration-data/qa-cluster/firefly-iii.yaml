@@ -8,7 +8,6 @@ firefly-iii:
       DB_CONNECTION: pgsql
       DB_PORT: "5432"
       DB_DATABASE: firefly
-      DB_USERNAME: firefly-iii
       DEFAULT_LANGUAGE: "en_US"
       DEFAULT_LOCALE: "equal"
       TZ: "America/New_York"
@@ -19,3 +18,7 @@ firefly-iii:
         secretKeyRef:
           name: firefly-iii-config-secret
           key: postgresPassword
+      DB_USERNAME:
+        secretKeyRef:
+          name: firefly-iii-config-secret
+          key: postgresUsername
