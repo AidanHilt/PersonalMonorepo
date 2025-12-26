@@ -38,7 +38,7 @@ job-templates:
   enabled: false
 
 postgres:
-  enabled: false
+  enabled: true
 
 prowlarr:
   enabled: false
