@@ -8,7 +8,7 @@ firefly-iii:
       DB_CONNECTION: pgsql
       DB_PORT: "5432"
       DB_DATABASE: firefly
-      DB_USERNAME: firefly
+      DB_USERNAME: firefly-iii
       DEFAULT_LANGUAGE: "en_US"
       DEFAULT_LOCALE: "equal"
       TZ: "America/New_York"
