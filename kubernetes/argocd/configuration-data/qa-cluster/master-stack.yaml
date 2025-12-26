@@ -100,3 +100,6 @@ n8n:
   enabled: false
   configuration:
     enabled: true
+
+firefly-iii:
+  enabled: true
