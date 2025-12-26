@@ -10,7 +10,7 @@ set -euo pipefail
 
 source ${printing-and-output.printing-and-output}
 
-GIT_BRANCH=""
+CURRENT_BRANCH=""
 
 show_help () {
   echo "Usage: $0 [OPTIONS]"
