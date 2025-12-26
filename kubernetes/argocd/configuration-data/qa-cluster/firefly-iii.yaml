@@ -22,3 +22,8 @@ firefly-iii:
         secretKeyRef:
           name: firefly-iii-config-secret
           key: postgresUsername
+
+importer:
+  fireflyiii:
+    url: "http://firefly-iii"
+    vanityUrl: http://firefly-importer.qa-cluster-lb.lan
