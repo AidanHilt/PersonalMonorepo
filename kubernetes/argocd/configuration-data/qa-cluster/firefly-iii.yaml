@@ -13,3 +13,9 @@ firefly-iii:
       DEFAULT_LOCALE: "equal"
       TZ: "America/New_York"
       TRUSTED_PROXIES: "**"
+
+    envValueFrom:
+      DB_PASSWORD:
+        secretKeyRef:
+          name: firefly-iii-config-secret
+          key: postgresPassword
