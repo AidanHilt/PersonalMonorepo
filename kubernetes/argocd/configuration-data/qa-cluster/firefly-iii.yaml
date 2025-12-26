@@ -26,4 +26,4 @@ firefly-iii:
 importer:
   fireflyiii:
     url: "http://firefly-iii"
-    vanityUrl: http://firefly-importer.qa-cluster-lb.lan
+    vanityUrl: http://firefly.qa-cluster-lb.lan
