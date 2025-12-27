@@ -31,7 +31,7 @@ data:
         {{- end }}
 
         {{- range $k, $v := $value }}
-          {{- if and (ne $k "subdomain") (ne $k "enabled") (ne $k "prefixes") (ne $k "group") }}
+          {{- if and (ne $k "subdomain") (ne $k "enabled") (ne $k "prefixes") (ne $k "group") (ne $k "dependentApps") }}
             {{- $_ := set $entry $k $v }}
           {{- end }}
         {{- end }}
@@ -43,7 +43,6 @@ data:
         {{- $finalEntry := dict $entryName $entry }}
         {{- $_ := set $grouped $groupName (append $currentList $finalEntry) }}
       {{- end }}
-    {{- end }}
     {{- range $subKey, $subValue := $value.dependentApps }}
       {{- if and $subValue.enabled (not (and $isIP $subValue.subdomain)) (or $subValue.subdomain $subValue.prefixes) }}
         {{- $groupName := $subValue.group | default "Uncategorized" }}
@@ -74,6 +73,7 @@ data:
         {{- $_ := set $grouped $groupName (append $currentList $finalEntry) }}
       {{- end }}
     {{- end }}
+  {{- end }}
   {{- end }}
   services.yaml: |
     {{- range $groupName, $services := $grouped }}
