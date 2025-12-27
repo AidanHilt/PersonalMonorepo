@@ -44,6 +44,36 @@ data:
         {{- $_ := set $grouped $groupName (append $currentList $finalEntry) }}
       {{- end }}
     {{- end }}
+    {{- range $subKey, $subValue := $value.dependentApps }}
+      {{- if and $subValue.enabled (not (and $isIP $subValue.subdomain)) (or $subValue.subdomain $subValue.prefixes) }}
+        {{- $groupName := $subValue.group | default "Uncategorized" }}
+        {{- $entryName := $subValue.nameOverride | default $subKey }}
+        {{- $entry := dict }}
+
+        {{- if $subValue.subdomain }}
+          {{- $_ := set $entry "href" (printf "http://%s.%s" $subValue.subdomain $defaultHostname) }}
+        {{- else }}
+          {{- $prefix := "" }}
+          {{- if $subValue.prefixes }}
+            {{- $prefix = index $subValue.prefixes 0 | trimPrefix "/" }}
+          {{- end }}
+          {{- $_ := set $entry "href" (printf "http://%s/%s" $defaultHostname $prefix) }}
+        {{- end }}
+
+        {{- range $k, $v := $subValue }}
+          {{- if and (ne $k "subdomain") (ne $k "enabled") (ne $k "prefixes") (ne $k "group") }}
+            {{- $_ := set $entry $k $v }}
+          {{- end }}
+        {{- end }}
+
+        {{- if not (hasKey $grouped $groupName) }}
+          {{- $_ := set $grouped $groupName list }}
+        {{- end }}
+        {{- $currentList := index $grouped $groupName }}
+        {{- $finalEntry := dict $entryName $entry }}
+        {{- $_ := set $grouped $groupName (append $currentList $finalEntry) }}
+      {{- end }}
+    {{- end }}
   {{- end }}
   services.yaml: |
     {{- range $groupName, $services := $grouped }}
