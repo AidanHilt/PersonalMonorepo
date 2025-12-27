@@ -1,3 +1,10 @@
+firefly-iii:
+  enabled: false
+  secretDestinationNamespace: finance
+  postgresSecret:
+    enabled: true
+  serviceAccount:
+    name: default
 jellyfin:
   enabled: false
   secretDestinationNamespace: videos

@@ -4,7 +4,7 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/n8n
+gitRevision: project-appocalypse/firefly-iii
 
 homepage:
   enabled: false
@@ -27,7 +27,7 @@ hashi-vault:
 jellyfin:
   enabled: false
   configuration:
-    enabled: true
+    enabled: truea
 
 jellyseerr:
   enabled: false
@@ -38,7 +38,7 @@ job-templates:
   enabled: false
 
 postgres:
-  enabled: false
+  enabled: true
 
 prowlarr:
   enabled: false
@@ -98,5 +98,10 @@ istio:
 
 n8n:
   enabled: false
+  configuration:
+    enabled: true
+
+firefly-iii:
+  enabled: true
   configuration:
     enabled: true

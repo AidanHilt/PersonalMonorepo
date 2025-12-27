@@ -1,7 +1,6 @@
 hostnames:
   - localhost
 
-
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -36,6 +35,21 @@ calibre-web:
   icon: sh-calibre-web
   nameOverride: Calibre-Web
   description: Ebook management server
+firefly-iii:
+  enabled: false
+  subdomain: firefly
+  description: Personal finance/budget tracker
+  icon: sh-firefly-iii
+  nameOverride: Firefly III
+  group: Finance
+  dependentApps:
+    firefly-importer:
+      enabled: true
+      subdomain: firefly-importer
+      description: Manage importing data for Firefly III
+      nameOverride: Firefly Importer
+      icon: sh-firefly-iii
+      group: Finance
 flashpaper:
   enabled: false
   subdomain: ots

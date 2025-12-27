@@ -69,23 +69,23 @@ while [[ $# -gt 0 ]]; do
       SECRET_NAME="$2"
       shift 2
       ;;
-      --secret-namespace)
+    --secret-namespace)
       SECRET_NAMESPACE="$2"
       shift 2
       ;;
-      --secret-mount)
+    --secret-mount)
       SECRET_MOUNT="$2"
       shift 2
       ;;
-      --postgres-secret)
+    --postgres-secret)
       POSTGRES_SECRET="true"
       shift 2
       ;;
-      --help|-h)
+    --help|-h)
       show_help
       exit 0
       ;;
-      *)
+    *)
       print_error "Unknown option: $2"
       exit 1
       ;;
@@ -127,6 +127,8 @@ done
 
 LOCAL_FILE="''${PERSONAL_MONOREPO_LOCATION}/terraform/vault-config/locals.tf.json"
 print_debug "Updating locals.tf.json at $LOCAL_FILE"
+
+echo "''${SECRET_KEYS[@]}"
 
 for entry in "''${SECRET_KEYS[@]}"; do
   key_name="$(cut -d'|' -f1 <<< "$entry")"
