@@ -19,6 +19,8 @@ controllers:
           repository: {{ .Values.frontendImage.repository }}
           pullPolicy: {{ .Values.frontendImage.pullPolicy }}
           tag: {{ .Values.frontendImage.tag }}
+        env:
+          API_URL: http://bar-assistant-frontend/
 
 {{- end -}}
 {{- $_ := mergeOverwrite .Values (include "bar-assistant.harcodedValues" . | fromYaml) -}}
