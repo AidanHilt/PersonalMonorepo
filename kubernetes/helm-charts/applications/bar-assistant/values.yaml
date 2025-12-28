@@ -4,12 +4,12 @@
 backendImage:
   repository: barassistant/server
   pullPolicy: IfNotPresent
-  tag: v5.11.0
+  tag: 5.11.0
 
 frontendImage:
   repository: barassistant/salt-rim
   pullPolicy: IfNotPresent
-  tag: v4.12.0
+  tag: 4.12.0
 
 service:
   frontend:
