@@ -31,3 +31,5 @@ service:
 #=============
 # Subchart(s)
 #=============
+meilisearch:
+  enabled: true
