@@ -16,8 +16,7 @@ audiobookshelf:
   destinationSvc: audiobookshelf.books.svc.cluster.local
 bar-assistant:
   enabled: false
-  prefixes:
-    - /bar/
+  subdomain: bar
   destinationSvc: bar-assistant-frontend.inventory-mgmt.svc.cluster.local
 bentopdf:
   enabled: false
