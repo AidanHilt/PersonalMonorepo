@@ -1,16 +1,29 @@
 #================================================================================================================================================
 # You should be able to use any of the values you can find here: https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
 #================================================================================================================================================
-image:
-  repository:
+backendImage:
+  repository: barassistant/server
   pullPolicy: IfNotPresent
+  tag: v5.11.0
+
+frontendImage:
+  repository: barassistant/salt-rim
+  pullPolicy: IfNotPresent
+  tag: v4.12.0
 
 service:
-  main:
+  frontend:
+    controller: frontend
     ports:
       http:
         port: 80
-        targetPort:
+        targetPort: 8080
+  backend:
+    controller: backend
+    ports:
+      http:
+        port: 80
+        targetPort: 8080
 #=============================
 # Application-specific config
 #=============================

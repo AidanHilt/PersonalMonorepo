@@ -1,3 +1,6 @@
+bar-assistant:
+  enabled: false
+  secretDestinationNamespace: inventory-mgmt
 firefly-iii:
   enabled: false
   secretDestinationNamespace: finance

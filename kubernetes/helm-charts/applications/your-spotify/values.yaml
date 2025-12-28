@@ -43,8 +43,8 @@ yourSpotify:
 
   mongodbPassword: "admin"
 
-#===============
+#=============
 # Subchart(s)
-#===============
+#=============
 mongodb:
   enabled: true

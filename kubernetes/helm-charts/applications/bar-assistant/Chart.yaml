@@ -1,0 +1,14 @@
+apiVersion: v2
+name: bar-assistant
+description: A Helm chart for installing and managing bar-assistant. Based on the bjw-s library chart
+
+type: application
+
+version: 0.0.3
+
+appVersion: "v5.11.0"
+
+dependencies:
+  - name: common
+    repository: https://bjw-s-labs.github.io/helm-charts/
+    version: 4.5.0

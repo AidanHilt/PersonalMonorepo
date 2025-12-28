@@ -1,6 +1,7 @@
 hostnames:
   - localhost
 
+
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -14,6 +15,11 @@ audiobookshelf:
   prefixes:
     - /audiobookshelf
   destinationSvc: audiobookshelf.books.svc.cluster.local
+bar-assistant:
+  enabled: false
+  prefixes:
+    - /bar/
+  destinationSvc: bar-assistant.inventory-mgmt.svc.cluster.local
 bentopdf:
   enabled: false
   subdomain: bento

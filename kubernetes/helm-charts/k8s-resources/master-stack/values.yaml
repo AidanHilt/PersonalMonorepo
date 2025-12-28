@@ -18,6 +18,10 @@ audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
   destinationNamespace: books
+bar-assistant:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/bar-assistant
+  destinationNamespace: inventory-mgmt
 bentopdf:
   enabled: false
   repo: https://kriegalex.github.io/k8s-charts/
