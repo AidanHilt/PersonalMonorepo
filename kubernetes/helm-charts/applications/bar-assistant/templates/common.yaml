@@ -20,7 +20,7 @@ controllers:
           pullPolicy: {{ .Values.frontendImage.pullPolicy }}
           tag: {{ .Values.frontendImage.tag }}
         env:
-          API_URL: http://bar-assistant-frontend/
+          API_URL: http://bar-assistant-backend/
 
 {{- end -}}
 {{- $_ := mergeOverwrite .Values (include "bar-assistant.harcodedValues" . | fromYaml) -}}
