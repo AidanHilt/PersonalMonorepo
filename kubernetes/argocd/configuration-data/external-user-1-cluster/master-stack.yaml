@@ -1,7 +1,7 @@
 env: external-user-1-cluster
 
 hostnames:
-  - 192.168.86.41
+  - 192.168.1.2
 
 gitRevision: feat/external-user-1-final-retry
 
