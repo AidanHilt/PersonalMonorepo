@@ -108,3 +108,6 @@ video-stack-configuration:
 
     transmission:
       port: 80
+
+job-templates:
+  enabled: true
