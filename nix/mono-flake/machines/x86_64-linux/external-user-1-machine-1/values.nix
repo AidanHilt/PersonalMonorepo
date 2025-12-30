@@ -5,6 +5,7 @@
 
   k8s = {
     primaryNode = true;
+    clusterEndpoint = "192.168.1.3";
   };
 
   networking = {
