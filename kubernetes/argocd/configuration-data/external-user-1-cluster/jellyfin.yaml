@@ -20,8 +20,3 @@ persistence:
     type: hostPath
     mountPath: /videos
     hostPath: /externalStorage/Media
-
-image:
-  repository: aidanhilt/jellyfin
-  tag: feat-external-user-1-retry
-  pullPolicy: Always
