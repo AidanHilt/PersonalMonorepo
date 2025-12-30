@@ -20,4 +20,12 @@
   };
 
   services.logind.lidSwitch = "ignore";
+
+  boot.supportedFilesystems = [ "ntfs" ];
+
+  fileSystems."/externalStorage" = {
+    device = "/dev/disk/by-uuid/4C0A704D0A703654";
+    fsType = "ntfs-3g";
+    options = [ "rw" "uid=1000" "gid=100" "dmask=022" "fmask=133" ];
+  };
 }
