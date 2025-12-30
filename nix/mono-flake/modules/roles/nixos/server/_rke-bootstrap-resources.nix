@@ -1,6 +1,6 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
-let 
+let
   argocdManifest = pkgs.writeText "argocd-helm.yaml" ''
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
@@ -13,7 +13,7 @@ spec:
   version: "8.2.2"
   targetNamespace: argocd
   createNamespace: true
-  
+
   # Helm values to customize the installation
   valuesContent: |-
     extraObjects:
@@ -145,7 +145,7 @@ spec:
   project: default
   sources:
     - repoURL: https://github.com/AidanHilt/PersonalMonorepo
-      path: kubernetes/helm-charts/k8s-resources/master-stack-new
+      path: kubernetes/helm-charts/k8s-resources/master-stack
       targetRevision: ${globals.personalMonorepoBranch}
       helm:
         valueFiles:
@@ -177,5 +177,5 @@ in
  systemd.tmpfiles.rules = [
   "C ${manifestPath}/argocd-helm.yaml 600 - - - ${argocdManifest}"
   "C ${manifestPath}/master-stack.yaml 600 - - - ${applicationManifest}"
- ]; 
+ ];
 }
