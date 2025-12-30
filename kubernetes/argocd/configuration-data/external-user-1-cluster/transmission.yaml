@@ -2,6 +2,13 @@ transmission:
   alternateUi:
     enabled: true
 
+serviceAccount:
+  create: true
+  name: transmission
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"
+
 env:
   TRANSMISSION_WEB_HOME: /custom/flood-for-transmission
 
