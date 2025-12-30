@@ -21,6 +21,11 @@ persistence:
     type: hostPath
     mountPath: /videos
     hostPath: /externalStorage/Media
+  downloads:
+    enabled: true
+    type: hostPath
+    mountPath: /downloads
+    hostPath: /externalStorage/Media/downloads
 
 initContainers:
   init-tv-dir:
