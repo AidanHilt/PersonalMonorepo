@@ -20,7 +20,7 @@ persistence:
     enabled: true
     type: hostPath
     mountPath: /videos
-    hostPath: /externalStorage/videos
+    hostPath: /externalStorage/Media
 
 initContainers:
   init-tv-dir:
