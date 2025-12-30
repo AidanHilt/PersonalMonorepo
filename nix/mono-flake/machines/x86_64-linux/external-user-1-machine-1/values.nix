@@ -8,14 +8,14 @@
   };
 
   networking = {
-    fixedIp = false;
+    fixedIp = true;
     loadbalancer = false;
 
-    address = "192.168.86.40";
+    address = "192.168.1.3";
     mainNetworkInterface = "eno1";
 
-    defaultGateway = "192.168.86.1";
-    nameservers = [ "192.168.86.2" ];
+    defaultGateway = "192.168.1.1";
+    nameservers = [ "192.168.1.1" ];
     prefixLength = 24;
   };
 
