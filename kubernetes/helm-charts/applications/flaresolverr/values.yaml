@@ -6,8 +6,6 @@ image:
   repository: ghcr.io/flaresolverr/flaresolverr
   # -- image pull policy
   pullPolicy: IfNotPresent
-  # -- image tag
-  tag: v3.4.0
 
 # -- environment variables. See more environment variables in the [flaresolverr documentation](https://github.com/FlareSolverr/FlareSolverr#environment-variables).
 # @default -- See below
