@@ -19,9 +19,8 @@
   environment.systemPackages = with pkgs; [
     act
     agenix
-    hcl2json
-    hcledit
     syncthing
     vault
+    weechat
   ];
 }

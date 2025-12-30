@@ -1,0 +1,29 @@
+firefly-db:
+  enabled: false
+
+firefly-iii:
+  config:
+    env:
+      DB_HOST: postgres-cluster-rw.postgres.svc.cluster.local
+      DB_CONNECTION: pgsql
+      DB_PORT: "5432"
+      DB_DATABASE: firefly
+      DEFAULT_LANGUAGE: "en_US"
+      DEFAULT_LOCALE: "equal"
+      TZ: "America/New_York"
+      TRUSTED_PROXIES: "**"
+
+    envValueFrom:
+      DB_PASSWORD:
+        secretKeyRef:
+          name: firefly-iii-config-secret
+          key: postgresPassword
+      DB_USERNAME:
+        secretKeyRef:
+          name: firefly-iii-config-secret
+          key: postgresUsername
+
+importer:
+  fireflyiii:
+    url: "http://firefly-iii"
+    vanityUrl: http://firefly.qa-cluster-lb.lan

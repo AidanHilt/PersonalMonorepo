@@ -22,6 +22,7 @@
       "strings": true
     }
   },
+  "yaml.validate": false,
   "aws.suppressPrompts": {
     "codeWhispererNewWelcomeMessage": true
   },

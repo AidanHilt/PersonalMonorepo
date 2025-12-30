@@ -14,13 +14,20 @@ configuration:
   configurationRevision: ""
 
 
-# Global config
+audiobookshelf:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/audiobookshelf
+  destinationNamespace: books
 bentopdf:
   enabled: false
   repo: https://kriegalex.github.io/k8s-charts/
   chart: bentopdf
   version: 1.0.1
   destinationNamespace: misc
+calibre-web:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/calibre-web
+  destinationNamespace: books
 crafty-server:
   enabled: false
   repo: oci://oci.trueforge.org/truecharts/crafty-4
@@ -29,6 +36,12 @@ crafty-server:
   version: 9.2.2
   configuration:
     enabled: false
+firefly-iii:
+  enabled: false
+  repo: https://firefly-iii.github.io/kubernetes/
+  chart: firefly-iii-stack
+  version: 0.9.1
+  destinationNamespace: finance
 flaresolverr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/flaresolverr
@@ -61,6 +74,22 @@ hashi-vault:
       followMasterConfig: true
       configuration:
         enabled: false
+# Note that this one isn't managed in main, but in homepage-config.yaml. This is because we need
+# to make a deployment and ingress for each hostname, since we can't just build links using the
+# hostname as a variable
+homepage:
+  enabled: false
+  repo: https://jameswynn.github.io/helm-charts
+  chart: homepage
+  version: 2.1.0
+  destinationNamespace: misc
+  dependentApps:
+    homepage-config:
+      repo: https://github.com/AidanHilt/PersonalMonorepo
+      gitPath: kubernetes/helm-charts/k8s-resources/homepage-config
+      useDefaultGitRevision: true
+      # Generates a mirror of the enabled status and hostname config as the config for this app
+      followMasterConfig: true
 istio:
   enabled: false
   repo: https://istio-release.storage.googleapis.com/charts
@@ -176,6 +205,12 @@ metallb:
       useDefaultGitRevision: true
       configuration:
         enabled: false
+n8n:
+  enabled: false
+  repo: oci://8gears.container-registry.com/library/n8n
+  chart: n8n
+  version: 2.0.1
+  destinationNamespace: n8n
 navidrome:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/navidrome
@@ -227,6 +262,12 @@ transmission:
   destinationNamespace: videos
   configuration:
     enabled: false
+ubrr:
+  enabled: false
+  repo: https://test.com
+  chart: ubrr
+  version: 1.0.0
+  destinationNamespace: ubrr
 video-stack-configuration:
   enabled: false
   secureValues: |

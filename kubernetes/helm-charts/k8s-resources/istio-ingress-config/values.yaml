@@ -1,7 +1,6 @@
 hostnames:
   - localhost
 
-
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -10,14 +9,37 @@ argocd:
   prefixes:
     - /argocd
   destinationSvc: argocd-server.argocd.svc.cluster.local
+audiobookshelf:
+  enabled: false
+  prefixes:
+    - /audiobookshelf
+  destinationSvc: audiobookshelf.books.svc.cluster.local
 bentopdf:
   enabled: false
   subdomain: bento
   destinationSvc: bentopdf.misc.svc.cluster.local
   destinationPort: 8080
+calibre-web:
+  enabled: false
+  prefixes:
+    - /calibre-web
+  destinationSvc: calibre-web.books.svc.cluster.local
+  headers:
+    request:
+      add:
+        X-Script-Name: /calibre-web
 # TODO Migrate this to istio
 crafty-server:
   enabled: false
+firefly-iii:
+  enabled: false
+  subdomain: firefly
+  destinationSvc: firefly-iii.finance.svc.cluster.local
+  dependentIngresses:
+    firefly-iii-data-importer:
+      enabled: true
+      subdomain: firefly-importer
+      destinationSvc: firefly-iii-importer.finance.svc.cluster.local
 flashpaper:
   enabled: false
   subdomain: ots
@@ -35,6 +57,12 @@ hashi-vault:
   subdomain: vault
   destinationSvc: hashi-vault.vault.svc.cluster.local
   destinationPort: 8200
+homepage:
+  enabled: false
+  prefixes:
+    - /
+  destinationSvc: homepage.misc.svc.cluster.local
+  destinationPort: 3000
 it-tools:
   enabled: false
   prefixes:
@@ -68,6 +96,10 @@ longhorn:
   rewrite:
     uri: /
   destinationSvc: longhorn-frontend.longhorn-system.svc.cluster.local
+n8n:
+  enabled: false
+  subdomain: n8n
+  destinationSvc: n8n.n8n.svc.cluster.local
 navidrome:
   enabled: false
   prefixes:

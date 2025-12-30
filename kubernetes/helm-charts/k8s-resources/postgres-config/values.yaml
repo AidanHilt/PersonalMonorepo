@@ -6,6 +6,8 @@ qa-cluster:
     - radarr
     - paperless
     - lidarr
+    - n8n
+    - firefly-iii
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -33,6 +35,10 @@ qa-cluster:
     lidarr-logs:
       dbName: lidarr_logs
       owner: lidarr
+    n8n:
+      owner: n8n
+    firefly:
+      owner: firefly-iii
   storage: 1Gi
 staging-cluster:
   enabled: false
@@ -42,6 +48,8 @@ staging-cluster:
     - radarr
     - paperless
     - lidarr
+    - n8n
+    - firefly-iii
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -69,6 +77,10 @@ staging-cluster:
     lidarr-logs:
       dbName: lidarr_logs
       owner: lidarr
+    n8n:
+      owner: n8n
+    firefly:
+      owner: firefly
   storage: 1Gi
 prod-cluster:
   enabled: false
@@ -79,6 +91,8 @@ prod-cluster:
     - radarr
     - paperless
     - lidarr
+    - n8n
+    - firefly-iii
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -106,4 +120,8 @@ prod-cluster:
     lidarr-logs:
       dbName: lidarr_logs
       owner: lidarr
+    n8n:
+      owner: n8n
+    firefly:
+      owner: firefly-iii
   storage: 50Gi

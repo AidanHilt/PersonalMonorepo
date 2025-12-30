@@ -6,7 +6,18 @@ hostnames:
 
 gitRevision: master
 
+bentopdf:
+  enabled: true
+
+calibre-web:
+  enabled: true
+  configuration:
+    enabled: true
+
 flaresolverr:
+  enabled: true
+
+flashpaper:
   enabled: true
 
 hashi-vault:
@@ -18,8 +29,14 @@ hashi-vault:
       configuration:
         enabled: true
 
+homepage:
+  enabled: true
+
 istio:
   enabled: true
+  dependentApps:
+    kiali:
+      enabled: false
 
 it-tools:
   enabled: true
@@ -91,6 +108,6 @@ video-stack-configuration:
     enabled: true
 
 your-spotify:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true

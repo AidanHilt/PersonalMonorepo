@@ -1,3 +1,10 @@
+firefly-iii:
+  enabled: false
+  secretDestinationNamespace: finance
+  postgresSecret:
+    enabled: true
+  serviceAccount:
+    name: default
 jellyfin:
   enabled: false
   secretDestinationNamespace: videos
@@ -7,6 +14,11 @@ jellyseerr:
 lidarr:
   enabled: false
   secretDestinationNamespace: music
+  postgresSecret:
+    enabled: true
+n8n-config:
+  enabled: false
+  secretDestinationNamespace: n8n
   postgresSecret:
     enabled: true
 paperless:

@@ -1,0 +1,187 @@
+hostnames:
+  - localhost
+
+argocd:
+  # This breaks the rule we have going here, BUT, if you're running this,
+  # it's probably with ArgoCD, so we should be able to access it no matter
+  # what
+  enabled: true
+  prefixes:
+    - /argocd
+  group: Cluster Management
+  icon: sh-argo-cd
+  nameOverride: ArgoCD
+  description: Deployment management for all mah stuff
+audiobookshelf:
+  enabled: false
+  prefixes:
+    - /audiobookshelf
+  group: Books and Reading
+  icon: sh-audiobookshelf
+  nameOverride: AudioBookshelf
+  description: Utility for streaming audiobooks, with a limited ebook reader
+bentopdf:
+  enabled: false
+  subdomain: bento
+  group: Tools and Utilities
+  icon: https://bentopdf.com/en/images/favicon.svg
+  nameOverride: BentoPDF
+  description: Set of utilities for managing and editing PDFs
+calibre-web:
+  enabled: false
+  prefixes:
+    - /calibre-web
+  group: Books and Reading
+  icon: sh-calibre-web
+  nameOverride: Calibre-Web
+  description: Ebook management server
+firefly-iii:
+  enabled: false
+  subdomain: firefly
+  description: Personal finance/budget tracker
+  icon: sh-firefly-iii
+  nameOverride: Firefly III
+  group: Finance
+  dependentApps:
+    firefly-importer:
+      enabled: true
+      subdomain: firefly-importer
+      description: Manage importing data for Firefly III
+      nameOverride: Firefly Importer
+      icon: sh-firefly-iii
+      group: Finance
+flashpaper:
+  enabled: false
+  subdomain: ots
+  group: Tools and Utilities
+  icon: https://flashpaper.io/img/logo.png
+  nameOverride: FlashPaper
+  description: Create encrypted one-time links
+grafana:
+  enabled: false
+  prefixes:
+    - /grafana
+    - /grafana/
+  group: Cluster Management
+  icon: sh-grafana
+  nameOverride: Grafana
+  description: Grafana, for viewing observability metrics
+hashi-vault:
+  enabled: false
+  subdomain: vault
+  group: Cluster Management
+  icon: sh-hashicorp-vault
+  nameOverride: Hashicorp Vault
+  description: Secrets management for the cluster
+it-tools:
+  enabled: false
+  prefixes:
+    - /it-tools/
+    - /it-tools
+  group: Tools and Utilities
+  icon: sh-it-tools
+  nameOverride: IT Tools
+  description: Set of utilities to assist with small IT-related tasks
+jellyfin:
+  enabled: false
+  prefixes:
+    - /emby
+  group: Videos
+  icon: sh-jellyfin
+  nameOverride: Jellyfin
+  description: Self-hosted media server for videos
+jellyseerr:
+  enabled: false
+  subdomain: jellyseerr
+  group: Videos
+  icon: sh-jellyseerr
+  nameOverride: Jellyseerr
+  description: Media request manager for movies and TV
+kiali:
+  enabled: false
+  prefixes:
+    - /kiali
+  group: Cluster Management
+  icon: ""
+  nameOverride: Kiali
+  description: Observability platform for istio
+lidarr:
+  enabled: false
+  prefixes:
+    - /lidarr
+  group: Music
+  icon: sh-lidarr
+  nameOverride: Lidarr
+  description: Self-hosted music collection manager
+longhorn:
+  enabled: false
+  prefixes:
+    - /longhorn/
+  group: Cluster Management
+  icon: sh-rancher-longhorn
+  nameOverride: Longhorn
+  description: CSI driver for kubernetes cluster
+n8n:
+  enabled: false
+  subdomain: n8n
+  description: Workflow automation service
+  icon: sh-n8n
+  group: Tools and Utilities
+navidrome:
+  enabled: false
+  prefixes:
+    - /music
+  group: Music
+  icon: sh-navidrome
+  nameOverride: Navidrome
+  description: Self-hosted music player
+paperless:
+  enabled: false
+  prefixes:
+    - /paperless
+  group: Personal Management
+  icon: sh-paperless-ngx
+  nameOverride: Paperless-ngx
+  description: Self-hosted document management system
+prowlarr:
+  enabled: false
+  prefixes:
+    - /prowlarr
+  group: Download Management
+  icon: sh-prowlarr
+  nameOverride: Prowlarr
+  description: Indexer manager
+radarr:
+  enabled: false
+  prefixes:
+    - /radarr
+  group: Videos
+  icon: sh-radarr
+  nameOverride: Radarr
+  description: Self-hosted movie collection manager
+settings:
+  title: ARH Homepage
+  description: The front page of this website
+sonarr:
+  enabled: false
+  prefixes:
+    - /sonarr
+  group: Videos
+  icon: sh-sonarr
+  nameOverride: Sonarr
+  description: Self-hosted tv series collection manager
+transmission:
+  enabled: false
+  prefixes:
+    - /transmission
+  group: Download Management
+  icon: sh-transmission
+  nameOverride: Transmission
+  description: Self-hosted web-based BitTorrent client
+your-spotify:
+  enabled: false
+  subdomain: spotify
+  group: Personal Management
+  icon: sh-your-spotify
+  nameOverride: Your Spotify
+  description: Spotify usage tracker

@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}
+data:
+  bookmarks.yaml: ""
+  docker.yaml: ""
+  kubernetes.yaml: ""
+  {{- $hostnames := .Values.hostnames }}
+  {{- $defaultHostname := index $hostnames 0 }}
+  {{- $grouped := dict }}
+  {{- range $key, $value := .Values }}
+  {{- $isIP := false }}
+  {{- if regexMatch "^([0-9]{1,3}\\.){3}[0-9]{1,3}$" $defaultHostname }}
+    {{- $isIP = true }}
+  {{- end }}
+    {{- if and (ne $key "hostnames") $value.enabled (not (and $isIP $value.subdomain)) }}
+      {{- if or $value.subdomain $value.prefixes }}
+        {{- $groupName := $value.group | default "Uncategorized" }}
+        {{- $entryName := $value.nameOverride | default $key }}
+        {{- $entry := dict }}
+
+        {{- if $value.subdomain }}
+          {{- $_ := set $entry "href" (printf "http://%s.%s" $value.subdomain $defaultHostname) }}
+        {{- else }}
+          {{- $prefix := "" }}
+          {{- if $value.prefixes }}
+            {{- $prefix = index $value.prefixes 0 | trimPrefix "/" }}
+          {{- end }}
+          {{- $_ := set $entry "href" (printf "http://%s/%s" $defaultHostname $prefix) }}
+        {{- end }}
+
+        {{- range $k, $v := $value }}
+          {{- if and (ne $k "subdomain") (ne $k "enabled") (ne $k "prefixes") (ne $k "group") (ne $k "dependentApps") }}
+            {{- $_ := set $entry $k $v }}
+          {{- end }}
+        {{- end }}
+
+        {{- if not (hasKey $grouped $groupName) }}
+          {{- $_ := set $grouped $groupName list }}
+        {{- end }}
+        {{- $currentList := index $grouped $groupName }}
+        {{- $finalEntry := dict $entryName $entry }}
+        {{- $_ := set $grouped $groupName (append $currentList $finalEntry) }}
+      {{- end }}
+    {{- range $subKey, $subValue := $value.dependentApps }}
+      {{- if and $subValue.enabled (not (and $isIP $subValue.subdomain)) (or $subValue.subdomain $subValue.prefixes) }}
+        {{- $groupName := $subValue.group | default "Uncategorized" }}
+        {{- $entryName := $subValue.nameOverride | default $subKey }}
+        {{- $entry := dict }}
+
+        {{- if $subValue.subdomain }}
+          {{- $_ := set $entry "href" (printf "http://%s.%s" $subValue.subdomain $defaultHostname) }}
+        {{- else }}
+          {{- $prefix := "" }}
+          {{- if $subValue.prefixes }}
+            {{- $prefix = index $subValue.prefixes 0 | trimPrefix "/" }}
+          {{- end }}
+          {{- $_ := set $entry "href" (printf "http://%s/%s" $defaultHostname $prefix) }}
+        {{- end }}
+
+        {{- range $k, $v := $subValue }}
+          {{- if and (ne $k "subdomain") (ne $k "enabled") (ne $k "prefixes") (ne $k "group") }}
+            {{- $_ := set $entry $k $v }}
+          {{- end }}
+        {{- end }}
+
+        {{- if not (hasKey $grouped $groupName) }}
+          {{- $_ := set $grouped $groupName list }}
+        {{- end }}
+        {{- $currentList := index $grouped $groupName }}
+        {{- $finalEntry := dict $entryName $entry }}
+        {{- $_ := set $grouped $groupName (append $currentList $finalEntry) }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
+  services.yaml: |
+    {{- range $groupName, $services := $grouped }}
+    - {{ $groupName }}:
+    {{- range $services }}
+      {{- range $serviceName, $serviceData := . }}
+      - {{ $serviceName }}:
+        {{- range $key, $value := $serviceData }}
+          {{ $key }}: {{ $value }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+  settings.yaml: |
+    {{- .Values.settings | toYaml | nindent 4 }}
+  widgets.yaml: ""

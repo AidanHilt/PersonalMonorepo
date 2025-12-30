@@ -4,15 +4,13 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: master
+gitRevision: project-appocalypse/firefly-iii
 
-navidrome:
-  enabled: true
-  configuration:
-    enabled: true
+homepage:
+  enabled: false
 
 flaresolverr:
-  enabled: true
+  enabled: false
 
 bentopdf:
   enabled: false
@@ -29,7 +27,7 @@ hashi-vault:
 jellyfin:
   enabled: false
   configuration:
-    enabled: true
+    enabled: truea
 
 jellyseerr:
   enabled: false
@@ -37,38 +35,38 @@ jellyseerr:
     enabled: true
 
 job-templates:
-  enabled: true
+  enabled: false
 
 postgres:
   enabled: true
 
 prowlarr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 lidarr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 radarr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 sonarr:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 transmission:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
 video-stack-configuration:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
@@ -97,3 +95,13 @@ istio:
   dependentApps:
     kiali:
       enabled: false
+
+n8n:
+  enabled: false
+  configuration:
+    enabled: true
+
+firefly-iii:
+  enabled: true
+  configuration:
+    enabled: true

@@ -13,7 +13,6 @@ source ${printing-and-output.printing-and-output}
 source ${modify-ingress-values.modify-ingress-values}
 
 ISTIO_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/istio-ingress-config/values.yaml
-NGINX_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/nginx-ingress-config/values.yaml
 
 APP_NAME=""
 PREFIXES=()
@@ -26,7 +25,7 @@ show_help () {
   echo "Usage: $0 [OPTIONS]"
   echo ""
   # Description goes here
-  echo "Create ingress resources for both istio and nginx"
+  echo "Create ingress resources for istio"
   echo ""
   echo "OPTIONS:"
   echo "  --app-name, -a: The name of the app to create ingress for"
@@ -56,7 +55,7 @@ while [[ $# -gt 0 ]]; do
     shift 2
     ;;
     --prefix|-r)
-    PREFIXES+=("$2")
+    PREFIXES+="$2"
     shift 2
     ;;
     --subdomain|-d)

@@ -1,11 +1,15 @@
-{{- range $appName, $app := .Values }}
-{{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration" "homepage")}}
-{{- if not (has $appName $excludedNames) }}
-{{- if $app.enabled }}
+{{- $app := .Values.homepage }}
+{{- $appName := "homepage" }}
+{{- $subAppName := "homepage-config" }}
+{{- $subApp := index $app "dependentApps" "homepage-config" }}
+{{- $enabled := ternary $subApp.enabled true (hasKey $subApp "enabled") }}
+{{- if $enabled }}
+{{- range $hostname := .Values.hostnames }}
+{{- $safeHostname := $hostname | replace "." "-" }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: {{ $appName }}
+  name: "{{ $appName }}-{{ $safeHostname }}"
   namespace: argocd
   annotations:
   {{- if $app.syncWave }}
@@ -28,11 +32,13 @@ spec:
     {{- $isHelmChart := and (not (hasKey $app "secureValues")) (or (not (hasKey $app "helmChart")) $app.helmChart) }}
     {{- if $isHelmChart }}
       helm:
-        {{- if $app.defaultValues }}
-        values:
-          {{ tpl $app.defaultValues $ | toYaml | indent 8 }}
-        {{- end }}
-        releaseName: {{ $appName }}
+        values: |
+          env:
+          - name: HOMEPAGE_ALLOWED_HOSTS
+            value: {{ $hostname }}
+          config:
+            useExistingConfigMap: homepage-config-{{ $safeHostname }}
+        releaseName: "{{ $appName }}-{{ $safeHostname }}"
       {{- if ($app.configuration).enabled }}
         valueFiles:
           - "$values/{{ $.Values.configuration.configurationDirectory }}/{{ $.Values.env }}/{{ $appName }}.yaml"
@@ -63,13 +69,10 @@ spec:
       - ServerSideApply=true
       {{- end }}
 ---
-{{- range $subAppName, $subApp := $app.dependentApps }}
-{{- $enabled := ternary $subApp.enabled true (hasKey $subApp "enabled") }}
-{{- if and (ne $subAppName "homepage-config") $enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: {{ $subAppName }}
+  name: "{{ $subAppName }}-{{ $safeHostname }}"
   namespace: argocd
   annotations:
   {{- $syncWave := $subApp.syncWave | default $app.syncWave }}
@@ -99,15 +102,21 @@ spec:
     {{- if $isHelmChart }}
       helm:
         {{- if or $subApp.defaultValues $subApp.followMasterConfig }}
-        values:
-          {{- with $subApp.defaultValues }}
-          {{- tpl . $ | toYaml | indent 8 }}
-          {{- end }}
+        values: |
           {{- if $subApp.followMasterConfig }}
-          {{- include "generateEnabledValues" $ | toYaml | indent 8 }}
+          {{- range $key, $value := $.Values }}
+          {{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration")}}
+          {{- if eq $key "hostnames" }}
+          {{ $key }}:
+            - {{ $hostname }}
+          {{- else if not (has $key $excludedNames) }}
+          {{ $key }}:
+            enabled: {{ if hasKey $value "enabled" }}{{ $value.enabled }}{{ else }}false{{ end }}
+          {{- end }}
+          {{- end }}
           {{- end }}
         {{- end }}
-        releaseName: {{ $subAppName }}
+        releaseName: "{{ $subAppName }}-{{ $safeHostname }}"
       {{- if ($subApp.configuration).enabled }}
         valueFiles:
           - "$values/{{ $.Values.configuration.configurationDirectory }}/{{ $.Values.env }}/{{ $subAppName }}.yaml"
@@ -139,8 +148,5 @@ spec:
       - ServerSideApply=true
       {{- end }}
 ---
-{{- end }}
-{{- end }}
-{{- end }}
 {{- end }}
 {{- end }}
