@@ -45,10 +45,8 @@ let
   prod-cluster-machines = [laptop-node-system optiplex-node-system gaming-pc-node-system];
 
   #External user 1
-
-
   external-user-1-machines = [external-user-1-machine-1-system];
-  external-user-1-machine-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFpAFr59RBygN43p3emZVC136rdeQUJ593toD9AnsMu3 noname";
+  external-user-1-machine-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJlk3tURSKdo0EzrOpv26CE91m65pV4Ax01y5ZRF6Rvn noname";
 in
 {
   "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
