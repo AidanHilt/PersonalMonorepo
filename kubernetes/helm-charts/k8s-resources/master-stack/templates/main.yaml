@@ -1,6 +1,6 @@
 {{- range $appName, $app := .Values }}
 {{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration" "homepage")}}
-{{- $create := not (hasKey $ingress "multiHost" | ternary $ingress.multiHost false) }}
+{{- $create := not (hasKey $ingress "multiHost" | ternary $app.multiHost false) }}
 {{- if not (has $appName $excludedNames) }}
 {{- if and $app.enabled $create }}
 apiVersion: argoproj.io/v1alpha1
