@@ -29,3 +29,7 @@ controllers:
       saltrim:
         env:
           API_URL: http://bar-assistant-api.qa-cluster-lb.lan
+
+serviceAccount:
+  bar-assistant:
+    enabled: true
