@@ -8,6 +8,8 @@ gitRevision: project-appocalypse/bar-assistant
 
 bar-assistant:
   enabled: true
+  configuration:
+    enabled: true
 
 homepage:
   enabled: true

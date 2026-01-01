@@ -24,9 +24,6 @@ controllers:
           repository: {{ .Values.frontendImage.repository }}
           pullPolicy: {{ .Values.frontendImage.pullPolicy }}
           tag: {{ .Values.frontendImage.tag }}
-        env:
-          API_URL: http://bar-assistant-api.qa-cluster-lb.lan
-          MEILISEARCH_URL: http://bar-assistant-meilisearch:7700
 
 {{- end -}}
 {{- $_ := mergeOverwrite .Values (include "bar-assistant.harcodedValues" . | fromYaml) -}}

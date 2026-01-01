@@ -1,0 +1,19 @@
+meilisearch:
+  auth:
+    existingMasterKey: bar-assistant-config-secret
+
+controllers:
+  backend:
+    type: deployment
+    containers:
+      bar-assistant:
+        env:
+          MEILISEARCH_HOST: http://bar-assistant-meilisearch:7700
+          CACHE_DRIVER: file
+          SESSION_DRIVER: file
+  frontend:
+    type: deployment
+    containers:
+      saltrim:
+        env:
+          API_URL: http://bar-assistant-api.qa-cluster-lb.lan
