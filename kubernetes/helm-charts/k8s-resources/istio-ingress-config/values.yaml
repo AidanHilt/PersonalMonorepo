@@ -18,6 +18,11 @@ bar-assistant:
   enabled: false
   subdomain: bar
   destinationSvc: bar-assistant-frontend.inventory-mgmt.svc.cluster.local
+  dependentIngresses:
+    bar-assistant-api:
+      enabled: true
+      subdomain: bar-assistant-api
+      destinationSvc: bar-assistant-backend.inventory-mgmt.svc.cluster.local
 bentopdf:
   enabled: false
   subdomain: bento
