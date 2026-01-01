@@ -1,6 +1,7 @@
 {{- range $ingressName, $ingress := .Values }}
 {{- if ne $ingressName "hostnames" }}
-{{- if and $ingress.enabled $ingress.destinationSvc (not $ingress.multiHost | default true) }}
+{{- $create := not (hasKey $ingress "multiHost" | ternary $ingress.multiHost false) }}
+{{- if and $ingress.enabled $ingress.destinationSvc $create }}
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
