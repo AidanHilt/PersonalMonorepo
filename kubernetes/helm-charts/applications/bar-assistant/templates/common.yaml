@@ -11,6 +11,8 @@ controllers:
           repository: {{ .Values.backendImage.repository }}
           pullPolicy: {{ .Values.backendImage.pullPolicy }}
           tag: {{ .Values.backendImage.tag }}
+        env:
+          MEILISEARCH_HOST: http://bar-assistant-meilisearch
   frontend:
     type: deployment
     containers:
