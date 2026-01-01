@@ -1,8 +1,11 @@
 meilisearch:
   auth:
-    existingMasterKey: bar-assistant-config-secret
+    existingMasterKeySecret: bar-assistant-config-secret
   environment:
     MEILI_ENV: production
+  serviceAccount:
+    create: false
+    name: bar-assistant
 
 controllers:
   backend:
