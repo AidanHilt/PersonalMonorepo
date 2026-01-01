@@ -1,5 +1,5 @@
 {{- range $appName, $app := .Values }}
-{{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration" "homepage")}}
+{{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration")}}
 {{- if not (has $appName $excludedNames) }}
 {{- $create := not (hasKey $app "multiHost" | ternary $app.multiHost false) }}
 {{- if and $app.enabled $create }}
