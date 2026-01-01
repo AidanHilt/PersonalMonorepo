@@ -15,6 +15,7 @@ audiobookshelf:
     - /audiobookshelf
   destinationSvc: audiobookshelf.books.svc.cluster.local
 bar-assistant:
+  multiHost: true
   enabled: false
   subdomain: bar
   destinationSvc: bar-assistant-frontend.inventory-mgmt.svc.cluster.local
