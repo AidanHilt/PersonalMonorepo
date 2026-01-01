@@ -12,7 +12,7 @@ controllers:
           pullPolicy: {{ .Values.backendImage.pullPolicy }}
           tag: {{ .Values.backendImage.tag }}
         env:
-          MEILISEARCH_HOST: http://bar-assistant-meilisearch
+          MEILISEARCH_HOST: http://bar-assistant-meilisearch:7700
           CACHE_DRIVER: file
           SESSION_DRIVER: file
           MEILISEARCH_KEY: testkey
@@ -26,7 +26,7 @@ controllers:
           tag: {{ .Values.frontendImage.tag }}
         env:
           API_URL: http://bar-assistant-api.qa-cluster-lb.lan/
-          MEILISEARCH_URL: http://bar-assistant-meilisearch
+          MEILISEARCH_URL: http://bar-assistant-meilisearch:7700
 
 {{- end -}}
 {{- $_ := mergeOverwrite .Values (include "bar-assistant.harcodedValues" . | fromYaml) -}}
