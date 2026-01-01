@@ -6,6 +6,9 @@ meilisearch:
   serviceAccount:
     create: false
     name: bar-assistant
+  persistence:
+    enabled: true
+    size: 5Gi
 
 controllers:
   backend:
@@ -35,3 +38,11 @@ controllers:
 serviceAccount:
   bar-assistant:
     enabled: true
+
+persistence:
+  backend:
+    size: 5Gi
+    advancedMounts:
+      backend:
+        backend:
+          - path: /var/www/cocktails/storage/bar-assistant
