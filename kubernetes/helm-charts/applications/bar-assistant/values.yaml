@@ -33,3 +33,5 @@ service:
 #=============
 meilisearch:
   enabled: true
+  environment:
+    MEILI_MASTER_KEY: testkey
