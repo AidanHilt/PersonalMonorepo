@@ -7,6 +7,7 @@ meilisearch:
 controllers:
   backend:
     type: deployment
+    serviceAccount: bar-assistant
     containers:
       bar-assistant:
         env:
