@@ -70,7 +70,7 @@
 
       globals = {
         nixConfig = inputs.personalMonorepo + "/nix";
-        personalMonorepoBranch = "project-appocalypse/audiobookshelf";
+        personalMonorepoBranch = "feat/external-user-1-final-retry";
         personalMonorepoURL = "https://github.com/AidanHilt/PersonalMonorepo";
       };
 
