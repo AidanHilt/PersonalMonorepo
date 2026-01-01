@@ -45,5 +45,5 @@ persistence:
     size: 5Gi
     advancedMounts:
       backend:
-        backend:
+        bar-assistant:
           - path: /var/www/cocktails/storage/bar-assistant
