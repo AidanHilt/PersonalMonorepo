@@ -1,5 +1,6 @@
 {{- range $appName, $app := .Values }}
 {{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration" "homepage")}}
+{{- if not (has $appName $excludedNames) }}
 {{- $enabled := ternary $app.enabled true (hasKey $app "enabled") }}
 {{- if and $enabled ($app.multiHost | default false)}}
 {{- range $hostname := .Values.hostnames }}
@@ -148,6 +149,7 @@ spec:
       - ServerSideApply=true
       {{- end }}
 ---
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
