@@ -13,6 +13,8 @@ controllers:
           tag: {{ .Values.backendImage.tag }}
         env:
           MEILISEARCH_HOST: http://bar-assistant-meilisearch
+          CACHE_DRIVER: file
+          SESSION_DRIVER: file
   frontend:
     type: deployment
     containers:
