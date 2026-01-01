@@ -67,6 +67,7 @@ hashi-vault:
   destinationSvc: hashi-vault.vault.svc.cluster.local
   destinationPort: 8200
 homepage:
+  multiHost: true
   enabled: false
   prefixes:
     - /
