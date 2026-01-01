@@ -41,7 +41,7 @@ serviceAccount:
 
 persistence:
   backend:
-    accessMode: readWriteOnce
+    accessMode: ReadWriteOnce
     size: 5Gi
     advancedMounts:
       backend:
