@@ -11,6 +11,11 @@ controllers:
           MEILISEARCH_HOST: http://bar-assistant-meilisearch:7700
           CACHE_DRIVER: file
           SESSION_DRIVER: file
+          MEILISEARCH_KEY:
+            valueFrom:
+              secretKeyRef:
+                name: bar-assistant-config-secret
+                key: MEILI_MASTER_KEY
   frontend:
     type: deployment
     containers:
