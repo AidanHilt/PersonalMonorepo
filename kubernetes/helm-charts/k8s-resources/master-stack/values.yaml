@@ -13,7 +13,6 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -82,6 +81,7 @@ hashi-vault:
 # to make a deployment and ingress for each hostname, since we can't just build links using the
 # hostname as a variable
 homepage:
+  multiHost: true
   enabled: false
   repo: https://jameswynn.github.io/helm-charts
   chart: homepage
