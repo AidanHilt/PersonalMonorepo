@@ -25,6 +25,8 @@ controllers:
                 key: MEILI_MASTER_KEY
   frontend:
     type: deployment
+    serviceAccount:
+      name: default
     containers:
       saltrim:
         env:
