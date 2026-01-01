@@ -1,5 +1,6 @@
-{{- $ingressName := "homepage" }}
-{{- $ingress := .Values.homepage }}
+{{- range $ingressName, $ingress := .Values }}
+{{- if ne $ingressName "hostnames" }}
+{{- if and $ingress.enabled $ingress.destinationSvc ($ingress.multiHost | default false) }}
 {{- range $hostname := .Values.hostnames }}
 {{- $safeHostname := $hostname | replace "." "-" }}
 apiVersion: networking.istio.io/v1alpha3
