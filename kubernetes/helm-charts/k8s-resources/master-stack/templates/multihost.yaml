@@ -1,9 +1,7 @@
-{{- $app := .Values.homepage }}
-{{- $appName := "homepage" }}
-{{- $subAppName := "homepage-config" }}
-{{- $subApp := index $app "dependentApps" "homepage-config" }}
+{{- range $appName, $app := .Values }}
+{{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration" "homepage")}}
 {{- $enabled := ternary $subApp.enabled true (hasKey $subApp "enabled") }}
-{{- if $enabled }}
+{{- if and $enabled ($app.multiHost | default false)}}
 {{- range $hostname := .Values.hostnames }}
 {{- $safeHostname := $hostname | replace "." "-" }}
 apiVersion: argoproj.io/v1alpha1
@@ -69,6 +67,8 @@ spec:
       - ServerSideApply=true
       {{- end }}
 ---
+{{- range $subAppName, $subApp := $app.dependentApps }}
+{{- $enabled := ternary $subApp.enabled true (hasKey $subApp "enabled") }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -148,5 +148,8 @@ spec:
       - ServerSideApply=true
       {{- end }}
 ---
+{{- end }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
