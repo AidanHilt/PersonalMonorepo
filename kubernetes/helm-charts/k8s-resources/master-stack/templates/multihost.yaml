@@ -1,6 +1,6 @@
 {{- range $appName, $app := .Values }}
 {{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration" "homepage")}}
-{{- $enabled := ternary $subApp.enabled true (hasKey $subApp "enabled") }}
+{{- $enabled := ternary $app.enabled true (hasKey $app "enabled") }}
 {{- if and $enabled ($app.multiHost | default false)}}
 {{- range $hostname := .Values.hostnames }}
 {{- $safeHostname := $hostname | replace "." "-" }}
