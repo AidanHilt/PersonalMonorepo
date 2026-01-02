@@ -193,7 +193,7 @@
             }
           },
           "namespace": "inventory-mgmt",
-          "mount": "inventory",
+          "mount": "inventory-mgmt`",
           "postgres_secret": "false"
         }
       },
