@@ -4,16 +4,15 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/firefly-iii
+gitRevision: project-appocalypse/bar-assistant
+
+bar-assistant:
+  enabled: true
+  configuration:
+    enabled: true
 
 homepage:
-  enabled: false
-
-flaresolverr:
-  enabled: false
-
-bentopdf:
-  enabled: false
+  enabled: true
 
 hashi-vault:
   enabled: true
@@ -24,57 +23,6 @@ hashi-vault:
       configuration:
         enabled: true
 
-jellyfin:
-  enabled: false
-  configuration:
-    enabled: truea
-
-jellyseerr:
-  enabled: false
-  configuration:
-    enabled: true
-
-job-templates:
-  enabled: false
-
-postgres:
-  enabled: true
-
-prowlarr:
-  enabled: false
-  configuration:
-    enabled: true
-
-lidarr:
-  enabled: false
-  configuration:
-    enabled: true
-
-radarr:
-  enabled: false
-  configuration:
-    enabled: true
-
-sonarr:
-  enabled: false
-  configuration:
-    enabled: true
-
-transmission:
-  enabled: false
-  configuration:
-    enabled: true
-
-video-stack-configuration:
-  enabled: false
-  configuration:
-    enabled: true
-
-paperless:
-  enabled: false
-  configuration:
-    enabled: true
-
 metallb:
   enabled: true
   dependentApps:
@@ -82,26 +30,8 @@ metallb:
       configuration:
         enabled: true
 
-it-tools:
-  enabled: false
-  configuration:
-    enabled: true
-
-flashpaper:
-  enabled: false
-
 istio:
   enabled: true
   dependentApps:
     kiali:
       enabled: false
-
-n8n:
-  enabled: false
-  configuration:
-    enabled: true
-
-firefly-iii:
-  enabled: true
-  configuration:
-    enabled: true

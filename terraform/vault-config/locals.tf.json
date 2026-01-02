@@ -171,6 +171,30 @@
           "namespace": "music",
           "mount": "music",
           "postgres_secret": "true"
+        },
+        "firefly-iii": {
+          "namespace": "finance",
+          "mount": "finance",
+          "service_account": "default",
+          "data": {
+            "postgresPassword": {
+              "is_postgres_password": true
+            },
+            "postgresUsername": {
+              "value": "firefly-iii"
+            }
+          },
+          "postgres_secret": "true"
+        },
+        "bar-assistant": {
+          "data": {
+            "meilisearchApiKey": {
+              "is_postgres_password": false
+            }
+          },
+          "namespace": "inventory-mgmt",
+          "mount": "inventory",
+          "postgres_secret": "false"
         }
       },
       "unique_mounts": "${toset([\n  for key, secret in local.secret_definitions : secret.mount\n  ])}"

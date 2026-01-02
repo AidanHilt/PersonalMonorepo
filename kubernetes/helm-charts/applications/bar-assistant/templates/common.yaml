@@ -1,0 +1,29 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "bar-assistant.harcodedValues" -}}
+controllers:
+  backend:
+    type: deployment
+    containers:
+      bar-assistant:
+        image:
+          repository: {{ .Values.backendImage.repository }}
+          pullPolicy: {{ .Values.backendImage.pullPolicy }}
+          tag: {{ .Values.backendImage.tag }}
+        env:
+          MEILISEARCH_HOST: http://bar-assistant-meilisearch:7700
+          CACHE_DRIVER: file
+          SESSION_DRIVER: file
+  frontend:
+    type: deployment
+    containers:
+      saltrim:
+        image:
+          repository: {{ .Values.frontendImage.repository }}
+          pullPolicy: {{ .Values.frontendImage.pullPolicy }}
+          tag: {{ .Values.frontendImage.tag }}
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "bar-assistant.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}

@@ -1,0 +1,49 @@
+meilisearch:
+  auth:
+    existingMasterKeySecret: bar-assistant-config-secret
+  environment:
+    MEILI_ENV: production
+  serviceAccount:
+    create: false
+    name: bar-assistant
+  persistence:
+    enabled: true
+    size: 5Gi
+
+controllers:
+  backend:
+    type: deployment
+    serviceAccount:
+      name: bar-assistant
+    containers:
+      bar-assistant:
+        env:
+          MEILISEARCH_HOST: http://bar-assistant-meilisearch:7700
+          CACHE_DRIVER: file
+          SESSION_DRIVER: file
+          MEILISEARCH_KEY:
+            valueFrom:
+              secretKeyRef:
+                name: bar-assistant-config-secret
+                key: MEILI_MASTER_KEY
+  frontend:
+    type: deployment
+    serviceAccount:
+      name: default
+    containers:
+      saltrim:
+        env:
+          API_URL: http://bar-assistant-api.qa-cluster-lb.lan
+
+serviceAccount:
+  bar-assistant:
+    enabled: true
+
+persistence:
+  backend:
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    advancedMounts:
+      backend:
+        bar-assistant:
+          - path: /var/www/cocktails/storage/bar-assistant

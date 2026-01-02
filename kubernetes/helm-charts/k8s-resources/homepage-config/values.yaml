@@ -20,6 +20,12 @@ audiobookshelf:
   icon: sh-audiobookshelf
   nameOverride: AudioBookshelf
   description: Utility for streaming audiobooks, with a limited ebook reader
+bar-assistant:
+  enabled: false
+  subdomain: bar
+  description: All-in-one solution for managing your home bar.
+  icon: sh-bar-assistant
+  group: Inventory Management
 bentopdf:
   enabled: false
   subdomain: bento

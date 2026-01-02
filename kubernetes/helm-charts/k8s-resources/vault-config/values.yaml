@@ -1,3 +1,11 @@
+bar-assistant:
+  enabled: false
+  secretDestinationNamespace: inventory-mgmt
+  destination:
+    transformation:
+      templates:
+        MEILI_MASTER_KEY:
+          text: "{{ .Secrets.meilisearchApiKey }}"
 firefly-iii:
   enabled: false
   secretDestinationNamespace: finance
