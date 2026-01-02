@@ -375,21 +375,10 @@ stringData:
                 prowlarr_url: {{ $prowlarrUrl }}
                 base_url: {{ $radarrUrl }}
                 sync_level: full-sync
-                sync_categories:
-                - movies/bluray
-                - movies/dvd
-                - movies/foreign
-                - movies/3d
-                - movies/sd
-                - movies/web-dl
-                - movies/hd
-                - movies/x265
-                - movies/other
-                - movies
-                - movies/uhd
                 tags: []
                 instance_name: null
                 api_key: {{ .Values.radarr.apiKey }}
+          {{- if .Values.lidarr.enabled }}
               Lidarr:
                 type: lidarr
                 prowlarr_url: {{ $prowlarrUrl }}
@@ -398,20 +387,12 @@ stringData:
                 tags: []
                 instance_name: null
                 api_key: {{ .Values.lidarr.apiKey }}
+          {{- end }}
               Sonarr:
                 type: sonarr
                 prowlarr_url: {{ $prowlarrUrl }}
                 base_url: {{ $sonarrUrl }}
                 sync_level: full-sync
-                sync_categories:
-                - tv/x265
-                - tv/uhd
-                - tv/web-dl
-                - tv/sd
-                - tv
-                - tv/other
-                - tv/foreign
-                - tv/hd
                 tags: []
                 instance_name: null
                 api_key: {{ .Values.sonarr.apiKey }}
