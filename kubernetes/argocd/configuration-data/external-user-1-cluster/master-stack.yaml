@@ -1,11 +1,9 @@
 env: external-user-1-cluster
 
-gitRevision: feat/external-user-1-retry
+hostnames:
+  - 192.168.1.2
 
-longhorn:
-  enabled: true
-  configuration:
-    enabled: true
+gitRevision: feat/external-user-1-final-retry
 
 flaresolverr:
   enabled: true
@@ -14,10 +12,19 @@ hashi-vault:
   enabled: true
   configuration:
     enabled: true
+  dependentApps:
+    vault-secrets-operator:
+      configuration:
+        enabled: true
 
-vault-secrets-operator:
-  configuration:
-    enabled: true
+homepage:
+  enabled: true
+
+istio:
+  enabled: true
+  dependentApps:
+    kiali:
+      enabled: false
 
 jellyfin:
   enabled: true
@@ -25,9 +32,21 @@ jellyfin:
     enabled: true
 
 jellyseerr:
+  enabled: false
+  configuration:
+    enabled: true
+
+longhorn:
   enabled: true
   configuration:
     enabled: true
+
+metallb:
+  enabled: true
+  dependentApps:
+    metallb-config:
+      configuration:
+        enabled: true
 
 prowlarr:
   enabled: true
@@ -51,9 +70,44 @@ transmission:
 
 video-stack-configuration:
   enabled: true
-  configuration:
-    enabled: true
+  secureValues: |
+    prowlarr:
+      port: 80
+      urlBase: /prowlarr
+      apiKey: <path:argocd/data/video_stack_configuration#prowlarrApiKey>
 
-ingress:
+    radarr:
+      port: 80
+      urlBase: /radarr
+      apiKey: <path:argocd/data/video_stack_configuration#radarrApiKey>
+      rootFolders:
+        - /videos/Movies
+
+    sonarr:
+      port: 80
+      urlBase: /sonarr
+      apiKey: <path:argocd/data/video_stack_configuration#sonarrApiKey>
+      rootFolders:
+        - /videos/TV
+
+    lidarr:
+      enabled: false
+
+    jellyseerr:
+      hostname: jellyseerr
+      urlBase: /
+      port: 80
+      apiKey: <path:argocd/data/video_stack_configuration#jellyseerrApiKey>
+      jellyfin:
+        hostname: jellyfin
+        url_base: /emby
+        port: 80
+        username: <path:argocd/data/video_stack_configuration#jellyfinUsername>
+        password: <path:argocd/data/video_stack_configuration#jellyfinPassword>
+        emailAddress: <path:argocd/data/video_stack_configuration#jellyfinEmail>
+
+    transmission:
+      port: 80
+
+job-templates:
   enabled: true
-  clusterType: "baremetal"

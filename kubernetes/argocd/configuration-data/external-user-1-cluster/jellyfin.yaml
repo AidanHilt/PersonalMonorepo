@@ -19,9 +19,4 @@ persistence:
     enabled: true
     type: hostPath
     mountPath: /videos
-    hostPath: /externalStorage/videos
-
-image:
-  repository: aidanhilt/jellyfin
-  tag: feat-external-user-1-retry
-  pullPolicy: Always
+    hostPath: /externalStorage/Media
