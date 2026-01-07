@@ -16,6 +16,11 @@ env:
       secretKeyRef:
         name: romm-config-secret
         key: steamGridDBApiKey
+  RETROACHIEVEMENTS_API_KEY:
+    valueFrom:
+      secretKeyRef:
+        name: romm-config-secret
+        key: retroAchievementsApiKey
 
 serviceAccount:
   create: true
