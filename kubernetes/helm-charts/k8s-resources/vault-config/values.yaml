@@ -5,7 +5,7 @@ bar-assistant:
     transformation:
       templates:
         MEILI_MASTER_KEY:
-          text: '{{ .Secrets.meilisearchApiKey }}'
+          text: "{{ .Secrets.meilisearchApiKey }}"
 firefly-iii:
   enabled: false
   secretDestinationNamespace: finance
@@ -58,6 +58,8 @@ radarr:
 romm:
   enabled: false
   secretDestinationNamespace: romm
+  postgresSecret:
+    enabled: true
 sonarr:
   enabled: false
   secretDestinationNamespace: videos
