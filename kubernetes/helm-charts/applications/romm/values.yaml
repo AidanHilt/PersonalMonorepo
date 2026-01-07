@@ -28,8 +28,8 @@ romm:
   database:
     enabled: false
 
-    # Valid options are postgres, mariadb, and mysql
-    engine: postgres
+    # Valid options are postgresql, mariadb, and mysql
+    engine: postgresql
 
     username: romm
     password: ""
