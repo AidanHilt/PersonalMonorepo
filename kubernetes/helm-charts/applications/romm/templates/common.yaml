@@ -12,7 +12,7 @@ env:
   DB_NAME: '{{ .Values.romm.database.dbName }}'
 
   # Database password from secret
-  DB_PASSWORD:
+  DB_PASSWD:
     valueFrom:
       secretKeyRef:
         name: '{{ if .Values.romm.database.passwordSecret }}{{ .Values.romm.database.passwordSecret }}{{ else if .Values.romm.configSecret }}{{ .Values.romm.configSecret }}{{ else }}{{ .Release.Name }}-secrets{{ end }}'
