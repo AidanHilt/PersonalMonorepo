@@ -20,7 +20,7 @@ env:
 
   # Redis configuration
   REDIS_ENABLED: '{{ .Values.romm.redis.enabled }}'
-  REDIS_HOST: '{{ if .Values.romm.redis.host }}{{ .Values.romm.redis.host }}{{ else }}{{ .Release.Name }}-redis-master{{ end }}'
+  REDIS_HOST: '{{ if .Values.romm.redis.host }}{{ .Values.romm.redis.host }}{{ else }}{{ .Release.Name }}-redis{{ end }}'
   REDIS_PORT: "6379"
 
   # Redis password from secret
