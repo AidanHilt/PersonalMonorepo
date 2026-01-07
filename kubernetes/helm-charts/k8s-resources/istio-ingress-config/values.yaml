@@ -1,7 +1,6 @@
 hostnames:
   - localhost
 
-
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -134,8 +133,7 @@ radarr:
   destinationSvc: radarr.videos.svc.cluster.local
 romm:
   enabled: false
-  prefixes:
-    - /romm
+  subdomain: romm
   destinationSvc: romm.romm.svc.cluster.local
 sonarr:
   enabled: false

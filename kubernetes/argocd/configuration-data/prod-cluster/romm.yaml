@@ -9,9 +9,6 @@ redis:
     existingSecret: romm-config-secret
     existingSecretPasswordKey: redisPassword
 
-env:
-  ROMM_BASE_PATH: /romm
-
 serviceAccount:
   create: true
   name: romm
