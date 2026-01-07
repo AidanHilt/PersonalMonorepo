@@ -36,6 +36,8 @@ env:
       secretKeyRef:
         name: '{{ if .Values.romm.masterKey.existingSecret }}{{ .Values.romm.masterKey.existingSecret }}{{ else if .Values.romm.configSecret }}{{ .Values.romm.configSecret }}{{ else }}{{ .Release.Name }}-secrets{{ end }}'
         key: '{{ .Values.romm.masterKey.secretKey }}'
+
+enableServiceLinks: false
 {{- end -}}
 {{- $_ := mergeOverwrite .Values (include "romm.harcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}
