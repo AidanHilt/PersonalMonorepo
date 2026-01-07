@@ -165,6 +165,13 @@ radarr:
   icon: sh-radarr
   nameOverride: Radarr
   description: Self-hosted movie collection manager
+romm:
+  enabled: false
+  subdomain: romm
+  group: Gaming
+  icon: sh-romm
+  nameOverride: RomM
+  description: Self-hosted ROM and flash game manager
 settings:
   title: ARH Homepage
   description: The front page of this website

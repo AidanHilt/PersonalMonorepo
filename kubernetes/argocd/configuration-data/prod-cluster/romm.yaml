@@ -9,6 +9,14 @@ redis:
     existingSecret: romm-config-secret
     existingSecretPasswordKey: redisPassword
 
+env:
+  HASHEOUS_API_ENABLED: true
+  STEAMGRIDDB_API_KEY:
+    valueFrom:
+      secretKeyRef:
+        name: romm-config-secret
+        key: steamGridDBApiKey
+
 serviceAccount:
   create: true
   name: romm
