@@ -1,0 +1,40 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "romm.harcodedValues" -}}
+env:
+  # Database configuration
+  DB_ENABLED: '{{ .Values.romm.database.enabled }}'
+  DB_ENGINE: '{{ .Values.romm.database.engine }}'
+  DB_USER: '{{ .Values.romm.database.username }}'
+  DB_PORT: '{{ .Values.romm.database.port }}'
+  DB_HOST: '{{ .Values.romm.database.host }}'
+
+  # Database password from secret
+  DB_PASSWORD:
+    valueFrom:
+      secretKeyRef:
+        name: '{{ if .Values.romm.database.passwordSecret }}{{ .Values.romm.database.passwordSecret }}{{ else if .Values.romm.configSecret }}{{ .Values.romm.configSecret }}{{ else }}{{ .Release.Name }}-secrets{{ end }}'
+        key: '{{ .Values.romm.database.secretKey }}'
+
+  # Redis configuration
+  REDIS_ENABLED: '{{ .Values.romm.redis.enabled }}'
+  REDIS_HOST: '{{ if .Values.romm.redis.host }}{{ .Values.romm.redis.host }}{{ else }}{{ .Release.Name }}-redis-master{{ end }}'
+  REDIS_PORT: "6379"
+
+  # Redis password from secret
+  REDIS_PASSWORD:
+    valueFrom:
+      secretKeyRef:
+        name: '{{ if .Values.romm.configSecret }}{{ .Values.romm.configSecret }}{{ else }}{{ .Release.Name }}-secrets{{ end }}'
+        key: redis-password
+
+  # Master key from secret
+  ROMM_MASTER_KEY:
+    valueFrom:
+      secretKeyRef:
+        name: '{{ if .Values.romm.masterKey.existingSecret }}{{ .Values.romm.masterKey.existingSecret }}{{ else if .Values.romm.configSecret }}{{ .Values.romm.configSecret }}{{ else }}{{ .Release.Name }}-secrets{{ end }}'
+        key: '{{ .Values.romm.masterKey.secretKey }}'
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "romm.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}

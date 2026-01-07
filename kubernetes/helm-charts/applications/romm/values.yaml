@@ -1,0 +1,65 @@
+#================================================================================================================================================
+# You should be able to use any of the values you can find here: https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
+#================================================================================================================================================
+image:
+  repository: ghcr.io/rommapp/romm
+  pullPolicy: IfNotPresent
+
+service:
+  main:
+    ports:
+      http:
+        port: 80
+        targetPort: 8080
+#=============================
+# Application-specific config
+#=============================
+romm:
+  # If set, switches off all generated secrets and becomes the default option to read from for any section that doesn't have a secret
+  # explicitly set.
+  configSecret: ""
+
+  masterKey:
+    key: ""
+
+    existingSecret: ""
+    secretKey: rommAuthKey
+
+  database:
+    enabled: false
+
+    # Valid options are postgres, mariadb, and mysql
+    engine: postgres
+
+    username: romm
+    password: ""
+
+    passwordSecret: ""
+    secretKey: postgresPassword
+
+    port: 5432
+    host: postgres-cluster-rw.postgres.svc.cluster.local
+
+  redis:
+    enabled: true
+
+    # Default is {{ $.Release.Name}}-redis
+    host: ""
+
+#=============
+# Subchart(s)
+#=============
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    username: ""
+    # Use an existing secret for redis auth. Do this if you're using Argo to manage your instance or otherwise using helm template under the hood
+    #     The secret name can vary, but the password key must be redis-password.
+    # existingSecret: paperless-redis
+    # existingSecretPasswordKey: redis-password
+  master:
+    persistence:
+      enabled: false
+  replica:
+    replicaCount: 0

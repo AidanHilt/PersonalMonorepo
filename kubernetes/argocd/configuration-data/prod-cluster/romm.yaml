@@ -1,0 +1,10 @@
+romm:
+  configSecret: romm-config-secret
+
+  database:
+    enabled: true
+
+redis:
+  auth:
+    existingSecret: romm-config-secret
+    existingSecretPasswordKey: redisPassword
