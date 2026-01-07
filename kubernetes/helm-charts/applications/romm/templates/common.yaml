@@ -9,6 +9,7 @@ env:
   DB_USER: '{{ .Values.romm.database.username }}'
   DB_PORT: '{{ .Values.romm.database.port }}'
   DB_HOST: '{{ .Values.romm.database.host }}'
+  DB_NAME: '{{ .Values.romm.database.dbName }}'
 
   # Database password from secret
   DB_PASSWORD:
