@@ -27,7 +27,7 @@ env:
     valueFrom:
       secretKeyRef:
         name: '{{ if .Values.romm.configSecret }}{{ .Values.romm.configSecret }}{{ else }}{{ .Release.Name }}-secrets{{ end }}'
-        key: '{{ .Values.redis.existingSecretPasswordKey }}'
+        key: '{{ .Values.redis.auth.existingSecretPasswordKey }}'
 
   # Master key from secret
   ROMM_MASTER_KEY:
