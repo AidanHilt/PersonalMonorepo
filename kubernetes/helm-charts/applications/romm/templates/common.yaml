@@ -30,7 +30,7 @@ env:
         key: '{{ .Values.redis.auth.existingSecretPasswordKey }}'
 
   # Master key from secret
-  ROMM_MASTER_KEY:
+  ROMM_AUTH_SECRET_KEY:
     valueFrom:
       secretKeyRef:
         name: '{{ if .Values.romm.masterKey.existingSecret }}{{ .Values.romm.masterKey.existingSecret }}{{ else if .Values.romm.configSecret }}{{ .Values.romm.configSecret }}{{ else }}{{ .Release.Name }}-secrets{{ end }}'
