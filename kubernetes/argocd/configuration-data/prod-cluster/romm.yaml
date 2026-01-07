@@ -8,3 +8,10 @@ redis:
   auth:
     existingSecret: romm-config-secret
     existingSecretPasswordKey: redisPassword
+
+serviceAccount:
+  create: true
+  name: romm
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"
