@@ -5,7 +5,7 @@
 env:
   # Database configuration
   DB_ENABLED: '{{ .Values.romm.database.enabled }}'
-  DB_ENGINE: '{{ .Values.romm.database.engine }}'
+  ROMM_DB_DRIVER: '{{ .Values.romm.database.engine }}'
   DB_USER: '{{ .Values.romm.database.username }}'
   DB_PORT: '{{ .Values.romm.database.port }}'
   DB_HOST: '{{ .Values.romm.database.host }}'
