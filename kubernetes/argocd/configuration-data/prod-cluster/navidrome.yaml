@@ -11,3 +11,6 @@ persistence:
 
 navidrome:
   baseUrl: /music
+
+nodeSelector:
+  kubernetes.io/hostname: gaming-pc-node
