@@ -100,7 +100,7 @@
     casks = [
       "firefox"
       "google-chrome"
-      "flux"
+      "flux-app"
       "rectangle"
       "flycut"
       "iterm2"
