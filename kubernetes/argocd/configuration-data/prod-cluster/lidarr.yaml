@@ -41,3 +41,6 @@ persistence:
     type: hostPath
     mountPath: /downloads
     hostPath: /storagePool/videoData/downloads
+
+nodeSelector:
+  kubernetes.io/hostname: gaming-pc-node
