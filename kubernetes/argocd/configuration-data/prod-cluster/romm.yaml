@@ -22,9 +22,19 @@ env:
         name: romm-config-secret
         key: retroAchievementsApiKey
 
+persistence:
+  romm:
+    enabled: true
+    type: hostPath
+    mountPath: /romm
+    hostPath: /storagePool/romm
+
 serviceAccount:
   create: true
   name: romm
   annotations:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "-2"
+
+nodeSelector:
+  kubernetes.io/hostname: gaming-pc-node
