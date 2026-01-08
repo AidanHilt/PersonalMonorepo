@@ -12,4 +12,7 @@ inputs = {
 
   spotify_public = run_cmd("keepass-retrieve-secret", "--secret-path", "Server/Your_Spotify", "--key-name", "Username")
   spotify_private = run_cmd("keepass-retrieve-secret", "--secret-path", "Server/Your_Spotify")
+
+  steamgridDB_api_key = run_cmd("keepass-retrieve-secret", "--secret-path", "Server/SteamGridDB")
+  retroAchievements_api_key = run_cmd("keepass-retrieve-secret", "--secret-path", "Server/RetroAchievements")
 }

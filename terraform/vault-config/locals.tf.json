@@ -195,6 +195,31 @@
           "namespace": "inventory-mgmt",
           "mount": "inventory-mgmt`",
           "postgres_secret": "false"
+        },
+        "romm": {
+          "data": {
+            "postgresUsername": {
+              "value": "romm"
+            },
+            "postgresPassword": {
+              "is_postgres_password": true
+            },
+            "rommAuthKey": {
+              "is_postgres_password": false
+            },
+            "redisPassword": {
+              "is_postgres_password": false
+            },
+            "steamGridDBApiKey": {
+              "value": "${var.steamgridDB_api_key}"
+            },
+            "retroAchievementsApiKey": {
+              "value": "${var.retroAchievements_api_key}"
+            }
+          },
+          "namespace": "romm",
+          "mount": "romm",
+          "postgres_secret": "true"
         }
       },
       "unique_mounts": "${toset([\n  for key, secret in local.secret_definitions : secret.mount\n  ])}"

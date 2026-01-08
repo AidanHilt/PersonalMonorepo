@@ -69,3 +69,15 @@ variable "spotify_private" {
   description = "Private key for spotify app, used by your_spotify"
   default     = ""
 }
+
+variable "steamgridDB_api_key" {
+  type        = string
+  description = "API key for SteamGridDB, used in RomM"
+  default     = ""
+}
+
+variable "retroAchievements_api_key" {
+  type        = string
+  description = "API key for RetroAchievements, used in RomM"
+  default     = ""
+}

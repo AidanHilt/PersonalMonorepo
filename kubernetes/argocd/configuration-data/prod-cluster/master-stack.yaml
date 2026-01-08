@@ -4,7 +4,7 @@ hostnames:
   - prod-cluster-lb.lan
   - 192.168.86.3
 
-gitRevision: project-appocalypse/romm
+gitRevision: master
 
 bentopdf:
   enabled: true
