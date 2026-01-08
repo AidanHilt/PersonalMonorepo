@@ -92,6 +92,11 @@ radarr:
   configuration:
     enabled: true
 
+romm:
+  enabled: true
+  configuration:
+    enabled: true
+
 sonarr:
   enabled: true
   configuration:

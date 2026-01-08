@@ -8,6 +8,7 @@ qa-cluster:
     - lidarr
     - n8n
     - firefly-iii
+    - romm
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -39,6 +40,8 @@ qa-cluster:
       owner: n8n
     firefly:
       owner: firefly-iii
+    romm:
+      owner: romm
   storage: 1Gi
 staging-cluster:
   enabled: false
@@ -50,6 +53,7 @@ staging-cluster:
     - lidarr
     - n8n
     - firefly-iii
+    - romm
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -81,6 +85,8 @@ staging-cluster:
       owner: n8n
     firefly:
       owner: firefly
+    romm:
+      owner: romm
   storage: 1Gi
 prod-cluster:
   enabled: false
@@ -93,6 +99,7 @@ prod-cluster:
     - lidarr
     - n8n
     - firefly-iii
+    - romm
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -124,4 +131,6 @@ prod-cluster:
       owner: n8n
     firefly:
       owner: firefly-iii
+    romm:
+      owner: romm
   storage: 50Gi

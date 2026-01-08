@@ -55,6 +55,11 @@ radarr:
   secretDestinationNamespace: videos
   postgresSecret:
     enabled: true
+romm:
+  enabled: false
+  secretDestinationNamespace: romm
+  postgresSecret:
+    enabled: true
 sonarr:
   enabled: false
   secretDestinationNamespace: videos

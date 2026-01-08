@@ -13,6 +13,7 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
+# Global config
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -254,6 +255,10 @@ radarr:
   destinationNamespace: videos
   configuration:
     enabled: false
+romm:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/romm
+  destinationNamespace: romm
 sonarr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/sonarr
@@ -266,12 +271,6 @@ transmission:
   destinationNamespace: videos
   configuration:
     enabled: false
-ubrr:
-  enabled: false
-  repo: https://test.com
-  chart: ubrr
-  version: 1.0.0
-  destinationNamespace: ubrr
 video-stack-configuration:
   enabled: false
   secureValues: |

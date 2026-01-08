@@ -131,6 +131,10 @@ radarr:
   prefixes:
     - /radarr
   destinationSvc: radarr.videos.svc.cluster.local
+romm:
+  enabled: false
+  subdomain: romm
+  destinationSvc: romm.romm.svc.cluster.local
 sonarr:
   enabled: false
   prefixes:
