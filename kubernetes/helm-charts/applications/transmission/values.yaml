@@ -80,7 +80,7 @@ persistence:
 transmission:
   alternateUi:
     enabled: false
-    uiLocation: https://github.com/johman10/flood-for-transmission/releases/download/latest/flood-for-transmission.tar.gz
+    uiLocation: https://github.com/johman10/flood-for-transmission/releases/download/v1.0.1/flood-for-transmission.tar.gz
 
 vpn:
   enabled: false
@@ -109,8 +109,7 @@ vpn:
 
   # -- All variables specified here will be added to the vpn sidecar container
   # See the documentation of the VPN image for all config values
-  env:
-    {}
+  env: {}
     # TZ: UTC
 
   # -- Override the args for the vpn sidecar container
@@ -146,8 +145,7 @@ vpn:
 
   # -- Optionally specify a livenessProbe, e.g. to check if the connection is still
   # being protected by the VPN
-  livenessProbe:
-    {}
+  livenessProbe: {}
     # exec:
     #   command:
     #     - sh
