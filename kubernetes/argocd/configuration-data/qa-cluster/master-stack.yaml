@@ -4,12 +4,10 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/bar-assistant
+gitRevision: project-appocalypse/immich
 
-bar-assistant:
+immich:
   enabled: true
-  configuration:
-    enabled: true
 
 homepage:
   enabled: true

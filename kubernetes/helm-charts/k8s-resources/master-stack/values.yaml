@@ -13,7 +13,7 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-# Global config
+
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -95,6 +95,12 @@ homepage:
       useDefaultGitRevision: true
       # Generates a mirror of the enabled status and hostname config as the config for this app
       followMasterConfig: true
+immich:
+  enabled: false
+  repo: oci://ghcr.io/immich-app/immich-charts/immich
+  chart: immich
+  version: 0.10.3
+  destinationNamespace: immich
 istio:
   enabled: false
   repo: https://istio-release.storage.googleapis.com/charts
