@@ -9,8 +9,8 @@
     sunshine
     lutris
     gogdl
-    heroic
-    itch
+    # heroic
+    # itch
   ]);
 
   programs.steam = lib.mkIf (pkgs.system == "x86_64-linux") {
