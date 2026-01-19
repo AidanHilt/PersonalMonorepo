@@ -7,6 +7,10 @@
   environment.systemPackages = lib.mkIf (pkgs.system == "x86_64-linux") (with pkgs; [
     discord
     sunshine
+    lutris
+    gogdl
+    heroic
+    itch
   ]);
 
   programs.steam = lib.mkIf (pkgs.system == "x86_64-linux") {
