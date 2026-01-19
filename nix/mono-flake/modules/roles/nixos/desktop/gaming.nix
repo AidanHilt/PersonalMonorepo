@@ -1,6 +1,7 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
+
   unstablePkgs = import inputs.nixpkgs-unstable {system = pkgs.system;};
 
 in
@@ -15,8 +16,11 @@ in
     lutris
     gogdl
     unstablePkgs.heroic
+    # linuxKernel.packages.linux_zen.xone
     # itch
   ]);
+
+ # hardware.xone.enable = true;
 
   programs.steam = lib.mkIf (pkgs.system == "x86_64-linux") {
     enable = true;
