@@ -1,5 +1,10 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
+let
+  unstablePkgs = import inputs.nixpkgs-unstable {system = pkgs.system;};
+
+in
+
 {
   imports = [];
 
@@ -9,7 +14,7 @@
     sunshine
     lutris
     gogdl
-    heroic
+    unstablePkgs.heroic
     # itch
   ]);
 
