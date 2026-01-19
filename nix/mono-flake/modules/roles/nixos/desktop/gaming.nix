@@ -9,7 +9,7 @@
     sunshine
     lutris
     gogdl
-    # heroic
+    heroic
     # itch
   ]);
 
