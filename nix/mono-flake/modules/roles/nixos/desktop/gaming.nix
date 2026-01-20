@@ -18,7 +18,7 @@ in
     heroic
     linuxKernel.packages.linux_zen.xone
     usbutils
-    xowPkgs.xow_dongle-firmware
+    xowPkgs.xone-dongle-firmware
     # itch
   ]);
 

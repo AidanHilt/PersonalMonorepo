@@ -303,6 +303,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-xone": {
+      "locked": {
+        "lastModified": 1767362050,
+        "narHash": "sha256-3x89FiysDGxjmNOh/D0lZfceTfS8YN+6IZxjmcYv6ys=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "f621e42319dbde5153c77fd7716c82853839b90b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "f621e42319dbde5153c77fd7716c82853839b90b",
+        "type": "github"
+      }
+    },
     "nixpkgs_2": {
       "locked": {
         "lastModified": 1768564909,
@@ -391,6 +407,7 @@
         "nixpkgs-terraform": "nixpkgs-terraform",
         "nixpkgs-terragrunt": "nixpkgs-terragrunt",
         "nixpkgs-unstable": "nixpkgs-unstable",
+        "nixpkgs-xone": "nixpkgs-xone",
         "nur": "nur",
         "personalMonorepo": "personalMonorepo",
         "plasma-manager": "plasma-manager",
