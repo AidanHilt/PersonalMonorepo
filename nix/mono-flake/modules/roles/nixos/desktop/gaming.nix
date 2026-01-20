@@ -2,7 +2,7 @@
 
 let
 
-  xowPkgs = import inputs.nixpkgs-xone {system = pkgs.system;};
+  xowPkgs = import inputs.nixpkgs-xone {system = pkgs.system; config.allowUnfree = true;};
 
 in
 
