@@ -1,11 +1,5 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
-let
-
-  unstablePkgs = import inputs.nixpkgs-unstable {system = pkgs.system;};
-
-in
-
 {
   imports = [];
 
@@ -21,6 +15,7 @@ in
   ]);
 
   hardware.xone.enable = true;
+  hardware.bluetooth.enable = true;
 
   programs.steam = lib.mkIf (pkgs.system == "x86_64-linux") {
     enable = true;
