@@ -16,11 +16,11 @@ in
     lutris
     gogdl
     unstablePkgs.heroic
-    # linuxKernel.packages.linux_zen.xone
+    linuxKernel.packages.linux_zen.xone
     # itch
   ]);
 
- # hardware.xone.enable = true;
+  hardware.xone.enable = true;
 
   programs.steam = lib.mkIf (pkgs.system == "x86_64-linux") {
     enable = true;
