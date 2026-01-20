@@ -1,5 +1,11 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
+let
+
+  xowPkgs = import inputs.nixpkgs-xone {system = pkgs.system;};
+
+in
+
 {
   imports = [];
 
@@ -12,7 +18,7 @@
     heroic
     linuxKernel.packages.linux_zen.xone
     usbutils
-    xow_dongle-firmware
+    xowPkgs.xow_dongle-firmware
     # itch
   ]);
 
