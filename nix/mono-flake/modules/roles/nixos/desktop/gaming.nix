@@ -15,12 +15,11 @@ in
     sunshine
     lutris
     gogdl
-    unstablePkgs.heroic
+    heroic
     linuxKernel.packages.linux_zen.xone
     # itch
   ]);
 
-  hardware.pulseaudio.enable = true;
   hardware.xone.enable = true;
 
   programs.steam = lib.mkIf (pkgs.system == "x86_64-linux") {
