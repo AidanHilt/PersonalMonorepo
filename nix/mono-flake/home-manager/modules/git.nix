@@ -10,10 +10,14 @@ in
   programs.git = {
     enable = true;
 
-    userEmail = email;
-    userName = userName;
+    settings = {
 
-    extraConfig = {
+      user = {
+        email = email;
+        name = userName;
+      };
+
+      
       push = {
         autoSetupRemote = true;
       };
