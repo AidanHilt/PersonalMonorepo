@@ -17,6 +17,8 @@
   hardware.xone.enable = true;
   hardware.bluetooth.enable = true;
 
+  hardware.firmware = [ pkgs.xone-firmware ]; 
+
   programs.steam = lib.mkIf (pkgs.system == "x86_64-linux") {
     enable = true;
   };
