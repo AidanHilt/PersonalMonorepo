@@ -2,7 +2,6 @@
 
 let
   terragruntPkgs = import inputs.nixpkgs-terragrunt {system = pkgs.system;};
-  terraformPkgs = import inputs.nixpkgs-terraform {system = pkgs.system; config.allowUnfree = true;};
 
   terragrunt = if ! machine-config ? configSwitches.work then pkgs.terragrunt else terragruntPkgs.terragrunt;
   # Platform-specific logic or setup
