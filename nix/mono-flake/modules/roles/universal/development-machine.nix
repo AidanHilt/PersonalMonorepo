@@ -1,11 +1,6 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
-  terragruntPkgs = import inputs.nixpkgs-terragrunt {system = pkgs.system;};
-  terraformPkgs = import inputs.nixpkgs-terraform {system = pkgs.system; config.allowUnfree = true;};
-
-  terragrunt = if ! machine-config ? configSwitches.work then pkgs.terragrunt else terragruntPkgs.terragrunt;
-  terraform = if ! machine-config ? configSwitches.work then pkgs.terraform else terraformPkgs.terraform;
   # Platform-specific logic or setup
   platform-apps = if pkgs.system == "aarch64-darwin" then with pkgs; [] else with pkgs; [];
 
