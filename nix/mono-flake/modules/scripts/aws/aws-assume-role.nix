@@ -45,7 +45,7 @@ let
       if [[ -n "$BASH_VERSION" ]]; then
           read -p "Enter Role Name: " role_name
       elif [[ -n "$ZSH_VERSION" ]]; then
-          read "role_name?"Enter Role Name: "
+          read "role_name?Enter Role Name: "
       fi
       if [[ -z "$role_name" ]]; then
         echo "Error: Role name is required"
