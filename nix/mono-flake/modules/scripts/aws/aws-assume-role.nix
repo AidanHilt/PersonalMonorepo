@@ -22,7 +22,6 @@ let
         *)
           echo "Unknown option: $1"
           echo "Usage: assume_role [--account-id ACCOUNT_ID] [--role-name ROLE_NAME]"
-          return 1
           ;;
       esac
     done
@@ -36,7 +35,6 @@ let
       fi
       if [[ -z "$account_id" ]]; then
         echo "Error: Account ID is required"
-        return 1
       fi
     fi
 
@@ -49,7 +47,6 @@ let
       fi
       if [[ -z "$role_name" ]]; then
         echo "Error: Role name is required"
-        return 1
       fi
     fi
 
@@ -69,7 +66,6 @@ let
     if [[ $? -ne 0 ]]; then
       echo "Error assuming role:"
       echo "$assume_output"
-      return 1
     fi
 
     # Parse the tab-separated output
@@ -81,7 +77,6 @@ let
     # Check if credentials were successfully extracted
     if [[ -z "$AWS_ACCESS_KEY_ID" ]]; then
       echo "Error: Failed to extract credentials from assume-role response"
-      return 1
     fi
 
     echo "Successfully assumed role!"
