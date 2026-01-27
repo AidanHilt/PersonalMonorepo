@@ -88,8 +88,6 @@ let
     echo "  AWS_SESSION_TOKEN"
     echo ""
     echo "To verify, run: aws sts get-caller-identity"
-
-    exit 0
   }
   '';
 in
