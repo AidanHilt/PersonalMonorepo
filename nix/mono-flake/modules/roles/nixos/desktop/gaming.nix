@@ -16,9 +16,7 @@ in
     lutris
     gogdl
     heroic
-    linuxKernel.packages.linux_zen.xone
     usbutils
-    xowPkgs.xone-dongle-firmware
     # itch
   ]);
 
