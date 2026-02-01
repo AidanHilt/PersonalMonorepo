@@ -17,6 +17,7 @@ in
     gogdl
     heroic
     usbutils
+    linuxKernel.packages.linux_zen.xone
     # itch
   ]);
 
