@@ -18,6 +18,7 @@ in
     heroic
     usbutils
     linuxKernel.packages.linux_zen.xone
+    xone-firmware
     # itch
   ]);
 
