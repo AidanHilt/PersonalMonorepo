@@ -25,6 +25,9 @@ in
   hardware.xone.enable = true;
   hardware.bluetooth.enable = true;
 
+  boot.extraModulePackages = [ config.boot.kernelPackages.xone ];
+  boot.kernelModules = [ "xone" ];
+
   services.pipewire = {
     enable = true;
     alsa.enable = true;
