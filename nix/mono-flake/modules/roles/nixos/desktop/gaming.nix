@@ -1,11 +1,5 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
-let
-
-  xowPkgs = import inputs.nixpkgs-xone {system = pkgs.system; config.allowUnfree = true;};
-
-in
-
 {
   imports = [];
 
@@ -32,7 +26,7 @@ in
     alsa.enable = true;
     pulse.enable = true;
   };
-  
+
   # Make sure your user is in the audio group
   users.users.${machine-config.username}.extraGroups = [ "audio" ];
 
