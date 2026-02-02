@@ -225,17 +225,17 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1767362050,
-        "narHash": "sha256-3x89FiysDGxjmNOh/D0lZfceTfS8YN+6IZxjmcYv6ys=",
-        "owner": "fxzzi",
+        "lastModified": 1764521362,
+        "narHash": "sha256-M101xMtWdF1eSD0xhiR8nG8CXRlHmv6V+VoY65Smwf4=",
+        "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "f621e42319dbde5153c77fd7716c82853839b90b",
+        "rev": "871b9fd269ff6246794583ce4ee1031e1da71895",
         "type": "github"
       },
       "original": {
-        "owner": "fxzzi",
+        "owner": "nixos",
+        "ref": "25.11",
         "repo": "nixpkgs",
-        "rev": "f621e42319dbde5153c77fd7716c82853839b90b",
         "type": "github"
       }
     },
@@ -300,22 +300,6 @@
         "owner": "nixos",
         "ref": "nixos-unstable",
         "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nixpkgs-xone": {
-      "locked": {
-        "lastModified": 1767362050,
-        "narHash": "sha256-3x89FiysDGxjmNOh/D0lZfceTfS8YN+6IZxjmcYv6ys=",
-        "owner": "fxzzi",
-        "repo": "nixpkgs",
-        "rev": "f621e42319dbde5153c77fd7716c82853839b90b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "fxzzi",
-        "repo": "nixpkgs",
-        "rev": "f621e42319dbde5153c77fd7716c82853839b90b",
         "type": "github"
       }
     },
@@ -407,7 +391,6 @@
         "nixpkgs-terraform": "nixpkgs-terraform",
         "nixpkgs-terragrunt": "nixpkgs-terragrunt",
         "nixpkgs-unstable": "nixpkgs-unstable",
-        "nixpkgs-xone": "nixpkgs-xone",
         "nur": "nur",
         "personalMonorepo": "personalMonorepo",
         "plasma-manager": "plasma-manager",
