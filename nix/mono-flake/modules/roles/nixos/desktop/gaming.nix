@@ -10,8 +10,25 @@
     lutris
     gogdl
     heroic
+    usbutils
+    linuxKernel.packages.linux_zen.xone
+    pavucontrol
     # itch
   ]);
+
+  hardware.xone.enable = true;
+  hardware.bluetooth.enable = true;
+
+  boot.kernelModules = [ "xone" ];
+
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    pulse.enable = true;
+  };
+
+  # Make sure your user is in the audio group
+  users.users.${machine-config.username}.extraGroups = [ "audio" ];
 
   programs.steam = lib.mkIf (pkgs.system == "x86_64-linux") {
     enable = true;
