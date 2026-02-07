@@ -2,29 +2,55 @@
 
 {{/* Append the hardcoded settings */}}
 {{- define "your-spotify.harcodedValues" -}}
+
+controllers:
+  frontend:
+    type: deployment
+    containers:
+      frontend:
+        image:
+          repository: {{ .Values.frontendImage.repository }}
+          pullPolicy: {{ .Values.frontendImage.pullPolicy }}
+          tag: {{ .Values.frontendImage.tag }}
+        env:
+          - name: API_ENDPOINT
+            value: http://spotify-api.prod-cluster-lb.lan
+        ports:
+          - name: frontend
+            containerPort: 3000
+  backend:
+    type: deployment
+    containers:
+      backend:
+        image:
+          repository: {{ .Values.backendImage.repository }}
+          pullPolicy: {{ .Values.backendImage.pullPolicy }}
+          tag: {{ .Values.backendImage.tag }}
+        env:
+          - name: MONGO_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.yourSpotify.configSecret.existingSecret | default $defaultSecretName }}
+                key: mongodbPassword
+            - name: MONGO_ENDPOINT
+              value: mongodb://admin:$(MONGO_PASSWORD)@{{ .Release.Name }}-mongodb:27017
+            - name: API_ENDPOINT
+              value: http://spotify-api.prod-cluster-lb.lan
+            - name: CLIENT_ENDPOINT
+              value: http://spotify.prod-cluster-lb.lan
+            - name: SPOTIFY_PUBLIC
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.yourSpotify.configSecret.existingSecret | default $defaultSecretName }}
+                  key: spotifyPublic
+            - name: SPOTIFY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.yourSpotify.configSecret.existingSecret | default $defaultSecretName }}
+                  key: spotifyPrivate
+
 {{ $defaultSecretName := printf "%v-%v" .Release.Name "config-secret"}}
-env:
-  - name: MONGO_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: {{ .Values.yourSpotify.configSecret.existingSecret | default $defaultSecretName }}
-        key: mongodbPassword
-  - name: MONGO_ENDPOINT
-    value: mongodb://admin:$(MONGO_PASSWORD)@{{ .Release.Name }}-mongodb:27017
-  - name: API_ENDPOINT
-    value: http://spotify-api.prod-cluster-lb.lan
-  - name: CLIENT_ENDPOINT
-    value: http://spotify.prod-cluster-lb.lan
-  - name: SPOTIFY_PUBLIC
-    valueFrom:
-      secretKeyRef:
-        name: {{ .Values.yourSpotify.configSecret.existingSecret | default $defaultSecretName }}
-        key: spotifyPublic
-  - name: SPOTIFY_SECRET
-    valueFrom:
-      secretKeyRef:
-        name: {{ .Values.yourSpotify.configSecret.existingSecret | default $defaultSecretName }}
-        key: spotifyPrivate
+
 
 
 {{- if eq .Values.yourSpotify.configSecret.existingSecret "" }}
