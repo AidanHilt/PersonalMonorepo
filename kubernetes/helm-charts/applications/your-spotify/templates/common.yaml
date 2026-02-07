@@ -3,6 +3,8 @@
 {{/* Append the hardcoded settings */}}
 {{- define "your-spotify.harcodedValues" -}}
 
+{{ $defaultSecretName := printf "%v-%v" .Release.Name "config-secret"}}
+
 controllers:
   frontend:
     type: deployment
@@ -48,10 +50,6 @@ controllers:
                 secretKeyRef:
                   name: {{ .Values.yourSpotify.configSecret.existingSecret | default $defaultSecretName }}
                   key: spotifyPrivate
-
-{{ $defaultSecretName := printf "%v-%v" .Release.Name "config-secret"}}
-
-
 
 {{- if eq .Values.yourSpotify.configSecret.existingSecret "" }}
 secrets:
