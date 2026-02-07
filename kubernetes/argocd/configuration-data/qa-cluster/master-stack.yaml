@@ -4,7 +4,7 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/bar-assistant
+gitRevision: project-appocalypse/your-spotify-fix
 
 bar-assistant:
   enabled: false
