@@ -103,9 +103,7 @@ persistence:
     {{- end }}
     name: {{ .Release.Name }}-immich-config
 {{- end }}
-  data:
-    enabled: true
-    existingClaim: {{ .Values.immich.persistence.library.existingClaim }}
+{{ .Values.immich.persistence | toYaml }}
 {{- end }}
 
 {{ if .Values.server.enabled }}
