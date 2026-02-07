@@ -7,7 +7,7 @@ hostnames:
 gitRevision: project-appocalypse/bar-assistant
 
 bar-assistant:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
@@ -35,3 +35,6 @@ istio:
   dependentApps:
     kiali:
       enabled: false
+
+your-spotify:
+  enabled: true
