@@ -1,9 +1,9 @@
 dependencies:
 - name: common
   repository: https://bjw-s-labs.github.io/helm-charts/
-  version: 1.5.1
+  version: 4.5.0
 - name: mongodb
   repository: oci://registry-1.docker.io/cloudpirates
   version: 0.6.4
-digest: sha256:a184def492a29588f02283cc955fa1d6fbb71e6842a6f7653036b15a4bece20a
-generated: "2025-11-23T17:37:55.349465-05:00"
+digest: sha256:79de8a9ace0758d379627e58707a0c7c91ab090f112c1dae47ee902f6b92fe43
+generated: "2026-02-07T00:11:39.893864-05:00"
