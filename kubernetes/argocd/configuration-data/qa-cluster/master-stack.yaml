@@ -33,3 +33,6 @@ istio:
   dependentApps:
     kiali:
       enabled: false
+
+your-spotify:
+  enabled: true

@@ -1,32 +1,26 @@
 #================================================================================================================================================
 # You should be able to use any of the values you can find here: https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
 #================================================================================================================================================
-image:
+backendImage:
   repository: yooooomi/your_spotify_server
   pullPolicy: IfNotPresent
+  tag: 1.17.0
 
-additionalContainers:
-  frontend:
-    name: frontend
-    image: yooooomi/your_spotify_client
-    imagePullPolicy: IfNotPresent
-    env:
-      - name: API_ENDPOINT
-        value: http://spotify-api.prod-cluster-lb.lan
-    ports:
-      - name: frontend
-        containerPort: 3000
+frontendImage:
+  repository: yooooomi/your_spotify_client
+  pullPolicy: IfNotPresent
+  tag: 1.17.0
 
 service:
   main:
     enabled: false
   backend:
-    nameOverride: backend
+    controller: backend
     ports:
       backend:
         port: 8080
   frontend:
-    nameOverride: frontend
+    controller: frontend
     ports:
       frontend:
         port: 3000
