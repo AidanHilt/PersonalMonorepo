@@ -34,22 +34,22 @@ controllers:
               secretKeyRef:
                 name: {{ .Values.yourSpotify.configSecret.existingSecret | default $defaultSecretName }}
                 key: mongodbPassword
-            - name: MONGO_ENDPOINT
-              value: mongodb://admin:$(MONGO_PASSWORD)@{{ .Release.Name }}-mongodb:27017
-            - name: API_ENDPOINT
-              value: http://spotify-api.prod-cluster-lb.lan
-            - name: CLIENT_ENDPOINT
-              value: http://spotify.prod-cluster-lb.lan
-            - name: SPOTIFY_PUBLIC
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.yourSpotify.configSecret.existingSecret | default $defaultSecretName }}
-                  key: spotifyPublic
-            - name: SPOTIFY_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.yourSpotify.configSecret.existingSecret | default $defaultSecretName }}
-                  key: spotifyPrivate
+          - name: MONGO_ENDPOINT
+            value: mongodb://admin:$(MONGO_PASSWORD)@{{ .Release.Name }}-mongodb:27017
+          - name: API_ENDPOINT
+            value: http://spotify-api.prod-cluster-lb.lan
+          - name: CLIENT_ENDPOINT
+            value: http://spotify.prod-cluster-lb.lan
+          - name: SPOTIFY_PUBLIC
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.yourSpotify.configSecret.existingSecret | default $defaultSecretName }}
+                key: spotifyPublic
+          - name: SPOTIFY_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.yourSpotify.configSecret.existingSecret | default $defaultSecretName }}
+                key: spotifyPrivate
 
 {{- if eq .Values.yourSpotify.configSecret.existingSecret "" }}
 secrets:
