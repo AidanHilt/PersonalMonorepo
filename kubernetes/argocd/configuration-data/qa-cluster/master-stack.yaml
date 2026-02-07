@@ -4,10 +4,10 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/bar-assistant
+gitRevision: project-appocalypse/your-spotify-fix
 
 bar-assistant:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
@@ -35,3 +35,6 @@ istio:
   dependentApps:
     kiali:
       enabled: false
+
+your-spotify:
+  enabled: true
