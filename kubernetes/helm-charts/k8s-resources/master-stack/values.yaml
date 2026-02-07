@@ -96,9 +96,7 @@ homepage:
       followMasterConfig: true
 immich:
   enabled: false
-  repo: oci://ghcr.io/immich-app/immich-charts/immich
-  chart: immich
-  version: 0.10.3
+  gitPath: kubernetes/helm-charts/applications/immich
   destinationNamespace: immich
 istio:
   enabled: false

@@ -1,0 +1,99 @@
+## This chart relies on the common library chart from bjw-s
+## You can find it at https://github.com/bjw-s-labs/helm-charts/tree/common-4.3.0/charts/library/common
+## Refer there for more detail about the supported values
+
+# These entries are shared between all the Immich components
+
+controllers:
+  main:
+    containers:
+      main:
+        image:
+          tag: v2.0.0
+        env:
+          REDIS_HOSTNAME: '{{ printf "%s-valkey" .Release.Name }}'
+          IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003" .Release.Name }}'
+
+immich:
+  metrics:
+    enabled: false
+  persistence:
+    library:
+      enabled: false
+  configuration: {}
+    # trash:
+    #   enabled: false
+    #   days: 30
+    # storageTemplate:
+    #   enabled: true
+    #   template: "{{y}}/{{y}}-{{MM}}-{{dd}}/{{filename}}"
+  # Sets the resource Kind to store configuration in. Must be either ConfigMap or Secret.
+  configurationKind: ConfigMap
+
+# Dependencies
+
+valkey:
+  enabled: false
+  controllers:
+    main:
+      containers:
+        main:
+          image:
+            repository: docker.io/valkey/valkey
+            tag: 9.0-alpine@sha256:1be494495248d53e3558b198a1c704e6b559d5e99fe4c926e14a8ad24d76c6fa
+            pullPolicy: IfNotPresent
+  persistence:
+    data:
+      enabled: true
+      size: 1Gi
+      # Optional: Set this to persistentVolumeClaim to keep job queues persistent
+      type: emptyDir
+      accessMode: ReadWriteOnce
+      # storageClass: your-class
+
+# Immich components
+
+server:
+  enabled: true
+  controllers:
+    main:
+      containers:
+        main:
+          image:
+            repository: ghcr.io/immich-app/immich-server
+            pullPolicy: IfNotPresent
+  ingress:
+    main:
+      enabled: false
+      annotations:
+        # proxy-body-size is set to 0 to remove the body limit on file uploads
+        nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      hosts:
+        - host: immich.local
+          paths:
+            - path: "/"
+              service:
+                identifier: main
+      tls: []
+
+machine-learning:
+  enabled: true
+  controllers:
+    main:
+      containers:
+        main:
+          image:
+            repository: ghcr.io/immich-app/immich-machine-learning
+            pullPolicy: IfNotPresent
+          env:
+            TRANSFORMERS_CACHE: /cache
+            HF_XET_CACHE: /cache/huggingface-xet
+            MPLCONFIGDIR: /cache/matplotlib-config
+  persistence:
+    cache:
+      enabled: true
+      size: 10Gi
+      # Optional: Set this to persistentVolumeClaim to avoid downloading the ML models every start.
+      type: emptyDir
+      accessMode: ReadWriteMany
+      # storageClass: your-class
