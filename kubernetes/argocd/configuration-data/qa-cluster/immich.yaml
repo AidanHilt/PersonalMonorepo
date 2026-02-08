@@ -1,35 +1,36 @@
-controllers:
-  main:
-    initContainers:
-      fix-permissions:
-        image:
-          repository: busybox
-          tag: latest
-        command:
-          - sh
-          - -c
-          - |
-            chmod -R 777 /data
-          volumeMounts:
-          - name: data
-            mountPath: /data
-          securityContext:
-            runAsUser: 0
-    containers:
-      main:
-        env:
-          DB_HOSTNAME: postgres-cluster-rw.postgres.svc.cluster.local
-          DB_DATABASE_NAME: immich
-          DB_USERNAME:
-            valueFrom:
-              secretKeyRef:
-                name: immich-config-secret
-                key: postgresUsername
-          DB_PASSWORD:
-            valueFrom:
-              secretKeyRef:
-                name: immich-config-secret
-                key: postgresPassword
+server:
+  controllers:
+    main:
+      initContainers:
+        fix-permissions:
+          image:
+            repository: busybox
+            tag: latest
+          command:
+            - sh
+            - -c
+            - |
+              chmod -R 777 /data
+            volumeMounts:
+            - name: data
+              mountPath: /data
+            securityContext:
+              runAsUser: 0
+      containers:
+        main:
+          env:
+            DB_HOSTNAME: postgres-cluster-rw.postgres.svc.cluster.local
+            DB_DATABASE_NAME: immich
+            DB_USERNAME:
+              valueFrom:
+                secretKeyRef:
+                  name: immich-config-secret
+                  key: postgresUsername
+            DB_PASSWORD:
+              valueFrom:
+                secretKeyRef:
+                  name: immich-config-secret
+                  key: postgresPassword
 valkey:
   enabled: true
 
