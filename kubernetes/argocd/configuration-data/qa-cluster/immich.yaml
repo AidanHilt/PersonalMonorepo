@@ -2,7 +2,8 @@ controllers:
   main:
     initContainers:
       - name: init-permissions
-        image: busybox
+        image:
+          repository: busybox
         command:
           - sh
           - -c
