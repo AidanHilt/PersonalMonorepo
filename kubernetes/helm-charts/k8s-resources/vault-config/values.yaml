@@ -13,6 +13,11 @@ firefly-iii:
     enabled: true
   serviceAccount:
     name: default
+immich:
+  enabled: false
+  secretDestinationNamespace: immich
+  postgresSecret:
+    enabled: true
 jellyfin:
   enabled: false
   secretDestinationNamespace: videos

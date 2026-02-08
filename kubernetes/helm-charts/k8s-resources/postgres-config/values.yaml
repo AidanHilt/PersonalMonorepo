@@ -9,6 +9,7 @@ qa-cluster:
     - n8n
     - firefly-iii
     - romm
+    - immich
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -42,6 +43,10 @@ qa-cluster:
       owner: firefly-iii
     romm:
       owner: romm
+    immich:
+      owner: immich
+      extensions:
+        - name: vector
   storage: 1Gi
 staging-cluster:
   enabled: false

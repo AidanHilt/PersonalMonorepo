@@ -12,6 +12,11 @@ spec:
   stopDelay: 300
   primaryUpdateStrategy: unsupervised
 
+{{- with $cluster.postgresql }}
+  postgresql:
+    {{- . | toYaml | nindent 4 }}
+{{- end }}
+
 {{- if $cluster.roles }}
   managed:
     roles:
@@ -37,6 +42,10 @@ spec:
   owner: {{ $db.owner | default $dbName }}
   cluster:
     name: postgres-cluster
+  {{- with $db.extensions }}
+  extensions:
+    {{- . | toYaml | nindent 4 }}
+  {{- end }}
 {{- end }}
 {{- end }}
 
