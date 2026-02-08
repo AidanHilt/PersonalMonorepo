@@ -52,6 +52,8 @@ qa-cluster:
       extensions:
         - name: vchord
         - name: earthdistance
+        - name: vector
+        - name: cube
   storage: 1Gi
 staging-cluster:
   enabled: false
