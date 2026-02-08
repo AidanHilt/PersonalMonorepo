@@ -50,7 +50,8 @@ qa-cluster:
     immich:
       owner: immich
       extensions:
-        - name: vector
+        - name: vchord
+        - name: earthdistance
   storage: 1Gi
 staging-cluster:
   enabled: false
