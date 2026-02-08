@@ -8,6 +8,8 @@ gitRevision: project-appocalypse/immich
 
 immich:
   enabled: true
+  configuration:
+    enabled: true
 
 homepage:
   enabled: true
@@ -33,6 +35,3 @@ istio:
   dependentApps:
     kiali:
       enabled: false
-
-your-spotify:
-  enabled: true

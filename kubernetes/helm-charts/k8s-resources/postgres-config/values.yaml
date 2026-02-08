@@ -1,5 +1,9 @@
 qa-cluster:
   enabled: false
+  postgresql:
+    shared_preload_libraries:
+      - "vchord.so"
+  image: ghcr.io/tensorchord/cloudnative-vectorchord:16.9-0.4.3
   roles:
     - prowlarr
     - sonarr

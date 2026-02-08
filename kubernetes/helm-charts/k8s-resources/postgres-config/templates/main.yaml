@@ -6,6 +6,9 @@ metadata:
   name: postgres-cluster
   namespace: postgres
 spec:
+  {{- with $cluster.image }}
+  imageName: {{ . }}
+  {{- end }}
   description: "The primary postgres cluster for this kubernetes cluster"
   instances: {{ $cluster.replicas | default 1 }}
   startDelay: 300
