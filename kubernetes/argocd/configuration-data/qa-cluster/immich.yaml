@@ -15,3 +15,5 @@ controllers:
               secretKeyRef:
                 name: immich-config-secret
                 key: postgresPassword
+valkey:
+  enabled: true
