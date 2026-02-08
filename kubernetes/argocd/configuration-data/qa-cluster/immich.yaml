@@ -1,7 +1,7 @@
 controllers:
   main:
     serviceAccount:
-      name: immich
+      identifier: immich
     containers:
       main:
         env:
@@ -17,3 +17,7 @@ controllers:
               secretKeyRef:
                 name: immich-config-secret
                 key: postgresPassword
+
+serviceAccount:
+  immich:
+    enabled: true
