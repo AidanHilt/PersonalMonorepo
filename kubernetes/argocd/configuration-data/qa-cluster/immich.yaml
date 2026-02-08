@@ -21,3 +21,4 @@ valkey:
 persistence:
   data:
     enabled: true
+    accessMode: ReadWriteOnce
