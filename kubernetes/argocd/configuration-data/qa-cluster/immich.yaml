@@ -9,13 +9,12 @@ server:
           command:
             - sh
             - -c
-            - |
-              chmod -R 777 /data
-            volumeMounts:
+            - "chmod -R 777 /data"
+          volumeMounts:
             - name: data
               mountPath: /data
-            securityContext:
-              runAsUser: 0
+          securityContext:
+            runAsUser: 0
       containers:
         main:
           env:
