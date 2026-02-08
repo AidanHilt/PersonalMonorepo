@@ -35,3 +35,6 @@ istio:
   dependentApps:
     kiali:
       enabled: false
+
+postgres:
+  enabled: true
