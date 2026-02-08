@@ -17,3 +17,7 @@ controllers:
                 key: postgresPassword
 valkey:
   enabled: true
+
+persistence:
+  data:
+    enabled: true
