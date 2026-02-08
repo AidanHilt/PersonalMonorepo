@@ -1,5 +1,19 @@
 controllers:
   main:
+    serviceAccount:
+      name: immich
     containers:
       main:
         env:
+          DB_HOSTNAME: postgres-cluster-rw.postgres.svc.cluster.local
+          DB_DATABASE_NAME: immich
+          DB_USERNAME:
+            valueFrom:
+              secretKeyRef:
+                name: immich-config-secret
+                key: postgresUsername
+          DB_PASSWORD:
+            valueFrom:
+              secretKeyRef:
+                name: immich-config-secret
+                key: postgresPassword
