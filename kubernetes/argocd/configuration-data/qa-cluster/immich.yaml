@@ -21,5 +21,5 @@ valkey:
 persistence:
   data:
     enabled: true
-    accessMode: ReadWriteMany
+    accessMode: ReadWriteOnce
     size: 10Gi
