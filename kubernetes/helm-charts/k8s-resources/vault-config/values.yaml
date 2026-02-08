@@ -18,6 +18,8 @@ immich:
   secretDestinationNamespace: immich
   postgresSecret:
     enabled: true
+  serviceAccount:
+    name: immich-server
 jellyfin:
   enabled: false
   secretDestinationNamespace: videos
