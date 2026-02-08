@@ -1,19 +1,20 @@
 controllers:
   main:
     initContainers:
-      init-permissions:
+      fix-permissions:
         image:
           repository: busybox
+          tag: latest
         command:
           - sh
           - -c
           - |
             chmod -R 777 /data
-        volumeMounts:
+          volumeMounts:
           - name: data
             mountPath: /data
-        securityContext:
-          runAsUser: 0
+          securityContext:
+            runAsUser: 0
     containers:
       main:
         env:
