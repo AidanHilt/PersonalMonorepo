@@ -19,7 +19,7 @@ valkey:
   enabled: true
 
 persistence:
-  data:
+  library:
     enabled: true
     accessMode: ReadWriteOnce
     size: 10Gi
