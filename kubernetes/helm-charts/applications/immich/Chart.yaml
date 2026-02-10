@@ -1,0 +1,21 @@
+---
+apiVersion: v2
+description: A chart to power Immich (immich.app) running on kubernetes
+name: immich
+version: 0.10.3
+appVersion: v2.0.0
+home: https://immich.app/
+icon: https://raw.githubusercontent.com/immich-app/immich/main/design/immich-logo.svg
+dependencies:
+  - name: common
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 4.5.0
+  - name: valkey
+    repository: https://valkey.io/valkey-helm/
+    version: 0.9.3
+    condition: valkey.enabled
+annotations:
+  artifacthub.io/category: storage
+  artifacthub.io/changes: |-
+    - kind: changed
+      description: Dependency updates

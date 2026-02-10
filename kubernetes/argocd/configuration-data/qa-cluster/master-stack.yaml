@@ -4,10 +4,10 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/your-spotify-fix
+gitRevision: project-appocalypse/immich
 
-bar-assistant:
-  enabled: false
+immich:
+  enabled: true
   configuration:
     enabled: true
 
@@ -36,5 +36,5 @@ istio:
     kiali:
       enabled: false
 
-your-spotify:
+postgres:
   enabled: true

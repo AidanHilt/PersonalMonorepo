@@ -6,11 +6,19 @@ metadata:
   name: postgres-cluster
   namespace: postgres
 spec:
+  {{- with $cluster.image }}
+  imageName: {{ . }}
+  {{- end }}
   description: "The primary postgres cluster for this kubernetes cluster"
   instances: {{ $cluster.replicas | default 1 }}
   startDelay: 300
   stopDelay: 300
   primaryUpdateStrategy: unsupervised
+
+{{- with $cluster.postgresql }}
+  postgresql:
+    {{- . | toYaml | nindent 4 }}
+{{- end }}
 
 {{- if $cluster.roles }}
   managed:
@@ -37,6 +45,10 @@ spec:
   owner: {{ $db.owner | default $dbName }}
   cluster:
     name: postgres-cluster
+  {{- with $db.extensions }}
+  extensions:
+    {{- . | toYaml | nindent 4 }}
+  {{- end }}
 {{- end }}
 {{- end }}
 

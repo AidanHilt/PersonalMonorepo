@@ -193,7 +193,7 @@
             }
           },
           "namespace": "inventory-mgmt",
-          "mount": "inventory-mgmt`",
+          "mount": "inventory-mgmt",
           "postgres_secret": "false"
         },
         "romm": {
@@ -220,6 +220,23 @@
           "namespace": "romm",
           "mount": "romm",
           "postgres_secret": "true"
+        },
+        "immich": {
+          "service_account": "immich-server",
+          "namespace": "immich",
+          "mount": "immich",
+          "postgres_secret": "true",
+          "data": {
+            "postgresPassword": {
+              "is_postgres_password": true
+            },
+            "postgresUsername": {
+              "value": "immich"
+            },
+            "valkeyPassword": {
+              "is_postgres_password": false
+            }
+          }
         }
       },
       "unique_mounts": "${toset([\n  for key, secret in local.secret_definitions : secret.mount\n  ])}"

@@ -1,5 +1,9 @@
 qa-cluster:
   enabled: false
+  postgresql:
+    shared_preload_libraries:
+      - "vchord.so"
+  image: ghcr.io/tensorchord/cloudnative-vectorchord:16.9-0.4.3
   roles:
     - prowlarr
     - sonarr
@@ -9,6 +13,7 @@ qa-cluster:
     - n8n
     - firefly-iii
     - romm
+    - immich
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -42,6 +47,13 @@ qa-cluster:
       owner: firefly-iii
     romm:
       owner: romm
+    immich:
+      owner: immich
+      extensions:
+        - name: vchord
+        - name: earthdistance
+        - name: vector
+        - name: cube
   storage: 1Gi
 staging-cluster:
   enabled: false

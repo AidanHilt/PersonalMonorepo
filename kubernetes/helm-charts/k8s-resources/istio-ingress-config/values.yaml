@@ -73,6 +73,11 @@ homepage:
     - /
   destinationSvc: homepage.misc.svc.cluster.local
   destinationPort: 3000
+immich:
+  enabled: false
+  subdomain: immich
+  destinationSvc: immich-server.immich.svc.cluster.local
+  destinationPort: 2283
 it-tools:
   enabled: false
   prefixes:
