@@ -4,7 +4,7 @@ server:
       containers:
         main:
           env:
-            - name: RED_PASSWORD
+            REDIS_PASSWORD:
               valueFrom:
                 secretKeyRef:
                   name: immich-config-secret
