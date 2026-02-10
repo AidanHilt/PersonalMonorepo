@@ -19,6 +19,16 @@ server:
 valkey:
   enabled: true
 
+  auth:
+    enabled: true
+
+    usersExistingSecret: immich-config-secret
+
+    aclUsers:
+      default:
+        permissions: "~* &* +@all"
+        passwordKey: valkeyPassword
+
 persistence:
   data:
     enabled: true
