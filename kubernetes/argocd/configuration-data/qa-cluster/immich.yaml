@@ -4,6 +4,11 @@ server:
       containers:
         main:
           env:
+            - name: RED_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: immich-config-secret
+                  key: valkeyPassword
             DB_HOSTNAME: postgres-cluster-rw.postgres.svc.cluster.local
             DB_DATABASE_NAME: immich
             DB_USERNAME:

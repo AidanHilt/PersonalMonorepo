@@ -35,6 +35,8 @@ immich:
 valkey:
   enabled: false
 
+  # You can use any value from here: https://github.com/valkey-io/valkey-helm/blob/main/valkey/values.yaml to configure valkey
+
 # Immich components
 
 server:
