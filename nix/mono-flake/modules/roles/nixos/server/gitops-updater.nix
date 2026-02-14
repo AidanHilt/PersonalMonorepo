@@ -9,6 +9,7 @@
     debug = true;
     repositorySubdir = "nix/mono-flake";
     remotes = [
+      # Test
       {
         name = "origin";
         url = globals.personalMonorepoURL;
