@@ -13,6 +13,7 @@
         url = globals.personalMonorepoURL;
         branches.main.name = "master";
         branches.testing.name = globals.personalMonorepoBranch;
+        branches.testing.operation = "switch";
       }
     ];
   };
