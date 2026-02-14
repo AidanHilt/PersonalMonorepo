@@ -72,7 +72,7 @@ in
       {
         name = "origin";
         url = "https://github.com/AidanHilt/PersonalMonorepo";
-        branches.main.name = "${globals.personalMonorepoBranch}";
+        branches.main.name = "master";
       }
       {
         name = "local";
