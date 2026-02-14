@@ -157,7 +157,7 @@ in
       }
       {
         name = "local";
-        url = "file:///tmp/PersonalMonorepo";
+        url = "file://${repoPath}";
         branches.main.name = "HEAD";
         poller.period = 5;
       }
