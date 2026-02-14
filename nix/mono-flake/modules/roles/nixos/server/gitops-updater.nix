@@ -15,7 +15,6 @@
         url = "file:///tmp/PersonalMonorepo";
         branches.main.name = "HEAD";
       }
-
-      ];
+    ];
   };
 }
