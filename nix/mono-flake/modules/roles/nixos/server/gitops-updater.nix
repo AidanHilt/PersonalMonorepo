@@ -144,7 +144,7 @@ let
 in
 
 {
-  environment.systemPackages = [ switchBranchScript ];
+  environment.systemPackages = [ switchBranchScript pkgs.neo-cowsay ];
 
   services.comin = {
     enable = true;
