@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, lib, ... }:
 
 {
-  environment.systemPackages = [ pkgs.neo-cowsay ];
+  environment.systemPackages = [];
 
   services.comin = {
     enable = true;
