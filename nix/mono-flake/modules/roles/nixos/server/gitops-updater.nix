@@ -1,6 +1,6 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 let
-  yaml = pkgs.formats.yaml;
+  yaml = pkgs.formats.yaml {};
 
   cominConfig = {
     hostname = machine-config.hostname;
