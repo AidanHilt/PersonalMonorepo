@@ -148,6 +148,7 @@ in
 
   services.comin = {
     enable = true;
+    hostname = machine-config.hostname;
     repositorySubdir = "nix/mono-flake";
     remotes = [
       {
