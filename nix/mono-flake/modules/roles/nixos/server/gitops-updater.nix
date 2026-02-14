@@ -37,7 +37,6 @@ in
 {
   environment.systemPackages = with pkgs; [
     branchUpdateScript
-    pkgs.comin
   ];
 
   # Ensure /etc/comin directory exists
