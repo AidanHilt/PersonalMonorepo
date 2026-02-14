@@ -3,7 +3,7 @@
 {
   services.comin = {
     enable = true;
-    flakeSubdirectory = "nix/mono-flake";
+    repositorySubdir = "nix/mono-flake";
     remotes = [
       {
         name = "origin";
@@ -14,6 +14,7 @@
         name = "local";
         url = "file:///tmp/PersonalMonorepo";
         branches.main.name = "HEAD";
+        poller.period = 15;
       }
     ];
   };
