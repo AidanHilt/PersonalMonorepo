@@ -48,7 +48,7 @@ in
     description = "Reset Comin config to template";
     serviceConfig = {
       Type = "oneshot";
-      ExecStart = "${pkgs.coreutils}/bin/cp ${cominConfig} /etc/comin/active-config.yaml";
+      ExecStart = "${pkgs.coreutils}/bin/cp ${cominConfigYaml} /etc/comin/active-config.yaml";
     };
   };
 
