@@ -70,7 +70,7 @@
 
       globals = {
         nixConfig = inputs.personalMonorepo + "/nix";
-        personalMonorepoBranch = "feat/external-user-1-final-retry";
+        personalMonorepoBranch = "project-appocalypse/nvidia";
         personalMonorepoURL = "https://github.com/AidanHilt/PersonalMonorepo";
       };
 
