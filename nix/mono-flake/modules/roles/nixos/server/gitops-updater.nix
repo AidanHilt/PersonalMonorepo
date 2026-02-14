@@ -14,7 +14,7 @@ let
     # ];
   };
 
-  cominConfigYaml = yaml.generate {"comin.yaml" cominConfig};
+  cominConfigYaml = yaml.generate "comin.yaml" cominConfig;
 
   branchUpdateScript = pkgs.writeShellScriptBin "gitops-branch-update" ''
     if [ -z "$1" ]; then
