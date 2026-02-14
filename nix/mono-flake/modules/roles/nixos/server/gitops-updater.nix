@@ -5,13 +5,13 @@ let
   cominConfig = {
     hostname = machine-config.hostname;
     flake_subdirectory = "nix/mono-flake";
-    remotes = [
-      {
-        name = "origin";
-        url = "https://github.com/AidanHilt/PersonalMonorepo";
-        branches.main.name = "${globals.personalMonorepoBranch}";
-      }
-    ];
+    # remotes = [
+    #   {
+    #     name = "origin";
+    #     url = "https://github.com/AidanHilt/PersonalMonorepo";
+    #     branches.main.name = "${globals.personalMonorepoBranch}";
+    #   }
+    # ];
   };
 
   cominConfigYaml = yaml.generate "comin.yaml" cominConfig;
