@@ -62,9 +62,90 @@ let
       ${pkgs.git}/bin/git pull origin "$CURRENT_BRANCH" || echo "Pull failed, continuing..."
     fi
   '';
+
+  switchBranchScript = pkgs.writeShellScriptBin "gitops-switch-branch" ''
+    #!/usr/bin/env bash
+    set -e
+
+    REPO_PATH="${repoPath}"
+
+    # Function to display usage
+    usage() {
+      echo "Usage: gitops-switch-branch <branch-name>"
+      echo ""
+      echo "Examples:"
+      echo "  gitops-switch-branch feature-branch"
+      echo "  gitops-switch-branch master"
+      exit 1
+    }
+
+    # Check if branch name is provided
+    if [ -z "$1" ]; then
+      echo "Error: Branch name required"
+      usage
+    fi
+
+    BRANCH="$1"
+
+    # Re-execute with sudo if not running as root
+    if [ "$(id -u)" -ne 0 ]; then
+      echo "Escalating to sudo..."
+      exec sudo "$0" "$@"
+    fi
+
+    # Check if repo exists
+    if [ ! -d "$REPO_PATH" ]; then
+      echo "Error: Repository does not exist at $REPO_PATH"
+      echo "Run 'sudo systemctl start gitops-repo-ensure.service' to initialize"
+      exit 1
+    fi
+
+    cd "$REPO_PATH"
+
+    echo "Fetching latest changes from all remotes..."
+    ${pkgs.git}/bin/git fetch --all
+
+    # Check if branch exists remotely
+    if ! ${pkgs.git}/bin/git rev-parse --verify "origin/$BRANCH" >/dev/null 2>&1; then
+      echo "Error: Branch '$BRANCH' does not exist on remote 'origin'"
+      echo ""
+      echo "Available remote branches:"
+      ${pkgs.git}/bin/git branch -r | grep "origin/" | sed 's/origin\//  /'
+      exit 1
+    fi
+
+    # Get current branch
+    CURRENT_BRANCH=$(${pkgs.git}/bin/git rev-parse --abbrev-ref HEAD)
+
+    if [ "$CURRENT_BRANCH" = "$BRANCH" ]; then
+      echo "Already on branch '$BRANCH', pulling latest changes..."
+      ${pkgs.git}/bin/git pull origin "$BRANCH"
+    else
+      echo "Switching from '$CURRENT_BRANCH' to '$BRANCH'..."
+
+      # Check for uncommitted changes
+      if ! ${pkgs.git}/bin/git diff-index --quiet HEAD --; then
+        echo "Warning: You have uncommitted changes. Stashing them..."
+        ${pkgs.git}/bin/git stash
+      fi
+
+      # Switch to branch
+      ${pkgs.git}/bin/git checkout "$BRANCH"
+      ${pkgs.git}/bin/git reset --hard "origin/$BRANCH"
+    fi
+
+    echo ""
+    echo "✓ Successfully switched to branch: $BRANCH"
+    echo "✓ Repository is now at: $(${pkgs.git}/bin/git rev-parse --short HEAD)"
+    echo ""
+    echo "The gitops-repo-pull-nonmaster timer will now pull updates every 10 seconds."
+    echo "To switch back to master, run: gitops-switch-branch master"
+  '';
 in
 
 {
+  environment.systemPackages = [ switchBranchScript ];
+
   services.comin = {
     enable = true;
     repositorySubdir = "nix/mono-flake";
