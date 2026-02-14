@@ -5,6 +5,7 @@ let
   cominConfig = {
     hostname = machine-config.hostname;
     flake_subdirectory = "nix/mono-flake";
+    repository_type = "flake";
     remotes = [
       {
         name = "origin";
@@ -12,6 +13,7 @@ let
         branches.main.name = "${globals.personalMonorepoBranch}";
       }
     ];
+
   };
 
   cominConfigYaml = yaml.generate "comin.yaml" cominConfig;
