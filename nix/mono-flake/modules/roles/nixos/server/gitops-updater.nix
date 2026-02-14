@@ -151,15 +151,15 @@ in
     repositorySubdir = "nix/mono-flake";
     remotes = [
       {
-        name = "origin";
-        url = "https://github.com/AidanHilt/PersonalMonorepo";
-        branches.main.name = "master";
-      }
-      {
         name = "local";
         url = "file://${repoPath}";
         branches.main.name = "HEAD";
         poller.period = 5;
+      }
+      {
+        name = "origin";
+        url = "https://github.com/AidanHilt/PersonalMonorepo";
+        branches.main.name = "master";
       }
     ];
   };
