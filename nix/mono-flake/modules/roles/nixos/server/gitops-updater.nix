@@ -5,16 +5,18 @@ let
   cominConfig = {
     hostname = machine-config.hostname;
     flake_subdirectory = "nix/mono-flake";
-    # remotes = [
-    #   {
-    #     name = "origin";
-    #     url = "https://github.com/AidanHilt/PersonalMonorepo";
-    #     branches.main.name = "${globals.personalMonorepoBranch}";
-    #   }
-    # ];
+    remotes = [
+      {
+        name = "origin";
+        url = "https://github.com/AidanHilt/PersonalMonorepo";
+        branches.main.name = "${globals.personalMonorepoBranch}";
+      }
+    ];
   };
 
   cominConfigYaml = yaml.generate "comin.yaml" cominConfig;
+
+  cominPackage = inputs.comin.packages.${pkgs.system}.comin;
 
   branchUpdateScript = pkgs.writeShellScriptBin "gitops-branch-update" ''
     if [ -z "$1" ]; then
@@ -72,7 +74,7 @@ in
 
     serviceConfig = {
       Type = "simple";
-      ExecStart = "${pkgs.comin}/bin/comin --config /etc/comin/active-config.yaml";
+      ExecStart = "${cominPackage}/bin/comin --config /etc/comin/active-config.yaml";
       Restart = "on-failure";
       RestartSec = "30s";
     };
