@@ -6,7 +6,6 @@
   services.comin = {
     enable = true;
     hostname = machine-config.hostname;
-    debug = true;
     repositorySubdir = "nix/mono-flake";
     remotes = [
       {
