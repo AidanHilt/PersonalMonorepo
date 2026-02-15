@@ -21,4 +21,6 @@
   };
 
   networking.hostId = "8425e349";
+
+  hardware.nvidia-container-toolkit.enable = true;
 }
