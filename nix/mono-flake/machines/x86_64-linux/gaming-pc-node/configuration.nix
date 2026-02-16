@@ -45,6 +45,10 @@
     settings = {
       plugins = {
         "io.containerd.grpc.v1.cri" = {
+          cni = {
+            bin_dir = "${pkgs.cni-plugins}/bin";
+            conf_dir = "/etc/cni/net.d";
+          };
           enable_cdi = true;
           cdi_spec_dirs = ["/etc/cdi" "/var/run/cdi"];
           containerd = {
