@@ -79,6 +79,9 @@ navidrome:
   configuration:
     enabled: true
 
+nvidia:
+  enabled: true
+
 postgres:
   enabled: true
 
