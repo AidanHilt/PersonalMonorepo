@@ -26,6 +26,8 @@
 
   hardware.nvidia-container-toolkit.enable = true;
 
+  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.legacy_470;
+
   services.rke2 = {
     extraFlags = [
       "--default-runtime=nvidia"
