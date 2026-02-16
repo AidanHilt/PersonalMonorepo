@@ -10,6 +10,7 @@
     ./hardware-configuration.nix
 
     ../../../modules/roles/nixos/linux-universal.nix
+    ../../../modules/roles/nixos/nvidia.nix
     ../../../modules/roles/nixos/server/smb.nix
     ../../../modules/shared-machine-configs/homelab-node.nix
   ];
@@ -22,7 +23,6 @@
 
   networking.hostId = "8425e349";
 
-  hardware.nvidia.datacenter.enable = true;
   hardware.nvidia-container-toolkit.enable = true;
 
   virtualisation.containerd = {
