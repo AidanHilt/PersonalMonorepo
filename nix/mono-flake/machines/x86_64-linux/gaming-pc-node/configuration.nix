@@ -36,6 +36,7 @@
     extraFlags = [
       "--default-runtime=nvidia"
       "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
+      "--snapshotter=overlayfs"
     ];
   };
 
