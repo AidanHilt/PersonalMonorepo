@@ -36,7 +36,6 @@
     extraFlags = [
       "--default-runtime=nvidia"
       "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
-      "--snapshotter=overlayfs"
     ];
   };
 
@@ -51,6 +50,7 @@
             default_runtime_name = "nvidia";
             runtimes = {
               nvidia = {
+                snapshotter = "overlayfs";
                 privileged_without_host_devices = false;
                 runtime_type = "io.containerd.runc.v2";
                 options = {
