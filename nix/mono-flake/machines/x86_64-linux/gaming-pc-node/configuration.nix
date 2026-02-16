@@ -35,10 +35,12 @@
   services.rke2 = {
     extraFlags = [
       "--default-runtime=nvidia"
+      "--container-runtime-endpoint="
     ];
   };
 
   virtualisation.containerd = {
+    enable = true;
     settings = {
       plugins = {
         "io.containerd.grpc.v1.cri" = {
