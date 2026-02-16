@@ -12,6 +12,7 @@
     ../../../modules/roles/nixos/linux-universal.nix
     ../../../modules/roles/nixos/nvidia.nix
     ../../../modules/roles/nixos/server/smb.nix
+    ../../../modules/roles/nixos/server/nvidia.nix
     ../../../modules/shared-machine-configs/homelab-node.nix
   ];
 
