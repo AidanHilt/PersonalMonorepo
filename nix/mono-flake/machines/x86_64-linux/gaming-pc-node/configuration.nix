@@ -25,6 +25,12 @@
 
   hardware.nvidia-container-toolkit.enable = true;
 
+  services.rke2 = {
+    extraFlags = [
+      "--default-runtime nvidia"
+    ];
+  };
+
   virtualisation.containerd = {
     settings = {
       plugins = {
