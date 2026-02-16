@@ -26,7 +26,10 @@
 
   hardware.nvidia-container-toolkit.enable = true;
 
-  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.legacy_470;
+  hardware.nvidia = {
+    gsp.enable = false;
+    package = config.boot.kernelPackages.nvidiaPackages.legacy_470;
+  };
 
   services.rke2 = {
     extraFlags = [
