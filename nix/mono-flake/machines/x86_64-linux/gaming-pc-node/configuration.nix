@@ -22,7 +22,7 @@
     efiInstallAsRemovable = true;
   };
 
-  environment.systemPackages = [ pkgs.nvidia-container-toolkit ];
+  environment.systemPackages = [ pkgs.cni-plugins ];
 
   networking.hostId = "8425e349";
 
@@ -54,15 +54,15 @@
           containerd = {
             snapshotter = "overlayfs";
             #default_runtime_name = "nvidia";
-            runtimes = {
-              nvidia = {
-                privileged_without_host_devices = false;
-                runtime_type = "io.containerd.runc.v2";
-                options = {
-                  BinaryName = "${pkgs.nvidia-container-toolkit}/bin/nvidia-container-runtime";
-                };
-              };
-            };
+            # runtimes = {
+            #   nvidia = {
+            #     privileged_without_host_devices = false;
+            #     runtime_type = "io.containerd.runc.v2";
+            #     options = {
+            #       BinaryName = "${pkgs.nvidia-container-toolkit}/bin/nvidia-container-runtime";
+            #     };
+            #   };
+            # };
           };
         };
       };
