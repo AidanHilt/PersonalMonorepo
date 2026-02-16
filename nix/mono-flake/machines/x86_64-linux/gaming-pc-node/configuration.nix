@@ -35,7 +35,7 @@
   services.rke2 = {
     extraFlags = [
       "--default-runtime=nvidia"
-      "--container-runtime-endpoint="
+      "--container-runtime-endpoint='unix:///run/containerd/containerd.sock'"
     ];
   };
 
