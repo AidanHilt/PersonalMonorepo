@@ -46,7 +46,7 @@
       plugins = {
         "io.containerd.grpc.v1.cri" = {
           cni = {
-            bin_dir = "${pkgs.cni-plugins}/bin";
+            bin_dir = "${pkgs.calico-cni-plugin}/bin";
             conf_dir = "/etc/cni/net.d";
           };
           enable_cdi = true;
