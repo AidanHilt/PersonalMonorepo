@@ -29,7 +29,7 @@
   hardware.nvidia = {
     gsp.enable = false;
     package = config.boot.kernelPackages.nvidiaPackages.legacy_470;
-    open = false;
+    open = lib.mkForce false;
   };
 
   services.rke2 = {
