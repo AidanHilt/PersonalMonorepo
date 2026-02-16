@@ -27,7 +27,7 @@
 
   services.rke2 = {
     extraFlags = [
-      "--default-runtime nvidia"
+      "--default-runtime=nvidia"
     ];
   };
 
