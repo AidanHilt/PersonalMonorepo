@@ -36,7 +36,6 @@
 
   services.rke2 = {
     extraFlags = [
-      "--default-runtime=nvidia"
       "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
     ];
   };
@@ -50,7 +49,7 @@
           cdi_spec_dirs = ["/etc/cdi" "/var/run/cdi"];
           containerd = {
             snapshotter = "overlayfs";
-            default_runtime_name = "nvidia";
+            #default_runtime_name = "nvidia";
             runtimes = {
               nvidia = {
                 privileged_without_host_devices = false;
