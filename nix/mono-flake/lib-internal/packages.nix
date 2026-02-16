@@ -32,6 +32,7 @@ in
       import nixpkgs-version {
         inherit system;
         config.allowUnfree = true;
+        config.nvidia.acceptLicense = true;
         overlays = overlays ++ systemOverlays ++ patches;
       }
     );

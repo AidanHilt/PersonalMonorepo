@@ -24,7 +24,6 @@
 
   hardware.nvidia.datacenter.enable = true;
   hardware.nvidia-container-toolkit.enable = true;
-  nvidia.acceptLicense = true;
 
   virtualisation.containerd = {
     settings = {
