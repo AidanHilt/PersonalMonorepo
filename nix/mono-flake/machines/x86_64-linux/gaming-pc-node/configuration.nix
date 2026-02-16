@@ -22,6 +22,7 @@
 
   networking.hostId = "8425e349";
 
+  hardware.nvidia.datacenter.enable
   hardware.nvidia-container-toolkit.enable = true;
 
   virtualisation.containerd = {
