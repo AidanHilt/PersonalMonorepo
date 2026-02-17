@@ -42,5 +42,30 @@
 
   virtualisation.containerd = {
     enable = true;
+    settings = {
+      plugins = {
+        "io.containerd.grpc.v1.cri" = {
+          cni = {
+            bin_dirs = ["${pkgs.calico-cni-plugin}/bin" "${pkgs.cni-plugins}/bin"];
+            conf_dir = "/etc/cni/net.d";
+          };
+          enable_cdi = true;
+          cdi_spec_dirs = ["/etc/cdi" "/var/run/cdi"];
+          containerd = {
+            snapshotter = "overlayfs";
+            #default_runtime_name = "nvidia";
+            # runtimes = {
+            #   nvidia = {
+            #     privileged_without_host_devices = false;
+            #     runtime_type = "io.containerd.runc.v2";
+            #     options = {
+            #       BinaryName = "${pkgs.nvidia-container-toolkit}/bin/nvidia-container-runtime";
+            #     };
+            #   };
+            # };
+          };
+        };
+      };
+    };
   };
 }
