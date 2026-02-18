@@ -2,3 +2,4 @@ gfd:
   enabled: true
 
 deviceDiscoveryStrategy: nvml
+runtimeClassName: nvidia
