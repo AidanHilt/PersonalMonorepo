@@ -29,8 +29,6 @@
   hardware.nvidia-container-toolkit.enable = true;
 
   hardware.opengl.enable = true;
-hardware.opengl.driSupport = true;
-hardware.opengl.driSupport32Bit = true;
 
   hardware.nvidia = {
     gsp.enable = false;
@@ -40,6 +38,7 @@ hardware.opengl.driSupport32Bit = true;
 
   services.rke2 = {
     extraFlags = [
+      "--default-runtime=nvidia"
       "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
     ];
   };
