@@ -63,7 +63,7 @@
           cdi_spec_dirs = ["/etc/cdi" "/var/run/cdi"];
           containerd = {
             default_runtime_name = "nvidia";
-            snapshotter = "overlayfs";
+            snapshotter = "zfs";
             runtimes = {
               nvidia = {
                 privileged_without_host_devices = false;
