@@ -30,7 +30,7 @@
     enable = true;
   };
 
-  hardware.opengl.enable = true;
+  hardware.graphics.enable = true;
 
   hardware.nvidia = {
     gsp.enable = false;
