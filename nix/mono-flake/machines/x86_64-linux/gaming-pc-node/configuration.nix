@@ -48,7 +48,7 @@
     settings = {
       plugins = {
         "io.containerd.grpc.v1.cri" = {
-          cni = {
+          cni = lib.mkForce {
             bin_dirs = ["${pkgs.calico-cni-plugin}/bin" "${pkgs.cni-plugins}/bin"];
             conf_dir = "/etc/cni/net.d";
           };
