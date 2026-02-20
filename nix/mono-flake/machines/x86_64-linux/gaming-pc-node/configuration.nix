@@ -55,6 +55,7 @@
           enable_cdi = true;
           cdi_spec_dirs = ["/etc/cdi" "/var/run/cdi"];
           containerd = {
+            default_runtime_name = "nvidia";
             snapshotter = "overlayfs";
             runtimes = {
               nvidia = {
