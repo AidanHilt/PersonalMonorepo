@@ -28,20 +28,6 @@
 
   hardware.nvidia-container-toolkit = {
     enable = true;
-    mounts = [
-      {
-        hostPath = "${config.hardware.nvidia.package}/bin/nvidia-smi";
-        containerPath = "/usr/bin/nvidia-smi";
-      }
-      {
-        hostPath = "${config.hardware.nvidia.package}/lib";
-        containerPath = "/usr/local/nvidia/lib";
-      }
-      {
-        hostPath = "${config.hardware.nvidia.package}/lib32";
-        containerPath = "/usr/local/nvidia/lib32";
-      }
-    ];
   };
 
   hardware.opengl.enable = true;
