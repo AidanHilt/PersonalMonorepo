@@ -22,7 +22,11 @@
     efiInstallAsRemovable = true;
   };
 
-  environment.systemPackages = [ pkgs.nvidia-container-toolkit pkgs.libnvidia-container ];
+  environment.systemPackages = with pkgs; [
+    libnvidia-container
+    nvidia-container-toolkit
+    zfs
+  ];
 
   networking.hostId = "8425e349";
 
