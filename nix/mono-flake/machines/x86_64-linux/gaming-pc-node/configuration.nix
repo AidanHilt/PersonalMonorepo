@@ -43,6 +43,10 @@
     ];
   };
 
+  systemd.tmpfiles.rules = [
+    "L+ /usr/bin/nvidia-ctk - - - - ${pkgs.nvidia-container-toolkit}/bin/nvidia-ctk"
+  ];
+
   virtualisation.containerd = {
     enable = true;
     settings = {
