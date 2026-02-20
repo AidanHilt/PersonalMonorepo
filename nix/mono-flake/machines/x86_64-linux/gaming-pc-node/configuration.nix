@@ -26,7 +26,25 @@
 
   networking.hostId = "8425e349";
 
-  hardware.nvidia-container-toolkit.enable = true;
+  hardware.nvidia-container-toolkit = {
+    enable = true;
+    mounts = [
+      {
+        hostPath = "${config.hardware.nvidia.package}/bin/nvidia-smi";
+        containerPath = "/usr/bin/nvidia-smi";
+      }
+      {
+        hostPath = "${config.hardware.nvidia.package}/lib";
+        containerPath = "/usr/local/nvidia/lib";
+        options = [ "ro" "nosuid" "nodev" "bind" ];
+      }
+      {
+        hostPath = "${config.hardware.nvidia.package}/lib32";
+        containerPath = "/usr/local/nvidia/lib32";
+        options = [ "ro" "nosuid" "nodev" "bind" ];
+      }
+    ];
+  };
 
   hardware.opengl.enable = true;
 
