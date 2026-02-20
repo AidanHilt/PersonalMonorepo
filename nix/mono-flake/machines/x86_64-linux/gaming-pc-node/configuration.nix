@@ -36,12 +36,10 @@
       {
         hostPath = "${config.hardware.nvidia.package}/lib";
         containerPath = "/usr/local/nvidia/lib";
-        options = [ "ro" "nosuid" "nodev" "bind" ];
       }
       {
         hostPath = "${config.hardware.nvidia.package}/lib32";
         containerPath = "/usr/local/nvidia/lib32";
-        options = [ "ro" "nosuid" "nodev" "bind" ];
       }
     ];
   };
