@@ -22,11 +22,7 @@
     efiInstallAsRemovable = true;
   };
 
-  environment.systemPackages = with pkgs; [
-    libnvidia-container
-    nvidia-container-toolkit
-    zfs
-  ];
+  environment.systemPackages = [ pkgs.nvidia-container-toolkit pkgs.libnvidia-container ];
 
   networking.hostId = "8425e349";
 
@@ -67,6 +63,7 @@
           cdi_spec_dirs = ["/etc/cdi" "/var/run/cdi"];
           containerd = {
             default_runtime_name = "nvidia";
+            snapshotter = "overlayfs";
             runtimes = {
               nvidia = {
                 privileged_without_host_devices = false;
