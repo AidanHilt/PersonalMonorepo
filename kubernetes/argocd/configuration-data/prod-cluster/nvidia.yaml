@@ -3,3 +3,5 @@ gfd:
 
 deviceDiscoveryStrategy: nvml
 runtimeClassName: nvidia
+
+deviceListStrategy: cdi
