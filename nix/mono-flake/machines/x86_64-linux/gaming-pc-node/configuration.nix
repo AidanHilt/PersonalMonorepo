@@ -26,16 +26,17 @@
 
   networking.hostId = "8425e349";
 
-  hardware.nvidia-container-toolkit = {
-    enable = true;
-  };
+  hardware = {
+    nvidia-container-toolkit = {
+      enable = true;
+      mount-nvidia-executables = true;
+    };
 
-  hardware.graphics.enable = true;
-
-  hardware.nvidia = {
-    gsp.enable = false;
-    package = config.boot.kernelPackages.nvidiaPackages.legacy_470;
-    open = lib.mkForce false;
+    nvidia = {
+      gsp.enable = false;
+      package = config.boot.kernelPackages.nvidiaPackages.legacy_470;
+      open = lib.mkForce false;
+    };
   };
 
   services.rke2 = {
