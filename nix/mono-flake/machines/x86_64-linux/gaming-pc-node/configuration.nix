@@ -43,15 +43,11 @@
     ];
   };
 
-  virtualisation.containerd = lib.mkForce {
+  virtualisation.containerd = {
     enable = true;
     settings = {
       plugins = {
         "io.containerd.grpc.v1.cri" = {
-          cni = {
-            bin_dirs = ["${pkgs.calico-cni-plugin}/bin" "${pkgs.cni-plugins}/bin"];
-            conf_dir = "/etc/cni/net.d";
-          };
           enable_cdi = true;
           cdi_spec_dirs = ["/etc/cdi" "/var/run/cdi"];
           containerd = {
