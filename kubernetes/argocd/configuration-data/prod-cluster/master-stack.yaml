@@ -80,7 +80,7 @@ navidrome:
     enabled: true
 
 nvidia:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
