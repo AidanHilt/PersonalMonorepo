@@ -4,6 +4,16 @@ gfd:
 deviceDiscoveryStrategy: nvml
 # runtimeClassName: nvidia
 
+config:
+  map:
+    default: |
+      version: v1
+      flags:
+        migStrategy: none
+      cdi:
+        enabled: true
+        default: true
+
 mps:
   enableHostPID: true
 
