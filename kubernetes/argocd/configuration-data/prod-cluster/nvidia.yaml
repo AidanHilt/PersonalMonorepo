@@ -3,3 +3,6 @@ gfd:
 
 deviceDiscoveryStrategy: nvml
 runtimeClassName: nvidia
+
+cdi:
+  nvidiaHookPath: /nix/store/qm0l0i6s7pjd280qakd2l9dww6zmd47h-system-path/bin/nvidia-smi
