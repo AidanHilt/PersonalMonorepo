@@ -225,9 +225,9 @@ navidrome:
   destinationNamespace: music
 nvidia:
   enabled: false
-  repo: https://helm.ngc.nvidia.com/nvidia
-  chart: gpu-operator
-  version: v25.10.1
+  repo: https://nvidia.github.io/k8s-device-plugin
+  chart: nvidia-device-plugin
+  version: v0.18.2
   destinationNamespace: nvidia
 paperless:
   enabled: false

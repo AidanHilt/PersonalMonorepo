@@ -1,7 +1,8 @@
-toolkit:
-  env:
-    - name: CONTAINERD_SOCKET
-      value: /run/k3s/containerd/containerd.sock
+gfd:
+  enabled: true
 
-driver:
-  enabled: false
+deviceDiscoveryStrategy: nvml
+runtimeClassName: nvidia
+
+mps:
+  enableHostPID: true
