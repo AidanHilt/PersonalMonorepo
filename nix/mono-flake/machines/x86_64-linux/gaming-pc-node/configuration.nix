@@ -30,6 +30,7 @@
     nvidia-container-toolkit = {
       enable = true;
       mount-nvidia-executables = true;
+      discovery-mode = "nvml";
     };
 
     nvidia = {
@@ -60,6 +61,7 @@
             conf_dir = "/etc/cni/net.d";
           };
           enable_cdi = true;
+          cdi_spec_dirs = ["/etc/cdi" "/var/run/cdi"];
           containerd = {
             default_runtime_name = "nvidia";
             snapshotter = "overlayfs";
