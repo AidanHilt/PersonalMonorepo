@@ -10,4 +10,4 @@ mps:
   enableHostPID: true
 
 cdi:
-  nvidia-hook-path: /usr/bin/nvidia-ctk
+  nvidia-hook-path: /usr/bin/nvidia-cdi-hook
