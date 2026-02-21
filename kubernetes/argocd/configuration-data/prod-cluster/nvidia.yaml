@@ -1,7 +1,6 @@
 gfd:
   enabled: true
 
-deviceDiscoveryStrategy: nvml
 deviceListStrategy: cdi-cri
 nvidiaDriverRoot: /run/opengl-driver/lib
 # runtimeClassName: nvidia
