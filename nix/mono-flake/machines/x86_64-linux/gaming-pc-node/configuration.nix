@@ -30,7 +30,6 @@
     nvidia-container-toolkit = {
       enable = true;
       mount-nvidia-executables = true;
-      discovery-mode = "nvml";
     };
 
     nvidia = {
