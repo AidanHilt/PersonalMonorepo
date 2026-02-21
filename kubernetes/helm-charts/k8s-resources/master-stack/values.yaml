@@ -13,7 +13,6 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -226,9 +225,9 @@ navidrome:
   destinationNamespace: music
 nvidia:
   enabled: false
-  repo: https://nvidia.github.io/k8s-device-plugin
-  chart: nvidia-device-plugin
-  version: v0.18.2
+  repo: https://helm.ngc.nvidia.com/nvidia
+  chart: gpu-operator
+  version: v25.10.1
   destinationNamespace: nvidia
 paperless:
   enabled: false
