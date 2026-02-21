@@ -48,7 +48,7 @@
   # };
 
   systemd.tmpfiles.rules = [
-    "L+ /usr/lib - - - - ${lib.getLib nvidia-driver}"
+    "L+ /usr/lib - - - - ${config.boot.kernelPackages.nvidiaPackages.legacy_470}/lib"
   ];
 
   # virtualisation.containerd = {
