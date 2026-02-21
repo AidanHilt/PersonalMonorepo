@@ -2,7 +2,7 @@ gfd:
   enabled: true
 
 deviceDiscoveryStrategy: nvml
-runtimeClassName: nvidia
+# runtimeClassName: nvidia
 
 mps:
   enableHostPID: true
