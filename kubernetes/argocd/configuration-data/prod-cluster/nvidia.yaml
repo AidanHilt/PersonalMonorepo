@@ -4,5 +4,5 @@ gfd:
 deviceDiscoveryStrategy: nvml
 runtimeClassName: nvidia
 
-cdi:
-  nvidiaHookPath: /usr/bin/nvidia-ctk
+mps:
+  enableHostPID: true
