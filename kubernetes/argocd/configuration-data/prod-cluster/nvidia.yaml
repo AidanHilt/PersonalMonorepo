@@ -3,6 +3,7 @@ gfd:
 
 deviceDiscoveryStrategy: nvml
 deviceListStrategy: cdi-cri
+nvidiaDriverRoot: /run/opengl-driver
 # runtimeClassName: nvidia
 
 mps:
