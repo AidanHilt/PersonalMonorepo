@@ -7,6 +7,3 @@ nvidiaDriverRoot: /run/opengl-driver
 
 mps:
   enableHostPID: true
-
-cdi:
-  nvidia-hook-path: /usr/bin/nvidia-cdi-hook
