@@ -2,7 +2,7 @@ gfd:
   enabled: true
 
 deviceListStrategy: cdi-cri
-nvidiaDriverRoot: /run/opengl-driver/lib
+nvidiaDriverRoot: /run/opengl-driver
 # runtimeClassName: nvidia
 
 mps:
