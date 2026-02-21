@@ -6,3 +6,6 @@ runtimeClassName: nvidia
 
 mps:
   enableHostPID: true
+
+cdi:
+  nvidia-hook-path: /usr/bin/nvidia-ctk
