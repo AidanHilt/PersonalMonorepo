@@ -3,3 +3,6 @@ gfd:
 
 deviceListStrategy: cdi-cri
 nvidiaDriverRoot: /run/opengl-driver/lib
+
+cdi:
+  nvidiaHookPath: /usr/bin/nvidia-ctk
