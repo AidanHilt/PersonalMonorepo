@@ -3,7 +3,3 @@ gfd:
 
 deviceListStrategy: cdi-cri
 nvidiaDriverRoot: /run/opengl-driver/lib
-# runtimeClassName: nvidia
-
-mps:
-  enableHostPID: true
