@@ -7,7 +7,6 @@ cdi:
   nvidiaHookPath: /usr/bin/nvidia-ctk
 
 config:
-  default: default
   map:
     default: |-
       version: v1
