@@ -13,6 +13,6 @@ config:
       flags:
         migStrategy: none
       plugin:
-        deviceListStrategy: ["cdi-cri"]
+        deviceListStrategy: "cdi-cri"
         deviceIDStrategy: "uuid"
         passDeviceSpecs: false
