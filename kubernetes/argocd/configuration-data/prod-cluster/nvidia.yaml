@@ -1,18 +1,15 @@
 gfd:
   enabled: true
 
-nvidiaDriverRoot: /run/opengl-driver/lib
-
-cdi:
-  nvidiaHookPath: /usr/bin/nvidia-ctk
-
 config:
   map:
     default: |-
       version: v1
       flags:
         migStrategy: none
+        nvidiaDriverRoot: /run/opengl-driver/lib
         plugin:
           deviceListStrategy: "cdi-cri"
           deviceIDStrategy: "uuid"
+          nvidiaCTKPath: /usr/bin/nvidia-ctk
           passDeviceSpecs: false
