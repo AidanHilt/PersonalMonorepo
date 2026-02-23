@@ -12,7 +12,7 @@ config:
       version: v1
       flags:
         migStrategy: none
-      plugin:
-        deviceListStrategy: "cdi-cri"
-        deviceIDStrategy: "uuid"
-        passDeviceSpecs: false
+        plugin:
+          deviceListStrategy: "cdi-cri"
+          deviceIDStrategy: "uuid"
+          passDeviceSpecs: false
