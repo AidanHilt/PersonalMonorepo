@@ -2,6 +2,7 @@ gfd:
   enabled: true
 
 nvidiaDriverRoot: /run/opengl-driver/lib
+nvidiaCTKPath: /usr/bin/nvidia-ctk
 
 config:
   map:
