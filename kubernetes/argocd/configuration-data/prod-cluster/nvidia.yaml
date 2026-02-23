@@ -1,6 +1,8 @@
 gfd:
   enabled: true
 
+nvidiaDriverRoot: /run/opengl-driver/lib
+
 config:
   map:
     default: |-
