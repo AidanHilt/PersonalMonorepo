@@ -227,7 +227,7 @@ nvidia:
   enabled: false
   repo: https://nvidia.github.io/k8s-device-plugin
   chart: nvidia-device-plugin
-  version: v0.18.0
+  version: v0.18.2
   destinationNamespace: nvidia
 paperless:
   enabled: false
