@@ -1,6 +1,8 @@
 gfd:
   enabled: true
 
+runtimeClassName: nvidia
+
 nvidiaDriverRoot: /run/opengl-driver/lib
 
 cdi:
