@@ -17,4 +17,4 @@ config:
           deviceListStrategy: "cdi-cri"
           deviceIDStrategy: "uuid"
           nvidiaCTKPath: /usr/bin/nvidia-ctk
-          passDeviceSpecs: false
+          passDeviceSpecs: true
