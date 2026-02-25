@@ -60,7 +60,6 @@
             snapshotter = "overlayfs";
             runtimes = {
               nvidia = {
-                privileged_without_host_devices = false;
                 runtime_type = "io.containerd.runc.v2";
                 options = {
                   BinaryName = lib.mkForce "${pkgs.nvidia-container-toolkit.tools}/bin/nvidia-container-runtime";
