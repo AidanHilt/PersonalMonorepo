@@ -3,8 +3,6 @@ gfd:
 
 runtimeClassName: nvidia
 
-nvidiaDriverRoot: /run/opengl-driver/lib
-
 cdi:
   nvidiaHookPath: /usr/bin/nvidia-ctk
 
