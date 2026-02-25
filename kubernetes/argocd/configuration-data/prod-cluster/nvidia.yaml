@@ -16,4 +16,4 @@ config:
           deviceListStrategy: "envvar"
           deviceIDStrategy: "uuid"
           nvidiaCTKPath: /usr/bin/nvidia-ctk
-          passDeviceSpecs: true
+          passDeviceSpecs: false
