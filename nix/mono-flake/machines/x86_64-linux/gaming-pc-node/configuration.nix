@@ -55,7 +55,10 @@
             bin_dirs = ["/opt/cni/bin" "${pkgs.cni-plugins}/bin"];
             conf_dir = "/etc/cni/net.d";
           };
-          enable_cdi = true;
+          cdi = {
+            enabled = true;
+            spec_dirs = ["/etc/cdi" "/var/run/cdi"];
+          };
           containerd = {
             default_runtime_name = "nvidia";
             snapshotter = "overlayfs";
