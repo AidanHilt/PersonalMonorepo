@@ -2,7 +2,7 @@
 
 let
   # Platform-specific logic or setup
-  platform-apps = if pkgs.system == "aarch64-darwin" then with pkgs; [] else with pkgs; [];
+  platform-apps = if pkgs.system == "aarch64-darwin" then with pkgs; [] else with pkgs; [inetutils];
 
   rebuild-app = if pkgs.system == "aarch64-darwin" then "darwin-rebuild" else "nixos-rebuild";
 
@@ -48,7 +48,6 @@ in
     detect-secrets
     eza
     gettext
-    inetutils
     jq
     p7zip
     pipx
