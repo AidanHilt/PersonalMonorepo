@@ -21,7 +21,6 @@ in
         pkgs.vscode-marketplace."4ops".terraform
 
         bbenoist.nix
-        bbenoist.vagrant
         brunnerh.file-properties-viewer
         charliermarsh.ruff
         github.vscode-github-actions
@@ -33,6 +32,7 @@ in
         mechatroner.rainbow-csv
         ms-azuretools.vscode-docker
         ms-kubernetes-tools.vscode-kubernetes-tools
+        ms-mssql.mssql
         ms-python.isort
         ms-vscode-remote.remote-ssh
         ms-vscode-remote.remote-ssh-edit
