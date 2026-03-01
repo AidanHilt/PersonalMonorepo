@@ -15,6 +15,7 @@ config:
       flags:
         migStrategy: none
         nvidiaDriverRoot: /run/opengl-driver/lib
+        nvidiaDevRoot: /dev
         plugin:
           deviceListStrategy: "cdi-cri"
           deviceIDStrategy: "uuid"
