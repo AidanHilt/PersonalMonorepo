@@ -10,6 +10,6 @@ config:
       flags:
         migStrategy: none
         plugin:
-          deviceListStrategy: "envvar"
+          deviceListStrategy: "cri-cdi"
           deviceIDStrategy: "uuid"
           passDeviceSpecs: false
