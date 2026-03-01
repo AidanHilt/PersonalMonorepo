@@ -3,21 +3,13 @@ gfd:
 
 runtimeClassName: nvidia
 
-nvidiaDriverRoot: /run/opengl-driver/lib
-
-cdi:
-  nvidiaHookPath: /usr/bin/nvidia-ctk
-
 config:
   map:
     default: |-
       version: v1
       flags:
         migStrategy: none
-        nvidiaDriverRoot: /run/opengl-driver/lib
-        nvidiaDevRoot: /dev
         plugin:
-          deviceListStrategy: "cdi-cri"
+          deviceListStrategy: "envvar"
           deviceIDStrategy: "uuid"
-          nvidiaCTKPath: /usr/bin/nvidia-ctk
-          passDeviceSpecs: true
+          passDeviceSpecs: false
