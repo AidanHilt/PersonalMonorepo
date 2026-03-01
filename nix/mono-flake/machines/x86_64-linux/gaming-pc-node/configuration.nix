@@ -56,7 +56,6 @@
             conf_dir = "/etc/cni/net.d";
           };
           containerd = {
-            default_runtime_name = "nvidia";
             snapshotter = "overlayfs";
             runtimes = {
               nvidia = {
