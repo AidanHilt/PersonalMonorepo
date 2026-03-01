@@ -34,7 +34,7 @@
 
     nvidia = {
       gsp.enable = false;
-      package = config.boot.kernelPackages.nvidiaPackages.legacy_470;
+      package = config.boot.kernelPackages.nvidiaPackages.legacy_580;
       open = lib.mkForce false;
     };
   };
