@@ -12,7 +12,7 @@
     ../../../modules/roles/nixos/linux-universal.nix
     ../../../modules/roles/nixos/nvidia.nix
     ../../../modules/roles/nixos/server/smb.nix
-    #../../../modules/roles/nixos/server/nvidia.nix
+    ../../../modules/roles/nixos/server/nvidia-k8s.nix
     ../../../modules/shared-machine-configs/homelab-node.nix
   ];
 
@@ -27,47 +27,9 @@
   networking.hostId = "8425e349";
 
   hardware = {
-    nvidia-container-toolkit = {
-      enable = true;
-      mount-nvidia-executables = true;
-    };
-
     nvidia = {
       gsp.enable = false;
-      #package = config.boot.kernelPackages.nvidiaPackages.legacy_535;
       open = lib.mkForce false;
-    };
-  };
-
-  services.rke2 = {
-    extraFlags = [
-      "--default-runtime=nvidia"
-      "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
-    ];
-  };
-
-  virtualisation.containerd = {
-    enable = true;
-    settings = {
-      plugins = {
-        "io.containerd.grpc.v1.cri" = {
-          cni = lib.mkForce {
-            bin_dirs = ["/opt/cni/bin" "${pkgs.cni-plugins}/bin"];
-            conf_dir = "/etc/cni/net.d";
-          };
-          containerd = {
-            snapshotter = "overlayfs";
-            runtimes = {
-              nvidia = {
-                runtime_type = "io.containerd.runc.v2";
-                options = {
-                  BinaryName = lib.mkForce "${pkgs.nvidia-container-toolkit.tools}/bin/nvidia-container-runtime.cdi";
-                };
-              };
-            };
-          };
-        };
-      };
     };
   };
 }
