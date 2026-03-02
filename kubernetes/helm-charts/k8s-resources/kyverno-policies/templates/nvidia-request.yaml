@@ -9,8 +9,7 @@ metadata:
       via NVIDIA_VISIBLE_DEVICES env vars or the nvidia RuntimeClass, unless the
       pod has a resource limit of 1 for nvidia.com/gpu.
 spec:
-  validationFailureAction:
-    { { .Values.nvidia.policy.validationFailureAction | default "Enforce" } }
+  validationFailureAction: Enforce
   background: true
   rules:
     - name: block-nvidia-runtimeclass
