@@ -14,3 +14,9 @@ config:
           deviceIDStrategy: "uuid"
           nvidiaCTKPath: /usr/bin/nvidia-ctk
           passDeviceSpecs: false
+      sharing:
+        timeSlicing:
+          failRequestsGreaterThanOne: true
+          resources:
+          - name: nvidia.com/gpu
+            replicas: 10
