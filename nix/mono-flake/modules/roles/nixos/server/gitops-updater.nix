@@ -1,14 +1,20 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{ inputs, globals, pkgs, machine-config, lib, ... }:
 
 {
+  environment.systemPackages = [];
+
   services.comin = {
     enable = true;
-    flakeSubdirectory = "nix/mono-flake";
-    remotes = [{
-      name = "origin";
-      url = "https://github.com/AidanHilt/PersonalMonorepo";
-      branches.main.name = "master";
-      branches.testing.name = globals.personalMonorepoBranch;
-    }];
+    hostname = machine-config.hostname;
+    repositorySubdir = "nix/mono-flake";
+    remotes = [
+      {
+        name = "origin";
+        url = globals.personalMonorepoURL;
+        branches.main.name = "master";
+        branches.testing.name = globals.personalMonorepoBranch;
+        branches.testing.operation = "switch";
+      }
+    ];
   };
 }

@@ -4,7 +4,7 @@ hostnames:
   - prod-cluster-lb.lan
   - 192.168.86.3
 
-gitRevision: master
+gitRevision: project-appocalypse/nvidia
 
 bentopdf:
   enabled: true
@@ -75,6 +75,11 @@ metallb:
         enabled: true
 
 navidrome:
+  enabled: true
+  configuration:
+    enabled: true
+
+nvidia:
   enabled: true
   configuration:
     enabled: true

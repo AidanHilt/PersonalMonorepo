@@ -28,6 +28,7 @@ spec:
           - vault
           - postgres
           - local-path-storage
+          - nvidia
       - resources:
           annotations:
             istio.io/injection-policy: "disabled"

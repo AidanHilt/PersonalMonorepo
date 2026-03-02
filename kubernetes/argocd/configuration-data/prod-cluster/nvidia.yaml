@@ -1,0 +1,22 @@
+gfd:
+  enabled: true
+
+runtimeClassName: nvidia
+
+config:
+  map:
+    default: |-
+      version: v1
+      flags:
+        migStrategy: none
+        plugin:
+          deviceListStrategy: "envvar"
+          deviceIDStrategy: "uuid"
+          nvidiaCTKPath: /usr/bin/nvidia-ctk
+          passDeviceSpecs: false
+      sharing:
+        timeSlicing:
+          failRequestsGreaterThanOne: true
+          resources:
+          - name: nvidia.com/gpu
+            replicas: 10

@@ -10,7 +10,9 @@
     ./hardware-configuration.nix
 
     ../../../modules/roles/nixos/linux-universal.nix
+    ../../../modules/roles/nixos/nvidia.nix
     ../../../modules/roles/nixos/server/smb.nix
+    ../../../modules/roles/nixos/server/nvidia-k8s.nix
     ../../../modules/shared-machine-configs/homelab-node.nix
   ];
 
@@ -20,5 +22,14 @@
     efiInstallAsRemovable = true;
   };
 
+  environment.systemPackages = [ pkgs.nvidia-container-toolkit pkgs.libnvidia-container ];
+
   networking.hostId = "8425e349";
+
+  hardware = {
+    nvidia = {
+      gsp.enable = false;
+      open = lib.mkForce false;
+    };
+  };
 }
