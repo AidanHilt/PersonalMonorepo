@@ -29,14 +29,14 @@ spec:
         deny:
           conditions:
             all:
-              - key: "{{ request.object.spec.runtimeClassName || request.object.spec.template.spec.runtimeClassName }}"
+              - key: "{{ `{{  request.object.spec.runtimeClassName || request.object.spec.template.spec.runtimeClassName  }}` }}"
                 operator: Equals
                 value: nvidia
             any:
-              - key: '{{ request.object.spec.containers[].resources.limits."nvidia.com/gpu" | max(@) }}'
+              - key: '{{ `{{  request.object.spec.containers[].resources.limits."nvidia.com/gpu" | max(@)  }}` }}'
                 operator: NotEquals
                 value: "1"
-              - key: '{{ request.object.spec.template.spec.containers[].resources.limits."nvidia.com/gpu" | max(@) }}'
+              - key: '{{ `{{  request.object.spec.template.spec.containers[].resources.limits."nvidia.com/gpu" | max(@)  }}` }}'
                 operator: NotEquals
                 value: "1"
 
@@ -57,13 +57,13 @@ spec:
         deny:
           conditions:
             all:
-              - key: "{{ request.object.spec.containers[].env[].name || request.object.spec.template.spec.containers[].env[].name }}"
+              - key: "{{ `{{  request.object.spec.containers[].env[].name || request.object.spec.template.spec.containers[].env[].name  }}` }}"
                 operator: AnyIn
                 value: ["NVIDIA_VISIBLE_DEVICES"]
             any:
-              - key: '{{ request.object.spec.containers[].resources.limits."nvidia.com/gpu" | max(@) }}'
+              - key: '{{ `{{  request.object.spec.containers[].resources.limits."nvidia.com/gpu" | max(@)  }}` }}'
                 operator: NotEquals
                 value: "1"
-              - key: '{{ request.object.spec.template.spec.containers[].resources.limits."nvidia.com/gpu" | max(@) }}'
+              - key: '{{ `{{  request.object.spec.template.spec.containers[].resources.limits."nvidia.com/gpu" | max(@)  }}` }}'
                 operator: NotEquals
                 value: "1"
