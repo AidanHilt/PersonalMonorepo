@@ -13,6 +13,7 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
+
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -152,6 +153,12 @@ job-templates:
   destinationNamespace: job-templates
   configuration:
     enabled: false
+knative:
+  enabled: false
+  repo: https://knative.github.io/operator
+  chart: knative-operator
+  version: 1.21.1
+  destinationNamespace: knative
 kyverno:
   enabled: false
   repo: https://kyverno.github.io/kyverno
