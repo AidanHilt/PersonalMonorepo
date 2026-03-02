@@ -9,7 +9,8 @@ metadata:
       via NVIDIA_VISIBLE_DEVICES env vars or the nvidia RuntimeClass, unless the
       pod has a resource limit of 1 for nvidia.com/gpu.
 spec:
-  validationFailureAction: Enforce
+  validationFailureAction:
+    { { .Values.nvidia.policy.validationFailureAction | default "Enforce" } }
   background: true
   rules:
     - name: block-nvidia-runtimeclass
@@ -29,16 +30,15 @@ spec:
         deny:
           conditions:
             all:
-              - key: "{{ `{{  request.object.spec.runtimeClassName || request.object.spec.template.spec.runtimeClassName  }}` }}"
+              - key: "{{ `{{ request.object.spec.runtimeClassName || request.object.spec.template.spec.runtimeClassName || '' }}` }}"
                 operator: Equals
                 value: nvidia
-            any:
-              - key: '{{ `{{  request.object.spec.containers[].resources.limits."nvidia.com/gpu" | max(@)  }}` }}'
-                operator: NotEquals
-                value: "1"
-              - key: '{{ `{{  request.object.spec.template.spec.containers[].resources.limits."nvidia.com/gpu" | max(@)  }}` }}'
-                operator: NotEquals
-                value: "1"
+              - key: '{{ `{{ request.object.spec.containers[].resources.limits."nvidia.com/gpu" | to_array(@) | [?@ == ''1''] | length(@) }}` }}'
+                operator: Equals
+                value: "0"
+              - key: '{{ `{{ request.object.spec.template.spec.containers[].resources.limits."nvidia.com/gpu" | to_array(@) | [?@ == ''1''] | length(@) }}` }}'
+                operator: Equals
+                value: "0"
 
     - name: block-nvidia-visible-devices-env
       match:
@@ -57,13 +57,12 @@ spec:
         deny:
           conditions:
             all:
-              - key: "{{ `{{  request.object.spec.containers[].env[].name || request.object.spec.template.spec.containers[].env[].name  }}` }}"
+              - key: "{{ `{{ request.object.spec.containers[].env[].name || request.object.spec.template.spec.containers[].env[].name || '' }}` }}"
                 operator: AnyIn
                 value: ["NVIDIA_VISIBLE_DEVICES"]
-            any:
-              - key: '{{ `{{  request.object.spec.containers[].resources.limits."nvidia.com/gpu" | max(@)  }}` }}'
-                operator: NotEquals
-                value: "1"
-              - key: '{{ `{{  request.object.spec.template.spec.containers[].resources.limits."nvidia.com/gpu" | max(@)  }}` }}'
-                operator: NotEquals
-                value: "1"
+              - key: '{{ `{{ request.object.spec.containers[].resources.limits."nvidia.com/gpu" | to_array(@) | [?@ == ''1''] | length(@) }}` }}'
+                operator: Equals
+                value: "0"
+              - key: '{{ `{{ request.object.spec.template.spec.containers[].resources.limits."nvidia.com/gpu" | to_array(@) | [?@ == ''1''] | length(@) }}` }}'
+                operator: Equals
+                value: "0"
