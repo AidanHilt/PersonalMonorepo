@@ -2,14 +2,14 @@
 let
   rootfs = pkgs.runCommand "rootfs" {} ''
     mkdir -p $out/etc/nginx/conf.d
-    cp ${nginxConf} $out/etc/nginx/conf.d/default.conf
-    cp ${nginxMainConf} $out/etc/nginx/nginx.conf
+#    cp ''${nginxConf} $out/etc/nginx/conf.d/default.conf
+#    cp ''${nginxMainConf} $out/etc/nginx/nginx.conf
   '';
 in
 {
   copyToRoot = pkgs.buildEnv {
     name = "image-root";
-    paths = with pkgs [
+    paths = with pkgs; [
       fakeNss
       rootfs
 
