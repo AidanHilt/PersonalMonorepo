@@ -13,7 +13,6 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -64,7 +63,7 @@ hashi-vault:
   enabled: false
   repo: https://helm.releases.hashicorp.com
   chart: vault
-  version: 0.30.1
+  version: 0.32.0
   destinationNamespace: vault
   configuration:
     enabled: false
@@ -72,7 +71,7 @@ hashi-vault:
     vault-secrets-operator:
       repo: https://helm.releases.hashicorp.com
       chart: vault-secrets-operator
-      version: 0.5.2
+      version: 1.3.0
       configuration:
         enabled: false
     vault-config:
