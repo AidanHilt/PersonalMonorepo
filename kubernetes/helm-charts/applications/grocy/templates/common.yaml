@@ -16,6 +16,7 @@ controllers:
 
     initContainers:
       init-db:
+        type: init
         image:
           repository: {{ .Values.image.repository }}
           tag: {{ .Values.image.tag }}
