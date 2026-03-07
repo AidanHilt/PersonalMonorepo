@@ -237,6 +237,16 @@
               "is_postgres_password": false
             }
           }
+        },
+        "grocy": {
+          "data": {
+            "GROCY_API_KEY": {
+              "is_postgres_password": false
+            }
+          },
+          "namespace": "grocy",
+          "mount": "grocy",
+          "postgres_secret": "true"
         }
       },
       "unique_mounts": "${toset([\n  for key, secret in local.secret_definitions : secret.mount\n  ])}"

@@ -62,7 +62,7 @@
 
   outputs = { self, nixpkgs, darwin, ... }@inputs:
     let
-      internalLib = import ./lib-internal/default.nix { inherit nixpkgs darwin inputs; };
+      internalLib = import ./lib/default.nix { inherit nixpkgs darwin inputs; };
 
       globals = {
         nixConfig = inputs.personalMonorepo + "/nix";
