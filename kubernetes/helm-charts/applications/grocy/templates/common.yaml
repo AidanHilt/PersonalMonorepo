@@ -14,6 +14,90 @@ controllers:
           pullPolicy: {{ .Values.image.pullPolicy }}
           tag: {{ .Values.image.tag }}
 
+    initContainers:
+      # Init container 1: Bootstrap grocy.db
+      # Starts Grocy briefly to generate the initial database, then kills it.
+      init-db:
+        type: init
+        image:
+          repository: lscr.io/linuxserver/grocy
+          tag: latest
+        command:
+          - /bin/sh
+          - -c
+          - |
+            DB_PATH="/config/data/grocy.db"
+            if [ ! -f "$DB_PATH" ]; then
+              echo "grocy.db not found, starting Grocy to initialise database..."
+              /init &
+              GROCY_PID=$!
+              echo "Waiting for $DB_PATH to be created..."
+              while [ ! -f "$DB_PATH" ]; do
+                sleep 1
+              done
+              echo "grocy.db found. Stopping Grocy..."
+              kill $GROCY_PID
+              wait $GROCY_PID 2>/dev/null || true
+              echo "Done."
+            else
+              echo "grocy.db already exists, skipping init."
+            fi
+        volumeMounts:
+          - name: config
+            mountPath: /config
+
+      # Init container 2: Seed API key
+      # Checks the api_keys table; if empty, inserts a default never-expiring key.
+      init-apikey:
+        type: init
+        image:
+          repository: keinos/sqlite3
+          tag: latest
+        command:
+          - /bin/sh
+          - -c
+          - |
+            DB_PATH="/config/data/grocy.db"
+
+            if [ ! -f "$DB_PATH" ]; then
+              echo "ERROR: grocy.db not found at $DB_PATH. Cannot seed API key."
+              exit 1
+            fi
+
+            ROW_COUNT=$(sqlite3 "$DB_PATH" "SELECT COUNT(*) FROM api_keys;")
+            echo "Current api_keys row count: $ROW_COUNT"
+
+            if [ "$ROW_COUNT" -eq 0 ]; then
+              echo "No API keys found. Creating default API key..."
+
+              # Generate a random 50-character alphanumeric API key
+              NEW_API_KEY=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 50)
+
+              sqlite3 "$DB_PATH" "
+                INSERT INTO api_keys (api_key, user_id, expires, key_type, description)
+                VALUES (
+                  '${NEW_API_KEY}',
+                  1,
+                  '2999-12-31 23:59:59',
+                  'default',
+                  'Auto-generated default API key'
+                );
+              "
+              echo "API key created: ${NEW_API_KEY}"
+            else
+              echo "API keys already exist, skipping seed."
+            fi
+        volumeMounts:
+          - name: config
+            mountPath: /config
+
+persistence:
+  config:
+    type: emptyDir
+    globalMounts:
+      - path: /config
+
+
 
 {{- end -}}
 {{- $_ := mergeOverwrite .Values (include "grocy.harcodedValues" . | fromYaml) -}}
