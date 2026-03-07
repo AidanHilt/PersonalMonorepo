@@ -27,7 +27,7 @@ controllers:
             DB_PATH="/config/data/grocy.db"
             if [ ! -f "$DB_PATH" ]; then
               echo "grocy.db not found, starting Grocy to initialise database..."
-              grocy &
+              /init &
               GROCY_PID=$!
               echo "Waiting for $DB_PATH to be created..."
               while [ ! -f "$DB_PATH" ]; do
