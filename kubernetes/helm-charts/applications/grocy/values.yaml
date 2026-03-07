@@ -1,0 +1,24 @@
+#================================================================================================================================================
+# You should be able to use any of the values you can find here: https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
+#================================================================================================================================================
+image:
+  repository: lscr.io/linuxserver/grocy
+  pullPolicy: IfNotPresent
+  tag: 4.5.0
+
+service:
+  main:
+    enabled: false
+  grocy:
+    controller: grocy
+    ports:
+      http:
+        port: 80
+        targetPort: 80
+#=============================
+# Application-specific config
+#=============================
+
+#=============
+# Subchart(s)
+#=============

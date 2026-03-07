@@ -1,6 +1,7 @@
 hostnames:
   - localhost
 
+
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -72,6 +73,12 @@ grafana:
   icon: sh-grafana
   nameOverride: Grafana
   description: Grafana, for viewing observability metrics
+grocy:
+  enabled: false
+  subdomain: grocy
+  description: Home inventory manager
+  icon: sh-grocy
+  group: Cooking
 hashi-vault:
   enabled: false
   subdomain: vault

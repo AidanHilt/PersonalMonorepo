@@ -56,6 +56,10 @@ flashpaper:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/flashpaper/
   destinationNamespace: misc
+grocy:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/grocy
+  destinationNamespace: grocy
 hashi-vault:
   enabled: false
   repo: https://helm.releases.hashicorp.com

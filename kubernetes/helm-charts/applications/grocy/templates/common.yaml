@@ -1,0 +1,20 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "grocy.harcodedValues" -}}
+
+
+controllers:
+  grocy:
+    type: deployment
+    containers:
+      grocy:
+        image:
+          repository: {{ .Values.image.repository }}
+          pullPolicy: {{ .Values.image.pullPolicy }}
+          tag: {{ .Values.image.tag }}
+
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "grocy.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}

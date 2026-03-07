@@ -5,7 +5,7 @@ bar-assistant:
     transformation:
       templates:
         MEILI_MASTER_KEY:
-          text: "{{ .Secrets.meilisearchApiKey }}"
+          text: '{{ .Secrets.meilisearchApiKey }}'
 firefly-iii:
   enabled: false
   secretDestinationNamespace: finance
@@ -13,6 +13,9 @@ firefly-iii:
     enabled: true
   serviceAccount:
     name: default
+grocy:
+  enabled: false
+  secretDestinationNamespace: grocy
 immich:
   enabled: false
   secretDestinationNamespace: immich
