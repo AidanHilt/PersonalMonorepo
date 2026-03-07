@@ -15,13 +15,10 @@ controllers:
           tag: {{ .Values.image.tag }}
 
     initContainers:
-      # Init container 1: Bootstrap grocy.db
-      # Starts Grocy briefly to generate the initial database, then kills it.
       init-db:
-        type: init
         image:
-          repository: lscr.io/linuxserver/grocy
-          tag: latest
+          repository: {{ .Values.image.repository }}
+          tag: {{ .Values.image.tag }}
         command:
           - /bin/sh
           - -c
@@ -59,10 +56,11 @@ controllers:
           - |
             DB_PATH="/config/data/grocy.db"
 
-            if [ ! -f "$DB_PATH" ]; then
-              echo "ERROR: grocy.db not found at $DB_PATH. Cannot seed API key."
-              exit 1
-            fi
+            echo "Waiting for $DB_PATH to exist..."
+            while [ ! -f "$DB_PATH" ]; do
+              sleep 2
+            done
+            echo "grocy.db found, proceeding."
 
             ROW_COUNT=$(sqlite3 "$DB_PATH" "SELECT COUNT(*) FROM api_keys;")
             echo "Current api_keys row count: $ROW_COUNT"
