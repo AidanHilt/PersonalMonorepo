@@ -14,7 +14,7 @@
     ../../../modules/roles/nixos/fixed-ip-machine.nix
     ../../../modules/roles/nixos/nvidia.nix
     ../../../modules/roles/nixos/vscode-server.nix
-    ../../../modules/roles/nixos/desktop/virtual-machine.nix
+    #../../../modules/roles/nixos/desktop/virtual-machine.nix
 
     ../../../modules/roles/universal/personal-development.nix
   ];
@@ -27,4 +27,5 @@
   };
 
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
+  boot.binfmt.registrations."aarch64-linux".fixBinary = true;
 }
