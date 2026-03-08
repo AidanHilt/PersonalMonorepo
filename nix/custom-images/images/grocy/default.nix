@@ -9,7 +9,6 @@ in
     name = "image-root";
     paths = with pkgs; [
       fakeNss
-      rootfs
 
       php85
       php85Extensions.gd

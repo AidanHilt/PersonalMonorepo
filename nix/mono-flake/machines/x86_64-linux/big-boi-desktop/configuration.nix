@@ -27,5 +27,6 @@
   };
 
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
-  boot.binfmt.registrations."aarch64-linux".fixBinary = true;
+  # boot.binfmt.registrations."aarch64-linux".fixBinary = true;
+  # nix.settings.extra-sandbox-paths = [ "/proc" ];
 }
