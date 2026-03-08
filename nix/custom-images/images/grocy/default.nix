@@ -2,8 +2,6 @@
 let
   rootfs = pkgs.runCommand "rootfs" {} ''
     mkdir -p $out/etc/nginx/conf.d
-#    cp ''${nginxConf} $out/etc/nginx/conf.d/default.conf
-#    cp ''${nginxMainConf} $out/etc/nginx/nginx.conf
   '';
 in
 {
@@ -20,6 +18,8 @@ in
       php85Extensions.pdo
       php85Extensions.pdo_sqlite
       php85Extensions.tokenizer
+
+      grocy
     ];
   };
 
