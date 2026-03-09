@@ -3,7 +3,7 @@
 let
   mkService =
     { name,          # string  — used as the directory name under /etc/sv
-    run           # string  — shell body of the run script
+    run,           # string  — shell body of the run script
     finish ? null, # string? — shell body of the finish script (optional)
     log  ? true,   # bool    — whether to attach a svlogd log service
     logDir ? "/var/log/${name}" # where svlogd writes logs
