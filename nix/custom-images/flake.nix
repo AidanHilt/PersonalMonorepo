@@ -8,7 +8,7 @@
   outputs = { self, nixpkgs }:
     let
       # Support multiple systems
-      systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
+      systems = [ "x86_64-linux" "aarch64-linux" ];
 
       forAllSystems = nixpkgs.lib.genAttrs systems;
 
@@ -43,7 +43,8 @@
                 inherit (values) tag;
               };
             in
-              pkgs.dockerTools.buildImage (imageConfig // {
+              pkgs.dockerTools.buildLayeredImage (imageConfig // {
+                maxLayers = 5;
                 name = imageName;
                 tag = tag;
                 # Add architecture to the image config

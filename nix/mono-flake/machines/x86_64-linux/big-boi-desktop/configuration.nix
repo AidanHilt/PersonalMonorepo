@@ -26,7 +26,10 @@
     useOSProber = true;
   };
 
+  environment.systemPackages = [ pkgs.virtiofsd]; 
+
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   # boot.binfmt.registrations."aarch64-linux".fixBinary = true;
-  # nix.settings.extra-sandbox-paths = [ "/proc" ];
+  nix.settings.extra-sandbox-paths = [ "/proc" ];
+  nix.settings.sandbox = false;
 }
