@@ -1,30 +1,26 @@
-{ pkgs, tag }:
+{ inputs, pkgs, tag, ... }:
 let
   # rootfs = pkgs.runCommand "rootfs" {} ''
   #   mkdir -p $out/etc/nginx/conf.d
   # '';
-in
-{
-  contents = pkgs.buildEnv {
-    name = "image-root";
-    paths = with pkgs; [
-      php85
-      php85Extensions.gd
-      php85Extensions.intl
-      php85Extensions.ldap
-      php85Extensions.pdo
-      php85Extensions.pdo_sqlite
-      php85Extensions.tokenizer
 
-      grocy
+  nixos = inputs.nixpkgs.lib.nixosSystem {
+    system = pkgs.system;
+    modules = [
+      ({ pkgs, ... }: {
+        # Minimal container config
+        boot.isContainer = true;
+        networking.useDHCP = false;
+        documentation.enable = false; 
+        
+        services.grocy.enable = true;
+        services.nginx.enable = true;
+
+        system.stateVersion = "24.11";
+      })
     ];
   };
-
-  config = {
-    Cmd = [ "${pkgs.nginx}/bin/nginx" "-c" "/etc/nginx/nginx.conf" ];
-    ExposedPorts = {
-      "80/tcp" = {};
-    };
-    WorkingDir = "/";
-  };
+in
+{
+  contents = [nixos];
 }

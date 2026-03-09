@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs }@inputs:
     let
       # Support multiple systems
       systems = [ "x86_64-linux" "aarch64-linux" ];
@@ -41,6 +41,7 @@
               imageConfig = import (imageDir + "/default.nix") {
                 inherit pkgs;
                 inherit (values) tag;
+                inherit inputs;
               };
             in
               pkgs.dockerTools.buildLayeredImage (imageConfig // {
