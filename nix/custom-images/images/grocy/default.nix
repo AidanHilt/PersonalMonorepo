@@ -94,10 +94,10 @@ in
   contents = with pkgs; [
     # Runtime deps
     php82
-    nginx
-    runit
-    grocy
-    fakeNss
+    #nginx
+    #runit
+    #grocy
+    #fakeNss
 
     # Service definitions
    # phpfpmService
@@ -108,21 +108,21 @@ in
    # nginxConfigFile
   ];
 
-  fakeRootCommands = ''
-    # Create runtime dirs
-    mkdir -p /run/phpfpm
-    mkdir -p /var/log/phpfpm-grocy
-    mkdir -p /var/log/nginx
-    mkdir -p /var/lib/grocy
+  # fakeRootCommands = ''
+  #   # Create runtime dirs
+  #   mkdir -p /run/phpfpm
+  #   mkdir -p /var/log/phpfpm-grocy
+  #   mkdir -p /var/log/nginx
+  #   mkdir -p /var/lib/grocy
 
-    # Set up runit service dirs
-    mkdir -p /etc/sv
-    mkdir -p /etc/service
+  #   # Set up runit service dirs
+  #   mkdir -p /etc/sv
+  #   mkdir -p /etc/service
 
-    # Link services into runit's scan dir
-    ln -s /etc/sv/phpfpm-grocy /etc/service/phpfpm-grocy
-    ln -s /etc/sv/nginx /etc/service/nginx
-  '';
+  #   # Link services into runit's scan dir
+  #   ln -s /etc/sv/phpfpm-grocy /etc/service/phpfpm-grocy
+  #   ln -s /etc/sv/nginx /etc/service/nginx
+  # '';
 
   config = {
     Cmd = [ "${pkgs.runit}/bin/runsvdir" "/etc/service" ];
