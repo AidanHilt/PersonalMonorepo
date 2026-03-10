@@ -59,8 +59,7 @@ let
       export GROCY_PLUGIN_DIR=/var/lib/grocy/plugins
       export GROCY_CACHE_DIR=/var/lib/grocy/viewcache
 
-      exec chpst -u grocy:nginx \
-        ${pkgs.php82}/bin/php-fpm \
+      exec ${pkgs.php82}/bin/php-fpm \
           -F \
           -y ${phpfpmConfigFile} \
           2>&1
@@ -89,6 +88,27 @@ let
     '';
     log = true;
   };
+
+  rootfs = pkgs.runCommand "rootfs" {} ''
+    # Create runtime dirs
+    mkdir -p $out/run/phpfpm
+    mkdir -p $out/var/log/phpfpm-grocy
+    mkdir -p $out/var/log/nginx
+    mkdir -p $out/var/lib/grocy
+
+    # Set up runit service dirs
+    mkdir -p $out/etc/service
+    mkdir -p $out/etc/service/phpfpm-grocy
+    mkdir -p $out/etc/service/nginx
+  '';
+
+  entrypoint = pkgs.writeShellScript "entrypoint.sh" ''
+    mkdir -p /run/service
+    cp -r /etc/sv/phpfpm-grocy /run/service/
+    cp -r /etc/sv/nginx /run/service/
+    chmod -R +w /run/service
+    exec ${pkgs.s6}/bin/s6-svscan /run/service
+  '';
 in
 {
   contents = with pkgs; [
@@ -99,30 +119,30 @@ in
     s6-portable-utils
     grocy
     fakeNss
+    uutils-coreutils-noprefix
 
     # Service definitions
     phpfpmService
     nginxService
+
+    # Root filesystem
+    rootfs
   ];
 
+  #enableFakechroot = true;
+
   # fakeRootCommands = ''
-  #   # Create runtime dirs
-  #   mkdir -p /run/phpfpm
-  #   mkdir -p /var/log/phpfpm-grocy
-  #   mkdir -p /var/log/nginx
-  #   mkdir -p /var/lib/grocy
+  #   mkdir -p $out/etc/service
+  #   mkdir -p $out/etc/service/phpfpm-grocy
+  #   mkdir -p $out/etc/service/nginx
 
-  #   # Set up runit service dirs
-  #   mkdir -p /etc/sv
-  #   mkdir -p /etc/service
-
-  #   # Link services into runit's scan dir
   #   ln -s /etc/sv/phpfpm-grocy /etc/service/phpfpm-grocy
   #   ln -s /etc/sv/nginx /etc/service/nginx
   # '';
 
   config = {
-    Cmd = [ "${pkgs.s6}/bin/s6-svscan" "/etc/service" ];
+    Entrypoint = ["${entrypoint}"];
+
     ExposedPorts = { "80/tcp" = {}; };
   };
 }
