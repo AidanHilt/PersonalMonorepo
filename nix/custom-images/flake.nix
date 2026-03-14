@@ -45,7 +45,7 @@
               };
             in
               pkgs.dockerTools.buildLayeredImage (imageConfig // {
-                maxLayers = 5;
+                #maxLayers = 5;
                 name = imageName;
                 tag = tag;
                 # Add architecture to the image config

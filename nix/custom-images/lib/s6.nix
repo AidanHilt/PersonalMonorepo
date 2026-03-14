@@ -12,7 +12,7 @@ let
 
       # run script
       cat > $out/etc/sv/${name}/run << 'EOF'
-      #!/bin/sh
+      #!${pkgs.dash}/bin/dash
       ${run}
       EOF
       chmod +x $out/etc/sv/${name}/run
@@ -22,7 +22,7 @@ let
 
       ${pkgs.lib.optionalString (finish != null) ''
         cat > $out/etc/sv/${name}/finish << 'EOF'
-        #!/bin/sh
+        #!${pkgs.dash}/bin/sh
         ${finish}
         EOF
         chmod +x $out/etc/sv/${name}/finish
@@ -36,7 +36,7 @@ let
         echo "longrun" > $out/etc/sv/${name}/log/type
 
         cat > $out/etc/sv/${name}/log/run << 'EOF'
-        #!/bin/sh
+        #!${pkgs.dash}/bin/sh
         mkdir -p ${logDir}
         exec ${pkgs.s6}/bin/s6-log -d3 t ${logDir}
         EOF

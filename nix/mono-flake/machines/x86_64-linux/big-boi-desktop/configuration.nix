@@ -29,5 +29,5 @@
   environment.systemPackages = [ pkgs.virtiofsd]; 
 
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
-  # boot.binfmt.registrations."aarch64-linux".fixBinary = true;
+  # boot.binfmt.registrations."aarch64-linux".fixBinary = true
 }

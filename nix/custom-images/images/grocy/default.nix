@@ -7,8 +7,10 @@ let
     user = grocy
     group = nginx
     listen = /run/phpfpm/grocy.sock
+    pid = /run/phpfpm/php-fpm.pid
     listen.owner = nginx
     listen.group = nginx
+
     pm = dynamic
     pm.max_children = 5
     pm.start_servers = 2
@@ -59,12 +61,19 @@ let
       export GROCY_PLUGIN_DIR=/var/lib/grocy/plugins
       export GROCY_CACHE_DIR=/var/lib/grocy/viewcache
 
+      mkdir -p \
+        /var/lib/grocy/viewcache \
+        /var/lib/grocy/plugins \
+        /var/lib/grocy/settingoverrides \
+        /var/lib/grocy/storage \
+        /run/phpfpm
+
       exec ${pkgs.php82}/bin/php-fpm \
           -F \
           -y ${phpfpmConfigFile} \
           2>&1
     '';
-    log = true;
+    log = false;
   };
 
   nginxService = runit.mkService {
@@ -89,24 +98,13 @@ let
     log = true;
   };
 
-  rootfs = pkgs.runCommand "rootfs" {} ''
-    # Create runtime dirs
-    mkdir -p $out/run/phpfpm
-    mkdir -p $out/var/log/phpfpm-grocy
-    mkdir -p $out/var/log/nginx
-    mkdir -p $out/var/lib/grocy
-
-    # Set up runit service dirs
-    mkdir -p $out/etc/service
-    mkdir -p $out/etc/service/phpfpm-grocy
-    mkdir -p $out/etc/service/nginx
-  '';
 
   entrypoint = pkgs.writeShellScript "entrypoint.sh" ''
     mkdir -p /run/service
     cp -r /etc/sv/phpfpm-grocy /run/service/
-    cp -r /etc/sv/nginx /run/service/
-    chmod -R +w /run/service
+    #cp -r /etc/sv/nginx /run/service/
+    chmod +x /run/service/phpfpm-grocy/run
+    mkdir =p /run/phpfpm
     exec ${pkgs.s6}/bin/s6-svscan /run/service
   '';
 in
@@ -123,22 +121,8 @@ in
 
     # Service definitions
     phpfpmService
-    nginxService
-
-    # Root filesystem
-    rootfs
+    #nginxService
   ];
-
-  #enableFakechroot = true;
-
-  # fakeRootCommands = ''
-  #   mkdir -p $out/etc/service
-  #   mkdir -p $out/etc/service/phpfpm-grocy
-  #   mkdir -p $out/etc/service/nginx
-
-  #   ln -s /etc/sv/phpfpm-grocy /etc/service/phpfpm-grocy
-  #   ln -s /etc/sv/nginx /etc/service/nginx
-  # '';
 
   config = {
     Entrypoint = ["${entrypoint}"];
