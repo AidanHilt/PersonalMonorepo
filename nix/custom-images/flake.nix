@@ -13,13 +13,9 @@
       forAllSystems = nixpkgs.lib.genAttrs systems;
       libPackages = import ./lib/packages.nix { inherit nixpkgs inputs; };
 
-      # Helper to get pkgs for a specific system
-      pkgsFor = libPackages.genMuslPkgs
-        systems;`
-
       buildImagesForSystem = system:
         let
-          pkgs = pkgsFor system;
+          pkgs = libPackages.genMuslPkgs system;
 
           # Read all directories in ./images/
           imagesDir = ./images;
