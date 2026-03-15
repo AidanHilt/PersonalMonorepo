@@ -2,6 +2,13 @@
 let
   runit = import ../../lib/s6.nix { inherit pkgs tag; };
 
+  minginx = pkgs.nginx.override {
+    modules = [];
+    withDebug = false;
+    withStream = false;
+    withMail = false;
+  };
+
   phpfpmConfigFile = pkgs.writeText "phpfpm-grocy.conf" ''
     [grocy]
     clear_env = no
@@ -22,7 +29,7 @@ let
     user nginx nginx;
     events {}
     http {
-      include ${pkgs.nginx}/conf/mime.types;
+      include ${minginx}/conf/mime.types;
       server {
         listen 80;
         root ${pkgs.grocy}/public;
@@ -34,8 +41,8 @@ let
         location ~ \.php$ {
           fastcgi_split_path_info ^(.+\.php)(/.+)$;
           fastcgi_pass unix:/run/phpfpm/grocy.sock;
-          include ${pkgs.nginx}/conf/fastcgi.conf;
-          include ${pkgs.nginx}/conf/fastcgi_params;
+          include ${minginx}/conf/fastcgi.conf;
+          include ${minginx}/conf/fastcgi_params;
         }
 
         location ~ \.(js|css|ttf|woff2?|png|jpe?g|svg)$ {
@@ -69,7 +76,7 @@ let
         /var/lib/grocy/storage \
         /tmp
 
-      exec ${pkgs.php82}/bin/php-fpm \
+      exec ${pkgs.php84}/bin/php-fpm \
           -F \
           -y ${phpfpmConfigFile} \
           2>&1
@@ -113,7 +120,6 @@ in
   contents = with pkgs; [
     # Runtime deps
     s6
-    s6-portable-utils
 
     # Service definitions
     phpfpmService
@@ -145,13 +151,6 @@ in
       Setting('CALENDAR_SHOW_WEEK_OF_YEAR', false);
     '')
   ];
-
-  enableFakechroot = true;
-
-  fakeRootCommands = ''
-    ${pkgs.buildPackages.coreutils}/bin/mkdir -p /run/phpfpm
-    ${pkgs.buildPackages.coreutils}/bin/mkdir -p /var/lib/grocy
-  '';
 
   config = {
     Entrypoint = ["${entrypoint}"];

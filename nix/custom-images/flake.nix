@@ -1,5 +1,5 @@
 {
-  description = "Dynamic Docker images from images/ directory";
+  description = "Docker images built with nix for smaller size and greater security";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -11,11 +11,11 @@
       systems = [ "x86_64-linux" "aarch64-linux" ];
 
       forAllSystems = nixpkgs.lib.genAttrs systems;
+      libPackages = import ./lib/packages.nix { inherit nixpkgs inputs; };
 
       # Helper to get pkgs for a specific system
-      pkgsFor = system: import nixpkgs {
-        inherit system;
-      };
+      pkgsFor = libPackages.genMuslPkgs
+        systems;`
 
       buildImagesForSystem = system:
         let
