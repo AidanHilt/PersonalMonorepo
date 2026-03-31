@@ -21,7 +21,7 @@ in
         
         (final: prev: {
           _7zz = prev."_7zz".overrideAttrs (old: {
-            patches = (prev.patches or []) ++ [ ../patches/7zz-musl.patch ];
+            patches = (prev.patches or []) ++ [ ../patches/7zz-musl.patch ../patches/7zz-flags.patch ];
           });
           }
         )
