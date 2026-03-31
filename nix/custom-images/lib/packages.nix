@@ -16,7 +16,16 @@ in
           spdlog = prev.spdlog.overrideAttrs (old: {
             patches = (prev.patches or []) ++ [ ../patches/spdlog-musl.patch ];
             });
-          })
+          }
+        )
+        
+        (final: prev: {
+          _7zz = prev."_7zz".overrideAttrs (old: {
+            patches = (prev.patches or []) ++ [ ../patches/7zz-musl.patch ];
+          });
+          }
+        )
+        
         ];
 
         basePkgs = import nixpkgs {
