@@ -4,7 +4,7 @@
   disko.devices = {
     disk = {
       main = {
-        device = "/dev/disk/by-id/nvme-WD_BLACK_SN750_SE_1TB_214401803107";
+        device = "/dev/nvme";
         type = "disk";
         content = {
           type = "gpt";
