@@ -23,7 +23,7 @@
     enable = true;
     efiSupport = true;
     efiInstallAsRemovable = true;
-    #useOSProber = true;
+    useOSProber = true;
   };
 
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
