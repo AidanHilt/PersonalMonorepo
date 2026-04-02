@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
-  imports = if machine-config.networking.loadBalancer or false == false then [] else [ ../roles/nixos/server/keepalived.nix ];
+  imports = if machine-config.networking.loadBalancerIp or false == false then [] else [ ../roles/nixos/server/keepalived.nix ];
 in
 
 {
