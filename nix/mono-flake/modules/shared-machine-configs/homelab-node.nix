@@ -11,7 +11,7 @@ in
     ../roles/nixos/server/gitops-updater.nix
 
     ../roles/nixos/fixed-ip-machine.nix
-  ];
+  ] ++ imports;
 
   services.openssh = {
     hostKeys = [
