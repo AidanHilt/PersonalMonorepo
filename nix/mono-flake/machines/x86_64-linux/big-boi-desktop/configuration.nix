@@ -24,7 +24,7 @@
     efiSupport = true;
     efiInstallAsRemovable = true;
     useOSProber = true;
-    device = "nodev";
+    device = "/dev/nvme1n1";
   };
 
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
