@@ -15,7 +15,9 @@
 
       buildImagesForSystem = system:
         let
-          pkgs = libPackages.genMuslPkgs system;
+          pkgs = import nixpkgs {
+            inherit system;
+          };
 
           # Read all directories in ./images/
           imagesDir = ./images;
