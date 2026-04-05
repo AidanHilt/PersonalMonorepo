@@ -28,10 +28,13 @@ in
             });
           })
           (final: prev: {
-            apk-tools = prev.apk-tools.overrideAttrs (prev: {
-              rev = "3.0.5";
+            apk-tools = prev.apk-tools.overrideAttrs (old: {
+              version = "3.0.5";
 
-              src = prev.src // {};
+              src = old.src.override {
+                rev = "v3.0.5";
+                sha256 = "";
+              };
             });
           })
         ];
