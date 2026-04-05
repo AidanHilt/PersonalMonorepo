@@ -6,7 +6,7 @@ let
   # Alpine .apks are: gzip(signature) ++ gzip(control.tar) ++ gzip(data.tar)
   # We only want the data tarball.
   unpackApk = apk:
-    pkgs.runCommandNoCC "apk-unpacked-${apk.name}" {
+    pkgs.runCommand "apk-unpacked-${apk.name}" {
       nativeBuildInputs = [ pkgs.python3 ];
     } ''
       mkdir -p $out
@@ -43,16 +43,20 @@ let
   mkAlpineLayer =
     { packages
     , name       ? "alpine-layer"
-    , alpineVersion ? "3.19"
+    , alpineVersion ? "3.23"
     , arch          ? "x86_64"
     , repo          ? "main"
     }:
     let
+      defaultAlpineVersion = alpineVersion;
+      defaultArch          = arch;
+      defaultRepo          = repo;
+
       fetchPkg = { name, version, sha256
-                 , repo          ? repo
-                 , arch          ? arch
-                 , alpineVersion ? alpineVersion
-                 , ... }:
+               , repo          ? defaultRepo
+               , arch          ? defaultArch
+               , alpineVersion ? defaultAlpineVersion
+               , ... }:
         pkgs.fetchurl {
           url    = "https://dl-cdn.alpinelinux.org/alpine/v${alpineVersion}/${repo}/${arch}/${name}-${version}.apk";
           inherit sha256;
