@@ -1,5 +1,9 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
+let
+  platformApps = if pkgs.system == "aarch64-darwin" then with pkgs; [] else with pkgs; [apk-tools];
+in
+
 {
   imports = [
     ../../scripts/app-creator/default.nix
@@ -22,5 +26,5 @@
     syncthing
     vault
     weechat
-  ];
+  ] ++ platformApps;
 }

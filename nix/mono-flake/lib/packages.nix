@@ -27,6 +27,13 @@ in
               ) oldAttrs.patches;
             });
           })
+          (final: prev: {
+            apk-tools = prev.apk-tools.overrideAttrs (oldAttrs: {
+              version = "3.0.5";
+
+              src = oldAttrs.src // {};
+            });
+          })
         ];
       in
       import nixpkgs-version {
