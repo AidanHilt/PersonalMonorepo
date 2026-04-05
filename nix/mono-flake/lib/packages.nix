@@ -36,7 +36,7 @@ in
                 sha256 = "sha256-iuJFgsn4yfQYqichMVhnOHFYj+5xPZYnXaCW0ZkKbRU=";
               };
 
-              buildInputs = old.buildInputs + [prev.zstd];
+              buildInputs = old.buildInputs ++ [prev.zstd];
             });
           })
         ];
