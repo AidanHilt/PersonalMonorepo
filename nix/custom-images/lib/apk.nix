@@ -2,41 +2,12 @@
 let
   lib = pkgs.lib;
 
-  # Unpack a single .apk into a store path.
-  # Alpine .apks are: gzip(signature) ++ gzip(control.tar) ++ gzip(data.tar)
-  # We only want the data tarball.
   unpackApk = apk:
     pkgs.runCommand "apk-unpacked-${apk.name}" {
-      nativeBuildInputs = [ pkgs.python3 ];
+      nativeBuildInputs = [ pkgs.apk-tools ];
     } ''
       mkdir -p $out
-      python3 - <<'EOF'
-      import gzip, io, sys, tarfile, pathlib
-
-      def iter_gzip_streams(path):
-          """Yield each independent gzip stream in a concatenated file."""
-          with open(path, "rb") as f:
-              data = f.read()
-          pos = 0
-          while pos < len(data):
-              # gzip magic bytes
-              if data[pos:pos+2] != b'\x1f\x8b':
-                  break
-              buf = io.BytesIO(data[pos:])
-              with gzip.GzipFile(fileobj=buf) as gz:
-                  content = gz.read()
-              yield content
-              pos += buf.tell()
-
-      streams = list(iter_gzip_streams("${apk}"))
-      # stream[0] = signature, stream[1] = control.tar, stream[2] = data.tar
-      if len(streams) < 3:
-          sys.exit("Expected 3 gzip streams in apk, got " + str(len(streams)))
-
-      data_tar = io.BytesIO(streams[2])
-      with tarfile.open(fileobj=data_tar) as t:
-          t.extractall("$out")
-      EOF
+      ${pkgs.apk-tools}/bin/apk extract --destination $out ${apk} --allow-untrusted 
     '';
 
   # Merge several unpacked apks into one layer derivation
@@ -66,7 +37,7 @@ let
     in
     pkgs.symlinkJoin {
       inherit name;
-      paths = unpacked;
+      paths = [unpacked];
     };
 
 in
