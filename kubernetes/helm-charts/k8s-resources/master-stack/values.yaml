@@ -73,7 +73,7 @@ hashi-vault:
     vault-secrets-operator:
       repo: https://helm.releases.hashicorp.com
       chart: vault-secrets-operator
-      version: 0.5.2
+      version: 0.10.0
       configuration:
         enabled: false
     vault-config:
