@@ -37,6 +37,9 @@ cert-manager:
   chart: cert-manager
   version: v1.20.0
   destinationNamespace: cert-manager
+  defaultValues: |
+    crds:
+      enabled: true
 crafty-server:
   enabled: false
   repo: oci://oci.trueforge.org/truecharts/crafty-4
