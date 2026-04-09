@@ -3,10 +3,9 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nix2container.url = "github:nlewo/nix2container";
   };
 
-  outputs = { self, nixpkgs }@inputs:
+  outputs = { self, nixpkgs, ... }@inputs:
     let
       # Support multiple systems
       systems = [ "x86_64-linux" "aarch64-linux" ];
@@ -18,18 +17,6 @@
         let
           pkgs = import nixpkgs {
             inherit system;
-            overlays = [(final: prev: {
-              apk-tools = prev.apk-tools.overrideAttrs (old: {
-                version = "3.0.5";
-
-                src = old.src.override {
-                  rev = "v3.0.5";
-                  sha256 = "sha256-iuJFgsn4yfQYqichMVhnOHFYj+5xPZYnXaCW0ZkKbRU=";
-                };
-
-                buildInputs = old.buildInputs ++ [prev.zstd];
-              });
-          })];
           };
 
           # Read all directories in ./images/
@@ -83,17 +70,7 @@
           default = imagePackages.all or (builtins.head (builtins.attrValues imagePackages));
         };
 
-        mkAlpineImage = import ./lib/docker-system.nix {tag = "0.0.0"; inherit inputs pkgs; };
-
     in {
-      packages = forAllSystems buildImagesForSystem // {
-        "x86_64-linux" = {
-          apkTest = mkAlpineImage {
-            system = "x86_64-linux";
-            alpinePackages = ["curl"];
-            nixPackages = [];
-          };
-        };
-      };
+      packages = forAllSystems buildImagesForSystem;
     };
 }

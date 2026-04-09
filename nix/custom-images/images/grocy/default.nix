@@ -2,13 +2,6 @@
 let
   runit = import ../../lib/s6.nix { inherit pkgs tag; };
 
-  minginx = pkgs.nginx.override {
-    modules = [];
-    withDebug = false;
-    withStream = false;
-    withMail = false;
-  };
-
   phpfpmConfigFile = pkgs.writeText "phpfpm-grocy.conf" ''
     [grocy]
     clear_env = no
@@ -29,7 +22,7 @@ let
     user nginx nginx;
     events {}
     http {
-      include ${minginx}/conf/mime.types;
+      include ${pkgs.nginx}/conf/mime.types;
       server {
         listen 80;
         root ${pkgs.grocy}/public;
@@ -41,8 +34,8 @@ let
         location ~ \.php$ {
           fastcgi_split_path_info ^(.+\.php)(/.+)$;
           fastcgi_pass unix:/run/phpfpm/grocy.sock;
-          include ${minginx}/conf/fastcgi.conf;
-          include ${minginx}/conf/fastcgi_params;
+          include ${pkgs.nginx}/conf/fastcgi.conf;
+          include ${pkgs.nginx}/conf/fastcgi_params;
         }
 
         location ~ \.(js|css|ttf|woff2?|png|jpe?g|svg)$ {
@@ -109,11 +102,12 @@ let
 
 
   entrypoint = pkgs.writeShellScript "entrypoint.sh" ''
-    mkdir -p /run/service
-    mkdir -p /run/phpfpm
-    cp -r /etc/sv/phpfpm-grocy /run/service/
-    cp -r /etc/sv/nginx /run/service/
-    exec ${pkgs.s6}/bin/s6-svscan /run/service
+    # mkdir -p /run/service
+    # mkdir -p /run/phpfpm
+    # cp -r /etc/sv/phpfpm-grocy /run/service/
+    # cp -r /etc/sv/nginx /run/service/
+   # exec ${pkgs.s6}/bin/s6-svscan /run/service
+   ls -a /test
   '';
 in
 {
@@ -124,6 +118,13 @@ in
     # Service definitions
     phpfpmService
     nginxService
+
+    uutils-coreutils-noprefix
+
+    (pkgs.runCommand "runtime-dir-test" {} ''
+      mkdir -p $out/test/
+      touch $out/test/.keep
+    '')
 
     (pkgs.writeTextDir "etc/passwd" ''
       root:x:0:0:root:/root:/bin/sh
