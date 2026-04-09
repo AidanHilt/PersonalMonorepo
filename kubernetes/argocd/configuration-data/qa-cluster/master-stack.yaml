@@ -4,9 +4,9 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/cert-manager
+gitRevision: project-appocalypse/velero
 
-cert-manager:
+velero:
   enabled: true
 
 homepage:
