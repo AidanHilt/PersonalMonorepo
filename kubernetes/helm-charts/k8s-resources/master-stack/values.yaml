@@ -13,6 +13,7 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
+
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -295,6 +296,12 @@ transmission:
   destinationNamespace: videos
   configuration:
     enabled: false
+velero:
+  enabled: false
+  repo: https://vmware-tanzu.github.io/helm-charts
+  chart: velero
+  version: 12.0.0
+  destinationNamespace: backup
 video-stack-configuration:
   enabled: false
   secureValues: |

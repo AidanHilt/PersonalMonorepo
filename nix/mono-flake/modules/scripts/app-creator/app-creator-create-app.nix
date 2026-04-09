@@ -44,35 +44,34 @@ while true; do
   PREFIXES+=("$prefix")
 done
 
-if [[ ''${#PREFIXES[@]} -eq 0 ]] ; then
-  while true; do
-    read -p "Enter subdomain: " SUBDOMAIN
-    if [[ -n "$SUBDOMAIN" ]]; then
-      break
-    fi
-    print_warning "Subdomain cannot be empty"
-  done
+if [[ ''${#PREFIXES[@]} -eq 0 ]]; then
+  read -p "Enter subdomain: " SUBDOMAIN
 fi
 
-print_debug "Adding ingress for $APP_NAME"
-INGRESS_ARGS=""
-if [[ ''${#PREFIXES[@]} -gt 0 ]]; then
-  for prefix in "''${PREFIXES[@]}"; do
-    INGRESS_ARGS+="--prefix $prefix "
-  done
-else
-  INGRESS_ARGS="--subdomain $SUBDOMAIN"
-fi
-app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" $INGRESS_ARGS
+if [[ ''${#PREFIXES[@]} -eq 0 ]] && [[ -z "$SUBDOMAIN" ]]; then
+  print_status "No prefixes or subdomains provided, skipping ingress and homepage"
+else 
+  print_debug "Adding ingress for $APP_NAME"
+  INGRESS_ARGS=""
+  if [[ ''${#PREFIXES[@]} -gt 0 ]]; then
+    for prefix in "''${PREFIXES[@]}"; do
+      INGRESS_ARGS+="--prefix $prefix "
+    done
+  else
+    INGRESS_ARGS="--subdomain $SUBDOMAIN"
+  fi
+  app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" $INGRESS_ARGS
 
-print_debug "Adding homepage link for $APP_NAME"
-HOMEPAGE_ARGS=""
-if [[ ''${#PREFIXES[@]} -gt 0 ]]; then
-  HOMEPAGE_ARGS="--prefix ''${PREFIXES[0]}"
-else
-  HOMEPAGE_ARGS="--subdomain $SUBDOMAIN"
+  print_debug "Adding homepage link for $APP_NAME"
+  HOMEPAGE_ARGS=""
+  if [[ ''${#PREFIXES[@]} -gt 0 ]]; then
+    HOMEPAGE_ARGS="--prefix ''${PREFIXES[0]}"
+  else
+    HOMEPAGE_ARGS="--subdomain $SUBDOMAIN"
+  fi
+  app-creator-add-homepage-link --app-name "$APP_NAME" $HOMEPAGE_ARGS
 fi
-app-creator-add-homepage-link --app-name "$APP_NAME" $HOMEPAGE_ARGS
+
 
 SECRET_NAMES=()
 SECRET_NAMESPACES=()
