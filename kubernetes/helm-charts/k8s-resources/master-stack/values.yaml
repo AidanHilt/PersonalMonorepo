@@ -284,6 +284,12 @@ romm:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/romm
   destinationNamespace: romm
+seaweedfs:
+  enabled: false
+  repo: https://seaweedfs.github.io/seaweedfs-operator/
+  chart: seaweedfs-operator
+  version: 0.1.13
+  destinationNamespace: seaweedfs
 sonarr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/sonarr

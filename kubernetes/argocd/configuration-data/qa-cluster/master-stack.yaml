@@ -6,7 +6,7 @@ hostnames:
 
 gitRevision: project-appocalypse/velero
 
-velero:
+seaweedfs:
   enabled: true
 
 homepage:
