@@ -13,7 +13,6 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -286,8 +285,8 @@ romm:
   destinationNamespace: romm
 seaweedfs:
   enabled: false
-  repo: https://seaweedfs.github.io/seaweedfs-operator/
-  chart: seaweedfs-operator
+  repo: https://seaweedfs.github.io/seaweedfs/helm
+  chart: seaweedfs
   version: 0.1.13
   destinationNamespace: seaweedfs
 sonarr:
