@@ -52,12 +52,6 @@
       Clicking = true;
       TrackpadRightClick = true;
     };
-
-    CustomSystemPreferences = {
-      "com.apple.AppleMultitouchTrackpad" = {
-        TrackpadThreeFingerDrag = 0;
-      };
-    };
   };
 
   launchd.user.agents.fix-trackpad = {
