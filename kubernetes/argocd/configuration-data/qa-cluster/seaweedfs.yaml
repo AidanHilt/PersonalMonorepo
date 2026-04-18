@@ -1,0 +1,95 @@
+global:
+  registry: ""
+  repository: ""
+  imageName: chrislusf/seaweedfs
+  imageTag: "latest"
+  imagePullPolicy: IfNotPresent
+  storageClass: "longhorn" # your Longhorn storageclass
+  replicationPlacement: "000" # single datacenter, no replication — adjust if you have 3+ nodes
+
+master:
+  enabled: true
+  replicas: 1 # bump to 3 for HA with an odd number of nodes
+  port: 9333
+  grpcPort: 19333
+  volumeSizeLimitMB: 1000
+  defaultReplication: "000" # change to "001" for 2-copy replication across nodes
+
+  data:
+    type: "persistentVolumeClaim"
+    size: "5Gi" # master only stores metadata, 5Gi is plenty
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+volume:
+  enabled: true
+  replicas: 1 # one per storage node ideally
+  port: 8080
+  grpcPort: 18080
+  minFreeSpacePercent: 10
+
+  data:
+    type: "persistentVolumeClaim"
+    size: "100Gi" # your actual storage budget per volume node
+
+  idx:
+    type: "persistentVolumeClaim"
+    size: "10Gi"
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+filer:
+  enabled: true
+  replicas: 1
+  port: 8888
+  grpcPort: 18888
+  metricsPort: 9327
+
+  # leveldb is fine for a single filer replica, use mysql/postgres for multiple
+  data:
+    type: "persistentVolumeClaim"
+    size: "10Gi"
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+s3:
+  enabled: true
+  port: 8333
+  httpsPort: 0 # set to 8334 if you want TLS at the pod level (vs. letting Istio handle it)
+  allowEmptyFolder: false
+  enableAuth: true
+  skipAuthSecretCreation: true # use pre-existing secret instead of generating one
+  existingConfigSecret: "seaweedfs-s3-secret" # name of your pre-existing secret
+
+  # Buckets to auto-create on startup
+  # createBuckets:
+  #   - name: my-first-bucket
+  #     anonymousRead: false
+  #   - name: my-second-bucket
+  #     anonymousRead: false
+
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "500m"
