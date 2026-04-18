@@ -287,7 +287,7 @@ seaweedfs:
   enabled: false
   repo: https://seaweedfs.github.io/seaweedfs/helm
   chart: seaweedfs
-  version: 0.1.13
+  version: 4.20.0
   destinationNamespace: seaweedfs
 sonarr:
   enabled: false
