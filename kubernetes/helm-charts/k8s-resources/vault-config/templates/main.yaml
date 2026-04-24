@@ -23,7 +23,7 @@ metadata:
 spec:
   type: kv-v2
   mount: {{ $vaultConfig.mount | default $vaultConfig.secretDestinationNamespace }}
-  path: {{ $resourceName }}/config
+  path: {{ $vaultConfig.path | "$resourceName/config" }}
 
   destination:
     name: {{ $resourceName }}-config-secret

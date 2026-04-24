@@ -5,7 +5,7 @@ bar-assistant:
     transformation:
       templates:
         MEILI_MASTER_KEY:
-          text: '{{ .Secrets.meilisearchApiKey }}'
+          text: "{{ .Secrets.meilisearchApiKey }}"
 firefly-iii:
   enabled: false
   secretDestinationNamespace: finance
@@ -70,6 +70,7 @@ romm:
 seaweedfs:
   enabled: false
   secretDestinationNamespace: seaweedfs
+  path: config
 sonarr:
   enabled: false
   secretDestinationNamespace: videos
