@@ -77,7 +77,7 @@ s3:
   allowEmptyFolder: false
   enableAuth: true
   skipAuthSecretCreation: true # use pre-existing secret instead of generating one
-  existingConfigSecret: "seaweedfs-s3-secret" # name of your pre-existing secret
+  existingConfigSecret: "seaweedfs-config-secret" # name of your pre-existing secret
 
   # Buckets to auto-create on startup
   # createBuckets:
