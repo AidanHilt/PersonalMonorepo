@@ -20,6 +20,8 @@
   hardware.xone.enable = true;
   hardware.bluetooth.enable = true;
 
+  powerManagement.cpuFreqGovernor = "schedutil";
+
   boot.kernelModules = [ "xone" ];
 
   services.pipewire = {
