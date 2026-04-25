@@ -28,6 +28,8 @@
     pulse.enable = true;
   };
 
+  programs.gamemode.enable = true;
+
   # Make sure your user is in the audio group
   users.users.${machine-config.username}.extraGroups = [ "audio" ];
 
