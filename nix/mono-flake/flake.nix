@@ -79,7 +79,7 @@
         inputs.nur.overlays.default
         inputs.agenix.overlays.default
         inputs.nix-vscode-extensions.overlays.default
-        inputs.nix-cachyos-kernel.overlays.default
+        inputs.nix-cachyos-kernel.overlays.pinned
       ];
 
       platformOverlays = {
