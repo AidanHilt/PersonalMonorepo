@@ -28,5 +28,5 @@
 
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
-  #boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest;
+  boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest;
 }
