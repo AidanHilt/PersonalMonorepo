@@ -51,6 +51,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
+
     # Darwin-specific items
     nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.11-darwin";
 
@@ -77,6 +79,7 @@
         inputs.nur.overlays.default
         inputs.agenix.overlays.default
         inputs.nix-vscode-extensions.overlays.default
+        inputs.nix-cachyos-kernel.overlays.default
       ];
 
       platformOverlays = {
