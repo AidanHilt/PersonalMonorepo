@@ -14,6 +14,7 @@
       substituters = [
         "https://nix-community.cachix.org"
         "https://cache.nixos.org/"
+        "https://attic.xuyh0120.win/lantian"
       ];
       trusted-public-keys = [
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
@@ -36,6 +37,7 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIImw5CsGmsR1WTunv5bvNcozmoUSgJf76RMvy6SZtA2R aidan@hyperion"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEEAi2UjaWUsDVY6wUMMcIjDXzyizhax86Z0J2I6fYM0 nixos@nixos"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICWRZws+JjItD7G/MgDqvcj6OCLzizV87AcYJvxEHXys aidan@big-boi-desktop"
+      "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
     ];
   };
 }
