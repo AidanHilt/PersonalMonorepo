@@ -79,13 +79,6 @@ s3:
   skipAuthSecretCreation: true # use pre-existing secret instead of generating one
   existingConfigSecret: "seaweedfs-config-secret" # name of your pre-existing secret
 
-  # Buckets to auto-create on startup
-  # createBuckets:
-  #   - name: my-first-bucket
-  #     anonymousRead: false
-  #   - name: my-second-bucket
-  #     anonymousRead: false
-
   resources:
     requests:
       memory: "128Mi"
@@ -93,3 +86,6 @@ s3:
     limits:
       memory: "256Mi"
       cpu: "500m"
+
+admin:
+  enabled: true
