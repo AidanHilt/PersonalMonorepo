@@ -41,7 +41,6 @@ filer:
 
 s3:
   enabled: true
-  port: 8333
   allowEmptyFolder: false
   enableAuth: true
   skipAuthSecretCreation: true

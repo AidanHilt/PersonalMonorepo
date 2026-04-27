@@ -1,6 +1,7 @@
 hostnames:
   - localhost
 
+
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -140,6 +141,11 @@ romm:
   enabled: false
   subdomain: romm
   destinationSvc: romm.romm.svc.cluster.local
+seaweedfs:
+  enabled: false
+  subdomain: seaweedfs
+  destinationSvc: seaweedfs-admin.seaweedfs.svc.cluster.local
+  destinationPort: "23646"
 sonarr:
   enabled: false
   prefixes:
