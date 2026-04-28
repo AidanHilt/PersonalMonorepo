@@ -3,7 +3,10 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    terranix.url = "github:terranix/terranix";
+    terranix = {
+      url = "github:terranix/terranix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    }
   };
 
   outputs = { self, nixpkgs, terranix, ... }:
@@ -21,7 +24,7 @@
       );
 
       buildModule = name: terranix.lib.terranixConfiguration {
-        inherit nixpkgs system;
+        inherit system;
         modules = [ ./modules/${name}/infra.nix ];
       };
 
