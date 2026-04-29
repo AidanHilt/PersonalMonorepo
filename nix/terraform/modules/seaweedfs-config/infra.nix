@@ -1,9 +1,31 @@
-{ ... }: {
-  variable.vault_url      = { type = "string"; };
-  variable.vault_token    = { type = "string"; sensitive = true; };
-  variable.seaweedfs_endpoint = { type = "string"; };
-  variable.access_key     = { type = "string"; };
-  variable.secret_key     = { type = "string"; sensitive = true; };
+{ ... }:
+
+{
+  variable = {
+    vault_url = {
+      type        = "string";
+      description = "The URL for our vault";
+    };
+    vault_token = {
+      type        = "string";
+      description = "The token to authenticate with Vault";
+      sensitive   = true;
+    };
+    seaweedfs_endpoint = {
+      type        = "string";
+      description = "The endpoint for the seaweedfs S3 API";
+      default     = "http://localhost:8333";
+    };
+    access_key = {
+      type        = "string";
+      description = "The pre-existing access key for seaweedfs with admin privileges";
+    };
+    secret_key = {
+      type        = "string";
+      description = "The pre-existing secret key for seaweedfs with admin privileges";
+      sensitive   = true;
+    };
+  };
 
   terraform.required_providers.seaweedfs = {
     source  = "JonasKop/seaweedfs";
@@ -15,8 +37,6 @@
     token   = "\${var.vault_token}";
   };
 
-  # TODO For now, this will only be able to be run from a machine that's port forwarding the service
-  # in the future, let's try to secure it with mTLS
   provider.seaweedfs = {
     endpoint   = "\${var.seaweedfs_endpoint}";
     insecure   = true;
