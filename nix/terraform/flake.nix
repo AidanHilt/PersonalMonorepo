@@ -13,6 +13,19 @@
     let
       system = "aarch64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
+      lib = nixpkgs.lib;
+
+      libFiles = builtins.attrNames (
+        lib.filterAttrs (name: type:
+          type == "regular" && lib.hasSuffix ".nix" name
+        ) (builtins.readDir ./lib)
+      );
+
+      loadLib = file: import ./lib/${file} { inherit lib; };
+
+      libFunctions = builtins.foldl' (acc: file:
+          acc // (loadLib file)
+        ) {} libFiles;
 
       moduleNames = builtins.attrNames (
         pkgs.lib.filterAttrs
@@ -26,6 +39,7 @@
       buildModule = name: terranix.lib.terranixConfiguration {
         inherit system;
         modules = [ ./modules/${name}/infra.nix ];
+        extraArgs = {inherit libFunctions lib;};
       };
 
     in {

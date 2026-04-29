@@ -19,7 +19,7 @@ let
         !(config ? value) && !(config.readFromVars or false)
       ) (value.data or {});
 
-      isPostgresPassword = value.postgres_password or true;
+      isPostgresPassword = value.postgresPassword or true;
     in {
       resource.vault_policy.reader.${key} = {
         name   = value.auth.role_name or key;
@@ -74,5 +74,5 @@ let
     );
 
 in {
-  _module.args = { inherit mkVaultSecret mkVaultSecrets; };
+  inherit mkVaultSecret mkVaultSecrets;
 }
