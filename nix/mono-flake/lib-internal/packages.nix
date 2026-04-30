@@ -13,6 +13,7 @@ in
   genPkgsFor = systems: overlays: platformOverlays:
     lib.genAttrs (import systems) (system:
       let
+        nixpkgs-version = if system == "aarch64-darwin" then inputs.nixpkgs-darwin else inputs.nixpkgs;
         systemOverlays = platformOverlays.${system} or [];
         patches = [
           (final: prev: {
@@ -28,10 +29,14 @@ in
           })
         ];
       in
-      import inputs.nixpkgs {
+      import nixpkgs-version {
         inherit system;
         config.allowUnfree = true;
         config.nvidia.acceptLicense = true;
+        config.permittedInsecurePackages = [
+          "lima-full-1.2.2"
+          "lima-additional-guestagents-1.2.2"
+        ];
         overlays = overlays ++ systemOverlays ++ patches;
       }
     );

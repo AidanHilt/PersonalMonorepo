@@ -1,7 +1,7 @@
 { libFunctions, lib, ... }:
 
 let
-  master-secret = libFunctions.mkVaultSecret "seaweedfs-config" {
+  masterSecret = libFunctions.mkVaultSecret "seaweedfs-config" {
     service_account = "seaweedfs";
     namespace = "seaweedfs";
     mount = "seaweedfs";
@@ -15,6 +15,8 @@ let
       };
     };
   };
+
+  vaultProvider = import ../../lib/vault-provider.nix;
 
   static = {
     variable = {
@@ -80,4 +82,4 @@ let
   };
 in
 
-lib.recursiveUpdate master-secret static
+lib.recursiveUpdate masterSecret static
