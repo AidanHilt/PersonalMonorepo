@@ -49,12 +49,12 @@ in
     eza
     gettext
     jq
+    opentofu
     p7zip
     pipx
     postgresql
     pre-commit
     rustc
-    opentofu
     terragrunt
     yarn
     yq-go

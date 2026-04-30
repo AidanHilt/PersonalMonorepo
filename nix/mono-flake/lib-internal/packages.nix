@@ -13,7 +13,6 @@ in
   genPkgsFor = systems: overlays: platformOverlays:
     lib.genAttrs (import systems) (system:
       let
-        nixpkgs-version = if system == "aarch64-darwin" then inputs.nixpkgs-darwin else inputs.nixpkgs;
         systemOverlays = platformOverlays.${system} or [];
         patches = [
           (final: prev: {
@@ -29,7 +28,7 @@ in
           })
         ];
       in
-      import nixpkgs-version {
+      import inputs.nixpkgs {
         inherit system;
         config.allowUnfree = true;
         config.nvidia.acceptLicense = true;
