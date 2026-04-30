@@ -7,9 +7,9 @@ let
     mount = "seaweedfs";
     postgres_secret = false;
     data = {
-      accessKey = {
-        value = "AKIA\${upper(random_id.admin_access_key.hex)}";
-      };
+      # accessKey = {
+      #   value = "AKIA\${upper(random_id.admin_access_key.hex)}";
+      # };
       secretKey = {
         postgresPassword = false;
       };
@@ -41,6 +41,15 @@ let
         description = "The pre-existing secret key for seaweedfs with admin privileges";
         sensitive   = true;
       };
+      kubeconfig_location = {
+        type        = "string";
+        description = "Where the kubeconfig for our cluster is located";
+        default     = "~/.kube/config";
+      };
+      kubeconfig_context = {
+        type        = "string";
+        description = "The Kubernetes context to run against";
+      };
     };
 
     terraform.required_providers.seaweedfs = {
@@ -51,6 +60,11 @@ let
     provider.vault = {
       address = "\${var.vault_url}";
       token   = "\${var.vault_token}";
+    };
+
+    provider.kubernetes = {
+      config_path    = "\${var.kubeconfig_location}";
+      config_context = "\${var.kubeconfig_context}";
     };
 
     provider.seaweedfs = {
