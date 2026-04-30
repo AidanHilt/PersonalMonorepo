@@ -53,10 +53,12 @@
 
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
 
+    # Darwin-specific items
+    nixpkgs-darwin.url = "github:nixos/nixpkgs/28a7d239f858e22377c84b573d0bf192a4fa0286";
 
     darwin = {
       url = "github:lnl7/nix-darwin/master";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-darwin";
     };
   };
 
