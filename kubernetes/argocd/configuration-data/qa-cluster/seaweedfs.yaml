@@ -50,13 +50,16 @@ s3:
   skipAuthSecretCreation: true
   # existingConfigSecret: "seaweedfs-config-secret"
   extraEnvironmentVars:
-    - name: AWS_ACCESS_KEY_ID
-      value: "your-access-key"
-    - name: AWS_SECRET_ACCESS_KEY
+    AWS_ACCESS_KEY_ID:
       valueFrom:
         secretKeyRef:
           name: seaweedfs-config-secret
-          key: secret-key
+          key: access_key
+    AWS_SECRET_ACCESS_KEY:
+      valueFrom:
+        secretKeyRef:
+          name: seaweedfs-config-secret
+          key: access_key
 
 admin:
   enabled: true
