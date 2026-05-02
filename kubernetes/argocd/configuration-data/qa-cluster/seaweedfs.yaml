@@ -35,9 +35,9 @@ filer:
   grpcPort: 18888
   metricsPort: 9327
 
-  extraArgs:
-    - "-iam"
-    - "-s3.iam.readOnly=false"
+  # extraArgs:
+  #   - "-iam"
+  #   - "-s3.iam.readOnly=false"
 
   data:
     type: "persistentVolumeClaim"
@@ -50,6 +50,9 @@ s3:
   enableAuth: false
   skipAuthSecretCreation: true
   # existingConfigSecret: "seaweedfs-config-secret"
+
+  extraArgs:
+    - "iam.readOnly=false"
 
   extraEnvironmentVars:
     AWS_ACCESS_KEY_ID:
