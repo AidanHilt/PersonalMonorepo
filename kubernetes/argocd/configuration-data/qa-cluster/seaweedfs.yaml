@@ -36,6 +36,7 @@ filer:
   metricsPort: 9327
 
   extraArgs:
+    - "-iam"
     - "-s3.iam.readOnly=false"
 
   data:
