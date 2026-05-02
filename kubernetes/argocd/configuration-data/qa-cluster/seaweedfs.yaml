@@ -46,7 +46,8 @@ filer:
 s3:
   enabled: true
   allowEmptyFolder: false
-  enableAuth: true
+  # Crazy, right?! This is because we want to enable it via env vars
+  enableAuth: false
   skipAuthSecretCreation: true
   # existingConfigSecret: "seaweedfs-config-secret"
   extraEnvironmentVars:
