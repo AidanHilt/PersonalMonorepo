@@ -70,7 +70,6 @@ romm:
 seaweedfs:
   enabled: false
   secretDestinationNamespace: seaweedfs
-  path: config
 sonarr:
   enabled: false
   secretDestinationNamespace: videos
