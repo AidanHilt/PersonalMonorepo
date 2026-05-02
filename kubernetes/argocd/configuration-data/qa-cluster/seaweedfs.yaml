@@ -35,6 +35,9 @@ filer:
   grpcPort: 18888
   metricsPort: 9327
 
+  extraArgs:
+    - "-s3.iam.readOnly=false"
+
   data:
     type: "persistentVolumeClaim"
     size: "10Gi"
@@ -45,8 +48,6 @@ s3:
   enableAuth: true
   skipAuthSecretCreation: true
   existingConfigSecret: "seaweedfs-config-secret"
-  extraArgs:
-    - "-s3.iam.readOnly=false"
 
 admin:
   enabled: true
