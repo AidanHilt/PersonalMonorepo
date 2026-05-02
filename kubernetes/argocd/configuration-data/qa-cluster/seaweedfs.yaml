@@ -50,6 +50,10 @@ s3:
   enableAuth: false
   skipAuthSecretCreation: true
   # existingConfigSecret: "seaweedfs-config-secret"
+
+  extraArgs:
+    - "-s3.iam.readOnly=false"
+
   extraEnvironmentVars:
     AWS_ACCESS_KEY_ID:
       secretKeyRef:
