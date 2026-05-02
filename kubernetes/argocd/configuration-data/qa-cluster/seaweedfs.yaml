@@ -43,23 +43,23 @@ filer:
     type: "persistentVolumeClaim"
     size: "10Gi"
 
-s3:
-  enabled: true
-  allowEmptyFolder: false
-  # Crazy, right?! This is because we want to enable it via env vars
-  enableAuth: false
-  skipAuthSecretCreation: true
-  # existingConfigSecret: "seaweedfs-config-secret"
+  s3:
+    enabled: true
+    allowEmptyFolder: false
+    # Crazy, right?! This is because we want to enable it via env vars
+    enableAuth: false
+    skipAuthSecretCreation: true
+    # existingConfigSecret: "seaweedfs-config-secret"
 
-  extraEnvironmentVars:
-    AWS_ACCESS_KEY_ID:
-      secretKeyRef:
-        name: seaweedfs-config-secret
-        key: accessKey
-    AWS_SECRET_ACCESS_KEY:
-      secretKeyRef:
-        name: seaweedfs-config-secret
-        key: secretKey
+    extraEnvironmentVars:
+      AWS_ACCESS_KEY_ID:
+        secretKeyRef:
+          name: seaweedfs-config-secret
+          key: accessKey
+      AWS_SECRET_ACCESS_KEY:
+        secretKeyRef:
+          name: seaweedfs-config-secret
+          key: secretKey
 
 admin:
   enabled: true
