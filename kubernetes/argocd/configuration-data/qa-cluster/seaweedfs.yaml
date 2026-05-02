@@ -52,7 +52,7 @@ s3:
   # existingConfigSecret: "seaweedfs-config-secret"
 
   extraArgs:
-    - "-iamReadOnly=false"
+    - "-iam.readOnly=false"
 
   extraEnvironmentVars:
     AWS_ACCESS_KEY_ID:
