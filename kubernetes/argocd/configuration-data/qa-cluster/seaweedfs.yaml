@@ -2,7 +2,7 @@ global:
   imageName: chrislusf/seaweedfs
   imageTag: "latest"
   imagePullPolicy: IfNotPresent
-  storageClass: "longhorn"
+  #storageClass: "longhorn"
   replicationPlacement: "000" # single datacenter, no replication — adjust if you have 3+ nodes
 
 master:
@@ -54,11 +54,11 @@ s3:
     AWS_ACCESS_KEY_ID:
       secretKeyRef:
         name: seaweedfs-config-secret
-        key: access_key
+        key: accessKey
     AWS_SECRET_ACCESS_KEY:
       secretKeyRef:
         name: seaweedfs-config-secret
-        key: access_key
+        key: secretKey
 
 admin:
   enabled: true
