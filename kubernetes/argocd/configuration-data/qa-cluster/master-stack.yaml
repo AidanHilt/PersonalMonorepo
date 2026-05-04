@@ -13,6 +13,8 @@ seaweedfs:
 
 nextcloud:
   enabled: true
+  configuration:
+    enabled: true
 
 homepage:
   enabled: true

@@ -1,0 +1,3 @@
+nextcloud:
+  trustedDomains:
+    - nextcloud.qa-cluster-lb.lan
