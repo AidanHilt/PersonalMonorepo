@@ -1,4 +1,2 @@
 nextcloud:
-  trustedDomains:
-    - nextcloud.qa-cluster-lb.lan
-    - 10.244.0.0/16
+  host: nextcloud.qa-cluster-lb.lan
