@@ -11,6 +11,9 @@ seaweedfs:
   configuration:
     enabled: true
 
+nextcloud:
+  enabled: true
+
 homepage:
   enabled: true
 

@@ -121,6 +121,10 @@ navidrome:
   prefixes:
     - /music
   destinationSvc: navidrome.music.svc.cluster.local
+nextcloud:
+  enabled: false
+  subdomain: nextcloud
+  destinationSvc: nextcloud.nextcloud.svc.cluster.local
 paperless:
   enabled: false
   prefixes:

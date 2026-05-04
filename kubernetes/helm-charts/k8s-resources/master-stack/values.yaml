@@ -13,6 +13,7 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
+
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -238,6 +239,12 @@ navidrome:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/navidrome
   destinationNamespace: music
+nextcloud:
+  enabled: false
+  repo: https://nextcloud.github.io/helm/
+  chart: nextcloud
+  version: 9.0.6
+  destinationNamespace: nextcloud
 nvidia:
   enabled: false
   repo: https://nvidia.github.io/k8s-device-plugin
