@@ -106,12 +106,12 @@ spec:
 
   refreshAfter: 30s
 
-  vaultAuthRef: {{ $resourceName }}-auth
+  vaultAuthRef: {{ $resourceName }}-seaweedfs-creds-auth
 ---
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultAuth
 metadata:
-  name: {{ $resourceName }}-auth
+  name: {{ $resourceName }}-seaweedfs-creds-auth
   namespace: {{ $vaultConfig.secretDestinationNamespace }}
 spec:
   method: kubernetes
