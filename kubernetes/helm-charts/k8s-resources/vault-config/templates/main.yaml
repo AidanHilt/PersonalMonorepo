@@ -91,5 +91,35 @@ spec:
     serviceAccount: postgres-cluster
 {{- end }}
 
+
+{{- if (get (default (dict) $vaultConfig.seaweedfsSecret) "enabled") | default false }}
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: {{ $resourceName }}-seaweedfs-user
+  namespace: {{ $vaultConfig.secretDestinationNamespace }}
+spec:
+  type: kv-v2
+  mount: "seaweedfs"
+  path: {{ $resourceName }}-creds
+
+  refreshAfter: 30s
+
+  vaultAuthRef: {{ $resourceName }}-auth
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: {{ $resourceName }}-auth
+  namespace: {{ $vaultConfig.secretDestinationNamespace }}
+spec:
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: {{ $resourceName }}-creds
+    serviceAccount: {{ $serviceAccountName }}
+{{- end }}
+
 {{- end }}
 {{- end }}
