@@ -17,6 +17,7 @@ externalDatabase:
   host: postgres-cluster-rw.postgres.svc.cluster.local
   existingSecret:
     enabled: true
+    secretName: nextcloud-config-secret
     usernameKey: postgresUsername
     passwordKey: postgresPassword
 
