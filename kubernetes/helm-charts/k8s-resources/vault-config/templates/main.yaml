@@ -106,6 +106,10 @@ spec:
 
   refreshAfter: 30s
 
+  destination:
+    name: {{ $resourceName }}-seaweedfs-creds
+    create: true
+
   vaultAuthRef: {{ $resourceName }}-seaweedfs-creds-auth
 ---
 apiVersion: secrets.hashicorp.com/v1beta1
