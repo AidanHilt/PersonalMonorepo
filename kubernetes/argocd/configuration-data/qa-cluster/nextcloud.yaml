@@ -2,3 +2,13 @@ nextcloud:
   host: nextcloud.qa-cluster-lb.lan
   trustedDomains:
     - nextcloud.qa-cluster-lb.lan
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-config-secret
+    usernameKey: username
+    passwordKey: password
+
+rbac:
+  enabled: true
+  serviceAccount:
+    name: nextcloud
