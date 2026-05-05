@@ -5,7 +5,7 @@ bar-assistant:
     transformation:
       templates:
         MEILI_MASTER_KEY:
-          text: '{{ .Secrets.meilisearchApiKey }}'
+          text: "{{ .Secrets.meilisearchApiKey }}"
 firefly-iii:
   enabled: false
   secretDestinationNamespace: finance
@@ -39,6 +39,8 @@ n8n-config:
 nextcloud:
   enabled: false
   secretDestinationNamespace: nextcloud
+  postgresSecret:
+    enabled: true
 paperless:
   enabled: false
   secretDestinationNamespace: paperless
