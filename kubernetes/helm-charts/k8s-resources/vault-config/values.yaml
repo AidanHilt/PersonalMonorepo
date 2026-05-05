@@ -41,6 +41,8 @@ nextcloud:
   secretDestinationNamespace: nextcloud
   postgresSecret:
     enabled: true
+  seaweedfsSecret:
+    enabled: true
 paperless:
   enabled: false
   secretDestinationNamespace: paperless
@@ -75,8 +77,6 @@ romm:
 seaweedfs:
   enabled: false
   secretDestinationNamespace: seaweedfs
-  seaweedfsSecret:
-    enabled: true
 sonarr:
   enabled: false
   secretDestinationNamespace: videos
