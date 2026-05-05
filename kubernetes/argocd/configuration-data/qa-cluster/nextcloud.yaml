@@ -8,6 +8,18 @@ nextcloud:
     usernameKey: username
     passwordKey: password
 
+internalDatabase:
+  enabled: false
+
+externalDatabase:
+  enabled: true
+  type: postgresql
+  host: postgres-cluster-rw.postgres.svc.cluster.local
+  existingSecret:
+    enabled: true
+    usernameKey: postgresUsername
+    passwordKey: postgresPassword
+
 rbac:
   enabled: true
   serviceaccount:
