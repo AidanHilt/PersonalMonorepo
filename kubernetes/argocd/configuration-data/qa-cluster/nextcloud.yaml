@@ -10,5 +10,5 @@ nextcloud:
 
 rbac:
   enabled: true
-  serviceAccount:
+  serviceaccount:
     name: nextcloud
