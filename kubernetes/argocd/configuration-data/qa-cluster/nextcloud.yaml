@@ -17,6 +17,10 @@ nextcloud:
   #       accessKey: accessKey
   #       secretKey: secretKey
 
+persistence:
+  enabled: true
+  size: 1Gi
+
 internalDatabase:
   enabled: false
 
