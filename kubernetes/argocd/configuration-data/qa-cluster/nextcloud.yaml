@@ -24,6 +24,7 @@ nextcloud:
       port: 8333
       bucket: nextcloud
       existingSecret: nextcloud-seaweedfs-creds
+      autoCreate: false
       ssl: false
       secretKeys:
         accessKey: accessKey
