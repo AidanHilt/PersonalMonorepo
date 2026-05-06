@@ -20,7 +20,7 @@ nextcloud:
     s3:
       enabled: true
       usePathStyle: true
-      host: http://seaweedfs-s3.seaweedfs.svc.clusadfsdfster.local
+      host: seaweedfs-s3.seaweedfs.svc.clusadfsdfster.local
       port: 8333
       bucket: nextcloud
       existingSecret: nextcloud-seaweedfs-creds
