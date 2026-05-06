@@ -10,7 +10,8 @@ nextcloud:
   objectStore:
     s3:
       enabled: true
-      host: http://seaweedfs-s3.seaweedfs.svc.clusadfsdfster.local:8333
+      host: http://seaweedfs-s3.seaweedfs.svc.clusadfsdfster.local
+      port: 8333
       bucket: nextcloud
       existingSecret: nextcloud-seaweedfs-creds
       secretKeys:
