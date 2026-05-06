@@ -25,15 +25,15 @@ persistence:
 internalDatabase:
   enabled: false
 
-# externalDatabase:
-#   enabled: true
-#   type: postgresql
-#   host: postgres-cluster-rw.postgres.svc.cluster.local
-#   existingSecret:
-#     enabled: true
-#     secretName: nextcloud-config-secret
-#     usernameKey: postgresUsername
-#     passwordKey: postgresPassword
+externalDatabase:
+  enabled: true
+  type: postgresql
+  host: postgres-cluster-rw.postgres.svc.cluster.local
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-config-secret
+    usernameKey: postgresUsername
+    passwordKey: postgresPassword
 
 rbac:
   enabled: true
