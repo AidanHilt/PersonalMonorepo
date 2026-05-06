@@ -24,7 +24,6 @@ nextcloud:
       port: 8333
       bucket: nextcloud
       existingSecret: nextcloud-seaweedfs-creds
-      legacyAuth: true
       ssl: false
       secretKeys:
         accessKey: accessKey
