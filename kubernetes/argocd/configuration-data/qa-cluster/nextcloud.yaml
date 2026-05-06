@@ -19,6 +19,7 @@ nextcloud:
   objectStore:
     s3:
       enabled: true
+      usePathStyle: true
       host: http://seaweedfs-s3.seaweedfs.svc.clusadfsdfster.local
       port: 8333
       bucket: nextcloud
