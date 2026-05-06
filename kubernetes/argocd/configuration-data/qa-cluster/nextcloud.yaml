@@ -25,6 +25,7 @@ nextcloud:
       bucket: nextcloud
       existingSecret: nextcloud-seaweedfs-creds
       autoCreate: false
+      region: us-east-1
       ssl: false
       secretKeys:
         accessKey: accessKey
