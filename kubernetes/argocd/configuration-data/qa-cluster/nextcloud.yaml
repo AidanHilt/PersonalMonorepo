@@ -7,6 +7,15 @@ nextcloud:
     secretName: nextcloud-config-secret
     usernameKey: username
     passwordKey: password
+  objectStore:
+    s3:
+      enabled: true
+      host: http://seaweedfs-s3.seaweedfs.svc.cluster.local
+      bucket: nextcloud
+      existingSecret: nextcloud-seaweedfs-creds
+      secretKeys:
+        accessKey: accessKey
+        secretKey: secretKey
 
 internalDatabase:
   enabled: false
@@ -20,16 +29,6 @@ externalDatabase:
     secretName: nextcloud-config-secret
     usernameKey: postgresUsername
     passwordKey: postgresPassword
-
-objectStore:
-  s3:
-    enabled: true
-    host: http://seaweedfs-s3.seaweedfs.svc.cluster.local
-    bucket: nextcloud
-    existingSecret: nextcloud-seaweedfs-creds
-    secretKeys:
-      accessKey: accessKey
-      secretKey: secretKey
 
 rbac:
   enabled: true
