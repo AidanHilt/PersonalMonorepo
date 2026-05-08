@@ -21,19 +21,6 @@ persistence:
   enabled: true
   size: 1Gi
 
-internalDatabase:
-  enabled: false
-
-externalDatabase:
-  enabled: true
-  type: postgresql
-  host: postgres-cluster-rw.postgres.svc.cluster.local
-  existingSecret:
-    enabled: true
-    secretName: nextcloud-config-secret
-    usernameKey: postgresUsername
-    passwordKey: postgresPassword
-
 rbac:
   enabled: true
   serviceaccount:
