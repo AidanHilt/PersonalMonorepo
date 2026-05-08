@@ -6,11 +6,6 @@ hostnames:
 
 gitRevision: project-appocalypse/nextcloud
 
-seaweedfs:
-  enabled: true
-  configuration:
-    enabled: true
-
 nextcloud:
   enabled: true
   configuration:
