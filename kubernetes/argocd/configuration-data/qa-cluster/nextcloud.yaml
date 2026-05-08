@@ -16,20 +16,21 @@ nextcloud:
     secretName: nextcloud-config-secret
     usernameKey: username
     passwordKey: password
-  # objectStore:
-  #   s3:
-  #     enabled: true
-  #     usePathStyle: true
-  #     host: seaweedfs-s3.seaweedfs.svc.cluster.local
-  #     port: 8333
-  #     bucket: nextcloud
-  #     existingSecret: nextcloud-seaweedfs-creds
-  #     autoCreate: false
-  #     region: ""
-  #     ssl: false
-  #     secretKeys:
-  #       accessKey: accessKey
-  #       secretKey: secretKey
+  objectStore:
+    s3:
+      enabled: true
+      usePathStyle: true
+      host: seaweedfs-s3.seaweedfs.svc.cluster.local
+      port: 8333
+      bucket: nextcloud
+      existingSecret: nextcloud-seaweedfs-creds
+      autoCreate: false
+      region: ""
+      legacyAuth: true
+      ssl: false
+      secretKeys:
+        accessKey: accessKey
+        secretKey: secretKey
 
 persistence:
   enabled: true
