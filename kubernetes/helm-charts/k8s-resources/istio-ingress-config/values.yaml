@@ -125,6 +125,13 @@ nextcloud:
   subdomain: nextcloud
   destinationSvc: nextcloud.nextcloud.svc.cluster.local
   destinationPort: 8080
+  dependentIngresses:
+    collabora:
+      enabled: true
+      subdomain: collabora
+      destinationSvc: nextcloud-collabora.nextcloud.svc.cluster.local
+      destinationPort: 9980
+
 paperless:
   enabled: false
   prefixes:
