@@ -8,6 +8,14 @@ nextcloud:
     usernameKey: username
     passwordKey: password
 
+collabora:
+  enabled: true
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-config-secret
+    usernameKey: collaboraUsername
+    passwordKey: collaboraPassword
+
 persistence:
   enabled: true
   size: 1Gi
