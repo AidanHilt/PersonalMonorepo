@@ -12,3 +12,12 @@ provider "vault" {
   token   = var.vault_token
 }
 
+provider "seaweedfs" {
+  # TODO For now, this will only be able to be run from a machine that's port forwarding the service
+  # in the future, let's try to secure it with mTLS
+  endp = var.seaweedfs_endpoint
+  insecure = true
+
+  access_key = var.access_key
+  secret_key = var.secret_key
+}

@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ lib, standalone ? true, ... }:
 
 {
   variable = {
@@ -25,25 +25,24 @@
       sensitive   = true;
     };
   };
-
-  data.kubernetes_secret_v1.vault_auth = {
+  data.kubernetes_secret_v1.vault_auth = lib.mkIf standalone {
     metadata = {
       name = "\${var.auth_secret_name}";
       namespace = "\${var.auth_secret_namespace}";
     };
   };
 
-  provider.vault = {
+  provider.vault = lib.mkIf standalone {
     address = "\${var.vault_url}";
     token   = "\${var.vault_token}";
   };
 
-  resource.vault_auth_backend.kubernetes = {
+  resource.vault_auth_backend.kubernetes = lib.mkIf standalone {
     type = "kubernetes";
     path = "kubernetes";
   };
 
-  resource.vault_kubernetes_auth_backend_config.backend_config = {
+  resource.vault_kubernetes_auth_backend_config.backend_config = lib.mkIf standalone {
     backend            = "\${vault_auth_backend.kubernetes.path}";
     kubernetes_host    = "https://kubernetes.default.svc.cluster.local";
     kubernetes_ca_cert = "\${data.kubernetes_secret_v1.vault_auth.data[\"ca.crt\"]}";

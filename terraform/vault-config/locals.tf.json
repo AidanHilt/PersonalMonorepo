@@ -237,6 +237,31 @@
               "is_postgres_password": false
             }
           }
+        },
+        "nextcloud": {
+          "data": {
+            "postgresUsername": {
+              "value": "nextcloud"
+            },
+            "postgresPassword": {
+              "is_postgres_password": true
+            },
+            "username": {
+              "value": "admin"
+            },
+            "password": {
+              "is_postgres_password": false
+            },
+            "collaboraUsername": {
+              "value": "admin"
+            },
+            "collaboraPassword": {
+              "is_postgres_password": false
+            }
+          },
+          "namespace": "nextcloud",
+          "mount": "nextcloud",
+          "postgres_secret": "true"
         }
       },
       "unique_mounts": "${toset([\n  for key, secret in local.secret_definitions : secret.mount\n  ])}"

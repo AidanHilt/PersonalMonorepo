@@ -1,10 +1,10 @@
 { libFunctions, lib, ... }:
 
 let
+  standalone = false;
+
   masterSecret = libFunctions.mkVaultSecret "seaweedfs" {
-    #serviceAccounts = "seaweedfs";
-    namespace = ["seaweedfs"];
-    #mount = "seaweedfs";
+    namespaces = ["seaweedfs"];
     postgres_secret = false;
     data = {
       accessKey = {
@@ -22,29 +22,13 @@ let
           sensitive   = true;
         };
       };
-      seaweedfs_s3_config = ''
-          {
-            "identities": [
-              {
-                "name": "admin",
-                "credentials": [
-                  {
-                    "accessKey": "''${var.access_key}",
-                    "secretKey": "''${var.secret_key}"
-                  }
-                ],
-                "actions": ["Admin", "Read", "Write", "List", "Tagging"]
-              }
-            ]
-          }
-        '';
     };
-  };
+  } {inherit standalone;};
 
-  seaweedfsConfig = libFunctions.mkSeaweedFsBucket "test";
-
-  vaultProvider = import ../../lib/vault-provider.nix {inherit lib;};
+  vaultProvider = import ../../lib/vault-provider.nix {inherit lib; inherit standalone;};
   kubernetesProvider = import ../../lib/kubernetes-provider.nix {inherit lib;};
+
+  nextcloud = libFunctions.mkSeaweedFsStack "nextcloud" {};
 
   static = {
     variable = {
@@ -72,8 +56,8 @@ in
 lib.mkMerge [
   vaultProvider
   kubernetesProvider
+  nextcloud
   masterSecret
-  seaweedfsConfig
   static
 ]
 
