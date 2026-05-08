@@ -10,11 +10,12 @@ nextcloud:
 
 collabora:
   enabled: true
-  existingSecret:
-    enabled: true
-    secretName: nextcloud-config-secret
-    usernameKey: collaboraUsername
-    passwordKey: collaboraPassword
+  collabora:
+    existingSecret:
+      enabled: true
+      secretName: nextcloud-config-secret
+      usernameKey: collaboraUsername
+      passwordKey: collaboraPassword
 
 persistence:
   enabled: true
