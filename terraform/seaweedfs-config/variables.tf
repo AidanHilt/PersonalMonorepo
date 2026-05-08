@@ -6,6 +6,7 @@ variable "vault_url" {
 variable "vault_token" {
   type        = string
   description = "The token to authenticate with Vault"
+<<<<<<< HEAD
 }
 
 variable "seaweedfs_endpoint" {
@@ -22,4 +23,6 @@ variable "access_key" {
 variable "secret_key" {
   type        = string
   description = "The pre-existing secret key for seaweedfs with admin privileges"
+=======
+>>>>>>> 8f1862e69c7a77b1f101f54c6b645841ebfcfc38
 }
