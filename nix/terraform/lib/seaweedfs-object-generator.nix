@@ -1,33 +1,19 @@
 { lib, ... }:
 
 let
-<<<<<<< HEAD
   mkSeaweedFsBucket = bucketName: { tags ? {} }: {
     resource.seaweedfs_bucket."${bucketName}" = {
       bucket = bucketName;
       tags = {
         created_time       = "\${null_resource.${bucketName}_created_time.triggers.created_time}";
-=======
-  mkSeaweedFsBucket = bucketName: tags ? {}: {
-    resource.seaweedfs_bucket."${bucketName}" = {
-      name = bucketName;
-      tags = {
-        created_time       = "\${null_resource.created_time.triggers.created_at}";
->>>>>>> 8f1862e69c7a77b1f101f54c6b645841ebfcfc38
         last_modified_time = "\${timestamp()}";
         created_by         = "terraform";
       } // tags;
     };
 
-<<<<<<< HEAD
     resource.null_resource."${bucketName}_created_time" = {
       triggers = {
         created_time = "\${timestamp()}";
-=======
-    resource.null_resource.created_time = {
-      triggers = {
-        created_at = "\${timestamp()}";
->>>>>>> 8f1862e69c7a77b1f101f54c6b645841ebfcfc38
       };
       lifecycle = [{
         ignore_changes = ["triggers"];
@@ -35,7 +21,6 @@ let
     };
   };
 
-<<<<<<< HEAD
   vaultSecretGenerators = import ./vault-secret-generator.nix {inherit lib;};
 
   mkSeaweedFsUser = userName: namespaces: serviceAccounts: {readOnly ? true, buckets ? [], standalone ? true}:
@@ -134,13 +119,4 @@ in
 
 {
   inherit mkSeaweedFsBucket mkSeaweedFsUser mkSeaweedFsStack;
-=======
-  mkSeaweedFsUser = {userName, readOnly ? true, buckets ? []}: {
-
-  };
-in
-
-{
-  inherit mkSeaweedFsBucket;
->>>>>>> 8f1862e69c7a77b1f101f54c6b645841ebfcfc38
 }

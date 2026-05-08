@@ -1,17 +1,10 @@
 { lib, ... }:
 
 let
-<<<<<<< HEAD
   mkVaultSecret = key: value: {standalone ? true, appendSuffix ? true}:
     let
       path     = value.auth.path or key;
       suffix   = if !appendSuffix then "" else (if path != "" then "/*" else "*");
-=======
-  mkVaultSecret = key: value:
-    let
-      path     = value.auth.path or key;
-      suffix   = if path != "" then "/*" else "*";
->>>>>>> 8f1862e69c7a77b1f101f54c6b645841ebfcfc38
       fullPath = "${path}${suffix}";
 
       # Calculated variables
@@ -72,11 +65,7 @@ let
                                            ++ lib.optional (value.postgres_secret or false) "postgres";
         token_ttl                        = 3600;
         token_policies                   = [ "\${vault_policy.${key}.name}" ];
-<<<<<<< HEAD
         depends_on                       = lib.mkIf (standalone) [
-=======
-        depends_on                       = [
->>>>>>> 8f1862e69c7a77b1f101f54c6b645841ebfcfc38
           "vault_auth_backend.kubernetes"
           "vault_kubernetes_auth_backend_config.backend_config"
         ];
@@ -93,11 +82,7 @@ let
       resource.vault_mount.${mountName} = {
         path        = mountName;
         type        = "kv-v2";
-<<<<<<< HEAD
         description = "KV v2 secrets mount for ${mountName}";
-=======
-        description = "KV v2 secrets mount for ${key}";
->>>>>>> 8f1862e69c7a77b1f101f54c6b645841ebfcfc38
 
         options = {
           version = "2";
