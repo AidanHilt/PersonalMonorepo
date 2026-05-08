@@ -11,6 +11,8 @@ nextcloud:
 collabora:
   enabled: true
   collabora:
+    server_name: collabora.qa-cluster-lb.lan
+
     existingSecret:
       enabled: true
       secretName: nextcloud-config-secret
