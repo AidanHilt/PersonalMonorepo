@@ -36,6 +36,13 @@ n8n-config:
   secretDestinationNamespace: n8n
   postgresSecret:
     enabled: true
+nextcloud:
+  enabled: false
+  secretDestinationNamespace: nextcloud
+  postgresSecret:
+    enabled: true
+  seaweedfsSecret:
+    enabled: true
 paperless:
   enabled: false
   secretDestinationNamespace: paperless
@@ -67,6 +74,9 @@ romm:
   secretDestinationNamespace: romm
   postgresSecret:
     enabled: true
+seaweedfs:
+  enabled: false
+  secretDestinationNamespace: seaweedfs
 sonarr:
   enabled: false
   secretDestinationNamespace: videos

@@ -1,0 +1,68 @@
+global:
+  imageName: chrislusf/seaweedfs
+  imageTag: "latest"
+  imagePullPolicy: IfNotPresent
+  #storageClass: "longhorn"
+  replicationPlacement: "000" # single datacenter, no replication — adjust if you have 3+ nodes
+
+master:
+  enabled: true
+  replicas: 1
+  volumeSizeLimitMB: 1000
+  defaultReplication: "000"
+
+  data:
+    type: "persistentVolumeClaim"
+    size: "5Gi"
+
+volume:
+  enabled: true
+  replicas: 1
+  minFreeSpacePercent: 10
+
+  data:
+    type: "persistentVolumeClaim"
+    size: "100Gi"
+
+  idx:
+    type: "persistentVolumeClaim"
+    size: "10Gi"
+
+filer:
+  enabled: true
+  replicas: 1
+  port: 8888
+  grpcPort: 18888
+  metricsPort: 9327
+
+  #extraArgs:
+  # - "-iam"
+  # - "-s3.iam.readOnly=false"
+
+  data:
+    type: "persistentVolumeClaim"
+    size: "10Gi"
+
+s3:
+  enabled: true
+  allowEmptyFolder: false
+  # Crazy, right?! This is because we want to enable it via env vars
+  enableAuth: false
+  skipAuthSecretCreation: true
+  # existingConfigSecret: "seaweedfs-config-secret"
+
+  extraArgs:
+    - "-iam.readOnly=false"
+
+  extraEnvironmentVars:
+    AWS_ACCESS_KEY_ID:
+      secretKeyRef:
+        name: seaweedfs-config-secret
+        key: accessKey
+    AWS_SECRET_ACCESS_KEY:
+      secretKeyRef:
+        name: seaweedfs-config-secret
+        key: secretKey
+
+admin:
+  enabled: true

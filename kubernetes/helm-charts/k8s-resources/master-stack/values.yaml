@@ -239,6 +239,12 @@ navidrome:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/navidrome
   destinationNamespace: music
+nextcloud:
+  enabled: false
+  repo: https://nextcloud.github.io/helm/
+  chart: nextcloud
+  version: 9.0.6
+  destinationNamespace: nextcloud
 nvidia:
   enabled: false
   repo: https://nvidia.github.io/k8s-device-plugin
@@ -284,6 +290,12 @@ romm:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/romm
   destinationNamespace: romm
+seaweedfs:
+  enabled: false
+  repo: https://seaweedfs.github.io/seaweedfs/helm
+  chart: seaweedfs
+  version: 4.20.0
+  destinationNamespace: seaweedfs
 sonarr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/sonarr

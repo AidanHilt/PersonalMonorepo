@@ -1,0 +1,29 @@
+nextcloud:
+  host: nextcloud.qa-cluster-lb.lan
+  trustedDomains:
+    - nextcloud.qa-cluster-lb.lan
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-config-secret
+    usernameKey: username
+    passwordKey: password
+
+collabora:
+  enabled: true
+  collabora:
+    server_name: collabora.qa-cluster-lb.lan
+
+    existingSecret:
+      enabled: true
+      secretName: nextcloud-config-secret
+      usernameKey: collaboraUsername
+      passwordKey: collaboraPassword
+
+persistence:
+  enabled: true
+  size: 1Gi
+
+rbac:
+  enabled: true
+  serviceaccount:
+    name: nextcloud

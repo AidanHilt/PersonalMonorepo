@@ -4,10 +4,12 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/velero
+gitRevision: project-appocalypse/nextcloud
 
-velero:
+nextcloud:
   enabled: true
+  configuration:
+    enabled: true
 
 homepage:
   enabled: true

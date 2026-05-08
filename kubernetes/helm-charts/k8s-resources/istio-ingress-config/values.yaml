@@ -120,6 +120,18 @@ navidrome:
   prefixes:
     - /music
   destinationSvc: navidrome.music.svc.cluster.local
+nextcloud:
+  enabled: false
+  subdomain: nextcloud
+  destinationSvc: nextcloud.nextcloud.svc.cluster.local
+  destinationPort: 8080
+  dependentIngresses:
+    collabora:
+      enabled: true
+      subdomain: collabora
+      destinationSvc: nextcloud-collabora.nextcloud.svc.cluster.local
+      destinationPort: 9980
+
 paperless:
   enabled: false
   prefixes:
@@ -140,6 +152,11 @@ romm:
   enabled: false
   subdomain: romm
   destinationSvc: romm.romm.svc.cluster.local
+seaweedfs:
+  enabled: false
+  subdomain: seaweedfs
+  destinationSvc: seaweedfs-admin.seaweedfs.svc.cluster.local
+  destinationPort: "23646"
 sonarr:
   enabled: false
   prefixes:

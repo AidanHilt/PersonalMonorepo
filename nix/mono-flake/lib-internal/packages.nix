@@ -33,6 +33,10 @@ in
         inherit system;
         config.allowUnfree = true;
         config.nvidia.acceptLicense = true;
+        config.permittedInsecurePackages = [
+          "lima-full-1.2.2"
+          "lima-additional-guestagents-1.2.2"
+        ];
         overlays = overlays ++ systemOverlays ++ patches;
       }
     );

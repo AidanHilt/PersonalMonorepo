@@ -1,6 +1,7 @@
 hostnames:
   - localhost
 
+
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -147,6 +148,12 @@ navidrome:
   icon: sh-navidrome
   nameOverride: Navidrome
   description: Self-hosted music player
+nextcloud:
+  enabled: false
+  subdomain: nextcloud
+  description: Cloud storage and document editor
+  icon: sh-nextcloud
+  group: Nextcloud
 paperless:
   enabled: false
   prefixes:
@@ -178,6 +185,13 @@ romm:
   icon: sh-romm
   nameOverride: RomM
   description: Self-hosted ROM and flash game manager
+seaweedfs:
+  enabled: false
+  subdomain: seaweedfs
+  description: S3-compatible object storage
+  icon: sh-seaweedfs
+  group: Cluster Management
+  nameOverride: SeaweedFS
 settings:
   title: ARH Homepage
   description: The front page of this website

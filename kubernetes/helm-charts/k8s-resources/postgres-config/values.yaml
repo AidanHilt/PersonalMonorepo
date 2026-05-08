@@ -14,6 +14,7 @@ qa-cluster:
     - firefly-iii
     - romm
     - immich
+    - nextcloud
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -54,6 +55,8 @@ qa-cluster:
         - name: earthdistance
         - name: vector
         - name: cube
+    nextcloud:
+      owner: nextcloud
   storage: 1Gi
 staging-cluster:
   enabled: false
@@ -66,6 +69,7 @@ staging-cluster:
     - n8n
     - firefly-iii
     - romm
+    - nextcloud
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -99,6 +103,8 @@ staging-cluster:
       owner: firefly
     romm:
       owner: romm
+    nextcloud:
+      owner: nextcloud
   storage: 1Gi
 prod-cluster:
   enabled: false
@@ -112,6 +118,7 @@ prod-cluster:
     - n8n
     - firefly-iii
     - romm
+    - nextcloud
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -145,4 +152,6 @@ prod-cluster:
       owner: firefly-iii
     romm:
       owner: romm
+    nextcloud:
+      owner: nextcloud
   storage: 50Gi

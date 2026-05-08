@@ -7,7 +7,8 @@
   environment.systemPackages = lib.mkIf (pkgs.system == "x86_64-linux") (with pkgs; [
     discord
     sunshine
-    lutris
+    # TODO This was causing build failures, due to issues with tests in openLDAP. Not sure if we even need this, but that might need to be resolved
+    #lutris
     gogdl
     heroic
     usbutils
@@ -19,6 +20,8 @@
   hardware.xone.enable = true;
   hardware.bluetooth.enable = true;
 
+  powerManagement.cpuFreqGovernor = "schedutil";
+
   boot.kernelModules = [ "xone" ];
 
   services.pipewire = {
@@ -26,6 +29,8 @@
     alsa.enable = true;
     pulse.enable = true;
   };
+
+  programs.gamemode.enable = true;
 
   # Make sure your user is in the audio group
   users.users.${machine-config.username}.extraGroups = [ "audio" ];
