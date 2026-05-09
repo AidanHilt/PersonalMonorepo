@@ -1,0 +1,13 @@
+serviceAccount:
+  create: true
+  name: rmfakecloud
+
+envFrom:
+  - secretRef:
+      name: rmfakecloud-config-secret
+
+persistence:
+  data:
+    enabled: true
+    size: 1Gi
+    accessMode: ReadWriteOnce

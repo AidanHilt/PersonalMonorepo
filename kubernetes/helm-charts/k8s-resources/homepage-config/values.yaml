@@ -178,6 +178,12 @@ radarr:
   icon: sh-radarr
   nameOverride: Radarr
   description: Self-hosted movie collection manager
+rmfakecloud:
+  enabled: false
+  subdomain: remarkable
+  description: ReMarkable Cloud replacement server
+  icon: sh-penpot
+  group: Tools and Utilities
 romm:
   enabled: false
   subdomain: romm

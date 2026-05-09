@@ -1,6 +1,7 @@
 hostnames:
   - localhost
 
+
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -131,7 +132,6 @@ nextcloud:
       subdomain: collabora
       destinationSvc: nextcloud-collabora.nextcloud.svc.cluster.local
       destinationPort: 9980
-
 paperless:
   enabled: false
   prefixes:
@@ -148,6 +148,10 @@ radarr:
   prefixes:
     - /radarr
   destinationSvc: radarr.videos.svc.cluster.local
+rmfakecloud:
+  enabled: false
+  subdomain: remarkable
+  destinationSvc: rmfakecloud.remarkable.svc.cluster.local
 romm:
   enabled: false
   subdomain: romm

@@ -13,7 +13,6 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -284,6 +283,12 @@ radarr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/radarr
   destinationNamespace: videos
+  configuration:
+    enabled: false
+rmfakecloud:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/rmfakecloud
+  destinationNamespace: remarkable
   configuration:
     enabled: false
 romm:
