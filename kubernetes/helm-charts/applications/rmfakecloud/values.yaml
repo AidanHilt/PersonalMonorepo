@@ -17,9 +17,10 @@ service:
 #=============================
 
 persistence:
-  storageClassName: "longhorn"
-  enabled: false
-  size: "5Gi"
+  data:
+    storageClassName: "longhorn"
+    enabled: false
+    size: "5Gi"
 
 #=============
 # Subchart(s)
