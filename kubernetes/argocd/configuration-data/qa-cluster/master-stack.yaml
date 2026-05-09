@@ -9,7 +9,7 @@ gitRevision: project-appocalypse/rmfakecloud
 rmfakecloud:
   enabled: true
   configuration:
-    enabled: true
+    enabled: false
 
 homepage:
   enabled: true
