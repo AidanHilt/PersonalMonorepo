@@ -3,5 +3,5 @@ serviceAccount:
   name: rmfakecloud
 
 envFrom:
-  secretRef:
-    name: rmefakecloud-config-secret
+  - secretRef:
+      name: rmfakecloud-config-secret
