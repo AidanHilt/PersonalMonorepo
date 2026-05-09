@@ -6,7 +6,7 @@ hostnames:
 
 gitRevision: project-appocalypse/rmfakecloud
 
-rmfakeloud:
+rmfakecloud:
   enabled: true
   configuration:
     enabled: true
