@@ -286,6 +286,10 @@ radarr:
   destinationNamespace: videos
   configuration:
     enabled: false
+rmfakecloud:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications
+  destinationNamespace: remarkable
 romm:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/romm

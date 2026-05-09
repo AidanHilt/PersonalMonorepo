@@ -1,0 +1,26 @@
+#================================================================================================================================================
+# You should be able to use any of the values you can find here: https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
+#================================================================================================================================================
+image:
+  repository: ddvk/rmfakecloud
+  pullPolicy: IfNotPresent
+
+service:
+  main:
+    ports:
+      http:
+        port: 80
+        targetPort: 3000
+
+#=============================
+# Application-specific config
+#=============================
+
+persistence:
+  storageClassName: "longhorn"
+  enabled: false
+  size: "5Gi"
+
+#=============
+# Subchart(s)
+#=============
