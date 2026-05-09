@@ -1,0 +1,7 @@
+serviceAccount:
+  create: true
+  name: rmfakecloud
+
+envFrom:
+  secretRef:
+    name: rmefakecloud-config-secret
