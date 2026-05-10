@@ -1,5 +1,10 @@
 terraform {
-  source = "../../../terraform/vault-config"
+
+}
+
+include "root" {
+  path   = find_in_parent_folders("root.hcl")
+  expose = true
 }
 
 inputs = {
@@ -9,4 +14,6 @@ inputs = {
   vault_url = get_env("VAULT_ADDR")
   vault_token = get_env("VAULT_TOKEN")
   kubeconfig_context = "kind-kind"
+  hwr_applicationkey = run_cmd("--terragrunt-quiet", "keepass-retrieve-secret", "--secret-path", "Server/MyScript", "--key-name", "Username")
+  hwr_hmac = run_cmd("--terragrunt-quiet", "keepass-retrieve-secret", "--secret-path", "Server/MyScript")
 }
