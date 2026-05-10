@@ -15,6 +15,17 @@ service:
 #=============================
 # Application-specific config
 #=============================
+rxresu:
+  postgres:
+    enabled: false
+
+    username: rxresu
+    password: ""
+
+    port: 5432
+    host: postgres-cluster-rw.postgres.svc.cluster.local
+
+    dbName: rxresu
 
 #=============
 # Subchart(s)

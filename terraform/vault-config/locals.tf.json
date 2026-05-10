@@ -275,6 +275,20 @@
               "value": ""
             }
           }
+        },
+        "rxresu": {
+          "data": {
+            "postgresUsername": {
+              "is_postgres_password": false,
+              "value": "rxresu"
+            },
+            "postgresPassword": {
+              "is_postgres_password": true
+            }
+          },
+          "namespace": "misc",
+          "mount": "misc",
+          "postgres_secret": "true"
         }
       },
       "unique_mounts": "${toset([\n  for key, secret in local.secret_definitions : secret.mount\n  ])}"
