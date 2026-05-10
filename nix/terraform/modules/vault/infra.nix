@@ -6,7 +6,7 @@ let
   vaultProvider = import ../../lib/vault-provider.nix {inherit lib; inherit standalone;};
   kubernetesProvider = import ../../lib/kubernetes-provider.nix {inherit lib;};
 
-  secretsSet = lib.importJson ./secrets.json;
+  secretsSet = lib.importJSON ./secrets.json;
 
   vaultSecrets = libFunctions.mkVaultSecrets secretsSet;
 in
