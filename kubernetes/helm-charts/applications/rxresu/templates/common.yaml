@@ -35,7 +35,7 @@ env:
         name: {{ .Values.rxresu.configSecret.existingSecret | default $defaultSecretName}}
         key: postgresPassword
   - name: DATABASE_URL
-    value: postgresql://$(POSTGRES__USER):$(POSTGRES__PASSWORD)@$(POSTGRES__HOST)/$(POSTGRES__DATABASE)
+    value: postgresql://$(POSTGRES__USER):$(POSTGRES__PASSWORD)@$(POSTGRES__HOST)/$(POSTGRES__DB)
   {{- end }}
 
 {{- if eq .Values.rxresu.configSecret.existingSecret "" }}
