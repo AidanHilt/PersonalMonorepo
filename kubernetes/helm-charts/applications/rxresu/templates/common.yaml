@@ -3,6 +3,7 @@
 {{/* Append the hardcoded settings */}}
 {{- define "rxresu.harcodedValues" -}}
 env:
+  {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
   - name: TZ
     value: {{ .Values.rxresu.timezone }}
   - name: APP_URL
