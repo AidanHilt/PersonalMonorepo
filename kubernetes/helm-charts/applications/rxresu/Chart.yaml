@@ -1,0 +1,15 @@
+apiVersion: v2
+name: rxresu
+description: A Helm chart for installing and managing rxresu. Based on the bjw-s
+  library chart
+
+type: application
+
+version: 0.0.3
+
+appVersion: "v5.1.1"
+
+dependencies:
+  - name: common
+    repository: https://bjw-s-labs.github.io/helm-charts/
+    version: 1.5.1

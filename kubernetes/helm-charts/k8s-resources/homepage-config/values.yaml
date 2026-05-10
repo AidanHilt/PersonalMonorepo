@@ -191,6 +191,12 @@ romm:
   icon: sh-romm
   nameOverride: RomM
   description: Self-hosted ROM and flash game manager
+rxresu:
+  enabled: false
+  subdomain: rxresu
+  description: Free and open-source resume builder
+  icon: reactive-resume
+  group: Tools and Utilities
 seaweedfs:
   enabled: false
   subdomain: seaweedfs

@@ -156,6 +156,10 @@ romm:
   enabled: false
   subdomain: romm
   destinationSvc: romm.romm.svc.cluster.local
+rxresu:
+  enabled: false
+  subdomain: rxresu
+  destinationSvc: rxresu.misc.svc.cluster.local
 seaweedfs:
   enabled: false
   subdomain: seaweedfs
