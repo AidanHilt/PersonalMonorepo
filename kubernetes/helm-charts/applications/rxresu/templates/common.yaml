@@ -11,8 +11,9 @@ env:
   - name: AUTH_SECRET
   {{- if .Values.rxresu.configSecret.existingSecret }}
     valueFrom:
-      name: {{ .Values.rxresu.configSecret.existingSecret | default $defaultSecretName }}
-      key: authSecret
+      secretKeyRef:
+        name: {{ .Values.rxresu.configSecret.existingSecret | default $defaultSecretName }}
+        key: authSecret
   {{- else }}
     value: {{ .Values.rxresu.apiKey }}
   {{- end }}
