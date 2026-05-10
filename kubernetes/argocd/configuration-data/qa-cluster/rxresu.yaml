@@ -4,6 +4,9 @@ rxresu:
   configSecret:
     existingSecret: rxresu-config-secret
 
+  postgres:
+    enabled: true
+
 serviceAccount:
   create: true
   name: rxresu
