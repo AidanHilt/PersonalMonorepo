@@ -262,6 +262,19 @@
           "namespace": "nextcloud",
           "mount": "nextcloud",
           "postgres_secret": "true"
+        },
+        "rmfakecloud": {
+          "namespace": "remarkable",
+          "mount": "remarkable",
+          "postgres_secret": "true",
+          "data": {
+            "JWT_SECRET_KEY": {
+              "is_postgres_password": true
+            },
+            "RMAPI_HWR_APPLICATIONKEY": {
+              "value": ""
+            }
+          }
         }
       },
       "unique_mounts": "${toset([\n  for key, secret in local.secret_definitions : secret.mount\n  ])}"

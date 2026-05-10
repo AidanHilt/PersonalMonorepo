@@ -75,7 +75,7 @@ let
         mount     = "\${vault_mount.${mountName}.path}";
         name      = value.path or "${key}/config";
         data_json = "\${jsonencode(${
-          builtins.toJSON (lib.mapAttrs resolveValue value.data)
+          builtins.toJSON (lib.mapAttrs resolveValue value.data or {})
         })}";
       };
 
@@ -100,23 +100,28 @@ let
         }
       ) generatedKeys;
 
-      variable = lib.mkMerge (lib.mapAttrsToList (dataKey: config:
+      variable = builtins.foldl' (acc: x: acc // x) {} (lib.mapAttrsToList (dataKey: config:
         {
           "${config.tfVar.name}" = lib.filterAttrs (_: v: v != null && v != "") {
             description = config.tfVar.description or null;
-            default = config.tfVar.default or null;
+            default = if config.tfVar ? default then if config.tfVar.default == "" then "" else config.tfVar.default else null;
             sensitive = config.tfVar.sensitive or null;
             type = config.tfVar.type or null;
           };
         }
-      ) generatedVariables);
+) generatedVariables);
     };
 
-  mkVaultSecrets = secretDefinitions:
-    lib.foldAttrs lib.recursiveUpdate {} (
-      lib.mapAttrsToList mkVaultSecret secretDefinitions
-    );
-
+    mkVaultSecrets = secretDefintions:
+      let
+        results = builtins.attrValues (builtins.mapAttrs (key: value: mkVaultSecret key value {}) secretDefintions);
+        merged = builtins.foldl' (
+          acc: x: builtins.foldl' (
+            acc2: k: lib.recursiveUpdate acc2 { ${k} = x.${k}; }
+          ) acc (builtins.attrNames x)
+        ) {} results;
+      in
+        merged;
 in {
   inherit mkVaultSecret mkVaultSecrets;
 }
