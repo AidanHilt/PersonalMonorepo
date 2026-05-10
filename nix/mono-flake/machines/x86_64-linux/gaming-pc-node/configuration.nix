@@ -31,6 +31,6 @@
       gsp.enable = false;
       open = lib.mkForce false;
     };
-    package = config.boot.kernelPackages.nvidiaPackages.legacy_535;
+    package = config.boot.kernelPackages.nvidiaPackages.legacy_580;
   };
 }
