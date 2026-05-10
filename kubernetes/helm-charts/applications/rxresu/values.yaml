@@ -13,9 +13,17 @@ service:
         targetPort: 3000
 
 #=============================
-# Application-specific config
+# RxResu specific config
 #=============================
 rxresu:
+  apiKey: ""
+  appUrl: "http://localhost:3000"
+  timezone: "Etc/UTC"
+
+  # Note: If this is set, the field apiKey won't have any effect
+  configSecret:
+    existingSecret: ""
+
   postgres:
     enabled: false
 

@@ -8,6 +8,8 @@ gitRevision: project-appocalypse/rxresu
 
 rxresu:
   enabled: true
+  configuration:
+    enabled: true
 
 homepage:
   enabled: true

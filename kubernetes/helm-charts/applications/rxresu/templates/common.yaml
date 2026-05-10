@@ -3,6 +3,18 @@
 {{/* Append the hardcoded settings */}}
 {{- define "rxresu.harcodedValues" -}}
 env:
+  - name: TZ
+    value: {{ .Values.rxresu.timezone }}
+  - name: APP_URL
+    value: {{ .Values.rxresu.appUrl }}
+  - name: AUTH_SECRET
+  {{- if .Values.rxresu.configSecret.existingSecret }}
+    valueFrom:
+      name: {{ .Values.rxresu.configSecret.existingSecret | default $defaultSecretName }}
+      key: authSecret
+  {{- else }}
+    value: {{ .Values.rxresu.apiKey }}
+  {{- end }}
   {{- if .Values.rxresu.postgres.enabled }}
   - name: POSTGRES__HOST
     value: {{ .Values.rxresu.postgres.host }}
@@ -20,7 +32,21 @@ env:
       secretKeyRef:
         name: {{ .Values.rxresu.configSecret.existingSecret | default $defaultSecretName}}
         key: postgresPassword
+  - name: DATABASE_URL
+    value: postgresql://$(POSTGRES__USER):$(POSTGRES__PASSWORD)@$(POSTGRES__HOST)/$(POSTGRES__DATABASE)
   {{- end }}
+
+{{- if eq .Values.rxresu.configSecret.existingSecret "" }}
+secrets:
+  config-secret:
+    enabled: true
+    stringData:
+      {{- if .Values.rxresu.postgres.enabled }}
+      postgresPassword: {{ .Values.rxresu.postgres.password | quote }}
+      postgresUsername: {{ .Values.rxresu.postgres.username | quote }}
+      {{- end }}
+      apiKey: {{ .Values.rxresu.apiKey | default (randAlphaNum 32 | lower) | quote }}
+{{- end }}
 
 {{- end -}}
 {{- $_ := mergeOverwrite .Values (include "rxresu.harcodedValues" . | fromYaml) -}}
