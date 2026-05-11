@@ -30,7 +30,12 @@ env:
     valueFrom:
       secretKeyRef:
         name: {{ .Values.rxresu.s3.configSecret.existingSecret | default $defaultSecretName }}
-        key:
+        key: accessKey
+  - name: S3_SECRET_ACCESS_KEY
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.rxresu.s3.configSecret.existingSecret | default $defaultSecretName }}
+        key: secretKey
   {{- end }}
   {{- if .Values.rxresu.postgres.enabled }}
   - name: POSTGRES__HOST
@@ -61,6 +66,10 @@ secrets:
       {{- if .Values.rxresu.postgres.enabled }}
       postgresPassword: {{ .Values.rxresu.postgres.password | quote }}
       postgresUsername: {{ .Values.rxresu.postgres.username | quote }}
+      {{- end }}
+      {{- if .Values.rxresu.s3.enabled }}
+      accessKey: {{ .Values.rxresu.s3.accessKeyId }}
+      secretAccessKey: {{ .Values.rxresu.s3.secretAccessKey }}
       {{- end }}
       apiKey: {{ .Values.rxresu.apiKey | default (randAlphaNum 32 | lower) | quote }}
 {{- end }}

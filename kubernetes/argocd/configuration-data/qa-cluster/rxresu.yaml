@@ -7,6 +7,12 @@ rxresu:
   postgres:
     enabled: true
 
+  s3:
+    enabled: true
+
+    configSecret:
+      existingSecret: rxresu-seaweedfs-user
+
 serviceAccount:
   create: true
   name: rxresu
