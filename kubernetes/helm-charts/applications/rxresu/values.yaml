@@ -24,6 +24,21 @@ rxresu:
   configSecret:
     existingSecret: ""
 
+  s3:
+    enabled: false
+
+    accessKeyId: ""
+    secretAccessKey: ""
+
+    region: "us-east-1"
+    endpoint: ""
+    bucket: ""
+
+    forcePathStyle: true
+
+    configSecret:
+      existingSecret: ""
+
   postgres:
     enabled: false
 

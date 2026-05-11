@@ -6,6 +6,11 @@ hostnames:
 
 gitRevision: project-appocalypse/rxresu
 
+seaweedfs:
+  enabled: true
+  configuration:
+    enabled: true
+
 rxresu:
   enabled: true
   configuration:
