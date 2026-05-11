@@ -41,8 +41,6 @@ nextcloud:
   secretDestinationNamespace: nextcloud
   postgresSecret:
     enabled: true
-  seaweedfsSecret:
-    enabled: true
 paperless:
   enabled: false
   secretDestinationNamespace: paperless
@@ -81,6 +79,8 @@ rxresu:
   enabled: false
   secretDestinationNamespace: misc
   postgresSecret:
+    enabled: true
+  seaweedfsSecret:
     enabled: true
 seaweedfs:
   enabled: false

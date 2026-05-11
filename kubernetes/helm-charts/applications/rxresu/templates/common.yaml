@@ -29,6 +29,8 @@ env:
   - name: S3_ACCESS_KEY_ID
     valueFrom:
       secretKeyRef:
+        name: {{ .Values.rxresu.s3.configSecret.existingSecret | default $defaultSecretName }}
+        key:
   {{- end }}
   {{- if .Values.rxresu.postgres.enabled }}
   - name: POSTGRES__HOST
