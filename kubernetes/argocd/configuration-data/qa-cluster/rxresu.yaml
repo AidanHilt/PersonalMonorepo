@@ -10,6 +10,9 @@ rxresu:
   s3:
     enabled: true
 
+    endpoint: http://seaweedfs-s3.seaweedfs.cluster.svc.local:8333
+    bucket: rxresu
+
     configSecret:
       existingSecret: rxresu-seaweedfs-creds
 
