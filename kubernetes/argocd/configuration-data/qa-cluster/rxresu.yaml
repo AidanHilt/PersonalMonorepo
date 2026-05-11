@@ -1,0 +1,24 @@
+rxresu:
+  appUrl: "http://qa-cluster-lb.lan"
+
+  configSecret:
+    existingSecret: rxresu-config-secret
+
+  postgres:
+    enabled: true
+
+  s3:
+    enabled: true
+
+    endpoint: http://seaweedfs-s3.seaweedfs.cluster.svc.local:8333
+    bucket: rxresu
+
+    configSecret:
+      existingSecret: rxresu-seaweedfs-creds
+
+serviceAccount:
+  create: true
+  name: rxresu
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-2"

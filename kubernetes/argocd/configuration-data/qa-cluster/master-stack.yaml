@@ -4,9 +4,14 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/rmfakecloud
+gitRevision: project-appocalypse/rxresu
 
-rmfakecloud:
+seaweedfs:
+  enabled: true
+  configuration:
+    enabled: true
+
+rxresu:
   enabled: true
   configuration:
     enabled: true

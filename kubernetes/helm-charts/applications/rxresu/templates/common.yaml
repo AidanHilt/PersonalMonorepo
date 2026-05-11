@@ -1,0 +1,79 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "rxresu.harcodedValues" -}}
+env:
+  {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
+  - name: TZ
+    value: {{ .Values.rxresu.timezone }}
+  - name: APP_URL
+    value: {{ .Values.rxresu.appUrl }}
+  - name: AUTH_SECRET
+  {{- if .Values.rxresu.configSecret.existingSecret }}
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.rxresu.configSecret.existingSecret | default $defaultSecretName }}
+        key: authSecret
+  {{- else }}
+    value: {{ .Values.rxresu.apiKey }}
+  {{- end }}
+  {{- if .Values.rxresu.s3.enabled}}
+  - name: S3_REGION
+    value: {{ .Values.rxresu.s3.region }}
+  - name: S3_BUCKET
+    value: {{ .Values.rxresu.s3.bucket }}
+  - name: S3_ENDPOINT
+    value: {{ .Values.rxresu.s3.endpoint }}
+  - name: S3_FORCE_PATH_STYLE
+    value: {{ .Values.rxresu.s3.forcePathStyle }}
+  - name: S3_ACCESS_KEY_ID
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.rxresu.s3.configSecret.existingSecret | default $defaultSecretName }}
+        key: accessKey
+  - name: S3_SECRET_ACCESS_KEY
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.rxresu.s3.configSecret.existingSecret | default $defaultSecretName }}
+        key: secretKey
+  {{- end }}
+  {{- if .Values.rxresu.postgres.enabled }}
+  - name: POSTGRES__HOST
+    value: {{ .Values.rxresu.postgres.host }}
+  - name: POSTGRES__DB
+    value: {{ .Values.rxresu.postgres.dbName }}
+  - name: POSTGRES__PORT
+    value: {{ .Values.rxresu.postgres.port | quote }}
+  - name: POSTGRES__USER
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.rxresu.configSecret.existingSecret | default $defaultSecretName }}
+        key: postgresUsername
+  - name: POSTGRES__PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.rxresu.configSecret.existingSecret | default $defaultSecretName}}
+        key: postgresPassword
+  - name: DATABASE_URL
+    value: postgresql://$(POSTGRES__USER):$(POSTGRES__PASSWORD)@$(POSTGRES__HOST)/$(POSTGRES__DB)
+  {{- end }}
+
+{{- if eq .Values.rxresu.configSecret.existingSecret "" }}
+secrets:
+  config-secret:
+    enabled: true
+    stringData:
+      {{- if .Values.rxresu.postgres.enabled }}
+      postgresPassword: {{ .Values.rxresu.postgres.password | quote }}
+      postgresUsername: {{ .Values.rxresu.postgres.username | quote }}
+      {{- end }}
+      {{- if .Values.rxresu.s3.enabled }}
+      accessKey: {{ .Values.rxresu.s3.accessKeyId }}
+      secretAccessKey: {{ .Values.rxresu.s3.secretAccessKey }}
+      {{- end }}
+      apiKey: {{ .Values.rxresu.apiKey | default (randAlphaNum 32 | lower) | quote }}
+{{- end }}
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "rxresu.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}

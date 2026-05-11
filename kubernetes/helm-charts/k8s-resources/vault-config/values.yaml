@@ -5,7 +5,7 @@ bar-assistant:
     transformation:
       templates:
         MEILI_MASTER_KEY:
-          text: '{{ .Secrets.meilisearchApiKey }}'
+          text: "{{ .Secrets.meilisearchApiKey }}"
 firefly-iii:
   enabled: false
   secretDestinationNamespace: finance
@@ -41,8 +41,6 @@ nextcloud:
   secretDestinationNamespace: nextcloud
   postgresSecret:
     enabled: true
-  seaweedfsSecret:
-    enabled: true
 paperless:
   enabled: false
   secretDestinationNamespace: paperless
@@ -76,6 +74,13 @@ romm:
   enabled: false
   secretDestinationNamespace: romm
   postgresSecret:
+    enabled: true
+rxresu:
+  enabled: false
+  secretDestinationNamespace: misc
+  postgresSecret:
+    enabled: true
+  seaweedfsSecret:
     enabled: true
 seaweedfs:
   enabled: false
