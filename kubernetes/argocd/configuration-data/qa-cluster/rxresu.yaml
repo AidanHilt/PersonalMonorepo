@@ -11,7 +11,7 @@ rxresu:
     enabled: true
 
     configSecret:
-      existingSecret: rxresu-seaweedfs-user
+      existingSecret: rxresu-seaweedfs-creds
 
 serviceAccount:
   create: true
