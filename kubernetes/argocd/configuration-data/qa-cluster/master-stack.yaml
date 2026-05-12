@@ -4,15 +4,13 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/rxresu
+gitRevision: project-appocalypse/bazarr
+
+bazarr:
+  enabled: true
 
 seaweedfs:
-  enabled: true
-  configuration:
-    enabled: true
-
-rxresu:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
