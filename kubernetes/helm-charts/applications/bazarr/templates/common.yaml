@@ -2,9 +2,9 @@
 
 {{/* Append the hardcoded settings */}}
 {{- define "bazarr.harcodedValues" -}}
+  {{- if .Values.bazarr.postgres.enabled }}
 env:
   {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
-  {{- if .Values.bazarr.postgres.enabled }}
   - name: POSTGRES_HOST
     value: {{ .Values.bazarr.postgres.host }}
   - name: POSTGRES_DATABASE
@@ -22,6 +22,15 @@ env:
         name: {{ .Values.bazarr.configSecret.existingSecret | default $defaultSecretName}}
         key: postgresPassword
   {{- end }}
+
+{{- if .Values.bazarr.configYamlSecret.enabled }}
+persistence:
+  config:
+    type: secret
+    name: {{ .Values.bazarr.configYamlSecret.existingSecret | default "bazarr-config-yaml" }}
+    mountPath: /config/config
+
+{{- end }}
 
 {{- end -}}
 {{- $_ := mergeOverwrite .Values (include "bazarr.harcodedValues" . | fromYaml) -}}

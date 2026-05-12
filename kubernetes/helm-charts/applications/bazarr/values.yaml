@@ -18,6 +18,10 @@ bazarr:
   configSecret:
     existingSecret: ""
 
+  configYamlSecret:
+    enabled: false
+    existingSecret: ""
+
   postgres:
     enabled: false
 

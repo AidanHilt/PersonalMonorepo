@@ -8,6 +8,8 @@ gitRevision: project-appocalypse/bazarr
 
 bazarr:
   enabled: true
+  configuration:
+    enabled: true
 
 seaweedfs:
   enabled: false
