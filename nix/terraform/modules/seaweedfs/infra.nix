@@ -28,7 +28,7 @@ let
   vaultProvider = import ../../lib/vault-provider.nix {inherit lib; inherit standalone;};
   kubernetesProvider = import ../../lib/kubernetes-provider.nix {inherit lib;};
 
-  nextcloud = libFunctions.mkSeaweedFsStack "nextcloud" {};
+  rxresu = libFunctions.mkSeaweedFsStack "rxresu" { namespaces = ["misc"]; };
 
   static = {
     variable = {
@@ -56,7 +56,7 @@ in
 lib.mkMerge [
   vaultProvider
   kubernetesProvider
-  nextcloud
+  rxresu
   masterSecret
   static
 ]
