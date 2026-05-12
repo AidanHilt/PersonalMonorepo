@@ -6,6 +6,9 @@ hostnames:
 
 gitRevision: project-appocalypse/bazarr
 
+video-stack-configuration:
+  enabled: true
+
 bazarr:
   enabled: true
   configuration:
