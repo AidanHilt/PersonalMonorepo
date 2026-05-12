@@ -3,6 +3,7 @@
 {{/* Append the hardcoded settings */}}
 {{- define "bazarr.harcodedValues" -}}
 env:
+  {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
   {{- if .Values.bazarr.postgres.enabled }}
   - name: POSTGRES_HOST
     value: {{ .Values.bazarr.postgres.host }}
