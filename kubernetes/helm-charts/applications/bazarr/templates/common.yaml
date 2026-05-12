@@ -26,6 +26,7 @@ env:
 {{- if .Values.bazarr.configYamlSecret.enabled }}
 persistence:
   config:
+    enabled: true
     type: secret
     name: {{ .Values.bazarr.configYamlSecret.existingSecret }}
     mountPath: /config/config
