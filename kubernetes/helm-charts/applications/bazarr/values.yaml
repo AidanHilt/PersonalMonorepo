@@ -20,7 +20,7 @@ bazarr:
 
   configYamlSecret:
     enabled: false
-    existingSecret: ""
+    existingSecret: bazarr-config-yaml
 
   postgres:
     enabled: false
