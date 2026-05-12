@@ -24,6 +24,11 @@ bar-assistant:
       enabled: true
       subdomain: bar-assistant-api
       destinationSvc: bar-assistant-backend.inventory-mgmt.svc.cluster.local
+bazarr:
+  enabled: false
+  prefixes:
+    - /bazarr
+  destinationSvc: bazarr.videos.svc.cluster.local
 bentopdf:
   enabled: false
   subdomain: bento

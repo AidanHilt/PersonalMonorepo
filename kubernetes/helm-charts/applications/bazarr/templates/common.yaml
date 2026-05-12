@@ -1,0 +1,27 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "bazarr.harcodedValues" -}}
+env:
+  {{- if .Values.bazarr.postgres.enabled }}
+  - name: POSTGRES_HOST
+    value: {{ .Values.bazarr.postgres.host }}
+  - name: POSTGRES_DATABASE
+    value: {{ .Values.bazarr.postgres.dbName }}
+  - name: POSTGRES_PORT
+    value: {{ .Values.bazarr.postgres.port | quote }}
+  - name: POSTGRES_USER
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.bazarr.configSecret.existingSecret | default $defaultSecretName }}
+        key: postgresUsername
+  - name: POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.bazarr.configSecret.existingSecret | default $defaultSecretName}}
+        key: postgresPassword
+  {{- end }}
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "bazarr.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}

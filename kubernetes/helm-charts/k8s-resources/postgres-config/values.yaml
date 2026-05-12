@@ -16,6 +16,7 @@ qa-cluster:
     - immich
     - nextcloud
     - rxresu
+    - bazarr
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -60,6 +61,8 @@ qa-cluster:
       owner: nextcloud
     rxresu:
       owner: rxresu
+    bazarr:
+      owner: bazarr
   storage: 1Gi
 staging-cluster:
   enabled: false
@@ -74,6 +77,7 @@ staging-cluster:
     - romm
     - nextcloud
     - rxresu
+    - bazarr
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -111,6 +115,8 @@ staging-cluster:
       owner: nextcloud
     rxresu:
       owner: rxresu
+    bazarr:
+      owner: bazarr
   storage: 1Gi
 prod-cluster:
   enabled: false
@@ -126,6 +132,7 @@ prod-cluster:
     - romm
     - nextcloud
     - rxresu
+    - bazarr
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -163,4 +170,6 @@ prod-cluster:
       owner: nextcloud
     rxresu:
       owner: rxresu
+    bazarr:
+      owner: bazarr
   storage: 50Gi

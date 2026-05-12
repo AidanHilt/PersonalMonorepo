@@ -22,6 +22,10 @@ bar-assistant:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/bar-assistant
   destinationNamespace: inventory-mgmt
+bazarr:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/bazarr
+  destinationNamespace: videos
 bentopdf:
   enabled: false
   repo: https://kriegalex.github.io/k8s-charts/
