@@ -1,4 +1,4 @@
-{{- if and .Values.bazarr.enabled -}}
+{{- if .Values.bazarr.enabled -}}
 {{- $c := .Values.bazarr -}}
 apiVersion: v1
 kind: Secret
