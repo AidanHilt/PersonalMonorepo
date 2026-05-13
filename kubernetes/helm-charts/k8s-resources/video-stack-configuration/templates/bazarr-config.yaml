@@ -181,34 +181,6 @@ stringData:
       password: {{ $c.opensubtitlescom.password | quote }}
       use_hash: {{ $c.opensubtitlescom.use_hash }}
       username: {{ $c.opensubtitlescom.username | quote }}
-    plex:
-      apikey: {{ $c.plex.apikey | quote }}
-      auth_method: apikey
-      client_identifier: ''
-      disable_auto_migration: false
-      email: ''
-      encryption_key: {{ $c.plex.encryption_key | quote }}
-      ip: {{ $c.plex.ip | quote }}
-      migration_attempted: false
-      migration_successful: false
-      migration_timestamp: ''
-      movie_library: []
-      movie_library_ids: []
-      port: {{ $c.plex.port }}
-      series_library: []
-      series_library_ids: []
-      server_local: false
-      server_machine_id: ''
-      server_name: ''
-      server_url: ''
-      set_episode_added: false
-      set_movie_added: false
-      ssl: {{ $c.plex.ssl }}
-      token: ''
-      update_movie_library: false
-      update_series_library: false
-      user_id: ''
-      username: ''
     podnapisi:
       verify_ssl: true
     postgresql:
@@ -238,7 +210,7 @@ stringData:
       full_update_day: {{ .Values.radarr.full_update_day }}
       full_update_hour: {{ .Values.radarr.full_update_hour }}
       http_timeout: {{ .Values.radarr.http_timeout }}
-      ip: {{ .Values.radarr.ip | quote }}
+      ip: {{ .Values.radarr.hostname | quote }}
       movies_sync: {{ .Values.radarr.movies_sync }}
       movies_sync_on_live: {{ .Values.radarr.movies_sync_on_live }}
       only_monitored: {{ .Values.radarr.only_monitored }}
@@ -270,7 +242,7 @@ stringData:
       full_update_day: {{ .Values.sonarr.full_update_day }}
       full_update_hour: {{ .Values.sonarr.full_update_hour }}
       http_timeout: {{ .Values.sonarr.http_timeout }}
-      ip: {{ .Values.sonarr.ip | quote }}
+      ip: {{ .Values.sonarr.hostname | quote }}
       only_monitored: {{ .Values.sonarr.only_monitored }}
       port: {{ .Values.sonarr.port }}
       series_sync: {{ .Values.sonarr.series_sync }}
