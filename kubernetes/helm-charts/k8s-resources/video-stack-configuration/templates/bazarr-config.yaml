@@ -200,20 +200,20 @@ stringData:
       url: {{ $c.proxy.url | quote }}
       username: {{ $c.proxy.username | quote }}
     radarr:
-      apikey: {{ .Values.radarr.apikey | quote }}
-      base_url: {{ .Values.radarr.base_url | quote }}
+      apikey: {{ .Values.radarr.apiKey | quote }}
+      base_url: {{ .Values.radarr.urlBase | quote }}
       defer_search_signalr: false
       excluded_tags: []
-      full_update: {{ .Values.radarr.full_update | quote }}
-      full_update_day: {{ .Values.radarr.full_update_day }}
-      full_update_hour: {{ .Values.radarr.full_update_hour }}
-      http_timeout: {{ .Values.radarr.http_timeout }}
+      full_update: "Daily"
+      full_update_day: 6
+      full_update_hour: 4
+      http_timeout: 60
       ip: {{ .Values.radarr.hostname | quote }}
-      movies_sync: {{ .Values.radarr.movies_sync }}
-      movies_sync_on_live: {{ .Values.radarr.movies_sync_on_live }}
-      only_monitored: {{ .Values.radarr.only_monitored }}
+      movies_sync: 60
+      movies_sync_on_live: true
+      only_monitored: false
       port: {{ .Values.radarr.port }}
-      ssl: {{ .Values.radarr.ssl }}
+      ssl: false
       sync_only_monitored_movies: false
       use_ffprobe_cache: true
     series_scores:
@@ -230,24 +230,21 @@ stringData:
       video_codec: 2
       year: 90
     sonarr:
-      apikey: {{ .Values.sonarr.apikey | quote }}
-      base_url: {{ .Values.sonarr.base_url | quote }}
+      apikey: {{ .Values.sonarr.apiKey | quote }}
+      base_url: {{ .Values.sonarr.urlBase | quote }}
       defer_search_signalr: false
-      exclude_season_zero: false
-      excluded_series_types: []
       excluded_tags: []
-      full_update: {{ .Values.sonarr.full_update | quote }}
-      full_update_day: {{ .Values.sonarr.full_update_day }}
-      full_update_hour: {{ .Values.sonarr.full_update_hour }}
-      http_timeout: {{ .Values.sonarr.http_timeout }}
+      full_update: "Daily"
+      full_update_day: 6
+      full_update_hour: 4
+      http_timeout: 60
       ip: {{ .Values.sonarr.hostname | quote }}
-      only_monitored: {{ .Values.sonarr.only_monitored }}
+      movies_sync: 60
+      movies_sync_on_live: true
+      only_monitored: false
       port: {{ .Values.sonarr.port }}
-      series_sync: {{ .Values.sonarr.series_sync }}
-      series_sync_on_live: {{ .Values.sonarr.series_sync_on_live }}
-      ssl: {{ .Values.sonarr.ssl }}
-      sync_only_monitored_episodes: false
-      sync_only_monitored_series: false
+      ssl: false
+      sync_only_monitored_movies: false
       use_ffprobe_cache: true
     subdl:
       api_key: ''
