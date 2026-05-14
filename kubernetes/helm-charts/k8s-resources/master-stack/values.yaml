@@ -332,8 +332,8 @@ video-stack-configuration:
   secureValues: |
     bazarr:
       opensubtitlescom:
-        username: <path:argocd/data/video_stack_configuration#opensubtitlesUsername>
-        passowrd: <path:argocd/data/video_stack_configuration#opensubtitlesPassword>
+        username: <path:argocd/data/video_stack_configuration#openSubtitlesUsername>
+        passowrd: <path:argocd/data/video_stack_configuration#openSubtitlesPassword>
     prowlarr:
       port: 80
       urlBase: /prowlarr
