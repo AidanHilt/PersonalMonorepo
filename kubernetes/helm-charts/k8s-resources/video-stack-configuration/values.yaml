@@ -19,6 +19,7 @@ bazarr:
     upgrade_frequency: 12
     use_embedded_subs: true
     single_language: false
+    enabled_providers: []
     use_sonarr: true
     use_radarr: true
     use_plex: false

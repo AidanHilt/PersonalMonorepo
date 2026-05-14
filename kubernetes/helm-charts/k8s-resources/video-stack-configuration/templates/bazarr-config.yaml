@@ -75,7 +75,7 @@ stringData:
       embedded_subtitles_parser: ffprobe
       enable_strm_support: false
       enabled_integrations: []
-      enabled_providers: []
+      enabled_providers: {{ $c.general.enabled_providers }}
       external_webhook_password: ''
       external_webhook_url: ''
       external_webhook_username: ''

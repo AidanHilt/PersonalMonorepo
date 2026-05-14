@@ -333,6 +333,7 @@ video-stack-configuration:
     bazarr:
       general:
         base_url: /bazarr
+        enabled_providers: [opensubtitlescom]
       opensubtitlescom:
         username: <path:argocd/data/video_stack_configuration#openSubtitlesUsername>
         password: <path:argocd/data/video_stack_configuration#openSubtitlesPassword>
