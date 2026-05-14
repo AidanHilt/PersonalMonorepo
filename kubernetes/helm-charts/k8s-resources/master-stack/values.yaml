@@ -13,7 +13,6 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -331,6 +330,10 @@ velero:
 video-stack-configuration:
   enabled: false
   secureValues: |
+    bazarr:
+      opensubtitlescom:
+        username: <path:argocd/data/video_stack_configuration#opensubtitlesUsername>
+        passowrd: <path:argocd/data/video_stack_configuration#opensubtitlesPassword>
     prowlarr:
       port: 80
       urlBase: /prowlarr

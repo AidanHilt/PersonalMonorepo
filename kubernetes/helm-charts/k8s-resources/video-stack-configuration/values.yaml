@@ -7,7 +7,7 @@ bazarr:
     password: ""
 
   general:
-    base_url: "/bazarr"
+    base_url: "/"
     ip: "*"
     port: 6767
     instance_name: "Bazarr"
@@ -23,35 +23,6 @@ bazarr:
     use_radarr: true
     use_plex: false
     flask_secret_key: "99a806946f2e4bd760f89373ec95af77"
-
-  # sonarr:
-  #   ip: "127.0.0.1"
-  #   port: 8989
-  #   apikey: ""
-  #   base_url: "/"
-  #   ssl: false
-  #   http_timeout: 60
-  #   only_monitored: false
-  #   series_sync: 60
-  #   series_sync_on_live: true
-  #   full_update: "Daily"
-  #   full_update_day: 6
-  #   full_update_hour: 4
-
-  # radarr:
-  #   ip: "127.0.0.1"
-  #   port: 7878
-  #   apikey: ""
-  #   base_url: "/"
-  #   ssl: false
-  #   http_timeout: 60
-  #   only_monitored: false
-  #   movies_sync: 60
-  #   movies_sync_on_live: true
-  #   full_update: "Daily"
-  #   full_update_day: 6
-  #   full_update_hour: 4
-
 
   postgresql:
     enabled: false
