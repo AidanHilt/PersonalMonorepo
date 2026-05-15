@@ -10,3 +10,24 @@
 {{- end }}
 {{- end }}
 {{- end }}
+
+{{/*
+  Check if an app's groupName parent is enabled.
+  Returns true if:
+    - $app has no groupName key (not part of a group), OR
+    - .Values.<groupName>.enabled is true
+
+  Usage: {{- if include "common.isGroupEnabled" (dict "app" $app "Values" .Values) }}
+*/}}
+{{- define "common.isGroupEnabled" -}}
+{{- $app := .app -}}
+{{- $values := .Values -}}
+{{- if hasKey $app "groupName" -}}
+  {{- $group := get $values $app.groupName -}}
+  {{- if and $group (get $group "enabled") -}}
+    {{- true -}}
+  {{- end -}}
+{{- else -}}
+  {{- true -}}
+{{- end -}}
+{{- end -}}

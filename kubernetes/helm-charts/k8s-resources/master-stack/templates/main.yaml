@@ -2,7 +2,8 @@
 {{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration")}}
 {{- if not (has $appName $excludedNames) }}
 {{- $create := not (hasKey $app "multiHost" | ternary $app.multiHost false) }}
-{{- if and $app.enabled $create }}
+{{- $enabled := or app.enabled (include "common.isGroupEnabled" (dict "app" $app "Values" $.Values)) }}
+{{- if and $enabled $create }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
