@@ -1,3 +1,7 @@
 bazarr:
   configYamlSecret:
     enabled: true
+
+serviceAccount:
+  create: true
+  name: bazarr
