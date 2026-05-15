@@ -6,13 +6,19 @@ hostnames:
 
 gitRevision: project-appocalypse/bazarr
 
-video-stack-configuration:
+videos:
   enabled: true
+  default:
+    configuration:
+      enabled: true
 
-bazarr:
-  enabled: true
-  configuration:
-    enabled: true
+# video-stack-configuration:
+#   enabled: true
+
+# bazarr:
+#   enabled: true
+#   configuration:
+#     enabled: true
 
 seaweedfs:
   enabled: false

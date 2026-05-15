@@ -25,6 +25,7 @@ bazarr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/bazarr
   destinationNamespace: videos
+  groupName: videos
 bentopdf:
   enabled: false
   repo: https://kriegalex.github.io/k8s-charts/
@@ -151,14 +152,12 @@ jellyfin:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/jellyfin
   destinationNamespace: videos
-  configuration:
-    enabled: false
+  groupName: videos
 jellyseerr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/jellyseerr
   destinationNamespace: videos
-  configuration:
-    enabled: false
+  groupName: videos
 job-templates:
   enabled: false
   gitPath: kubernetes/helm-charts/k8s-resources/job-templates
@@ -281,14 +280,12 @@ prowlarr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/prowlarr
   destinationNamespace: videos
-  configuration:
-    enabled: false
+  groupName: videos
 radarr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/radarr
   destinationNamespace: videos
-  configuration:
-    enabled: false
+  groupName: videos
 rmfakecloud:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/rmfakecloud
@@ -313,14 +310,12 @@ sonarr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/sonarr
   destinationNamespace: videos
-  configuration:
-    enabled: false
+  groupName: videos
 transmission:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/transmission
   destinationNamespace: videos
-  configuration:
-    enabled: false
+  groupName: videos
 velero:
   enabled: false
   repo: https://vmware-tanzu.github.io/helm-charts
@@ -329,6 +324,7 @@ velero:
   destinationNamespace: backup
 video-stack-configuration:
   enabled: false
+  groupName: videos
   secureValues: |
     bazarr:
       general:

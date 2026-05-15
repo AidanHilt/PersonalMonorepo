@@ -2,7 +2,18 @@
 {{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration")}}
 {{- if not (has $appName $excludedNames) }}
 {{- $create := not (hasKey $app "multiHost" | ternary $app.multiHost false) }}
-{{- $enabled := or app.enabled (include "common.isGroupEnabled" (dict "app" $app "Values" $.Values)) }}
+{{- $enabled := or $app.enabled (include "common.isAppEnabled" (dict "app" $app "Values" $.Values)) }}
+{{- $appDetails := $app -}}
+{{- if hasKey $app "groupName" -}}
+  {{- $group := index ($.Values | toJson | fromJson) $app.groupName -}}
+  {{- $groupOverrides := dict -}}
+  {{- if and $group (index $group $appName) -}}
+    {{- $groupOverrides = index $group $appName -}}
+  {{- else if and $group (index $group "default") -}}
+    {{- $groupOverrides = index $group "default" -}}
+  {{- end -}}
+  {{- $appDetails = mergeOverwrite $app $groupOverrides -}}
+{{- end -}}
 {{- if and $enabled $create }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -10,50 +21,50 @@ metadata:
   name: {{ $appName }}
   namespace: argocd
   annotations:
-  {{- if $app.syncWave }}
-    argocd.argoproj.io/sync-wave: "{{ $app.syncWave }}"
+  {{- if $appDetails.syncWave }}
+    argocd.argoproj.io/sync-wave: "{{ $appDetails.syncWave }}"
   {{- end }}
-  {{- if $app.syncOptions }}
-    argocd.argoproj.io/compare-options: "{{ $app.syncOptions }}"
+  {{- if $appDetails.syncOptions }}
+    argocd.argoproj.io/compare-options: "{{ $appDetails.syncOptions }}"
   {{- end }}
 spec:
   project: default
   sources:
-    - repoURL: {{ $app.repo | default $.Values.defaultGitRepo }}
-      targetRevision: {{ $app.version | default $.Values.gitRevision }}
-    {{- with $app.gitPath }}
+    - repoURL: {{ $appDetails.repo | default $.Values.defaultGitRepo }}
+      targetRevision: {{ $appDetails.version | default $.Values.gitRevision }}
+    {{- with $appDetails.gitPath }}
       path: {{ tpl . $ }}
     {{- end }}
-    {{- with $app.chart }}
+    {{- with $appDetails.chart }}
       chart: {{ . }}
     {{- end }}
-    {{- $isHelmChart := and (not (hasKey $app "secureValues")) (or (not (hasKey $app "helmChart")) $app.helmChart) }}
+    {{- $isHelmChart := and (not (hasKey $app "secureValues")) (or (not (hasKey $app "helmChart")) $appDetails.helmChart) }}
     {{- if $isHelmChart }}
       helm:
-        {{- if $app.defaultValues }}
+        {{- if $appDetails.defaultValues }}
         values:
-          {{ tpl $app.defaultValues $ | toYaml | indent 8 }}
+          {{ tpl $appDetails.defaultValues $ | toYaml | indent 8 }}
         {{- end }}
         releaseName: {{ $appName }}
-      {{- if ($app.configuration).enabled }}
+      {{- if ($appDetails.configuration).enabled }}
         valueFiles:
           - "$values/{{ $.Values.configuration.configurationDirectory }}/{{ $.Values.env }}/{{ $appName }}.yaml"
     - repoURL: {{ $.Values.configuration.configurationRepo }}
       targetRevision: {{ $.Values.configuration.configurationRevision | default $.Values.gitRevision }}
       ref: values
       {{- end }}
-    {{- else if $app.secureValues }}
+    {{- else if $appDetails.secureValues }}
       plugin:
         name: argocd-vault-plugin-helm
         env:
           - name: HELM_VALUES
             value:
-              {{- $app.secureValues | toYaml | indent 12 }}
+              {{- $appDetails.secureValues | toYaml | indent 12 }}
     {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
-  {{- if $app.destinationNamespace }}
-    namespace: {{ $app.destinationNamespace }}
+  {{- if $appDetails.destinationNamespace }}
+    namespace: {{ $appDetails.destinationNamespace }}
   {{- end }}
   syncPolicy:
     automated:
@@ -61,7 +72,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      {{- if $app.serverSideApply }}
+      {{- if $appDetails.serverSideApply }}
       - ServerSideApply=true
       {{- end }}
 ---
@@ -106,7 +117,7 @@ spec:
           {{- tpl . $ | toYaml | indent 8 }}
           {{- end }}
           {{- if $subApp.followMasterConfig }}
-          {{- include "generateEnabledValues" $ | toYaml | indent 8 }}
+          {{- include "common.generateEnabledValues" (dict "passThroughKeys" (list) "Values" $.Values) | toYaml | indent 8 }}
           {{- end }}
         {{- end }}
         releaseName: {{ $subAppName }}
