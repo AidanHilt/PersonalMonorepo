@@ -4,8 +4,6 @@ jellyseerr:
 
   postgres:
     enabled: true
-    setupJob:
-      setupJobServiceAccount: setup-job
 
 persistence:
   config:
