@@ -2,12 +2,6 @@ jellyseerr:
   configSecret:
     existingSecret: jellyseerr-config-secret
 
-  postgres:
-    enabled: true
-
-    setupJob:
-      enabled: false
-
 persistence:
   config:
     enabled: false
