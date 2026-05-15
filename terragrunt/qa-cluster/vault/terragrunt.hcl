@@ -16,4 +16,6 @@ inputs = {
   kubeconfig_context = "kind-kind"
   hwr_applicationkey = run_cmd("--terragrunt-quiet", "keepass-retrieve-secret", "--secret-path", "Server/MyScript", "--key-name", "Username")
   hwr_hmac = run_cmd("--terragrunt-quiet", "keepass-retrieve-secret", "--secret-path", "Server/MyScript")
+  open_subtitles_username = run_cmd("--terragrunt-quiet", "keepass-retrieve-secret", "--secret-path", "Internet/OpenSubtitles", "--key-name", "Username")
+  open_subtitles_password = run_cmd("--terragrunt-quiet", "keepass-retrieve-secret", "--secret-path", "Internet/OpenSubtitles")
 }
