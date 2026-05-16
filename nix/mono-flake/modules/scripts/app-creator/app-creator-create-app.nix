@@ -23,7 +23,11 @@ fi
 echo "======================================"
 echo " You are now creating the ArgoCD app"
 echo "======================================"
-app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --skip-default-values --skip-secure-values --app-type "$APP_TYPE"
+if [[ "$APP_TYPE" == 2 ]]; then
+  app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --skip-default-values --skip-secure-values --app-type "$APP_TYPE"
+else
+  app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --skip-default-values --skip-secure-values --app-type "$APP_TYPE" --repo "https://github.com/AidanHilt/PersonalMonorepo" --git-path "kubernetes/helm-charts/applications/$APP_NAME"
+fi
 
 echo "=========================================="
 echo " You are now defining ingress for the app"
@@ -50,7 +54,7 @@ fi
 
 if [[ ''${#PREFIXES[@]} -eq 0 ]] && [[ -z "$SUBDOMAIN" ]]; then
   print_status "No prefixes or subdomains provided, skipping ingress and homepage"
-else 
+else
   print_debug "Adding ingress for $APP_NAME"
   INGRESS_ARGS=""
   if [[ ''${#PREFIXES[@]} -gt 0 ]]; then
