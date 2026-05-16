@@ -79,13 +79,11 @@ if [[ -z "$destination_namespace" ]]; then
   read -p "Enter the destination namespace: " destination_namespace
 fi
 
-if [[ -z "$resource_name" ]]; then
-  read -p "Enter the resource name (optional): " resource_name
-fi
-
 configure_sa="n"
 
-read -p "Would you like to configure the service account? (y/N): " configure_sa
+if [[ -z "$service_account_name" ]]; then
+  read -p "Would you like to configure the service account? (y/N): " configure_sa
+fi
 
 if [[ "$configure_sa" == "y" ]]; then
   SA_DEFAULT="$secret_name"
