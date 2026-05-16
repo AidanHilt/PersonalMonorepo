@@ -289,6 +289,20 @@
           "namespace": "misc",
           "mount": "misc",
           "postgres_secret": "true"
+        },
+        "bazarr": {
+          "data": {
+            "postgresUser": {
+              "is_postgres_password": false,
+              "value": "bazarr"
+            },
+            "postgresPassword": {
+              "is_postgres_password": true
+            }
+          },
+          "namespace": "videos",
+          "mount": "videos",
+          "postgres_secret": "false"
         }
       },
       "unique_mounts": "${toset([\n  for key, secret in local.secret_definitions : secret.mount\n  ])}"

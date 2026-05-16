@@ -1,0 +1,38 @@
+#================================================================================================================================================
+# You should be able to use any of the values you can find here: https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
+#================================================================================================================================================
+image:
+  repository: linuxserver/bazarr
+  pullPolicy: IfNotPresent
+
+service:
+  main:
+    ports:
+      http:
+        port: 80
+        targetPort: 6767
+#=============================
+# Application-specific config
+#=============================
+bazarr:
+  configSecret:
+    existingSecret: ""
+
+  configYamlSecret:
+    enabled: false
+    existingSecret: bazarr-config-yaml
+
+  postgres:
+    enabled: false
+
+    username: bazarr
+    password: ""
+
+    port: 5432
+    host: postgres-cluster-rw.postgres.svc.cluster.local
+
+    dbName: bazarr
+
+#=============
+# Subchart(s)
+#=============

@@ -27,6 +27,13 @@ bar-assistant:
   description: All-in-one solution for managing your home bar.
   icon: sh-bar-assistant
   group: Inventory Management
+bazarr:
+  enabled: false
+  prefixes:
+    - /bazarr
+  description: Automated subtitle manager for media servers
+  icon: sh-bazarr
+  group: Videos
 bentopdf:
   enabled: false
   subdomain: bento

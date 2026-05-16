@@ -1,0 +1,69 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "bazarr.harcodedValues" -}}
+  {{- if .Values.bazarr.postgres.enabled }}
+env:
+  {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
+  - name: POSTGRES_HOST
+    value: {{ .Values.bazarr.postgres.host }}
+  - name: POSTGRES_DATABASE
+    value: {{ .Values.bazarr.postgres.dbName }}
+  - name: POSTGRES_PORT
+    value: {{ .Values.bazarr.postgres.port | quote }}
+  - name: POSTGRES_USER
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.bazarr.configSecret.existingSecret | default $defaultSecretName }}
+        key: postgresUsername
+  - name: POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.bazarr.configSecret.existingSecret | default $defaultSecretName}}
+        key: postgresPassword
+  {{- end }}
+
+
+
+
+persistence:
+  config:
+    enabled: true
+{{- if .Values.persistence.config.enabled }}
+    type: pvc
+{{- else }}
+    type: emptyDir
+{{- end }}
+{{- if .Values.bazarr.configYamlSecret.enabled }}
+  secret-config:
+    enabled: true
+    type: secret
+    name: {{ .Values.bazarr.configYamlSecret.existingSecret | quote }}
+    defaultMode: 0440
+    globalMounts:
+      - path: /secret-config
+        readOnly: true
+
+initContainers:
+  01-copy-config:
+    image: busybox
+    imagePullPolicy: IfNotPresent
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        mkdir -p /config/config
+        cp /secret-config/config.yaml /config/config/config.yaml
+    volumeMounts:
+      - name: config
+        mountPath: /config
+      - name: secret-config
+        mountPath: /secret-config
+        readOnly: true
+
+{{- end }}
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "bazarr.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}

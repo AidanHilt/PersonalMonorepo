@@ -10,8 +10,7 @@
     };
 
     home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:nix-community/home-manager/release-25.11";
     };
 
     nur.url = "github:nix-community/nur";

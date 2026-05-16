@@ -1,3 +1,74 @@
+bazarr:
+  enabled: true
+  auth:
+    apikey: "1c9f199e176117fca40fabbd33211e4d"
+    type: null
+    username: ""
+    password: ""
+
+  general:
+    base_url: "/"
+    ip: "*"
+    port: 6767
+    instance_name: "Bazarr"
+    minimum_score: 90
+    minimum_score_movie: 70
+    days_to_upgrade_subs: 7
+    upgrade_subs: true
+    upgrade_manual: true
+    upgrade_frequency: 12
+    use_embedded_subs: true
+    single_language: false
+    enabled_providers: []
+    use_sonarr: true
+    use_radarr: true
+    use_plex: false
+    flask_secret_key: "99a806946f2e4bd760f89373ec95af77"
+
+  postgresql:
+    enabled: false
+    host: "localhost"
+    port: 5432
+    database: ""
+    username: ""
+    password: ""
+    url: ""
+
+  proxy:
+    type: null
+    url: ""
+    port: ""
+    username: ""
+    password: ""
+    exclude:
+      - localhost
+      - 127.0.0.1
+
+  backup:
+    folder: "/config/backup"
+    frequency: "Weekly"
+    day: 6
+    hour: 3
+    retention: 31
+
+  opensubtitlescom:
+    username: ""
+    password: ""
+    use_hash: true
+    include_ai_translated: false
+    include_machine_translated: false
+
+  translator:
+    translator_type: "google_translate"
+    gemini_key: ""
+    gemini_model: "gemini-2.0-flash"
+    lingarr_url: "http://lingarr:9876"
+    lingarr_token: ""
+
+  whisperai:
+    endpoint: "http://127.0.0.1:9000"
+    timeout: 3600
+
 flaresolverr:
   host_url: http://flaresolverr
 
