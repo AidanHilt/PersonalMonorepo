@@ -136,6 +136,7 @@ for entry in "''${SECRET_KEYS[@]}"; do
   is_pg_password="$(cut -d'|' -f2 <<< "$entry")"
   key_value="$(cut -d'|' -f3 <<< "$entry")"
   JQ_PATH=".''${SECRET_NAME}.data.''${key_name}"
+  jq "$JQ_PATH={}" "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
   if [[ "$is_pg_password" == "true" ]]; then
     jq "$JQ_PATH.is_postgres_password=$is_pg_password" "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
   fi
