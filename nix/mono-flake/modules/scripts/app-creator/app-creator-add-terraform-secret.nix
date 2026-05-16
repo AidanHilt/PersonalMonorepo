@@ -48,7 +48,10 @@ add_secret_key() {
       is_pg_password=false
       ;;
   esac
-  set_value="$(get_input "Set a value for this key? (y/n)" "n")"
+  set_value=n
+  if [[ "$is_pg_password" != "n" ]]; then
+    set_value="$(get_input "Set a value for this key? (y/n)" "n")"
+  fi
   if [ "$set_value" = "y" ]; then
     key_value="$(get_input "Enter value for $key_name" "")"
   else
