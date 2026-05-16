@@ -125,7 +125,7 @@ while [ "$add_keys" = "y" ]; do
   add_keys="$(get_input "Add another key? (y/n)" "n")"
 done
 
-LOCAL_FILE="''${PERSONAL_MONOREPO_LOCATION}/nix/terraform/modules/vault/.json"
+LOCAL_FILE="''${PERSONAL_MONOREPO_LOCATION}/nix/terraform/modules/vault/secrets.json"
 print_debug "Updating locals.tf.json at $LOCAL_FILE"
 
 for entry in "''${SECRET_KEYS[@]}"; do
@@ -147,9 +147,9 @@ jq \
   --arg mount "$SECRET_MOUNT" \
   --arg pg "$POSTGRES_SECRET" \
   '
-  .$name.namespace = $ns
-  | .$name.mount = $mount
-  | .$name.postgres_secret = $pg
+  .[$name].namespace = $ns
+  | .[$name].mount = $mount
+  | .[$name].postgres_secret = $pg
   ' "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
 
 
