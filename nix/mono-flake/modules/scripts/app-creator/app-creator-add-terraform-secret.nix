@@ -146,9 +146,10 @@ jq \
   --arg ns "$SECRET_NAMESPACE" \
   --arg mount "$SECRET_MOUNT" \
   --arg pg "$POSTGRES_SECRET" \
-  .["$name"].namespace = $ns
-  | .["$name"].mount = $mount
-  | .["$name"].postgres_secret = $pg
+  '
+  .$name.namespace = $ns
+  | .$name.mount = $mount
+  | .$name.postgres_secret = $pg
   ' "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
 
 
