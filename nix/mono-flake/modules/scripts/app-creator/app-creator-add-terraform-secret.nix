@@ -49,7 +49,7 @@ add_secret_key() {
       ;;
   esac
   set_value=n
-  if [[ "$is_pg_password" != "n" ]]; then
+  if [[ "$is_pg_password" == "n" ]]; then
     set_value="$(get_input "Set a value for this key? (y/n)" "n")"
   fi
   if [ "$set_value" = "y" ]; then
