@@ -23,10 +23,19 @@ fi
 echo "======================================"
 echo " You are now creating the ArgoCD app"
 echo "======================================"
-app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --skip-default-values --skip-secure-values --app-type "$APP_TYPE"
+if [[ "$APP_TYPE" == 2 ]]; then
+  app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --skip-default-values --skip-secure-values --app-type "$APP_TYPE"
+else
+  app-creator-add-argocd-app --app-name "$APP_NAME" --namespace "$NAMESPACE" --skip-default-values --skip-secure-values --app-type "$APP_TYPE" --repo "https://github.com/AidanHilt/PersonalMonorepo" --git-path "kubernetes/helm-charts/applications/$APP_NAME"
+fi
 
 echo "=========================================="
 echo " You are now defining ingress for the app"
+echo " Use prefixes for path-based routing, or"
+echo " subdomains if desired. If nothing is input"
+echo " the script will assume no access from"
+echo " outside the cluster is desired and will"
+echo " skip that and creating a homepage link"
 echo "=========================================="
 
 PREFIXES=()
@@ -50,7 +59,7 @@ fi
 
 if [[ ''${#PREFIXES[@]} -eq 0 ]] && [[ -z "$SUBDOMAIN" ]]; then
   print_status "No prefixes or subdomains provided, skipping ingress and homepage"
-else 
+else
   print_debug "Adding ingress for $APP_NAME"
   INGRESS_ARGS=""
   if [[ ''${#PREFIXES[@]} -gt 0 ]]; then
@@ -113,13 +122,13 @@ if [[ "$add_secrets" =~ ^[Yy]$ ]]; then
 
   for i in "''${!SECRET_NAMES[@]}"; do
     echo "============================================"
-    echo " You are adding kubernetes external secrets"
+    echo " You are adding kubernetes secrets"
     echo "============================================"
     app-creator-add-secret --secret-name "''${SECRET_NAMES[$i]}" --destination-namespace "''${SECRET_NAMESPACES[$i]}" --service-account-name "''${SERVICE_ACCOUNT_NAMES[$i]}"
 
-    echo "========================================="
-    echo " You are adding terraform secrets"
-    echo "========================================="
+    echo "================================================="
+    echo " You are adding secret configuration to terraform"
+    echo "================================================="
     app-creator-add-terraform-secret --secret-name "''${SECRET_NAMES[$i]}" --secret-namespace "''${SECRET_NAMESPACES[$i]}" --postgres-secret "''${POSTGRES_SECRETS[$i]}"
   done
 fi

@@ -48,7 +48,10 @@ add_secret_key() {
       is_pg_password=false
       ;;
   esac
-  set_value="$(get_input "Set a value for this key? (y/n)" "n")"
+  set_value=n
+  if [[ "$is_pg_password" == "false" ]]; then
+    set_value="$(get_input "Set a value for this key? (y/n)" "n")"
+  fi
   if [ "$set_value" = "y" ]; then
     key_value="$(get_input "Enter value for $key_name" "")"
   else
@@ -125,17 +128,20 @@ while [ "$add_keys" = "y" ]; do
   add_keys="$(get_input "Add another key? (y/n)" "n")"
 done
 
-LOCAL_FILE="''${PERSONAL_MONOREPO_LOCATION}/terraform/vault-config/locals.tf.json"
+LOCAL_FILE="''${PERSONAL_MONOREPO_LOCATION}/nix/terraform/modules/vault/secrets.json"
 print_debug "Updating locals.tf.json at $LOCAL_FILE"
 
 for entry in "''${SECRET_KEYS[@]}"; do
   key_name="$(cut -d'|' -f1 <<< "$entry")"
   is_pg_password="$(cut -d'|' -f2 <<< "$entry")"
   key_value="$(cut -d'|' -f3 <<< "$entry")"
-  JQ_PATH=".locals[0].secret_definitions.[\"''${SECRET_NAME}\"].data.''${key_name}"
-  jq "$JQ_PATH.is_postgres_password=$is_pg_password" "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
+  JQ_PATH=".''${SECRET_NAME}.data.''${key_name}"
+  jq "$JQ_PATH={}" "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
+  if [[ "$is_pg_password" == "true" ]]; then
+    jq "$JQ_PATH.is_postgres_password=$is_pg_password" "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
+  fi
   if [ -n "$key_value" ]; then
-    jq "$JQ_PATH.value=\"$key_value\"" "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
+    jq "$JQ_PATH=\"$key_value\"" "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
   fi
 done
 
@@ -145,9 +151,9 @@ jq \
   --arg mount "$SECRET_MOUNT" \
   --arg pg "$POSTGRES_SECRET" \
   '
-  .locals[0].secret_definitions[$name].namespace = $ns
-  | .locals[0].secret_definitions[$name].mount = $mount
-  | .locals[0].secret_definitions[$name].postgres_secret = $pg
+  .[$name].namespace = $ns
+  | .[$name].mount = $mount
+  | .[$name].postgres_secret = $pg
   ' "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
 
 
