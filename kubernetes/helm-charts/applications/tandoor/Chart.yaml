@@ -1,12 +1,13 @@
 apiVersion: v2
 name: tandoor
-description: A Helm chart for installing and managing tandoor. Based on the bjw-s library chart
+description: A Helm chart for installing and managing tandoor. Based on the
+  bjw-s library chart
 
 type: application
 
 version: 0.0.3
 
-appVersion: "2.0.5"
+appVersion: "2.3"
 
 dependencies:
   - name: common

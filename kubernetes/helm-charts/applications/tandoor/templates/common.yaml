@@ -5,6 +5,8 @@
   {{- if .Values.tandoor.postgres.enabled }}
 env:
   {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
+  - name: DB_ENGINE
+    value: django.db.backends.postgresql
   - name: POSTGRES_HOST
     value: {{ .Values.tandoor.postgres.host }}
   - name: POSTGRES_DATABASE
