@@ -4,21 +4,12 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/bazarr
+gitRevision: project-appocalypse/tandoor-recipes
 
-videos:
+tandoor:
   enabled: true
-  default:
-    configuration:
-      enabled: true
-
-# video-stack-configuration:
-#   enabled: true
-
-# bazarr:
-#   enabled: true
-#   configuration:
-#     enabled: true
+  configuration:
+    enabled: true
 
 seaweedfs:
   enabled: false

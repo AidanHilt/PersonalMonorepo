@@ -10,11 +10,25 @@ service:
     ports:
       http:
         port: 80
-        targetPort:
+        targetPort: 80
 #=============================
 # Application-specific config
 #=============================
-$CHART_NAME:
+tandoor:
+  configSecret:
+    existingSecret: ""
+
+  postgres:
+    enabled: false
+
+    username: bazarr
+    password: ""
+
+    port: 5432
+    host: postgres-cluster-rw.postgres.svc.cluster.local
+
+    dbName: bazarr
+
 #=============
 # Subchart(s)
 #=============

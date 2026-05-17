@@ -311,6 +311,10 @@ sonarr:
   gitPath: kubernetes/helm-charts/applications/sonarr
   destinationNamespace: videos
   groupName: videos
+tandoor:
+  enabled: false
+  gitPath: kubernetes/helm-charts/applications/tandoor
+  destinationNamespace: inventory-mgmt
 transmission:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/transmission

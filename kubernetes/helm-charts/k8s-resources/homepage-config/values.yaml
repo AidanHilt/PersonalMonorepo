@@ -222,6 +222,12 @@ sonarr:
   icon: sh-sonarr
   nameOverride: Sonarr
   description: Self-hosted tv series collection manager
+tandoor:
+  enabled: false
+  subdomain: tandoor
+  description: Recipe and inventory manager
+  icon: sh-tandoor
+  group: Inventory Management
 transmission:
   enabled: false
   prefixes:
