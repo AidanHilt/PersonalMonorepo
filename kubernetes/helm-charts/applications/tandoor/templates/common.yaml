@@ -2,8 +2,11 @@
 
 {{/* Append the hardcoded settings */}}
 {{- define "tandoor.harcodedValues" -}}
-  {{- if .Values.tandoor.postgres.enabled }}
+
 env:
+  - name: SECRET_KEY
+    value: sdgflaskfdgdfslkvnasldfnasd
+  {{- if .Values.tandoor.postgres.enabled }}
   {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
   - name: DB_ENGINE
     value: django.db.backends.postgresql
