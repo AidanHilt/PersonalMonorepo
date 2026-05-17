@@ -6,6 +6,8 @@
 env:
   - name: SECRET_KEY
     value: sdgflaskfdgdfslkvnasldfnasd
+  - name: TANDOOR_PORT
+    value: "80"
   {{- if .Values.tandoor.postgres.enabled }}
   {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
   - name: DB_ENGINE
