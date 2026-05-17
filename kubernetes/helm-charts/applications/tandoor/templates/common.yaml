@@ -9,7 +9,7 @@ env:
   - name: TANDOOR_PORT
     value: "80"
   - name: ALLOWED_HOSTS
-    value: http://tandoor.qa-cluster-lb.lan
+    value: tandoor.qa-cluster-lb.lan
   {{- if .Values.tandoor.postgres.enabled }}
   {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
   - name: DB_ENGINE
