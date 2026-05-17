@@ -29,6 +29,20 @@ readinessProbe:
   periodSeconds: 10
   timeoutSeconds: 5
   failureThreshold: 3
+
+persistence:
+  staticfiles:
+    enabled: true
+    mountPath: /opt/recipes/staticfiles
+    size: 1Gi
+    accessMode: ReadWriteOnce
+
+  mediafiles:
+    enabled: true
+    mountPath: /opt/recipes/mediafiles
+    size: 1Gi
+    accessMode: ReadWriteOnce
+
 #=============================
 # Application-specific config
 #=============================
