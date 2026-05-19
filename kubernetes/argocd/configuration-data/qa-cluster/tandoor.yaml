@@ -1,3 +1,7 @@
+serviceAccount:
+  create: true
+  name: tandoor
+
 tandoor:
   allowedHosts: tandoor.qa-cluster-lb.lan
 
