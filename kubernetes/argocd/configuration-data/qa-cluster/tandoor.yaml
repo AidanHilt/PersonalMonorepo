@@ -1,2 +1,8 @@
 tandoor:
   allowedHosts: tandoor.qa-cluster-lb.lan
+
+  configSecret:
+    existingSecret: tandoor-config-secret
+
+  postgres:
+    enabled: true
