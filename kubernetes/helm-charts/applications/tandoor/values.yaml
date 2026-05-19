@@ -50,6 +50,8 @@ tandoor:
   configSecret:
     existingSecret: ""
 
+  allowedHosts: ""
+
   postgres:
     enabled: false
 

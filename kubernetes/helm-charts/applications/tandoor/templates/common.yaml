@@ -4,14 +4,19 @@
 {{- define "tandoor.harcodedValues" -}}
 
 env:
+{{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
   - name: SECRET_KEY
-    value: sdgflaskfdgdfslkvnasldfnasd
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.tandoor.configSecret.existingSecret | default $defaultSecretName }}
+        key: secretKey
   - name: TANDOOR_PORT
     value: "80"
+  {{- with .Values.tandoor.allowedHosts }}
   - name: ALLOWED_HOSTS
-    value: tandoor.qa-cluster-lb.lan
+    value: {{ . }}
+  {{- end }}
   {{- if .Values.tandoor.postgres.enabled }}
-  {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
   - name: DB_ENGINE
     value: django.db.backends.postgresql
   - name: POSTGRES_HOST
@@ -31,6 +36,18 @@ env:
         name: {{ .Values.tandoor.configSecret.existingSecret | default $defaultSecretName}}
         key: postgresPassword
   {{- end }}
+
+{{- if eq .Values.tandoor.configSecret.existingSecret "" }}
+secrets:
+  config-secret:
+    enabled: true
+    stringData:
+      {{- if .Values.tandoor.postgres.enabled }}
+      postgresPassword: {{ .Values.tandoor.postgres.password | quote }}
+      postgresUsername: {{ .Values.tandoor.postgres.username | quote }}
+      {{- end }}
+      secretKey: {{ .Values.tandoor.secretKey | default (randAlphaNum 32 | lower) | quote }}
+{{- end }}
 
 {{- end -}}
 {{- $_ := mergeOverwrite .Values (include "tandoor.harcodedValues" . | fromYaml) -}}
