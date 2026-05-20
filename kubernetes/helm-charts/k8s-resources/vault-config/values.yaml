@@ -96,6 +96,10 @@ sonarr:
 tandoor:
   enabled: false
   secretDestinationNamespace: inventory-mgmt
+  postgresSecret:
+    enabled: true
+  seaweedfsSecret:
+    enabled: true
 transmission:
   enabled: false
   secretDestinationNamespace: videos
