@@ -63,6 +63,19 @@ tandoor:
 
     dbName: bazarr
 
+  s3:
+    enabled: false
+
+    accessKeyId: ""
+    secretAccessKey: ""
+
+    region: "us-east-1"
+    endpoint: ""
+    bucket: ""
+
+    configSecret:
+      existingSecret: ""
+
 #=============
 # Subchart(s)
 #=============

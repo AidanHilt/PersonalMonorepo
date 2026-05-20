@@ -10,3 +10,12 @@ tandoor:
 
   postgres:
     enabled: true
+
+  s3:
+    enabled: true
+
+    endpoint: http://seaweedfs-s3.seaweedfs.cluster.svc.local:8333
+    bucket: tandoor
+
+    configSecret:
+      existingSecret: tandoor-seaweedfs-creds
