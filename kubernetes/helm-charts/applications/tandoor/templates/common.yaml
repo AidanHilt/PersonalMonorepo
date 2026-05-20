@@ -39,7 +39,7 @@ env:
     value: django.db.backends.postgresql
   - name: POSTGRES_HOST
     value: {{ .Values.tandoor.postgres.host }}
-  - name: POSTGRES_DATABASE
+  - name: POSTGRES_DB
     value: {{ .Values.tandoor.postgres.dbName }}
   - name: POSTGRES_PORT
     value: {{ .Values.tandoor.postgres.port | quote }}
