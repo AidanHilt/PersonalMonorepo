@@ -55,13 +55,13 @@ tandoor:
   postgres:
     enabled: false
 
-    username: bazarr
+    username: tandoor
     password: ""
 
     port: 5432
     host: postgres-cluster-rw.postgres.svc.cluster.local
 
-    dbName: bazarr
+    dbName: tandoor
 
   s3:
     enabled: false
