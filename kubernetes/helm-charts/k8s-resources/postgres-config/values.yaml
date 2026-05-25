@@ -17,6 +17,7 @@ qa-cluster:
     - nextcloud
     - rxresu
     - bazarr
+    - tandoor
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -63,6 +64,8 @@ qa-cluster:
       owner: rxresu
     bazarr:
       owner: bazarr
+    tandoor:
+      owner: tandoor
   storage: 1Gi
 staging-cluster:
   enabled: false
@@ -78,6 +81,7 @@ staging-cluster:
     - nextcloud
     - rxresu
     - bazarr
+    - tandoor
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -117,6 +121,8 @@ staging-cluster:
       owner: rxresu
     bazarr:
       owner: bazarr
+    tandoor:
+      owner: tandoor
   storage: 1Gi
 prod-cluster:
   enabled: false
@@ -133,6 +139,7 @@ prod-cluster:
     - nextcloud
     - rxresu
     - bazarr
+    - tandoor
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -172,4 +179,6 @@ prod-cluster:
       owner: rxresu
     bazarr:
       owner: bazarr
+    tandoor:
+      owner: tandoor
   storage: 50Gi

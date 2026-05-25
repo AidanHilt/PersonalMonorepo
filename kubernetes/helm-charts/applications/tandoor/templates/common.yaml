@@ -1,0 +1,72 @@
+{{- include "bjw-s.common.loader.init" . }}
+
+{{/* Append the hardcoded settings */}}
+{{- define "tandoor.harcodedValues" -}}
+
+env:
+{{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
+  - name: SECRET_KEY
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.tandoor.configSecret.existingSecret | default $defaultSecretName }}
+        key: secretKey
+  - name: TANDOOR_PORT
+    value: "80"
+  {{- with .Values.tandoor.allowedHosts }}
+  - name: ALLOWED_HOSTS
+    value: {{ . }}
+  {{- end }}
+  {{- if .Values.tandoor.s3.enabled}}
+  - name: S3_REGION
+    value: {{ .Values.tandoor.s3.region }}
+  - name: S3_BUCKET_NAME
+    value: {{ .Values.tandoor.s3.bucket }}
+  - name: S3_ENDPOINT_URL
+    value: {{ .Values.tandoor.s3.endpoint }}
+  - name: S3_ACCESS_KEY
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.tandoor.s3.configSecret.existingSecret | default $defaultSecretName }}
+        key: accessKey
+  - name: S3_SECRET_ACCESS_KEY
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.tandoor.s3.configSecret.existingSecret | default $defaultSecretName }}
+        key: secretKey
+  {{- end }}
+  {{- if .Values.tandoor.postgres.enabled }}
+  - name: DB_ENGINE
+    value: django.db.backends.postgresql
+  - name: POSTGRES_HOST
+    value: {{ .Values.tandoor.postgres.host }}
+  - name: POSTGRES_DB
+    value: {{ .Values.tandoor.postgres.dbName }}
+  - name: POSTGRES_PORT
+    value: {{ .Values.tandoor.postgres.port | quote }}
+  - name: POSTGRES_USER
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.tandoor.configSecret.existingSecret | default $defaultSecretName }}
+        key: postgresUsername
+  - name: POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.tandoor.configSecret.existingSecret | default $defaultSecretName}}
+        key: postgresPassword
+  {{- end }}
+
+{{- if eq .Values.tandoor.configSecret.existingSecret "" }}
+secrets:
+  config-secret:
+    enabled: true
+    stringData:
+      {{- if .Values.tandoor.postgres.enabled }}
+      postgresPassword: {{ .Values.tandoor.postgres.password | quote }}
+      postgresUsername: {{ .Values.tandoor.postgres.username | quote }}
+      {{- end }}
+      secretKey: {{ .Values.tandoor.secretKey | default (randAlphaNum 32 | lower) | quote }}
+{{- end }}
+
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "tandoor.harcodedValues" . | fromYaml) -}}
+{{ include "bjw-s.common.loader.generate" . }}

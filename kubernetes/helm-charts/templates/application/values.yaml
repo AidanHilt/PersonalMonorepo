@@ -14,7 +14,7 @@ service:
 #=============================
 # Application-specific config
 #=============================
-
+$CHART_NAME:
 #=============
 # Subchart(s)
 #=============

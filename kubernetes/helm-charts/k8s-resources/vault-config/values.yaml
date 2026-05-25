@@ -5,7 +5,7 @@ bar-assistant:
     transformation:
       templates:
         MEILI_MASTER_KEY:
-          text: '{{ .Secrets.meilisearchApiKey }}'
+          text: "{{ .Secrets.meilisearchApiKey }}"
 bazarr:
   enabled: false
   secretDestinationNamespace: videos
@@ -92,6 +92,13 @@ sonarr:
   enabled: false
   secretDestinationNamespace: videos
   postgresSecret:
+    enabled: true
+tandoor:
+  enabled: false
+  secretDestinationNamespace: inventory-mgmt
+  postgresSecret:
+    enabled: true
+  seaweedfsSecret:
     enabled: true
 transmission:
   enabled: false

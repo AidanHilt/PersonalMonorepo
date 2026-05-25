@@ -175,6 +175,10 @@ sonarr:
   prefixes:
     - /sonarr
   destinationSvc: sonarr.videos.svc.cluster.local
+tandoor:
+  enabled: false
+  subdomain: tandoor
+  destinationSvc: tandoor.inventory-mgmt.svc.cluster.local
 transmission:
   enabled: false
   prefixes:

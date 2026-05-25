@@ -1,0 +1,81 @@
+#================================================================================================================================================
+# You should be able to use any of the values you can find here: https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
+#================================================================================================================================================
+image:
+  repository: vabene1111/recipes
+  pullPolicy: IfNotPresent
+
+service:
+  main:
+    ports:
+      http:
+        port: 80
+        targetPort: 80
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 120
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+persistence:
+  staticfiles:
+    enabled: true
+    mountPath: /opt/recipes/staticfiles
+    size: 1Gi
+    accessMode: ReadWriteOnce
+
+  mediafiles:
+    enabled: true
+    mountPath: /opt/recipes/mediafiles
+    size: 1Gi
+    accessMode: ReadWriteOnce
+
+#=============================
+# Application-specific config
+#=============================
+tandoor:
+  configSecret:
+    existingSecret: ""
+
+  allowedHosts: ""
+
+  postgres:
+    enabled: false
+
+    username: tandoor
+    password: ""
+
+    port: 5432
+    host: postgres-cluster-rw.postgres.svc.cluster.local
+
+    dbName: tandoor
+
+  s3:
+    enabled: false
+
+    accessKeyId: ""
+    secretAccessKey: ""
+
+    region: "us-east-1"
+    endpoint: ""
+    bucket: ""
+
+    configSecret:
+      existingSecret: ""
+
+#=============
+# Subchart(s)
+#=============
