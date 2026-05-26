@@ -29,6 +29,7 @@ let
   kubernetesProvider = import ../../lib/kubernetes-provider.nix {inherit lib;};
 
   rxresu = libFunctions.mkSeaweedFsStack "rxresu" { namespaces = ["misc"]; };
+  tandoor = libFunctions.mkSeaweedFsStack "tandoor" { namespaces = ["inventory-mgmt"]; };
 
   static = {
     variable = {
@@ -59,5 +60,6 @@ lib.mkMerge [
   rxresu
   masterSecret
   static
+  tandoor
 ]
 

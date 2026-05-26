@@ -129,7 +129,7 @@ if [[ "$add_secrets" =~ ^[Yy]$ ]]; then
     echo "================================================="
     echo " You are adding secret configuration to terraform"
     echo "================================================="
-    app-creator-add-terraform-secret --secret-name "''${SECRET_NAMES[$i]}" --secret-namespace "''${SECRET_NAMESPACES[$i]}" --postgres-secret "''${POSTGRES_SECRETS[$i]}"
+    app-creator-add-terraform-secret --secret-name "''${SECRET_NAMES[$i]}" --secret-namespace "''${SECRET_NAMESPACES[$i]}" --secret-mount "''${SECRET_NAMESPACES[$i]}"--postgres-secret "''${POSTGRES_SECRETS[$i]}"
   done
 fi
 

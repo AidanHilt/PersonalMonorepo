@@ -35,7 +35,7 @@ let
           "\${random_password.${config.key_name or "${key}-${dataKey}"}.result}";
 
       generatedKeys = lib.filterAttrs (dataKey: config:
-        !(config ? value) && !(config ? tfVar) && !(builtins.isString config)
+        !(config ? value) && !(config ? tfVar) && !(builtins.isString config && config != "")
       ) (value.data or {});
 
       generatedVariables = lib.filterAttrs (dataKey: config:
