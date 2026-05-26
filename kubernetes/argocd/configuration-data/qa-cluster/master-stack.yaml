@@ -4,15 +4,13 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/tandoor-recipes
+gitRevision: project-appocalypse/user-mgmt
 
-tandoor:
+authentik:
   enabled: true
-  configuration:
-    enabled: true
 
 seaweedfs:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 

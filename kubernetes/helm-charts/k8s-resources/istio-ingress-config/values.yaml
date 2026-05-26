@@ -15,6 +15,10 @@ audiobookshelf:
   prefixes:
     - /audiobookshelf
   destinationSvc: audiobookshelf.books.svc.cluster.local
+authentik:
+  enabled: false
+  subdomain: iam
+  destinationSvc: authentik.authentik.svc.cluster.local
 bar-assistant:
   enabled: false
   subdomain: bar
