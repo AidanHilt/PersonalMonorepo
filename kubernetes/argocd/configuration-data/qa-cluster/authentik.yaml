@@ -1,4 +1,4 @@
 global:
   envFrom:
-    secretRef:
-      name: authentik-config-secret
+    - secretRef:
+        name: authentik-config-secret
