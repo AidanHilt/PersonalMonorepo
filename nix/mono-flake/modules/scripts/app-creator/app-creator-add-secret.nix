@@ -23,6 +23,7 @@ show_help () {
   echo "--resource-name: Override for the resource name"
   echo "--service-account-create: Takes no arguments. If provided, set service account create to true"
   echo "--service-account-name: The name of the service account"
+  echo "--postgres-secret: Whether or not this secret is a postgres user"
   echo ""
 }
 
@@ -33,6 +34,7 @@ service_account_name=""
 service_account_create=""
 service_account_namespace=""
 destination_config=""
+postgres_secret=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -58,6 +60,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --service-account-namespace)
       service_account_namespace="$2"
+      shift 2
+      ;;
+    --postgres-secret)
+      postgres_secret="$2"
       shift 2
       ;;
     --help|-h)
