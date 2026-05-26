@@ -1,6 +1,8 @@
 authentik:
   enabled: false
   secretDestinationNamespace: authentik
+  postgresSecret:
+    enabled: true
   destination:
     transformation:
       templates:
