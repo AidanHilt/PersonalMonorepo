@@ -4,5 +4,6 @@ global:
         name: authentik-config-secret
 
 authentik:
+  enabled: false
   postgresql:
     host: postgres-cluster-rw.postgres.svc.cluster.local
