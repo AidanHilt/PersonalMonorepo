@@ -157,7 +157,7 @@ jq \
   '
   .[$name].namespace = $ns
   | .[$name].mount = $mount
-  | .[$name].postgres_secret = $pg
+  | .[$name].postgres_secret = ($pg == "true")
   ' "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
 
 
