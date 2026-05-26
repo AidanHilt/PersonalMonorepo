@@ -6,6 +6,8 @@ authentik:
       templates:
         AUTHENTIK_SECRET_KEY:
           text: "{{ .Secrets.secretKey }}"
+        AUTHENTIK_POSTGRESQL__PASSWORD:
+          text: "{{ .Secrets.postgresPassword }}"
 bar-assistant:
   enabled: false
   secretDestinationNamespace: inventory-mgmt
