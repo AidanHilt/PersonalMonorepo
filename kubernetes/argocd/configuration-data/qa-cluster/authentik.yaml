@@ -1,6 +1,4 @@
-authentik:
-  secret_key:
-    valueFrom:
-      secretKeyRef:
-        name: authentik-config-secret
-        key: secretKey
+global:
+  envFrom:
+    secretRef:
+      name: authentik-config-secret

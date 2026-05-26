@@ -1,6 +1,11 @@
 authentik:
   enabled: false
   secretDestinationNamespace: authentik
+  destination:
+    transformation:
+      templates:
+        AUTHENTIK_SECRET_KEY:
+          text: "{{ .Secrets.secretKey }}"
 bar-assistant:
   enabled: false
   secretDestinationNamespace: inventory-mgmt
@@ -8,7 +13,7 @@ bar-assistant:
     transformation:
       templates:
         MEILI_MASTER_KEY:
-          text: '{{ .Secrets.meilisearchApiKey }}'
+          text: "{{ .Secrets.meilisearchApiKey }}"
 bazarr:
   enabled: false
   secretDestinationNamespace: videos
