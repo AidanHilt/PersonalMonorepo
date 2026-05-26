@@ -8,6 +8,8 @@ gitRevision: project-rockhard/user-mgmt
 
 authentik:
   enabled: true
+  configuration:
+    enabled: true
 
 seaweedfs:
   enabled: false

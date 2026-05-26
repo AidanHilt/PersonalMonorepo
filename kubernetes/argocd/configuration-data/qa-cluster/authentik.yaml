@@ -1,0 +1,6 @@
+authentik:
+  secret_key:
+    valueFrom:
+      secretKeyRef:
+        name: authentik-config-secret
+        key: secretKey
