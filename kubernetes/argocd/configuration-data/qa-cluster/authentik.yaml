@@ -1,9 +1,5 @@
-global:
-  envFrom:
-    - secretRef:
-        name: authentik-config-secret
-
 authentik:
   enabled: false
+  existingSecret: authentik-config-secret
   postgresql:
     host: postgres-cluster-rw.postgres.svc.cluster.local
