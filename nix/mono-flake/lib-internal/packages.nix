@@ -39,6 +39,7 @@ in
           "test_available_connections_no_limits"
           "test_connect_tunnel_connection_release"
           "test_invalid_header_spacing"
+          "test_parse"
         ];
       });
     })
