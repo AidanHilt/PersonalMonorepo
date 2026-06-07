@@ -87,7 +87,7 @@
     enable = true;
 
     onActivation = {
-      cleanup = "uninstall";
+      cleanup = "none";
       upgrade = true;
     };
 
