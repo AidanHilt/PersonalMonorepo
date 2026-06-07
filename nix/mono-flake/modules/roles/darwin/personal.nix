@@ -9,7 +9,7 @@
   ];
 
   environment.systemPackages = [
-    pkgs.python312
+    pkgs.python313
     #pkgs.poetry
   ];
 
