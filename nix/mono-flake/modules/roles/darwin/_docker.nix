@@ -28,7 +28,7 @@
 
     brews = [
       "docker-credential-helper"
-      "docker-mac-net-connect"
+      "chipmk/tap/docker-mac-net-connect"
     ];
   };
 }
