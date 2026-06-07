@@ -28,7 +28,6 @@
 
     brews = [
       "docker-credential-helper"
-      "docker-mac-net-connect"
     ];
   };
 }
