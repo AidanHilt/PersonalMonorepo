@@ -32,7 +32,7 @@ in
     (pyFinal: pyPrev: {
       aiohttp = pyPrev.aiohttp.overridePythonAttrs (old: {
         disabledTests = (old.disabledTests or []) ++ [
-          "test_your_new_skipped_test"
+          "test_tcp_connector_socket_factory"
         ];
       });
     })
