@@ -40,6 +40,7 @@ in
           "test_connect_tunnel_connection_release"
           "test_invalid_header_spacing"
           "test_parse"
+          "test_http_request_parser_bad_version"
         ];
       });
     })
