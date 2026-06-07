@@ -87,7 +87,7 @@
     enable = true;
 
     onActivation = {
-      cleanup = "none";
+      cleanup = "zap";
       upgrade = true;
     };
 
