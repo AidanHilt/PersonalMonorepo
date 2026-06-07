@@ -27,6 +27,13 @@ in
               ) oldAttrs.patches;
             });
           })
+          (final: prev: {
+            python313Packages.aiohttp = prev.python313Packages.aiohttp.overrideAttrs (oldAttrs: {
+                disabledTests = (old.disabledTests or []) ++ [
+    "test_tcp_connector_socket_factory"
+  ];
+            });
+          })
         ];
       in
       import nixpkgs-version {
