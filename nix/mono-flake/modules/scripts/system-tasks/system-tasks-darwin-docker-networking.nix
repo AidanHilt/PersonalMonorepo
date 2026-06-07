@@ -20,7 +20,7 @@ export colima_vm_iface=$(colima ssh -- ip -br address show to $colima_vm_ip | cu
 echo $colima_vm_iface
 export colima_kind_iface=$(colima ssh -- ip -br address show to $colima_kind_cidr | cut -d' ' -f1)
 echo $colima_kind_iface
-sudo route -nv add -net $colima_kind_cidr_short --interface bridge100
+sudo route -nv add -net $colima_kind_cidr_short -interface bridge100
 ssh_cmd="sudo iptables -A FORWARD -s $colima_host_ip -d $colima_kind_cidr -i $colima_vm_iface -o $colima_kind_iface -p tcp -j ACCEPT"
 echo $ssh_cmd
 colima ssh -- $ssh_cmd
