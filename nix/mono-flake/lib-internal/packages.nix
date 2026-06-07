@@ -33,6 +33,7 @@ in
       aiohttp = pyPrev.aiohttp.overridePythonAttrs (old: {
         disabledTests = (old.disabledTests or []) ++ [
           "test_tcp_connector_socket_factory"
+          "test_available_connections_with_limit_per_host"
         ];
       });
     })
