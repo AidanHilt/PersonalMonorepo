@@ -27,13 +27,17 @@ in
               ) oldAttrs.patches;
             });
           })
-  #         (final: prev: {
-  #           python313Packages.aiohttp = prev.python313Packages.aiohttp.overrideAttrs (oldAttrs: {
-  #               disabledTests = (oldAttrs.disabledTests or []) ++ [
-  #   "test_tcp_connector_socket_factory"
-  # ];
-  #           });
-  #         })
+        (final: prev: {
+  pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+    (pyFinal: pyPrev: {
+      aiohttp = pyPrev.aiohttp.overridePythonAttrs (old: {
+        disabledTests = (old.disabledTests or []) ++ [
+          "test_your_new_skipped_test"
+        ];
+      });
+    })
+  ];
+})
         ];
       in
       import nixpkgs-version {
