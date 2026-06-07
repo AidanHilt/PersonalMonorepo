@@ -10,7 +10,7 @@
 
   environment.systemPackages = [
     pkgs.python312
-    pkgs.poetry
+    #pkgs.poetry
   ];
 
   homebrew = {
