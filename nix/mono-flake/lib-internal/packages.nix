@@ -29,7 +29,7 @@ in
           })
           (final: prev: {
             python313Packages.aiohttp = prev.python313Packages.aiohttp.overrideAttrs (oldAttrs: {
-                disabledTests = (prev.disabledTests or []) ++ [
+                disabledTests = (oldAttrs.disabledTests or []) ++ [
     "test_tcp_connector_socket_factory"
   ];
             });
