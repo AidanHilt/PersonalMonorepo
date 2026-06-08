@@ -11,6 +11,11 @@ authentik:
   configuration:
     enabled: true
 
+prowlarr:
+  enabled: true
+  configuration:
+    enabled: true
+
 seaweedfs:
   enabled: false
   configuration:
