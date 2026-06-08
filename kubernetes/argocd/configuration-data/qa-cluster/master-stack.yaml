@@ -42,6 +42,8 @@ metallb:
 
 istio:
   enabled: true
+  configuration:
+    enabled: true
   dependentApps:
     kiali:
       enabled: false

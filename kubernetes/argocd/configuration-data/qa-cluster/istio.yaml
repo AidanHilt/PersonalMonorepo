@@ -1,0 +1,15 @@
+meshConfig:
+  trustDomain: cluster.local
+  extensionProviders:
+  - envoyExtAuthzHttp:
+      headersToDownstreamOnAllow:
+      - cookie
+      headersToUpstreamOnAllow:
+      - set-cookie
+      - x-authentik-*
+      includeRequestHeadersInCheck:
+      - cookie
+      pathPrefix: /outpost.goauthentik.io/auth/envoy
+      port: 80
+      service: authentik-server.authentik.svc.cluster.local
+    name: authentik
