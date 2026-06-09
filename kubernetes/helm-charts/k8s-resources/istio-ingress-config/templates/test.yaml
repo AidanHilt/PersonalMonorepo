@@ -1,42 +1,46 @@
-# apiVersion: security.istio.io/v1beta1
-# kind: AuthorizationPolicy
-# metadata:
-#   name: allow-nothing
-#   namespace: istio-system
-# spec:
-#   action: ALLOW
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-nothing
+  namespace: istio-system
+spec:
+  action: ALLOW
 ---
-# apiVersion: security.istio.io/v1beta1
-# kind: AuthorizationPolicy
-# metadata:
-#   name: argocd-ingress-istio
-#   namespace: argocd
-# spec:
-#   action: ALLOW
-#   rules:
-#   - from:
-#     - source:
-#         principals:
-#         - cluster.local/ns/istio-system/sa/istio-gateway
-#   - to:
-#     - operation:
-#         hosts:
-#         - qa-cluster-lb.lan/argocd
-#         - qa-cluster-lb.lan:*/argocd
-# ---
-# apiVersion: security.istio.io/v1beta1
-# kind: AuthorizationPolicy
-# metadata:
-#   name: argocd-ingress
-#   namespace: istio-system
-# spec:
-#   action: ALLOW
-#   rules:
-#   - to:
-#     - operation:
-#         hosts:
-#         - qa-cluster-lb.lan/argocd
-#         - qa-cluster-lb.lan:80/argocd
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: argocd-ingress-istio
+  namespace: istio-system
+spec:
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        hosts:
+        - qa-cluster-lb.lan/argocd
+        - qa-cluster-lb.lan:443/argocd
+        - qa-cluster-lb.lan:80/argocd
+  selector:
+    matchLabels:
+      app: istio-ingressgateway
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: argocd-ingress-allow
+  namespace: argocd
+spec:
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals:
+        - cluster.local/ns/istio-system/sa/istio-ingressgateway
+    to:
+    - operation:
+        hosts:
+        - qa-cluster-lb.lan/argocd
+        - qa-cluster-lb.lan:*/argocd
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
