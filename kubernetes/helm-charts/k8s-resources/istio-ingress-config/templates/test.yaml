@@ -10,7 +10,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: argocd-ingress-istio
-  namespace: istio-ingress
+  namespace: istio-system
 spec:
   action: ALLOW
   rules:
@@ -21,13 +21,13 @@ spec:
         - qa-cluster-lb.lan:80/argocd
   selector:
     matchLabels:
-      app: istio-ingressgateway
+      app: istio-systemgateway
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: argocd-ingress-istio
-  namespace: istio-ingress
+  namespace: istio-system
 spec:
   action: ALLOW
   rules:
@@ -52,7 +52,7 @@ spec:
         - qa-cluster-lb.lan:80/prowlarr
   selector:
     matchLabels:
-      app: istio-ingressgateway
+      app: istio-systemgateway
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
