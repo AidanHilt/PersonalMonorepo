@@ -9,6 +9,20 @@ spec:
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
+  name: argocd-ingress-istio
+  namespace: istio-ingress
+spec:
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        hosts:
+        - qa-cluster-lb.lan/argocd
+        - qa-cluster-lb.lan:80/argocd
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
   name: prowlarr-ingress-istio
   namespace: istio-ingress
 spec:
