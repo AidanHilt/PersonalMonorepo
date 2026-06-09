@@ -10,7 +10,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: argocd-ingress-istio
-  namespace: istio-system
+  namespace: argocd
 spec:
   action: ALLOW
   rules:
@@ -22,7 +22,7 @@ spec:
     - operation:
         hosts:
         - qa-cluster-lb.lan/argocd
-        - qa-cluster-lb.lan:80/argocd
+        - qa-cluster-lb.lan:*/argocd
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
