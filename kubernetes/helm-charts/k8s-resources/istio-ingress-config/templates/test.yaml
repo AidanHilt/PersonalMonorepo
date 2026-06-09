@@ -23,7 +23,7 @@ spec:
         - /argocd/*
   selector:
     matchLabels:
-      app: istio-ingressgateway
+      app: istio-gateway
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
