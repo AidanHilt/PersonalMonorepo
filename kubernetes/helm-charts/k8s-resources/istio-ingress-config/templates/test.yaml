@@ -17,9 +17,12 @@ spec:
   - to:
     - operation:
         hosts:
-        - qa-cluster-lb.lan/argocd
-        - qa-cluster-lb.lan:443/argocd
-        - qa-cluster-lb.lan:80/argocd
+        - qa-cluster-lb.lan
+        - qa-cluster-lb.lan:443
+        - qa-cluster-lb.lan:80
+        paths:
+        - /argocd
+        - /argocd/
   selector:
     matchLabels:
       app: istio-ingressgateway
@@ -39,8 +42,11 @@ spec:
     to:
     - operation:
         hosts:
-        - qa-cluster-lb.lan/argocd
-        - qa-cluster-lb.lan:*/argocd
+        - qa-cluster-lb.lan
+        - qa-cluster-lb.lan:*
+        paths:
+        - /argocd
+        - /argocd/
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
