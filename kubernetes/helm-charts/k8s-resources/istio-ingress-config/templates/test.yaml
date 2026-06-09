@@ -26,7 +26,7 @@ spec:
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: argocd-ingress-istio
+  name: argocd-ingress
   namespace: istio-system
 spec:
   action: ALLOW
