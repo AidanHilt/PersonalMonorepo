@@ -22,7 +22,7 @@ spec:
         - qa-cluster-lb.lan:80
         paths:
         - /argocd
-        - /argocd/
+        - /argocd/*
   selector:
     matchLabels:
       app: istio-ingressgateway
@@ -46,7 +46,7 @@ spec:
         - qa-cluster-lb.lan:*
         paths:
         - /argocd
-        - /argocd/
+        - /argocd/*
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
