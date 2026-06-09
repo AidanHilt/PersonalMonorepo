@@ -35,7 +35,7 @@ spec:
   - from:
     - source:
         principals:
-        - cluster.local/ns/istio-system/sa/istio-ingressgateway
+        - cluster.local/ns/istio-system/sa/istio-gateway
     to:
     - operation:
         hosts:
