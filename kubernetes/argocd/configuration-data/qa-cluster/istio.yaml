@@ -4,6 +4,7 @@ meshConfig:
   - envoyExtAuthzHttp:
       headersToDownstreamOnAllow:
       - cookie
+      - location
       headersToUpstreamOnAllow:
       - set-cookie
       - x-authentik-*
