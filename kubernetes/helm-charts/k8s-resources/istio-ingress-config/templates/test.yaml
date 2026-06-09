@@ -24,7 +24,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: prowlarr-ingress-istio
-  namespace: istio-ingress
+  namespace: istio-system
 spec:
   action: ALLOW
   rules:
@@ -37,7 +37,6 @@ spec:
     matchLabels:
       app: istio-ingressgateway
 ---
-# FILE: httpbin-ingress-custom.yaml
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
