@@ -1,0 +1,41 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-nothing
+  namespace: istio-system
+spec:
+  action: ALLOW
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: prowlarr-ingress-istio
+  namespace: istio-ingress
+spec:
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        hosts:
+        - qa-cluster-lb.lan/prowlarr
+        - qa-cluster-lb.lan:80/prowlarr
+  selector:
+    matchLabels:
+      app: istio-ingressgateway
+---
+# FILE: httpbin-ingress-custom.yaml
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: prowlarr-ingress-custom
+  namespace: videos
+spec:
+  action: CUSTOM
+  provider:
+    name: authentik
+  rules:
+  - to:
+    - operation:
+        hosts:
+        - qa-cluster-lb.lan/prowlarr
+        - qa-cluster-lb.lan:*/prowlarr
