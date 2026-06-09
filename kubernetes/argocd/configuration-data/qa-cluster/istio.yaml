@@ -12,6 +12,6 @@ meshConfig:
       - cookie
       - authorization
       #pathPrefix: /outpost.goauthentik.io/auth/envoy
-      port: 80
-      service: authentik-server.authentik.svc.cluster.local
+      port: 9000
+      service: ak-outpost-main-outpost.authentik.svc.cluster.local
     name: authentik
