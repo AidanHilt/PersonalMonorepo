@@ -3,7 +3,6 @@ meshConfig:
   extensionProviders:
   - envoyExtAuthzHttp:
       headersToDownstreamOnDeny:
-        - location
         - set-cookie
       headersToDownstreamOnAllow:
       - cookie
