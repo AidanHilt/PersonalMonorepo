@@ -2,9 +2,11 @@ meshConfig:
   trustDomain: cluster.local
   extensionProviders:
   - envoyExtAuthzHttp:
+      headersToDownstreamOnDeny:
+        - location
+        - set-cookie
       headersToDownstreamOnAllow:
       - cookie
-      - location
       headersToUpstreamOnAllow:
       - set-cookie
       - x-authentik-*
