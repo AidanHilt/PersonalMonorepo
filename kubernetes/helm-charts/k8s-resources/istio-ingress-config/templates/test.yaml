@@ -85,7 +85,7 @@ spec:
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: argocd-ingress-istio
+  name: authentik-outpost-ingress-istio
   namespace: istio-system
 spec:
   action: ALLOW
@@ -104,7 +104,7 @@ spec:
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: argocd-ingress-allow
+  name: authentik-outpost-ingress-allow
   namespace: authentik
 spec:
   action: ALLOW
