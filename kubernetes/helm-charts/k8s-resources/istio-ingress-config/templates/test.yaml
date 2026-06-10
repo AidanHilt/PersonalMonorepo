@@ -130,7 +130,7 @@ spec:
   hosts:
     - qa-cluster-lb.lan
   gateways:
-    - main-gateway
+    - internal-gateway
   http:
     - match:
       - uri:
