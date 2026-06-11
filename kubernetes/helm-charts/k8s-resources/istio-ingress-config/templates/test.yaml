@@ -179,3 +179,15 @@ spec:
         paths:
         - /prowlarr
         - /prowlarr/*
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-outpost-to-server
+  namespace: authentik
+spec:
+  action: ALLOW
+  rules:
+    - from:
+      - source:
+          namespaces: ["authentik"]
