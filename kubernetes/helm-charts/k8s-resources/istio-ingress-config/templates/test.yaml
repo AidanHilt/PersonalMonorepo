@@ -165,6 +165,26 @@ spec:
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
+  name: prowlarr-ingress-allow
+  namespace: argocd
+spec:
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals:
+        - cluster.local/ns/videos/sa/prowlarr
+    to:
+    - operation:
+        hosts:
+        - qa-cluster-lb.lan
+        paths:
+        - /prowlarr
+        - /prowlarr/*
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
   name: prowlarr-ingress-custom
   namespace: istio-system
 spec:
