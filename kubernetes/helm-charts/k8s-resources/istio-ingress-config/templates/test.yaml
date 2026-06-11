@@ -147,7 +147,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: prowlarr-ingress-istio
-  namespace: videos
+  namespace: istio-system
 spec:
   action: ALLOW
   rules:
