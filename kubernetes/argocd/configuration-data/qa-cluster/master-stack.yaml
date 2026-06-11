@@ -48,5 +48,8 @@ istio:
     kiali:
       enabled: false
 
+kyverno:
+  enabled: true
+
 postgres:
   enabled: true
