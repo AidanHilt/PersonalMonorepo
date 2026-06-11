@@ -199,6 +199,8 @@ spec:
         paths:
         - /prowlarr
         - /prowlarr/*
+        notPaths:
+        - /outpost.goauthentik.io/*
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
