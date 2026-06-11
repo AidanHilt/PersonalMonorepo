@@ -166,7 +166,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: prowlarr-ingress-allow
-  namespace: argocd
+  namespace: videos
 spec:
   action: ALLOW
   rules:
