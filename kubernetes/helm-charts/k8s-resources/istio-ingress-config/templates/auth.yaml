@@ -1,0 +1,81 @@
+# Technically not necessary, as one policy makes the whole cluster deny-by-default
+# But we put this here so it's obvious
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: explicit-deny-all
+  namespace: istio-system
+spec: {}
+---
+# TODO Remove this as we move to a proper deny-by-default model
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-intra-cluster
+  namespace: istio-system
+spec:
+  action: ALLOW
+  rules:
+    - from:
+      - source:
+          principals:
+            - "cluster.local/*"
+---
+# apiVersion: security.istio.io/v1beta1
+# kind: AuthorizationPolicy
+# metadata:
+#   name: prowlarr-ingress-allow
+#   namespace: videos
+# spec:
+#   action: ALLOW
+#   rules:
+#   - from:
+#     - source:
+#         principals:
+#         - cluster.local/ns/videos/sa/prowlarr
+#     to:
+#     - operation:
+#         hosts:
+#         - qa-cluster-lb.lan
+#         paths:
+#         - /prowlarr
+#         - /prowlarr/*
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: prowlarr-ingress-custom
+  namespace: istio-system
+spec:
+  action: CUSTOM
+  provider:
+    name: authentik
+  rules:
+  - to:
+    - operation:
+        hosts:
+        - qa-cluster-lb.lan
+        paths:
+        - /prowlarr
+        - /prowlarr/*
+        notPaths:
+        - /outpost.goauthentik.io/*
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: prowlarr-ingress-istio
+  namespace: istio-system
+spec:
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        hosts:
+        - qa-cluster-lb.lan
+        paths:
+        - /prowlarr
+        - /prowlarr/*
+  selector:
+    matchLabels:
+      app: istio-gateway
