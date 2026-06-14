@@ -43,7 +43,7 @@ spec:
             - {{ $ingress.subdomain }}.{{ . }}
             {{- end }}
             {{- else }}
-            {{- range .Values.hostnames }}
+            {{- range $.Values.hostnames }}
             - {{ . }}
             {{- end }}
             {{- end }}
