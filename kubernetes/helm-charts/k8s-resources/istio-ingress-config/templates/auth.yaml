@@ -21,7 +21,7 @@ spec:
           principals:
             - "cluster.local/*"
 ---
-{{- range $ingressName, $ingress := .Values }}
+{{- range $ingressName, $ingress := $.Values }}
 {{- if ne $ingressName "hostnames" }}
 {{- $create := not (hasKey $ingress "multiHost" | ternary $ingress.multiHost false) }}
 {{- if and $ingress.enabled $ingress.destinationSvc $create }}
@@ -39,7 +39,7 @@ spec:
       - operation:
           hosts:
             {{- if $ingress.subdomain }}
-            {{- range .Values.hostnames }}
+            {{- range $.Values.hostnames }}
             - {{ $ingress.subdomain }}.{{ . }}
             {{- end }}
             {{- else }}
@@ -67,11 +67,11 @@ spec:
     - operation:
         hosts:
           {{- if $ingress.subdomain }}
-          {{- range .Values.hostnames }}
+          {{- range $.Values.hostnames }}
           - {{ $ingress.subdomain }}.{{ . }}
           {{- end }}
           {{- else }}
-          {{- range .Values.hostnames }}
+          {{- range $.Values.hostnames }}
           - {{ . }}
           {{- end }}
           {{- end }}
