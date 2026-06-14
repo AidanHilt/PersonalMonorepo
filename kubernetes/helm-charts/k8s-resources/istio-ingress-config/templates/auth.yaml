@@ -21,45 +21,39 @@ spec:
           principals:
             - "cluster.local/*"
 ---
-# apiVersion: security.istio.io/v1beta1
-# kind: AuthorizationPolicy
-# metadata:
-#   name: prowlarr-ingress-allow
-#   namespace: videos
-# spec:
-#   action: ALLOW
-#   rules:
-#   - from:
-#     - source:
-#         principals:
-#         - cluster.local/ns/videos/sa/prowlarr
-#     to:
-#     - operation:
-#         hosts:
-#         - qa-cluster-lb.lan
-#         paths:
-#         - /prowlarr
-#         - /prowlarr/*
----
+{{- range $ingressName, $ingress := .Values }}
+{{- if ne $ingressName "hostnames" }}
+{{- $create := not (hasKey $ingress "multiHost" | ternary $ingress.multiHost false) }}
+{{- if and $ingress.enabled $ingress.destinationSvc $create }}
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: prowlarr-ingress-custom
+  name: {{ $ingressName }}-ingress-authentik
   namespace: istio-system
 spec:
   action: CUSTOM
   provider:
     name: authentik
   rules:
-  - to:
-    - operation:
-        hosts:
-        - qa-cluster-lb.lan
-        paths:
-        - /prowlarr
-        - /prowlarr/*
-        notPaths:
-        - /outpost.goauthentik.io/*
+    - to:
+      - operation:
+          hosts:
+            {{- if $ingress.subdomain }}
+            {{- range .Values.hostnames }}
+            - {{ $ingress.subdomain }}.{{ . }}
+            {{- end }}
+            {{- else }}
+            {{- range .Values.hostnames }}
+            - {{ . }}
+            {{- end }}
+            {{- end }}
+          {{- if not $ingress.subdomain }}
+          paths:
+            {{- range $ingress.prefixes }}
+            - {{ . }}
+            - {{ . }}/*
+            {{- end }}
+          {{- end }}
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
@@ -72,10 +66,25 @@ spec:
   - to:
     - operation:
         hosts:
-        - qa-cluster-lb.lan
+          {{- if $ingress.subdomain }}
+          {{- range .Values.hostnames }}
+          - {{ $ingress.subdomain }}.{{ . }}
+          {{- end }}
+          {{- else }}
+          {{- range .Values.hostnames }}
+          - {{ . }}
+          {{- end }}
+          {{- end }}
+        {{- if not $ingress.subdomain }}
         paths:
-        - /prowlarr
-        - /prowlarr/*
+          {{- range $ingress.prefixes }}
+          - {{ . }}
+          - {{ . }}/*
+          {{- end }}
+        {{- end }}
   selector:
     matchLabels:
       app: istio-gateway
+{{- end }}
+{{- end }}
+{{- end }}
