@@ -151,6 +151,9 @@ prowlarr:
   prefixes:
     - /prowlarr
   destinationSvc: prowlarr.videos.svc.cluster.local
+  auth:
+    proxy:
+      enabled: true
 radarr:
   enabled: false
   prefixes:
