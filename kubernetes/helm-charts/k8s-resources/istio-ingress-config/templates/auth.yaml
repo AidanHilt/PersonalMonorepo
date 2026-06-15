@@ -25,7 +25,7 @@ spec:
 {{- if ne $ingressName "hostnames" }}
 {{- $create := not (hasKey $ingress "multiHost" | ternary $ingress.multiHost false) }}
 {{- if and $ingress.enabled $ingress.destinationSvc $create }}
-{{- if $ingress.auth.proxy.enabled }}
+{{- if and $ingress.auth $ingress.auth.proxy $ingress.auth.proxy.enabled }}
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
