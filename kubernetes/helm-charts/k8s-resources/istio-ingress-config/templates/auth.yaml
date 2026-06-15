@@ -25,6 +25,7 @@ spec:
 {{- if ne $ingressName "hostnames" }}
 {{- $create := not (hasKey $ingress "multiHost" | ternary $ingress.multiHost false) }}
 {{- if and $ingress.enabled $ingress.destinationSvc $create }}
+{{- if $ingress.auth.proxy.enabled }}
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
@@ -54,11 +55,12 @@ spec:
             - {{ . }}/*
             {{- end }}
           {{- end }}
+{{- end }}
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: prowlarr-ingress-istio
+  name: {{ $ingressName }}-ingress-istio
   namespace: istio-system
 spec:
   action: ALLOW
