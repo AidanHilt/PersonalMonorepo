@@ -15,5 +15,5 @@ meshConfig:
       - authorization
       pathPrefix: /outpost.goauthentik.io/auth/envoy
       port: 9000
-      service: ak-outpost-main-outpost.authentik.svc.cluster.local
+      service: ak-outpost-proxy-outpost.authentik.svc.cluster.local
     name: authentik
