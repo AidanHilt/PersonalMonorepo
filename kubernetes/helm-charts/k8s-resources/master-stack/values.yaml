@@ -186,7 +186,7 @@ kyverno:
   configuration:
     enabled: false
   syncOptions: ServerSideDiff=true,IncludeMutationWebhook=true
-  syncWave: "-8"
+  syncWave: "-20"
   serverSideApply: true
   defaultValues: |
     admissionController:
