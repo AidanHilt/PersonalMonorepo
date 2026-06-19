@@ -76,6 +76,6 @@ spec:
           prefix: /outpost.goauthentik.io
       route:
         - destination:
-            host: ak-outpost-main-outpost.authentik.svc.cluster.local
+            host: ak-outpost-proxy-outpost.authentik.svc.cluster.local
             port:
               number: 9000
