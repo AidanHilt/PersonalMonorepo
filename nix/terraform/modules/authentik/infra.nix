@@ -1,6 +1,7 @@
 { libFunctions, lib, ... }:
 
 let
+  standalone = false;
   static = {
     variable = {
       authentik_url = {
@@ -20,6 +21,11 @@ let
       };
     };
 
+    terraform.required_providers.authentik = {
+      source = "goauthentik/authentik";
+      version = "2026.2.0";
+    };
+
     provider = {
       authentik = {
         url      = "\${var.authentik_url}";
@@ -33,12 +39,20 @@ let
         default-authorization-flow = {
           slug = "default-provider-authorization-implicit-consent";
         };
+        default-invalidation-flow = {
+          slug = "default-invalidation-flow";
+        };
       };
     };
   };
 
+  prowlarr = libFunctions.mkProxyApplication "prowlarr" "http://prowlarr.videos.svc.cluster.local" "http://qa-cluster-lb.lan";
+
+  vaultProvider = import ../../lib/vault-provider.nix {inherit lib; inherit standalone;};
 in
 
 lib.mkMerge [
-
+  vaultProvider
+  static
+  prowlarr
 ]
