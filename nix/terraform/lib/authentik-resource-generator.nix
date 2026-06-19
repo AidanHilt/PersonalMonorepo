@@ -16,6 +16,15 @@ let
         else capitalize applicationName;
 
 
+      splitProtocol = url:
+        let
+          m = builtins.match "^([a-zA-Z][a-zA-Z0-9+.-]*://)(.*)$" url;
+        in
+        if m == null
+        then { protocol = ""; rest = url; }
+        else { protocol = builtins.elemAt m 0; rest = builtins.elemAt m 1; };
+
+      # Strip everything up to and including the first dot, leaving the "base" domain
       stripSubdomains = host:
         let
           parts = lib.splitString "." host;
@@ -27,7 +36,11 @@ let
       resolvedHostBrowser =
         if authentikHostBrowser != null && authentikHostBrowser != ""
         then authentikHostBrowser
-        else "iam." + (stripSubdomains externalHost);
+        else
+          let
+            split = splitProtocol externalHost;
+          in
+          split.protocol + "iam." + (stripSubdomains split.rest);
     in
     {
       resource = {
@@ -59,6 +72,8 @@ let
               authentik_host_browser = "${resolvedHostBrowser}";
             };
 
+            service_connection = "\${data.authentik_service_connection_kubernetes.default.id}";
+
             type = "proxy";
             protocol_providers = [
               "\${resource.authentik_provider_proxy.${applicationName}.id}"
@@ -70,5 +85,5 @@ let
 in
 
 {
-
+  inherit mkProxyApplication;
 }

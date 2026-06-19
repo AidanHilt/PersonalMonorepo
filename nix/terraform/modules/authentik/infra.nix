@@ -43,10 +43,24 @@ let
           slug = "default-invalidation-flow";
         };
       };
+      authentik_service_connection_kubernetes = {
+        default =  {
+          name = "Local Kubernetes Cluster";
+        };
+      };
     };
+
+    # resource = {
+    #   authentik_service_connection_kubernetes = {
+    #     local = {
+    #       name = "local";
+    #       local = true;
+    #     };
+    #   };
+    # };
   };
 
-  prowlarr = libFunctions.mkProxyApplication "prowlarr" "http://prowlarr.videos.svc.cluster.local" "http://qa-cluster-lb.lan";
+  prowlarr = libFunctions.mkProxyApplication "prowlarr" "http://prowlarr.videos.svc.cluster.local" "http://qa-cluster-lb.lan" {};
 
   vaultProvider = import ../../lib/vault-provider.nix {inherit lib; inherit standalone;};
 in
