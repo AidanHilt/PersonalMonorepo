@@ -47,7 +47,9 @@ spec:
         hosts:
           {{- if $ingress.subdomain }}
           {{- range $.Values.hostnames }}
+          {{- if not (regexMatch "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$" .) }}
           - {{ $ingress.subdomain }}.{{ . }}
+          {{- end }}
           {{- end }}
           {{- else }}
           {{- range $.Values.hostnames }}
