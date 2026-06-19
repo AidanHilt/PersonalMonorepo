@@ -66,6 +66,7 @@ spec:
   selector:
     matchLabels:
       app: istio-gateway
+---
 {{- end }}
 {{- end }}
 {{- end }}
