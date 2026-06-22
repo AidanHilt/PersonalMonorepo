@@ -14,6 +14,7 @@
     usbutils
     linuxKernel.packages.linux_zen.xone
     pavucontrol
+    motrix
     # itch
   ]);
 
