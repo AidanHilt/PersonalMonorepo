@@ -1,12 +1,12 @@
-{ libFunctions, lib, ... }:
+{ libFunctions, lib, inputs, pkgs, ... }:
 
 let
   standalone = false;
   static = {
     variable = {
-      authentik_url = {
+      authentik_access_url = {
         type        = "string";
-        description = "The URL to connect to Authentik";
+        description = "The URL to connect to Authentik, which may be different from the URL users connect with";
       };
 
       authentik_token = {
@@ -19,6 +19,20 @@ let
         description = "Whether or not to force an https connection";
         default     = true;
       };
+      authentik_subdomain = {
+        type        = "string";
+        description = "The subdomain authentik is served from for the user";
+        default     = "iam";
+      };
+      domain = {
+        type = "string";
+        description = "The domain that the user accesses this stack from";
+      };
+      secure = {
+        type        = "bool";
+        description = "Use https:// for user-accessible URL if true, http:// otherwise";
+        default     = true;
+      };
     };
 
     terraform.required_providers.authentik = {
@@ -28,7 +42,7 @@ let
 
     provider = {
       authentik = {
-        url      = "\${var.authentik_url}";
+        url      = "\${var.authentik_access_url}";
         token    = "\${var.authentik_token}";
         insecure = "\${var.authentik_insecure}";
       };
@@ -49,18 +63,24 @@ let
         };
       };
     };
-
-    # resource = {
-    #   authentik_service_connection_kubernetes = {
-    #     local = {
-    #       name = "local";
-    #       local = true;
-    #     };
-    #   };
-    # };
   };
 
-  prowlarr = libFunctions.mkProxyApplication "prowlarr" "http://prowlarr.videos.svc.cluster.local" "http://qa-cluster-lb.lan" {};
+  mergedValues = libFunctions.mergedValues;
+
+  results = builtins.concatMap (value: map (hostname: ...) value.hostnames) (builtins.attrValues mergedValues);
+
+  hasEnabledAuthProxy = entry:
+    (entry.auth or { }).proxy.enabled or false == true;
+
+  results =
+    builtins.filter (x: x != null)
+      (lib.mapAttrsToList
+        (key: entry:
+          if hasEnabledAuthProxy entry
+          then libFunctions.mkProxyApplication key "http://${entry.destinationSvc}" "http://qa-cluster-lb.lan" {}
+          else null
+        )
+        values);
 
   vaultProvider = import ../../lib/vault-provider.nix {inherit lib; inherit standalone;};
 in
@@ -68,5 +88,5 @@ in
 lib.mkMerge [
   vaultProvider
   static
-  prowlarr
+  (lib.mkMerge results)
 ]

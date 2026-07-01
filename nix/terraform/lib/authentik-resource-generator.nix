@@ -1,7 +1,7 @@
 { lib, ... }:
 
 let
-  mkProxyApplication = applicationName: internalHost: externalHost: {authentikHostBrowser ? "", authentikApplicationName ? ""}:
+  mkProxyApplication = applicationName: internalHost: externalHost: {authentikHostBrowser ? "", authentikApplicationName ? "", subdomain ? ""}:
     let
       capitalize = s:
         let
@@ -41,14 +41,28 @@ let
             split = splitProtocol externalHost;
           in
           split.protocol + "iam." + (stripSubdomains split.rest);
+
+      resolvedExternalHost =
+        if subdomain != null && subdomain != ""
+        then
+          let
+            split = splitProtocol externalHost;
+          in
+          split.protocol + subdomain + "." + (stripSubdomains split.rest)
+        else
+          externalHost;
     in
     {
+      locals = {
+        authentik_url = "\${var.secure ? \"https\" : \"http\"}://\${var.authentik_subdomain}.\${var.domain}";
+      };
+
       resource = {
         authentik_provider_proxy = {
-          "${applicationName}" = {
+          "${applicationName}_${externalHost}" = {
             name = "${applicationName}";
             internal_host = "${internalHost}";
-            external_host = "${externalHost}";
+            external_host = "${resolvedExternalHost}";
             authorization_flow = "\${data.authentik_flow.default-authorization-flow.id}";
             invalidation_flow = "\${data.authentik_flow.default-invalidation-flow.id}";
             mode = "forward_single";
@@ -56,7 +70,7 @@ let
         };
 
         authentik_application = {
-          "${applicationName}" = {
+          "${applicationName}_${externalHost}" = {
             name = resolvedApplicationName;
             slug = "${applicationName}";
             protocol_provider = "\${resource.authentik_provider_proxy.${applicationName}.id}";
@@ -69,7 +83,7 @@ let
 
             config = builtins.toJSON {
               authentik_host         = "http://authentik-server.authentik.svc.cluster.local";
-              authentik_host_browser = "${resolvedHostBrowser}";
+              authentik_host_browser = "\${local.authentik_url}";
             };
 
             service_connection = "\${data.authentik_service_connection_kubernetes.default.id}";

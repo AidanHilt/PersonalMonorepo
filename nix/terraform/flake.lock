@@ -37,9 +37,27 @@
         "type": "github"
       }
     },
+    "personalMonorepo": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1781900499,
+        "narHash": "sha256-0wo1OxD1an2FZp9ckljnbJ4wuivS1+p86zcWXHmerHQ=",
+        "owner": "aidanhilt",
+        "repo": "PersonalMonorepo",
+        "rev": "64b4a86c10774a4509eb958d063835ac3871fa58",
+        "type": "github"
+      },
+      "original": {
+        "owner": "aidanhilt",
+        "ref": "project-rockhard/user-mgmt",
+        "repo": "PersonalMonorepo",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
+        "personalMonorepo": "personalMonorepo",
         "terranix": "terranix"
       }
     },
