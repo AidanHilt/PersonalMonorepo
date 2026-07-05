@@ -27,7 +27,7 @@
         ) (builtins.readDir ./lib)
       );
 
-      loadLib = file: import ./lib/${file} { inherit lib; };
+      loadLib = file: import ./lib/${file} { inherit lib pkgs inputs; };
 
       libFunctions = builtins.foldl' (acc: file:
           acc // (loadLib file)

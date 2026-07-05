@@ -1,4 +1,4 @@
-{lib, inputs, ...}:
+{lib, inputs, pkgs, ...}:
 
 let
   valuesFile = inputs.personalMonorepo + "/kubernetes/helm-charts/k8s-resources/istio-ingress-config/values.yaml";
@@ -11,8 +11,7 @@ let
 
   configDataDir = inputs.personalMonorepo + "/kubernetes/argocd/configuration-data";
 
-  # Get all subdirectories in configuration-data
-  subDirs = builtins.filterAttrs
+  subDirs = lib.filterAttrs
     (_: type: type == "directory")
     (builtins.readDir configDataDir);
 

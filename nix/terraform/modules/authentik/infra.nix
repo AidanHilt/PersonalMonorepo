@@ -24,10 +24,6 @@ let
         description = "The subdomain authentik is served from for the user";
         default     = "iam";
       };
-      domain = {
-        type = "string";
-        description = "The domain that the user accesses this stack from";
-      };
       secure = {
         type        = "bool";
         description = "Use https:// for user-accessible URL if true, http:// otherwise";
@@ -67,20 +63,30 @@ let
 
   mergedValues = libFunctions.mergedValues;
 
-  results = builtins.concatMap (value: map (hostname: ...) value.hostnames) (builtins.attrValues mergedValues);
+  isIp = hostname: builtins.match "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+" hostname != null;
+
+  results = builtins.concatLists
+    (lib.mapAttrsToList
+      (environment: value:
+        builtins.concatMap
+          (hostname:
+            builtins.filter (x: x != null)
+              (lib.mapAttrsToList
+                (key: entry:
+                  if hasEnabledAuthProxy entry
+                  then libFunctions.mkProxyApplication key "http://${entry.destinationSvc}" hostname environment {}
+                  else null
+                )
+                value
+              )
+          )
+          (builtins.filter (h: !(isIp h)) value.hostnames)
+      )
+      mergedValues
+    );
 
   hasEnabledAuthProxy = entry:
     (entry.auth or { }).proxy.enabled or false == true;
-
-  results =
-    builtins.filter (x: x != null)
-      (lib.mapAttrsToList
-        (key: entry:
-          if hasEnabledAuthProxy entry
-          then libFunctions.mkProxyApplication key "http://${entry.destinationSvc}" "http://qa-cluster-lb.lan" {}
-          else null
-        )
-        values);
 
   vaultProvider = import ../../lib/vault-provider.nix {inherit lib; inherit standalone;};
 in

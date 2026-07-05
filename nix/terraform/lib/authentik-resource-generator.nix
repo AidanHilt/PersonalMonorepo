@@ -1,7 +1,7 @@
 { lib, ... }:
 
 let
-  mkProxyApplication = applicationName: internalHost: externalHost: {authentikHostBrowser ? "", authentikApplicationName ? "", subdomain ? ""}:
+  mkProxyApplication = applicationName: internalHost: externalHost: environment: {authentikHostBrowser ? "", authentikApplicationName ? "", subdomain ? ""}:
     let
       capitalize = s:
         let
@@ -39,28 +39,45 @@ let
         else
           let
             split = splitProtocol externalHost;
+            # We'll have to identify if a hostname is secure or not, and change this based on that
+            protocol = "http://";
           in
-          split.protocol + "iam." + (stripSubdomains split.rest);
+          protocol + "iam." + (stripSubdomains split.rest);
 
       resolvedExternalHost =
+        let
+          # We'll have to identify if a hostname is secure or not, and change this based on that
+          protocol = "http://";
+        in
         if subdomain != null && subdomain != ""
         then
           let
             split = splitProtocol externalHost;
           in
-          split.protocol + subdomain + "." + (stripSubdomains split.rest)
+          protocol + subdomain + "." + (stripSubdomains split.rest)
         else
-          externalHost;
+          protocol + externalHost;
+
+      safeExternalHost = builtins.replaceStrings ["."] ["-"] externalHost;
     in
     {
       locals = {
-        authentik_url = "\${var.secure ? \"https\" : \"http\"}://\${var.authentik_subdomain}.\${var.domain}";
+        "authentik_url_${safeExternalHost}" = "\${var.secure ? \"https\" : \"http\"}://\${var.authentik_subdomain}.${externalHost}";
+      };
+
+      variable = {
+        "${environment}" = {
+          type = "bool";
+          description = "Create resources based on configuration of environment ${environment}";
+          default = false;
+        };
       };
 
       resource = {
         authentik_provider_proxy = {
-          "${applicationName}_${externalHost}" = {
-            name = "${applicationName}";
+          "${applicationName}_${safeExternalHost}" = {
+            count = "\${var.${environment} ? 1 : 0}";
+            name = "${applicationName}_${safeExternalHost}";
             internal_host = "${internalHost}";
             external_host = "${resolvedExternalHost}";
             authorization_flow = "\${data.authentik_flow.default-authorization-flow.id}";
@@ -70,27 +87,29 @@ let
         };
 
         authentik_application = {
-          "${applicationName}_${externalHost}" = {
+          "${applicationName}_${safeExternalHost}" = {
+            count = "\${var.${environment} ? 1 : 0}";
             name = resolvedApplicationName;
             slug = "${applicationName}";
-            protocol_provider = "\${resource.authentik_provider_proxy.${applicationName}.id}";
+            protocol_provider = "\${resource.authentik_provider_proxy.${applicationName}_${safeExternalHost}[0].id}";
           };
         };
 
         authentik_outpost = {
-          mainProxyOutpost = {
-            name = "proxy-outpost";
+          "proxyOutpost_${safeExternalHost}" = {
+            name = "proxy-outpost-${safeExternalHost}";
+            count = "\${var.${environment} ? 1 : 0}";
 
             config = builtins.toJSON {
               authentik_host         = "http://authentik-server.authentik.svc.cluster.local";
-              authentik_host_browser = "\${local.authentik_url}";
+              authentik_host_browser = "\${local.authentik_url_${safeExternalHost}}";
             };
 
             service_connection = "\${data.authentik_service_connection_kubernetes.default.id}";
 
             type = "proxy";
             protocol_providers = [
-              "\${resource.authentik_provider_proxy.${applicationName}.id}"
+              "\${resource.authentik_provider_proxy.${applicationName}_${safeExternalHost}[0].id}"
             ];
           };
         };
