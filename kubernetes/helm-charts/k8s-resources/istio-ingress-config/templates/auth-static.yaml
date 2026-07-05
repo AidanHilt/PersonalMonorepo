@@ -60,6 +60,8 @@ spec:
         - /outpost.goauthentik.io
         - /outpost.goauthentik.io/*
 ---
+{{- range $hostname := .Values.hostnames }}
+{{- $safeHostname := replace "." "-" $hostname }}
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
@@ -67,7 +69,7 @@ metadata:
   namespace: istio-system
 spec:
   hosts:
-    - qa-cluster-lb.lan
+    - {{ $hostname }}
   gateways:
     - internal-gateway
   http:
@@ -76,6 +78,7 @@ spec:
           prefix: /outpost.goauthentik.io
       route:
         - destination:
-            host: ak-outpost-proxy-outpost.authentik.svc.cluster.local
+            host: ak-outpost-proxy-outpost-{{ $safeHostname }}.authentik.svc.cluster.local
             port:
               number: 9000
+{{- end }}
