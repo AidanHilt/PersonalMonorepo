@@ -62,6 +62,7 @@ spec:
 ---
 {{- range $hostname := .Values.hostnames }}
 {{- $safeHostname := replace "." "-" $hostname }}
+---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
@@ -81,4 +82,5 @@ spec:
             host: ak-outpost-proxy-outpost-{{ $safeHostname }}.authentik.svc.cluster.local
             port:
               number: 9000
+---
 {{- end }}
