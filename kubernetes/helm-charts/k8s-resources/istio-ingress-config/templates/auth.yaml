@@ -1,0 +1,72 @@
+{{- range $ingressName, $ingress := $.Values }}
+{{- if ne $ingressName "hostnames" }}
+{{- $create := not (hasKey $ingress "multiHost" | ternary $ingress.multiHost false) }}
+{{- if and $ingress.enabled $ingress.destinationSvc $create }}
+{{- if and $ingress.auth $ingress.auth.proxy $ingress.auth.proxy.enabled }}
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ $ingressName }}-ingress-authentik
+  namespace: istio-system
+spec:
+  action: CUSTOM
+  provider:
+    name: authentik
+  rules:
+    - to:
+      - operation:
+          hosts:
+            {{- if $ingress.subdomain }}
+            {{- range $.Values.hostnames }}
+            - {{ $ingress.subdomain }}.{{ . }}
+            {{- end }}
+            {{- else }}
+            {{- range $.Values.hostnames }}
+            - {{ . }}
+            {{- end }}
+            {{- end }}
+          {{- if not $ingress.subdomain }}
+          paths:
+            {{- range $ingress.prefixes }}
+            - {{ . }}
+            - {{ . }}/*
+            {{- end }}
+          {{- end }}
+{{- end }}
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ $ingressName }}-ingress-istio
+  namespace: istio-system
+spec:
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        hosts:
+          {{- if $ingress.subdomain }}
+          {{- range $.Values.hostnames }}
+          {{- if not (regexMatch "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$" .) }}
+          - {{ $ingress.subdomain }}.{{ . }}
+          {{- end }}
+          {{- end }}
+          {{- else }}
+          {{- range $.Values.hostnames }}
+          - {{ . }}
+          {{- end }}
+          {{- end }}
+        {{- if not $ingress.subdomain }}
+        paths:
+          {{- range $ingress.prefixes }}
+          - {{ . }}
+          - {{ . }}/*
+          {{- end }}
+        {{- end }}
+  selector:
+    matchLabels:
+      app: istio-gateway
+---
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,4 @@
+authentik:
+  enabled: false
+  existingSecret:
+    secretName: authentik-config-secret

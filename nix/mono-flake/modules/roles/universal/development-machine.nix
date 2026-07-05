@@ -50,7 +50,6 @@ in
     gettext
     jq
     p7zip
-    pipx
     postgresql
     pre-commit
     rustc

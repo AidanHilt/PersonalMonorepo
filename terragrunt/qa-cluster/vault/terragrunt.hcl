@@ -1,6 +1,4 @@
-terraform {
-
-}
+terraform {}
 
 include "root" {
   path   = find_in_parent_folders("root.hcl")
@@ -8,7 +6,7 @@ include "root" {
 }
 
 inputs = {
-  jellyfin_email = get_env("EMAIL_ADDR")
+  email = get_env("EMAIL_ADDR")
   vpn_auth = get_env("VPN_AUTH")
   vpn_config = get_env("VPN_CONFIG")
   vault_url = get_env("VAULT_ADDR")

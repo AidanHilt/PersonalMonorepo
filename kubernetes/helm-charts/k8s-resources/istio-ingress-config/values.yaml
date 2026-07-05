@@ -1,7 +1,6 @@
 hostnames:
   - localhost
 
-
 argocd:
   # This breaks the rule we have going here, BUT, if you're running this,
   # it's probably with ArgoCD, so we should be able to access it no matter
@@ -15,6 +14,10 @@ audiobookshelf:
   prefixes:
     - /audiobookshelf
   destinationSvc: audiobookshelf.books.svc.cluster.local
+authentik:
+  enabled: false
+  subdomain: iam
+  destinationSvc: authentik-server.authentik.svc.cluster.local
 bar-assistant:
   enabled: false
   subdomain: bar
@@ -34,6 +37,9 @@ bentopdf:
   subdomain: bento
   destinationSvc: bentopdf.misc.svc.cluster.local
   destinationPort: 8080
+  auth:
+    proxy:
+      enabled: true
 calibre-web:
   enabled: false
   prefixes:
@@ -148,6 +154,9 @@ prowlarr:
   prefixes:
     - /prowlarr
   destinationSvc: prowlarr.videos.svc.cluster.local
+  auth:
+    proxy:
+      enabled: true
 radarr:
   enabled: false
   prefixes:

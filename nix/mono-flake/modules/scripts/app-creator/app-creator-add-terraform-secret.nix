@@ -39,7 +39,11 @@ get_input() {
 add_secret_key() {
   local key_name is_pg_password set_value key_value
   key_name="$(get_input "Enter key name" "")"
-  is_pg_password="$(get_input "Is this a postgres password? (y/n)" "n")"
+  if [[ "$key_name" == "postgresPassword" ]]; then
+    is_pg_password="y"
+  else
+    is_pg_password="$(get_input "Is this a postgres password? (y/n)" "n")"
+  fi
   case $is_pg_password in
     [Yy]*)
       is_pg_password=true
@@ -153,7 +157,7 @@ jq \
   '
   .[$name].namespace = $ns
   | .[$name].mount = $mount
-  | .[$name].postgres_secret = $pg
+  | .[$name].postgres_secret = ($pg == "true")
   ' "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
 
 

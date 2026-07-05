@@ -45,7 +45,7 @@ in
         tim-koehler.helm-intellisense
         timonwong.shellcheck
         wholroyd.jinja
-      ] ++ platformSpecificExtensions;
+      ];
     };
   };
 }

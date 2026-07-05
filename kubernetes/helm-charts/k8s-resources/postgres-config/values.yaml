@@ -18,6 +18,7 @@ qa-cluster:
     - rxresu
     - bazarr
     - tandoor
+    - authentik
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -66,6 +67,8 @@ qa-cluster:
       owner: bazarr
     tandoor:
       owner: tandoor
+    authentik:
+      owner: authentik
   storage: 1Gi
 staging-cluster:
   enabled: false
@@ -82,6 +85,7 @@ staging-cluster:
     - rxresu
     - bazarr
     - tandoor
+    - authentik
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -123,6 +127,8 @@ staging-cluster:
       owner: bazarr
     tandoor:
       owner: tandoor
+    authentik:
+      owner: authentik
   storage: 1Gi
 prod-cluster:
   enabled: false
@@ -140,6 +146,7 @@ prod-cluster:
     - rxresu
     - bazarr
     - tandoor
+    - authentik
   databases:
     prowlarr-main:
       dbName: prowlarr_main
@@ -181,4 +188,6 @@ prod-cluster:
       owner: bazarr
     tandoor:
       owner: tandoor
+    authentik:
+      owner: authentik
   storage: 50Gi

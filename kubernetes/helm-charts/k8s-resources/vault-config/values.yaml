@@ -1,3 +1,17 @@
+authentik:
+  enabled: false
+  secretDestinationNamespace: authentik
+  postgresSecret:
+    enabled: true
+  destination:
+    transformation:
+      templates:
+        AUTHENTIK_SECRET_KEY:
+          text: "{{ .Secrets.secretKey }}"
+        AUTHENTIK_POSTGRESQL__PASSWORD:
+          text: "{{ .Secrets.postgresPassword }}"
+        AUTHENTIK_POSTGRESQL__USER:
+          text: "{{ .Secrets.postgresUsername }}"
 bar-assistant:
   enabled: false
   secretDestinationNamespace: inventory-mgmt

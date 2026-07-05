@@ -28,6 +28,26 @@
 
     brews = [
       "docker-credential-helper"
+      "chipmk/tap/docker-mac-net-connect"
     ];
   };
+
+launchd.daemons.docker-mac-net-connect = {
+  serviceConfig = {
+    Label = "com.docker-mac-net-connect";
+    ProgramArguments = [
+      "/bin/bash"
+      "-c"
+      ''
+        while ! /opt/homebrew/bin/colima status &>/dev/null; do
+          sleep 5
+        done
+        exec /opt/homebrew/bin/docker-mac-net-connect
+      ''
+    ];
+    RunAtLoad = true;
+    StandardOutPath = "/tmp/docker-mac-net-connect.log";
+    StandardErrorPath = "/tmp/docker-mac-net-connect.err";
+  };
+};
 }

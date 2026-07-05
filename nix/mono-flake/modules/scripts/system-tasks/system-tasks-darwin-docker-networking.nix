@@ -12,9 +12,9 @@ export colima_host_ip=$(ifconfig bridge100 | grep "inet " | awk '{print $2}')
 echo $colima_host_ip
 export colima_vm_ip=$(colima list | grep docker | awk '{print $8}')
 echo $colima_vm_ip
-export colima_kind_cidr=$(docker network inspect -f '{{.IPAM.Config}}' kind | cut -d'{' -f2 | cut -d' ' -f1)
+export colima_kind_cidr=$(docker network inspect -f '{{.IPAM.Config}}' kind | cut -d'{' -f3 | cut -d' ' -f1)
 echo $colima_kind_cidr
-export colima_kind_cidr_short=$(docker network inspect -f '{{.IPAM.Config}}' kind | cut -d'{' -f2 | cut -d' ' -f1| cut -d '.' -f1-2)
+export colima_kind_cidr_short=$(docker network inspect -f '{{.IPAM.Config}}' kind | cut -d'{' -f3 | cut -d' ' -f1| cut -d '.' -f1-2)
 echo $colima_kind_cidr_short
 export colima_vm_iface=$(colima ssh -- ip -br address show to $colima_vm_ip | cut -d' ' -f1)
 echo $colima_vm_iface

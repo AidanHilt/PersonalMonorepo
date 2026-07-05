@@ -13,10 +13,17 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
+
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
   destinationNamespace: books
+authentik:
+  enabled: false
+  repo: https://charts.goauthentik.io
+  chart: authentik
+  version: 2026.5.0
+  destinationNamespace: authentik
 bar-assistant:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/bar-assistant
@@ -179,7 +186,7 @@ kyverno:
   configuration:
     enabled: false
   syncOptions: ServerSideDiff=true,IncludeMutationWebhook=true
-  syncWave: "-8"
+  syncWave: "-20"
   serverSideApply: true
   defaultValues: |
     admissionController:

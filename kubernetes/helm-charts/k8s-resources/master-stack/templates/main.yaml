@@ -41,7 +41,7 @@ spec:
     {{- $isHelmChart := and (not (hasKey $app "secureValues")) (or (not (hasKey $app "helmChart")) $appDetails.helmChart) }}
     {{- if $isHelmChart }}
       helm:
-        {{- if $appDetails.defaultValues }}
+        {{- if and $appDetails.defaultValues (not $appDetails.configuration.enabled) }}
         values:
           {{ tpl $appDetails.defaultValues $ | toYaml | indent 8 }}
         {{- end }}

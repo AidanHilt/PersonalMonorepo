@@ -4,15 +4,23 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-appocalypse/tandoor-recipes
+gitRevision: project-rockhard/user-mgmt
 
-tandoor:
+authentik:
+  enabled: true
+  configuration:
+    enabled: true
+
+bentopdf:
+  enabled: true
+
+prowlarr:
   enabled: true
   configuration:
     enabled: true
 
 seaweedfs:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
@@ -37,9 +45,16 @@ metallb:
 
 istio:
   enabled: true
+  configuration:
+    enabled: true
   dependentApps:
     kiali:
       enabled: false
+
+kyverno:
+  enabled: true
+  configuration:
+    enabled: true
 
 postgres:
   enabled: true
