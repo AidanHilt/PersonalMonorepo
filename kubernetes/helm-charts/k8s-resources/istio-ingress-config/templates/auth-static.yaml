@@ -65,7 +65,7 @@ spec:
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: authentik-outpost
+  name: authentik-outpost-{{$safeHostname}}
   namespace: istio-system
 spec:
   hosts:
