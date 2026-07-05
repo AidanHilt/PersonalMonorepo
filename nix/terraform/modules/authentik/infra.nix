@@ -74,7 +74,7 @@ let
               (lib.mapAttrsToList
                 (key: entry:
                   if hasEnabledAuthProxy entry
-                  then libFunctions.mkProxyApplication key "http://${entry.destinationSvc}" hostname environment {}
+                  then libFunctions.mkProxyApplication key "http://${entry.destinationSvc}" hostname environment {subdomain = entry.subdomain or "";}
                   else null
                 )
                 value
