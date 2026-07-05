@@ -11,6 +11,9 @@ authentik:
   configuration:
     enabled: true
 
+bentopdf:
+  enabled: true
+
 prowlarr:
   enabled: true
   configuration:

@@ -37,6 +37,9 @@ bentopdf:
   subdomain: bento
   destinationSvc: bentopdf.misc.svc.cluster.local
   destinationPort: 8080
+  auth:
+    proxy:
+      enabled: true
 calibre-web:
   enabled: false
   prefixes:
