@@ -4,6 +4,11 @@ description: A chart to repeatably create kubernetes resources not tied to an ap
 
 type: application
 
-version: 0.0.1
+version: 0.1.0
 
 appVersion: "N/A"
+
+dependencies:
+  - name: k8s-resources-common
+    repository: file://../../lib/k8s-resources-common
+    version: 0.1.0

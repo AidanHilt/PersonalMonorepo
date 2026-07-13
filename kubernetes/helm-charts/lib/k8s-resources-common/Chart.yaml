@@ -1,0 +1,10 @@
+apiVersion: v2
+name: k8s-resources-common
+description: Functions shared between kubernetes resources charts
+
+type: library
+
+version: 0.1.0
+
+
+appVersion: ""

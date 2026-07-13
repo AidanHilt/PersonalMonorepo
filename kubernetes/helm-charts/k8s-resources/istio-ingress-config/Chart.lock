@@ -1,0 +1,6 @@
+dependencies:
+- name: k8s-resources-common
+  repository: file://../../lib/k8s-resources-common
+  version: 0.1.0
+digest: sha256:c07b23caa72c49a73380d89f23bec9936b1a5c1e5b0be3153d5f0510a31307ed
+generated: "2026-07-12T23:26:16.135343-04:00"
