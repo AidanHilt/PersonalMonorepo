@@ -20,13 +20,14 @@ authentik:
   destinationSvc: authentik-server.authentik.svc.cluster.local
 bar-assistant:
   enabled: false
+  groupName: bar-assistant
   subdomain: bar
   destinationSvc: bar-assistant-frontend.inventory-mgmt.svc.cluster.local
-  dependentIngresses:
-    bar-assistant-api:
-      enabled: true
-      subdomain: bar-assistant-api
-      destinationSvc: bar-assistant-backend.inventory-mgmt.svc.cluster.local
+bar-assistant-api:
+  enabled: false
+  groupNmae: bar-assistant
+  subdomain: bar-assistant-api
+  destinationSvc: bar-assistant-backend.inventory-mgmt.svc.cluster.local
 bazarr:
   enabled: false
   prefixes:
@@ -54,13 +55,14 @@ crafty-server:
   enabled: false
 firefly-iii:
   enabled: false
+  groupName: firefly-iii
   subdomain: firefly
   destinationSvc: firefly-iii.finance.svc.cluster.local
-  dependentIngresses:
-    firefly-iii-data-importer:
-      enabled: true
-      subdomain: firefly-importer
-      destinationSvc: firefly-iii-importer.finance.svc.cluster.local
+firefly-iii-data-importer:
+  enabled: false
+  groupName: firefly-iii
+  subdomain: firefly-importer
+  destinationSvc: firefly-iii-importer.finance.svc.cluster.local
 flashpaper:
   enabled: false
   subdomain: ots
@@ -135,14 +137,15 @@ navidrome:
 nextcloud:
   enabled: false
   subdomain: nextcloud
+  groupName: nextcloud
   destinationSvc: nextcloud.nextcloud.svc.cluster.local
   destinationPort: 8080
-  dependentIngresses:
-    collabora:
-      enabled: true
-      subdomain: collabora
-      destinationSvc: nextcloud-collabora.nextcloud.svc.cluster.local
-      destinationPort: 9980
+collabora:
+  enabled: false
+  subdomain: collabora
+  groupName: nextcloud
+  destinationSvc: nextcloud-collabora.nextcloud.svc.cluster.local
+  destinationPort: 9980
 paperless:
   enabled: false
   prefixes:
@@ -195,12 +198,13 @@ transmission:
   destinationSvc: transmission.videos.svc.cluster.local
 your-spotify:
   enabled: false
+  groupName: your-spotify
   subdomain: spotify
   destinationSvc: your-spotify-frontend.your-spotify.svc.cluster.local
   destinationPort: "3000"
-  dependentIngresses:
-    your-spotify-api:
-      enabled: true
-      subdomain: spotify-api
-      destinationSvc: your-spotify-backend.your-spotify.svc.cluster.local
-      destinationPort: "8080"
+your-spotify-api:
+  groupName: your-spotify
+  enabled: false
+  subdomain: spotify-api
+  destinationSvc: your-spotify-backend.your-spotify.svc.cluster.local
+  destinationPort: "8080"

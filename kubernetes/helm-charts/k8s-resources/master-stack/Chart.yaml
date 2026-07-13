@@ -7,3 +7,8 @@ type: application
 version: 0.0.1
 
 appVersion: "N/A"
+
+dependencies:
+  - name: k8s-resources-common
+    repository: file://../../lib/k8s-resources-common
+    version: 0.1.0
