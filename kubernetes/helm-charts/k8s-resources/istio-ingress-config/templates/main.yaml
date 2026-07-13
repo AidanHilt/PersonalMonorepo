@@ -3,7 +3,7 @@
 {{- $create := not (hasKey $ingress "multiHost" | ternary $ingress.multiHost false) }}
 {{- $enabled := or $ingress.enabled (include "common.isItemEnabled" (dict "item" $ingress "Values" $.Values))}}
 {{- $ingressDetails := include "common.mergeGroupOverrides" (dict "item" (dict "item" $ingress "itemName" $ingressName)) | fromYaml }}
-{{- if and $enabled $create }}
+{{- if and $enabled $create $ingress.destinationSvc }}
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
