@@ -4,7 +4,6 @@
 {{- $create := not (hasKey $app "multiHost" | ternary $app.multiHost false) }}
 {{- $enabled := or $app.enabled (include "common.isAppEnabled" (dict "item" $app "Values" $.Values)) }}
 {{- $appDetails := include "common.mergeGroupOverrides" (dict "item" (dict "item" $app "itemName" $appName)) | fromYaml }}
-{{- end -}}
 {{- if and $enabled $create }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
