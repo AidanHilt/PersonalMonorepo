@@ -1,8 +1,7 @@
 authentik:
   enabled: false
   secretDestinationNamespace: authentik
-  postgresSecret:
-    enabled: true
+  postgresSecret: true
   destination:
     transformation:
       templates:
@@ -12,6 +11,21 @@ authentik:
           text: "{{ .Secrets.postgresPassword }}"
         AUTHENTIK_POSTGRESQL__USER:
           text: "{{ .Secrets.postgresUsername }}"
+  data:
+    postgresUsername: authentik
+    postgresPassword:
+      is_postgres_password: true
+    secretKey: {}
+    AUTHENTIK_POSTGRESQL__HOST: postgres-cluster-rw.postgres.svc.cluster.local
+    AUTHENTIK_POSTGRESQL__NAME: authentik
+    AUTHENTIK_BOOTSTRAP_PASSWORD: ""
+    AUTHENTIK_BOOTSTRAP_TOKEN: ""
+    AUTHENTIK_BOOTSTRAP_EMAIL:
+      tfVar:
+        name: email
+        type: string
+  namespace: authentik
+  mount: authentik
 bar-assistant:
   enabled: false
   secretDestinationNamespace: inventory-mgmt
@@ -20,51 +34,125 @@ bar-assistant:
       templates:
         MEILI_MASTER_KEY:
           text: "{{ .Secrets.meilisearchApiKey }}"
+  data:
+    meilisearchApiKey:
+      is_postgres_password: false
+  namespace: inventory-mgmt
+  mount: inventory-mgmt
 bazarr:
   enabled: false
   secretDestinationNamespace: videos
+  data:
+    postgresUser: bazarr
+    postgresPassword:
+      is_postgres_password: true
+    openSubtitlesUsername:
+      tfVar:
+        name: open_subtitles_username
+        type: string
+        default: user
+    openSubtitlesPassword:
+      tfVar:
+        name: open_subtitles_password
+        type: string
+        default: password
+  namespace: videos
+  mount: videos
 firefly-iii:
   enabled: false
   secretDestinationNamespace: finance
-  postgresSecret:
-    enabled: true
+  postgresSecret: true
   serviceAccount:
     name: default
+  namespace: finance
+  mount: finance
+  service_account: default
+  data:
+    postgresPassword:
+      is_postgres_password: true
+    postgresUsername: firefly-iii
 immich:
   enabled: false
   secretDestinationNamespace: immich
-  postgresSecret:
-    enabled: true
+  postgresSecret: true
   serviceAccount:
     name: immich-server
+  service_account: immich-server
+  namespace: immich
+  mount: immich
+  data:
+    postgresPassword:
+      is_postgres_password: true
+    postgresUsername: immich
+    valkeyPassword:
+      is_postgres_password: false
 jellyfin:
   enabled: false
   secretDestinationNamespace: videos
+  data:
+    apiKey: {}
+    password:
+      postgres_password: true
+    username:
+      tfVar:
+        name: jellyfin_username
+        type: string
+        default: admin
+  mount: videos
+  namespace: videos
 jellyseerr:
   enabled: false
   secretDestinationNamespace: videos
+  data:
+    apiKey: {}
+  mount: videos
+  namespace: videos
 lidarr:
   enabled: false
   secretDestinationNamespace: music
-  postgresSecret:
-    enabled: true
+  postgresSecret: true
+  data:
+    apiKey:
+      is_postgres_password: false
+    postgresPassword:
+      is_postgres_password: true
+    postgresUsername: lidarr
+  namespace: music
+  mount: music
 n8n-config:
   enabled: false
   secretDestinationNamespace: n8n
-  postgresSecret:
-    enabled: true
+  postgresSecret: true
 nextcloud:
   enabled: false
   secretDestinationNamespace: nextcloud
-  postgresSecret:
-    enabled: true
+  postgresSecret: true
+  data:
+    postgresUsername: nextcloud
+    postgresPassword:
+      is_postgres_password: true
+    username: admin
+    password:
+      is_postgres_password: false
+    collaboraUsername: admin
+    collaboraPassword:
+      is_postgres_password: false
+  namespace: nextcloud
+  mount: nextcloud
 paperless:
   enabled: false
   secretDestinationNamespace: paperless
   serviceAccount:
     name: paperless-ngx
-  postgresSecret:
-    enabled: true
+  postgresSecret: true
+  namespace: paperless
+  mount: paperless
+  service_account: paperless-ngx
+  data:
+    postgresUsername: paperless
+    postgresPassword:
+      postgres_password: true
+    redis-password: {}
 postgres:
   enabled: false
   secretDestinationNamespace: postgres
@@ -74,46 +162,117 @@ postgres:
       cnpg.io/reload: ""
   serviceAccount:
     name: postgres-cluster
+  data:
+    password:
+      postgres_password: true
+    username: postgres
+  mount: postgres
+  namespace: postgres
+  service_account: postgres-cluster
 prowlarr:
   enabled: false
   secretDestinationNamespace: videos
-  postgresSecret:
-    enabled: true
+  postgresSecret: true
+  data:
+    apiKey: {}
+    postgresPassword:
+      postgres_password: true
+    postgresUsername: prowlarr
+  mount: videos
+  namespace: videos
 radarr:
   enabled: false
   secretDestinationNamespace: videos
-  postgresSecret:
-    enabled: true
+  postgresSecret: true
+  data:
+    apiKey: {}
+    postgresPassword:
+      postgres_password: true
+    postgresUsername: radarr
+  mount: videos
+  namespace: videos
 rmfakecloud:
   enabled: false
   secretDestinationNamespace: remarkable
+  namespace: remarkable
+  mount: remarkable
+  data:
+    JWT_SECRET_KEY:
+      is_postgres_password: true
+    RMAPI_HWR_APPLICATIONKEY:
+      tfVar:
+        name: hwr_applicationkey
+        type: string
+        default: XXXXXXX
+    RMAPI_HWR_HMAC:
+      tfVar:
+        name: hwr_hmac
+        type: string
+        default: XXXXXXX
 romm:
   enabled: false
   secretDestinationNamespace: romm
-  postgresSecret:
-    enabled: true
+  postgresSecret: true
+  data:
+    postgresUsername: romm
+    postgresPassword:
+      is_postgres_password: true
+    rommAuthKey:
+      is_postgres_password: false
+    redisPassword:
+      is_postgres_password: false
+    steamGridDBApiKey:
+      tfVar:
+        name: steamgridDB_api_key
+        type: string
+        default: XXXXXXXX
+    retroAchievementsApiKey:
+      tfVar:
+        name: retroAchievements_api_key
+        type: string
+        default: XXXXXXXX
+  namespace: romm
+  mount: romm
 rxresu:
   enabled: false
   secretDestinationNamespace: misc
-  postgresSecret:
-    enabled: true
+  postgresSecret: true
   seaweedfsSecret:
     enabled: true
+  data:
+    postgresUsername: rxresu
+    postgresPassword:
+      is_postgres_password: true
+    authSecret: {}
+  namespace: misc
+  mount: misc
 seaweedfs:
   enabled: false
   secretDestinationNamespace: seaweedfs
 sonarr:
   enabled: false
   secretDestinationNamespace: videos
-  postgresSecret:
-    enabled: true
+  postgresSecret: true
+  data:
+    apiKey: {}
+    postgresPassword:
+      postgres_password: true
+    postgresUsername: sonarr
+  mount: videos
+  namespace: videos
 tandoor:
   enabled: false
   secretDestinationNamespace: inventory-mgmt
-  postgresSecret:
-    enabled: true
+  postgresSecret: true
   seaweedfsSecret:
     enabled: true
+  data:
+    postgresUsername: tandoor
+    postgresPassword:
+      is_postgres_password: true
+    secretKey: ""
+  namespace: inventory-mgmt
+  mount: inventory-mgmt
 transmission:
   enabled: false
   secretDestinationNamespace: videos
@@ -138,3 +297,72 @@ your-spotify:
   mount: misc
   serviceAccount:
     name: default
+  namespace: your-spotify
+  service_account: default
+  data:
+    spotifyPublic:
+      tfVar:
+        name: spotify_public
+        type: string
+        default: XXXX
+    spotifyPrivate:
+      tfVar:
+        name: spotify_private
+        type: string
+        default: XXXXXXXX
+    mongodbPassword: {}
+video_stack_configuration:
+  serviceAccounts:
+    - argocd-repo-server
+  auth:
+    path: ""
+    role_name: argocd
+  data:
+    jellyfinEmail:
+      tfVar:
+        name: email
+        type: string
+    jellyfinPassword:
+      key_name: jellyfin-password
+    jellyfinUsername:
+      tfVar:
+        name: jellyfin_username
+        type: string
+        default: admin
+    jellyseerrApiKey:
+      key_name: jellyseerr-apiKey
+    prowlarrApiKey:
+      key_name: prowlarr-apiKey
+    radarrApiKey:
+      key_name: radarr-apiKey
+    sonarrApiKey:
+      key_name: sonarr-apiKey
+    lidarrApiKey:
+      key_name: lidarr-apiKey
+    openSubtitlesUsername:
+      tfVar:
+        name: open_subtitles_username
+        type: string
+        default: user
+    openSubtitlesPassword:
+      tfVar:
+        name: open_subtitles_password
+        type: string
+        default: password
+  mount: argocd
+  namespace: argocd
+  path: video_stack_configuration
+vpn:
+  data:
+    VPN_AUTH:
+      tfVar:
+        name: vpn_auth
+        type: string
+    vpnConfig:
+      tfVar:
+        name: vpn_config
+        type: string
+  mount: videos
+  namespace: videos
+  serviceAccounts:
+    - transmission

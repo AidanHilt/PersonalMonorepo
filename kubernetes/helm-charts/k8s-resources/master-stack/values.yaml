@@ -58,8 +58,6 @@ crafty-server:
   chart: mychart
   destinationNamespace: crafty
   version: 9.2.2
-  configuration:
-    enabled: false
 firefly-iii:
   enabled: false
   repo: https://firefly-iii.github.io/kubernetes/
@@ -70,8 +68,6 @@ flaresolverr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/flaresolverr
   destinationNamespace: videos
-  configuration:
-    enabled: false
 flashpaper:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/flashpaper/
@@ -82,22 +78,16 @@ hashi-vault:
   chart: vault
   version: 0.32.0
   destinationNamespace: vault
-  configuration:
-    enabled: false
   dependentApps:
     vault-secrets-operator:
       repo: https://helm.releases.hashicorp.com
       chart: vault-secrets-operator
       version: 0.10.0
-      configuration:
-        enabled: false
     vault-config:
       repo: https://github.com/AidanHilt/PersonalMonorepo
       gitPath: kubernetes/helm-charts/k8s-resources/vault-config
       useDefaultGitRevision: true
       followMasterConfig: true
-      configuration:
-        enabled: false
 # Note that this one isn't managed in main, but in homepage-config.yaml. This is because we need
 # to make a deployment and ingress for each hostname, since we can't just build links using the
 # hostname as a variable
@@ -125,22 +115,14 @@ istio:
   chart: istiod
   version: 1.28.3
   destinationNamespace: istio-system
-  configuration:
-    enabled: false
   dependentApps:
     istio-base:
       chart: base
-      configuration:
-        enabled: false
     istio-gateway:
       chart: gateway
-      configuration:
-        enabled: false
     kiali:
       repo: https://kiali.org/helm-charts
       chart: kiali-operator
-      configuration:
-        enabled: false
       version: 1.81.0
     ingress-config:
       repo: https://github.com/AidanHilt/PersonalMonorepo
@@ -153,8 +135,6 @@ it-tools:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/it-tools
   destinationNamespace: misc
-  configuration:
-    enabled: false
 jellyfin:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/jellyfin
@@ -169,8 +149,6 @@ job-templates:
   enabled: false
   gitPath: kubernetes/helm-charts/k8s-resources/job-templates
   destinationNamespace: job-templates
-  configuration:
-    enabled: false
 knative:
   enabled: false
   repo: https://knative.github.io/operator
@@ -183,8 +161,6 @@ kyverno:
   chart: kyverno
   version: 3.5.1
   destinationNamespace: kyverno
-  configuration:
-    enabled: false
   syncOptions: ServerSideDiff=true,IncludeMutationWebhook=true
   syncWave: "-20"
   serverSideApply: true
@@ -204,8 +180,6 @@ kyverno:
       repo: https://github.com/AidanHilt/PersonalMonorepo
       gitPath: kubernetes/helm-charts/k8s-resources/kyverno-policies
       useDefaultGitRevision: true
-      configuration:
-        enabled: false
 lidarr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/lidarr
@@ -220,8 +194,6 @@ longhorn:
   defaultValues: |
     preUpgradeChecker:
       jobEnabled: false
-  configuration:
-    enabled: false
 metallb:
   enabled: false
   repo: https://metallb.github.io/metallb
@@ -229,15 +201,11 @@ metallb:
   destinationNamespace: metallb-system
   version: 0.14.3
   syncWave: "-10"
-  configuration:
-    enabled: false
   dependentApps:
     metallb-config:
       repo: https://github.com/AidanHilt/PersonalMonorepo
       gitPath: kubernetes/helm-charts/k8s-resources/metallb-config
       useDefaultGitRevision: true
-      configuration:
-        enabled: false
 n8n:
   enabled: false
   repo: oci://8gears.container-registry.com/library/n8n
@@ -264,16 +232,12 @@ paperless:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/paperless-ngx
   destinationNamespace: paperless
-  configuration:
-    enabled: false
 postgres:
   enabled: false
   repo: https://cloudnative-pg.github.io/charts
   chart: cloudnative-pg
   destinationNamespace: postgres
   version: 0.26.0
-  configuration:
-    enabled: false
   serverSideApply: true
   dependentApps:
     postgres-cluster:
@@ -297,8 +261,6 @@ rmfakecloud:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/rmfakecloud
   destinationNamespace: remarkable
-  configuration:
-    enabled: false
 romm:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/romm
