@@ -6,9 +6,9 @@ let
   vaultProvider = import ../../lib/vault-provider.nix {inherit lib; inherit standalone;};
   kubernetesProvider = import ../../lib/kubernetes-provider.nix {inherit lib;};
 
-  secretsSet = lib.importJSON ./secrets.json;
+  secretSet = libFunctions.loadMergedValues "vault-config";
 
-  vaultSecrets = libFunctions.mkVaultSecrets secretsSet;
+  vaultSecrets = libFunctions.mkVaultSecrets secretSet;
 in
 
 lib.mkMerge [
