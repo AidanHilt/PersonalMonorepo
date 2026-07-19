@@ -1,7 +1,7 @@
 { lib, ... }:
 
 let
-  mkVaultSecret = key: value: {standalone ? true, appendSuffix ? true}:
+  mkVaultSecret = key: value: environment: {standalone ? true, appendSuffix ? true}:
     let
       path     = value.auth.path or key;
       suffix   = if !appendSuffix then "" else (if path != "" then "/*" else "*");
@@ -44,7 +44,8 @@ let
 
       isPostgresPassword = value.postgresPassword or true;
     in {
-      resource.vault_policy.${key} = {
+      resource.vault_policy."${key}-${environment}" = {
+        count  = "\${var.${environment} ? 1 : 0}";
         name   = value.auth.role_name or key;
         policy = ''
           path "${mountName}/data/${fullPath}" {
@@ -56,7 +57,8 @@ let
         '';
       };
 
-      resource.vault_kubernetes_auth_backend_role.${key} = {
+      resource.vault_kubernetes_auth_backend_role."${key}-${environment}" = {
+        count                            = "\${var.${environment} ? 1 : 0}";
         backend                          = "kubernetes";
         role_name                        = value.auth.role_name or key;
         bound_service_account_names      = serviceAccounts
@@ -64,22 +66,24 @@ let
         bound_service_account_namespaces = namespaceNames
                                            ++ lib.optional (value.postgres_secret or false) "postgres";
         token_ttl                        = 3600;
-        token_policies                   = [ "\${vault_policy.${key}.name}" ];
+        token_policies                   = [ "\${vault_policy.${key}-${environment}[0].name}" ];
         depends_on                       = lib.mkIf (standalone) [
           "vault_auth_backend.kubernetes"
           "vault_kubernetes_auth_backend_config.backend_config"
         ];
       };
 
-      resource.vault_kv_secret_v2.${key} = {
-        mount     = "\${vault_mount.${mountName}.path}";
+      resource.vault_kv_secret_v2."${key}-${environment}" = {
+        count     = "\${var.${environment} ? 1 : 0}";
+        mount     = "\${vault_mount.${mountName}-${environment}[0].path}";
         name      = value.path or "${key}/config";
         data_json = "\${jsonencode(${
           builtins.toJSON (lib.mapAttrs resolveValue value.data or {})
         })}";
       };
 
-      resource.vault_mount.${mountName} = {
+      resource.vault_mount."${mountName}-${environment}" = {
+        count       = "\${var.${environment} ? 1 : 0}";
         path        = mountName;
         type        = "kv-v2";
         description = "KV v2 secrets mount for ${mountName}";
@@ -92,11 +96,13 @@ let
       resource.random_password = lib.mapAttrs' (dataKey: config:
         let
           passwordKey = config.key_name or "${key}-${dataKey}";
+          postgresPassword = (dataKey == "postgresPassword") || (config.isPostgresPassword or false);
         in
         lib.nameValuePair passwordKey {
+          count            = "\${var.${environment} ? 1 : 0}";
           length           = config.length or 32;
-          special          = !isPostgresPassword;
-          override_special = if isPostgresPassword then null else config.override_special or null;
+          special          = !postgresPassword;
+          override_special = if postgresPassword then null else config.override_special or null;
         }
       ) generatedKeys;
 
@@ -109,19 +115,38 @@ let
             type = config.tfVar.type or null;
           };
         }
-) generatedVariables);
+      ) generatedVariables) //
+      {
+        "${environment}" = {
+          type = "bool";
+          description = "Create resources based on configuration of environment ${environment}";
+          default = false;
+        };
+      };
     };
 
-    mkVaultSecrets = secretDefintions:
-      let
-        results = builtins.attrValues (builtins.mapAttrs (key: value: mkVaultSecret key value {}) secretDefintions);
-        merged = builtins.foldl' (
-          acc: x: builtins.foldl' (
-            acc2: k: lib.recursiveUpdate acc2 { ${k} = x.${k}; }
-          ) acc (builtins.attrNames x)
-        ) {} results;
-      in
-        merged;
+  mkVaultSecrets = secretDefintions:
+    let
+      filteredEnvironments = lib.filterAttrs (key: _: key != "original") secretDefintions;
+      results = lib.flatten (
+        builtins.attrValues (builtins.mapAttrs (envName: envSecrets:
+          let
+            enabledSecrets = lib.filterAttrs
+              (secretKey: secretValue: (secretValue.enabled or false) == true)
+              envSecrets;
+          in
+          builtins.attrValues (builtins.mapAttrs
+            (secretKey: secretValue: mkVaultSecret secretKey secretValue envName {})
+            enabledSecrets)
+        ) filteredEnvironments)
+      );
+      merged = builtins.foldl' (
+        acc: x: builtins.foldl' (
+          acc2: k: lib.recursiveUpdate acc2 { ${k} = x.${k}; }
+        ) acc (builtins.attrNames x)
+      ) {} results;
+    in
+    merged;
 in {
   inherit mkVaultSecret mkVaultSecrets;
 }

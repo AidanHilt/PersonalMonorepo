@@ -61,7 +61,7 @@ let
     };
   };
 
-  mergedValues = libFunctions.mergedValues;
+  mergedValues = libFunctions.loadMergedValues "istio-ingress-config";
 
   isIp = hostname: builtins.match "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+" hostname != null;
 
