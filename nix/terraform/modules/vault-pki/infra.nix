@@ -5,14 +5,13 @@ let
 
   vaultProvider = import ../../lib/vault-provider.nix {inherit lib; inherit standalone;};
 
-  secretSet = libFunctions.loadMergedValues "istio-ingress-config";
+  hostSet = libFunctions.loadMergedValues "istio-ingress-config";
 
-  vaultSecrets = libFunctions.mkVaultSecrets secretSet;
+  vaultPki = libFunctions.mkPkiStackForEnv hostSet;
 in
 
 lib.mkMerge [
   vaultProvider
-  kubernetesProvider
-  vaultSecrets
+  vaultPki
 ]
 

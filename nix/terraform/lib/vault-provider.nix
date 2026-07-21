@@ -42,6 +42,10 @@
     path = "kubernetes";
   };
 
+  data.vault_auth_backend.kubernetes = lib.mkIf (!standalone) {
+    path = "kubernetes";
+  };
+
   resource.vault_kubernetes_auth_backend_config.backend_config = lib.mkIf standalone {
     backend            = "\${vault_auth_backend.kubernetes.path}";
     kubernetes_host    = "https://kubernetes.default.svc.cluster.local";
