@@ -123,7 +123,7 @@ let
           # TODO this may bite us in the ass if we can't assume that this is run with the main vault setup, in which case
           # we need to switch between data.vault_auth and resource.vault_auth based on whether or not we're standalone
           backend                           = "\${data.vault_auth_backend.kubernetes.path}";
-          role_name                         = "cert-manager";
+          role_name                         = "cert-manager-${safeHostname}";
           bound_service_account_names       = [ certManagerSA ];
           bound_service_account_namespaces  = [ certManagerNamespace ];
           token_policies                    = [ "\${vault_policy.cert_manager_${safeHostname}[0].name}" ];
