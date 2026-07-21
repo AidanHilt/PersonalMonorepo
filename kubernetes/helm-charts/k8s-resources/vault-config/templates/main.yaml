@@ -82,7 +82,7 @@ apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultAuth
 metadata:
   name: {{ $resourceName }}-auth
-  namespace: {{ $vaultConfig.postgresSecret.namespace | default "postgres" }}
+  namespace: {{ $vaultConfig.postgresSecretNamespace | default "postgres" }}
 spec:
   method: kubernetes
   mount: kubernetes
