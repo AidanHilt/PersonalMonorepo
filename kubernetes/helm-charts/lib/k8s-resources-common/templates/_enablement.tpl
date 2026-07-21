@@ -64,7 +64,7 @@ Usage:
   {{- else if and $group (index $group "default") -}}
     {{- $groupOverrides = index $group "default" -}}
   {{- end -}}
-  {{- $itemDetails = mergeOverwrite $groupOverrides $item -}}
+  {{- $itemDetails = mergeOverwrite $item $groupOverrides -}}
 {{- end -}}
 {{- $itemDetails | toYaml -}}
 {{- end -}}
