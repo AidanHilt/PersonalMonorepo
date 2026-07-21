@@ -19,6 +19,9 @@ prowlarr:
   configuration:
     enabled: true
 
+cert-manager:
+  enabled: true
+
 seaweedfs:
   enabled: false
   configuration:
