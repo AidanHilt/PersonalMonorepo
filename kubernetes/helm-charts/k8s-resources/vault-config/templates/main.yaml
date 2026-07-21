@@ -52,7 +52,7 @@ apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultStaticSecret
 metadata:
   name: {{ $resourceName }}-postgres-user
-  namespace: {{ $vaultConfig.postgresSecret.namespace | default "postgres" }}
+  namespace: {{ $vaultConfig.postgresSecretNamespace | default "postgres" }}
 spec:
   type: kv-v2
   mount: {{ $vaultConfig.secretDestinationNamespace }}
