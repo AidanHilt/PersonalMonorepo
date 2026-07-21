@@ -71,8 +71,8 @@ spec:
         password:
           text: {{ printf "{{ get .Secrets \"%s\" }}" ($vaultConfig.postgresSecretPasswordKey | default "postgresPassword") | quote }}
       excludes:
-        - {{  $vaultConfig.postgresSecret.usernameKey | default "postgresUsername"}}
-        - {{  $vaultConfig.postgresSecret.passwordKey | default "postgresPassword" }}
+        - {{  $vaultConfig.postgresSecretUsernameKey | default "postgresUsername"}}
+        - {{  $vaultConfig.postgresSecretPasswordKey | default "postgresPassword" }}
 
   refreshAfter: 30s
 
