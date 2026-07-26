@@ -13,6 +13,8 @@ service:
         targetPort: 9696
 
 probes:
+  readiness:
+    enabled: false
   liveness:
     enabled: true
     custom: true
