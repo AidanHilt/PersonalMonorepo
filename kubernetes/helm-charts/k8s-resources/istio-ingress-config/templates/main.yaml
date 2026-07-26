@@ -38,7 +38,7 @@
 {{- $certSecretName := printf "%s-tls" $resourceName }}
 {{- $issuerName := printf "%s-issuer" $resourceName }}
 {{- $gatewayName := printf "%s-gateway" $resourceName }}
-{{- $vaultRole := printf "cert-manager-%s" $safeHostname }}
+{{- $vaultRole := printf "cert-manager-%s" $safeRoot }}
 
 {{- $matchedRoot := "" }}
 
