@@ -55,7 +55,7 @@ spec:
         role: {{ $vaultRole }}
         mountPath: /v1/auth/kubernetes
         serviceAccountRef:
-          name: cert-manager
+          name: cert-issuer
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -203,7 +203,7 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: cert-manager
+  name: cert-issuer
   namespace: {{ $namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -214,7 +214,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["serviceaccounts/token"]
-    resourceNames: ["cert-manager"]
+    resourceNames: ["cert-issuer"]
     verbs: ["create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
