@@ -33,11 +33,6 @@
 
 {{- /* ---- Real hostnames: Issuer + Certificate + Gateway + VirtualService ---- */ -}}
 {{- range $fqdn := $actualHostnames }}
-{{- $safeHostname := $fqdn | replace "." "-" }}
-{{- $resourceName := printf "%s-%s" $ingressName $safeHostname }}
-{{- $certSecretName := printf "%s-tls" $resourceName }}
-{{- $issuerName := printf "%s-issuer" $resourceName }}
-{{- $gatewayName := printf "%s-gateway" $resourceName }}
 
 {{- $matchedRoot := "" }}
 
@@ -48,6 +43,11 @@
 {{- end }}
 
 {{- $safeRoot := $matchedRoot | replace "." "-" }}
+{{- $safeHostname := $fqdn | replace "." "-" }}
+{{- $resourceName := printf "%s-%s" $ingressName $safeRoot }}
+{{- $certSecretName := printf "%s-tls" $resourceName }}
+{{- $issuerName := printf "%s-issuer" $resourceName }}
+{{- $gatewayName := printf "%s-gateway" $resourceName }}
 {{- $vaultRole := printf "cert-manager-%s" $safeRoot }}
 
 ---
