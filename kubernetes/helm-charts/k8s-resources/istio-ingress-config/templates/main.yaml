@@ -59,7 +59,7 @@ metadata:
 spec:
   vault:
     server: http://hashi-vault.vault.svc.cluster.local:8200
-    path: pki_int_{{ $safeRoot }}/sign/{{ $vaultRole }}
+    path: pki_int_{{ $safeRoot }}/sign/cert-manager
     auth:
       kubernetes:
         role: {{ $vaultRole }}
