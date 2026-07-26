@@ -42,7 +42,7 @@
 
 {{- $matchedRoot := "" }}
 
-{{- range $root := .Values.hostnames }}
+{{- range $root := $.Values.hostnames }}
   {{- if or (eq $fqdn $root) (hasSuffix (printf ".%s" $root) $fqdn) }}
     {{- $matchedRoot = $root }}
   {{- end }}
