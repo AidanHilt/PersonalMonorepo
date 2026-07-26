@@ -26,13 +26,13 @@
 {{- $primarySecretName := "" }}
 {{- if gt (len $actualHostnames) 0 }}
 {{- $firstFqdn := first $actualHostnames }}
-{{- $firstSafeHostname := $firstFqdn | replace "." "_" }}
+{{- $firstSafeHostname := $firstFqdn | replace "." "-" }}
 {{- $primarySecretName = printf "%s-%s-tls" $ingressName $firstSafeHostname }}
 {{- end }}
 
 {{- /* ---- Real hostnames: Issuer + Certificate + Gateway + VirtualService ---- */ -}}
 {{- range $fqdn := $actualHostnames }}
-{{- $safeHostname := $fqdn | replace "." "_" }}
+{{- $safeHostname := $fqdn | replace "." "-" }}
 {{- $resourceName := printf "%s-%s" $ingressName $safeHostname }}
 {{- $certSecretName := printf "%s-tls" $resourceName }}
 {{- $issuerName := printf "%s-issuer" $resourceName }}
