@@ -6,8 +6,8 @@ let
     , environment
     , vaultAddr           ? "http://vault.${hostname}"
     , kubernetesHost       ? "https://kubernetes.default.svc:443"
-    , certManagerNamespace ? "cert-manager"
-    , certManagerSA        ? "cert-manager"
+    , certManagerNamespace ? "istio-system"
+    , certManagerSA        ? "cert-issuer"
     , rootTtl              ? "87600h"   # 10y
     , intTtl               ? "43800h"   # 5y
     , roleMaxTtl           ? "720h"     # 30d
@@ -15,7 +15,7 @@ let
     }:
 
     let
-      sanitize = s: builtins.replaceStrings [ "." "-" ] [ "_" "_" ] s;
+      sanitize = s: builtins.replaceStrings [ "." ] [ "-" ] s;
       safeHostname = sanitize hostname;
     in
 

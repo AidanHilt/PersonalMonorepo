@@ -10,7 +10,7 @@
     };
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/project-rockhard/user-mgmt";
+      url = "github:aidanhilt/PersonalMonorepo/project-rockhard/pki";
       flake = false;
     };
   };
