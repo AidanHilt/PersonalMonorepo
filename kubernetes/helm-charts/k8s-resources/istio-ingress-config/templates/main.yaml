@@ -95,7 +95,7 @@ metadata:
   namespace: {{ $namespace }}
 spec:
   selector:
-    istio: ingressgateway
+    istio: gateway
   servers:
     - port:
         number: 80
@@ -158,7 +158,7 @@ metadata:
   namespace: {{ $namespace }}
 spec:
   selector:
-    istio: ingressgateway
+    istio: gateway
   servers:
     - port:
         number: 80
