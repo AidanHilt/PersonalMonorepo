@@ -135,7 +135,7 @@ spec:
 
 {{- /* ---- IP addresses: Gateway (reusing primary cert) + VirtualService, no Issuer/Certificate ---- */ -}}
 {{- range $ip := $ipAddresses }}
-{{- $safeIp := $ip | replace "." "_" }}
+{{- $safeIp := $ip | replace "." "-" }}
 {{- $resourceName := printf "%s-%s" $ingressName $safeIp }}
 {{- $gatewayName := printf "%s-gateway" $resourceName }}
 
