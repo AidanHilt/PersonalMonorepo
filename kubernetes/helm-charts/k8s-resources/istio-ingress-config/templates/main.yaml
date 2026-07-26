@@ -149,7 +149,7 @@ spec:
 {{- $safeIp := $ip | replace "." "-" }}
 {{- $resourceName := printf "%s-%s" $ingressName $safeIp }}
 {{- $gatewayName := printf "%s-gateway" $resourceName }}
-
+{{- if not $ingressDetails.subdomain }}
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
@@ -176,7 +176,6 @@ spec:
       hosts:
         - {{ $ip }}
 ---
-{{- if not $ingressDetails.subdomain }}
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
