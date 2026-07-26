@@ -1,3 +1,4 @@
+{{- if .Values.authentik.enabled }}
 # Technically not necessary, as one policy makes the whole cluster deny-by-default
 # But we put this here so it's obvious
 apiVersion: security.istio.io/v1beta1
@@ -83,4 +84,5 @@ spec:
             port:
               number: 9000
 ---
+{{- end }}
 {{- end }}

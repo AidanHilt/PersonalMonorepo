@@ -1,51 +1,201 @@
 {{- range $ingressName, $ingress := .Values }}
 {{- if ne $ingressName "hostnames" }}
 {{- $create := not (hasKey $ingress "multiHost" | ternary $ingress.multiHost false) }}
-{{- $enabled := or $ingress.enabled (include "common.isItemEnabled" (dict "item" $ingress "Values" $.Values))}}
+{{- $enabled := or $ingress.enabled (include "common.isItemEnabled" (dict "item" $ingress "Values" $.Values)) }}
 {{- $ingressDetails := include "common.mergeGroupOverrides" (dict "item" $ingress "itemName" $ingressName) | fromYaml }}
 {{- if and $enabled $create $ingress.destinationSvc }}
+{{- $namespace := $ingressDetails.namespace | default "istio-system" }}
+{{- $prefixes := $ingressDetails.prefixes | default (list "/") }}
+
+{{- /* Split hostnames into actual DNS hostnames vs IP addresses */ -}}
+{{- $ipAddresses := list }}
+{{- $actualHostnames := list }}
+{{- range $host := $.Values.hostnames }}
+{{- if regexMatch "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$" $host }}
+{{- $ipAddresses = append $ipAddresses $host }}
+{{- else }}
+{{- $fqdn := $host }}
+{{- if $ingressDetails.subdomain }}
+{{- $fqdn = printf "%s.%s" $ingressDetails.subdomain $host }}
+{{- end }}
+{{- $actualHostnames = append $actualHostnames $fqdn }}
+{{- end }}
+{{- end }}
+
+{{- /* The first real hostname's cert secret is reused by IP gateways for TLS */ -}}
+{{- $primarySecretName := "" }}
+{{- if gt (len $actualHostnames) 0 }}
+{{- $firstFqdn := first $actualHostnames }}
+{{- $firstSafeHostname := $firstFqdn | replace "." "_" }}
+{{- $primarySecretName = printf "%s-%s-tls" $ingressName $firstSafeHostname }}
+{{- end }}
+
+{{- /* ---- Real hostnames: Issuer + Certificate + Gateway + VirtualService ---- */ -}}
+{{- range $fqdn := $actualHostnames }}
+{{- $safeHostname := $fqdn | replace "." "_" }}
+{{- $resourceName := printf "%s-%s" $ingressName $safeHostname }}
+{{- $certSecretName := printf "%s-tls" $resourceName }}
+{{- $issuerName := printf "%s-issuer" $resourceName }}
+{{- $gatewayName := printf "%s-gateway" $resourceName }}
+{{- $vaultRole := printf "cert-manager-%s" $safeHostname }}
+
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ $issuerName }}
+  namespace: {{ $namespace }}
+spec:
+  vault:
+    server: http://hashi-vault.vault.svc.cluster.local:8200
+    path: pki_int_{{ $safeHostname }}/sign/{{ $vaultRole }}
+    auth:
+      kubernetes:
+        role: {{ $vaultRole }}
+        mountPath: /v1/auth/kubernetes
+        serviceAccountRef:
+          name: cert-manager
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $resourceName }}-cert
+  namespace: {{ $namespace }}
+spec:
+  secretName: {{ $certSecretName }}
+  commonName: {{ $fqdn }}
+  dnsNames:
+    - {{ $fqdn }}
+  {{- if gt (len $ipAddresses) 0 }}
+  ipAddresses:
+    {{- range $ipAddresses }}
+    - {{ . }}
+    {{- end }}
+  {{- end }}
+  issuerRef:
+    name: {{ $issuerName }}
+    kind: Issuer
+    group: cert-manager.io
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: {{ $gatewayName }}
+  namespace: {{ $namespace }}
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http-{{ $safeHostname }}
+        protocol: HTTP
+      hosts:
+        - {{ $fqdn }}
+    - port:
+        number: 443
+        name: https-{{ $safeHostname }}
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: {{ $certSecretName }}
+      hosts:
+        - {{ $fqdn }}
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: {{ $ingressName }}
-  namespace: {{ $ingressDetails.namespace | default "istio-system" }}
+  name: {{ $resourceName }}
+  namespace: {{ $namespace }}
 spec:
-{{- with $.Values.hostnames }}
   hosts:
-  {{- range . }}
-    {{- if $ingressDetails.subdomain }}
-      {{- if not (regexMatch "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$" .) }}
-    - {{ $ingressDetails.subdomain }}.{{ . }}
-      {{- end }}
-    {{- else }}
-    - {{ . }}
-    {{- end }}
-  {{- end }}
-{{- end }}
+    - {{ $fqdn }}
   gateways:
-    - internal-gateway
+    - {{ $gatewayName }}
   http:
     - match:
-      {{- $prefixes := $ingressDetails.prefixes | default (list "/") }}
       {{- range $prefixes }}
         - uri:
             prefix: {{ . }}
       {{- end }}
       {{- with $ingressDetails.rewrite }}
       rewrite:
-        {{- toYaml . | nindent 7}}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       route:
         - destination:
             host: {{ $ingressDetails.destinationSvc }}
             port:
-              number: {{ $ingressDetails.destinationPort | default 80}}
-        {{- with $ingressDetails.headers }}
+              number: {{ $ingressDetails.destinationPort | default 80 }}
+          {{- with $ingressDetails.headers }}
           headers:
             {{- toYaml . | nindent 12 }}
-        {{- end }}
+          {{- end }}
+{{- end }}
+
+{{- /* ---- IP addresses: Gateway (reusing primary cert) + VirtualService, no Issuer/Certificate ---- */ -}}
+{{- range $ip := $ipAddresses }}
+{{- $safeIp := $ip | replace "." "_" }}
+{{- $resourceName := printf "%s-%s" $ingressName $safeIp }}
+{{- $gatewayName := printf "%s-gateway" $resourceName }}
+
 ---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: {{ $gatewayName }}
+  namespace: {{ $namespace }}
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http-{{ $safeIp }}
+        protocol: HTTP
+      hosts:
+        - {{ $ip }}
+    - port:
+        number: 443
+        name: https-{{ $safeIp }}
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: {{ $primarySecretName }}
+      hosts:
+        - {{ $ip }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ $resourceName }}
+  namespace: {{ $namespace }}
+spec:
+  hosts:
+    - {{ $ip }}
+  gateways:
+    - {{ $gatewayName }}
+  http:
+    - match:
+      {{- range $prefixes }}
+        - uri:
+            prefix: {{ . }}
+      {{- end }}
+      {{- with $ingressDetails.rewrite }}
+      rewrite:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      route:
+        - destination:
+            host: {{ $ingressDetails.destinationSvc }}
+            port:
+              number: {{ $ingressDetails.destinationPort | default 80 }}
+          {{- with $ingressDetails.headers }}
+          headers:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}
+
 {{- end }}
 {{- end }}
 {{- end }}
