@@ -28,7 +28,7 @@ seaweedfs:
     enabled: true
 
 homepage:
-  enabled: true
+  enabled: false
 
 hashi-vault:
   enabled: true
