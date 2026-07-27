@@ -29,7 +29,7 @@ list_clusters() {
 }
 
 select_cluster() {
-  print_info "Please choose a cluster whose hostnames you want to acquire"
+  print_status "Please choose a cluster whose hostnames you want to acquire"
   local clusters=("$@")
   local chosen
 
