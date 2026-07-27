@@ -19,7 +19,7 @@ DEFAULT_OUT_DIR="''${HOME}/.local/share/vault-ca"
 
 require_env() {
   if [[ -z "''${VAULT_ADDR:-}" || -z "''${VAULT_TOKEN:-}" ]]; then
-    print_error "VAULT_ADDR and VAULT_TOKEN must both be set in the environment."
+    print_error "VAULT_ADDR and VAULT_TOKEN must both be set in the environment. Use context-activate-context to enable the proper env, if needed."
     exit 1
   fi
 }
@@ -29,6 +29,7 @@ list_clusters() {
 }
 
 select_cluster() {
+  print_info "Please choose a cluster whose hostnames you want to acquire"
   local clusters=("$@")
   local chosen
 
@@ -158,6 +159,7 @@ parse_args() {
 main() {
   require_env
   parse_args "$@"
+
 
   if [[ -z "''${cluster}" ]]; then
     local CLUSTERS
