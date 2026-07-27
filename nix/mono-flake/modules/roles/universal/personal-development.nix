@@ -22,5 +22,6 @@
     syncthing
     vault
     weechat
+    nss
   ];
 }
