@@ -182,6 +182,7 @@ main() {
 
   local hostname
   for hostname in "''${HOSTNAMES[@]}"; do
+    echo "$hostname"
     trust_hostname "''${hostname}" "''${out_dir}"
   done
 
