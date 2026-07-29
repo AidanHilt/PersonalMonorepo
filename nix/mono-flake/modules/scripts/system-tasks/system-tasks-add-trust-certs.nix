@@ -180,6 +180,8 @@ main() {
   local HOSTNAMES
   mapfile -t HOSTNAMES < <(fetch_hostnames "''${cluster}")
 
+  echo "$HOSTNAMES"
+
   local hostname
   for hostname in "''${HOSTNAMES[@]}"; do
     trust_hostname "''${hostname}" "''${out_dir}"
