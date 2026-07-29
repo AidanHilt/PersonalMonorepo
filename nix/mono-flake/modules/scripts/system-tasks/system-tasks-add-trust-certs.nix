@@ -34,7 +34,7 @@ select_cluster() {
   local chosen
 
   index=1
-  echo "''${clusters[@]}"
+  echo "$clusters"
   for cluster_name in "''${clusters[@]}"; do
     echo "''${index}) ''${cluster_name}"
     index=$((index + 1))
