@@ -39,14 +39,17 @@ select_cluster() {
     index=$((index + 1))
   done
 
-  read -rp "Select a cluster: " chosen
+  chosen=""
+  while [[ -z "''${chosen}" ]]; do
+    read -rp "Select a cluster: " chosen
 
-  if [[ "''${chosen}" =~ ^[0-9]+$ ]] && (( chosen >= 1 && chosen <= ''${#clusters[@]} )); then
-    echo "''${clusters[$((chosen - 1))]}"
-  else
-    print_warning "Invalid selection, try again."
-    select_cluster "''${clusters[@]}"
-  fi
+    if [[ ! "''${chosen}" =~ ^[0-9]+$ ]] || (( chosen < 1 || chosen > ''${#clusters[@]} )); then
+      print_warning "Invalid selection, try again."
+      chosen=""
+    fi
+  done
+
+  echo "''${clusters[$((chosen - 1))]}"
 }
 
 
