@@ -29,18 +29,26 @@ list_clusters() {
 }
 
 select_cluster() {
-  echo "Please choose a cluster whose hostnames you want to acquire"
   local clusters=("$@")
+  local index
   local chosen
 
-  select chosen in "''${clusters[@]}"; do
-    if [[ -n "''${chosen}" ]]; then
-      echo "''${chosen}"
-      break
-    fi
-    print_warning "Invalid selection, try again."
+  index=1
+  for cluster_name in "''${clusters[@]}"; do
+    print_debug "''${index}) ''${cluster_name}"
+    index=$((index + 1))
   done
+
+  read -rp "Select a cluster: " chosen
+
+  if [[ "''${chosen}" =~ ^[0-9]+$ ]] && (( chosen >= 1 && chosen <= ''${#clusters[@]} )); then
+    echo "''${clusters[$((chosen - 1))]}"
+  else
+    print_warning "Invalid selection, try again."
+    select_cluster "''${clusters[@]}"
+  fi
 }
+
 
 fetch_hostnames() {
   local cluster="$1"
@@ -122,10 +130,8 @@ trust_hostname() {
   case "$(uname -s)" in
     Darwin)
       install_macos_keychain "''${CERT_FILE}"
-      install_nss "''${CERT_FILE}" "''${CERT_NAME}"
       ;;
     Linux)
-      install_nss "''${CERT_FILE}" "''${CERT_NAME}"
       print_nixos_instructions "''${CERT_FILE}"
       ;;
     *)
