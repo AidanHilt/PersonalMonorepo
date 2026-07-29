@@ -14,7 +14,7 @@ GITHUB_OWNER="AidanHilt"
 GITHUB_REPO="PersonalMonorepo"
 CONFIG_ROOT_PATH="kubernetes/argocd/configuration-data"
 GITHUB_API_URL="https://api.github.com/repos/''${GITHUB_OWNER}/''${GITHUB_REPO}/contents/''${CONFIG_ROOT_PATH}"
-RAW_BASE_URL="https://raw.githubusercontent.com/''${GITHUB_OWNER}/''${GITHUB_REPO}/main/''${CONFIG_ROOT_PATH}"
+RAW_BASE_URL="https://raw.githubusercontent.com/''${GITHUB_OWNER}/''${GITHUB_REPO}/master/''${CONFIG_ROOT_PATH}"
 DEFAULT_OUT_DIR="''${HOME}/.local/share/vault-ca"
 
 require_env() {
@@ -182,7 +182,6 @@ main() {
 
   local hostname
   for hostname in "''${HOSTNAMES[@]}"; do
-    echo "$hostname"
     trust_hostname "''${hostname}" "''${out_dir}"
   done
 
