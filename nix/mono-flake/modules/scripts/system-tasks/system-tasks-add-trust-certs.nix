@@ -56,7 +56,6 @@ select_cluster() {
 
 fetch_hostnames() {
   local cluster="$1"
-  echo "$cluster"
   local STACK_URL="''${RAW_BASE_URL}/''${cluster}/master-stack.yaml"
   echo "$STACK_URL"
 
@@ -176,6 +175,7 @@ main() {
   if [[ -z "''${cluster}" ]]; then
     local CLUSTERS
     mapfile -t CLUSTERS < <(list_clusters)
+    echo "''${CLUSTERS[@]}"
     cluster="$(select_cluster "''${CLUSTERS[@]}")"
   fi
 
