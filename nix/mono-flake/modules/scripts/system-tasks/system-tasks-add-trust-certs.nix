@@ -180,7 +180,7 @@ main() {
   local HOSTNAMES
   mapfile -t HOSTNAMES < <(fetch_hostnames "''${cluster}")
 
-  echo "$HOSTNAMES"
+  echo "$HOSTNAMES[@]"
 
   local hostname
   for hostname in "''${HOSTNAMES[@]}"; do
