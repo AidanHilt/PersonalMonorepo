@@ -7,7 +7,7 @@ hostnames:
 gitRevision: project-rockhard/pki
 
 authentik:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
@@ -49,7 +49,7 @@ metallb:
 istio:
   enabled: true
   configuration:
-    enabled: true
+    enabled: false
   dependentApps:
     kiali:
       enabled: false
