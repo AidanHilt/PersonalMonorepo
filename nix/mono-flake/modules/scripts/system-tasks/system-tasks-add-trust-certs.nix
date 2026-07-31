@@ -34,7 +34,6 @@ select_cluster() {
   local chosen
 
   index=1
-  echo "$clusters"
   for cluster_name in "''${clusters[@]}"; do
     echo "''${index}) ''${cluster_name}" >&2
     index=$((index + 1))
@@ -175,8 +174,6 @@ main() {
     local CLUSTERS
     mapfile -t CLUSTERS < <(list_clusters)
     cluster="$(select_cluster "''${CLUSTERS[@]}")"
-    echo "==========Run Border=========="
-    echo "$cluster"
   fi
 
   local HOSTNAMES
