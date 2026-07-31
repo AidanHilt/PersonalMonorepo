@@ -1,4 +1,5 @@
 {{- $processedNamespaces := dict }}
+{{- $processedCerts := dict }}
 {{- range $ingressName, $ingress := .Values }}
 {{- if ne $ingressName "hostnames" }}
 {{- $create := not (hasKey $ingress "multiHost" | ternary $ingress.multiHost false) }}
@@ -23,12 +24,17 @@
 {{- end }}
 {{- end }}
 
-{{- /* The first real hostname's cert secret is reused by IP gateways for TLS */ -}}
+{{- /* The first real hostname's cert secret is reused by IP gateways for TLS.
+       If no subdomain is set, that secret is the shared root cert. */ -}}
 {{- $primarySecretName := "" }}
 {{- if gt (len $actualHostnames) 0 }}
 {{- $firstFqdn := first $actualHostnames }}
 {{- $firstSafeHostname := $firstFqdn | replace "." "-" }}
+{{- if $ingressDetails.subdomain }}
 {{- $primarySecretName = printf "%s-%s-tls" $ingressName $firstSafeHostname }}
+{{- else }}
+{{- $primarySecretName = printf "shared-%s-tls" $firstSafeHostname }}
+{{- end }}
 {{- end }}
 
 {{- /* ---- Real hostnames: Issuer + Certificate + Gateway + VirtualService ---- */ -}}
@@ -45,11 +51,31 @@
 {{- $safeRoot := $matchedRoot | replace "." "-" }}
 {{- $safeHostname := $fqdn | replace "." "-" }}
 {{- $resourceName := printf "%s-%s" $ingressName $safeRoot }}
-{{- $certSecretName := printf "%s-tls" $resourceName }}
-{{- $issuerName := printf "%s-issuer" $resourceName }}
 {{- $gatewayName := printf "%s-gateway" $resourceName }}
 {{- $vaultRole := printf "cert-manager-%s" $safeRoot }}
 
+{{- /* No subdomain means $fqdn IS the root hostname - share one cert across
+       every ingress that requests the bare root in this namespace, instead
+       of minting a new Issuer/Certificate per ingress. */ -}}
+{{- $useCommonCert := not $ingressDetails.subdomain }}
+{{- $certSecretName := "" }}
+{{- $issuerName := "" }}
+{{- $certResourceName := "" }}
+{{- if $useCommonCert }}
+{{- $certSecretName = printf "shared-%s-tls" $safeRoot }}
+{{- $issuerName = printf "shared-%s-issuer" $safeRoot }}
+{{- $certResourceName = printf "shared-%s" $safeRoot }}
+{{- else }}
+{{- $certSecretName = printf "%s-tls" $resourceName }}
+{{- $issuerName = printf "%s-issuer" $resourceName }}
+{{- $certResourceName = $resourceName }}
+{{- end }}
+
+{{- $certKey := printf "%s/%s" $namespace $certSecretName }}
+{{- $needsCert := or (not $useCommonCert) (not (hasKey $processedCerts $certKey)) }}
+
+{{- if $needsCert }}
+{{- $_ := set $processedCerts $certKey true }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
@@ -70,7 +96,7 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ $resourceName }}-cert
+  name: {{ $certResourceName }}-cert
   namespace: {{ $namespace }}
 spec:
   secretName: {{ $certSecretName }}
@@ -87,6 +113,7 @@ spec:
     name: {{ $issuerName }}
     kind: Issuer
     group: cert-manager.io
+{{- end }}
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
@@ -172,77 +199,3 @@ spec:
         protocol: HTTPS
       tls:
         mode: SIMPLE
-        credentialName: {{ $primarySecretName }}
-      hosts:
-        - {{ $ip }}
----
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: {{ $resourceName }}
-  namespace: {{ $namespace }}
-spec:
-  hosts:
-    - {{ $ip }}
-  gateways:
-    - {{ $gatewayName }}
-  http:
-    - match:
-      {{- range $prefixes }}
-        - uri:
-            prefix: {{ . }}
-      {{- end }}
-      {{- with $ingressDetails.rewrite }}
-      rewrite:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      route:
-        - destination:
-            host: {{ $ingressDetails.destinationSvc }}
-            port:
-              number: {{ $ingressDetails.destinationPort | default 80 }}
-          {{- with $ingressDetails.headers }}
-          headers:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-{{- end }}
-{{- end }}
-
-{{- if not (hasKey $processedNamespaces $namespace) }}
-{{- $_ := set $processedNamespaces $namespace true }}
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: cert-issuer
-  namespace: {{ $namespace }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: cert-manager-token-request
-  namespace: {{ $namespace }}
-rules:
-  - apiGroups: [""]
-    resources: ["serviceaccounts/token"]
-    resourceNames: ["cert-issuer"]
-    verbs: ["create"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: cert-manager-token-request
-  namespace: {{ $namespace }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: cert-manager-token-request
-subjects:
-  - kind: ServiceAccount
-    name: cert-manager
-    namespace: cert-manager
-{{- end }}
-
-{{- end }}
-{{- end }}
-{{- end }}
