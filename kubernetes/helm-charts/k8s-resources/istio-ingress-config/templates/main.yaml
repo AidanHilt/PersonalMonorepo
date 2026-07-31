@@ -1,5 +1,6 @@
 {{- $processedNamespaces := dict }}
 {{- $processedCerts := dict }}
+{{- $processedGateways := dict }}
 {{- range $ingressName, $ingress := .Values }}
 {{- if ne $ingressName "hostnames" }}
 {{- $create := not (hasKey $ingress "multiHost" | ternary $ingress.multiHost false) }}
@@ -51,24 +52,26 @@
 {{- $safeRoot := $matchedRoot | replace "." "-" }}
 {{- $safeHostname := $fqdn | replace "." "-" }}
 {{- $resourceName := printf "%s-%s" $ingressName $safeRoot }}
-{{- $gatewayName := printf "%s-gateway" $resourceName }}
 {{- $vaultRole := printf "cert-manager-%s" $safeRoot }}
 
-{{- /* No subdomain means $fqdn IS the root hostname - share one cert across
-       every ingress that requests the bare root in this namespace, instead
-       of minting a new Issuer/Certificate per ingress. */ -}}
+{{- /* No subdomain means $fqdn IS the root hostname - share one cert (and one
+       gateway) across every ingress that requests the bare root in this
+       namespace, instead of minting a new Issuer/Certificate/Gateway per ingress. */ -}}
 {{- $useCommonCert := not $ingressDetails.subdomain }}
 {{- $certSecretName := "" }}
 {{- $issuerName := "" }}
 {{- $certResourceName := "" }}
+{{- $gatewayName := "" }}
 {{- if $useCommonCert }}
 {{- $certSecretName = printf "shared-%s-tls" $safeRoot }}
 {{- $issuerName = printf "shared-%s-issuer" $safeRoot }}
 {{- $certResourceName = printf "shared-%s" $safeRoot }}
+{{- $gatewayName = printf "shared-%s-gateway" $safeRoot }}
 {{- else }}
 {{- $certSecretName = printf "%s-tls" $resourceName }}
 {{- $issuerName = printf "%s-issuer" $resourceName }}
 {{- $certResourceName = $resourceName }}
+{{- $gatewayName = printf "%s-gateway" $resourceName }}
 {{- end }}
 
 {{- $certKey := printf "%s/%s" $namespace $certSecretName }}
@@ -114,6 +117,12 @@ spec:
     kind: Issuer
     group: cert-manager.io
 {{- end }}
+
+{{- $gatewayKey := printf "%s/%s" $namespace $gatewayName }}
+{{- $needsGateway := or (not $useCommonCert) (not (hasKey $processedGateways $gatewayKey)) }}
+
+{{- if $needsGateway }}
+{{- $_ := set $processedGateways $gatewayKey true }}
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
@@ -139,6 +148,7 @@ spec:
         credentialName: {{ $certSecretName }}
       hosts:
         - {{ $fqdn }}
+{{- end }}
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -171,12 +181,15 @@ spec:
           {{- end }}
 {{- end }}
 
-{{- /* ---- IP addresses: Gateway (reusing primary cert) + VirtualService, no Issuer/Certificate ---- */ -}}
+{{- /* ---- IP addresses: Gateway (reusing primary cert, shared across ingresses) + VirtualService, no Issuer/Certificate ---- */ -}}
 {{- range $ip := $ipAddresses }}
 {{- $safeIp := $ip | replace "." "-" }}
 {{- $resourceName := printf "%s-%s" $ingressName $safeIp }}
-{{- $gatewayName := printf "%s-gateway" $resourceName }}
 {{- if not $ingressDetails.subdomain }}
+{{- $gatewayName := printf "shared-%s-gateway" $safeIp }}
+{{- $gatewayKey := printf "%s/%s" $namespace $gatewayName }}
+{{- if not (hasKey $processedGateways $gatewayKey) }}
+{{- $_ := set $processedGateways $gatewayKey true }}
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
@@ -202,6 +215,7 @@ spec:
         credentialName: {{ $primarySecretName }}
       hosts:
         - {{ $ip }}
+{{- end }}
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
