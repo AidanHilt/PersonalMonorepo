@@ -44,8 +44,6 @@ let
       generatedVariables = lib.filterAttrs (dataKey: config:
         (config ? tfVar)
       ) (value.data or {});
-
-      isPostgresPassword = value.postgresPassword or true;
     in {
       resource.vault_policy."${key}-${environment}" = {
         count  = "\${var.${environment} ? 1 : 0}";
@@ -99,7 +97,7 @@ let
       resource.random_password = lib.mapAttrs' (dataKey: config:
         let
           passwordKey = if config.key_name or false then "${config.key_name}-${environment}" else "${key}-${dataKey}-${environment}";
-          postgresPassword = (dataKey == "postgresPassword") || (config.isPostgresPassword or false);
+          postgresPassword = (dataKey == "postgresPassword") || (config.postgresPassword or false);
         in
         lib.nameValuePair passwordKey {
           count            = "\${var.${environment} ? 1 : 0}";
