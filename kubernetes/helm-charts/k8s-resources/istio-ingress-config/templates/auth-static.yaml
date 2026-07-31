@@ -63,6 +63,7 @@ spec:
 ---
 {{- range $hostname := .Values.hostnames }}
 {{- $safeHostname := replace "." "-" $hostname }}
+{{- $gatewayName = printf "shared-%s-gateway" $safeHostname }}
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
@@ -73,7 +74,7 @@ spec:
   hosts:
     - {{ $hostname }}
   gateways:
-    - internal-gateway
+    - {{ $gatewayName }}
   http:
     - match:
       - uri:
