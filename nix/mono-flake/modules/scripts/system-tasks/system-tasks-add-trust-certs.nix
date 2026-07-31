@@ -83,34 +83,37 @@ fetch_cert() {
   echo "''${CERT_FILE}"
 }
 
-install_nss() {
-  local CERT_FILE="$1"
-  local CERT_NAME="$2"
-  local profile_dirs=()
-
-  mapfile -t profile_dirs < <(find "''${HOME}/.mozilla/firefox" "''${HOME}/Library/Application Support/Firefox/Profiles" -maxdepth 1 -type d -name '*.default*' 2>/dev/null)
-
-  if [[ -d "''${HOME}/.pki/nssdb" ]]; then
-    profile_dirs+=("''${HOME}/.pki/nssdb")
-  fi
-
-  if [[ ''${#profile_dirs[@]} -eq 0 ]]; then
-    print_warning "No Firefox/Chrome NSS profiles found for ''${CERT_NAME}."
-    return
-  fi
-
-  local profile_dir
-  for profile_dir in "''${profile_dirs[@]}"; do
-    print_debug "Trusting ''${CERT_NAME} in NSS DB: ''${profile_dir}"
-    certutil -A -n "''${CERT_NAME}" -t "CT,C,C" -i "''${CERT_FILE}" -d "sql:''${profile_dir}"
-  done
-}
-
 install_macos_keychain() {
   local CERT_FILE="$1"
+  local KEYCHAIN="''${HOME}/Library/Keychains/login.keychain-db"
+
+  local CERT_CN
+  CERT_CN=$(openssl x509 -noout -subject -in "''${CERT_FILE}" | sed -n 's/.*CN\s*=\s*\([^,/]*\).*/\1/p')
+
+  if [[ -z "''${CERT_CN}" ]]; then
+    print_debug "Could not determine CN for ''${CERT_FILE}, skipping duplicate check"
+  else
+    local NEW_FINGERPRINT
+    NEW_FINGERPRINT=$(openssl x509 -noout -fingerprint -sha1 -in "''${CERT_FILE}" | sed 's/^.*=//; s/://g')
+
+    # find-certificate only returns the first match, so loop until none are left
+    while security find-certificate -c "''${CERT_CN}" -Z "''${KEYCHAIN}" >/dev/null 2>&1; do
+      local EXISTING_FINGERPRINT
+      EXISTING_FINGERPRINT=$(security find-certificate -c "''${CERT_CN}" -Z "''${KEYCHAIN}" | \
+        sed -n 's/^SHA-1 hash: //p')
+
+      if [[ "''${EXISTING_FINGERPRINT}" == "''${NEW_FINGERPRINT}" ]]; then
+        print_debug "Identical cert for ''${CERT_CN} already trusted in keychain, skipping"
+        return 0
+      fi
+
+      print_debug "Removing stale cert for ''${CERT_CN} (''${EXISTING_FINGERPRINT}) from keychain"
+      security delete-certificate -Z "''${EXISTING_FINGERPRINT}" "''${KEYCHAIN}"
+    done
+  fi
 
   print_debug "Adding ''${CERT_FILE} to macOS login keychain"
-  security add-trusted-cert -d -r trustAsRoot -k "''${HOME}/Library/Keychains/login.keychain-db" "''${CERT_FILE}"
+  security add-trusted-cert -d -r trustAsRoot -k "''${KEYCHAIN}" "''${CERT_FILE}"
 }
 
 print_nixos_instructions() {
