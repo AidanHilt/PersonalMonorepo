@@ -174,7 +174,6 @@ main() {
   if [[ -z "''${cluster}" ]]; then
     local CLUSTERS
     mapfile -t CLUSTERS < <(list_clusters)
-    echo "''${CLUSTERS[@]}"
     cluster="$(select_cluster "''${CLUSTERS[@]}")"
     echo "$cluster"
   fi
