@@ -14,7 +14,7 @@ authentik:
   data:
     postgresUsername: authentik
     postgresPassword:
-      is_postgres_password: true
+      postgresPassword: true
     secretKey: {}
     AUTHENTIK_POSTGRESQL__HOST: postgres-cluster-rw.postgres.svc.cluster.local
     AUTHENTIK_POSTGRESQL__NAME: authentik
@@ -36,7 +36,7 @@ bar-assistant:
           text: "{{ .Secrets.meilisearchApiKey }}"
   data:
     meilisearchApiKey:
-      is_postgres_password: false
+      postgresPassword: false
   namespace: inventory-mgmt
   mount: inventory-mgmt
 bazarr:
@@ -45,7 +45,7 @@ bazarr:
   data:
     postgresUser: bazarr
     postgresPassword:
-      is_postgres_password: true
+      postgresPassword: true
     openSubtitlesUsername:
       tfVar:
         name: open_subtitles_username
@@ -69,7 +69,7 @@ firefly-iii:
   service_account: default
   data:
     postgresPassword:
-      is_postgres_password: true
+      postgresPassword: true
     postgresUsername: firefly-iii
 immich:
   enabled: false
@@ -82,17 +82,17 @@ immich:
   mount: immich
   data:
     postgresPassword:
-      is_postgres_password: true
+      postgresPassword: true
     postgresUsername: immich
     valkeyPassword:
-      is_postgres_password: false
+      postgresPassword: false
 jellyfin:
   enabled: false
   secretDestinationNamespace: videos
   data:
     apiKey: {}
     password:
-      postgres_password: true
+      postgresPassword: true
     username:
       tfVar:
         name: jellyfin_username
@@ -113,9 +113,9 @@ lidarr:
   postgresSecret: true
   data:
     apiKey:
-      is_postgres_password: false
+      postgresPassword: false
     postgresPassword:
-      is_postgres_password: true
+      postgresPassword: true
     postgresUsername: lidarr
   namespace: music
   mount: music
@@ -130,13 +130,13 @@ nextcloud:
   data:
     postgresUsername: nextcloud
     postgresPassword:
-      is_postgres_password: true
+      postgresPassword: true
     username: admin
     password:
-      is_postgres_password: false
+      postgresPassword: false
     collaboraUsername: admin
     collaboraPassword:
-      is_postgres_password: false
+      postgresPassword: false
   namespace: nextcloud
   mount: nextcloud
 paperless:
@@ -151,7 +151,7 @@ paperless:
   data:
     postgresUsername: paperless
     postgresPassword:
-      postgres_password: true
+      postgresPassword: true
     redis-password: {}
 postgres:
   enabled: false
@@ -164,7 +164,7 @@ postgres:
     name: postgres-cluster
   data:
     password:
-      postgres_password: true
+      postgresPassword: true
     username: postgres
   mount: postgres
   namespace: postgres
@@ -174,9 +174,10 @@ prowlarr:
   secretDestinationNamespace: videos
   postgresSecret: true
   data:
-    apiKey: {}
+    apiKey:
+      postgresPassword: true
     postgresPassword:
-      postgres_password: true
+      postgresPassword: true
     postgresUsername: prowlarr
   mount: videos
   namespace: videos
@@ -185,9 +186,10 @@ radarr:
   secretDestinationNamespace: videos
   postgresSecret: true
   data:
-    apiKey: {}
+    apiKey:
+      postgresPassword: true
     postgresPassword:
-      postgres_password: true
+      postgresPassword: true
     postgresUsername: radarr
   mount: videos
   namespace: videos
@@ -198,7 +200,7 @@ rmfakecloud:
   mount: remarkable
   data:
     JWT_SECRET_KEY:
-      is_postgres_password: true
+      postgresPassword: true
     RMAPI_HWR_APPLICATIONKEY:
       tfVar:
         name: hwr_applicationkey
@@ -216,11 +218,11 @@ romm:
   data:
     postgresUsername: romm
     postgresPassword:
-      is_postgres_password: true
+      postgresPassword: true
     rommAuthKey:
-      is_postgres_password: false
+      postgresPassword: false
     redisPassword:
-      is_postgres_password: false
+      postgresPassword: false
     steamGridDBApiKey:
       tfVar:
         name: steamgridDB_api_key
@@ -242,7 +244,7 @@ rxresu:
   data:
     postgresUsername: rxresu
     postgresPassword:
-      is_postgres_password: true
+      postgresPassword: true
     authSecret: {}
   namespace: misc
   mount: misc
@@ -254,9 +256,10 @@ sonarr:
   secretDestinationNamespace: videos
   postgresSecret: true
   data:
-    apiKey: {}
+    apiKey:
+      postgresPassword: true
     postgresPassword:
-      postgres_password: true
+      postgresPassword: true
     postgresUsername: sonarr
   mount: videos
   namespace: videos
@@ -269,7 +272,7 @@ tandoor:
   data:
     postgresUsername: tandoor
     postgresPassword:
-      is_postgres_password: true
+      postgresPassword: true
     secretKey: ""
   namespace: inventory-mgmt
   mount: inventory-mgmt

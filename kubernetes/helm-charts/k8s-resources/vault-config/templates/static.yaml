@@ -13,6 +13,9 @@ subjects:
   - kind: ServiceAccount
     name: argocd-repo-server
     namespace: argocd
+  - kind: ServiceAccount
+    name: cert-manager
+    namespace: cert-manager
 ---
 kind: Secret
 apiVersion: v1

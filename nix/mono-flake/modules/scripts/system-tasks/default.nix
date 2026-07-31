@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ./system-tasks-add-trust-certs.nix
     ./system-tasks-darwin-docker-networking.nix
     ./system-tasks-generate-hashed-password.nix
   ];

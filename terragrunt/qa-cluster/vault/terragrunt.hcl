@@ -6,6 +6,7 @@ include "root" {
 }
 
 inputs = {
+  basename(dirname(get_terragrunt_dir())) = true
   email = get_env("EMAIL_ADDR")
   vpn_auth = get_env("VPN_AUTH")
   vpn_config = get_env("VPN_CONFIG")

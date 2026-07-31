@@ -40,14 +40,14 @@ let
           let
             split = splitProtocol externalHost;
             # We'll have to identify if a hostname is secure or not, and change this based on that
-            protocol = "http://";
+            protocol = "https://";
           in
           protocol + "iam." + (stripSubdomains split.rest);
 
       resolvedExternalHost =
         let
           # We'll have to identify if a hostname is secure or not, and change this based on that
-          protocol = "http://";
+          protocol = "https://";
         in
         if subdomain != null && subdomain != ""
         then

@@ -1,51 +1,289 @@
+{{- $processedNamespaces := dict }}
+{{- $processedCerts := dict }}
+{{- $processedGateways := dict }}
 {{- range $ingressName, $ingress := .Values }}
 {{- if ne $ingressName "hostnames" }}
 {{- $create := not (hasKey $ingress "multiHost" | ternary $ingress.multiHost false) }}
-{{- $enabled := or $ingress.enabled (include "common.isItemEnabled" (dict "item" $ingress "Values" $.Values))}}
+{{- $enabled := or $ingress.enabled (include "common.isItemEnabled" (dict "item" $ingress "Values" $.Values)) }}
 {{- $ingressDetails := include "common.mergeGroupOverrides" (dict "item" $ingress "itemName" $ingressName) | fromYaml }}
 {{- if and $enabled $create $ingress.destinationSvc }}
+{{- $namespace := $ingressDetails.namespace | default "istio-system" }}
+{{- $prefixes := $ingressDetails.prefixes | default (list "/") }}
+
+{{- /* Split hostnames into actual DNS hostnames vs IP addresses */ -}}
+{{- $ipAddresses := list }}
+{{- $actualHostnames := list }}
+{{- range $host := $.Values.hostnames }}
+{{- if regexMatch "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$" $host }}
+{{- $ipAddresses = append $ipAddresses $host }}
+{{- else }}
+{{- $fqdn := $host }}
+{{- if $ingressDetails.subdomain }}
+{{- $fqdn = printf "%s.%s" $ingressDetails.subdomain $host }}
+{{- end }}
+{{- $actualHostnames = append $actualHostnames $fqdn }}
+{{- end }}
+{{- end }}
+
+{{- /* The first real hostname's cert secret is reused by IP gateways for TLS.
+       If no subdomain is set, that secret is the shared root cert. */ -}}
+{{- $primarySecretName := "" }}
+{{- if gt (len $actualHostnames) 0 }}
+{{- $firstFqdn := first $actualHostnames }}
+{{- $firstSafeHostname := $firstFqdn | replace "." "-" }}
+{{- if $ingressDetails.subdomain }}
+{{- $primarySecretName = printf "%s-%s-tls" $ingressName $firstSafeHostname }}
+{{- else }}
+{{- $primarySecretName = printf "shared-%s-tls" $firstSafeHostname }}
+{{- end }}
+{{- end }}
+
+{{- /* ---- Real hostnames: Issuer + Certificate + Gateway + VirtualService ---- */ -}}
+{{- range $fqdn := $actualHostnames }}
+
+{{- $matchedRoot := "" }}
+
+{{- range $root := $.Values.hostnames }}
+  {{- if or (eq $fqdn $root) (hasSuffix (printf ".%s" $root) $fqdn) }}
+    {{- $matchedRoot = $root }}
+  {{- end }}
+{{- end }}
+
+{{- $safeRoot := $matchedRoot | replace "." "-" }}
+{{- $safeHostname := $fqdn | replace "." "-" }}
+{{- $resourceName := printf "%s-%s" $ingressName $safeRoot }}
+{{- $vaultRole := printf "cert-manager-%s" $safeRoot }}
+
+{{- /* No subdomain means $fqdn IS the root hostname - share one cert (and one
+       gateway) across every ingress that requests the bare root in this
+       namespace, instead of minting a new Issuer/Certificate/Gateway per ingress. */ -}}
+{{- $useCommonCert := not $ingressDetails.subdomain }}
+{{- $certSecretName := "" }}
+{{- $issuerName := "" }}
+{{- $certResourceName := "" }}
+{{- $gatewayName := "" }}
+{{- if $useCommonCert }}
+{{- $certSecretName = printf "shared-%s-tls" $safeRoot }}
+{{- $issuerName = printf "shared-%s-issuer" $safeRoot }}
+{{- $certResourceName = printf "shared-%s" $safeRoot }}
+{{- $gatewayName = printf "shared-%s-gateway" $safeRoot }}
+{{- else }}
+{{- $certSecretName = printf "%s-tls" $resourceName }}
+{{- $issuerName = printf "%s-issuer" $resourceName }}
+{{- $certResourceName = $resourceName }}
+{{- $gatewayName = printf "%s-gateway" $resourceName }}
+{{- end }}
+
+{{- $certKey := printf "%s/%s" $namespace $certSecretName }}
+{{- $needsCert := or (not $useCommonCert) (not (hasKey $processedCerts $certKey)) }}
+
+{{- if $needsCert }}
+{{- $_ := set $processedCerts $certKey true }}
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ $issuerName }}
+  namespace: {{ $namespace }}
+spec:
+  vault:
+    server: http://hashi-vault.vault.svc.cluster.local:8200
+    path: pki_int_{{ $safeRoot }}/sign/cert-manager
+    auth:
+      kubernetes:
+        role: {{ $vaultRole }}
+        mountPath: /v1/auth/kubernetes
+        serviceAccountRef:
+          name: cert-issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $certResourceName }}-cert
+  namespace: {{ $namespace }}
+spec:
+  secretName: {{ $certSecretName }}
+  commonName: {{ $fqdn }}
+  dnsNames:
+    - {{ $fqdn }}
+  {{- if gt (len $ipAddresses) 0 }}
+  ipAddresses:
+    {{- range $ipAddresses }}
+    - {{ . }}
+    {{- end }}
+  {{- end }}
+  issuerRef:
+    name: {{ $issuerName }}
+    kind: Issuer
+    group: cert-manager.io
+{{- end }}
+
+{{- $gatewayKey := printf "%s/%s" $namespace $gatewayName }}
+{{- $needsGateway := or (not $useCommonCert) (not (hasKey $processedGateways $gatewayKey)) }}
+
+{{- if $needsGateway }}
+{{- $_ := set $processedGateways $gatewayKey true }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: {{ $gatewayName }}
+  namespace: {{ $namespace }}
+spec:
+  selector:
+    istio: gateway
+  servers:
+    - port:
+        number: 80
+        name: http-{{ $safeHostname }}
+        protocol: HTTP
+      hosts:
+        - {{ $fqdn }}
+    - port:
+        number: 443
+        name: https-{{ $safeHostname }}
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: {{ $certSecretName }}
+      hosts:
+        - {{ $fqdn }}
+{{- end }}
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: {{ $ingressName }}
-  namespace: {{ $ingressDetails.namespace | default "istio-system" }}
+  name: {{ $resourceName }}
+  namespace: {{ $namespace }}
 spec:
-{{- with $.Values.hostnames }}
   hosts:
-  {{- range . }}
-    {{- if $ingressDetails.subdomain }}
-      {{- if not (regexMatch "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$" .) }}
-    - {{ $ingressDetails.subdomain }}.{{ . }}
-      {{- end }}
-    {{- else }}
-    - {{ . }}
-    {{- end }}
-  {{- end }}
-{{- end }}
+    - {{ $fqdn }}
   gateways:
-    - internal-gateway
+    - {{ $gatewayName }}
   http:
     - match:
-      {{- $prefixes := $ingressDetails.prefixes | default (list "/") }}
       {{- range $prefixes }}
         - uri:
             prefix: {{ . }}
       {{- end }}
       {{- with $ingressDetails.rewrite }}
       rewrite:
-        {{- toYaml . | nindent 7}}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       route:
         - destination:
             host: {{ $ingressDetails.destinationSvc }}
             port:
-              number: {{ $ingressDetails.destinationPort | default 80}}
-        {{- with $ingressDetails.headers }}
+              number: {{ $ingressDetails.destinationPort | default 80 }}
+          {{- with $ingressDetails.headers }}
           headers:
             {{- toYaml . | nindent 12 }}
-        {{- end }}
+          {{- end }}
+{{- end }}
+
+{{- /* ---- IP addresses: Gateway (reusing primary cert, shared across ingresses) + VirtualService, no Issuer/Certificate ---- */ -}}
+{{- range $ip := $ipAddresses }}
+{{- $safeIp := $ip | replace "." "-" }}
+{{- $resourceName := printf "%s-%s" $ingressName $safeIp }}
+{{- if not $ingressDetails.subdomain }}
+{{- $gatewayName := printf "shared-%s-gateway" $safeIp }}
+{{- $gatewayKey := printf "%s/%s" $namespace $gatewayName }}
+{{- if not (hasKey $processedGateways $gatewayKey) }}
+{{- $_ := set $processedGateways $gatewayKey true }}
 ---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: {{ $gatewayName }}
+  namespace: {{ $namespace }}
+spec:
+  selector:
+    istio: gateway
+  servers:
+    - port:
+        number: 80
+        name: http-{{ $safeIp }}
+        protocol: HTTP
+      hosts:
+        - {{ $ip }}
+    - port:
+        number: 443
+        name: https-{{ $safeIp }}
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: {{ $primarySecretName }}
+      hosts:
+        - {{ $ip }}
+{{- end }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ $resourceName }}
+  namespace: {{ $namespace }}
+spec:
+  hosts:
+    - {{ $ip }}
+  gateways:
+    - {{ $gatewayName }}
+  http:
+    - match:
+      {{- range $prefixes }}
+        - uri:
+            prefix: {{ . }}
+      {{- end }}
+      {{- with $ingressDetails.rewrite }}
+      rewrite:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      route:
+        - destination:
+            host: {{ $ingressDetails.destinationSvc }}
+            port:
+              number: {{ $ingressDetails.destinationPort | default 80 }}
+          {{- with $ingressDetails.headers }}
+          headers:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}
+{{- end }}
+
+{{- if not (hasKey $processedNamespaces $namespace) }}
+{{- $_ := set $processedNamespaces $namespace true }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cert-issuer
+  namespace: {{ $namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cert-manager-token-request
+  namespace: {{ $namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["serviceaccounts/token"]
+    resourceNames: ["cert-issuer"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cert-manager-token-request
+  namespace: {{ $namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cert-manager-token-request
+subjects:
+  - kind: ServiceAccount
+    name: cert-manager
+    namespace: cert-manager
+{{- end }}
+
 {{- end }}
 {{- end }}
 {{- end }}

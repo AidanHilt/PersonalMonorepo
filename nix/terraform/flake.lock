@@ -21,13 +21,28 @@
         "type": "github"
       }
     },
+    "import-tree": {
+      "locked": {
+        "lastModified": 1784254960,
+        "narHash": "sha256-iI88R3wHz8wTKQb5orvpc51L/Xr64AJyxid/0MKa/b8=",
+        "owner": "vic",
+        "repo": "import-tree",
+        "rev": "4ebb10ae17d5f1ad366e7aef5b92cb8eecf24f69",
+        "type": "github"
+      },
+      "original": {
+        "owner": "vic",
+        "repo": "import-tree",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1784356753,
-        "narHash": "sha256-12KrbMiWLcf8m7pCvAtZh1ZrgF85ZXDXvfR/fWTKy84=",
+        "lastModified": 1785318670,
+        "narHash": "sha256-dN6Ou5x/+23FZLEpYP3IffO+NyJFzUlGumt1uu3MMaY=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "61b7c44c4073f0b827768aff0049561b5110ea5a",
+        "rev": "0954f7ee2f6bb3dc7d4e3d0d8bcb8fd4bde4cfc5",
         "type": "github"
       },
       "original": {
@@ -40,16 +55,16 @@
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1783290840,
-        "narHash": "sha256-hnqE7tqSr53QwljqR/o5ZZiSfSc7KKnpcn4pk9sbNro=",
+        "lastModified": 1785466514,
+        "narHash": "sha256-gG4PxwkQm5zVzRL360RxLnkX9TsnGTiRn+FR+BMlnmY=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "7a1dc509ba16ea7a7078cd4282bf03c36cba9148",
+        "rev": "0ae4f1bfcf101208ca1012a35d0fa2c8e4ea4db9",
         "type": "github"
       },
       "original": {
         "owner": "aidanhilt",
-        "ref": "project-rockhard/user-mgmt",
+        "ref": "project-rockhard/pki",
         "repo": "PersonalMonorepo",
         "type": "github"
       }
@@ -79,17 +94,18 @@
     "terranix": {
       "inputs": {
         "flake-parts": "flake-parts",
+        "import-tree": "import-tree",
         "nixpkgs": [
           "nixpkgs"
         ],
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1784205993,
-        "narHash": "sha256-yobmv1W2eALWtJPKCjE+sfqhQw/swtw6DzT0XnPlZpo=",
+        "lastModified": 1784465933,
+        "narHash": "sha256-5fZTF5lCVnHisTmXICtIIjHAEsqDXx3RgD+Q/r5Bxpg=",
         "owner": "terranix",
         "repo": "terranix",
-        "rev": "01440cdbe2d7c417a9aab9f7c8825dcea38a0378",
+        "rev": "f2f0ca1895f15e18e308769bdae77030ae093b8c",
         "type": "github"
       },
       "original": {

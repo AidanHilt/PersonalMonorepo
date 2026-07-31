@@ -25,6 +25,9 @@ let
           else [mountName];
 
       resolveValue = dataKey: config:
+        let
+          randomPasswordKey = if config.key_name or false then "${config.key_name}-${environment}" else "${key}-${dataKey}-${environment}";
+        in
         if (builtins.isString config && config != "") then
           config
         else if config ? value then
@@ -32,7 +35,7 @@ let
         else if config ? tfVar then
           "\${var.${config.tfVar.name}}"
         else
-          "\${random_password.${config.key_name or "${key}-${dataKey}"}.result}";
+          "\${random_password.${randomPasswordKey}[0].result}";
 
       generatedKeys = lib.filterAttrs (dataKey: config:
         !(config ? value) && !(config ? tfVar) && !(builtins.isString config && config != "")
@@ -41,8 +44,6 @@ let
       generatedVariables = lib.filterAttrs (dataKey: config:
         (config ? tfVar)
       ) (value.data or {});
-
-      isPostgresPassword = value.postgresPassword or true;
     in {
       resource.vault_policy."${key}-${environment}" = {
         count  = "\${var.${environment} ? 1 : 0}";
@@ -62,9 +63,9 @@ let
         backend                          = "kubernetes";
         role_name                        = value.auth.role_name or key;
         bound_service_account_names      = serviceAccounts
-                                           ++ lib.optional (value.postgres_secret or false) "postgres-cluster";
+                                           ++ lib.optional (value.postgresSecret or false) "postgres-cluster";
         bound_service_account_namespaces = namespaceNames
-                                           ++ lib.optional (value.postgres_secret or false) "postgres";
+                                           ++ lib.optional (value.postgresSecret or false) "postgres";
         token_ttl                        = 3600;
         token_policies                   = [ "\${vault_policy.${key}-${environment}[0].name}" ];
         depends_on                       = lib.mkIf (standalone) [
@@ -78,7 +79,7 @@ let
         mount     = "\${vault_mount.${mountName}-${environment}[0].path}";
         name      = value.path or "${key}/config";
         data_json = "\${jsonencode(${
-          builtins.toJSON (lib.mapAttrs resolveValue value.data or {})
+          builtins.toJSON (lib.mapAttrs resolveValue (value.data or {}))
         })}";
       };
 
@@ -95,14 +96,15 @@ let
 
       resource.random_password = lib.mapAttrs' (dataKey: config:
         let
-          passwordKey = config.key_name or "${key}-${dataKey}";
-          postgresPassword = (dataKey == "postgresPassword") || (config.isPostgresPassword or false);
+          passwordKey = if config.key_name or false then "${config.key_name}-${environment}" else "${key}-${dataKey}-${environment}";
+          postgresPassword = (dataKey == "postgresPassword") || (config.postgresPassword or false);
         in
         lib.nameValuePair passwordKey {
           count            = "\${var.${environment} ? 1 : 0}";
           length           = config.length or 32;
           special          = !postgresPassword;
-          override_special = if postgresPassword then null else config.override_special or null;
+          # This makes the special characters safe to put in bash scripts, which is needed for some liveness checks
+          override_special = if postgresPassword then null else config.overrideSpecial or "!@#$%&*-_=+<>:?";
         }
       ) generatedKeys;
 
