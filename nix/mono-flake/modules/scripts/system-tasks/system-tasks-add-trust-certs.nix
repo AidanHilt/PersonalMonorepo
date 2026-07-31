@@ -57,7 +57,7 @@ fetch_hostnames() {
   local cluster="$1"
   local STACK_URL="''${RAW_BASE_URL}/''${cluster}/master-stack.yaml"
 
-  curl -s -v "''${STACK_URL}" | yq -r '.hostnames[]'
+  curl -s "''${STACK_URL}" | yq -r '.hostnames[]'
 }
 
 safe_hostname() {
