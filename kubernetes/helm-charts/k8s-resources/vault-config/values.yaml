@@ -174,7 +174,8 @@ prowlarr:
   secretDestinationNamespace: videos
   postgresSecret: true
   data:
-    apiKey: {}
+    apiKey:
+      postgres_password: true
     postgresPassword:
       postgres_password: true
     postgresUsername: prowlarr
