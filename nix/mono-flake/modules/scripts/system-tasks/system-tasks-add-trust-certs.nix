@@ -175,6 +175,7 @@ main() {
     local CLUSTERS
     mapfile -t CLUSTERS < <(list_clusters)
     cluster="$(select_cluster "''${CLUSTERS[@]}")"
+    echo "==========Run Border=========="
     echo "$cluster"
   fi
 
