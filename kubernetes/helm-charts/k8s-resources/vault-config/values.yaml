@@ -186,7 +186,8 @@ radarr:
   secretDestinationNamespace: videos
   postgresSecret: true
   data:
-    apiKey: {}
+    apiKey:
+      postgresPassword: true
     postgresPassword:
       postgresPassword: true
     postgresUsername: radarr
@@ -255,7 +256,8 @@ sonarr:
   secretDestinationNamespace: videos
   postgresSecret: true
   data:
-    apiKey: {}
+    apiKey:
+      postgresPassword: true
     postgresPassword:
       postgresPassword: true
     postgresUsername: sonarr
