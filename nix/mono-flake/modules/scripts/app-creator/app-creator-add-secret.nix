@@ -224,6 +224,11 @@ while [ "$add_keys" = "y" ]; do
   add_keys="$(get_input "Add another key? (y/n)" "n")"
 done
 
+if [[ "$POSTGRES_SECRET" == "true" ]]; then
+  _modify-secret-values "$YQ_PATH.data.postgresPassword={}" "$SECRET_VALUES_FILE"
+  _modify-secret-values "$YQ_PATH.data.postgresUsername=$SECRET_NAME"
+fi
+
 for entry in "''${SECRET_KEYS[@]}"; do
   key_name="$(cut -d'|' -f1 <<< "$entry")"
   is_pg_password="$(cut -d'|' -f2 <<< "$entry")"
@@ -232,8 +237,6 @@ for entry in "''${SECRET_KEYS[@]}"; do
   _modify-secret-values "$YQ_PATH={}" "$SECRET_VALUES_FILE"
   if [[ "$is_pg_password" == "true" ]]; then
     _modify-secret-values "$YQ_PATH.is_postgres_password=$is_pg_password" "$SECRET_VALUES_FILE"
-    _modify-secret-values "$YQ_PATH.data.postgresPassword={}" "$SECRET_VALUES_FILE"
-    _modify-secret-values "$YQ_PATH.data.postgresUsername=$SECRET_NAME"
   fi
   if [ -n "$key_value" ]; then
     _modify-secret-values "$YQ_PATH=\"$key_value\"" "$SECRET_VALUES_FILE"
