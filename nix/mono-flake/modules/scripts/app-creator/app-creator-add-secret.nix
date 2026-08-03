@@ -226,7 +226,7 @@ for entry in "''${SECRET_KEYS[@]}"; do
   fi
 done
 
-print_status "Secret definition for $SECRET_NAME added to helm. Don't forget to run 'nix flake update' before running terraform to preserve changes.:
+print_status "Secret definition for $SECRET_NAME added to helm. Don't forget to run 'nix flake update' before running terraform to preserve changes."
 '';
 in
 
