@@ -225,8 +225,8 @@ while [ "$add_keys" = "y" ]; do
 done
 
 if [[ "$POSTGRES_SECRET" == "true" ]]; then
-  _modify-secret-values "''${SECRET_NAME}.data.postgresPassword={}" "$SECRET_VALUES_FILE"
-  _modify-secret-values "''${SECRET_NAME}.data.postgresUsername=$SECRET_NAME"
+  _modify-secret-values ".''${SECRET_NAME}.data.postgresPassword={}" "$SECRET_VALUES_FILE"
+  _modify-secret-values ".''${SECRET_NAME}.data.postgresUsername=$SECRET_NAME"
 fi
 
 for entry in "''${SECRET_KEYS[@]}"; do
