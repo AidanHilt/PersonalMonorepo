@@ -135,6 +135,18 @@ if [[ -z "$SECRET_MOUNT" ]]; then
   SECRET_MOUNT="$DESTINATION_NAMESPACE"
 fi
 
+if [ -z "$POSTGRES_SECRET" ]; then
+  ANSWER="$(get_input "Does the secret contain postgres creds? (y/n)" "n")"
+  case $ANSWER in
+    [Yy]*)
+      POSTGRES_SECRET=true
+      ;;
+    *)
+      POSTGRES_SECRET=false
+      ;;
+  esac
+fi
+
 CONFIGURE_SA="n"
 
 if [[ -z "$SERVICE_ACCOUNT_NAME" ]]; then
