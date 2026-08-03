@@ -164,7 +164,7 @@ if [[ "$CONFIGURE_SA" == "y" ]]; then
   fi
 fi
 
-CONFIGURE_DEST=$("Would you like to configure the destination secret? (y/): " "n")
+CONFIGURE_DEST=$(get_input "Would you like to configure the destination secret? (y/n): " "n")
 
 if [[ "$CONFIGURE_DEST" == "y" ]]; then
   DESTINATION_FILE=$(mktemp)
