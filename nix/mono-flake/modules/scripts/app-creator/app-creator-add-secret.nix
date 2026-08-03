@@ -219,10 +219,10 @@ for entry in "''${SECRET_KEYS[@]}"; do
   YQ_PATH=".''${SECRET_NAME}.data.''${key_name}"
   _modify-secret-values "$YQ_PATH={}" "SECRET_VALUES_FILE"
   if [[ "$is_pg_password" == "true" ]]; then
-    jq "$YQ_PATH.is_postgres_password=$is_pg_password" "$SECRET_VALUES_FILE"
+    _modify-secret-values "$YQ_PATH.is_postgres_password=$is_pg_password" "$SECRET_VALUES_FILE"
   fi
   if [ -n "$key_value" ]; then
-    jq "$YQ_PATH=\"$key_value\"" "$SECRET_VALUES_FILE"
+    _modify-secret-values "$YQ_PATH=\"$key_value\"" "$SECRET_VALUES_FILE"
   fi
 done
 
