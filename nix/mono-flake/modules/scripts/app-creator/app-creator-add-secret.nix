@@ -217,7 +217,7 @@ for entry in "''${SECRET_KEYS[@]}"; do
   is_pg_password="$(cut -d'|' -f2 <<< "$entry")"
   key_value="$(cut -d'|' -f3 <<< "$entry")"
   YQ_PATH=".''${SECRET_NAME}.data.''${key_name}"
-  _modify-secret-values "$YQ_PATH={}" "SECRET_VALUES_FILE"
+  _modify-secret-values "$YQ_PATH={}" "$SECRET_VALUES_FILE"
   if [[ "$is_pg_password" == "true" ]]; then
     _modify-secret-values "$YQ_PATH.is_postgres_password=$is_pg_password" "$SECRET_VALUES_FILE"
   fi
