@@ -138,7 +138,7 @@ fi
 CONFIGURE_SA="n"
 
 if [[ -z "$SERVICE_ACCOUNT_NAME" ]]; then
-  read -p "Would you like to configure the service account? (y/N): " CONFIGURE_SA
+  CONFIGURE_SA=$(get_input "Would you like to configure the service account? (y/n)" "n")
 fi
 
 if [[ "$CONFIGURE_SA" == "y" ]]; then
@@ -153,7 +153,7 @@ if [[ "$CONFIGURE_SA" == "y" ]]; then
   fi
 
   if [[ -z "$SERVICE_ACCOUNT_CREATE" ]]; then
-    read -p "Should the service account be created? (y/N): " SA_CREATE_INPUT
+    SA_CREATE_INPUT=$(get_input "Should the service account be created? (y/n): " "n")
     if [[ "$SA_CREATE_INPUT" == "y" ]]; then
       SERVICE_ACCOUNT_CREATE="true"
     fi
@@ -164,7 +164,7 @@ if [[ "$CONFIGURE_SA" == "y" ]]; then
   fi
 fi
 
-read -p "Would you like to configure the destination secret? (y/N): " CONFIGURE_DEST
+CONFIGURE_DEST=$("Would you like to configure the destination secret? (y/): " "n")
 
 if [[ "$CONFIGURE_DEST" == "y" ]]; then
   DESTINATION_FILE=$(mktemp)
