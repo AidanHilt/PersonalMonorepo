@@ -23,47 +23,93 @@ show_help () {
   echo "--resource-name: Override for the resource name"
   echo "--service-account-create: Takes no arguments. If provided, set service account create to true"
   echo "--service-account-name: The name of the service account"
-  echo "--postgres-secret: Whether or not this secret is a postgres user"
+  echo "--secret-mount MOUNT The Vault mount to store this secret in"
+  echo "--postgres-secret: [true|false] Whether or not this secret is a postgres user"
   echo ""
 }
 
-secret_name=""
-destination_namespace=""
-resource_name=""
-service_account_name=""
-service_account_create=""
-service_account_namespace=""
-destination_config=""
-postgres_secret=""
+get_input() {
+  local prompt="$1"
+  local default="$2"
+  local value
+  if [ -n "$default" ]; then
+    read -r -p "$prompt [$default]: " value
+    value="''${value:-$default}"
+  else
+    read -r -p "$prompt: " value
+  fi
+  printf '%s' "$value"
+}
+
+add_secret_key() {
+  local key_name is_pg_password set_value key_value
+  key_name="$(get_input "Enter key name" "")"
+  if [[ "$key_name" == "postgresPassword" ]]; then
+    is_pg_password="y"
+  else
+    is_pg_password="$(get_input "Is this a postgres password? (y/n)" "n")"
+  fi
+  case $is_pg_password in
+    [Yy]*)
+      is_pg_password=true
+      ;;
+    *)
+      is_pg_password=false
+      ;;
+  esac
+  set_value=n
+  if [[ "$is_pg_password" == "false" ]]; then
+    set_value="$(get_input "Set a value for this key? (y/n)" "n")"
+  fi
+  if [ "$set_value" = "y" ]; then
+    key_value="$(get_input "Enter value for $key_name" "")"
+  else
+    key_value=""
+  fi
+  SECRET_KEYS+=("$key_name|$is_pg_password|$key_value")
+}
+
+SECRET_NAME=""
+DESTINATION_NAMESPACE=""
+RESOURCE_NAME=""
+SERVICE_ACCOUNT_NAME=""
+SERVICE_ACCOUNT_CREATE=""
+SERVICE_ACCOUNT_NAMESPACE=""
+POSTGRES_SECRET=""
+SECRET_MOUNT=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
     --secret-name)
-      secret_name="$2"
+      SECRET_NAME="$2"
       shift 2
       ;;
     --destination-namespace)
-      destination_namespace="$2"
+      DESTINATION_NAMESPACE="$2"
       shift 2
       ;;
     --resource-name)
-      resource_name="$2"
+      RESOURCE_NAME="$2"
       shift 2
       ;;
     --service-account-name)
-      service_account_name="$2"
+      SERVICE_ACCOUNT_NAME="$2"
       shift 2
       ;;
     --service-account-create)
-      service_account_create="true"
+      SERVICE_ACCOUNT_CREATE="true"
       shift 1
       ;;
     --service-account-namespace)
-      service_account_namespace="$2"
+      SERVICE_ACCOUNT_NAMESPACE="$2"
       shift 2
       ;;
     --postgres-secret)
-      postgres_secret="$2"
+      POSTGRES_SECRET="$2"
+      shift 2
+      ;;
+    --secret-mount)
+      SECRET_MOUNT="$2"
       shift 2
       ;;
     --help|-h)
@@ -77,72 +123,76 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "$secret_name" ]]; then
-  read -p "Enter the name of the secret: " secret_name
+if [[ -z "$SECRET_NAME" ]]; then
+  read -p "Enter the name of the secret: " SECRET_NAME
 fi
 
-if [[ -z "$destination_namespace" ]]; then
-  read -p "Enter the destination namespace: " destination_namespace
+if [[ -z "$DESTINATION_NAMESPACE" ]]; then
+  read -p "Enter the destination namespace: " DESTINATION_NAMESPACE
 fi
 
-configure_sa="n"
-
-if [[ -z "$service_account_name" ]]; then
-  read -p "Would you like to configure the service account? (y/N): " configure_sa
+if [[ -z "$SECRET_MOUNT" ]]; then
+  SECRET_MOUNT="$DESTINATION_NAMESPACE"
 fi
 
-if [[ "$configure_sa" == "y" ]]; then
-  SA_DEFAULT="$secret_name"
-  if [[ -n "$resource_name" ]]; then
-    SA_DEFAULT="$resource_name"
+CONFIGURE_SA="n"
+
+if [[ -z "$SERVICE_ACCOUNT_NAME" ]]; then
+  read -p "Would you like to configure the service account? (y/N): " CONFIGURE_SA
+fi
+
+if [[ "$CONFIGURE_SA" == "y" ]]; then
+  SA_DEFAULT="$SECRET_NAME"
+  if [[ -n "$RESOURCE_NAME" ]]; then
+    SA_DEFAULT="$RESOURCE_NAME"
   fi
 
-  if [[ -z "$service_account_name" ]]; then
-    read -p "Enter the service account name [''${SA_DEFAULT}]: " service_account_name
-    service_account_name="''${service_account_name:-$SA_DEFAULT}"
+  if [[ -z "$SERVICE_ACCOUNT_NAME" ]]; then
+    read -p "Enter the service account name [''${SA_DEFAULT}]: " SERVICE_ACCOUNT_NAME
+    SERVICE_ACCOUNT_NAME="''${SERVICE_ACCOUNT_NAME:-$SA_DEFAULT}"
   fi
 
-  if [[ -z "$service_account_create" ]]; then
-    read -p "Should the service account be created? (y/N): " sa_create_input
-    if [[ "$sa_create_input" == "y" ]]; then
-      service_account_create="true"
+  if [[ -z "$SERVICE_ACCOUNT_CREATE" ]]; then
+    read -p "Should the service account be created? (y/N): " SA_CREATE_INPUT
+    if [[ "$SA_CREATE_INPUT" == "y" ]]; then
+      SERVICE_ACCOUNT_CREATE="true"
     fi
   fi
 
-  if [[ -z "$service_account_namespace" ]]; then
-    read -p "Enter the service account namespace [''${destination_namespace}]: " service_account_namespace
+  if [[ -z "$SERVICE_ACCOUNT_NAMESPACE" ]]; then
+    read -p "Enter the service account namespace [''${DESTINATION_NAMESPACE}]: " SERVICE_ACCOUNT_NAMESPACE
   fi
 fi
 
-read -p "Would you like to configure the destination secret? (y/N): " configure_dest
+read -p "Would you like to configure the destination secret? (y/N): " CONFIGURE_DEST
 
-if [[ "$configure_dest" == "y" ]]; then
+if [[ "$CONFIGURE_DEST" == "y" ]]; then
   DESTINATION_FILE=$(mktemp)
   echo "destination:" > "$DESTINATION_FILE"
 
   $EDITOR "$DESTINATION_FILE"
 fi
 
-YQ_STRING=".\"$secret_name\".enabled=false | .\"$secret_name\".secretDestinationNamespace = \"$destination_namespace\""
+YQ_STRING=".\"$SECRET_NAME\".enabled=false | .\"$SECRET_NAME\".secretDestinationNamespace = \"$DESTINATION_NAMESPACE\""
 
-if [[ -n "$resource_name" ]]; then
-  YQ_STRING="$YQ_STRING | .\"$secret_name\".destination.name = \"$resource_name\""
+if [[ -n "$RESOURCE_NAME" ]]; then
+  YQ_STRING="$YQ_STRING | .\"$SECRET_NAME\".destination.name = \"$RESOURCE_NAME\""
 fi
 
-if [[ "$configure_sa" == "y" ]]; then
-  YQ_STRING="$YQ_STRING | .\"$secret_name\".serviceAccount.create = true"
+if [[ "$CONFIGURE_SA" == "y" ]]; then
+  YQ_STRING="$YQ_STRING | .\"$SECRET_NAME\".serviceAccount.create = true"
 
-  if [[ -n "$service_account_name" ]]; then
-    YQ_STRING="$YQ_STRING | .\"$secret_name\".serviceAccount.name = \"$service_account_name\""
+  if [[ -n "$SERVICE_ACCOUNT_NAME" ]]; then
+    YQ_STRING="$YQ_STRING | .\"$SECRET_NAME\".serviceAccount.name = \"$SERVICE_ACCOUNT_NAME\""
   fi
 
-  if [[ -n "$service_account_namespace" ]]; then
-    YQ_STRING="$YQ_STRING | .\"$secret_name\".serviceAccount.namespace = \"$service_account_namespace\""
+  if [[ -n "$SERVICE_ACCOUNT_NAMESPACE" ]]; then
+    YQ_STRING="$YQ_STRING | .\"$SECRET_NAME\".serviceAccount.namespace = \"$SERVICE_ACCOUNT_NAMESPACE\""
   fi
 fi
 
 if [[ -v DESTINATION_FILE ]]; then
-  YQ_STRING="$YQ_STRING | .\"$secret_name\" += load(\"$DESTINATION_FILE\")"
+  YQ_STRING="$YQ_STRING | .\"$SECRET_NAME\" += load(\"$DESTINATION_FILE\")"
 fi
 
 SECRET_VALUES_FILE="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/vault-config/values.yaml"
@@ -154,7 +204,29 @@ if [[ -v DESTINATION_FILE ]]; then
   rm "$DESTINATION_FILE"
 fi
 
-print_status "Secret configuration completed successfully"
+print_debug "Collecting secret keys"
+SECRET_KEYS=()
+add_keys="$(get_input "Would you like to enter any secret keys? (y/n)" "n")"
+while [ "$add_keys" = "y" ]; do
+  add_secret_key
+  add_keys="$(get_input "Add another key? (y/n)" "n")"
+done
+
+for entry in "''${SECRET_KEYS[@]}"; do
+  key_name="$(cut -d'|' -f1 <<< "$entry")"
+  is_pg_password="$(cut -d'|' -f2 <<< "$entry")"
+  key_value="$(cut -d'|' -f3 <<< "$entry")"
+  YQ_PATH=".''${SECRET_NAME}.data.''${key_name}"
+  _modify-secret-values "$YQ_PATH={}" "SECRET_VALUES_FILE"
+  if [[ "$is_pg_password" == "true" ]]; then
+    jq "$YQ_PATH.is_postgres_password=$is_pg_password" "$SECRET_VALUES_FILE"
+  fi
+  if [ -n "$key_value" ]; then
+    jq "$YQ_PATH=\"$key_value\"" "$SECRET_VALUES_FILE"
+  fi
+done
+
+print_status "Secret definition for $SECRET_NAME added to helm. Don't forget to run 'nix flake update' before running terraform to preserve changes.:
 '';
 in
 
