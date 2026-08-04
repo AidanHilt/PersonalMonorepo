@@ -81,55 +81,19 @@ else
   app-creator-add-homepage-link --app-name "$APP_NAME" $HOMEPAGE_ARGS
 fi
 
-
-SECRET_NAMES=()
-SECRET_NAMESPACES=()
-SERVICE_ACCOUNT_NAMES=()
-POSTGRES_SECRETS=()
-
 read -p "Would you like to add any secrets? (y/n): " add_secrets
 
 if [[ "$add_secrets" =~ ^[Yy]$ ]]; then
-  while true; do
-    read -p "Enter secret name (or leave blank to finish) [default: $APP_NAME]: " secret_name
+  app-creator-add-secret
 
-    if [[ -z "$secret_name" ]]; then
-      if [[ ''${#SECRET_NAMES[@]} -eq 0 ]]; then
-        secret_name="$APP_NAME"
+  CONTINUE="true"
+  while "$CONTINUE"; do
+    read -p "Enter another secret? [y/N]" add_another_secret
+      if ! [[ "$add_another_secret" =~ ^[Yy]$ ]]; then
+        CONTINUE="false"
       else
-        break
+        app-creator-add-secret
       fi
-    fi
-
-    read -p "Enter namespace [default: $NAMESPACE]: " secret_namespace
-    secret_namespace="''${secret_namespace:-$NAMESPACE}"
-
-    read -p "Enter service account name [default: $APP_NAME]: " service_account_name
-    service_account_name="''${service_account_name:-$APP_NAME}"
-
-    read -p "Is this a postgres secret? (y/n): " is_postgres
-    if [[ "$is_postgres" =~ ^[Yy]$ ]]; then
-      postgres_secret="true"
-    else
-      postgres_secret="false"
-    fi
-
-    SECRET_NAMES+=("$secret_name")
-    SECRET_NAMESPACES+=("$secret_namespace")
-    SERVICE_ACCOUNT_NAMES+=("$service_account_name")
-    POSTGRES_SECRETS+=("$postgres_secret")
-  done
-
-  for i in "''${!SECRET_NAMES[@]}"; do
-    echo "============================================"
-    echo " You are adding kubernetes secrets"
-    echo "============================================"
-    app-creator-add-secret --secret-name "''${SECRET_NAMES[$i]}" --destination-namespace "''${SECRET_NAMESPACES[$i]}" --service-account-name "''${SERVICE_ACCOUNT_NAMES[$i]}" --postgres-secret "''${POSTGRES_SECRETS[$i]}"
-
-    echo "================================================="
-    echo " You are adding secret configuration to terraform"
-    echo "================================================="
-    app-creator-add-terraform-secret --secret-name "''${SECRET_NAMES[$i]}" --secret-namespace "''${SECRET_NAMESPACES[$i]}" --secret-mount "''${SECRET_NAMESPACES[$i]}" --postgres-secret "''${POSTGRES_SECRETS[$i]}"
   done
 fi
 

@@ -44,9 +44,7 @@ get_input() {
 add_secret_key() {
   local key_name is_pg_password set_value key_value
   key_name="$(get_input "Enter key name" "")"
-  if [[ "$key_name" == "postgresPassword" ]]; then
-    is_pg_password="y"
-  else
+  if [[ "$key_name" != "postgresPassword" ]]; then
     is_pg_password="$(get_input "Is this a postgres password? (y/n)" "n")"
   fi
   case $is_pg_password in
