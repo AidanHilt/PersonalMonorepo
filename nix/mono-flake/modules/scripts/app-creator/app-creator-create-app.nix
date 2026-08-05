@@ -89,11 +89,11 @@ if [[ "$add_secrets" =~ ^[Yy]$ ]]; then
   CONTINUE="true"
   while "$CONTINUE"; do
     read -p "Enter another secret? [y/N]" add_another_secret
-      if ! [[ "$add_another_secret" =~ ^[Yy]$ ]]; then
-        CONTINUE="false"
-      else
-        app-creator-add-secret
-      fi
+    if ! [[ "$add_another_secret" =~ ^[Yy]$ ]]; then
+      CONTINUE="false"
+    else
+      app-creator-add-secret
+    fi
   done
 fi
 
