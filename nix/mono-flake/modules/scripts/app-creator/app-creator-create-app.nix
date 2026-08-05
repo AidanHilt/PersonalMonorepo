@@ -84,7 +84,7 @@ fi
 read -p "Would you like to add any secrets? (y/n): " add_secrets
 
 if [[ "$add_secrets" =~ ^[Yy]$ ]]; then
-  app-creator-add-secret
+  app-creator-add-secret --secret-name "$APP_NAME" --destination-namespace "$NAMESPACE"
 
   CONTINUE="true"
   while "$CONTINUE"; do
