@@ -11,7 +11,11 @@ set -euo pipefail
 source ${printing-and-output.printing-and-output}
 
 read -p "Enter app name: " APP_NAME
-read -p "Enter app namespace: " NAMESPACE
+read -p "Enter app namespace ($APP_NAME): " NAMESPACE
+
+if [[ -z $NAMESPACE ]]; then
+  NAMESPACE="$APP_NAME"
+fi
 
 read -p "Create a new helm chart? (y/n): " HELM_CHART
 APP_TYPE=2
