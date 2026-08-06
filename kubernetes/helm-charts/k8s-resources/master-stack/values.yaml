@@ -287,7 +287,7 @@ tandoor:
 tekton-pipelines:
   enabled: false
   repo: https://cdfoundation.github.io/tekton-helm-chart/
-  chart: tekton
+  chart: tekton-pipeline
   version: 1.14.0
   destinationNamespace: tekton-pipelines
 transmission:
