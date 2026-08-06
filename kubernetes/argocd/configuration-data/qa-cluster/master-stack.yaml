@@ -6,6 +6,9 @@ hostnames:
 
 gitRevision: project-rockhard/pki
 
+tekton-pipelines:
+  enabled: true
+
 authentik:
   enabled: true
   configuration:
