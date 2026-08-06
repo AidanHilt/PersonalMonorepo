@@ -284,6 +284,12 @@ tandoor:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/tandoor
   destinationNamespace: inventory-mgmt
+tekton-pipelines:
+  enabled: false
+  repo: oci://ghcr.io/cdfoundation/charts/tekton-pipeline
+  chart: tekton-pipeline
+  version: 1.14.0
+  destinationNamespace: tekton-pipelines
 transmission:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/transmission
