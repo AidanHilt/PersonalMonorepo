@@ -286,8 +286,8 @@ tandoor:
   destinationNamespace: inventory-mgmt
 tekton-pipelines:
   enabled: false
-  repo: oci://ghcr.io/cdfoundation/charts/tekton-pipeline
-  chart: tekton-pipeline
+  repo: https://cdfoundation.github.io/tekton-helm-chart/
+  chart: tekton
   version: 1.14.0
   destinationNamespace: tekton-pipelines
 transmission:
