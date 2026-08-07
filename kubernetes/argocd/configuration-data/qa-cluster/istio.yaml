@@ -1,3 +1,7 @@
+global:
+  proxy:
+    seccompProfile:
+      type: RuntimeDefault
 cni:
   enabled: true
 meshConfig:
