@@ -1,3 +1,5 @@
+cni:
+  enabled: true
 meshConfig:
   trustDomain: cluster.local
   extensionProviders:
