@@ -10,6 +10,7 @@ metadata:
       unless explicitly excluded or disabled.
 spec:
   validationFailureAction: enforce
+  mutateExistingOnPolicyUpdate: true
   background: true
   rules:
   - name: add-istio-injection-label
@@ -33,6 +34,9 @@ spec:
           annotations:
             istio.io/injection-policy: "disabled"
     mutate:
+      targets:
+        - apiVersion: v1
+          kind: Namespace
       patchStrategicMerge:
         metadata:
           labels:
