@@ -4,7 +4,7 @@ hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
 
-gitRevision: project-rockhard/pki
+gitRevision: project-rockhard/backup
 
 tekton-pipelines:
   enabled: true
