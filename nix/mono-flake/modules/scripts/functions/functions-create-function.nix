@@ -20,7 +20,7 @@ readonly DEFAULT_NAMESPACE="default"
 readonly DEFAULT_SCALE_MIN="0"
 readonly DEFAULT_SCALE_MAX="10"
 readonly FUNCTION_NAME_PATTERN="^[a-z]([-a-z0-9]*[a-z0-9])?$"
-readonly CRON_FIELD_PATTERN="^[0-9*/,-]+$"
+readonly CRON_FIELD_PATTERN="^((((\d+,)+\d+|(\d+(\/|-|#)\d+)|\d+L?|\*(\/\d+)?|L(-\d+)?|\?|[A-Z]{3}(-[A-Z]{3})?) ?){5,7})|(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\d+(ns|us|µs|ms|s|m|h))+)$"
 
 get_named_arg() {
   local FLAG_NAME="$1"
@@ -86,16 +86,11 @@ validate_function_name() {
 }
 
 validate_cron_schedule() {
-  local CANDIDATE="$1"
-  local field
-  local field_count=0
-  for field in ''${CANDIDATE}; do
-    field_count=$((field_count + 1))
-    if [[ ! "''${field}" =~ ''${CRON_FIELD_PATTERN} ]]; then
-      return 1
-    fi
-  done
-  [[ "''${field_count}" -eq 5 ]]
+  if echo "$1" | ${pkgs.gnugrep}/bin/grep -Pq "$CRON_FIELD_PATTERN"; then
+    return 0
+  else
+    return 1
+  fi
 }
 
 collect_function_name() {
