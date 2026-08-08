@@ -2,9 +2,8 @@
 {{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration")}}
 {{- if not (has $appName $excludedNames) }}
 {{- $create := not (hasKey $app "multiHost" | ternary $app.multiHost false) }}
-{{- $appDetails := include "common.mergeGroupOverrides" (dict "item" $app "itemName" $appName) | fromYaml }}
-{{- $enabled := or $appDetails.enabled (include "common.isAppEnabled" (dict "item" $app "Values" $.Values)) }}
-{{- $appDetails | toYaml }}
+{{- $appDetails := include "common.mergeGroupOverrides" (dict "item" $app "itemName" $appName "Values" $.Values) | fromYaml }}
+{{- $enabled := or $app.enabled (include "common.isItemEnabled" (dict "item" $app "Values" $.Values)) }}
 {{- if and $enabled $create }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -29,7 +28,7 @@ spec:
     {{- with $appDetails.chart }}
       chart: {{ . }}
     {{- end }}
-    {{- $isHelmChart := and (not (hasKey $app "secureValues")) (or (not (hasKey $app "helmChart")) $appDetails.helmChart) }}
+    {{- $isHelmChart := and (not (hasKey $appDetails "secureValues")) (or (not (hasKey $appDetails "helmChart")) $appDetails.helmChart) }}
     {{- if $isHelmChart }}
       helm:
         {{- if and $appDetails.defaultValues (not (($appDetails.configuration).enabled | default false)) }}

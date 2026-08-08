@@ -50,19 +50,18 @@ Returns:
   YAML-encoded $appDetails. Decode with `fromYaml` at the call site.
 
 Usage:
-  {{- $appDetails := include "common.mergeGroupOverrides" (dict "item" (dict "app" $app "appName" $appName)) | fromYaml }}
+  {{- $appDetails := include "common.mergeGroupOverrides" (dict "app" $app "appName" $appName "Values" $.Values) | fromYaml }}
 */}}
 {{- define "common.mergeGroupOverrides" -}}
 {{- $item := .item -}}
 {{- $itemName := .itemName }}
+{{- $values := .Values | toJson | fromJson }}
 {{- $itemDetails := $item -}}
 {{- if hasKey $item "groupName" -}}
-  {{- $group := index ($.Values | toJson | fromJson) $item.groupName -}}
+  {{- $group := get $values $item.groupName -}}
   {{- $groupOverrides := dict -}}
-  {{- if and $group (index $group $itemName) -}}
-    {{- $groupOverrides = index $group $itemName -}}
-  {{- else if and $group (index $group "default") -}}
-    {{- $groupOverrides = index $group "default" -}}
+  {{- if and $group (hasKey $group "default") -}}
+    {{- $groupOverrides = $group.default -}}
   {{- end -}}
   {{- $itemDetails = mergeOverwrite $item $groupOverrides -}}
 {{- end -}}
