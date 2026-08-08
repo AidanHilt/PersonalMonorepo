@@ -6,6 +6,7 @@
 {{- if and $enabled ($appDetails.multiHost | default false)}}
 {{- range $hostname := $.Values.hostnames }}
 {{- $safeHostname := $hostname | replace "." "-" }}
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -68,6 +69,7 @@ spec:
       {{- if $appDetails.serverSideApply }}
       - ServerSideApply=true
       {{- end }}
+---
 {{- end }}
 {{- end }}
 {{- end }}
