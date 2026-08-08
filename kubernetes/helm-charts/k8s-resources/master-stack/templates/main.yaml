@@ -1,7 +1,7 @@
 {{- range $appName, $app := .Values }}
 {{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration")}}
 {{- if not (has $appName $excludedNames) }}
-{{- $create := not (hasKey $app "multiHost" | ternary $app.multiHost false) }}
+{{- $create := and (not (hasKey $app "multiHost" | ternary $app.multiHost false)) (or (hasKey $app "gitPath") (hasKey $app "chart"))}}
 {{- $appDetails := include "common.mergeGroupOverrides" (dict "item" $app "itemName" $appName "Values" $.Values) | fromYaml }}
 {{- $enabled := or $app.enabled (include "common.isItemEnabled" (dict "item" $app "Values" $.Values)) }}
 {{- if and $enabled $create }}
