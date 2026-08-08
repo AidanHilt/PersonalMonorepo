@@ -78,16 +78,18 @@ hashi-vault:
   chart: vault
   version: 0.32.0
   destinationNamespace: vault
-  dependentApps:
-    vault-secrets-operator:
-      repo: https://helm.releases.hashicorp.com
-      chart: vault-secrets-operator
-      version: 0.10.0
-    vault-config:
-      repo: https://github.com/AidanHilt/PersonalMonorepo
-      gitPath: kubernetes/helm-charts/k8s-resources/vault-config
-      useDefaultGitRevision: true
-      followMasterConfig: true
+  groupName: vault
+vault-secrets-operator:
+  repo: https://helm.releases.hashicorp.com
+  chart: vault-secrets-operator
+  groupName: vault
+  version: 0.10.0
+vault-config:
+  repo: https://github.com/AidanHilt/PersonalMonorepo
+  gitPath: kubernetes/helm-charts/k8s-resources/vault-config
+  useDefaultGitRevision: true
+  followMasterConfig: true
+  groupName: vault
 # Note that this one isn't managed in main, but in homepage-config.yaml. This is because we need
 # to make a deployment and ingress for each hostname, since we can't just build links using the
 # hostname as a variable
@@ -98,13 +100,14 @@ homepage:
   chart: homepage
   version: 2.1.0
   destinationNamespace: misc
-  dependentApps:
-    homepage-config:
-      repo: https://github.com/AidanHilt/PersonalMonorepo
-      gitPath: kubernetes/helm-charts/k8s-resources/homepage-config
-      useDefaultGitRevision: true
-      # Generates a mirror of the enabled status and hostname config as the config for this app
-      followMasterConfig: true
+  groupName: homepage
+homepage-config:
+  groupName: homepage
+  repo: https://github.com/AidanHilt/PersonalMonorepo
+  gitPath: kubernetes/helm-charts/k8s-resources/homepage-config
+  useDefaultGitRevision: true
+  # Generates a mirror of the enabled status and hostname config as the config for this app
+  followMasterConfig: true
 immich:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/immich
@@ -164,6 +167,7 @@ knative:
   destinationNamespace: knative
 kyverno:
   enabled: false
+  groupName: kyverno
   repo: https://kyverno.github.io/kyverno
   chart: kyverno
   version: 3.5.1
@@ -182,11 +186,11 @@ kyverno:
       replicas: 3
     webhookLabels:
       app.kubernetes.io/managed-by: argocd
-  dependentApps:
-    kyverno-policies:
-      repo: https://github.com/AidanHilt/PersonalMonorepo
-      gitPath: kubernetes/helm-charts/k8s-resources/kyverno-policies
-      useDefaultGitRevision: true
+kyverno-policies:
+  groupName: kyverno
+  repo: https://github.com/AidanHilt/PersonalMonorepo
+  gitPath: kubernetes/helm-charts/k8s-resources/kyverno-policies
+  useDefaultGitRevision: true
 lidarr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/lidarr
@@ -206,13 +210,14 @@ metallb:
   repo: https://metallb.github.io/metallb
   chart: metallb
   destinationNamespace: metallb-system
+  groupName: metallb
   version: 0.14.3
   syncWave: "-10"
-  dependentApps:
-    metallb-config:
-      repo: https://github.com/AidanHilt/PersonalMonorepo
-      gitPath: kubernetes/helm-charts/k8s-resources/metallb-config
-      useDefaultGitRevision: true
+metallb-config:
+  groupName: metallb
+  repo: https://github.com/AidanHilt/PersonalMonorepo
+  gitPath: kubernetes/helm-charts/k8s-resources/metallb-config
+  useDefaultGitRevision: true
 n8n:
   enabled: false
   repo: oci://8gears.container-registry.com/library/n8n
@@ -246,14 +251,15 @@ postgres:
   destinationNamespace: postgres
   version: 0.26.0
   serverSideApply: true
-  dependentApps:
-    postgres-cluster:
-      repo: https://github.com/AidanHilt/PersonalMonorepo
-      gitPath: kubernetes/helm-charts/k8s-resources/postgres-config/
-      defaultValues: |
-        {{ $.Values.env }}:
-          enabled: true
-      useDefaultGitRevision: true
+  groupName: postgres
+postgres-cluster:
+  repo: https://github.com/AidanHilt/PersonalMonorepo
+  gitPath: kubernetes/helm-charts/k8s-resources/postgres-config/
+  groupName: postgres
+  defaultValues: |
+    {{ $.Values.env }}:
+      enabled: true
+  useDefaultGitRevision: true
 prowlarr:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/prowlarr

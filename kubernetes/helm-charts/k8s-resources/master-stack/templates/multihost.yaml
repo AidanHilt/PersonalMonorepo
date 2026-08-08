@@ -1,8 +1,9 @@
 {{- range $appName, $app := .Values }}
 {{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration")}}
 {{- if not (has $appName $excludedNames) }}
-{{- $enabled := ternary $app.enabled true (hasKey $app "enabled") }}
-{{- if and $enabled ($app.multiHost | default false)}}
+{{- $enabled := or $appDetails.enabled (include "common.isAppEnabled" (dict "item" $app "Values" $.Values)) }}
+{{- $appDetails := include "common.mergeGroupOverrides" (dict "item" $app "itemName" $appName) | fromYaml }}
+{{- if and $enabled ($appDetails.multiHost | default false)}}
 {{- range $hostname := $.Values.hostnames }}
 {{- $safeHostname := $hostname | replace "." "-" }}
 apiVersion: argoproj.io/v1alpha1
@@ -11,24 +12,24 @@ metadata:
   name: "{{ $appName }}-{{ $safeHostname }}"
   namespace: argocd
   annotations:
-  {{- if $app.syncWave }}
-    argocd.argoproj.io/sync-wave: "{{ $app.syncWave }}"
+  {{- if $appDetails.syncWave }}
+    argocd.argoproj.io/sync-wave: "{{ $appDetails.syncWave }}"
   {{- end }}
-  {{- if $app.syncOptions }}
-    argocd.argoproj.io/compare-options: "{{ $app.syncOptions }}"
+  {{- if $appDetails.syncOptions }}
+    argocd.argoproj.io/compare-options: "{{ $appDetails.syncOptions }}"
   {{- end }}
 spec:
   project: default
   sources:
-    - repoURL: {{ $app.repo | default $.Values.defaultGitRepo }}
-      targetRevision: {{ $app.version | default $.Values.gitRevision }}
-    {{- with $app.gitPath }}
+    - repoURL: {{ $appDetails.repo | default $.Values.defaultGitRepo }}
+      targetRevision: {{ $appDetails.version | default $.Values.gitRevision }}
+    {{- with $appDetails.gitPath }}
       path: {{ tpl . $ }}
     {{- end }}
-    {{- with $app.chart }}
+    {{- with $appDetails.chart }}
       chart: {{ . }}
     {{- end }}
-    {{- $isHelmChart := and (not (hasKey $app "secureValues")) (or (not (hasKey $app "helmChart")) $app.helmChart) }}
+    {{- $isHelmChart := and (not (hasKey $app "secureValues")) (or (not (hasKey $app "helmChart")) $appDetails.helmChart) }}
     {{- if $isHelmChart }}
       helm:
         values: |
@@ -38,25 +39,25 @@ spec:
           config:
             useExistingConfigMap: homepage-config-{{ $safeHostname }}
         releaseName: "{{ $appName }}-{{ $safeHostname }}"
-      {{- if ($app.configuration).enabled }}
+      {{- if ($appDetails.configuration).enabled }}
         valueFiles:
           - "$values/{{ $.Values.configuration.configurationDirectory }}/{{ $.Values.env }}/{{ $appName }}.yaml"
     - repoURL: {{ $.Values.configuration.configurationRepo }}
       targetRevision: {{ $.Values.configuration.configurationRevision | default $.Values.gitRevision }}
       ref: values
       {{- end }}
-    {{- else if $app.secureValues }}
+    {{- else if $appDetails.secureValues }}
       plugin:
         name: argocd-vault-plugin-helm
         env:
           - name: HELM_VALUES
             value:
-              {{- $app.secureValues | toYaml | indent 12 }}
+              {{- $appDetails.secureValues | toYaml | indent 12 }}
     {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
-  {{- if $app.destinationNamespace }}
-    namespace: {{ $app.destinationNamespace }}
+  {{- if $appDetails.destinationNamespace }}
+    namespace: {{ $appDetails.destinationNamespace }}
   {{- end }}
   syncPolicy:
     automated:
@@ -64,11 +65,11 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      {{- if $app.serverSideApply }}
+      {{- if $appDetails.serverSideApply }}
       - ServerSideApply=true
       {{- end }}
 ---
-{{- range $subAppName, $subApp := $app.dependentApps }}
+{{- range $subAppName, $subApp := $appDetails.dependentApps }}
 {{- $enabled := ternary $subApp.enabled true (hasKey $subApp "enabled") }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -76,8 +77,8 @@ metadata:
   name: "{{ $subAppName }}-{{ $safeHostname }}"
   namespace: argocd
   annotations:
-  {{- $syncWave := $subApp.syncWave | default $app.syncWave }}
-  {{- $syncOptions := $subApp.syncOptions | default $app.syncOptions }}
+  {{- $syncWave := $subApp.syncWave | default $appDetails.syncWave }}
+  {{- $syncOptions := $subApp.syncOptions | default $appDetails.syncOptions }}
   {{- if $syncWave }}
     argocd.argoproj.io/sync-wave: "{{ $syncWave }}"
   {{- end }}
@@ -87,11 +88,11 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: {{ $subApp.repo | default $app.repo }}
+    - repoURL: {{ $subApp.repo | default $appDetails.repo }}
     {{- if $subApp.useDefaultGitRevision }}
       targetRevision: {{ $.Values.gitRevision }}
     {{- else }}
-      targetRevision: {{ $subApp.version | default $app.version }}
+      targetRevision: {{ $subApp.version | default $appDetails.version }}
     {{- end }}
     {{- with $subApp.gitPath }}
       path: {{ tpl . $ }}
@@ -135,7 +136,7 @@ spec:
     {{- end }}
   destination:
     server: 'https://kubernetes.default.svc'
-  {{- $destinationNamespace := $subApp.destinationNamespace | default $app.destinationNamespace }}
+  {{- $destinationNamespace := $subApp.destinationNamespace | default $appDetails.destinationNamespace }}
   {{- if $destinationNamespace }}
     namespace: {{ $destinationNamespace }}
   {{- end }}

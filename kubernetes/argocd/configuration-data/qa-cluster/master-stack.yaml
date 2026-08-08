@@ -33,29 +33,29 @@ seaweedfs:
 homepage:
   enabled: false
 
-hashi-vault:
+vault:
   enabled: true
   configuration:
     enabled: true
-  dependentApps:
-    vault-secrets-operator:
-      configuration:
-        enabled: true
+
+vault-secrets-operator:
+  configuration:
+    enabled: true
 
 metallb:
   enabled: true
-  dependentApps:
-    metallb-config:
-      configuration:
-        enabled: true
+
+metallb-config:
+  configuration:
+    enabled: true
 
 istio:
   enabled: true
   configuration:
     enabled: true
-  dependentApps:
-    kiali:
-      enabled: false
+
+kiali:
+  enabled: false
 
 kyverno:
   enabled: true
