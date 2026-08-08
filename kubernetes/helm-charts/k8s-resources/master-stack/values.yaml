@@ -115,24 +115,29 @@ istio:
   chart: istiod
   version: 1.30.3
   destinationNamespace: istio-system
-  dependentApps:
-    istio-base:
-      chart: base
-    istio-gateway:
-      chart: gateway
-    istio-cni:
-      chart: cni
-    kiali:
-      repo: https://kiali.org/helm-charts
-      chart: kiali-operator
-      version: 1.81.0
-    ingress-config:
-      repo: https://github.com/AidanHilt/PersonalMonorepo
-      useDefaultGitRevision: true
-      gitPath: kubernetes/helm-charts/k8s-resources/istio-ingress-config
-      destinationNamespace: ""
-      # Generates a mirror of the enabled status and hostname config as the config for this app
-      followMasterConfig: true
+  groupName: istio
+istio-base:
+  groupName: istio
+  chart: base
+istio-gateway:
+  groupName: istio
+  chart: gateway
+istio-cni:
+  groupName: istio
+  chart: cni
+kiali:
+  groupName: istio
+  repo: https://kiali.org/helm-charts
+  chart: kiali-operator
+  version: 1.81.0
+ingress-config:
+  groupName: istio
+  repo: https://github.com/AidanHilt/PersonalMonorepo
+  useDefaultGitRevision: true
+  gitPath: kubernetes/helm-charts/k8s-resources/istio-ingress-config
+  destinationNamespace: ""
+  # Generates a mirror of the enabled status and hostname config as the config for this app
+  followMasterConfig: true
 it-tools:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/it-tools
