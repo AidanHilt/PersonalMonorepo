@@ -1,8 +1,8 @@
 {{- range $appName, $app := .Values }}
 {{- $excludedNames := (list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration")}}
 {{- if not (has $appName $excludedNames) }}
-{{- $enabled := or $appDetails.enabled (include "common.isAppEnabled" (dict "item" $app "Values" $.Values)) }}
 {{- $appDetails := include "common.mergeGroupOverrides" (dict "item" $app "itemName" $appName) | fromYaml }}
+{{- $enabled := or $appDetails.enabled (include "common.isAppEnabled" (dict "item" $app "Values" $.Values)) }}
 {{- if and $enabled ($appDetails.multiHost | default false)}}
 {{- range $hostname := $.Values.hostnames }}
 {{- $safeHostname := $hostname | replace "." "-" }}

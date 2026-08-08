@@ -120,12 +120,15 @@ istio:
   destinationNamespace: istio-system
   groupName: istio
 istio-base:
+  enabled: false
   groupName: istio
   chart: base
 istio-gateway:
+  enabled: false
   groupName: istio
   chart: gateway
 istio-cni:
+  enabled: false
   groupName: istio
   chart: cni
 kiali:
