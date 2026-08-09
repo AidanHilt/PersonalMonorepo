@@ -1,5 +1,5 @@
 {{- $excludedNames := list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration" }}
-{{- $kubectlImage := "bitnami/kubectl@sha256:928dbeb5ec84f3ff0f9e3172713f0b22c08284edc81332b557c6fddfd1c97ab4" }}
+{{- $kubectlImage := "dtzar/helm-kubectl:4.2" }}
 
 {{- $hasGates := false }}
 {{- range $appName, $app := .Values }}
