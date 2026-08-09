@@ -168,6 +168,7 @@ istio:
         exit 1
       fi
       echo "Injection confirmed: istiod returned a $PATCH_COUNT-operation patch"
+      sleep 15
   default:
     repo: https://istio-release.storage.googleapis.com/charts
     version: 1.30.3
