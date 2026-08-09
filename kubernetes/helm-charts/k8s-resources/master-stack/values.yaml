@@ -74,6 +74,7 @@ flashpaper:
   destinationNamespace: misc
 vault-namespace:
   enabled: false
+  groupName: vault
   gitPath: kubernetes/namespaces/vault
   syncWave: "-11"
   destinationNamespace: vault
