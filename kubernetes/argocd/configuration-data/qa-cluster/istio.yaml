@@ -2,6 +2,13 @@ global:
   proxy:
     seccompProfile:
       type: RuntimeDefault
+    resources:
+      requests:
+        cpu: 10m
+        memory: 16Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
 cni:
   enabled: true
 meshConfig:
