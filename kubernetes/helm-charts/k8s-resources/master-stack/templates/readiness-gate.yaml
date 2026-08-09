@@ -68,6 +68,7 @@ metadata:
   namespace: {{ $.Release.Namespace }}
   annotations:
     argocd.argoproj.io/sync-wave: {{ $app.syncWave | quote }}
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
 spec:
   backoffLimit: {{ $app.readinessGateCheck.backoffLimit | default 1 }}
   activeDeadlineSeconds: {{ $app.readinessGateCheck.timeoutSeconds | default 300 }}
