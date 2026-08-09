@@ -17,11 +17,15 @@ kind: ServiceAccount
 metadata:
   name: readiness-gate
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1000"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: readiness-gate
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1000"
 rules:
   - apiGroups: ["apps"]
     resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
@@ -37,6 +41,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: readiness-gate
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1000"
 subjects:
   - kind: ServiceAccount
     name: readiness-gate
