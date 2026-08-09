@@ -40,6 +40,7 @@ spec:
                     - kyverno
                     - metallb-system
                     - argocd
+                    - authentik
                 - key: {{ `{{ target.metadata.annotations."istio.io/injection-policy" || '' }}` | quote }}
                   operator: NotEquals
                   value: "disabled"
