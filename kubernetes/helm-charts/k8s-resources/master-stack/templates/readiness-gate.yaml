@@ -67,11 +67,11 @@ metadata:
   name: {{ $appName }}-readiness-gate
   namespace: {{ $.Release.Namespace }}
   annotations:
-    argocd.argoproj.io/sync-wave: {{ $app.syncWave | quote }}
+    argocd.argoproj.io/sync-wave: {{ $appDetails.syncWave | quote }}
     argocd.argoproj.io/compare-options: Replace=true,Force=true
 spec:
-  backoffLimit: {{ $app.readinessGateCheck.backoffLimit | default 1 }}
-  activeDeadlineSeconds: {{ $app.readinessGateCheck.timeoutSeconds | default 300 }}
+  backoffLimit: {{ $appDetails.readinessGateCheck.backoffLimit | default 1 }}
+  activeDeadlineSeconds: {{ $appDetails.readinessGateCheck.timeoutSeconds | default 300 }}
   template:
     spec:
       serviceAccountName: readiness-gate
@@ -82,7 +82,7 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - |
-{{ $app.readinessGateCheck.command | indent 14 }}
+{{ $appDetails.readinessGateCheck.command | indent 14 }}
 ---
 {{- end }}
 {{- end }}
