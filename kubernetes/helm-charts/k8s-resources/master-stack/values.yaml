@@ -116,6 +116,11 @@ immich:
   destinationNamespace: immich
 istio:
   enabled: false
+  readinessGateCheck:
+    command: |
+      set -e
+      until kubectl -n istio-system get deploy/istiod >/dev/null 2>&1; do sleep 3; done
+      kubectl -n istio-system rollout status deploy/istiod --timeout=180s
   default:
     repo: https://istio-release.storage.googleapis.com/charts
     version: 1.30.3
@@ -129,6 +134,7 @@ istio-base:
   chart: base
 istio-gateway:
   enabled: false
+  syncWave: "-14"
   groupName: istio
   chart: gateway
 istio-cni:
@@ -182,6 +188,14 @@ kyverno:
   syncOptions: ServerSideDiff=true,IncludeMutationWebhook=true
   syncWave: "-20"
   serverSideApply: true
+  readinessGateCheck:
+    timeoutSeconds: 240
+    command: |
+      set -e
+      until kubectl -n kyverno get deploy/kyverno-admission-controller >/dev/null 2>&1; do sleep 3; done
+      kubectl -n kyverno rollout status deploy/kyverno-admission-controller --timeout=180s
+      kubectl wait --for=jsonpath='{.webhooks[0].clientConfig.caBundle}' \
+        mutatingwebhookconfiguration/kyverno-resource-mutating-webhook-cfg --timeout=60s
   defaultValues: |
     admissionController:
       replicas: 3

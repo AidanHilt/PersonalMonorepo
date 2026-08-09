@@ -1,0 +1,82 @@
+{{- $excludedNames := list "env" "hostnames" "defaultGitRepo" "gitRevision" "configuration" }}
+{{- $kubectlImage := "bitnami/kubectl@sha256:928dbeb5ec84f3ff0f9e3172713f0b22c08284edc81332b557c6fddfd1c97ab4" }}
+
+{{- $hasGates := false }}
+{{- range $appName, $app := .Values }}
+{{- if not (has $appName $excludedNames) }}
+{{- $appDetails := include "common.mergeGroupOverrides" (dict "item" $app "itemName" $appName "Values" $.Values) | fromYaml }}
+{{- if and $appDetails.enabled $appDetails.readinessGateCheck }}
+{{- $hasGates = true }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- if $hasGates }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: readiness-gate
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: readiness-gate
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: readiness-gate
+subjects:
+  - kind: ServiceAccount
+    name: readiness-gate
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: readiness-gate
+  apiGroup: rbac.authorization.k8s.io
+---
+{{- end }}
+
+{{- range $appName, $app := .Values }}
+{{- if not (has $appName $excludedNames) }}
+{{- $appDetails := include "common.mergeGroupOverrides" (dict "item" $app "itemName" $appName "Values" $.Values) | fromYaml }}
+{{- if and $appDetails.enabled $appDetails.readinessGateCheck }}
+{{- if not $app.syncWave }}
+{{ fail (printf "app '%s' has readinessGateCheck set but no syncWave defined" $appName) }}
+{{- end }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $appName }}-readiness-gate
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ $app.syncWave | quote }}
+spec:
+  backoffLimit: {{ $app.readinessGateCheck.backoffLimit | default 1 }}
+  activeDeadlineSeconds: {{ $app.readinessGateCheck.timeoutSeconds | default 300 }}
+  template:
+    spec:
+      serviceAccountName: readiness-gate
+      restartPolicy: Never
+      containers:
+        - name: check
+          image: {{ $kubectlImage | quote }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+{{ $app.readinessGateCheck.command | indent 14 }}
+---
+{{- end }}
+{{- end }}
+{{- end }}
