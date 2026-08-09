@@ -124,6 +124,7 @@ istio:
       set -e
       until kubectl -n istio-system get deploy/istiod >/dev/null 2>&1; do sleep 3; done
       kubectl -n istio-system rollout status deploy/istiod --timeout=180s
+      sleep 60
   default:
     repo: https://istio-release.storage.googleapis.com/charts
     version: 1.30.3
