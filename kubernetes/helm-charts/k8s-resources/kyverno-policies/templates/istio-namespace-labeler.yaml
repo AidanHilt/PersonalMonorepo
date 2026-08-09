@@ -15,31 +15,34 @@ spec:
     - name: add-istio-injection-label
       match:
         any:
-        - resources:
-            kinds:
-              - Namespace
-      exclude:
-        any:
-        - resources:
-            names:
-              - kube-*
-              - istio-system
-              - vault
-              - postgres
-              - local-path-storage
-              - nvidia
-              - cert-manager
-              - kyverno
-              - metallb-system
-              - argocd
-              - cert-manager
-        - resources:
-            annotations:
-              istio.io/injection-policy: "disabled"
+          - resources:
+              kinds:
+                - Namespace
       mutate:
         targets:
           - apiVersion: v1
             kind: Namespace
+            name: "*"
+            preconditions:
+              all:
+                - key: "{{ target.metadata.name }}"
+                  operator: AnyNotIn
+                  value:
+                    - kube-system
+                    - kube-public
+                    - kube-node-lease
+                    - istio-system
+                    - vault
+                    - postgres
+                    - local-path-storage
+                    - nvidia
+                    - cert-manager
+                    - kyverno
+                    - metallb-system
+                    - argocd
+                - key: "{{ target.metadata.annotations.\"istio.io/injection-policy\" || '' }}"
+                  operator: NotEquals
+                  value: "disabled"
         patchStrategicMerge:
           metadata:
             labels:
