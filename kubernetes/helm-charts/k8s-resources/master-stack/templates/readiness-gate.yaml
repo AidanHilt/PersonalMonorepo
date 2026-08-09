@@ -58,7 +58,7 @@ roleRef:
 {{- if not (has $appName $excludedNames) }}
 {{- $appDetails := include "common.mergeGroupOverrides" (dict "item" $app "itemName" $appName "Values" $.Values) | fromYaml }}
 {{- if and $appDetails.enabled $appDetails.readinessGateCheck }}
-{{- if not $app.syncWave }}
+{{- if not $appDetails.syncWave }}
 {{ fail (printf "app '%s' has readinessGateCheck set but no syncWave defined" $appName) }}
 {{- end }}
 apiVersion: batch/v1
