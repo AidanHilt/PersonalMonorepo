@@ -35,6 +35,8 @@ homepage:
 
 vault:
   enabled: true
+
+hashi-vault:
   configuration:
     enabled: true
 
