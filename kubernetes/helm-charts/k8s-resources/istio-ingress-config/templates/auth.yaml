@@ -63,6 +63,8 @@ spec:
           - {{ . }}/*
           {{- end }}
         {{- end }}
+        notPaths:
+          - "/outpost.goauthentik.io/*"
   selector:
     matchLabels:
       app: istio-gateway

@@ -19,7 +19,7 @@ meshConfig:
       - set-cookie
       - location
       headersToDownstreamOnAllow:
-      - cookie
+      - set-cookie
       headersToUpstreamOnAllow:
       - set-cookie
       - x-authentik-*
