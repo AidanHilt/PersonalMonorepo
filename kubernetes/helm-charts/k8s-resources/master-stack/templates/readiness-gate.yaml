@@ -13,12 +13,46 @@
 
 {{- if $hasGates }}
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: readiness-canary
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1000"
+  labels:
+    istio-injection: enabled
+    readiness-gate/canary: "true"
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: readiness-gate
   namespace: {{ .Release.Namespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "-1000"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: readiness-gate
+  namespace: readiness-canary
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: readiness-gate
+  namespace: readiness-canary
+subjects:
+  - kind: ServiceAccount
+    name: readiness-gate
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: readiness-gate
+  apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole

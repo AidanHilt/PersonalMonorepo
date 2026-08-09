@@ -127,48 +127,40 @@ istio:
       kubectl wait --for=jsonpath='{.webhooks[0].clientConfig.caBundle}' \
       mutatingwebhookconfiguration/istio-sidecar-injector --timeout=60s
 
-      cat <<'EOF' > /tmp/admission-review.json
-      {
-        "kind": "AdmissionReview",
-        "apiVersion": "admission.k8s.io/v1",
-        "request": {
-          "uid": "readiness-gate-check",
-          "kind": {"group": "", "version": "v1", "kind": "Pod"},
-          "resource": {"group": "", "version": "v1", "resource": "pods"},
-          "namespace": "istio-injection-canary",
-          "operation": "CREATE",
-          "userInfo": {"username": "system:readiness-gate", "uid": "readiness-gate"},
-          "object": {
-            "apiVersion": "v1",
-            "kind": "Pod",
-            "metadata": {
-              "name": "injection-canary",
-              "namespace": "istio-injection-canary",
-              "labels": {"istio-injection-canary": "true"}
-            },
-            "spec": {
-              "containers": [{"name": "canary", "image": "pause:3.9"}]
-            }
-          }
-        }
-      }
-      EOF
+      NAMESPACE=readiness-canary
+      REQUIRED_CONSECUTIVE=3
+      pass_count=0
+      attempt=0
 
-      RESPONSE=$(curl -sk --fail-with-body \
-        -H "Content-Type: application/json" \
-        -d @/tmp/admission-review.json \
-        https://istiod.istio-system.svc:443/inject)
+      while [ "$pass_count" -lt "$REQUIRED_CONSECUTIVE" ]; do
+        attempt=$((attempt + 1))
+        POD_NAME="injection-canary-${attempt}"
 
-      # istiod returns an AdmissionReview response with a JSONPatch (base64) if it would inject
-      PATCH_COUNT=$(echo "$RESPONSE" | jq -r '.response.patch // empty' | base64 -d 2>/dev/null | jq 'length' 2>/dev/null || echo 0)
+        kubectl run "$POD_NAME" -n "$NAMESPACE" \
+          --image=pause:3.9 --restart=Never -o name >/dev/null
 
-      if [ "$PATCH_COUNT" -eq 0 ]; then
-        echo "istiod did not return an injection patch — sidecar injection is not functioning"
-        echo "$RESPONSE"
-        exit 1
-      fi
-      echo "Injection confirmed: istiod returned a $PATCH_COUNT-operation patch"
-      sleep 15
+        # Give the scheduler/kubelet a moment, then check container count
+        for i in $(seq 1 10); do
+          COUNT=$(kubectl get pod "$POD_NAME" -n "$NAMESPACE" \
+            -o jsonpath='{.spec.containers[*].name}' | wc -w)
+          [ "$COUNT" -ge 1 ] && break
+          sleep 1
+        done
+
+        kubectl delete pod "$POD_NAME" -n "$NAMESPACE" --wait=false --ignore-not-found
+
+        if [ "$COUNT" -ge 2 ]; then
+          pass_count=$((pass_count + 1))
+          echo "attempt $attempt: injected ($COUNT containers) — $pass_count/$REQUIRED_CONSECUTIVE consecutive passes"
+        else
+          pass_count=0
+          echo "attempt $attempt: NOT injected ($COUNT containers) — resetting streak"
+        fi
+
+        sleep 2
+      done
+
+      echo "Injection stable across $REQUIRED_CONSECUTIVE consecutive real pod creations"
   default:
     repo: https://istio-release.storage.googleapis.com/charts
     version: 1.30.3
