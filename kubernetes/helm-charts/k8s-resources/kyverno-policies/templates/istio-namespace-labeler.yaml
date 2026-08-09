@@ -30,6 +30,9 @@ spec:
               - nvidia
               - cert-manager
               - kyverno
+              - metallb-system
+              - argocd
+              - cert-manager
         - resources:
             annotations:
               istio.io/injection-policy: "disabled"
