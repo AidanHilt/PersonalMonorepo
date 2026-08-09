@@ -25,7 +25,7 @@ spec:
             name: "*"
             preconditions:
               all:
-                - key: "{{ target.metadata.name }}"
+                - key: {{ target.metadata.name }}
                   operator: AnyNotIn
                   value:
                     - kube-system
@@ -40,7 +40,7 @@ spec:
                     - kyverno
                     - metallb-system
                     - argocd
-                - key: "{{ target.metadata.annotations.\"istio.io/injection-policy\" || '' }}"
+                - key: {{ target.metadata.annotations."istio.io/injection-policy" || '' }}
                   operator: NotEquals
                   value: "disabled"
         patchStrategicMerge:
