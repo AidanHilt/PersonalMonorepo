@@ -120,6 +120,7 @@ istio:
     repo: https://istio-release.storage.googleapis.com/charts
     version: 1.30.3
     destinationNamespace: istio-system
+    syncWave: "-15"
   chart: istiod
   groupName: istio
 istio-base:
@@ -196,6 +197,7 @@ kyverno-policies:
   groupName: kyverno
   repo: https://github.com/AidanHilt/PersonalMonorepo
   gitPath: kubernetes/helm-charts/k8s-resources/kyverno-policies
+  syncWave: "-19"
   useDefaultGitRevision: true
 lidarr:
   enabled: false
