@@ -28,6 +28,8 @@ spec:
               - postgres
               - local-path-storage
               - nvidia
+              - cert-manager
+              - kyverno
         - resources:
             annotations:
               istio.io/injection-policy: "disabled"
