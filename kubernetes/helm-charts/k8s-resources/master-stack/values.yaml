@@ -72,6 +72,11 @@ flashpaper:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/flashpaper/
   destinationNamespace: misc
+vault-namespace:
+  enabled: false
+  gitPath: kubernetes/namespaces/vault
+  syncWave: "-11"
+  destinationNamespace: vault
 hashi-vault:
   enabled: false
   repo: https://helm.releases.hashicorp.com
@@ -88,11 +93,9 @@ vault-secrets-operator:
   groupName: vault
   version: 0.10.0
 vault-config:
-  repo: https://github.com/AidanHilt/PersonalMonorepo
   syncWave: "-9"
   gitPath: kubernetes/helm-charts/k8s-resources/vault-config
   destinationNamespace: vault
-  useDefaultGitRevision: true
   followMasterConfig: true
   groupName: vault
 # Note that this one isn't managed in main, but in homepage-config.yaml. This is because we need
