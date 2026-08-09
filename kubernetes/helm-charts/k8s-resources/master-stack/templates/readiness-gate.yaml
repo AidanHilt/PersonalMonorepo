@@ -35,6 +35,8 @@ kind: Role
 metadata:
   name: readiness-gate
   namespace: readiness-canary
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1000"
 rules:
   - apiGroups: [""]
     resources: ["pods"]
@@ -45,6 +47,8 @@ kind: RoleBinding
 metadata:
   name: readiness-gate
   namespace: readiness-canary
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1000"
 subjects:
   - kind: ServiceAccount
     name: readiness-gate
