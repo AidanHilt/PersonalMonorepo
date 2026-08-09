@@ -16,7 +16,8 @@
         {{- $groupEnabled = true -}}
       {{- else -}}
         {{- $groupApp := get $group $key -}}
-        {{- if or (not $groupApp) (not (hasKey $groupApp "enabled")) (get $groupApp "enabled") -}}
+        {{- $checkApp := $groupApp | default dict }}
+        {{- if get $checkApp "enabled" -}}
           {{- $groupEnabled = true -}}
         {{- end -}}
       {{- end -}}
