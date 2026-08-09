@@ -40,6 +40,7 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Database
 metadata:
   name: {{ $dbName }}
+  namespace: postgres
 spec:
   name: {{ $db.dbName | default $dbName }}
   owner: {{ $db.owner | default $dbName }}
