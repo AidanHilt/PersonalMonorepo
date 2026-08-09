@@ -32,9 +32,14 @@ spec:
     {{- $isHelmChart := and (not (hasKey $appDetails "secureValues")) (or (not (hasKey $appDetails "helmChart")) $appDetails.helmChart) }}
     {{- if $isHelmChart }}
       helm:
-        {{- if and $appDetails.defaultValues (not (($appDetails.configuration).enabled | default false)) }}
+        {{- if or $appDetails.followMasterConfig (and $appDetails.defaultValues (not (($appDetails.configuration).enabled | default false))) }}
         values:
-          {{ tpl $appDetails.defaultValues $ | toYaml | indent 8 }}
+          {{- with $appDetails.defaultValues }}
+          {{- tpl . $ | toYaml | indent 8 }}
+          {{- end }}
+          {{- if $appDetails.followMasterConfig }}
+          {{- include "common.generateEnabledValues" (dict "passThroughKeys" (list "hostnames") "Values" $.Values) | toYaml | indent 8 }}
+          {{- end }}
         {{- end }}
         releaseName: {{ $appName }}
       {{- if ($appDetails.configuration).enabled }}
