@@ -76,17 +76,20 @@ hashi-vault:
   enabled: false
   repo: https://helm.releases.hashicorp.com
   chart: vault
+  syncWave: "-10"
   version: 0.32.0
   destinationNamespace: vault
   groupName: vault
 vault-secrets-operator:
   repo: https://helm.releases.hashicorp.com
   chart: vault-secrets-operator
+  syncWave: "-10"
   destinationNamespace: vault
   groupName: vault
   version: 0.10.0
 vault-config:
   repo: https://github.com/AidanHilt/PersonalMonorepo
+  syncWave: "-9"
   gitPath: kubernetes/helm-charts/k8s-resources/vault-config
   destinationNamespace: vault
   useDefaultGitRevision: true
