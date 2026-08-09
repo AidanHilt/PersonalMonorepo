@@ -126,6 +126,48 @@ istio:
       kubectl -n istio-system rollout status deploy/istiod --timeout=180s
       kubectl wait --for=jsonpath='{.webhooks[0].clientConfig.caBundle}' \
       mutatingwebhookconfiguration/istio-sidecar-injector --timeout=60s
+
+      cat <<'EOF' > /tmp/admission-review.json
+      {
+        "kind": "AdmissionReview",
+        "apiVersion": "admission.k8s.io/v1",
+        "request": {
+          "uid": "readiness-gate-check",
+          "kind": {"group": "", "version": "v1", "kind": "Pod"},
+          "resource": {"group": "", "version": "v1", "resource": "pods"},
+          "namespace": "istio-injection-canary",
+          "operation": "CREATE",
+          "userInfo": {"username": "system:readiness-gate", "uid": "readiness-gate"},
+          "object": {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "metadata": {
+              "name": "injection-canary",
+              "namespace": "istio-injection-canary",
+              "labels": {"istio-injection-canary": "true"}
+            },
+            "spec": {
+              "containers": [{"name": "canary", "image": "pause:3.9"}]
+            }
+          }
+        }
+      }
+      EOF
+
+      RESPONSE=$(curl -sk --fail-with-body \
+        -H "Content-Type: application/json" \
+        -d @/tmp/admission-review.json \
+        https://istiod.istio-system.svc:443/inject)
+
+      # istiod returns an AdmissionReview response with a JSONPatch (base64) if it would inject
+      PATCH_COUNT=$(echo "$RESPONSE" | jq -r '.response.patch // empty' | base64 -d 2>/dev/null | jq 'length' 2>/dev/null || echo 0)
+
+      if [ "$PATCH_COUNT" -eq 0 ]; then
+        echo "istiod did not return an injection patch — sidecar injection is not functioning"
+        echo "$RESPONSE"
+        exit 1
+      fi
+      echo "Injection confirmed: istiod returned a $PATCH_COUNT-operation patch"
   default:
     repo: https://istio-release.storage.googleapis.com/charts
     version: 1.30.3
