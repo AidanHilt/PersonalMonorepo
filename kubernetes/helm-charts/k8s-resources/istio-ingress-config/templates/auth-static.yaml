@@ -61,29 +61,47 @@ spec:
         - /outpost.goauthentik.io
         - /outpost.goauthentik.io/*
 ---
+{{- $ipv4Regex := `^(\d{1,3}\.){3}\d{1,3}$` -}}
+{{- $subdomains := include "istio-ingress-config.subdomains" .Values | mustFromJson }}
+
 {{- range $hostname := .Values.hostnames }}
+{{- if not (regexMatch $ipv4Regex $hostname) }}
 {{- $safeHostname := replace "." "-" $hostname }}
-{{- $gatewayName := printf "shared-%s-gateway" $safeHostname }}
+{{- $rootGatewayName := printf "shared-%s-gateway" $safeHostname }}
+
+{{- $allHosts := list $hostname }}
+{{- $allGateways := list $rootGatewayName }}
+
+{{- range $subdomains }}
+{{- $subHost := printf "%s.%s" . $hostname }}
+{{- $safeSubHost := replace "." "-" $subHost }}
+{{- $allHosts = append $allHosts $subHost }}
+{{- $allGateways = append $allGateways (printf "shared-%s-gateway" $safeSubHost) }}
+{{- end }}
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: authentik-outpost-{{$safeHostname}}
+  name: authentik-outpost-{{ $safeHostname }}
   namespace: istio-system
 spec:
   hosts:
-    - {{ $hostname }}
+{{- range $allHosts }}
+    - {{ . }}
+{{- end }}
   gateways:
-    - {{ $gatewayName }}
+{{- range $allGateways }}
+    - {{ . }}
+{{- end }}
   http:
     - match:
-      - uri:
-          prefix: /outpost.goauthentik.io
+        - uri:
+            prefix: /outpost.goauthentik.io
       route:
         - destination:
             host: ak-outpost-proxy-outpost-{{ $safeHostname }}.authentik.svc.cluster.local
             port:
               number: 9000
----
+{{- end }}
 {{- end }}
 {{- end }}
