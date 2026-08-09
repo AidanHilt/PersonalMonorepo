@@ -139,22 +139,24 @@ istio:
         kubectl run "$POD_NAME" -n "$NAMESPACE" \
           --image=pause:3.9 --restart=Never -o name >/dev/null
 
-        # Give the scheduler/kubelet a moment, then check container count
+        HAS_PROXY="false"
         for i in $(seq 1 10); do
-          COUNT=$(kubectl get pod "$POD_NAME" -n "$NAMESPACE" \
-            -o jsonpath='{.spec.containers[*].name}' | wc -w)
-          [ "$COUNT" -ge 1 ] && break
+          NAMES=$(kubectl get pod "$POD_NAME" -n "$NAMESPACE" \
+            -o jsonpath='{.spec.initContainers[*].name}' 2>/dev/null)
+          case " $NAMES " in
+            *" istio-proxy "*) HAS_PROXY="true"; break ;;
+          esac
           sleep 1
         done
 
         kubectl delete pod "$POD_NAME" -n "$NAMESPACE" --wait=false --ignore-not-found
 
-        if [ "$COUNT" -ge 2 ]; then
+        if [ "$HAS_PROXY" = "true" ]; then
           pass_count=$((pass_count + 1))
-          echo "attempt $attempt: injected ($COUNT containers) — $pass_count/$REQUIRED_CONSECUTIVE consecutive passes"
+          echo "attempt $attempt: istio-proxy init container present — $pass_count/$REQUIRED_CONSECUTIVE consecutive passes"
         else
           pass_count=0
-          echo "attempt $attempt: NOT injected ($COUNT containers) — resetting streak"
+          echo "attempt $attempt: istio-proxy init container missing — resetting streak"
         fi
 
         sleep 2
