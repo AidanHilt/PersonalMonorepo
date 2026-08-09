@@ -142,12 +142,11 @@ istio-cni:
   groupName: istio
   chart: cni
 kiali:
-  groupName: istio
   repo: https://kiali.org/helm-charts
   chart: kiali-operator
+  destinationNamespace: istio-system
   version: 1.81.0
-ingress-config:
-  groupName: istio
+ingress:
   repo: https://github.com/AidanHilt/PersonalMonorepo
   useDefaultGitRevision: true
   gitPath: kubernetes/helm-charts/k8s-resources/istio-ingress-config
