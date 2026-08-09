@@ -194,8 +194,6 @@ kyverno:
       set -e
       until kubectl -n kyverno get deploy/kyverno-admission-controller >/dev/null 2>&1; do sleep 3; done
       kubectl -n kyverno rollout status deploy/kyverno-admission-controller --timeout=180s
-      kubectl wait --for=jsonpath='{.webhooks[0].clientConfig.caBundle}' \
-        mutatingwebhookconfiguration/kyverno-resource-mutating-webhook-cfg --timeout=60s
   defaultValues: |
     admissionController:
       replicas: 3
