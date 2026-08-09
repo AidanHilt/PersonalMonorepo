@@ -63,7 +63,7 @@ Usage:
   {{- if and $group (hasKey $group "default") -}}
     {{- $groupOverrides = $group.default -}}
   {{- end -}}
-  {{- $itemDetails = mergeOverwrite $item $groupOverrides -}}
+  {{- $itemDetails = mergeOverwrite $groupOverrides $item -}}
 {{- end -}}
 {{- $itemDetails | toYaml -}}
 {{- end -}}
