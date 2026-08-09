@@ -82,11 +82,13 @@ hashi-vault:
 vault-secrets-operator:
   repo: https://helm.releases.hashicorp.com
   chart: vault-secrets-operator
+  destinationNamespace: vault
   groupName: vault
   version: 0.10.0
 vault-config:
   repo: https://github.com/AidanHilt/PersonalMonorepo
   gitPath: kubernetes/helm-charts/k8s-resources/vault-config
+  destinationNamespace: vault
   useDefaultGitRevision: true
   followMasterConfig: true
   groupName: vault
