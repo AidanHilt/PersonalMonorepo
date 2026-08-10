@@ -1,0 +1,442 @@
+name: Custom Images
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "nix/custom-images/**"
+  workflow_dispatch:
+
+concurrency:
+  group: custom-images-release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  FLAKE_ROOT: nix/custom-images
+  REGISTRY: ghcr.io
+  IMAGE_NAMESPACE: ${{ github.repository_owner }}
+
+jobs:
+  determine-releases:
+    runs-on: ubuntu-24.04
+
+    outputs:
+      releases: ${{ steps.release.outputs.releases }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine releases
+        id: release
+        working-directory: ${{ env.FLAKE_ROOT }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch --tags --force
+
+          releases='[]'
+
+          semver_bump() {
+            local version="$1"
+            local bump="$2"
+
+            IFS=. read -r major minor patch <<< "$version"
+
+            case "$bump" in
+              major)
+                echo "$((major + 1)).0.0"
+                ;;
+              minor)
+                echo "$major.$((minor + 1)).0"
+                ;;
+              patch)
+                echo "$major.$minor.$((patch + 1))"
+                ;;
+            esac
+          }
+
+          highest_bump() {
+            local current="$1"
+            local candidate="$2"
+
+            case "$candidate" in
+              major)
+                echo "major"
+                ;;
+              minor)
+                if [[ "$current" == "major" ]]; then
+                  echo "major"
+                else
+                  echo "minor"
+                fi
+                ;;
+              patch)
+                echo "$current"
+                ;;
+              none)
+                echo "$current"
+                ;;
+            esac
+          }
+
+          get_bootstrap_version() {
+            local image="$1"
+
+            nix eval \
+              --raw \
+              --expr "(import ./images/$image/values.nix).tag"
+          }
+
+          get_latest_tag() {
+            local image="$1"
+
+            git tag \
+              --list "${image}-v*" \
+              --sort=-version:refname |
+              head -n 1
+          }
+
+          get_version_from_tag() {
+            local tag="$1"
+
+            echo "${tag#*-v}"
+          }
+
+          get_bump_for_commit() {
+            local commit="$1"
+
+            subject="$(git log -1 --format='%s' "$commit")"
+            body="$(git log -1 --format='%b' "$commit")"
+
+            if echo "$subject" | grep -qE '^[[:alnum:]_-]+(\([^)]*\))?!:' ||
+              echo "$body" | grep -qE '(^|[[:space:]])BREAKING CHANGE:'; then
+              echo "major"
+              return
+            fi
+
+            if echo "$subject" | grep -qE '^feat(\([^)]*\))?:'; then
+              echo "minor"
+              return
+            fi
+
+            if echo "$subject" | grep -qE '^(fix|perf)(\([^)]*\))?:'; then
+              echo "patch"
+              return
+            fi
+
+            echo "none"
+          }
+
+          for image_dir in images/*; do
+            [[ -d "$image_dir" ]] || continue
+
+            image="$(basename "$image_dir")"
+            latest_tag="$(get_latest_tag "$image")"
+
+            if [[ -z "$latest_tag" ]]; then
+              version="$(get_bootstrap_version "$image")"
+
+              if [[ -z "$version" ]]; then
+                echo "::error::No bootstrap version found for $image"
+                exit 1
+              fi
+
+              releases="$(
+                jq \
+                  --arg image "$image" \
+                  --arg version "$version" \
+                  '. + [{
+                    image: $image,
+                    version: $version,
+                    tag: ($image + "-v" + $version),
+                    initial: true
+                  }]' \
+                  <<< "$releases"
+              )"
+
+              continue
+            fi
+
+            current_version="$(get_version_from_tag "$latest_tag")"
+
+            commits="$(
+              git log \
+                --format='%H' \
+                "${latest_tag}..HEAD" \
+                -- "images/$image"
+            )"
+
+            [[ -n "$commits" ]] || continue
+
+            bump="none"
+
+            while IFS= read -r commit; do
+              commit_bump="$(get_bump_for_commit "$commit")"
+              bump="$(highest_bump "$bump" "$commit_bump")"
+            done <<< "$commits"
+
+            [[ "$bump" != "none" ]] || continue
+
+            next_version="$(semver_bump "$current_version" "$bump")"
+
+            releases="$(
+              jq \
+                --arg image "$image" \
+                --arg version "$next_version" \
+                '. + [{
+                  image: $image,
+                  version: $version,
+                  tag: ($image + "-v" + $version),
+                  initial: false
+                }]' \
+                <<< "$releases"
+            )"
+          done
+
+          echo "Releases:"
+          jq . <<< "$releases"
+
+          echo "releases=$(jq -c . <<< "$releases")" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: determine-releases
+    if: needs.determine-releases.outputs.releases != '[]'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        release: ${{ fromJSON(needs.determine-releases.outputs.releases) }}
+        architecture:
+          - x86_64-linux
+          - aarch64-linux
+
+    runs-on: ${{ matrix.architecture == 'aarch64-linux' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v21
+
+      - name: Enable Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v13
+
+      - name: Update image version
+        working-directory: ${{ env.FLAKE_ROOT }}
+        env:
+          IMAGE: ${{ matrix.release.image }}
+          VERSION: ${{ matrix.release.version }}
+        run: |
+          set -euo pipefail
+
+          values="images/$IMAGE/values.nix"
+
+          sed -i -E \
+            "s/^([[:space:]]*tag[[:space:]]*=[[:space:]]*)\"[^\"]*\"/\1\"$VERSION\"/" \
+            "$values"
+
+          if ! grep -qE '^[[:space:]]*tag[[:space:]]*=[[:space:]]*"[^"]+"' "$values"; then
+            echo "::error::$values does not contain a tag attribute"
+            exit 1
+          fi
+
+      - name: Build image
+        working-directory: ${{ env.FLAKE_ROOT }}
+        env:
+          IMAGE: ${{ matrix.release.image }}
+          ARCHITECTURE: ${{ matrix.architecture }}
+        run: |
+          set -euo pipefail
+
+          nix build \
+            ".#packages.${ARCHITECTURE}.${IMAGE}"
+
+      - name: Load image
+        id: load
+        env:
+          IMAGE: ${{ matrix.release.image }}
+        run: |
+          set -euo pipefail
+
+          image="$(
+            docker load \
+              --input "${{ env.FLAKE_ROOT }}/result" |
+            awk '/Loaded image:/ { print $3 }'
+          )
+
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag architecture image
+        env:
+          IMAGE: ${{ matrix.release.image }}
+          VERSION: ${{ matrix.release.version }}
+          ARCHITECTURE: ${{ matrix.architecture }}
+        run: |
+          set -euo pipefail
+
+          docker tag \
+            "${{ steps.load.outputs.image }}" \
+            "${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${IMAGE}:${VERSION}-${ARCHITECTURE}"
+
+      - name: Push architecture image
+        env:
+          IMAGE: ${{ matrix.release.image }}
+          VERSION: ${{ matrix.release.version }}
+          ARCHITECTURE: ${{ matrix.architecture }}
+        run: |
+          set -euo pipefail
+
+          docker push \
+            "${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${IMAGE}:${VERSION}-${ARCHITECTURE}"
+
+  finalize:
+    needs:
+      - determine-releases
+      - build
+    if: needs.determine-releases.outputs.releases != '[]'
+
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Update image versions
+        working-directory: ${{ env.FLAKE_ROOT }}
+        env:
+          RELEASES: ${{ needs.determine-releases.outputs.releases }}
+        run: |
+          set -euo pipefail
+
+          jq -c '.[]' <<< "$RELEASES" |
+          while read -r release; do
+            image="$(jq -r '.image' <<< "$release")"
+            version="$(jq -r '.version' <<< "$release")"
+
+            values="images/$image/values.nix"
+
+            sed -i -E \
+              "s/^([[:space:]]*tag[[:space:]]*=[[:space:]]*)\"[^\"]*\"/\1\"$version\"/" \
+              "$values"
+
+            if ! grep -qE '^[[:space:]]*tag[[:space:]]*=[[:space:]]*"[^"]+"' "$values"; then
+              echo "::error::$values does not contain a tag attribute"
+              exit 1
+            fi
+          done
+
+      - name: Commit synchronized versions
+        env:
+          RELEASES: ${{ needs.determine-releases.outputs.releases }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add nix/custom-images/images/*/values.nix
+
+          if git diff --cached --quiet; then
+            echo "No version changes to commit"
+            exit 0
+          fi
+
+          message="$(
+            jq -r '
+              map(.image + " " + .version) |
+              "chore(release): " + join(", ")
+            ' <<< "$RELEASES"
+          )"
+
+          git commit -m "$message"
+          git push origin HEAD:main
+
+      - name: Create Git tags
+        env:
+          RELEASES: ${{ needs.determine-releases.outputs.releases }}
+        run: |
+          set -euo pipefail
+
+          git fetch --tags --force
+
+          jq -r '.[].tag' <<< "$RELEASES" |
+          while read -r tag; do
+            git tag \
+              --annotate \
+              "$tag" \
+              --message "$tag"
+
+            git push origin "$tag"
+          done
+
+      - name: Create GitHub releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASES: ${{ needs.determine-releases.outputs.releases }}
+        run: |
+          set -euo pipefail
+
+          jq -c '.[]' <<< "$RELEASES" |
+          while read -r release; do
+            image="$(jq -r '.image' <<< "$release")"
+            tag="$(jq -r '.tag' <<< "$release")"
+
+            gh release create "$tag" \
+              --title "$image $tag" \
+              --generate-notes \
+              --verify-tag
+
+  manifest:
+    needs:
+      - determine-releases
+      - build
+      - finalize
+    if: needs.determine-releases.outputs.releases != '[]'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        release: ${{ fromJSON(needs.determine-releases.outputs.releases) }}
+
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create multi-architecture image
+        env:
+          IMAGE: ${{ matrix.release.image }}
+          VERSION: ${{ matrix.release.version }}
+        run: |
+          set -euo pipefail
+
+          image="${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${IMAGE}"
+
+          docker buildx imagetools create \
+            --tag "${image}:${VERSION}" \
+            "${image}:${VERSION}-x86_64-linux" \
+            "${image}:${VERSION}-aarch64-linux"

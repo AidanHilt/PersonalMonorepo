@@ -1,0 +1,27 @@
+name: Check Custom Images
+
+on:
+  pull_request:
+    paths:
+      - "nix/custom-images/**"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-26.04
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v21
+
+      - name: Enable Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v13
+
+      - name: Check flake
+        working-directory: nix/custom-images
+        run: nix flake check
