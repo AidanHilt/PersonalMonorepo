@@ -83,6 +83,7 @@ let
             authorization_flow = "\${data.authentik_flow.default-authorization-flow.id}";
             invalidation_flow = "\${data.authentik_flow.default-invalidation-flow.id}";
             mode = "forward_single";
+            cookie_domain = ".${stripSubdomains externalHost}";
           };
         };
 
