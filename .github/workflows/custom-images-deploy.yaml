@@ -1,4 +1,4 @@
-name: Custom Images
+name: Custom Images Build and Deploy
 
 on:
   push:
