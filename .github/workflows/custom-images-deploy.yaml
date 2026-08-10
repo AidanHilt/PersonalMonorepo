@@ -4,9 +4,18 @@ on:
   push:
     branches:
       - main
+      - project-rockhard/backup
     paths:
       - "nix/custom-images/**"
+      - ".github/worflows/custom-images-deploy.yaml"
+
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build and calculate releases without publishing"
+        required: true
+        default: true
+        type: boolean
 
 concurrency:
   group: custom-images-release
@@ -27,10 +36,12 @@ jobs:
 
     outputs:
       releases: ${{ steps.release.outputs.releases }}
+      base_sha: ${{ steps.release.outputs.base_sha }}
+      dry_run: ${{ steps.release.outputs.dry_run }}
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -38,10 +49,17 @@ jobs:
         id: release
         working-directory: ${{ env.FLAKE_ROOT }}
         shell: bash
+        env:
+          DRY_RUN: ${{ inputs.dry_run || false }}
         run: |
           set -euo pipefail
 
           git fetch --tags --force
+
+          base_sha="$(git rev-parse HEAD)"
+
+          echo "base_sha=$base_sha" >> "$GITHUB_OUTPUT"
+          echo "dry_run=$DRY_RUN" >> "$GITHUB_OUTPUT"
 
           releases='[]'
 
@@ -79,10 +97,7 @@ jobs:
                   echo "minor"
                 fi
                 ;;
-              patch)
-                echo "$current"
-                ;;
-              none)
+              patch|none)
                 echo "$current"
                 ;;
             esac
@@ -113,6 +128,9 @@ jobs:
 
           get_bump_for_commit() {
             local commit="$1"
+
+            local subject
+            local body
 
             subject="$(git log -1 --format='%s' "$commit")"
             body="$(git log -1 --format='%b' "$commit")"
@@ -202,13 +220,17 @@ jobs:
             )"
           done
 
-          echo "Releases:"
+          echo "========================================"
+          echo "Release calculation"
+          echo "========================================"
           jq . <<< "$releases"
+          echo "========================================"
 
           echo "releases=$(jq -c . <<< "$releases")" >> "$GITHUB_OUTPUT"
 
   build:
     needs: determine-releases
+
     if: needs.determine-releases.outputs.releases != '[]'
 
     strategy:
@@ -223,7 +245,9 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.determine-releases.outputs.base_sha }}
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v21
@@ -250,6 +274,8 @@ jobs:
             exit 1
           fi
 
+          echo "Building $IMAGE version $VERSION"
+
       - name: Build image
         working-directory: ${{ env.FLAKE_ROOT }}
         env:
@@ -263,8 +289,6 @@ jobs:
 
       - name: Load image
         id: load
-        env:
-          IMAGE: ${{ matrix.release.image }}
         run: |
           set -euo pipefail
 
@@ -274,51 +298,92 @@ jobs:
             awk '/Loaded image:/ { print $3 }'
           )
 
+          if [[ -z "$image" ]]; then
+            echo "::error::Unable to determine loaded image name"
+            exit 1
+          fi
+
           echo "image=$image" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GHCR
+        if: needs.determine-releases.outputs.dry_run != 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Tag architecture image
+      - name: Tag temporary image
+        if: needs.determine-releases.outputs.dry_run != 'true'
         env:
           IMAGE: ${{ matrix.release.image }}
-          VERSION: ${{ matrix.release.version }}
           ARCHITECTURE: ${{ matrix.architecture }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
+
+          temporary_tag="${IMAGE}:ci-${RUN_ID}-${ARCHITECTURE}"
+          registry_image="${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${temporary_tag}"
 
           docker tag \
             "${{ steps.load.outputs.image }}" \
-            "${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${IMAGE}:${VERSION}-${ARCHITECTURE}"
+            "$registry_image"
 
-      - name: Push architecture image
+          echo "temporary_image=$registry_image" >> "$GITHUB_ENV"
+
+      - name: Push temporary image
+        if: needs.determine-releases.outputs.dry_run != 'true'
+        run: |
+          set -euo pipefail
+
+          docker push "$temporary_image"
+
+      - name: Display dry-run result
+        if: needs.determine-releases.outputs.dry_run == 'true'
         env:
           IMAGE: ${{ matrix.release.image }}
           VERSION: ${{ matrix.release.version }}
           ARCHITECTURE: ${{ matrix.architecture }}
         run: |
-          set -euo pipefail
-
-          docker push \
-            "${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${IMAGE}:${VERSION}-${ARCHITECTURE}"
+          echo "DRY RUN"
+          echo "Would publish:"
+          echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${IMAGE}:${VERSION}"
+          echo "Architecture: ${ARCHITECTURE}"
 
   finalize:
     needs:
       - determine-releases
       - build
-    if: needs.determine-releases.outputs.releases != '[]'
+
+    if: |
+      needs.determine-releases.outputs.releases != '[]' &&
+      needs.determine-releases.outputs.dry_run != 'true'
 
     runs-on: ubuntu-24.04
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: main
+
+      - name: Verify source has not changed
+        env:
+          BASE_SHA: ${{ needs.determine-releases.outputs.base_sha }}
+        run: |
+          set -euo pipefail
+
+          git fetch origin main --force
+
+          current_sha="$(git rev-parse origin/main)"
+
+          if [[ "$current_sha" != "$BASE_SHA" ]]; then
+            echo "::error::main changed while the release was being built"
+            echo "::error::Expected: $BASE_SHA"
+            echo "::error::Actual:   $current_sha"
+            exit 1
+          fi
 
       - name: Update image versions
         working-directory: ${{ env.FLAKE_ROOT }}
@@ -347,6 +412,7 @@ jobs:
       - name: Commit synchronized versions
         env:
           RELEASES: ${{ needs.determine-releases.outputs.releases }}
+          BASE_SHA: ${{ needs.determine-releases.outputs.base_sha }}
         run: |
           set -euo pipefail
 
@@ -368,6 +434,12 @@ jobs:
           )"
 
           git commit -m "$message"
+
+          if ! git merge-base --is-ancestor "$BASE_SHA" HEAD; then
+            echo "::error::Release commit is not based on the expected source"
+            exit 1
+          fi
+
           git push origin HEAD:main
 
       - name: Create Git tags
@@ -380,6 +452,11 @@ jobs:
 
           jq -r '.[].tag' <<< "$RELEASES" |
           while read -r tag; do
+            if git rev-parse "$tag" >/dev/null 2>&1; then
+              echo "::error::Tag already exists: $tag"
+              exit 1
+            fi
+
             git tag \
               --annotate \
               "$tag" \
@@ -388,29 +465,15 @@ jobs:
             git push origin "$tag"
           done
 
-      - name: Create GitHub releases
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASES: ${{ needs.determine-releases.outputs.releases }}
-        run: |
-          set -euo pipefail
-
-          jq -c '.[]' <<< "$RELEASES" |
-          while read -r release; do
-            image="$(jq -r '.image' <<< "$release")"
-            tag="$(jq -r '.tag' <<< "$release")"
-
-            gh release create "$tag" \
-              --title "$image $tag" \
-              --generate-notes \
-              --verify-tag
-
   manifest:
     needs:
       - determine-releases
       - build
       - finalize
-    if: needs.determine-releases.outputs.releases != '[]'
+
+    if: |
+      needs.determine-releases.outputs.releases != '[]' &&
+      needs.determine-releases.outputs.dry_run != 'true'
 
     strategy:
       fail-fast: false
@@ -431,12 +494,40 @@ jobs:
         env:
           IMAGE: ${{ matrix.release.image }}
           VERSION: ${{ matrix.release.version }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
 
           image="${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${IMAGE}"
 
+          amd64="${image}:ci-${RUN_ID}-x86_64-linux"
+          arm64="${image}:ci-${RUN_ID}-aarch64-linux"
+
           docker buildx imagetools create \
             --tag "${image}:${VERSION}" \
-            "${image}:${VERSION}-x86_64-linux" \
-            "${image}:${VERSION}-aarch64-linux"
+            "$amd64" \
+            "$arm64"
+
+      - name: Verify multi-architecture image
+        env:
+          IMAGE: ${{ matrix.release.image }}
+          VERSION: ${{ matrix.release.version }}
+        run: |
+          set -euo pipefail
+
+          image="${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${IMAGE}:${VERSION}"
+
+          docker buildx imagetools inspect "$image"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE: ${{ matrix.release.image }}
+          TAG: ${{ matrix.release.tag }}
+        run: |
+          set -euo pipefail
+
+          gh release create "$TAG" \
+            --title "$IMAGE $TAG" \
+            --generate-notes \
+            --verify-tag
