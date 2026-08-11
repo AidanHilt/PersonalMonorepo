@@ -110,6 +110,7 @@ jobs:
             local image="$1"
 
             nix eval \
+              --impure \
               --raw \
               --expr "(import ./images/$image/values.nix).tag"
           }
