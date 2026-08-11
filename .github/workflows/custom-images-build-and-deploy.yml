@@ -45,6 +45,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v21
+
       - name: Determine releases
         id: release
         working-directory: ${{ env.FLAKE_ROOT }}
