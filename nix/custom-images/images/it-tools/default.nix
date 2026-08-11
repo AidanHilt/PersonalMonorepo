@@ -64,7 +64,7 @@ let
   '';
 in
 {
-  copyToRoot = pkgs.buildEnv {
+  contents = pkgs.buildEnv {
     name = "image-root";
     paths = [ pkgs.fakeNss rootfs ];
   };
