@@ -300,7 +300,7 @@ jobs:
             docker load \
               --input "${{ env.FLAKE_ROOT }}/result" |
             awk '/Loaded image:/ { print $3 }'
-          )
+          )"
 
           if [[ -z "$image" ]]; then
             echo "::error::Unable to determine loaded image name"
