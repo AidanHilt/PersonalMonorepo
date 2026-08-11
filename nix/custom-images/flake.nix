@@ -43,7 +43,7 @@
                 inherit (values) tag;
               };
             in
-              pkgs.dockerTools.buildImage (imageConfig // {
+              pkgs.dockerTools.buildLayeredImage (imageConfig // {
                 name = imageName;
                 tag = tag;
                 # Add architecture to the image config
