@@ -61,20 +61,31 @@ let
     mkdir -p $out/etc/nginx/conf.d
     cp ${nginxConf} $out/etc/nginx/conf.d/default.conf
     cp ${nginxMainConf} $out/etc/nginx/nginx.conf
+
+    mkdir -p $out/var/log/nginx $out/var/cache/nginx
+    touch $out/var/log/nginx/.keep $out/var/cache/nginx/.keep
+
+    mkdir -p $out/tmp/client_body $out/tmp/proxy $out/tmp/fastcgi $out/tmp/uwsgi $out/tmp/scgi
+    touch $out/tmp/client_body/.keep $out/tmp/proxy/.keep $out/tmp/fastcgi/.keep $out/tmp/uwsgi/.keep $out/tmp/scgi/.keep
   '';
 in
+
 {
-  contents = pkgs.buildEnv {
+  name = "it-tools";
+  inherit tag;
+
+  copyToRoot = pkgs.buildEnv {
     name = "image-root";
     paths = [ pkgs.fakeNss rootfs ];
   };
 
-  fakeRootCommands = ''
-    mkdir -p var/log/nginx
-    mkdir -p var/cache/nginx
-    mkdir -p tmp/client_body tmp/proxy tmp/fastcgi tmp/uwsgi tmp/scgi
-    chmod 1777 tmp
-  '';
+  perms = [
+    {
+      path = rootfs;
+      regex = "tmp";
+      mode = "1777";
+    }
+  ];
 
   config = {
     Cmd = [ "${pkgs.nginx}/bin/nginx" "-c" "/etc/nginx/nginx.conf" ];
