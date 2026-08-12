@@ -10,6 +10,7 @@
 
   nix = {
     settings = {
+      trusted-users = [machine-config.username];
       experimental-features = [ "nix-command" "flakes" ];
       substituters = [
         "https://nix-community.cachix.org"
