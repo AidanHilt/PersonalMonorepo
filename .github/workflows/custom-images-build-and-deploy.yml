@@ -259,8 +259,10 @@ jobs:
 
       - name: Build and push
         run: |
-          nix run "./$FLAKE_ROOT#packages.${{ matrix.architecture }}.${{ matrix.release.image }}.copyToRegistry" \
-            -- docker://ghcr.io/${{ github.repository_owner }}/${{ matrix.release.image }}:${{ matrix.release.image }}-${{ matrix.architecture }}
+          IMAGE_PATH=$(nix build .#packages.${{ matrix.architecture }}.it-tools-image --print-out-paths --no-link)
+          nix run nixpkgs#skopeo -- --insecure-policy copy \
+            "nix:$IMAGE_PATH" \
+            "docker://ghcr.io/${{ github.repository_owner }}/it-tools:${{ matrix.release }}-${{ matrix.architecture }}"
 
       - name: Display dry-run result
         if: needs.determine-releases.outputs.dry_run == 'true'
