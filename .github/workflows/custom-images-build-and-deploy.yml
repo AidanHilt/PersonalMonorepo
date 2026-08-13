@@ -259,7 +259,7 @@ jobs:
 
       - name: Build and push
         run: |
-          IMAGE_PATH=$(nix build .#packages.${{ matrix.architecture }}.it-tools-image --print-out-paths --no-link)
+          IMAGE_PATH=$(nix build "./#packages.${{ matrix.architecture }}.it-tools-image" --print-out-paths --no-link)
           nix run nixpkgs#skopeo -- --insecure-policy copy \
             "nix:$IMAGE_PATH" \
             "docker://ghcr.io/${{ github.repository_owner }}/it-tools:${{ matrix.release }}-${{ matrix.architecture }}"
