@@ -260,7 +260,7 @@ jobs:
       - name: Build and push
         run: |
           IMAGE_PATH=$(nix build "./$FLAKE_ROOT/#packages.${{ matrix.architecture }}.${{ matrix.release.image }}" --print-out-paths --no-link)
-          nix run .#nix2container.skopeo-nix2container -- --insecure-policy copy \
+          nix run github:nlewo/nix2container#skopeo-nix2container -- --insecure-policy copy \
             "nix:$IMAGE_PATH" \
             "docker://ghcr.io/${{ github.repository_owner }}/${{ matrix.release.image }}:${{ matrix.release.version }}-${{ matrix.architecture }}"
 
