@@ -260,8 +260,8 @@ jobs:
       - name: Build and push
         run: |
           cd
-          nix run "$FLAKE_ROOT#packages.${{ matrix.architecture }}.${{ matrix.release.image }}.copyToRegistry" \
-            -- docker://ghcr.io/${{ github.repository_owner }}/it-tools:${{ matrix.release.image }}-${{ matrix.architecture }}
+          nix run "./$FLAKE_ROOT#packages.${{ matrix.architecture }}.${{ matrix.release.image }}.copyToRegistry" \
+            -- docker://ghcr.io/${{ github.repository_owner }}/${{ matrix.release.image }}:${{ matrix.release.image }}-${{ matrix.architecture }}
 
       - name: Display dry-run result
         if: needs.determine-releases.outputs.dry_run == 'true'
