@@ -259,7 +259,8 @@ jobs:
 
       - name: Build and push
         run: |
-          nix run .#packages.${{ matrix.architecture }}.it-tools-image.copyToRegistry \
+          cd
+          nix run "$FLAKE_ROOT#packages.${{ matrix.architecture }}.it-tools-image.copyToRegistry" \
             -- docker://ghcr.io/${{ github.repository_owner }}/it-tools:${{ matrix.release }}-${{ matrix.architecture }}
 
       - name: Display dry-run result
