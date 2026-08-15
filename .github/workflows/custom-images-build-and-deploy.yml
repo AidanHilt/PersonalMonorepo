@@ -27,7 +27,6 @@ permissions:
 env:
   FLAKE_ROOT: nix/custom-images
   REGISTRY: ghcr.io
-  IMAGE_NAMESPACE: ${{ github.repository_owner }}
 
 jobs:
   determine-releases:
@@ -419,6 +418,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set lowercase repo owner
+        id: repo
+        run: echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
       - name: Create multi-architecture image
         env:
           IMAGE: ${{ matrix.release.image }}
@@ -427,7 +430,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          image="${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${IMAGE}"
+          image="${{ env.REGISTRY }}/${{ steps.repo.outputs.owner }}/${IMAGE}"
 
           amd64="${image}:ci-${RUN_ID}-x86_64-linux"
           arm64="${image}:ci-${RUN_ID}-aarch64-linux"
@@ -444,7 +447,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          image="${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${IMAGE}:${VERSION}"
+          image="${{ env.REGISTRY }}/${{ steps.repo.outputs.owner }}/${IMAGE}:${VERSION}"
 
           docker buildx imagetools inspect "$image"
 
