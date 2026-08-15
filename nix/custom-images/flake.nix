@@ -3,9 +3,14 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+    nix2container = {
+      url = "github:nlewo/nix2container";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, nix2container }:
     let
       # Support multiple systems
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
@@ -17,9 +22,12 @@
         inherit system;
       };
 
+      nix2containerFor = system: nix2container.packages.${system}.nix2container;
+
       buildImagesForSystem = system:
         let
           pkgs = pkgsFor system;
+          nix2containerInstance = nix2containerFor system;
 
           # Read all directories in ./images/
           imagesDir = ./images;
@@ -43,13 +51,9 @@
                 inherit (values) tag;
               };
             in
-              pkgs.dockerTools.buildImage (imageConfig // {
+              nix2containerInstance.buildImage (imageConfig // {
                 name = imageName;
                 tag = tag;
-                # Add architecture to the image config
-                architecture = if system == "aarch64-linux" then "arm64"
-                              else if system == "x86_64-linux" then "amd64"
-                              else "amd64";
               });
 
           # Create an attribute set of all images

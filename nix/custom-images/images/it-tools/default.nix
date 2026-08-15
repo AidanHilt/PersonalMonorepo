@@ -15,26 +15,26 @@ let
     error_log /dev/stderr warn;
     daemon off;
     pid /tmp/nginx.pid;
-    
+
     events {
       worker_connections 1024;
     }
-    
+
     http {
       include ${pkgs.nginx}/conf/mime.types;
       default_type application/octet-stream;
-      
+
       access_log /dev/stdout;
-      
+
       sendfile on;
       keepalive_timeout 65;
-      
+
       client_body_temp_path /tmp/client_body;
       proxy_temp_path /tmp/proxy;
       fastcgi_temp_path /tmp/fastcgi;
       uwsgi_temp_path /tmp/uwsgi;
       scgi_temp_path /tmp/scgi;
-      
+
       include /etc/nginx/conf.d/*.conf;
     }
   '';
@@ -45,7 +45,7 @@ let
       server_name localhost;
       root ${it-tools}/lib/;
       index index.html;
-      
+
       location /it-tools/ {
         alias ${it-tools}/lib/;
         try_files $uri $uri/ /it-tools/index.html;
@@ -61,20 +61,31 @@ let
     mkdir -p $out/etc/nginx/conf.d
     cp ${nginxConf} $out/etc/nginx/conf.d/default.conf
     cp ${nginxMainConf} $out/etc/nginx/nginx.conf
+
+    mkdir -p $out/var/log/nginx $out/var/cache/nginx
+    touch $out/var/log/nginx/.keep $out/var/cache/nginx/.keep
+
+    mkdir -p $out/tmp/client_body $out/tmp/proxy $out/tmp/fastcgi $out/tmp/uwsgi $out/tmp/scgi
+    touch $out/tmp/client_body/.keep $out/tmp/proxy/.keep $out/tmp/fastcgi/.keep $out/tmp/uwsgi/.keep $out/tmp/scgi/.keep
   '';
 in
+
 {
+  name = "it-tools";
+  inherit tag;
+
   copyToRoot = pkgs.buildEnv {
     name = "image-root";
     paths = [ pkgs.fakeNss rootfs ];
   };
 
-  runAsRoot = ''
-    mkdir -p var/log/nginx
-    mkdir -p var/cache/nginx
-    mkdir -p tmp/client_body tmp/proxy tmp/fastcgi tmp/uwsgi tmp/scgi
-    chmod 1777 tmp
-  '';
+  perms = [
+    {
+      path = rootfs;
+      regex = "tmp";
+      mode = "1777";
+    }
+  ];
 
   config = {
     Cmd = [ "${pkgs.nginx}/bin/nginx" "-c" "/etc/nginx/nginx.conf" ];
