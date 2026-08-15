@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - project-rockhard/backup
     paths:
       - "nix/custom-images/**"
       - ".github/worflows/custom-images-deploy.yaml"
