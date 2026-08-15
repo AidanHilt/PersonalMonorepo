@@ -298,6 +298,23 @@ jobs:
           fetch-depth: 0
           ref: main
 
+      - name: Verify source has not changed
+        env:
+          BASE_SHA: ${{ needs.determine-releases.outputs.base_sha }}
+        run: |
+          set -euo pipefail
+
+          git fetch origin main --force
+
+          current_sha="$(git rev-parse origin/main)"
+
+          if [[ "$current_sha" != "$BASE_SHA" ]]; then
+            echo "::error::main changed while the release was being built"
+            echo "::error::Expected: $BASE_SHA"
+            echo "::error::Actual:   $current_sha"
+            exit 1
+          fi
+
       - name: Update image versions
         working-directory: ${{ env.FLAKE_ROOT }}
         env:
