@@ -87,6 +87,7 @@ in
     }
   ];
 
+
   config = {
     Cmd = [ "${pkgs.nginx}/bin/nginx" "-c" "/etc/nginx/nginx.conf" ];
     ExposedPorts = {
