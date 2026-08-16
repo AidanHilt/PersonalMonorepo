@@ -24,6 +24,11 @@ spec:
                 - Job
                 - CronJob
                 - ReplicaSet
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - nvidia
       validate:
         message: "Using the 'nvidia' RuntimeClass directly is not permitted unless nvidia.com/gpu: 1 is set in resource limits."
         deny:
@@ -51,17 +56,10 @@ spec:
                 - Job
                 - CronJob
                 - ReplicaSet
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - nvidia
       validate:
-        message: "Setting NVIDIA_VISIBLE_DEVICES is not permitted unless nvidia.com/gpu: 1 is set in resource limits."
-        deny:
-          conditions:
-            all:
-              - key: "{{ `{{ request.object.spec.containers[].env[].name || request.object.spec.template.spec.containers[].env[].name || '' }}` }}"
-                operator: AnyIn
-                value: ["NVIDIA_VISIBLE_DEVICES"]
-              - key: '{{ `{{ request.object.spec.containers[].resources.limits."nvidia.com/gpu" | to_array(@) | [?@ == ''1''] | length(@) }}` }}'
-                operator: Equals
-                value: "0"
-              - key: '{{ `{{ request.object.spec.template.spec.containers[].resources.limits."nvidia.com/gpu" | to_array(@) | [?@ == ''1''] | length(@) }}` }}'
-                operator: Equals
-                value: "0"
+        message: "Setting NVIDIA_VISIBLE_DEVICES is not permitted unless nvidia.com/gpu: 1 is set in
