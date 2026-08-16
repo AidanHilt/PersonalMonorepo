@@ -11,7 +11,7 @@ serviceAccount:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "-1"
 
-runtimeClass: nvidia
+runtimeClassName: nvidia
 
 resources:
   requests:
