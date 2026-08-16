@@ -24,6 +24,11 @@ spec:
                 - Job
                 - CronJob
                 - ReplicaSet
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - nvidia
       validate:
         message: "Using the 'nvidia' RuntimeClass directly is not permitted unless nvidia.com/gpu: 1 is set in resource limits."
         deny:
@@ -51,6 +56,11 @@ spec:
                 - Job
                 - CronJob
                 - ReplicaSet
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - nvidia
       validate:
         message: "Setting NVIDIA_VISIBLE_DEVICES is not permitted unless nvidia.com/gpu: 1 is set in resource limits."
         deny:

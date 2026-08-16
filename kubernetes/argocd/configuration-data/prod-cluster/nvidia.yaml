@@ -11,7 +11,7 @@ config:
         migStrategy: none
         plugin:
           deviceListStrategy: "envvar"
-          deviceIDStrategy: "uuid"
+          deviceIDStrategy: "index"
           nvidiaCTKPath: /usr/bin/nvidia-ctk
           passDeviceSpecs: false
       sharing:
