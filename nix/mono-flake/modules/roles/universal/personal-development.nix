@@ -23,5 +23,6 @@
     vault
     weechat
     nss
+    cocogitto
   ];
 }
