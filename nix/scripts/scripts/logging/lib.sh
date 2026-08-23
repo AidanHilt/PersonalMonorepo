@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Contract: sourced by run.sh scripts via `# @lib: logging`.
 # Exposes log_info(msg) and log_error(msg), both writing to stderr with a level prefix.
 

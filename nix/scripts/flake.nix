@@ -122,7 +122,7 @@
         # Nested under `myscripts` to avoid shadowing real nixpkgs names.
         # `all` is deliberately left out here; it's a packaging convenience,
         # not something that belongs in the global package set.
-        myscripts = (mkScripts final).packages;
+        ahilt-scripts = (mkScripts final).packages;
       };
     };
 }
