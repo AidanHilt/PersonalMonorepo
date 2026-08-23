@@ -96,7 +96,9 @@
           inherit packages libChecks;
         };
     in
-    flake-utils.lib.eachDefaultSystem (system:
+    flake-utils.lib.eachSystem
+      (builtins.filter (s: s != "x86_64-darwin") flake-utils.lib.defaultSystems)
+      (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
         built = mkScripts pkgs;
@@ -122,7 +124,7 @@
         # Nested under `myscripts` to avoid shadowing real nixpkgs names.
         # `all` is deliberately left out here; it's a packaging convenience,
         # not something that belongs in the global package set.
-        ahilt-scripts = (mkScripts final).packages;
+        myscripts = (mkScripts final).packages;
       };
     };
 }
