@@ -1,0 +1,3 @@
+{
+  vendorHash = "sha256-6uzyoUyFKq494h5XnowCiGByJq4gErF2A+L+U77E4XY=";
+}
