@@ -42,6 +42,7 @@ in
         redhat.vscode-yaml
         shd101wyy.markdown-preview-enhanced
         slevesque.vscode-zipexplorer
+        tamasfe.even-better-toml
         tim-koehler.helm-intellisense
         timonwong.shellcheck
         wholroyd.jinja

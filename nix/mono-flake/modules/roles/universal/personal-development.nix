@@ -1,18 +1,20 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 {
-  imports =
-    let
-      scriptsDir = ../../scripts;
-      entries = builtins.readDir scriptsDir;
-      dirNames = builtins.filter
-        (name: entries.${name} == "directory")
-        (builtins.attrNames entries);
-      candidatePaths = map
-        (name: scriptsDir + "/${name}/default.nix")
-        dirNames;
-    in
-      builtins.filter builtins.pathExists candidatePaths;
+  imports = [
+    ../../scripts/app-creator/default.nix
+    ../../scripts/argocd/default.nix
+    ../../scripts/context/default.nix
+    ../../scripts/custom-images/default.nix
+    ../../scripts/helm/default.nix
+    ../../scripts/keepass/default.nix
+    ../../scripts/kubernetes/default.nix
+    ../../scripts/mono-flake/default.nix
+    ../../scripts/nixos/default.nix
+    ../../scripts/system-tasks/default.nix
+    ../../scripts/vault/default.nix
+    ../../scripts/terragrunt/default.nix
+  ];
 
   environment.systemPackages = with pkgs; [
     act
