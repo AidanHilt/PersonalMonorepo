@@ -115,8 +115,13 @@
 
         checks = built.packages // built.libChecks;
 
-        devShells.default = pkgs.mkShell {
-          packages = [ pkgs.go pkgs.shellcheck pkgs.nix-update ];
+        devShells = builtins.mapAttrs
+          (_: pkg: pkgs.mkShell { packages = [ pkg ]; })
+          built.packages
+        // {
+          default = pkgs.mkShell {
+            packages = [ pkgs.go pkgs.shellcheck pkgs.nix-update ] ++ builtins.attrValues built.packages;
+          };
         };
       }
     ) // {
@@ -124,7 +129,7 @@
         # Nested under `myscripts` to avoid shadowing real nixpkgs names.
         # `all` is deliberately left out here; it's a packaging convenience,
         # not something that belongs in the global package set.
-        myscripts = (mkScripts final).packages;
+        ahilt-scripts = (mkScripts final).packages;
       };
     };
 }
