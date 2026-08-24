@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
-generate-desktop-files = pkgs.writeShellScriptBin "generate-desktop-files" ''
+_generate-desktop-files = pkgs.writeShellScriptBin "_generate-desktop-files" ''
 #!/bin/bash
 
 set -euo pipefail

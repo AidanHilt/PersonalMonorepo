@@ -28,10 +28,13 @@
             if has "go.mod" then "go"
             else if has "run.sh" then "shell"
             else if has "lib.sh" then "lib"
-            else throw "scripts/${name}: expected one of go.mod, run.sh, lib.sh";
+            else if has "source.sh" then "source"
+            else throw "scripts/${name}: expected one of go.mod, run.sh, lib.sh, source.sh";
 
+
+          sourceNames = builtins.filter (n: classify n == "source") dirNames;
           libNames = builtins.filter (n: classify n == "lib") dirNames;
-          pkgNames = builtins.filter (n: classify n != "lib") dirNames;
+          pkgNames = builtins.filter (n: classify n == "go" || classify n == "shell") dirNames;
 
           # Pulls `# @lib: <name>` declarations out of a run.sh, in order.
           parseLibDeps = text:
@@ -91,10 +94,33 @@
               '';
             })
             libNames);
+
+          sourceChecks = builtins.listToAttrs (map
+            (name: {
+              name = "source-${name}-shellcheck";
+              value = pkgs.runCommand "shellcheck-source-${name}" { } ''
+                ${pkgs.shellcheck}/bin/shellcheck -s bash ${scriptsDir + "/${name}/source.sh"}
+                touch $out
+              '';
+            })
+            sourceNames);
         in
         {
-          inherit packages libChecks;
+          inherit packages libChecks sourceChecks;
         };
+
+      interactiveShellInit =
+        let
+          lib = nixpkgs.lib;
+          entries = builtins.readDir scriptsDir;
+          dirNames = builtins.attrNames (lib.filterAttrs (_: t: t == "directory") entries);
+          sourceNames = builtins.filter
+            (name: builtins.hasAttr "source.sh" (builtins.readDir (scriptsDir + "/${name}")))
+            dirNames;
+        in
+        lib.concatMapStrings
+          (name: builtins.readFile (scriptsDir + "/${name}/source.sh") + "\n")
+          sourceNames;
     in
     flake-utils.lib.eachSystem
       (builtins.filter (s: s != "x86_64-darwin") flake-utils.lib.defaultSystems)
@@ -113,7 +139,7 @@
           default = all;
         };
 
-        checks = built.packages // built.libChecks;
+        checks = built.packages // built.libChecks // built.sourceChecks;
 
         devShells = builtins.mapAttrs
           (_: pkg: pkgs.mkShell { packages = [ pkg ]; })
@@ -125,6 +151,7 @@
         };
       }
     ) // {
+      inherit interactiveShellInit;
       overlays.default = final: _prev: {
         # Nested under `myscripts` to avoid shadowing real nixpkgs names.
         # `all` is deliberately left out here; it's a packaging convenience,
