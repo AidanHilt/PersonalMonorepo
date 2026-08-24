@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-source ${contextSelector.contextSelector}
+@lib: contextSelector
 
 if [[ -z "${ATILS_CONTEXTS_DIRECTORY}" ]]; then
   echo "Error: ATILS_CONTEXTS_DIRECTORY environment variable is not set"
@@ -24,19 +24,19 @@ CONTEXT_NAME=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --name|-n)
-      CONTEXT_NAME="$2"
-      shift 2
-      ;;
-    --help|-h)
-      show_usage
-      exit 0
-      ;;
-    *)
-      echo "Error: Unknown option $1"
-      show_usage
-      exit 1
-      ;;
+  --name | -n)
+    CONTEXT_NAME="$2"
+    shift 2
+    ;;
+  --help | -h)
+    show_usage
+    exit 0
+    ;;
+  *)
+    echo "Error: Unknown option $1"
+    show_usage
+    exit 1
+    ;;
   esac
 done
 
@@ -66,13 +66,13 @@ fi
 echo
 read -p "Are you sure you want to delete context '$CONTEXT_NAME'? (y/N) " response
 case "$response" in
-  [yY]|[yY][eE][sS])
-    echo "Deleting context..."
-    ;;
-  *)
-    echo "Aborted."
-    exit 0
-    ;;
+[yY] | [yY][eE][sS])
+  echo "Deleting context..."
+  ;;
+*)
+  echo "Aborted."
+  exit 0
+  ;;
 esac
 
 # Delete the directory

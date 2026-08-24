@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
-source ${modify-ingress-values.modify-ingress-values}
+@lib: printing-and-output
+@lib: modify-ingress-values
 
 HOMEPAGE_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/homepage-config/values.yaml
 
@@ -15,7 +15,7 @@ ICON=""
 SUBDOMAIN=""
 DISPLAY_NAME=""
 
-show_help () {
+show_help() {
   echo "Usage: $0 [OPTIONS]"
   echo ""
   # Description goes here
@@ -32,39 +32,39 @@ show_help () {
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --app-name|-a)
+  --app-name | -a)
     APP_NAME="$2"
     shift 2
     ;;
-    --description|-d)
+  --description | -d)
     DESRIPTION="$2"
     shift 2
     ;;
-    --group|-g)
+  --group | -g)
     GROUP="$2"
     shift 2
     ;;
-    --icon|-i)
+  --icon | -i)
     ICON="$2"
     shift 2
     ;;
-    --prefix|-r)
+  --prefix | -r)
     PREFIX="$2"
     shift 2
     ;;
-    --subdomain|-s)
+  --subdomain | -s)
     SUBDOMAIN="$2"
     shift 2
     ;;
-    --display-name|-n)
+  --display-name | -n)
     DISPLAY_NAME="$2"
     shift 2
     ;;
-    --help|-h)
+  --help | -h)
     show_help
     exit 0
     ;;
-    *)
+  *)
     print_error "Unknown option: $1"
     exit 1
     ;;
@@ -85,7 +85,7 @@ if [[ -z $PREFIX && -z "$SUBDOMAIN" ]]; then
   read -p "Enter prefix or leave blank: " PREFIX
 fi
 
-if [[ -z $PREFIX && -z "$SUBDOMAIN" ]] ; then
+if [[ -z $PREFIX && -z "$SUBDOMAIN" ]]; then
   while true; do
     read -p "Enter subdomain: " SUBDOMAIN
     if [[ -n "$SUBDOMAIN" ]]; then
@@ -141,6 +141,5 @@ HOMEPAGE_YQ_STRING=".$APP_NAME.enabled=false ${ROUTE_CONFIG_STRING}"
 HOMEPAGE_YQ_STRING+="| .$APP_NAME.description=\"$DESCRIPTION\""
 HOMEPAGE_YQ_STRING+="| .$APP_NAME.icon=\"$ICON\""
 HOMEPAGE_YQ_STRING+="| .$APP_NAME.group=\"$GROUP\""
-
 
 _modify-ingress-values "$HOMEPAGE_YQ_STRING" "$HOMEPAGE_VALUES_FILE"

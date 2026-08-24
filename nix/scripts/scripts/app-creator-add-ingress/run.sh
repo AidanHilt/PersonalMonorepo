@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
-source ${modify-ingress-values.modify-ingress-values}
+@lib: printing-and-output
+@lib: modify-ingress-values
 
 ISTIO_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/istio-ingress-config/values.yaml
 
@@ -14,7 +14,7 @@ SERVICE_NAME=""
 DESTINATION_PORT=""
 SUBDOMAIN=""
 
-show_help () {
+show_help() {
   echo "Usage: $0 [OPTIONS]"
   echo ""
   # Description goes here
@@ -31,35 +31,35 @@ show_help () {
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --app-name|-a)
+  --app-name | -a)
     APP_NAME="$2"
     shift 2
     ;;
-    --namespace|-n)
+  --namespace | -n)
     NAMESPACE="$2"
     shift 2
     ;;
-    --service-name|-s)
+  --service-name | -s)
     SERVICE_NAME="$2"
     shift 2
     ;;
-    --port|-p)
+  --port | -p)
     DESTINATION_PORT="$2"
     shift 2
     ;;
-    --prefix|-r)
+  --prefix | -r)
     PREFIXES+="$2"
     shift 2
     ;;
-    --subdomain|-d)
+  --subdomain | -d)
     SUBDOMAIN="$2"
     shift 2
     ;;
-    --help|-h)
+  --help | -h)
     show_help
     exit 0
     ;;
-    *)
+  *)
     print_error "Unknown option: $1"
     exit 1
     ;;
@@ -84,7 +84,7 @@ if [[ ${#PREFIXES[@]} -eq 0 && -z "$SUBDOMAIN" ]]; then
   done
 fi
 
-if [[ ${#PREFIXES[@]} -eq 0 && -z "$SUBDOMAIN" ]] ; then
+if [[ ${#PREFIXES[@]} -eq 0 && -z "$SUBDOMAIN" ]]; then
   while true; do
     read -p "Enter subdomain: " SUBDOMAIN
     if [[ -n "$SUBDOMAIN" ]]; then

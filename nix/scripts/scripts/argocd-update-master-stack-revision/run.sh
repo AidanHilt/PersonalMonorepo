@@ -2,11 +2,11 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+@lib: printing-and-output
 
 CURRENT_BRANCH=""
 
-show_help () {
+show_help() {
   echo "Usage: $0 [OPTIONS]"
   echo ""
   echo "Update master-stack in the current kubernetes cluster. Defaults to current personal monorepo branch"
@@ -18,15 +18,15 @@ show_help () {
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --master|-m)
+  --master | -m)
     CURRENT_BRANCH="master"
     shift 1
     ;;
-    --branch-name|-b)
+  --branch-name | -b)
     CURRENT_BRANCH="$2"
     shift 2
     ;;
-    --help|-h)
+  --help | -h)
     show_help
     exit 0
     ;;

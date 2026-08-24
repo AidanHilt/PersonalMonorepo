@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+@lib: printing-and-output
 
 read -p "Enter app name: " APP_NAME
 read -p "Enter app namespace: " NAMESPACE
@@ -74,7 +74,6 @@ else
   fi
   app-creator-add-homepage-link --app-name "$APP_NAME" $HOMEPAGE_ARGS
 fi
-
 
 SECRET_NAMES=()
 SECRET_NAMESPACES=()

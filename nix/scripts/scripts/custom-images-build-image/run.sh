@@ -2,13 +2,13 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+@lib: printing-and-output
 
 IMAGE_NAME=""
 IMAGE_TAG="latest"
 BRANCH_BUILD=true
 
-show_help () {
+show_help() {
   echo "Usage: $0 [OPTIONS]"
   echo ""
   echo "Build and publish one of the images in our custom-image flake"
@@ -21,26 +21,26 @@ show_help () {
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --image-name)
-      IMAGE_NAME="$2"
-      shift 2
-      ;;
-    --image-tag)
-      IMAGE_TAG="$2"
-      shift 2
-      ;;
-    --version-build)
-      BRANCH_BUILD=false
-      shift 1
-      ;;
-    --help)
-      show_help
-      exit 0
-      ;;
-    *)
-      print_error "Unknown argument: $1"
-      exit 1
-      ;;
+  --image-name)
+    IMAGE_NAME="$2"
+    shift 2
+    ;;
+  --image-tag)
+    IMAGE_TAG="$2"
+    shift 2
+    ;;
+  --version-build)
+    BRANCH_BUILD=false
+    shift 1
+    ;;
+  --help)
+    show_help
+    exit 0
+    ;;
+  *)
+    print_error "Unknown argument: $1"
+    exit 1
+    ;;
   esac
 done
 
@@ -64,7 +64,7 @@ modify_and_load_image() {
       sub("^"; "aidanhilt/") |
       sub(":"; ":" + $arch + "-")
     ]
-  ' "$WORK_DIR/manifest.json" > "$WORK_DIR/manifest.json.tmp"
+  ' "$WORK_DIR/manifest.json" >"$WORK_DIR/manifest.json.tmp"
 
   mv -f "$WORK_DIR/manifest.json.tmp" "$WORK_DIR/manifest.json"
 
@@ -72,7 +72,7 @@ modify_and_load_image() {
   tar -cf "$MODIFIED_IMAGE" -C "$WORK_DIR" .
 
   print_debug "Loading modified $ARCH image..."
-  docker load < "$MODIFIED_IMAGE"
+  docker load <"$MODIFIED_IMAGE"
 
   local LOADED_TAG=$(jq -r '.[0].RepoTags[0]' "$WORK_DIR/manifest.json")
   eval "$VAR_NAME='$LOADED_TAG'"

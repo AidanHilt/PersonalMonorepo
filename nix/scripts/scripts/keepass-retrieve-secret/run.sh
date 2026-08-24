@@ -2,25 +2,25 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+@lib: printing-and-output
 
 key_name="Password"
 secret_path=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --key-name)
-      key_name="$2"
-      shift 2
-      ;;
-    --secret-path)
-      secret_path="$2"
-      shift 2
-      ;;
-    *)
-      print_error "Unknown argument: $1"
-      exit 1
-      ;;
+  --key-name)
+    key_name="$2"
+    shift 2
+    ;;
+  --secret-path)
+    secret_path="$2"
+    shift 2
+    ;;
+  *)
+    print_error "Unknown argument: $1"
+    exit 1
+    ;;
   esac
 done
 

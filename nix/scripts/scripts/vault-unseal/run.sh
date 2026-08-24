@@ -2,14 +2,14 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+@lib: printing-and-output
 
 check_vault_status() {
   print_status "Checking Vault status..."
 
   status_output=$(vault status -format=json || true)
 
-  if [[ -z "$status_output" ]];  then
+  if [[ -z "$status_output" ]]; then
     print_error "Failed to get Vault status. Is Vault server running at $VAULT_ADDR?"
     exit 1
   fi

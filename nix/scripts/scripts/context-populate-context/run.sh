@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-source ${contextSelector.contextSelector}
+@lib: contextSelector
 
 show_usage() {
   echo "Usage: $0 --name <context_name> [--var-name value] [--another-var value2] ..."
@@ -41,40 +41,40 @@ declare -a ENV_VARS=()
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --name)
-      if [[ -z "$2" || "$2" =~ ^-- ]]; then
-        echo "Error: --name requires a value"
-        exit 1
-      fi
-      CONTEXT_NAME="$2"
-      shift 2
-      ;;
-    --help|-h)
-      show_usage
-      exit 0
-      ;;
-    --*)
-      # Check if it's a valid custom argument format
-      if is_valid_arg_format "$1"; then
-        if [[ -z "$2" || "$2" =~ ^-- ]]; then
-          echo "Error: $1 requires a value"
-          exit 1
-        fi
-        # Convert to uppercase snake case and store
-        var_name=$(kebab_to_upper_snake "$1")
-        ENV_VARS+=("$var_name=$2")
-        shift 2
-      else
-        echo "Error: Invalid argument format '$1'"
-        echo "Arguments must be in the format --words-separated-by-dashes"
-        exit 1
-      fi
-      ;;
-    *)
-      echo "Error: Unknown argument '$1'"
-      show_usage
+  --name)
+    if [[ -z "$2" || "$2" =~ ^-- ]]; then
+      echo "Error: --name requires a value"
       exit 1
-      ;;
+    fi
+    CONTEXT_NAME="$2"
+    shift 2
+    ;;
+  --help | -h)
+    show_usage
+    exit 0
+    ;;
+  --*)
+    # Check if it's a valid custom argument format
+    if is_valid_arg_format "$1"; then
+      if [[ -z "$2" || "$2" =~ ^-- ]]; then
+        echo "Error: $1 requires a value"
+        exit 1
+      fi
+      # Convert to uppercase snake case and store
+      var_name=$(kebab_to_upper_snake "$1")
+      ENV_VARS+=("$var_name=$2")
+      shift 2
+    else
+      echo "Error: Invalid argument format '$1'"
+      echo "Arguments must be in the format --words-separated-by-dashes"
+      exit 1
+    fi
+    ;;
+  *)
+    echo "Error: Unknown argument '$1'"
+    show_usage
+    exit 1
+    ;;
   esac
 done
 
@@ -104,7 +104,7 @@ if [[ ${#ENV_VARS[@]} -eq 0 ]]; then
 fi
 
 # Check if dotenvx is available
-if ! command -v dotenvx &> /dev/null; then
+if ! command -v dotenvx &>/dev/null; then
   echo "Error: dotenvx command not found"
   exit 1
 fi
@@ -122,7 +122,7 @@ for env_var in "${ENV_VARS[@]}"; do
 
   echo "$var_value"
 
-  dotenvx set "$var_name" "$var_value" -f "${ATILS_CONTEXTS_DIRECTORY}/${CONTEXT_NAME}/.env";
+  dotenvx set "$var_name" "$var_value" -f "${ATILS_CONTEXTS_DIRECTORY}/${CONTEXT_NAME}/.env"
 done
 
 echo

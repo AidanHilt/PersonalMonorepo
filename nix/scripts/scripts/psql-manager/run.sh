@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+@lib: printing-and-output
 
 show_help() {
   print_status "Usage: $0 [OPTIONS]"
@@ -28,38 +28,38 @@ DATABASE="postgres"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --secret-name)
-      SECRET_NAME="$2"
-      shift 2
-      ;;
-    --namespace)
-      NAMESPACE="$2"
-      shift 2
-      ;;
-    --username-key)
-      USERNAME_KEY="$2"
-      shift 2
-      ;;
-    --password-key)
-      PASSWORD_KEY="$2"
-      shift 2
-      ;;
-    --postgres-endpoint)
-      POSTGRES_ENDPOINT="$2"
-      shift 2
-      ;;
-    --database)
-      DATABASE="$2"
-      shift 2
-      ;;
-    --help)
-      show_help
-      exit
-      ;;
-    *)
-      print_error "Unknown argument: $1"
-      exit 1
-      ;;
+  --secret-name)
+    SECRET_NAME="$2"
+    shift 2
+    ;;
+  --namespace)
+    NAMESPACE="$2"
+    shift 2
+    ;;
+  --username-key)
+    USERNAME_KEY="$2"
+    shift 2
+    ;;
+  --password-key)
+    PASSWORD_KEY="$2"
+    shift 2
+    ;;
+  --postgres-endpoint)
+    POSTGRES_ENDPOINT="$2"
+    shift 2
+    ;;
+  --database)
+    DATABASE="$2"
+    shift 2
+    ;;
+  --help)
+    show_help
+    exit
+    ;;
+  *)
+    print_error "Unknown argument: $1"
+    exit 1
+    ;;
   esac
 done
 
@@ -93,7 +93,8 @@ kubectl wait --for=condition=ready pod/"${POD_NAME}" -n "${NAMESPACE}" --timeout
 print_status "Connecting to database ${DATABASE} at ${POSTGRES_ENDPOINT}"
 
 kubectl exec -it "${POD_NAME}" -n "${NAMESPACE}" -- \
-  psql -h "${POSTGRES_ENDPOINT}" -U "${USERNAME}" -d "${DATABASE}" || export EXIT_CODE=$?; true
+  psql -h "${POSTGRES_ENDPOINT}" -U "${USERNAME}" -d "${DATABASE}" || export EXIT_CODE=$?
+true
 
 if [[ ! -v EXIT_CODE ]]; then
   export EXIT_CODE=0

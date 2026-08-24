@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+@lib: printing-and-output
 
 GITHUB_OWNER="AidanHilt"
 GITHUB_REPO="PersonalMonorepo"
@@ -37,7 +37,7 @@ select_cluster() {
   while [[ -z "${chosen}" ]]; do
     read -rp "Select a cluster: " chosen
 
-    if [[ ! "${chosen}" =~ ^[0-9]+$ ]] || (( chosen < 1 || chosen > ${#clusters[@]} )); then
+    if [[ ! "${chosen}" =~ ^[0-9]+$ ]] || ((chosen < 1 || chosen > ${#clusters[@]})); then
       print_warning "Invalid selection, try again."
       chosen=""
     fi
@@ -45,7 +45,6 @@ select_cluster() {
 
   echo "${clusters[$((chosen - 1))]}"
 }
-
 
 fetch_hostnames() {
   local cluster="$1"
@@ -67,7 +66,7 @@ fetch_cert() {
 
   print_debug "Fetching intermediate CA cert from Vault mount: ${PKI_MOUNT}"
   mkdir -p "${OUT_DIR}"
-  vault read -field=certificate "${PKI_MOUNT}/cert/ca" > "${CERT_FILE}"
+  vault read -field=certificate "${PKI_MOUNT}/cert/ca" >"${CERT_FILE}"
 
   if [[ ! -s "${CERT_FILE}" ]]; then
     print_error "Fetched cert is empty for mount: ${PKI_MOUNT}"
@@ -93,7 +92,7 @@ install_macos_keychain() {
     # find-certificate only returns the first match, so loop until none are left
     while security find-certificate -c "${CERT_CN}" -Z "${KEYCHAIN}" >/dev/null 2>&1; do
       local EXISTING_FINGERPRINT
-      EXISTING_FINGERPRINT=$(security find-certificate -c "${CERT_CN}" -Z "${KEYCHAIN}" | \
+      EXISTING_FINGERPRINT=$(security find-certificate -c "${CERT_CN}" -Z "${KEYCHAIN}" |
         sed -n 's/^SHA-1 hash: //p')
 
       if [[ "${EXISTING_FINGERPRINT}" == "${NEW_FINGERPRINT}" ]]; then
@@ -128,15 +127,15 @@ trust_hostname() {
   CERT_FILE="$(fetch_cert "${PKI_MOUNT}" "${out_dir}")"
 
   case "$(uname -s)" in
-    Darwin)
-      install_macos_keychain "${CERT_FILE}"
-      ;;
-    Linux)
-      print_nixos_instructions "${CERT_FILE}"
-      ;;
-    *)
-      print_warning "Unrecognized OS, cert saved to ${CERT_FILE}"
-      ;;
+  Darwin)
+    install_macos_keychain "${CERT_FILE}"
+    ;;
+  Linux)
+    print_nixos_instructions "${CERT_FILE}"
+    ;;
+  *)
+    print_warning "Unrecognized OS, cert saved to ${CERT_FILE}"
+    ;;
   esac
 }
 
@@ -146,18 +145,18 @@ parse_args() {
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --cluster)
-        cluster="$2"
-        shift 2
-        ;;
-      --out-dir)
-        out_dir="$2"
-        shift 2
-        ;;
-      *)
-        print_error "Unknown argument: $1"
-        exit 1
-        ;;
+    --cluster)
+      cluster="$2"
+      shift 2
+      ;;
+    --out-dir)
+      out_dir="$2"
+      shift 2
+      ;;
+    *)
+      print_error "Unknown argument: $1"
+      exit 1
+      ;;
     esac
   done
 }
@@ -165,7 +164,6 @@ parse_args() {
 main() {
   require_env
   parse_args "$@"
-
 
   if [[ -z "${cluster}" ]]; then
     local CLUSTERS

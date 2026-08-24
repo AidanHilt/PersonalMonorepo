@@ -2,9 +2,9 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+@lib: printing-and-output
 
-show_help () {
+show_help() {
   echo "Usage: $0 [OPTIONS]"
   echo ""
   # Description goes here
@@ -39,12 +39,12 @@ add_secret_key() {
     is_pg_password="$(get_input "Is this a postgres password? (y/n)" "n")"
   fi
   case $is_pg_password in
-    [Yy]*)
-      is_pg_password=true
-      ;;
-    *)
-      is_pg_password=false
-      ;;
+  [Yy]*)
+    is_pg_password=true
+    ;;
+  *)
+    is_pg_password=false
+    ;;
   esac
   set_value=n
   if [[ "$is_pg_password" == "false" ]]; then
@@ -58,7 +58,6 @@ add_secret_key() {
   SECRET_KEYS+=("$key_name|$is_pg_password|$key_value")
 }
 
-
 SECRET_NAME=""
 SECRET_NAMESPACE=""
 SECRET_MOUNT=""
@@ -66,33 +65,32 @@ POSTGRES_SECRET=false
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --secret-name)
-      SECRET_NAME="$2"
-      shift 2
-      ;;
-    --secret-namespace)
-      SECRET_NAMESPACE="$2"
-      shift 2
-      ;;
-    --secret-mount)
-      SECRET_MOUNT="$2"
-      shift 2
-      ;;
-    --postgres-secret)
-      POSTGRES_SECRET="true"
-      shift 2
-      ;;
-    --help|-h)
-      show_help
-      exit 0
-      ;;
-    *)
-      print_error "Unknown option: $2"
-      exit 1
-      ;;
+  --secret-name)
+    SECRET_NAME="$2"
+    shift 2
+    ;;
+  --secret-namespace)
+    SECRET_NAMESPACE="$2"
+    shift 2
+    ;;
+  --secret-mount)
+    SECRET_MOUNT="$2"
+    shift 2
+    ;;
+  --postgres-secret)
+    POSTGRES_SECRET="true"
+    shift 2
+    ;;
+  --help | -h)
+    show_help
+    exit 0
+    ;;
+  *)
+    print_error "Unknown option: $2"
+    exit 1
+    ;;
   esac
 done
-
 
 if [ -z "$SECRET_NAME" ]; then
   SECRET_NAME="$(get_input "Enter secret name" "")"
@@ -109,12 +107,12 @@ fi
 if [ -z "$POSTGRES_SECRET" ]; then
   ANSWER="$(get_input "Does the secret contain postgres creds? (y/n)" "n")"
   case $ANSWER in
-    [Yy]*)
-      POSTGRES_SECRET=true
-      ;;
-    *)
-      POSTGRES_SECRET=false
-      ;;
+  [Yy]*)
+    POSTGRES_SECRET=true
+    ;;
+  *)
+    POSTGRES_SECRET=false
+    ;;
   esac
 fi
 
@@ -130,16 +128,16 @@ LOCAL_FILE="${PERSONAL_MONOREPO_LOCATION}/nix/terraform/modules/vault/secrets.js
 print_debug "Updating locals.tf.json at $LOCAL_FILE"
 
 for entry in "${SECRET_KEYS[@]}"; do
-  key_name="$(cut -d'|' -f1 <<< "$entry")"
-  is_pg_password="$(cut -d'|' -f2 <<< "$entry")"
-  key_value="$(cut -d'|' -f3 <<< "$entry")"
+  key_name="$(cut -d'|' -f1 <<<"$entry")"
+  is_pg_password="$(cut -d'|' -f2 <<<"$entry")"
+  key_value="$(cut -d'|' -f3 <<<"$entry")"
   JQ_PATH=".${SECRET_NAME}.data.${key_name}"
-  jq "$JQ_PATH={}" "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
+  jq "$JQ_PATH={}" "$LOCAL_FILE" >tmp.json && mv tmp.json "$LOCAL_FILE"
   if [[ "$is_pg_password" == "true" ]]; then
-    jq "$JQ_PATH.is_postgres_password=$is_pg_password" "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
+    jq "$JQ_PATH.is_postgres_password=$is_pg_password" "$LOCAL_FILE" >tmp.json && mv tmp.json "$LOCAL_FILE"
   fi
   if [ -n "$key_value" ]; then
-    jq "$JQ_PATH=\"$key_value\"" "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
+    jq "$JQ_PATH=\"$key_value\"" "$LOCAL_FILE" >tmp.json && mv tmp.json "$LOCAL_FILE"
   fi
 done
 
@@ -152,7 +150,6 @@ jq \
   .[$name].namespace = $ns
   | .[$name].mount = $mount
   | .[$name].postgres_secret = ($pg == "true")
-  ' "$LOCAL_FILE" > tmp.json && mv tmp.json "$LOCAL_FILE"
+  ' "$LOCAL_FILE" >tmp.json && mv tmp.json "$LOCAL_FILE"
 
-
-  print_status "Secret definition for $SECRET_NAME added to locals file"
+print_status "Secret definition for $SECRET_NAME added to locals file"

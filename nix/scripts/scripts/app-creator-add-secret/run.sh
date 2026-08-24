@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+@lib: printing-and-output
 source ${modify-secret-values}
 
-show_help () {
+show_help() {
   echo "Usage: $0 [OPTIONS]"
   echo ""
   echo "Add a new secret to the vault-config chart"
@@ -31,42 +31,42 @@ postgres_secret=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --secret-name)
-      secret_name="$2"
-      shift 2
-      ;;
-    --destination-namespace)
-      destination_namespace="$2"
-      shift 2
-      ;;
-    --resource-name)
-      resource_name="$2"
-      shift 2
-      ;;
-    --service-account-name)
-      service_account_name="$2"
-      shift 2
-      ;;
-    --service-account-create)
-      service_account_create="true"
-      shift 1
-      ;;
-    --service-account-namespace)
-      service_account_namespace="$2"
-      shift 2
-      ;;
-    --postgres-secret)
-      postgres_secret="$2"
-      shift 2
-      ;;
-    --help|-h)
-      show_help
-      exit 0
-      ;;
-    *)
-      print_error "Unknown argument: $1"
-      exit 1
-      ;;
+  --secret-name)
+    secret_name="$2"
+    shift 2
+    ;;
+  --destination-namespace)
+    destination_namespace="$2"
+    shift 2
+    ;;
+  --resource-name)
+    resource_name="$2"
+    shift 2
+    ;;
+  --service-account-name)
+    service_account_name="$2"
+    shift 2
+    ;;
+  --service-account-create)
+    service_account_create="true"
+    shift 1
+    ;;
+  --service-account-namespace)
+    service_account_namespace="$2"
+    shift 2
+    ;;
+  --postgres-secret)
+    postgres_secret="$2"
+    shift 2
+    ;;
+  --help | -h)
+    show_help
+    exit 0
+    ;;
+  *)
+    print_error "Unknown argument: $1"
+    exit 1
+    ;;
   esac
 done
 
@@ -111,7 +111,7 @@ read -p "Would you like to configure the destination secret? (y/N): " configure_
 
 if [[ "$configure_dest" == "y" ]]; then
   DESTINATION_FILE=$(mktemp)
-  echo "destination:" > "$DESTINATION_FILE"
+  echo "destination:" >"$DESTINATION_FILE"
 
   $EDITOR "$DESTINATION_FILE"
 fi

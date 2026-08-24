@@ -2,11 +2,11 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+@lib: printing-and-output
 
 # Check if helm is installed
 check_helm() {
-  if ! command -v helm &> /dev/null; then
+  if ! command -v helm &>/dev/null; then
     print_error "Helm is not installed. Please install Helm first."
     exit 1
   fi
@@ -15,7 +15,7 @@ check_helm() {
 
 # Check if kubectl is installed
 check_kubectl() {
-  if ! command -v kubectl &> /dev/null; then
+  if ! command -v kubectl &>/dev/null; then
     print_error "kubectl is not installed. Please install kubectl first."
     exit 1
   fi
@@ -102,7 +102,7 @@ get_admin_password() {
   # Wait a bit for the secret to be created
   sleep 5
 
-  if kubectl get secret argocd-initial-admin-secret -n "${namespace}" &> /dev/null; then
+  if kubectl get secret argocd-initial-admin-secret -n "${namespace}" &>/dev/null; then
     local admin_password
     admin_password=$(kubectl get secret argocd-initial-admin-secret -n "${namespace}" -o jsonpath="{.data.password}" | base64 -d)
 

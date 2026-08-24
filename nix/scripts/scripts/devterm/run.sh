@@ -2,13 +2,13 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+@lib: printing-and-output
 IMAGE="aidanhilt/atils-debug:latest"
 NAMESPACE=""
 COMMAND="zsh"
 
 show_help() {
-  cat << EOF
+  cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
 Options:
@@ -26,27 +26,27 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --image)
-      IMAGE="$2"
-      shift 2
-      ;;
-    --namespace)
-      NAMESPACE="$2"
-      shift 2
-      ;;
-    --command)
-      COMMAND="$2"
-      shift 2
-      ;;
-    --help)
-      show_help
-      exit 0
-      ;;
-    *)
-      print_error "Unknown argument: $1"
-      echo "Use --help for usage information"
-      exit 1
-      ;;
+  --image)
+    IMAGE="$2"
+    shift 2
+    ;;
+  --namespace)
+    NAMESPACE="$2"
+    shift 2
+    ;;
+  --command)
+    COMMAND="$2"
+    shift 2
+    ;;
+  --help)
+    show_help
+    exit 0
+    ;;
+  *)
+    print_error "Unknown argument: $1"
+    echo "Use --help for usage information"
+    exit 1
+    ;;
   esac
 done
 

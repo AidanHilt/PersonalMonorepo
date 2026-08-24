@@ -2,9 +2,9 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+@lib: printing-and-output
 
-show_help () {
+show_help() {
   echo "Usage: $0 [OPTIONS]"
   echo ""
   echo "Add postgres configuration (roles and DBs) to helm chart"
@@ -46,29 +46,29 @@ if [[ $# -eq 0 ]]; then
 else
   while [[ $# -gt 0 ]]; do
     case $1 in
-      --username)
-        username="$2"
-        USERS_TO_DBS["$username"]=""
-        shift 2
-        ;;
-      --database)
-        dbname="$2"
-        owner="$3"
-        if [[ -z "${USERS_TO_DBS[$owner]}" ]]; then
-          USERS_TO_DBS["$owner"]="$dbname"
-        else
-          USERS_TO_DBS["$owner"]="${USERS_TO_DBS[$owner]} $dbname"
-        fi
-        shift 3
-        ;;
-      --help|-h)
-        show_help
-        exit 0
-        ;;
-      *)
-        print_error "Unknown argument: $1"
-        exit 1
-        ;;
+    --username)
+      username="$2"
+      USERS_TO_DBS["$username"]=""
+      shift 2
+      ;;
+    --database)
+      dbname="$2"
+      owner="$3"
+      if [[ -z "${USERS_TO_DBS[$owner]}" ]]; then
+        USERS_TO_DBS["$owner"]="$dbname"
+      else
+        USERS_TO_DBS["$owner"]="${USERS_TO_DBS[$owner]} $dbname"
+      fi
+      shift 3
+      ;;
+    --help | -h)
+      show_help
+      exit 0
+      ;;
+    *)
+      print_error "Unknown argument: $1"
+      exit 1
+      ;;
     esac
   done
 fi

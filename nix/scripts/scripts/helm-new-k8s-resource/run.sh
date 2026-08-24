@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+@lib: printing-and-output
 
 show_help() {
   "Usage: $0 [OPTIONS]"
@@ -17,22 +17,22 @@ RESOURCE_TYPE=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --chart-name)
-      CHART_NAME="$2"
-      shift 2
-      ;;
-    --resource-type)
-      RESOURCE_TYPE="$2"
-      shift 2
-      ;;
-    --help)
-      show_help
-      exit 0
-      ;;
-    *)
-      print_error "Unknown option: $1"
-      exit 1
-      ;;
+  --chart-name)
+    CHART_NAME="$2"
+    shift 2
+    ;;
+  --resource-type)
+    RESOURCE_TYPE="$2"
+    shift 2
+    ;;
+  --help)
+    show_help
+    exit 0
+    ;;
+  *)
+    print_error "Unknown option: $1"
+    exit 1
+    ;;
   esac
 done
 
@@ -73,7 +73,7 @@ export RESOURCE_TYPE
 
 print_debug "Running envsubst on all files in $DEST_DIR"
 find "$DEST_DIR" -type f | while read -r FILE; do
-  envsubst < "$FILE" > "$FILE.tmp"
+  envsubst <"$FILE" >"$FILE.tmp"
   mv "$FILE.tmp" "$FILE"
   print_debug "Processed: $FILE"
 done

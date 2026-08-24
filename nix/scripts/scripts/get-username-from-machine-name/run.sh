@@ -53,7 +53,6 @@ if [ -z "$USERNAME" ]; then
   USERNAME=$(grep -E '^\s*username\s*=\s*"[^"]*"' "$DEFAULT_VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1 || true)
 fi
 
-
 if [ -z "$USERNAME" ]; then
   echo "No username found"
   exit 1
@@ -64,7 +63,7 @@ echo "$USERNAME"
 
 set -euo pipefail
 
-source ${printing-and-output.printing-and-output}
+@lib: printing-and-output
 
 # False by default
 NIXOS_ANYWHERE_ARGS_PROVIDED=0
@@ -96,89 +95,89 @@ show_usage() {
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --nixos-anywhere-args)
-      if [[ $# -lt 2 ]]; then
-        print_error "--nixos-anywhere-args requires an argument"
-        exit 1
-      fi
-      NIXOS_ANYWHERE_ARGS="$2"
-      NIXOS_ANYWHERE_ARGS_PROVIDED=true
-      shift 2
-      ;;
-    --machine-name)
-      if [[ $# -lt 2 ]]; then
-        print_error "--machine-name requires an argument"
-        exit 1
-      fi
-      SELECTED_MACHINE="$2"
-      SELECTED_MACHINE_ARG_PROVIDED=true
-      shift 2
-      ;;
-    --remote-ip)
-      if [[ $# -lt 2 ]]; then
-        print_error "--remote-ip requires an argument"
-        exit 1
-      fi
-      IP_ADDRESS="$2"
-      IP_ADDRESS_ARG_PROVIDED=true
-      shift 2
-      ;;
-    --post-install-ip)
-      if [[ $# -lt 2 ]]; then
-        print_error "--post-install-ip requires an argument"
-        exit 1
-      fi
-      POST_INSTALL_IP_ADDRESS="$2"
-      POST_INSTALL_IP_ADDRESS_ARG_PROVIDED=true
-      shift 2
-      ;;
-    --cluster-name)
-      if [[ $# -lt 2 ]]; then
-        print_error "--cluster-name requires an argument"
-        exit 1
-      fi
-      CLUSTER_NAME="$2"
-      CLUSTER_NAME_ARG_PROVIDED=true
-      shift 2
-      ;;
-    --help|-h)
-      show_usage
-      exit 0
-      ;;
-    --homelab-node)
-      HOMELAB_NODE="true"
-      HOMELAB_NODE_ARG_PROVIDED=true
-      shift 1
-      ;;
-    --desktop)
-      HOMELAB_NODE="false"
-      HOMELAB_NODE_ARG_PROVIDED=true
-      shift 1
-      ;;
-    --retrieve-kubeconfig)
-      RETRIEVE_KUBECONFIG_ARG_PROVIDED=true
-      shift 1
-      ;;
-    --cluster-endpoint)
-      if [[ $# -lt 2 ]]; then
-        print_error "--cluster-endpoint requires an argument"
-        exit 1
-      fi
-      ENDPOINT="$2"
-      ENDPOINT_ARG_PROVIDED=true
-      shift 2
-      ;;
-    -*)
-      print_error "Unknown option: $1"
-      print_status "Use --help to see available options"
+  --nixos-anywhere-args)
+    if [[ $# -lt 2 ]]; then
+      print_error "--nixos-anywhere-args requires an argument"
       exit 1
-      ;;
-    *)
-      print_error "Unexpected argument: $1"
-      print_status "Currently only --nixos-anywhere-args is supported"
-      print_status "Use --help to see usage information"
+    fi
+    NIXOS_ANYWHERE_ARGS="$2"
+    NIXOS_ANYWHERE_ARGS_PROVIDED=true
+    shift 2
+    ;;
+  --machine-name)
+    if [[ $# -lt 2 ]]; then
+      print_error "--machine-name requires an argument"
       exit 1
-      ;;
+    fi
+    SELECTED_MACHINE="$2"
+    SELECTED_MACHINE_ARG_PROVIDED=true
+    shift 2
+    ;;
+  --remote-ip)
+    if [[ $# -lt 2 ]]; then
+      print_error "--remote-ip requires an argument"
+      exit 1
+    fi
+    IP_ADDRESS="$2"
+    IP_ADDRESS_ARG_PROVIDED=true
+    shift 2
+    ;;
+  --post-install-ip)
+    if [[ $# -lt 2 ]]; then
+      print_error "--post-install-ip requires an argument"
+      exit 1
+    fi
+    POST_INSTALL_IP_ADDRESS="$2"
+    POST_INSTALL_IP_ADDRESS_ARG_PROVIDED=true
+    shift 2
+    ;;
+  --cluster-name)
+    if [[ $# -lt 2 ]]; then
+      print_error "--cluster-name requires an argument"
+      exit 1
+    fi
+    CLUSTER_NAME="$2"
+    CLUSTER_NAME_ARG_PROVIDED=true
+    shift 2
+    ;;
+  --help | -h)
+    show_usage
+    exit 0
+    ;;
+  --homelab-node)
+    HOMELAB_NODE="true"
+    HOMELAB_NODE_ARG_PROVIDED=true
+    shift 1
+    ;;
+  --desktop)
+    HOMELAB_NODE="false"
+    HOMELAB_NODE_ARG_PROVIDED=true
+    shift 1
+    ;;
+  --retrieve-kubeconfig)
+    RETRIEVE_KUBECONFIG_ARG_PROVIDED=true
+    shift 1
+    ;;
+  --cluster-endpoint)
+    if [[ $# -lt 2 ]]; then
+      print_error "--cluster-endpoint requires an argument"
+      exit 1
+    fi
+    ENDPOINT="$2"
+    ENDPOINT_ARG_PROVIDED=true
+    shift 2
+    ;;
+  -*)
+    print_error "Unknown option: $1"
+    print_status "Use --help to see available options"
+    exit 1
+    ;;
+  *)
+    print_error "Unexpected argument: $1"
+    print_status "Currently only --nixos-anywhere-args is supported"
+    print_status "Use --help to see usage information"
+    exit 1
+    ;;
   esac
 done
 
@@ -238,8 +237,8 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   # Present numbered list to user
   echo
   print_status "Available machine configurations:"
-  for ((i=0; i<${#MACHINE_NAMES[@]}; i++)); do
-    echo "  $((i+1))) ${MACHINE_NAMES[$i]}"
+  for ((i = 0; i < ${#MACHINE_NAMES[@]}; i++)); do
+    echo "  $((i + 1))) ${MACHINE_NAMES[$i]}"
   done
 
   # Get user selection
@@ -250,7 +249,7 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
 
     # Validate selection
     if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ${#MACHINE_NAMES[@]} ]]; then
-      SELECTED_MACHINE="${MACHINE_NAMES[$((selection-1))]}"
+      SELECTED_MACHINE="${MACHINE_NAMES[$((selection - 1))]}"
       break
     else
       print_error "Invalid selection. Please enter a number between 1 and ${#MACHINE_NAMES[@]}"
@@ -265,7 +264,7 @@ if [[ "$IP_ADDRESS_ARG_PROVIDED" != true ]]; then
     echo -n "Enter the IP address of the machine you are trying to install NixOS on: "
     read -r IP_ADDRESS
 
-    if ipcalc -c "$IP_ADDRESS" > /dev/null 2>&1; then
+    if ipcalc -c "$IP_ADDRESS" >/dev/null 2>&1; then
       break
     fi
 
@@ -298,23 +297,22 @@ if [[ "$HOMELAB_NODE_ARG_PROVIDED" != true ]]; then
   echo ""
   read -p "Is this a homelab node? (y/n): " NODE_TYPE
   case "$NODE_TYPE" in
-  [Yy]|[Yy][Ee][Ss])
+  [Yy] | [Yy][Ee][Ss])
     HOMELAB_NODE=true
-  ;;
+    ;;
   *)
     HOMELAB_NODE=false
-  ;;
+    ;;
   esac
 fi
 
-
-if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true  ]] && [[ "$HOMELAB_NODE" = true ]]; then
-    echo ""
-    read -p "Please enter the cluster name: " CLUSTER_NAME
-    if [ -z "$CLUSTER_NAME" ]; then
-        echo "Error: Cluster name cannot be empty"
-        exit 1
-    fi
+if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true ]] && [[ "$HOMELAB_NODE" = true ]]; then
+  echo ""
+  read -p "Please enter the cluster name: " CLUSTER_NAME
+  if [ -z "$CLUSTER_NAME" ]; then
+    echo "Error: Cluster name cannot be empty"
+    exit 1
+  fi
 fi
 
 if [[ "$HOMELAB_NODE" = true ]]; then
@@ -328,7 +326,7 @@ PUBKEY_LOCATION="$FILES_FOR_NEW_MACHINE/etc/ssh/ssh_host_ed25519_key.pub"
 nixos-key-retrieval "$PUBKEY_LOCATION" "$SELECTED_MACHINE"
 
 if [[ $NIXOS_ANYWHERE_ARGS_PROVIDED = "true" ]]; then
-  read -ra CMD_ARRAY <<< "$NIXOS_ANYWHERE_ARGS"
+  read -ra CMD_ARRAY <<<"$NIXOS_ANYWHERE_ARGS"
   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE" "${CMD_ARRAY[*]}"
 else
   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE"
@@ -347,7 +345,7 @@ if [[ ! "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" = true ]]; then
     echo -n $output_message
     read -r POST_INSTALL_IP_ADDRESS
 
-    if ipcalc -c "$POST_INSTALL_IP_ADDRESS" > /dev/null 2>&1; then
+    if ipcalc -c "$POST_INSTALL_IP_ADDRESS" >/dev/null 2>&1; then
       break
     fi
 
@@ -361,7 +359,7 @@ if [ -f ~/.ssh/known_hosts ]; then
   ssh-keygen -R $POST_INSTALL_IP_ADDRESS
 fi
 
-ssh-keyscan $POST_INSTALL_IP_ADDRESS >> ~/.ssh/known_hosts
+ssh-keyscan $POST_INSTALL_IP_ADDRESS >>~/.ssh/known_hosts
 
 RETRY_INTERVALS=(30 60 75 90 105)
 ATTEMPT=1
