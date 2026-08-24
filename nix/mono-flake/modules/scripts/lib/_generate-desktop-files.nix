@@ -15,6 +15,6 @@ in
 
 {
   environment.systemPackages = [
-    generate-desktop-files
+    _generate-desktop-files
   ];
 }

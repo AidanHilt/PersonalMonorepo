@@ -17,6 +17,6 @@ in
 
 {
   environment.systemPackages = [
-    generate-homelab-node-files
+    _generate-homelab-node-files
   ];
 }

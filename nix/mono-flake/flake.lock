@@ -228,6 +228,24 @@
         "type": "github"
       }
     },
+    "flake-utils": {
+      "inputs": {
+        "systems": "systems_2"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -422,6 +440,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_6": {
+      "locked": {
+        "lastModified": 1787360063,
+        "narHash": "sha256-dt4WdcvsA8/RCe+VZZwqU0X+XMM3wBbGCWA0/sFWzGo=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "2c423e03bbafcff28bfadc6781a4a8257f205cb5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nur": {
       "inputs": {
         "flake-parts": "flake-parts_2",
@@ -444,16 +478,16 @@
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1783951789,
-        "narHash": "sha256-gO74mLoJiHbSpl3bBOnwXNZWNxAMS5mCvEOX+eQ37+s=",
+        "lastModified": 1786899384,
+        "narHash": "sha256-MqtV8huJeJiHJ28q527SN+5AKXBWdKGgVlDgcRAmzno=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "e07b60699fbad68e3d9d0c42f3126f53eb466e25",
+        "rev": "26527d89692a5e3fff29188ba9123114131f29cb",
         "type": "github"
       },
       "original": {
         "owner": "aidanhilt",
-        "ref": "master",
+        "ref": "main",
         "repo": "PersonalMonorepo",
         "type": "github"
       }
@@ -495,8 +529,31 @@
         "nur": "nur",
         "personalMonorepo": "personalMonorepo",
         "plasma-manager": "plasma-manager",
-        "systems": "systems_2",
+        "scripts": "scripts",
+        "systems": "systems_3",
         "wsl": "wsl"
+      }
+    },
+    "scripts": {
+      "inputs": {
+        "flake-utils": "flake-utils",
+        "nixpkgs": "nixpkgs_6"
+      },
+      "locked": {
+        "dir": "nix/scripts",
+        "lastModified": 1787609781,
+        "narHash": "sha256-fOYmDDD+81vh6oVtyV+ZK9zTz7a7hzTYcCqifnKkLbE=",
+        "owner": "aidanhilt",
+        "repo": "PersonalMonorepo",
+        "rev": "25f41419996ec5462e6f39c81440b17683e8fc05",
+        "type": "github"
+      },
+      "original": {
+        "dir": "nix/scripts",
+        "owner": "aidanhilt",
+        "ref": "project-lockstep/release-mgmt",
+        "repo": "PersonalMonorepo",
+        "type": "github"
       }
     },
     "systems": {
@@ -515,6 +572,21 @@
       }
     },
     "systems_2": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "systems_3": {
       "locked": {
         "lastModified": 1681028828,
         "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
