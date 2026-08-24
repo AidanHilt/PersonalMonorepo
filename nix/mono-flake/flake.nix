@@ -16,8 +16,12 @@
     nur.url = "github:nix-community/nur";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/master";
+      url = "github:aidanhilt/PersonalMonorepo/main";
       flake = false;
+    };
+
+    scripts = {
+      url = "github:aidanhilt/PersonalMonorepo/project-lockstep/release-mgmt?dir=nix/scripts";
     };
 
     comin = {
