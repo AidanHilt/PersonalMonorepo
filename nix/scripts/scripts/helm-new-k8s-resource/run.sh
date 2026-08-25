@@ -5,7 +5,7 @@ set -euo pipefail
 # @lib: printing-and-output
 
 show_help() {
-  "Usage: $0 [OPTIONS]"
+  echo "Usage: $0 [OPTIONS]"
   echo ""
   echo "OPTIONS:"
   echo "  --chart-name NAME    Name of the helm chart to create"
