@@ -51,6 +51,7 @@ in
 {
   "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
 
+  "github-config.age".publicKeys = user-machines;
   "smb-mount-config.age".publicKeys = user-machines;
   "rclone-config.age".publicKeys = user-machines;
   "kubeconfig.age".publicKeys = user-machines;
