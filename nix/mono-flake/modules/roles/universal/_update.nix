@@ -55,15 +55,17 @@ let
   read source_type
   source_type="''${source_type:-remote}"  # Default to remote if empty
 
+  replace_flag=""
+
   if [[ "$source_type" == "remote" ]]; then
     # For remote source, get repository and branch
     echo -n "Remote repository (default: github:AidanHilt/PersonalMonorepo?dir=nix/mono-flake): "
     read remote_repo
     UPDATE__REMOTE_URL="''${remote_repo:-github:AidanHilt/PersonalMonorepo?dir=nix/mono-flake}"
 
-    echo -n "Branch to use (default: master): "
+    echo -n "Branch to use (default: main): "
     read branch_name
-    UPDATE__REMOTE_BRANCH="''${branch_name:-master}"
+    UPDATE__REMOTE_BRANCH="''${branch_name:-main}"
 
   elif [[ "$source_type" == "local" ]]; then
     # For local source, check if PERSONAL_MONOREPO_LOCATION exists
@@ -123,8 +125,16 @@ let
   fi
   fi
 
-  echo "Rebuilding system with flake: $UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
-  sudo $rebuildExecutable switch --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
+  if [[ -d $UPDATE_FLAKE_LOCATION ]]; then
+    replace_flag="--override-input scripts path:$PERSONAL_MONOREPO_LOCATION/nix/scripts"
+  fi
+
+  echo "Rebuilding system with flake: $UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME $replace_flag"
+  if [[ "$replace_flag" ]]; then
+    sudo $rebuildExecutable switch --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME" "$replace_flag"
+  else
+    sudo $rebuildExecutable switch --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
+  fi
 
   if [ -z "$UPDATE__NO_SAVE" ]; then
   # List of variables to check and save
