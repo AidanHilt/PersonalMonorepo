@@ -28,4 +28,15 @@
     vault
     weechat
   ];
+
+  age.secrets.github-token = {
+    file = ../../../secrets/github-token.age;
+    path = "/run/agenix/github-token";
+    owner = "root";
+    mode = "0400";
+  };
+
+  nix.extraOptions = ''
+    !include ${config.age.secrets.github-token.path}
+  '';
 }
