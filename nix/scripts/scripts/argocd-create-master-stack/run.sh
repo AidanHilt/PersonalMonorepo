@@ -2,13 +2,17 @@
 
 set -euo pipefail
 
+MONOREPO_BRANCH=""
+
 if [[ ! -v MONOREPO_BRANCH ]]; then
   if [[ -v PERSONAL_MONOREPO_LOCATION ]]; then
-    export MONOREPO_BRANCH=$(git -C "$PERSONAL_MONOREPO_LOCATION" branch --show-current)
+    MONOREPO_BRANCH=$(git -C "$PERSONAL_MONOREPO_LOCATION" branch --show-current)
   else
-    export MONOREPO_BRANCH=master
+    MONOREPO_BRANCH="main"
   fi
 fi
+
+export MONOREPO_BRANCH
 
 if [[ ! -v CLUSTER_NAME ]]; then
   if [[ ! -v ATILS_CURRENT_CONTEXT ]]; then
