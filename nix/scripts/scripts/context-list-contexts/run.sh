@@ -9,7 +9,7 @@ fi
 
 echo "Available contexts:"
 if [[ -d "$ATILS_CONTEXTS_DIRECTORY" ]]; then
-  contexts=($(ls -1 "$ATILS_CONTEXTS_DIRECTORY" 2>/dev/null))
+  mapfile -t contexts < <(ls -1 "$ATILS_CONTEXTS_DIRECTORY" 2>/dev/null)
   if [[ ${#contexts[@]} -eq 0 ]]; then
     echo "  (no contexts found)"
     exit 1
