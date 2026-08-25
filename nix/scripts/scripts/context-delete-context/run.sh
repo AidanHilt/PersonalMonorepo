@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-# @lib: contextSelector
-
 if [[ -z "${ATILS_CONTEXTS_DIRECTORY}" ]]; then
   echo "Error: ATILS_CONTEXTS_DIRECTORY environment variable is not set"
   echo "Please set it to your desired contexts directory path"
