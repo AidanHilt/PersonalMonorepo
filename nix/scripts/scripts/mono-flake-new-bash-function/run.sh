@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-source "${add-import-to-nix}"
-source "${select-directory}"
+# @lib: add-import-to-nix
+# @lib: select-directory
 
 # Default values
 FUNCTION_NAME=""
