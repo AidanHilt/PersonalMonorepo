@@ -87,7 +87,7 @@ fi
 
 # Create temporary directory for hardware config
 TEMP_DIR=$(mktemp -d)
-trap "rm -rf $TEMP_DIR" EXIT
+trap 'rm -rf $TEMP_DIR' EXIT
 
 # SSH into machine and generate hardware configuration
 echo "Generating hardware configuration on remote machine..."
@@ -116,7 +116,7 @@ if [[ -n "$REMOTE_HOSTNAME" ]]; then
     echo "Searching for hostname directory in $MACHINES_DIR..."
 
     # Search recursively for a directory matching the hostname
-    FOUND_DIRS=($(find "$MACHINES_DIR" -type d -name "$REMOTE_HOSTNAME" 2>/dev/null || true))
+    FOUND_DIRS=("$(find "$MACHINES_DIR" -type d -name "$REMOTE_HOSTNAME" 2>/dev/null || true)")
 
     if [[ ${#FOUND_DIRS[@]} -eq 1 ]]; then
         HOSTNAME_DIR="${FOUND_DIRS[0]}"

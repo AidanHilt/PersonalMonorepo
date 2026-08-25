@@ -122,7 +122,7 @@ trust_hostname() {
   local SAFE_NAME
   SAFE_NAME="$(safe_hostname "${hostname}")"
   local PKI_MOUNT="pki_int_${SAFE_NAME}"
-  local CERT_NAME="Vault Intermediate CA - ${hostname}"
+  #local CERT_NAME="Vault Intermediate CA - ${hostname}"
   local CERT_FILE
   CERT_FILE="$(fetch_cert "${PKI_MOUNT}" "${out_dir}")"
 

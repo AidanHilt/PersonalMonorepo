@@ -17,14 +17,14 @@ usage() {
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    -p|--password-string)
-      PASSWORD="$2"
-      shift 2
-      ;;
-    *)
-      echo "Unknown option $1"
-      usage
-      ;;
+  -p | --password-string)
+    PASSWORD="$2"
+    shift 2
+    ;;
+  *)
+    echo "Unknown option $1"
+    usage
+    ;;
   esac
 done
 
@@ -40,7 +40,7 @@ if [[ -z "$PASSWORD" ]]; then
   done
 fi
 
-HASHED_PASSWORD=$(mkpasswd $PASSWORD)
+HASHED_PASSWORD=$(mkpasswd "$PASSWORD")
 
 if command -v pbcopy >/dev/null 2>&1; then
   # macOS

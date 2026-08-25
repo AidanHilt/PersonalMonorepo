@@ -29,10 +29,12 @@ select-directory() {
       read -rp "Enter new directory name: " new_dir
       SELECTED_DIR="$new_dir"
     elif [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -lt "$i" ]]; then
-      SELECTED_DIR="''${dirs[$((choice - 1))]}"
+      SELECTED_DIR="${dirs[$((choice - 1))]}"
     else
       echo "Invalid selection"
       exit 1
     fi
+
+    export SELECTED_DIR
   fi
 }

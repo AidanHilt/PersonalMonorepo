@@ -46,16 +46,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ -z "''$NAMESPACE" ]; then
+if [ -z "$NAMESPACE" ]; then
   CURRENT_NAMESPACE=$(kubectl config view --minify --output 'jsonpath={..namespace}')
   NAMESPACE="${CURRENT_NAMESPACE:-default}"
 fi
 
-if [ -z "''$PVC_NAME" ]; then
+if [ -z "$PVC_NAME" ]; then
   read -rp "Enter PVC name: " PVC_NAME
 fi
 
-if [ -z "''$PVC_NAME" ]; then
+if [ -z "$PVC_NAME" ]; then
   print_error "PVC name cannot be empty"
   exit 1
 fi

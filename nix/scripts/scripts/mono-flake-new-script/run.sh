@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-source ${add-import-to-nix}
-source ${select-directory}
+# @lib: add-import-to-nix
+# @lib: select-directory
 
 # Default values
 SCRIPT_NAME=""
@@ -38,7 +38,7 @@ select_directory() {
   # Find all directories (including subdirectories)
   while IFS= read -r -d "" dir; do
     # Get relative path from modules directory
-    rel_path="${dir#$OUTPUT_DIR/}"
+    rel_path="${dir#"$OUTPUT_DIR"/}"
     dirs+=("$rel_path")
     echo "$i) $rel_path"
     ((i++))

@@ -6,8 +6,11 @@ _modify-ingress-values() {
 
   eval "yq -P eval '$YQ_STRING' -i \"$FILE_NAME\""
 
-  local TEMP_HOSTNAMES=$(mktemp)
-  local TEMP_REST=$(mktemp)
+  TEMP_HOSTNAMES="$(mktemp)"
+  TEMP_REST="$(mktemp)"
+
+  local TEMP_HOSTNAMES
+  local TEMP_REST
 
   yq eval '.hostnames' "$FILE_NAME" >"$TEMP_HOSTNAMES"
   yq eval 'del(.hostnames) | to_entries | sort_by(.key) | from_entries' "$FILE_NAME" >"$TEMP_REST"

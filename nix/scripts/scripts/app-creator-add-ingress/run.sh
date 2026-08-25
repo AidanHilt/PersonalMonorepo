@@ -48,7 +48,7 @@ while [[ $# -gt 0 ]]; do
     shift 2
     ;;
   --prefix | -r)
-    PREFIXES+="$2"
+    PREFIXES+=("$2")
     shift 2
     ;;
   --subdomain | -d)
@@ -115,7 +115,9 @@ if [[ -z "$DESTINATION_PORT" ]]; then
   DESTINATION_PORT=${port:-80}
 fi
 
-export PREFIXES_JSON=$(printf '%s\n' "${PREFIXES[@]}" | jq -R . | jq -s .)
+PREFIXES_JSON=$(printf '%s\n' "${PREFIXES[@]}" | jq -R . | jq -s .)
+
+export PREFIXES_JSON
 
 ROUTE_CONFIG_STRING=""
 

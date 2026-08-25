@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
     shift 2
     ;;
   --description | -d)
-    DESRIPTION="$2"
+    DESCRIPTION="$2"
     shift 2
     ;;
   --group | -g)

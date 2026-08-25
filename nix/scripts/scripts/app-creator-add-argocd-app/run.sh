@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-source "${printing-and-output.printing-and-output}"
-source "${modify-master-stack-values}"
+# @lib: printing-and-output.printing-and-output
+# @lib: modify-master-stack-values
 
 show_help() {
   echo "Usage: $0 [OPTIONS]"

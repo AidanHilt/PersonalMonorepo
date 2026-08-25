@@ -88,7 +88,7 @@ if [[ -z "$SYSTEM" ]]; then
     done
 else
     # Validate provided system
-    if [[ ! " ${SYSTEMS[*]} " =~ " $SYSTEM " ]]; then
+    if [[ ! " ${SYSTEMS[*]} " == *" $SYSTEM "* ]]; then
         echo "Error: System '$SYSTEM' not found. Available systems:"
         printf '%s\n' "${SYSTEMS[@]}"
         exit 1
@@ -129,10 +129,10 @@ mkdir -p "$DEST_DIR"
 
 # Copy template files
 cp -r "$TEMPLATE_DIR"/configuration.nix "$DEST_DIR"/configuration.nix
-mono-flake-template-machine-file-options $PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/blank-machine/disko.nix $DEST_DIR/disko.nix $PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/shared-disko-configs DISKO_COMMON_CONFIG_OPTIONS
-mono-flake-template-machine-file-options $PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/blank-machine/home.nix $DEST_DIR/home.nix $PERSONAL_MONOREPO_LOCATION/nix/mono-flake/home-manager/shared-configs HOME_MANAGER_COMMON_CONFIG_OPTIONS
-mono-flake-template-machine-file-options $PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/blank-machine/values.nix $DEST_DIR/values.nix $PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules/shared-values VALUES_FILE_COMMON_CONFIG_OPTIONS
+mono-flake-template-machine-file-options "$PERSONAL_MONOREPO_LOCATION"/nix/mono-flake/templates/blank-machine/disko.nix "$DEST_DIR"/disko.nix "$PERSONAL_MONOREPO_LOCATION"/nix/mono-flake/modules/shared-disko-configs DISKO_COMMON_CONFIG_OPTIONS
+mono-flake-template-machine-file-options "$PERSONAL_MONOREPO_LOCATION"/nix/mono-flake/templates/blank-machine/home.nix "$DEST_DIR"/home.nix "$PERSONAL_MONOREPO_LOCATION"/nix/mono-flake/home-manager/shared-configs HOME_MANAGER_COMMON_CONFIG_OPTIONS
+mono-flake-template-machine-file-options "$PERSONAL_MONOREPO_LOCATION"/nix/mono-flake/templates/blank-machine/values.nix "$DEST_DIR"/values.nix "$PERSONAL_MONOREPO_LOCATION"/nix/mono-flake/modules/shared-values VALUES_FILE_COMMON_CONFIG_OPTIONS
 
-sed -i "" 's|../../../modules/shared-values/\(.*\)\.nix$|\1|' $DEST_DIR/values.nix
+sed -i "" 's|../../../modules/shared-values/\(.*\)\.nix$|\1|' "$DEST_DIR"/values.nix
 
 echo "Success! Machine created at: $DEST_DIR"

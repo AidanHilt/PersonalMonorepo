@@ -27,7 +27,7 @@ for cmd in ssh sed kubecm; do
 done
 
 # Parse arguments
-SSH_CONNECTION=""
+#SSH_CONNECTION=""
 CLUSTER_NAME=""
 OVERWRITE_IP=""
 

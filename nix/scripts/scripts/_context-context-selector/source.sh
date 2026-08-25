@@ -18,13 +18,13 @@ _context-context-selector() {
       echo "$i. $context"
       ((i++))
     done
-    echo -n "Select a context: "
-    read CONTEXT_SELECTION
+    read -rp "Select a context: " CONTEXT_SELECTION
     if [[ -z "${ZSH_VERSION-}" ]]; then
       CONTEXT_NAME=${contexts[$CONTEXT_SELECTION - 1]}
     else
       CONTEXT_NAME=${contexts[$CONTEXT_SELECTION]}
     fi
+    export CONTEXT_NAME
   else
     echo "  (contexts directory does not exist)"
     return 1

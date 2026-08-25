@@ -6,8 +6,11 @@ _modify-master-stack-values() {
 
   eval "yq -P eval '$YQ_STRING' -i \"$FILE_NAME\""
 
-  local TEMP_HEADER=$(mktemp)
-  local TEMP_REST=$(mktemp)
+  TEMP_HEADER=$(mktemp)
+  TEMP_REST=$(mktemp)
+
+  local TEMP_HEADER
+  local TEMP_REST
 
   yq eval 'pick(["env", "hostnames", "defaultGitRepo", "gitRevision", "configuration"])' "$FILE_NAME" | sed '/^# Global config$/d' >"$TEMP_HEADER"
   yq eval 'del(.env) | del(.hostnames) | del(.defaultGitRepo) | del(.gitRevision) | del(.configuration) | to_entries | sort_by(.key) | from_entries' "$FILE_NAME" | sed '/^# Global config$/d' >"$TEMP_REST"

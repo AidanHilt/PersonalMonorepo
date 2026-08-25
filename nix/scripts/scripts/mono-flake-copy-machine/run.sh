@@ -103,7 +103,7 @@ else
 
   # Find source machine directory
   echo "Searching for source machine '$SOURCE_MACHINE'..."
-  SOURCE_DIRS=($(find "$MACHINES_DIR" -type d -name "$SOURCE_MACHINE" 2>/dev/null || true))
+  SOURCE_DIRS=("$(find "$MACHINES_DIR" -type d -name "$SOURCE_MACHINE" 2>/dev/null || true)")
 
   if [[ ${#SOURCE_DIRS[@]} -eq 0 ]]; then
     echo "Error: Source machine '$SOURCE_MACHINE' not found in $MACHINES_DIR"
@@ -173,7 +173,7 @@ if [[ -z "$DESTINATION_SYSTEM" ]]; then
   done
 else
   # Validate provided destination system
-  if [[ ! " ${SYSTEMS[*]} " =~ " $DESTINATION_SYSTEM " ]]; then
+  if [[ ! " ${SYSTEMS[*]} " == *" $DESTINATION_SYSTEM "* ]]; then
     echo "Error: System '$DESTINATION_SYSTEM' not found. Available systems:"
     printf '%s\n' "${SYSTEMS[@]}"
     exit 1

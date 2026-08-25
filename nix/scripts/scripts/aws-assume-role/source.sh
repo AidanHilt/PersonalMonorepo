@@ -1,9 +1,13 @@
 #!/bin/bash
 
 aws-assume-role() {
-  local account_id=""
-  local role_name=""
-  local session_name="assumed-role-session-$(date +%s)"
+  account_id=""
+  role_name=""
+  session_name="assumed-role-session-$(date +%s)"
+
+  local account_id
+  local role_name
+  local session_name
 
   # Parse arguments
   while [[ $# -gt 0 ]]; do
@@ -66,10 +70,17 @@ aws-assume-role() {
   fi
 
   # Parse the tab-separated output
-  export AWS_ACCESS_KEY_ID=$(echo "$assume_output" | awk '{print $1}')
-  export AWS_SECRET_ACCESS_KEY=$(echo "$assume_output" | awk '{print $2}')
-  export AWS_SESSION_TOKEN=$(echo "$assume_output" | awk '{print $3}')
-  local expiration=$(echo "$assume_output" | awk '{print $4}')
+  AWS_ACCESS_KEY_ID=$(echo "$assume_output" | awk '{print $1}')
+  AWS_SECRET_ACCESS_KEY=$(echo "$assume_output" | awk '{print $2}')
+  AWS_SESSION_TOKEN=$(echo "$assume_output" | awk '{print $3}')
+
+  export AWS_ACCESS_KEY_ID
+  export AWS_SECRET_ACCESS_KEY
+  export AWS_SESSION_TOKEN
+
+  expiration=$(echo "$assume_output" | awk '{print $4}')
+
+  local expiration
 
   # Check if credentials were successfully extracted
   if [[ -z "$AWS_ACCESS_KEY_ID" ]]; then

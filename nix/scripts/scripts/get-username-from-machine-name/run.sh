@@ -43,7 +43,7 @@ USERNAME=$(grep -E '^\s*username\s*=\s*"[^"]*"' "$VALUES_FILE" | sed 's/.*"\([^"
 if [ -z "$USERNAME" ]; then
   FILENAME=$(grep -E '^\s*defaultValues\s*=\s*"[^"]*"' "$VALUES_FILE" | sed 's/.*"\([^"]*\)".*/\1/' | head -n1 || true)
 
-  if [ -z FILENAME ]; then
+  if [ -z "$FILENAME" ]; then
     echo "Could not find username or a default values file. Exiting."
     exit 1
   fi
@@ -208,7 +208,7 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   if [[ -d "$AARCH64_DIR" ]]; then
     for dir in "$AARCH64_DIR"/*/; do
       if [[ -d "$dir" ]]; then
-        MACHINE_NAMES+=($(basename "$dir"))
+        MACHINE_NAMES+=("$(basename "$dir")")
       fi
     done
   fi
@@ -218,7 +218,7 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   if [[ -d "$X86_64_DIR" ]]; then
     for dir in "$X86_64_DIR"/*/; do
       if [[ -d "$dir" ]]; then
-        MACHINE_NAMES+=($(basename "$dir"))
+        MACHINE_NAMES+=("$(basename "$dir")")
       fi
     done
   fi
@@ -231,7 +231,7 @@ if [[ "$SELECTED_MACHINE_ARG_PROVIDED" != true ]]; then
   fi
 
   # Sort machine names alphabetically
-  IFS=$'\n' MACHINE_NAMES=($(sort <<<"${MACHINE_NAMES[*]}"))
+  IFS=$'\n' MACHINE_NAMES=("$(sort <<<"${MACHINE_NAMES[*]}")")
   unset IFS
 
   # Present numbered list to user
