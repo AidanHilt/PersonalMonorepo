@@ -30,7 +30,7 @@
   ];
 
   age.secrets.github-token = {
-    file = ../../../secrets/github-token.age;
+    file = ../../../secrets/github-config.age;
     path = "/run/agenix/github-token";
     owner = "root";
     mode = "0400";
