@@ -29,7 +29,6 @@ usage() {
   exit 1
 }
 
-
 # Function to select directory interactively
 select_directory() {
   echo "Available directories in $OUTPUT_DIR:"
@@ -51,16 +50,16 @@ select_directory() {
     echo "$i) Create new directory"
     echo "0) Exit"
 
-    read -p "Select directory (number): " choice
+    read -rp "Select directory (number): " choice
 
     if [[ "$choice" == "0" ]]; then
       echo "Exiting..."
       exit 0
     elif [[ "$choice" == "$i" ]]; then
-      read -p "Enter new directory name: " new_dir
+      read -rp "Enter new directory name: " new_dir
       SELECTED_DIR="$new_dir"
     elif [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -lt "$i" ]]; then
-      SELECTED_DIR="${dirs[$((choice-1))]}"
+      SELECTED_DIR="${dirs[$((choice - 1))]}"
     else
       echo "Invalid selection"
       exit 1
@@ -71,31 +70,31 @@ select_directory() {
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    -n|--name)
-      SCRIPT_NAME="$2"
-      shift 2
-      ;;
-    -d|--out-dir)
-      SELECTED_DIR="$2"
-      shift 2
-      ;;
-    -h|--help)
+  -n | --name)
+    SCRIPT_NAME="$2"
+    shift 2
+    ;;
+  -d | --out-dir)
+    SELECTED_DIR="$2"
+    shift 2
+    ;;
+  -h | --help)
+    usage
+    ;;
+  -*)
+    echo "Unknown option: $1"
+    usage
+    ;;
+  *)
+    # Treat as positional argument (script name)
+    if [[ -z "$SCRIPT_NAME" ]]; then
+      SCRIPT_NAME="$1"
+    else
+      echo "Error: Multiple script names provided"
       usage
-      ;;
-    -*)
-      echo "Unknown option: $1"
-      usage
-      ;;
-    *)
-      # Treat as positional argument (script name)
-      if [[ -z "$SCRIPT_NAME" ]]; then
-        SCRIPT_NAME="$1"
-      else
-        echo "Error: Multiple script names provided"
-        usage
-      fi
-      shift
-      ;;
+    fi
+    shift
+    ;;
   esac
 done
 
@@ -124,7 +123,7 @@ fi
 # Get script name (interactive or from argument)
 if [[ -z "$SCRIPT_NAME" ]]; then
   while true; do
-    read -p "Enter the script name: " SCRIPT_NAME
+    read -rp "Enter the script name: " SCRIPT_NAME
     if [[ -n "$SCRIPT_NAME" ]]; then
       break
     else
@@ -150,15 +149,15 @@ OUTPUT_FILE="$OUTPUT_DIR/$SELECTED_DIR/$SCRIPT_NAME"
 # Check if output file already exists
 if [[ -f "$OUTPUT_FILE" ]]; then
   echo "Warning: File '$OUTPUT_FILE' already exists"
-  read -p "Do you want to overwrite it? (y/N): " confirm
+  read -rp "Do you want to overwrite it? (y/N): " confirm
   case $confirm in
-    [Yy]*)
-      echo "Overwriting existing file..."
-      ;;
-    *)
-      echo "Aborted."
-      exit 0
-      ;;
+  [Yy]*)
+    echo "Overwriting existing file..."
+    ;;
+  *)
+    echo "Aborted."
+    exit 0
+    ;;
   esac
 fi
 
@@ -166,7 +165,7 @@ TARGET_DIR="$(dirname "$OUTPUT_FILE")"
 if [[ ! -d "$TARGET_DIR" ]]; then
   echo "Creating directory: $TARGET_DIR"
   mkdir -p "$TARGET_DIR"
-  cat << 'EOF' > "$TARGET_DIR/default.nix"
+  cat <<'EOF' >"$TARGET_DIR/default.nix"
 { inputs, globals, pkgs, machine-config, lib, ...}:
 {
  imports = [
@@ -176,7 +175,7 @@ EOF
 fi
 
 # Export the script name as environment variable for envsubst
-export SCRIPT_NAME_BASE="${SCRIPT_NAME%.nix}"  # Remove .nix extension for template use
+export SCRIPT_NAME_BASE="${SCRIPT_NAME%.nix}" # Remove .nix extension for template use
 export SCRIPT_NAME_FULL="$SCRIPT_NAME"
 
 # Check if envsubst is available
@@ -187,7 +186,7 @@ fi
 
 # Process template with envsubst
 echo "Processing template..."
-envsubst < "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+envsubst <"$TEMPLATE_FILE" >"$OUTPUT_FILE"
 
 add-import-to-nix "$TARGET_DIR/default.nix" "$SCRIPT_NAME_FULL"
 

@@ -90,7 +90,7 @@ fi
 # Get function name (interactive or from argument)
 if [[ -z "$FUNCTION_NAME" ]]; then
   while true; do
-    read -p "Enter the function name: " FUNCTION_NAME
+    read -rp "Enter the function name: " FUNCTION_NAME
     if [[ -n "$FUNCTION_NAME" ]]; then
       break
     else
@@ -116,7 +116,7 @@ OUTPUT_FILE="$OUTPUT_DIR/$SELECTED_DIR/$FUNCTION_NAME"
 # Check if output file already exists
 if [[ -f "$OUTPUT_FILE" ]]; then
   echo "Warning: File '$OUTPUT_FILE' already exists"
-  read -p "Do you want to overwrite it? (y/N): " confirm
+  read -rp "Do you want to overwrite it? (y/N): " confirm
   case $confirm in
   [Yy]*)
     echo "Overwriting existing file..."

@@ -73,7 +73,7 @@ done
 
 if [[ -z "$APP_NAME" ]]; then
   while true; do
-    read -p "Enter the name of the app: " APP_NAME
+    read -rp "Enter the name of the app: " APP_NAME
     if [[ -n "$APP_NAME" ]]; then
       break
     fi
@@ -82,12 +82,12 @@ if [[ -z "$APP_NAME" ]]; then
 fi
 
 if [[ -z $PREFIX && -z "$SUBDOMAIN" ]]; then
-  read -p "Enter prefix or leave blank: " PREFIX
+  read -rp "Enter prefix or leave blank: " PREFIX
 fi
 
 if [[ -z $PREFIX && -z "$SUBDOMAIN" ]]; then
   while true; do
-    read -p "Enter subdomain: " SUBDOMAIN
+    read -rp "Enter subdomain: " SUBDOMAIN
     if [[ -n "$SUBDOMAIN" ]]; then
       break
     fi
@@ -97,7 +97,7 @@ fi
 
 if [[ -z "$DESCRIPTION" ]]; then
   while true; do
-    read -p "Enter a short description of the app: " DESCRIPTION
+    read -rp "Enter a short description of the app: " DESCRIPTION
     if [[ -n "$DESCRIPTION" ]]; then
       break
     fi
@@ -107,19 +107,19 @@ fi
 
 if [[ -z "$DISPLAY_NAME" ]]; then
   DEFAULT_DISPLAY_NAME=$(echo "$APP_NAME" | tr '-' ' ' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2))}1')
-  read -p "Enter a display name with proper formatting (default: $DEFAULT_DISPLAY_NAME): " display_name
+  read -rp "Enter a display name with proper formatting (default: $DEFAULT_DISPLAY_NAME): " display_name
   DISPLAY_NAME=${display_name:-$DEFAULT_DISPLAY_NAME}
 
 fi
 
 if [[ -z "$ICON" ]]; then
-  read -p "Enter a path for the icon. See https://gethomepage.dev/configs/services/#icons (default sh-$APP_NAME): " svc_name
+  read -rp "Enter a path for the icon. See https://gethomepage.dev/configs/services/#icons (default sh-$APP_NAME): " svc_name
   ICON=${svc_name:-sh-$APP_NAME}
 fi
 
 if [[ -z "$GROUP" ]]; then
   while true; do
-    read -p "Enter the group name of the app: " GROUP
+    read -rp "Enter the group name of the app: " GROUP
     if [[ -n "$GROUP" ]]; then
       break
     fi

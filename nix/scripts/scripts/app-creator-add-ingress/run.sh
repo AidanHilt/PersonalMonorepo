@@ -67,13 +67,13 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$APP_NAME" ]]; then
-  read -p "Enter the name of the app: " APP_NAME
+  read -rp "Enter the name of the app: " APP_NAME
 fi
 
 if [[ ${#PREFIXES[@]} -eq 0 && -z "$SUBDOMAIN" ]]; then
   print_status "Enter prefixes (one per line, press Enter on empty line to finish):"
   while true; do
-    read -p "Prefix: " prefix
+    read -rp "Prefix: " prefix
     if [[ -z "$prefix" ]]; then
       break
     fi
@@ -86,7 +86,7 @@ fi
 
 if [[ ${#PREFIXES[@]} -eq 0 && -z "$SUBDOMAIN" ]]; then
   while true; do
-    read -p "Enter subdomain: " SUBDOMAIN
+    read -rp "Enter subdomain: " SUBDOMAIN
     if [[ -n "$SUBDOMAIN" ]]; then
       break
     fi
@@ -96,7 +96,7 @@ fi
 
 if [[ -z "$NAMESPACE" ]]; then
   while true; do
-    read -p "Enter namespace: " NAMESPACE
+    read -rp "Enter namespace: " NAMESPACE
     if [[ -n "$NAMESPACE" ]]; then
       break
     fi
@@ -106,12 +106,12 @@ fi
 
 if [[ -z "$SERVICE_NAME" ]]; then
   echo "$SERVICE_NAME"
-  read -p "Enter destination service name (default $APP_NAME): " svc_name
+  read -rp "Enter destination service name (default $APP_NAME): " svc_name
   SERVICE_NAME=${svc_name:-$APP_NAME}
 fi
 
 if [[ -z "$DESTINATION_PORT" ]]; then
-  read -p "Enter destination port (default: 80): " port
+  read -rp "Enter destination port (default: 80): " port
   DESTINATION_PORT=${port:-80}
 fi
 

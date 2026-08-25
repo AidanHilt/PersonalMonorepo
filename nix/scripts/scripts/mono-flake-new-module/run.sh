@@ -46,16 +46,16 @@ select_directory() {
         echo "$i) Create new directory"
         echo "0) Exit"
 
-        read -p "Select directory (number): " choice
+        read -rp "Select directory (number): " choice
 
         if [[ "$choice" == "0" ]]; then
             echo "Exiting..."
             exit 0
         elif [[ "$choice" == "$i" ]]; then
-            read -p "Enter new directory name: " new_dir
+            read -rp "Enter new directory name: " new_dir
             selected_dir="$new_dir"
         elif [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -lt "$i" ]]; then
-            selected_dir="${dirs[$((choice-1))]}"
+            selected_dir="${dirs[$((choice - 1))]}"
         else
             echo "Invalid selection"
             exit 1
@@ -65,7 +65,7 @@ select_directory() {
 
 # Function to get module name
 get_module_name() {
-    read -p "Enter module name (without .nix extension): " module_name
+    read -rp "Enter module name (without .nix extension): " module_name
     if [[ -z "$module_name" ]]; then
         echo "Error: Module name cannot be empty"
         exit 1
@@ -79,19 +79,19 @@ get_module_name() {
 module_path=""
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --module-path)
-            module_path="$2"
-            shift 2
-            ;;
-        --home-manager)
-            HOME_MANAGER=true
-            shift 1
-            ;;
-        *)
-            echo "Unknown option: $1"
-            echo "Usage: $0 [--module-path PATH] [--home-manager]"
-            exit 1
-            ;;
+    --module-path)
+        module_path="$2"
+        shift 2
+        ;;
+    --home-manager)
+        HOME_MANAGER=true
+        shift 1
+        ;;
+    *)
+        echo "Unknown option: $1"
+        echo "Usage: $0 [--module-path PATH] [--home-manager]"
+        exit 1
+        ;;
     esac
 done
 
@@ -136,7 +136,7 @@ fi
 
 # Check if target file already exists
 if [[ -f "$target_file" ]]; then
-    read -p "File $target_file already exists. Overwrite? (y/N): " overwrite
+    read -rp "File $target_file already exists. Overwrite? (y/N): " overwrite
     if [[ "$overwrite" != "y" && "$overwrite" != "Y" ]]; then
         echo "Operation cancelled"
         exit 0

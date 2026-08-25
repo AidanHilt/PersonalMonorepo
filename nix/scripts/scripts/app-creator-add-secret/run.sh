@@ -71,17 +71,17 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$secret_name" ]]; then
-  read -p "Enter the name of the secret: " secret_name
+  read -rp "Enter the name of the secret: " secret_name
 fi
 
 if [[ -z "$destination_namespace" ]]; then
-  read -p "Enter the destination namespace: " destination_namespace
+  read -rp "Enter the destination namespace: " destination_namespace
 fi
 
 configure_sa="n"
 
 if [[ -z "$service_account_name" ]]; then
-  read -p "Would you like to configure the service account? (y/N): " configure_sa
+  read -rp "Would you like to configure the service account? (y/N): " configure_sa
 fi
 
 if [[ "$configure_sa" == "y" ]]; then
@@ -91,23 +91,23 @@ if [[ "$configure_sa" == "y" ]]; then
   fi
 
   if [[ -z "$service_account_name" ]]; then
-    read -p "Enter the service account name [${SA_DEFAULT}]: " service_account_name
+    read -rp "Enter the service account name [${SA_DEFAULT}]: " service_account_name
     service_account_name="${service_account_name:-$SA_DEFAULT}"
   fi
 
   if [[ -z "$service_account_create" ]]; then
-    read -p "Should the service account be created? (y/N): " sa_create_input
+    read -rp "Should the service account be created? (y/N): " sa_create_input
     if [[ "$sa_create_input" == "y" ]]; then
       service_account_create="true"
     fi
   fi
 
   if [[ -z "$service_account_namespace" ]]; then
-    read -p "Enter the service account namespace [${destination_namespace}]: " service_account_namespace
+    read -rp "Enter the service account namespace [${destination_namespace}]: " service_account_namespace
   fi
 fi
 
-read -p "Would you like to configure the destination secret? (y/N): " configure_dest
+read -rp "Would you like to configure the destination secret? (y/N): " configure_dest
 
 if [[ "$configure_dest" == "y" ]]; then
   DESTINATION_FILE=$(mktemp)

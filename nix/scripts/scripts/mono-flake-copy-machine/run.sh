@@ -27,25 +27,25 @@ usage() {
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    -s|--source)
-      SOURCE_MACHINE="$2"
-      shift 2
-      ;;
-    -d|--destination)
-      DESTINATION_MACHINE="$2"
-      shift 2
-      ;;
-    -t|--target-system)
-      DESTINATION_SYSTEM="$2"
-      shift 2
-      ;;
-    -h|--help)
-      usage
-      ;;
-    *)
-      echo "Unknown option: $1"
-      usage
-      ;;
+  -s | --source)
+    SOURCE_MACHINE="$2"
+    shift 2
+    ;;
+  -d | --destination)
+    DESTINATION_MACHINE="$2"
+    shift 2
+    ;;
+  -t | --target-system)
+    DESTINATION_SYSTEM="$2"
+    shift 2
+    ;;
+  -h | --help)
+    usage
+    ;;
+  *)
+    echo "Unknown option: $1"
+    usage
+    ;;
   esac
 done
 
@@ -78,13 +78,13 @@ if [[ -z "$SOURCE_MACHINE" ]]; then
   echo "Available machines:"
   for i in "${!ALL_MACHINE_DIRS[@]}"; do
     MACHINE_PATH="${ALL_MACHINE_DIRS[i]#$MACHINES_DIR/}"
-    echo "$((i+1)). $MACHINE_PATH"
+    echo "$((i + 1)). $MACHINE_PATH"
   done
 
   while true; do
-    read -p "Select source machine (1-${#ALL_MACHINE_DIRS[@]}): " selection
+    read -rp "Select source machine (1-${#ALL_MACHINE_DIRS[@]}): " selection
     if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ${#ALL_MACHINE_DIRS[@]} ]]; then
-      SOURCE_DIR="${ALL_MACHINE_DIRS[$((selection-1))]}"
+      SOURCE_DIR="${ALL_MACHINE_DIRS[$((selection - 1))]}"
       SOURCE_MACHINE=$(basename "$SOURCE_DIR")
       break
     else
@@ -114,13 +114,13 @@ else
   else
     echo "Multiple directories found for source machine '$SOURCE_MACHINE':"
     for i in "${!SOURCE_DIRS[@]}"; do
-      echo "$((i+1)). ${SOURCE_DIRS[i]#$MACHINES_DIR/}"
+      echo "$((i + 1)). ${SOURCE_DIRS[i]#$MACHINES_DIR/}"
     done
 
     while true; do
-      read -p "Select source directory (1-${#SOURCE_DIRS[@]}): " selection
+      read -rp "Select source directory (1-${#SOURCE_DIRS[@]}): " selection
       if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ${#SOURCE_DIRS[@]} ]]; then
-        SOURCE_DIR="${SOURCE_DIRS[$((selection-1))]}"
+        SOURCE_DIR="${SOURCE_DIRS[$((selection - 1))]}"
         break
       else
         echo "Invalid selection. Please enter a number between 1 and ${#SOURCE_DIRS[@]}."
@@ -132,7 +132,7 @@ fi
 # Get destination machine name (interactive or from argument)
 if [[ -z "$DESTINATION_MACHINE" ]]; then
   while true; do
-    read -p "Enter the destination machine name: " DESTINATION_MACHINE
+    read -rp "Enter the destination machine name: " DESTINATION_MACHINE
     if [[ -n "$DESTINATION_MACHINE" ]]; then
       break
     else
@@ -159,13 +159,13 @@ fi
 if [[ -z "$DESTINATION_SYSTEM" ]]; then
   echo "Available systems:"
   for i in "${!SYSTEMS[@]}"; do
-    echo "$((i+1)). ${SYSTEMS[i]}"
+    echo "$((i + 1)). ${SYSTEMS[i]}"
   done
 
   while true; do
-    read -p "Select destination system (1-${#SYSTEMS[@]}): " selection
+    read -rp "Select destination system (1-${#SYSTEMS[@]}): " selection
     if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ${#SYSTEMS[@]} ]]; then
-      DESTINATION_SYSTEM="${SYSTEMS[$((selection-1))]}"
+      DESTINATION_SYSTEM="${SYSTEMS[$((selection - 1))]}"
       break
     else
       echo "Invalid selection. Please enter a number between 1 and ${#SYSTEMS[@]}."
@@ -186,16 +186,16 @@ DESTINATION_DIR="$MACHINES_DIR/$DESTINATION_SYSTEM/$DESTINATION_MACHINE"
 # Check if destination already exists
 if [[ -d "$DESTINATION_DIR" ]]; then
   echo "Warning: Destination directory already exists: $DESTINATION_DIR"
-  read -p "Do you want to overwrite it? (y/N): " confirm
+  read -rp "Do you want to overwrite it? (y/N): " confirm
   case $confirm in
-    [Yy]*)
-      echo "Proceeding with overwrite..."
-      rm -rf "$DESTINATION_DIR"
-      ;;
-    *)
-      echo "Aborted."
-      exit 0
-      ;;
+  [Yy]*)
+    echo "Proceeding with overwrite..."
+    rm -rf "$DESTINATION_DIR"
+    ;;
+  *)
+    echo "Aborted."
+    exit 0
+    ;;
   esac
 fi
 

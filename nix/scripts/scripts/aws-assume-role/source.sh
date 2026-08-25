@@ -26,7 +26,7 @@ aws-assume-role() {
   # Prompt for account ID if not provided
   if [[ -z "$account_id" ]]; then
     if [[ -n "$BASH_VERSION" ]]; then
-      read -p "Enter AWS Account ID: " account_id
+      read -rp "Enter AWS Account ID: " account_id
     elif [[ -n "$ZSH_VERSION" ]]; then
       read "account_id?Enter AWS Account ID: "
     fi
@@ -38,7 +38,7 @@ aws-assume-role() {
   # Prompt for role name if not provided
   if [[ -z "$role_name" ]]; then
     if [[ -n "$BASH_VERSION" ]]; then
-      read -p "Enter Role Name: " role_name
+      read -rp "Enter Role Name: " role_name
     elif [[ -n "$ZSH_VERSION" ]]; then
       read "role_name?Enter Role Name: "
     fi

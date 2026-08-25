@@ -44,28 +44,28 @@ shift
 # Parse optional arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --cluster-name)
-      if [ -n "$2" ] && [[ $2 != --* ]]; then
-        CLUSTER_NAME="$2"
-        shift 2
-      else
-        echo "Error: --cluster-name requires a value"
-        usage
-      fi
-      ;;
-    --overwrite-ip)
-      if [ -n "$2" ] && [[ $2 != --* ]]; then
-        OVERWRITE_IP="$2"
-        shift 2
-      else
-        echo "Error: --overwrite-ip requires a value"
-        usage
-      fi
-      ;;
-    *)
-      echo "Error: Unknown option $1"
+  --cluster-name)
+    if [ -n "$2" ] && [[ $2 != --* ]]; then
+      CLUSTER_NAME="$2"
+      shift 2
+    else
+      echo "Error: --cluster-name requires a value"
       usage
-      ;;
+    fi
+    ;;
+  --overwrite-ip)
+    if [ -n "$2" ] && [[ $2 != --* ]]; then
+      OVERWRITE_IP="$2"
+      shift 2
+    else
+      echo "Error: --overwrite-ip requires a value"
+      usage
+    fi
+    ;;
+  *)
+    echo "Error: Unknown option $1"
+    usage
+    ;;
   esac
 done
 
@@ -80,7 +80,7 @@ fi
 
 if [ -z "$CLUSTER_NAME" ]; then
   echo ""
-  read -p "Please enter the cluster name: " CLUSTER_NAME
+  read -rp "Please enter the cluster name: " CLUSTER_NAME
   if [ -z "$CLUSTER_NAME" ]; then
     echo "Error: Cluster name cannot be empty"
     exit 1
@@ -99,7 +99,7 @@ ESCAPED_IP=$(printf '%s\n' "$REPLACEMENT_IP" | sed 's/[[\.*^$()+?{|]/\\&/g')
 TEMP_KUBECONFIG="/tmp/rke2-kubeconfig-${CLUSTER_NAME}.yaml"
 
 echo "Found RKE2 kubeconfig, retrieving..."
-ssh "$USERNAME@$IP_ADDRESS" "cat $RKE2_CONFIG_PATH" | sed "s/default/$CLUSTER_NAME/g" | sed "s/127\.0\.0\.1/$ESCAPED_IP/g" > "$TEMP_KUBECONFIG"
+ssh "$USERNAME@$IP_ADDRESS" "cat $RKE2_CONFIG_PATH" | sed "s/default/$CLUSTER_NAME/g" | sed "s/127\.0\.0\.1/$ESCAPED_IP/g" >"$TEMP_KUBECONFIG"
 
 # Step 6: Use kubecm to add the kubeconfig
 echo "Step 6: Adding kubeconfig to primary kubeconfig using kubecm..."

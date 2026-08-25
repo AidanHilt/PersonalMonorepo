@@ -52,7 +52,7 @@ if [ -z "''$NAMESPACE" ]; then
 fi
 
 if [ -z "''$PVC_NAME" ]; then
-  read -p "Enter PVC name: " PVC_NAME
+  read -rp "Enter PVC name: " PVC_NAME
 fi
 
 if [ -z "''$PVC_NAME" ]; then

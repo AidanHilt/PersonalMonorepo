@@ -64,7 +64,7 @@ fi
 
 # Confirmation prompt
 echo
-read -p "Are you sure you want to delete context '$CONTEXT_NAME'? (y/N) " response
+read -rp "Are you sure you want to delete context '$CONTEXT_NAME'? (y/N) " response
 case "$response" in
 [yY] | [yY][eE][sS])
   echo "Deleting context..."

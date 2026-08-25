@@ -20,13 +20,13 @@ select-directory() {
     echo "$i) Create new directory"
     echo "0) Exit"
 
-    read -p "Select directory (number): " choice
+    read -rp "Select directory (number): " choice
 
     if [[ "$choice" == "0" ]]; then
       echo "Exiting..."
       exit 0
     elif [[ "$choice" == "$i" ]]; then
-      read -p "Enter new directory name: " new_dir
+      read -rp "Enter new directory name: " new_dir
       SELECTED_DIR="$new_dir"
     elif [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -lt "$i" ]]; then
       SELECTED_DIR="''${dirs[$((choice - 1))]}"

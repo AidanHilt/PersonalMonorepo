@@ -22,21 +22,21 @@ usage() {
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -s|--system)
-            SYSTEM="$2"
-            shift 2
-            ;;
-        -m|--machine)
-            MACHINE_NAME="$2"
-            shift 2
-            ;;
-        -h|--help)
-            usage
-            ;;
-        *)
-            echo "Unknown option: $1"
-            usage
-            ;;
+    -s | --system)
+        SYSTEM="$2"
+        shift 2
+        ;;
+    -m | --machine)
+        MACHINE_NAME="$2"
+        shift 2
+        ;;
+    -h | --help)
+        usage
+        ;;
+    *)
+        echo "Unknown option: $1"
+        usage
+        ;;
     esac
 done
 
@@ -74,13 +74,13 @@ fi
 if [[ -z "$SYSTEM" ]]; then
     echo "Available systems:"
     for i in "${!SYSTEMS[@]}"; do
-        echo "$((i+1)). ${SYSTEMS[i]}"
+        echo "$((i + 1)). ${SYSTEMS[i]}"
     done
 
     while true; do
-        read -p "Select system for new machine (1-${#SYSTEMS[@]}): " selection
+        read -rp "Select system for new machine (1-${#SYSTEMS[@]}): " selection
         if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ${#SYSTEMS[@]} ]]; then
-            SYSTEM="${SYSTEMS[$((selection-1))]}"
+            SYSTEM="${SYSTEMS[$((selection - 1))]}"
             break
         else
             echo "Invalid selection. Please enter a number between 1 and ${#SYSTEMS[@]}."
@@ -98,7 +98,7 @@ fi
 # Get machine name (interactive or from argument)
 if [[ -z "$MACHINE_NAME" ]]; then
     while true; do
-        read -p "Enter the name of the machine: " MACHINE_NAME
+        read -rp "Enter the name of the machine: " MACHINE_NAME
         if [[ -n "$MACHINE_NAME" ]]; then
             break
         else

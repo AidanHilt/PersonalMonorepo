@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$CHART_NAME" ]]; then
-  read -p "Enter chart name: " CHART_NAME
+  read -rp "Enter chart name: " CHART_NAME
 fi
 
 if [[ -z "$CHART_NAME" ]]; then
@@ -60,7 +60,7 @@ print_debug "Copying files from $SOURCE_DIR to $DEST_DIR"
 cp -r "$SOURCE_DIR"/* "$DEST_DIR"
 
 if [[ -z "$RESOURCE_TYPE" ]]; then
-  read -p "Enter resource type: " RESOURCE_TYPE
+  read -rp "Enter resource type: " RESOURCE_TYPE
 fi
 
 if [[ -z "$RESOURCE_TYPE" ]]; then

@@ -295,7 +295,7 @@ echo
 
 if [[ "$HOMELAB_NODE_ARG_PROVIDED" != true ]]; then
   echo ""
-  read -p "Is this a homelab node? (y/n): " NODE_TYPE
+  read -rp "Is this a homelab node? (y/n): " NODE_TYPE
   case "$NODE_TYPE" in
   [Yy] | [Yy][Ee][Ss])
     HOMELAB_NODE=true
@@ -308,7 +308,7 @@ fi
 
 if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true ]] && [[ "$HOMELAB_NODE" = true ]]; then
   echo ""
-  read -p "Please enter the cluster name: " CLUSTER_NAME
+  read -rp "Please enter the cluster name: " CLUSTER_NAME
   if [ -z "$CLUSTER_NAME" ]; then
     echo "Error: Cluster name cannot be empty"
     exit 1

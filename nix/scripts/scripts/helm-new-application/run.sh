@@ -33,7 +33,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$CHART_NAME" ]]; then
-  read -p "Enter chart name: " CHART_NAME
+  read -rp "Enter chart name: " CHART_NAME
 fi
 
 if [[ -z "$CHART_NAME" ]]; then

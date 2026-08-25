@@ -17,7 +17,7 @@ declare -A USERS_TO_DBS
 
 if [[ $# -eq 0 ]]; then
   while true; do
-    read -p "Enter username (or leave blank to finish): " username
+    read -rp "Enter username (or leave blank to finish): " username
 
     if [[ -z "$username" ]]; then
       break
@@ -25,11 +25,11 @@ if [[ $# -eq 0 ]]; then
 
     USERS_TO_DBS["$username"]=""
 
-    read -p "Would you like to make databases owned by $username? (y/n): " create_dbs
+    read -rp "Would you like to make databases owned by $username? (y/n): " create_dbs
 
     if [[ "$create_dbs" =~ ^[Yy]$ ]]; then
       while true; do
-        read -p "Enter database name (or leave blank to finish): " dbname
+        read -rp "Enter database name (or leave blank to finish): " dbname
 
         if [[ -z "$dbname" ]]; then
           break

@@ -26,21 +26,21 @@ usage() {
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -i|--ip)
-            IP_ADDRESS="$2"
-            shift 2
-            ;;
-        -u|--user)
-            USERNAME="$2"
-            shift 2
-            ;;
-        -h|--help)
-            usage
-            ;;
-        *)
-            echo "Unknown option: $1"
-            usage
-            ;;
+    -i | --ip)
+        IP_ADDRESS="$2"
+        shift 2
+        ;;
+    -u | --user)
+        USERNAME="$2"
+        shift 2
+        ;;
+    -h | --help)
+        usage
+        ;;
+    *)
+        echo "Unknown option: $1"
+        usage
+        ;;
     esac
 done
 
@@ -59,7 +59,7 @@ fi
 
 if [[ -z "$IP_ADDRESS" ]]; then
     while true; do
-        read -p "Enter the IP address of the remote machine: " IP_ADDRESS
+        read -rp "Enter the IP address of the remote machine: " IP_ADDRESS
         if [[ -n "$IP_ADDRESS" ]]; then
             # Basic IP validation
             if [[ "$IP_ADDRESS" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
@@ -76,7 +76,7 @@ fi
 
 if [[ -z "$USERNAME" ]]; then
     while true; do
-        read -p "Enter the SSH username: " USERNAME
+        read -rp "Enter the SSH username: " USERNAME
         if [[ -n "$USERNAME" ]]; then
             break
         else
@@ -91,7 +91,7 @@ trap "rm -rf $TEMP_DIR" EXIT
 
 # SSH into machine and generate hardware configuration
 echo "Generating hardware configuration on remote machine..."
-ssh "$USERNAME@$IP_ADDRESS" "nixos-generate-config --show-hardware-config" > "$TEMP_DIR/hardware-configuration.nix"
+ssh "$USERNAME@$IP_ADDRESS" "nixos-generate-config --show-hardware-config" >"$TEMP_DIR/hardware-configuration.nix"
 
 if [[ ! -s "$TEMP_DIR/hardware-configuration.nix" ]]; then
     echo "Error: Failed to generate or retrieve hardware configuration"
@@ -124,13 +124,13 @@ if [[ -n "$REMOTE_HOSTNAME" ]]; then
     elif [[ ${#FOUND_DIRS[@]} -gt 1 ]]; then
         echo "Multiple directories found for hostname '$REMOTE_HOSTNAME':"
         for i in "${!FOUND_DIRS[@]}"; do
-            echo "$((i+1)). ${FOUND_DIRS[i]}"
+            echo "$((i + 1)). ${FOUND_DIRS[i]}"
         done
 
         while true; do
-            read -p "Select directory (1-${#FOUND_DIRS[@]}): " selection
+            read -rp "Select directory (1-${#FOUND_DIRS[@]}): " selection
             if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ${#FOUND_DIRS[@]} ]]; then
-                HOSTNAME_DIR="${FOUND_DIRS[$((selection-1))]}"
+                HOSTNAME_DIR="${FOUND_DIRS[$((selection - 1))]}"
                 break
             else
                 echo "Invalid selection. Please enter a number between 1 and ${#FOUND_DIRS[@]}."
@@ -152,13 +152,13 @@ if [[ -z "$HOSTNAME_DIR" ]]; then
     fi
 
     for i in "${!ALL_DIRS[@]}"; do
-        echo "$((i+1)). ${ALL_DIRS[i]#$MACHINES_DIR/}"
+        echo "$((i + 1)). ${ALL_DIRS[i]#$MACHINES_DIR/}"
     done
 
     while true; do
-        read -p "Select target directory for hardware configuration (1-${#ALL_DIRS[@]}): " selection
+        read -rp "Select target directory for hardware configuration (1-${#ALL_DIRS[@]}): " selection
         if [[ "$selection" =~ ^[0-9]+$ ]] && [[ "$selection" -ge 1 ]] && [[ "$selection" -le ${#ALL_DIRS[@]} ]]; then
-            HOSTNAME_DIR="${ALL_DIRS[$((selection-1))]}"
+            HOSTNAME_DIR="${ALL_DIRS[$((selection - 1))]}"
             break
         else
             echo "Invalid selection. Please enter a number between 1 and ${#ALL_DIRS[@]}."
@@ -172,15 +172,15 @@ TARGET_FILE="$HOSTNAME_DIR/hardware-configuration.nix"
 # Check if target file already exists
 if [[ -f "$TARGET_FILE" ]]; then
     echo "Warning: Hardware configuration already exists at $TARGET_FILE"
-    read -p "Do you want to overwrite it? (y/N): " confirm
+    read -rp "Do you want to overwrite it? (y/N): " confirm
     case $confirm in
-        [Yy]*)
-            echo "Overwriting existing hardware configuration..."
-            ;;
-        *)
-            echo "Aborted."
-            exit 0
-            ;;
+    [Yy]*)
+        echo "Overwriting existing hardware configuration..."
+        ;;
+    *)
+        echo "Aborted."
+        exit 0
+        ;;
     esac
 fi
 

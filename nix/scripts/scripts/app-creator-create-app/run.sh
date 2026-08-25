@@ -4,10 +4,10 @@ set -euo pipefail
 
 # @lib: printing-and-output
 
-read -p "Enter app name: " APP_NAME
-read -p "Enter app namespace: " NAMESPACE
+read -rp "Enter app name: " APP_NAME
+read -rp "Enter app namespace: " NAMESPACE
 
-read -p "Create a new helm chart? (y/n): " HELM_CHART
+read -rp "Create a new helm chart? (y/n): " HELM_CHART
 APP_TYPE=2
 if [[ "$HELM_CHART" =~ ^[Yy]$ ]]; then
   helm-new-application --chart-name "$APP_NAME"
@@ -37,7 +37,7 @@ SUBDOMAIN=""
 
 print_status "Enter prefixes (one per line, press Enter on empty line to finish): "
 while true; do
-  read -p "Prefix: " prefix
+  read -rp "Prefix: " prefix
   if [[ -z "$prefix" ]]; then
     break
   fi
@@ -48,7 +48,7 @@ while true; do
 done
 
 if [[ ${#PREFIXES[@]} -eq 0 ]]; then
-  read -p "Enter subdomain: " SUBDOMAIN
+  read -rp "Enter subdomain: " SUBDOMAIN
 fi
 
 if [[ ${#PREFIXES[@]} -eq 0 ]] && [[ -z "$SUBDOMAIN" ]]; then
@@ -80,11 +80,11 @@ SECRET_NAMESPACES=()
 SERVICE_ACCOUNT_NAMES=()
 POSTGRES_SECRETS=()
 
-read -p "Would you like to add any secrets? (y/n): " add_secrets
+read -rp "Would you like to add any secrets? (y/n): " add_secrets
 
 if [[ "$add_secrets" =~ ^[Yy]$ ]]; then
   while true; do
-    read -p "Enter secret name (or leave blank to finish) [default: $APP_NAME]: " secret_name
+    read -rp "Enter secret name (or leave blank to finish) [default: $APP_NAME]: " secret_name
 
     if [[ -z "$secret_name" ]]; then
       if [[ ${#SECRET_NAMES[@]} -eq 0 ]]; then
@@ -94,13 +94,13 @@ if [[ "$add_secrets" =~ ^[Yy]$ ]]; then
       fi
     fi
 
-    read -p "Enter namespace [default: $NAMESPACE]: " secret_namespace
+    read -rp "Enter namespace [default: $NAMESPACE]: " secret_namespace
     secret_namespace="${secret_namespace:-$NAMESPACE}"
 
-    read -p "Enter service account name [default: $APP_NAME]: " service_account_name
+    read -rp "Enter service account name [default: $APP_NAME]: " service_account_name
     service_account_name="${service_account_name:-$APP_NAME}"
 
-    read -p "Is this a postgres secret? (y/n): " is_postgres
+    read -rp "Is this a postgres secret? (y/n): " is_postgres
     if [[ "$is_postgres" =~ ^[Yy]$ ]]; then
       postgres_secret="true"
     else
@@ -126,7 +126,7 @@ if [[ "$add_secrets" =~ ^[Yy]$ ]]; then
   done
 fi
 
-read -p "Do you need any postgres DBs? (y/n): " need_postgres
+read -rp "Do you need any postgres DBs? (y/n): " need_postgres
 
 if [[ "$need_postgres" =~ ^[Yy]$ ]]; then
   print_debug "Adding postgres configuration"

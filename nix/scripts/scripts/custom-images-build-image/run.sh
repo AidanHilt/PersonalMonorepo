@@ -98,7 +98,7 @@ if [[ -z "$IMAGE_NAME" ]]; then
     echo "  $((i + 1))) ${AVAILABLE_IMAGES[$i]}"
   done
 
-  read -p "Select an image (1-${#AVAILABLE_IMAGES[@]}): " SELECTION
+  read -rp "Select an image (1-${#AVAILABLE_IMAGES[@]}): " SELECTION
 
   if [[ ! "$SELECTION" =~ ^[0-9]+$ ]] || [[ "$SELECTION" -lt 1 ]] || [[ "$SELECTION" -gt ${#AVAILABLE_IMAGES[@]} ]]; then
     print_error "Invalid selection"
