@@ -7,6 +7,7 @@ BLUE='\033[0;34m'
 #CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
+#shellcheck disable=SC2329
 print_status() {
   if [[ ! -v ATILS_LOG_LEVEL ]]; then
     ATILS_LOG_LEVEL="INFO"
@@ -17,6 +18,7 @@ print_status() {
   fi
 }
 
+#shellcheck disable=SC2329
 print_warning() {
   if [[ ! -v ATILS_LOG_LEVEL ]]; then
     ATILS_LOG_LEVEL="INFO"
@@ -27,10 +29,12 @@ print_warning() {
   fi
 }
 
+#shellcheck disable=SC2329
 print_error() {
   echo -e "''${RED}[ERROR]''${NC} $1"
 }
 
+#shellcheck disable=SC2329
 print_debug() {
   if [[ ! -v ATILS_LOG_LEVEL ]]; then
     ATILS_LOG_LEVEL="INFO"
