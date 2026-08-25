@@ -34,7 +34,7 @@ select_directory() {
     # Find all directories (including subdirectories)
     while IFS= read -r -d "" dir; do
         # Get relative path from modules directory
-        rel_path="${dir#$MODULES_DIR/}"
+        rel_path="${dir#"$MODULES_DIR"/}"
         dirs+=("$rel_path")
         echo "$i) $rel_path"
         ((i++))
