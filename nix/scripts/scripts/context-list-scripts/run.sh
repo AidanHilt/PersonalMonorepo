@@ -34,30 +34,30 @@ is_executable() {
 }
 
 # Colors for pretty printing
-if [[ -t 1 ]]; then  # Only use colors if stdout is a terminal
-  readonly RED='\033[0;31m'
-  readonly GREEN='\033[0;32m'
-  readonly YELLOW='\033[0;33m'
+if [[ -t 1 ]]; then # Only use colors if stdout is a terminal
+  #readonly RED='\033[0;31m'
+  #readonly GREEN='\033[0;32m'
+  #readonly YELLOW='\033[0;33m'
   readonly BLUE='\033[0;34m'
-  readonly PURPLE='\033[0;35m'
-  readonly CYAN='\033[0;36m'
+  #readonly PURPLE='\033[0;35m'
+  #readonly CYAN='\033[0;36m'
   readonly GRAY='\033[0;37m'
   readonly BOLD='\033[1m'
-  readonly NC='\033[0m'  # No Color
+  readonly NC='\033[0m' # No Color
 else
-  readonly RED=""
-  readonly GREEN=""
-  readonly YELLOW=""
+  #readonly RED=""
+  #readonly GREEN=""
+  #readonly YELLOW=""
   readonly BLUE=""
-  readonly PURPLE=""
-  readonly CYAN=""
+  #readonly PURPLE=""
+  #readonly CYAN=""
   readonly GRAY=""
   readonly BOLD=""
   readonly NC=""
 fi
 
 # Header
-echo -e "${BOLD}Scripts for context ${BLUE}"''$ATILS_CURRENT_CONTEXT"${NC}${BOLD}:${NC}"
+echo -e "${BOLD}Scripts for context ${BLUE}"''"$ATILS_CURRENT_CONTEXT""${NC}${BOLD}:${NC}"
 echo
 
 if [[ -d "$ATILS_CURRENT_CONTEXT_SCRIPTS_DIR" ]]; then
@@ -85,7 +85,7 @@ max_name_length=0
 max_type_length=0
 
 for info in "${script_info[@]}"; do
-  IFS='|' read -r name desc type <<< "$info"
+  IFS='|' read -r name desc type <<<"$info"
   [[ ${#name} -gt $max_name_length ]] && max_name_length=${#name}
   [[ ${#type} -gt $max_type_length ]] && max_type_length=${#type}
 done
@@ -96,7 +96,7 @@ done
 
 # Print scripts with descriptions
 for info in "${script_info[@]}"; do
-  IFS='|' read -r name desc type <<< "$info"
+  IFS='|' read -r name desc type <<<"$info"
 
   # Format the line
   printf "  ${BOLD}%-${max_name_length}s${NC}" "$name"
