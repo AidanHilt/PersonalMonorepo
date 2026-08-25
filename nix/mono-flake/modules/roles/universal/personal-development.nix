@@ -16,10 +16,10 @@
     ../../scripts/terragrunt/default.nix
   ];
 
-#  environment.interactiveShellInit = inputs.scripts.interactiveShellInit;
+  environment.interactiveShellInit = inputs.scripts.interactiveShellInit;
 
   environment.systemPackages = with pkgs; [
- #   inputs.scripts.packages.${pkgs.system}.all
+    inputs.scripts.packages.${pkgs.system}.all
     act
     agenix
     cocogitto
