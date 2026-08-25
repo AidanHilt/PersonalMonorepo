@@ -33,8 +33,7 @@ check_and_add_repo() {
     print_status "ArgoCD Helm repository is already added"
   else
     print_status "Adding ArgoCD Helm repository..."
-    helm repo add "${repo_name}" "${repo_url}"
-    if [ $? -eq 0 ]; then
+    if helm repo add "${repo_name}" "${repo_url}"; then
       print_status "Successfully added ArgoCD Helm repository"
     else
       print_error "Failed to add ArgoCD Helm repository"
