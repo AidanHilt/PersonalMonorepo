@@ -125,7 +125,7 @@ let
   fi
   fi
 
-  if [[ -d $UPDATE_FLAKE_LOCATION ]]; then
+  if [[ -d "$UPDATE__FLAKE_LOCATION" ]]; then
     replace_flag="--override-input scripts path:$PERSONAL_MONOREPO_LOCATION/nix/scripts"
   fi
 
