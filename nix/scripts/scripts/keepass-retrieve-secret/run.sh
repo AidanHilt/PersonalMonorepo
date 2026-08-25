@@ -31,7 +31,7 @@ fi
 
 if [[ ! -v KEEPASS_PASSWORD ]]; then
   print_debug "KEEPASS_PASSWORD not set, decrypting..."
-  eval $(age -i ~/.ssh/id_ed25519 -d "$ATILS_CONFIG_DIRECTORY/keepass-password")
+  eval "$(age -i ~/.ssh/id_ed25519 -d "$ATILS_CONFIG_DIRECTORY/keepass-password")"
 fi
 
 KEY_NAME="$key_name"
