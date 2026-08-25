@@ -332,6 +332,7 @@ else
   nix run github:nix-community/nixos-anywhere -- --flake "$FLAKE_DIR#$SELECTED_MACHINE" --target-host "root@$IP_ADDRESS" --extra-files "$FILES_FOR_NEW_MACHINE"
 fi
 
+# shellcheck disable=SC2181
 if [[ $? -eq 0 ]]; then
   print_status "Sucess: nixos-anywhere deployment completed successfully!"
 else
