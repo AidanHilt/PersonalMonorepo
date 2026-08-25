@@ -507,11 +507,11 @@
       },
       "locked": {
         "dir": "nix/scripts",
-        "lastModified": 1787616557,
-        "narHash": "sha256-uthqFm1pv5UVl68yGekq7Ajez+sNaufPTYIW8zqEQNc=",
+        "lastModified": 1787616867,
+        "narHash": "sha256-66IiYAgK+Sr+LigdReyRfi+etDB2CMWlg0aaZW5IIV4=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "7131e518ea88896e868cec047460a732fd6a06ed",
+        "rev": "0ff683ef198d5876044d344a3dd67617372f982e",
         "type": "github"
       },
       "original": {
