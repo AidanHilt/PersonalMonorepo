@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # @lib: printing-and-output
-source "${modify-secret-values}"
+# @lib: modify-secret-values}
 
 show_help() {
   echo "Usage: $0 [OPTIONS]"
@@ -26,8 +26,8 @@ resource_name=""
 service_account_name=""
 service_account_create=""
 service_account_namespace=""
-destination_config=""
-postgres_secret=""
+#destination_config=""
+#postgres_secret=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -55,10 +55,10 @@ while [[ $# -gt 0 ]]; do
     service_account_namespace="$2"
     shift 2
     ;;
-  --postgres-secret)
-    postgres_secret="$2"
-    shift 2
-    ;;
+  # --postgres-secret)
+  #   postgres_secret="$2"
+  #   shift 2
+  #   ;;
   --help | -h)
     show_help
     exit 0
