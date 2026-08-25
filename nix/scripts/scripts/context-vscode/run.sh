@@ -7,4 +7,4 @@ if [[ ! -v ATILS_CURRENT_CONTEXT ]]; then
     exit 1
 fi
 
-code $ATILS_CURRENT_CONTEXT_DIR
+code "$ATILS_CURRENT_CONTEXT_DIR"
