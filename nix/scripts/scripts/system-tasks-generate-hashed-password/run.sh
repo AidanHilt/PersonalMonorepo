@@ -30,7 +30,7 @@ done
 
 if [[ -z "$PASSWORD" ]]; then
   while true; do
-    read -s -p "Please enter the password you would like to generate a hash for: " PASSWORD
+    read -sr -p "Please enter the password you would like to generate a hash for: " PASSWORD
     if [[ -n "$PASSWORD" ]]; then
       echo ""
       break
