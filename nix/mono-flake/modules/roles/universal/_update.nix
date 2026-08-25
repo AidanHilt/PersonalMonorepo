@@ -131,7 +131,7 @@ let
 
   echo "Rebuilding system with flake: $UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME $replace_flag"
   if [[ "$replace_flag" ]]; then
-    sudo $rebuildExecutable switch --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME" "$replace_flag"
+    sudo $rebuildExecutable switch $replace_flag --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
   else
     sudo $rebuildExecutable switch --flake "$UPDATE__FLAKE_LOCATION#$UPDATE__MACHINE_NAME"
   fi
