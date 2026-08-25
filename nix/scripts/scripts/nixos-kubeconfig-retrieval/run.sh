@@ -95,10 +95,12 @@ else
   echo "Step 4: Replacing 127.0.0.1 with SSH host IP: $REPLACEMENT_IP"
 fi
 
-ESCAPED_IP=$(printf '%s\n' "$REPLACEMENT_IP" | sed 's/[[\.*^$()+?{|]/\\&/g')
+ESCAPED_IP=$(printf '%s\n' "$REPLACEMENT_IP" | sed "s/[[\.*^$()+?{|]/\\&/g")
 TEMP_KUBECONFIG="/tmp/rke2-kubeconfig-${CLUSTER_NAME}.yaml"
 
 echo "Found RKE2 kubeconfig, retrieving..."
+# Note: We actually explicitly WANT to expand on the client side, this is flagging our intended behavior as an issue
+# shellcheck disable=SC2029
 ssh "$USERNAME@$IP_ADDRESS" "cat $RKE2_CONFIG_PATH" | sed "s/default/$CLUSTER_NAME/g" | sed "s/127\.0\.0\.1/$ESCAPED_IP/g" >"$TEMP_KUBECONFIG"
 
 # Step 6: Use kubecm to add the kubeconfig
