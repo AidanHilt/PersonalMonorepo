@@ -15,7 +15,7 @@ import (
 
 func main() {
 	root := flag.String("root", ".", "repo root")
-	imagesDir := flag.String("images-dir", "nix/mono-flake/custom-images/images", "images directory, relative to root")
+	imagesDir := flag.String("images-dir", "nix/custom-images/images", "images directory, relative to root")
 	cogTomlPath := flag.String("cog-toml", "cog.toml", "path to cog.toml, relative to root")
 	check := flag.Bool("check", false, "report whether changes are needed without writing; exit 1 if so")
 	flag.Parse()
