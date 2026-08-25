@@ -63,7 +63,7 @@ echo "$USERNAME"
 
 set -euo pipefail
 
-@lib: printing-and-output
+# @lib: printing-and-output
 
 # False by default
 NIXOS_ANYWHERE_ARGS_PROVIDED=0
@@ -316,7 +316,7 @@ if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true ]] && [[ "$HOMELAB_NODE" = true ]]; t
 fi
 
 if [[ "$HOMELAB_NODE" = true ]]; then
-  FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files $CLUSTER_NAME)
+  FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files "$CLUSTER_NAME")
 else
   FILES_FOR_NEW_MACHINE=$(generate-desktop-files)
 fi
@@ -342,7 +342,7 @@ fi
 if [[ ! "$POST_INSTALL_IP_ADDRESS_ARG_PROVIDED" = true ]]; then
   output_message="Enter the IP address of the machine after rebooting: "
   while true; do
-    echo -n $output_message
+    echo -n "$output_message"
     read -r POST_INSTALL_IP_ADDRESS
 
     if ipcalc -c "$POST_INSTALL_IP_ADDRESS" >/dev/null 2>&1; then
@@ -356,10 +356,10 @@ fi
 USERNAME=$(get-username-from-machine-name "$SELECTED_MACHINE")
 
 if [ -f ~/.ssh/known_hosts ]; then
-  ssh-keygen -R $POST_INSTALL_IP_ADDRESS
+  ssh-keygen -R "$POST_INSTALL_IP_ADDRESS"
 fi
 
-ssh-keyscan $POST_INSTALL_IP_ADDRESS >>~/.ssh/known_hosts
+ssh-keyscan "$POST_INSTALL_IP_ADDRESS" >>~/.ssh/known_hosts
 
 RETRY_INTERVALS=(30 60 75 90 105)
 ATTEMPT=1
@@ -382,9 +382,9 @@ done
 if [[ "$HOMELAB_NODE" = true ]]; then
   if [[ $RETRIEVE_KUBECONFIG_ARG_PROVIDED = true ]]; then
     if [[ $ENDPOINT_ARG_PROVIDED != true ]]; then
-      nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME
+      nixos-kubeconfig-retrieval "$USERNAME" "$POST_INSTALL_IP_ADDRESS" --cluster-name "$CLUSTER_NAME"
     else
-      nixos-kubeconfig-retrieval $USERNAME $POST_INSTALL_IP_ADDRESS --cluster-name $CLUSTER_NAME --overwrite-ip $ENDPOINT
+      nixos-kubeconfig-retrieval "$USERNAME" "$POST_INSTALL_IP_ADDRESS" --cluster-name "$CLUSTER_NAME" --overwrite-ip "$ENDPOINT"
     fi
   fi
 fi

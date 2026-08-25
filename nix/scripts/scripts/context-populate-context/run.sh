@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-@lib: contextSelector
+# @lib: contextSelector
 
 show_usage() {
   echo "Usage: $0 --name <context_name> [--var-name value] [--another-var value2] ..."

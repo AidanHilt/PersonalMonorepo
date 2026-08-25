@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-@lib: printing-and-output
+# @lib: printing-and-output
 
 FILENAME="$1"
 YQ_STRING="$2"

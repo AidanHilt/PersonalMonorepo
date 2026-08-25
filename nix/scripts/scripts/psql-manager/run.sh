@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-@lib: printing-and-output
+# @lib: printing-and-output
 
 show_help() {
   print_status "Usage: $0 [OPTIONS]"

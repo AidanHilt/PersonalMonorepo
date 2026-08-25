@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-@lib: printing-and-output
+# @lib: printing-and-output
 
 check_vault_status() {
   print_status "Checking Vault status..."

@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-@lib: printing-and-output
+# @lib: printing-and-output
 
 IMAGE_NAME=""
 IMAGE_TAG="latest"

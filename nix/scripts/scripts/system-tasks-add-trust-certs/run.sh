@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-@lib: printing-and-output
+# @lib: printing-and-output
 
 GITHUB_OWNER="AidanHilt"
 GITHUB_REPO="PersonalMonorepo"

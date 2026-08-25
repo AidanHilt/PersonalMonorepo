@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-@lib: printing-and-output
-@lib: modify-ingress-values
+# @lib: printing-and-output
+# @lib: modify-ingress-values
 
 HOMEPAGE_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/homepage-config/values.yaml
 

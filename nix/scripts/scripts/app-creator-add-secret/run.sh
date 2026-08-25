@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-@lib: printing-and-output
-source ${modify-secret-values}
+# @lib: printing-and-output
+source "${modify-secret-values}"
 
 show_help() {
   echo "Usage: $0 [OPTIONS]"

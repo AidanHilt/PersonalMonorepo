@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-@lib: printing-and-output
+# @lib: printing-and-output
 
 show_help() {
   echo "Usage: $0 [OPTIONS]"

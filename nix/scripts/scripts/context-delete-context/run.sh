@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-@lib: contextSelector
+# @lib: contextSelector
 
 if [[ -z "${ATILS_CONTEXTS_DIRECTORY}" ]]; then
   echo "Error: ATILS_CONTEXTS_DIRECTORY environment variable is not set"

@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-@lib: printing-and-output
+# @lib: printing-and-output
 
 read -p "Enter app name: " APP_NAME
 read -p "Enter app namespace: " NAMESPACE
@@ -10,7 +10,7 @@ read -p "Enter app namespace: " NAMESPACE
 read -p "Create a new helm chart? (y/n): " HELM_CHART
 APP_TYPE=2
 if [[ "$HELM_CHART" =~ ^[Yy]$ ]]; then
-  helm-new-application --chart-name $APP_NAME
+  helm-new-application --chart-name "$APP_NAME"
   APP_TYPE=1
 fi
 
@@ -63,7 +63,7 @@ else
   else
     INGRESS_ARGS="--subdomain $SUBDOMAIN"
   fi
-  app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" $INGRESS_ARGS
+  app-creator-add-ingress --app-name "$APP_NAME" --namespace "$NAMESPACE" "$INGRESS_ARGS"
 
   print_debug "Adding homepage link for $APP_NAME"
   HOMEPAGE_ARGS=""
@@ -72,7 +72,7 @@ else
   else
     HOMEPAGE_ARGS="--subdomain $SUBDOMAIN"
   fi
-  app-creator-add-homepage-link --app-name "$APP_NAME" $HOMEPAGE_ARGS
+  app-creator-add-homepage-link --app-name "$APP_NAME" "$HOMEPAGE_ARGS"
 fi
 
 SECRET_NAMES=()

@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-@lib: printing-and-output
-@lib: modify-ingress-values
+# @lib: printing-and-output
+# @lib: modify-ingress-values
 
 ISTIO_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/istio-ingress-config/values.yaml
 
