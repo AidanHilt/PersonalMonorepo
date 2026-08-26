@@ -10,7 +10,7 @@
 // from cocogitto entirely, since their version tracks a nixpkgs
 // attribute rather than conventional-commit history.
 //
-// -list=internalVersion / -list=externalPkgVersioned print the discovered packages of
+// -list=internalVersioned / -list=externalPkgVersioned print the discovered packages of
 // that category as JSON, for consumption by a GH Actions build matrix.
 package main
 
@@ -28,8 +28,8 @@ func main() {
 	root := flag.String("root", ".", "repo root")
 	imagesDir := flag.String("images-dir", "nix/mono-flake/custom-images/images", "images directory, relative to root")
 	cogTomlPath := flag.String("cog-toml", "cog.toml", "path to cog.toml, relative to root")
-	check := flag.Bool("check", false, "report whether cog.toml changes are needed without writing; exit 1 if so (Category A only)")
-	list := flag.String("list", "", `print discovered packages as JSON instead of syncing cog.toml; one of "internalVersion" or "externalPkgVersioned"`)
+	check := flag.Bool("check", false, "report whether cog.toml changes are needed without writing; exit 1 if so (Internal Versioned only)")
+	list := flag.String("list", "", `print discovered packages as JSON instead of syncing cog.toml; one of "internalVersioned" or "externalPkgVersioned"`)
 	flag.Parse()
 
 	if err := run(*root, *imagesDir, *cogTomlPath, *check, *list); err != nil {
@@ -50,8 +50,8 @@ func run(root, imagesDir, cogTomlRel string, check bool, list string) error {
 
 	// cog.toml only ever reflects Category A — Category B is
 	// intentionally invisible to cocogitto.
-	internalVersion := discover.FilterCategory(pkgs, discover.InternalVersion)
-	return syncCogToml(root, cogTomlRel, internalVersion, check)
+	internalVersioned := discover.FilterCategory(pkgs, discover.InternalVersioned)
+	return syncCogToml(root, cogTomlRel, internalVersioned, check)
 }
 
 // listEntry is the JSON shape emitted by -list. Fields irrelevant to
@@ -70,12 +70,12 @@ type listEntry struct {
 func printList(pkgs []discover.Package, list string) error {
 	var cat discover.Category
 	switch list {
-	case "internalVersion":
-		cat = discover.InternalVersion
+	case "internalVersioned":
+		cat = discover.InternalVersioned
 	case "externalPkgVersioned":
 		cat = discover.ExternalPkgVersioned
 	default:
-		return fmt.Errorf(`invalid -list value %q, must be "internalVersion" or "externalPkgVersioned"`, list)
+		return fmt.Errorf(`invalid -list value %q, must be "internalVersioned" or "externalPkgVersioned"`, list)
 	}
 
 	filtered := discover.FilterCategory(pkgs, cat)
@@ -95,7 +95,7 @@ func printList(pkgs []discover.Package, list string) error {
 	return enc.Encode(entries)
 }
 
-func syncCogToml(root, cogTomlRel string, internalVersion []discover.Package, check bool) error {
+func syncCogToml(root, cogTomlRel string, internalVersioned []discover.Package, check bool) error {
 	cogTomlAbs := root + string(os.PathSeparator) + cogTomlRel
 	rawBytes, err := os.ReadFile(cogTomlAbs)
 	if err != nil {
@@ -112,7 +112,7 @@ func syncCogToml(root, cogTomlRel string, internalVersion []discover.Package, ch
 		return err
 	}
 
-	newPkgs := cogtoml.Build(internalVersion, extras)
+	newPkgs := cogtoml.Build(internalVersioned, extras)
 	newSuffix := cogtoml.Render(newPkgs)
 
 	if check {

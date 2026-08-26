@@ -33,8 +33,8 @@ import (
 type Category int
 
 const (
-	// InternalVersion packages are versioned by cocogitto via the `tag` field.
-	InternalVersion Category = iota
+	// InternalVersioned packages are versioned by cocogitto via the `tag` field.
+	InternalVersioned Category = iota
 	// ExternalPkgVersioned packages track a nixpkgs attribute via `versionPackage`
 	// and are rebuilt whenever their content changes, independent of
 	// cocogitto.
@@ -43,8 +43,8 @@ const (
 
 func (c Category) String() string {
 	switch c {
-	case InternalVersion:
-		return "internalVersion"
+	case InternalVersioned:
+		return "internalVersioned"
 	case ExternalPkgVersioned:
 		return "externalPkgVersioned"
 	default:
@@ -196,7 +196,7 @@ func Discover(root, imagesDir string) ([]Package, error) {
 				Name:          name,
 				Dir:           dirRel,
 				ValuesNixPath: valuesRel,
-				Category:      InternalVersion,
+				Category:      InternalVersioned,
 				Tag:           tagVal,
 			})
 		default: // vpFound

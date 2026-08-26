@@ -42,7 +42,7 @@ Other cases:
 
 ## Listing packages for CI matrices
 
-`-list=internalVersion` / `-list=externalPkgVersioned` print the discovered packages of
+`-list=internalVersioned` / `-list=externalPkgVersioned` print the discovered packages of
 that category as JSON (one line, array of objects), for direct
 consumption via `fromJson(...)` in a GitHub Actions matrix:
 
