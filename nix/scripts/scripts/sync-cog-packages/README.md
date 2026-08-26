@@ -7,23 +7,49 @@ syncs their `[packages.*]` entries into the generated section of
 ## The standard
 
 A directory under `<images-dir>/` is a releasable package if it contains a
-`values.nix` with a top-level, literal-string `tag` field:
+`values.nix` with a top-level, literal-string `tag` **or** `versionPackage`
+field — never both.
 
+**Category A** — versioned by cocogitto:
 ```nix
 {
   tag = "0.1.4";
 }
 ```
+Syncs into `cog.toml`'s generated `[packages.*]` section. Version comes
+from conventional-commit-driven semver bumps.
 
+**Category B** — tracks a nixpkgs attribute, independent of cocogitto:
+```nix
+{
+  versionPackage = "nodePackages.foo";
+}
+```
+Never written to `cog.toml`. Rebuilt whenever its directory (or
+`flake.lock`/`flake.nix`) changes; version resolution against
+`versionPackage` is a separate mechanism, not part of this tool.
+
+Other cases:
 - No `values.nix` → not a package, silently skipped.
-- `values.nix` with no `tag` field → not a package yet, silently skipped
+- `values.nix` with neither field → not a package yet, silently skipped
   (useful for WIP directories).
-- `values.nix` with a `tag` field that **isn't** a bare string literal
-  (e.g. computed, or using `${...}` interpolation) → **hard error, nonzero
-  exit**. The standard requires a literal because the cocogitto bump hook
-  rewrites this field in place with `sed`; a computed expression can't be
-  rewritten safely, so this is treated as a standard violation rather than
-  silently ignored.
+- `values.nix` with **both** `tag` and `versionPackage` → **hard error**.
+- Either field present but **not** a bare string literal (e.g. computed,
+  or using `${...}` interpolation) → **hard error, nonzero exit**. Both
+  fields must be literals so tooling (cog's bump hook for `tag`; CI
+  matrix construction for either) can read/rewrite them with simple text
+  tools rather than a real Nix evaluator.
+
+## Listing packages for CI matrices
+
+`-list=internalVersion` / `-list=externalPkgVersioned` print the discovered packages of
+that category as JSON (one line, array of objects), for direct
+consumption via `fromJson(...)` in a GitHub Actions matrix:
+
+```sh
+sync-cog-packages -list=externalPkgVersioned
+# [{"name":"foo","dir":"...","valuesNixPath":"...","tagPrefix":"foo-","versionPackage":"nodePackages.foo"}]
+```
 
 ## cog.toml: fixed vs. generated
 
@@ -84,7 +110,7 @@ Flags:
   -root string
         repo root (default ".")
   -images-dir string
-        images directory, relative to root (default "nix/custom-images/images")
+        images directory, relative to root (default "nix/mono-flake/custom-images/images")
   -cog-toml string
         path to cog.toml, relative to root (default "cog.toml")
   -check

@@ -153,7 +153,7 @@
     ) // {
       inherit interactiveShellInit;
       overlays.default = final: _prev: {
-        # Nested under `myscripts` to avoid shadowing real nixpkgs names.
+        # Nested under `ahilt-scripts` to avoid shadowing real nixpkgs names.
         # `all` is deliberately left out here; it's a packaging convenience,
         # not something that belongs in the global package set.
         ahilt-scripts = (mkScripts final).packages;
