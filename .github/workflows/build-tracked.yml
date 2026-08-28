@@ -1,0 +1,134 @@
+name: build-tracked
+
+# ExternalPkgVersioned packages (values.nix has `versionPackage`, not `tag`).
+# Not versioned by cocogitto, never touch cog.toml or git tags.
+# Rebuilt whenever the package's own directory changes, or whenever
+# the container-images flake's flake.lock/flake.nix changes.
+#
+# Tagging: same approach as release.yml — nix2container's own
+# `imageName`/`imageTag` are the source of truth, with the flake
+# baking the system into the tag per arch, so the per-arch push needs
+# no manual destination. The `versionPackage` -> real version
+# resolution mechanism is still being built; `imageTag` reads here
+# will fail until that lands. The workflow shape is otherwise ready.
+#
+# Pushing is unconditional rather than digest-gated: registries are
+# content-addressed, so pushing an unchanged image reuses existing
+# blobs and only rewrites the manifest — cheap enough not to need a
+# pre-push comparison step.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "nix/container-images/images/**"
+      - "nix/container-images/flake.lock"
+      - "nix/container-images/flake.nix"
+
+concurrency:
+  group: build-tracked-main
+  cancel-in-progress: false
+
+env:
+  FLAKE: path:nix/container-images
+  IMAGES_DIR: nix/container-images/images
+
+jobs:
+  discover:
+    runs-on: ubuntu-24.04
+    outputs:
+      packages: ${{ steps.discover.outputs.packages }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+
+      - name: List Category B packages
+        id: discover
+        run: |
+          packages=$(nix run "path:nix/scripts#sync-cog-packages" -- \
+            -images-dir "$IMAGES_DIR" -list=externalPkgVersioned)
+          echo "packages=$packages" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: discover
+    if: needs.discover.outputs.packages != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJson(needs.discover.outputs.packages) }}
+        system: [x86_64-linux, aarch64-linux]
+        # NOTE: two explicit axes + a runs-on expression, not
+        # `include` — `include` entries without the `package` key
+        # don't cross-product against a fromJson-driven axis.
+    runs-on: ${{ matrix.system == 'aarch64-linux' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            nix run nixpkgs#crane -- auth login ghcr.io \
+              --username "${{ github.actor }}" --password-stdin
+
+      - name: Push per-arch image
+        run: |
+          nix run "${{ env.FLAKE }}#packages.${{ matrix.system }}.${{ matrix.package.name }}.copyToRegistry"
+
+  publish-manifest:
+    needs: [discover, build]
+    if: needs.discover.outputs.packages != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJson(needs.discover.outputs.packages) }}
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+
+      - name: Install crane
+        uses: imjasonh/setup-crane@v0.4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | crane auth login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Derive refs
+        id: refs
+        run: |
+          pkg="${{ matrix.package.name }}"
+          image_name=$(nix eval --raw "${{ env.FLAKE }}#packages.x86_64-linux.${pkg}.imageName")
+          x86_tag=$(nix eval --raw "${{ env.FLAKE }}#packages.x86_64-linux.${pkg}.imageTag")
+          arm_tag=$(nix eval --raw "${{ env.FLAKE }}#packages.aarch64-linux.${pkg}.imageTag")
+
+          final_tag="${x86_tag%-x86_64-linux}"
+          if [ "${arm_tag%-aarch64-linux}" != "$final_tag" ]; then
+            echo "::error::x86_64 and aarch64 image tags disagree on their base version (${x86_tag} vs ${arm_tag}) — refusing to publish a mismatched multi-arch index"
+            exit 1
+          fi
+
+          echo "x86_ref=${image_name}:${x86_tag}" >> "$GITHUB_OUTPUT"
+          echo "arm_ref=${image_name}:${arm_tag}" >> "$GITHUB_OUTPUT"
+          echo "final_ref=${image_name}:${final_tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Assemble multi-arch index
+        run: |
+          crane index append \
+            -m "${{ steps.refs.outputs.x86_ref }}" \
+            -m "${{ steps.refs.outputs.arm_ref }}" \
+            -t "${{ steps.refs.outputs.final_ref }}"
+          crane tag "${{ steps.refs.outputs.final_ref }}" latest

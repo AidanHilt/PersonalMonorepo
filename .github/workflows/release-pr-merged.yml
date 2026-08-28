@@ -1,0 +1,57 @@
+name: release-pr-merged
+
+# Only relevant when RELEASE_MODE = "pr". prepare-release.yml pushes
+# the bump commit (and cog-computed tags, held locally on the runner —
+# not pushed) to release/auto and opens a PR without pushing tags. This
+# workflow fires once that PR actually merges into main, and pushes
+# the tags at that point — so release.yml (tag-triggered) can't fire
+# before the bump commit is actually on main.
+#
+# Since tags aren't retained between workflow runs, this recomputes
+# them from cog.toml + values.nix state on the merged commit rather
+# than trying to pass state between workflows.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+env:
+  IMAGES_DIR: nix/container-images/images
+
+jobs:
+  push-tags:
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'release/auto'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout main (post-merge)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+          token: ${{ secrets.RELEASE_BOT_TOKEN }}
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+
+      - name: Tag each package at its current values.nix version
+        run: |
+          # NOTE: this re-derives tags directly from the already-bumped
+          # `tag` fields in values.nix (source of truth per our design)
+          # rather than re-running `cog bump`, since cocogitto doesn't
+          # have a clean "re-tag an already-bumped commit without
+          # bumping again" mode. This keeps the two workflows honest:
+          # prepare-release computes and writes versions; this one only
+          # tags a commit that's now confirmed to be on main.
+          nix run "path:nix/scripts#sync-cog-packages" -- -images-dir "$IMAGES_DIR" -list=categoryA \
+            | jq -r '.[] | "\(.tagPrefix)\(.tag)"' \
+            | while read -r tagname; do
+                if git rev-parse "$tagname" >/dev/null 2>&1; then
+                  echo "tag $tagname already exists, skipping"
+                else
+                  git tag "$tagname"
+                fi
+              done
+          git push --tags origin main
