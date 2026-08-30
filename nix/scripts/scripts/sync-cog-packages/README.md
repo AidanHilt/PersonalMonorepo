@@ -110,7 +110,7 @@ Flags:
   -root string
         repo root (default ".")
   -images-dir string
-        images directory, relative to root (default "nix/mono-flake/custom-images/images")
+        images directory, relative to root (default "nix/scripts/images")
   -cog-toml string
         path to cog.toml, relative to root (default "cog.toml")
   -check
