@@ -1,4 +1,4 @@
-name: release
+name: release-internal-versioned-image
 
 # InternalVersioned only. Triggered by tags cocogitto/prepare-release
 # produces: <package>-v<semver>. Only the package name is parsed from
