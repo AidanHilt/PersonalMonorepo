@@ -31,7 +31,7 @@ repos:
     hooks:
       - id: sync-cog-packages
         name: Sync cog.toml with container image directories
-        entry: nix run path:nix/scripts#sync-cog-packages
+        entry: sync-cog-packages
         language: system
         pass_filenames: false
         files: >-
