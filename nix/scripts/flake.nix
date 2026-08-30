@@ -65,13 +65,46 @@
                 else lib.fakeHash;
             };
 
+          scriptKinds = [ "run.sh" "source.sh" "lib.sh" ];
+
+          # Identifies which kind a script directory is (or null if it's a go
+          # module / something else), reads its one script file, and rewrites
+          # "./" to that directory's store path -- but only if there are other
+          # files in the dir worth pointing at, so bare scripts don't pull in
+          # an unnecessary store copy.
+          readDirScript = dir:
+            let
+              entries = builtins.readDir dir;
+              kind = lib.findFirst (k: builtins.hasAttr k entries) null scriptKinds;
+            in
+            if kind == null then null
+            else
+              let
+                text = builtins.readFile (dir + "/${kind}");
+                extras = lib.filterAttrs (n: _: n != kind) entries;
+                hasExtras = extras != { };
+              in
+              {
+                inherit kind;
+                text = if hasExtras then builtins.replaceStrings [ "./" ] [ "${dir}/" ] text else text;
+              };
+
+          # Fetch + assert the expected kind, for callsites that require a specific one.
+          readDirScriptOfKind = expectedKind: dir:
+            let script = readDirScript dir;
+            in
+            assert lib.assertMsg (script != null && script.kind == expectedKind)
+              "expected ${dir} to contain ${expectedKind}";
+            script.text;
+
           mkShell = name:
             let
               dir = scriptsDir + "/${name}";
-              runText = builtins.readFile (dir + "/run.sh");
+              runText = readDirScriptOfKind "run.sh" dir;
+              libDeps = parseLibDeps runText;
               libText = lib.concatMapStrings
-                (libName: builtins.readFile (scriptsDir + "/${libName}/lib.sh") + "\n")
-                (parseLibDeps runText);
+                (libName: (readDirScriptOfKind "lib.sh" (scriptsDir + "/${libName}")) + "\n")
+                libDeps;
             in
             pkgs.writeShellApplication {
               name = name;
@@ -109,18 +142,17 @@
           inherit packages libChecks sourceChecks;
         };
 
-      interactiveShellInit =
-        let
-          lib = nixpkgs.lib;
-          entries = builtins.readDir scriptsDir;
-          dirNames = builtins.attrNames (lib.filterAttrs (_: t: t == "directory") entries);
-          sourceNames = builtins.filter
-            (name: builtins.hasAttr "source.sh" (builtins.readDir (scriptsDir + "/${name}")))
-            dirNames;
-        in
-        lib.concatMapStrings
-          (name: builtins.readFile (scriptsDir + "/${name}/source.sh") + "\n")
-          sourceNames;
+        allScriptDirs = builtins.attrNames (builtins.readDir scriptsDir);
+        interactiveShellInit = lib.concatMapStrings
+          (name:
+            let
+              dir = scriptsDir + "/${name}";
+              script = readDirScript dir;
+            in
+            if script != null && script.kind == "source.sh"
+            then script.text + "\n"
+            else "")
+          allScriptDirs;
     in
     flake-utils.lib.eachSystem
       (builtins.filter (s: s != "x86_64-darwin") flake-utils.lib.defaultSystems)
