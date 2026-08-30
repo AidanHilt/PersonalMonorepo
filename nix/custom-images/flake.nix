@@ -79,11 +79,13 @@
                 inherit pkgs;
                 inherit (values) tag;
               };
+
+              fullImageName = "ghcr.io/aidanhilt/${imageName}";
             in
               nix2containerInstance.buildImage (imageConfig // {
-                name = "ghcr.io/aidanhilt/${imageName}";
+                name = fullImageName;
                 tag = tag;
-              }) // { imageTag = tag; };
+              }) // { imageTag = tag; imageName = fullImageName; };
 
           # Create an attribute set of all images
           imagePackages = builtins.listToAttrs (
