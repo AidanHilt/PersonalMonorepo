@@ -26,7 +26,7 @@ import (
 
 func main() {
 	root := flag.String("root", ".", "repo root")
-	imagesDir := flag.String("images-dir", "nix/scripts/images", "images directory, relative to root")
+	imagesDir := flag.String("images-dir", "nix/custom-images/images", "images directory, relative to root")
 	cogTomlPath := flag.String("cog-toml", "cog.toml", "path to cog.toml, relative to root")
 	check := flag.Bool("check", false, "report whether cog.toml changes are needed without writing; exit 1 if so (Internal Versioned only)")
 	list := flag.String("list", "", `print discovered packages as JSON instead of syncing cog.toml; one of "internalVersioned" or "externalPkgVersioned"`)
