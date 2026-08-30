@@ -35,4 +35,4 @@ repos:
         language: system
         pass_filenames: false
         files: >-
-          ^nix/container-images/(images/.*|flake\.(nix|lock))$
+          ^nix/custom-images/(images/.*|flake\.(nix|lock))$
