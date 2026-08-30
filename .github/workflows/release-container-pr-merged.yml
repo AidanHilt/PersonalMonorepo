@@ -1,4 +1,4 @@
-name: release-pr-merged
+name: release-container-pr-merged
 
 # Only relevant when RELEASE_MODE = "pr". prepare-release.yml pushes
 # the bump commit (and cog-computed tags, held locally on the runner —

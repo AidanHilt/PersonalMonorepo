@@ -1,0 +1,168 @@
+name: release-pkg-versioned-images
+
+# Category B ("externalPkgVersioned") images: no cocogitto-managed
+# version — the tag tracks the version of an underlying nixpkgs
+# package, set correctly by the flake itself (imageTag). There's no
+# repo commit or version bump involved, so this workflow only ever
+# pushes to GHCR — it ignores prepare-release.yml's RELEASE_MODE
+# switch and always runs direct.
+#
+# Since the flake is trusted to always produce the correct tag,
+# there's nothing to compare or resolve here: on any push touching a
+# Category B image's directory (or the shared flake.lock/flake.nix,
+# which potentially affects all of them), just rebuild and push the
+# affected packages. copyToRegistry / skopeo copy is already
+# content-addressed and cheap on a no-op, so pushing unconditionally
+# costs a bit of registry-manifest churn, not meaningful work.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "nix/container-images/images/**"
+      - "nix/container-images/flake.lock"
+      - "nix/container-images/flake.nix"
+
+concurrency:
+  group: release-untracked-main
+  cancel-in-progress: false
+
+env:
+  IMAGES_DIR: nix/container-images/images
+  FLAKE_DIR: nix/container-images
+  REGISTRY: ghcr.io
+  SYNC_TOOL: path:nix/scripts#sync-cog-packages
+
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.affected.outputs.matrix }}
+      any: ${{ steps.affected.outputs.any }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: cachix/install-nix-action@v27
+
+      - name: Build sync-cog-packages
+        run: nix build "${{ env.SYNC_TOOL }}" -o /tmp/sync-cog-packages-out
+
+      - name: List all Category B packages
+        run: |
+          /tmp/sync-cog-packages-out/bin/sync-cog-packages \
+            -images-dir "$IMAGES_DIR" -list=externalPkgVersioned \
+            > /tmp/category-b.json
+          cat /tmp/category-b.json
+
+      - name: Did flake.lock/flake.nix change?
+        id: lockdiff
+        run: |
+          if git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
+             | grep -qE '^nix/container-images/flake\.(lock|nix)$'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Determine affected packages
+        id: affected
+        run: |
+          if [ "${{ steps.lockdiff.outputs.changed }}" = "true" ]; then
+            # Whole-fleet path: everything is potentially affected.
+            candidates="$(jq -c '[.[] | .name]' /tmp/category-b.json)"
+          else
+            changed_dirs="$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
+              | grep -oE "^${IMAGES_DIR}/[^/]+" | sed "s|^${IMAGES_DIR}/||" | sort -u)"
+            candidates="$(jq -c --argjson names "$(printf '%s\n' "$changed_dirs" | jq -R . | jq -s .)" \
+              '[.[] | select(.name as $n | $names | index($n)) | .name]' /tmp/category-b.json)"
+          fi
+
+          echo "Affected packages: $candidates"
+          echo "matrix=$candidates" >> "$GITHUB_OUTPUT"
+          if [ "$(echo "$candidates" | jq 'length')" -gt 0 ]; then
+            echo "any=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "any=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-push:
+    needs: resolve
+    if: needs.resolve.outputs.any == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        name: ${{ fromJson(needs.resolve.outputs.matrix) }}
+        system: [x86_64-linux, aarch64-linux]
+        include:
+          - system: x86_64-linux
+            runs-on: ubuntu-24.04
+          - system: aarch64-linux
+            runs-on: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runs-on }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v27
+
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            nix run nixpkgs#skopeo -- login "${{ env.REGISTRY }}" \
+              -u "${{ github.actor }}" --password-stdin
+
+      - name: Push ${{ matrix.system }} image to GHCR
+        working-directory: ${{ env.FLAKE_DIR }}
+        run: |
+          nix run ".#packages.${{ matrix.system }}.${{ matrix.name }}.copyToRegistry"
+
+      - name: Record resolved version for manifest step
+        id: tag
+        working-directory: ${{ env.FLAKE_DIR }}
+        run: |
+          tag="$(nix eval --raw ".#packages.${{ matrix.system }}.${{ matrix.name }}.imageTag")"
+          version="${tag%-${{ matrix.system }}}"
+          mkdir -p /tmp/version
+          echo "$version" > /tmp/version/version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: version-${{ matrix.name }}
+          path: /tmp/version/version
+          overwrite: true
+          retention-days: 1
+
+  multiarch-manifest:
+    needs: [resolve, build-and-push]
+    if: needs.resolve.outputs.any == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/versions
+          pattern: version-*
+
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            docker login "${{ env.REGISTRY }}" -u "${{ github.actor }}" --password-stdin
+
+      - name: Create & push multiarch manifests
+        run: |
+          echo '${{ needs.resolve.outputs.matrix }}' | jq -r '.[]' | while read -r name; do
+            version="$(cat "/tmp/versions/version-${name}/version")"
+            image="${{ env.REGISTRY }}/${{ github.repository_owner }}/${name}"
+
+            echo "Updating manifest for ${image}:${version}"
+            docker buildx imagetools create \
+              --tag "${image}:${version}" \
+              "${image}:${version}-x86_64-linux" \
+              "${image}:${version}-aarch64-linux"
+          done
