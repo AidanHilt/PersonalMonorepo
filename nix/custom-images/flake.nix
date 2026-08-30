@@ -45,7 +45,7 @@
           buildImageForDir = imageName:
             let
               imageDir = imagesDir + "/${imageName}";
-              tag = "${getTagForImage imageName system}-${system}";
+              tag = "${getTagForImage imageName system}";
               values = import (imageDir + "/values.nix");
 
 
@@ -81,7 +81,7 @@
               };
             in
               nix2containerInstance.buildImage (imageConfig // {
-                name = imageName;
+                name = "aidanhilt/${imageName}";
                 tag = tag;
               });
 
