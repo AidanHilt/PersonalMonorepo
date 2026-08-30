@@ -27,3 +27,12 @@ repos:
       - id: check-jsonschema
         files: "'.atils_jobconfig.json'"
         args: ["--schemafile", "json-schemas/atils_jobconfig.json"]
+  - repo: local
+    hooks:
+      - id: sync-cog-packages
+        name: Sync cog.toml with container image directories
+        entry: nix run path:nix/scripts#sync-cog-packages
+        language: system
+        pass_filenames: false
+        files: >-
+          ^nix/container-images/(images/.*|flake\.(nix|lock))$
