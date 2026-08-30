@@ -81,9 +81,9 @@
               };
             in
               nix2containerInstance.buildImage (imageConfig // {
-                name = "aidanhilt/${imageName}";
+                name = "ghcr.io/aidanhilt/${imageName}";
                 tag = tag;
-              });
+              }) // { imageTag = tag; };
 
           # Create an attribute set of all images
           imagePackages = builtins.listToAttrs (
