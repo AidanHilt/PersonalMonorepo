@@ -14,7 +14,7 @@ print_status() {
   fi
 
   if [[ $ATILS_LOG_LEVEL = "DEBUG" ]] || [[ $ATILS_LOG_LEVEL = "INFO" ]]; then
-    echo -e "''${GREEN}[INFO]''${NC} $1"
+    echo -e "${GREEN}[INFO]${NC} $1"
   fi
 }
 
@@ -25,13 +25,13 @@ print_warning() {
   fi
 
   if [[ $ATILS_LOG_LEVEL = "DEBUG" ]] || [[ $ATILS_LOG_LEVEL = "INFO" ]] || [[ $ATILS_LOG_LEVEL = "WARN" ]]; then
-    echo -e "''${YELLOW}[WARN]''${NC} $1"
+    echo -e "${YELLOW}[WARN]${NC} $1"
   fi
 }
 
 #shellcheck disable=SC2329
 print_error() {
-  echo -e "''${RED}[ERROR]''${NC} $1"
+  echo -e "${RED}[ERROR]${NC} $1"
 }
 
 #shellcheck disable=SC2329
@@ -41,6 +41,6 @@ print_debug() {
   fi
 
   if [[ $ATILS_LOG_LEVEL = "DEBUG" ]]; then
-    echo -e "''${BLUE}[DEBUG]''${NC} $1"
+    echo -e "${BLUE}[DEBUG]${NC} $1"
   fi
 }
