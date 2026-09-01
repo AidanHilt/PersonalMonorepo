@@ -9,6 +9,38 @@
   outputs = { self, nixpkgs, flake-utils, ... }:
     let
       scriptsDir = ./scripts;
+      lib = nixpkgs.legacyPackages.aarch64-darwin.lib;
+      scriptKinds = [ "run.sh" "source.sh" "lib.sh" ];
+
+      # Identifies which kind a script directory is (or null if it's a go
+      # module / something else), reads its one script file, and rewrites
+      # "./" to that directory's store path -- but only if there are other
+      # files in the dir worth pointing at, so bare scripts don't pull in
+      # an unnecessary store copy.
+      readDirScript = dir:
+        let
+          entries = builtins.readDir dir;
+          kind = lib.findFirst (k: builtins.hasAttr k entries) null scriptKinds;
+        in
+        if kind == null then null
+        else
+          let
+            text = builtins.readFile (dir + "/${kind}");
+            extras = lib.filterAttrs (n: _: n != kind) entries;
+            hasExtras = extras != { };
+          in
+          {
+            inherit kind;
+            text = if hasExtras then builtins.replaceStrings [ "./" ] [ "${dir}/" ] text else text;
+          };
+
+      # Fetch + assert the expected kind, for callsites that require a specific one.
+      readDirScriptOfKind = expectedKind: dir:
+        let script = readDirScript dir;
+        in
+        assert lib.assertMsg (script != null && script.kind == expectedKind)
+          "expected ${dir} to contain ${expectedKind}";
+        script.text;
 
       # Builds { <name> = derivation; ... } plus lib-only shellcheck checks,
       # for a given `pkgs`. Kept independent of `system` so it can be reused
@@ -16,7 +48,6 @@
       # only has `final`/`prev`, not a bound `pkgs`).
       mkScripts = pkgs:
         let
-          lib = pkgs.lib;
           entries = builtins.readDir scriptsDir;
           dirNames = builtins.attrNames (lib.filterAttrs (_: t: t == "directory") entries);
 
@@ -64,38 +95,6 @@
                 else if builtins.pathExists vendorHashFile then import vendorHashFile
                 else lib.fakeHash;
             };
-
-          scriptKinds = [ "run.sh" "source.sh" "lib.sh" ];
-
-          # Identifies which kind a script directory is (or null if it's a go
-          # module / something else), reads its one script file, and rewrites
-          # "./" to that directory's store path -- but only if there are other
-          # files in the dir worth pointing at, so bare scripts don't pull in
-          # an unnecessary store copy.
-          readDirScript = dir:
-            let
-              entries = builtins.readDir dir;
-              kind = lib.findFirst (k: builtins.hasAttr k entries) null scriptKinds;
-            in
-            if kind == null then null
-            else
-              let
-                text = builtins.readFile (dir + "/${kind}");
-                extras = lib.filterAttrs (n: _: n != kind) entries;
-                hasExtras = extras != { };
-              in
-              {
-                inherit kind;
-                text = if hasExtras then builtins.replaceStrings [ "./" ] [ "${dir}/" ] text else text;
-              };
-
-          # Fetch + assert the expected kind, for callsites that require a specific one.
-          readDirScriptOfKind = expectedKind: dir:
-            let script = readDirScript dir;
-            in
-            assert lib.assertMsg (script != null && script.kind == expectedKind)
-              "expected ${dir} to contain ${expectedKind}";
-            script.text;
 
           mkShell = name:
             let
