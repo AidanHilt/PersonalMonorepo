@@ -3,7 +3,7 @@ name: check-cog-sync
 on:
   pull_request:
     paths:
-      - "nix/container-images/images/**"
+      - "nix/custom-images/images/**"
 
 jobs:
   check:
@@ -18,4 +18,4 @@ jobs:
       - name: Check cog.toml is in sync
         run: |
           nix run "path:nix/scripts#sync-cog-packages" -- \
-            -images-dir nix/container-images/images -check
+            -images-dir nix/custom-images/images -check

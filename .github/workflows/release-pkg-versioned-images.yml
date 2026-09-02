@@ -23,17 +23,17 @@ on:
   push:
     branches: [main]
     paths:
-      - "nix/container-images/images/**"
-      - "nix/container-images/flake.lock"
-      - "nix/container-images/flake.nix"
+      - "nix/custom-images/images/**"
+      - "nix/custom-images/flake.lock"
+      - "nix/custom-images/flake.nix"
 
 concurrency:
   group: release-pkg-versioned-images-main
   cancel-in-progress: false
 
 env:
-  IMAGES_DIR: nix/container-images/images
-  FLAKE: path:nix/container-images
+  IMAGES_DIR: nix/custom-images/images
+  FLAKE: path:nix/custom-images
   REGISTRY: ghcr.io
   SYNC_TOOL: path:nix/scripts#sync-cog-packages
 
@@ -64,7 +64,7 @@ jobs:
         id: lockdiff
         run: |
           if git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
-             | grep -qE '^nix/container-images/flake\.(lock|nix)$'; then
+             | grep -qE '^nix/custom-images/flake\.(lock|nix)$'; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"

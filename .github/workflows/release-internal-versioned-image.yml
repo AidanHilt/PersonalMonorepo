@@ -18,7 +18,7 @@ on:
       - "*-v*.*.*"
 
 env:
-  FLAKE: path:nix/container-images
+  FLAKE: path:nix/custom-images
 
 jobs:
   parse-tag:

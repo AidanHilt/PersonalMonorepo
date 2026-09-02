@@ -17,7 +17,7 @@ on:
     branches: [main]
 
 env:
-  IMAGES_DIR: nix/container-images/images
+  IMAGES_DIR: nix/custom-images/images
 
 jobs:
   push-tags:
