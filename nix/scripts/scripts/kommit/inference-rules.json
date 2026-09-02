@@ -1,0 +1,33 @@
+{
+  "rules": [
+    {
+      "type": "chore",
+      "path": "**/cog.toml",
+      "content": "^\\s*version\\s*="
+    },
+    {
+      "type": "test",
+      "path": "**/test/**"
+    },
+    {
+      "type": "test",
+      "path": "**/*_test.go"
+    },
+    {
+      "type": "docs",
+      "path": "**/*.md"
+    },
+    {
+      "type": "build",
+      "path": "**/go.mod"
+    },
+    {
+      "type": "build",
+      "path": "**/go.sum"
+    },
+    {
+      "type": "ci",
+      "path": ".github/workflows/**"
+    }
+  ]
+}

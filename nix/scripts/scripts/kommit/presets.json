@@ -1,0 +1,15 @@
+{
+  "presets": [
+    {
+      "name": "dep-update",
+      "type": "build",
+      "scope": "deps",
+      "description": "bump {package} to {version}"
+    },
+    {
+      "name": "wip",
+      "type": "chore",
+      "description": "wip: {summary}"
+    }
+  ]
+}
