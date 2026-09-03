@@ -1,0 +1,129 @@
+name: prepare-release
+
+# Two distinct triggers, both landing in the same job:
+#
+#   1. A push touching Category A image directories -> normal
+#      cocogitto flow: sync-cog-packages, then `cog bump --auto`,
+#      which scopes bumps to whichever packages have qualifying
+#      conventional commits since their last tag.
+#
+#   2. A push touching the container-images flake's flake.lock or
+#      flake.nix -> force-bump EVERY Category A package,
+#      unconditionally, bypassing commit-log analysis. A lockfile
+#      bump has no natural per-package scope, so this is treated as
+#      an unconditional patch release across the whole Category A
+#      fleet rather than trying to infer which packages were
+#      actually affected transitively.
+#
+# Category B packages are never touched here — they don't go through
+# cocogitto at all. See build-tracked.yml.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "nix/custom-images/images/**"
+      - "nix/custom-images/flake.lock"
+      - "nix/custom-images/flake.nix"
+
+concurrency:
+  group: prepare-release-main
+  cancel-in-progress: false
+
+env:
+  IMAGES_DIR: nix/custom-images/images
+  SYNC_TOOL: path:nix/scripts#sync-cog-packages
+
+jobs:
+  prepare:
+    # Bail on our own bump commits, so pushing the bump commit doesn't
+    # re-trigger this workflow.
+    if: >
+      !startsWith(github.event.head_commit.message, 'chore(release):')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history: cog needs prior tags
+          token: ${{ secrets.RELEASE_BOT_TOKEN }} # PAT/App token: default
+          # GITHUB_TOKEN pushes may be rejected by branch protection
+          # and won't reliably re-trigger tag-based workflows.
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+
+      - name: Install cocogitto
+        run: nix profile install nixpkgs#cocogitto
+
+      # Built once and reused below, since this job calls the tool
+      # twice (sync, then -list=categoryA for the force-bump path).
+      # A single `nix run` per call is simpler and is what every
+      # other workflow does, but isn't worth two flake-ref
+      # resolutions in the same job.
+      - name: Build sync-cog-packages
+        run: nix build "${{ env.SYNC_TOOL }}" -o /tmp/sync-cog-packages-out
+
+      - name: Sync cog.toml (Category A packages)
+        run: /tmp/sync-cog-packages-out/bin/sync-cog-packages -images-dir "$IMAGES_DIR"
+
+      - name: Determine trigger reason
+        id: reason
+        run: |
+          if git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
+             | grep -qE '^nix/custom-images/flake\.(lock|nix)$'; then
+            echo "lockfile_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "lockfile_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate conventional commits since last tags
+        if: steps.reason.outputs.lockfile_changed == 'false'
+        run: cog check
+
+      - name: Bump — scoped (normal path)
+        if: steps.reason.outputs.lockfile_changed == 'false'
+        run: cog bump --auto
+
+      - name: Bump — force, every Category A package (flake.lock/flake.nix path)
+        if: steps.reason.outputs.lockfile_changed == 'true'
+        run: |
+          for name in $(/tmp/sync-cog-packages-out/bin/sync-cog-packages -images-dir "$IMAGES_DIR" -list=categoryA | jq -r '.[].name'); do
+            echo "force patch-bumping $name"
+            cog bump --package "$name" --patch
+          done
+
+      # --- direct-vs-PR switch ---
+      # Set repo variable RELEASE_MODE to "direct" or "pr".
+      - name: Push directly to main
+        if: vars.RELEASE_MODE == 'direct'
+        run: git push --follow-tags origin main
+
+      - name: Push to release branch (PR mode)
+        if: vars.RELEASE_MODE == 'pr'
+        run: |
+          git push origin HEAD:refs/heads/release/auto --force
+          # Tags are intentionally NOT pushed yet in PR mode — see
+          # release-pr-merged.yml, which pushes them only after the
+          # PR actually merges, so the tag-triggered release workflow
+          # doesn't fire before main has the commit.
+
+      - name: Open / update release PR
+        if: vars.RELEASE_MODE == 'pr'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+        run: |
+          gh pr create \
+            --title "chore(release): automated version bump" \
+            --body "Automated bump from sync-cog-packages + cog bump. Merging this will push tags and trigger releases." \
+            --base main \
+            --head release/auto \
+            || echo "PR already exists, skipping create"
+          # If you want this fully hands-off rather than
+          # human-reviewed, uncomment the next line. Note: if branch
+          # protection requires an approver different from the PR
+          # author, the bot identity can't self-approve — you'd need
+          # a second bot/app identity or a protection-rule bypass.
+          # gh pr merge release/auto --auto --squash

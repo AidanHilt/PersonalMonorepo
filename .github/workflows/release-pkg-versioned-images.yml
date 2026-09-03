@@ -1,0 +1,209 @@
+name: release-pkg-versioned-images
+
+# externalPkgVersioned only. No cocogitto-managed version — the tag
+# tracks the version of an underlying nixpkgs package, set correctly
+# by the flake itself (imageName/imageTag), so per-arch pushes need
+# no manually-constructed destination, same as the InternalVersioned
+# companion workflow.
+#
+# Unlike InternalVersioned, there's no cocogitto-produced tag to
+# trigger from or attach a release to — this runs on ordinary pushes
+# to main. So this workflow creates its own git tag per affected
+# package (<name>-v<version>, mirroring InternalVersioned's
+# convention) once a push has succeeded, then cuts a release against
+# it the same way. Tag creation is idempotent: if a run touches a
+# package whose resolved version hasn't changed, the tag already
+# exists and is left alone rather than re-created.
+#
+# There's no cog.toml changelog entry for these packages (they're
+# not cocogitto-managed), so release notes are a short generated
+# note rather than an extracted changelog excerpt.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "nix/custom-images/images/**"
+      - "nix/custom-images/flake.lock"
+      - "nix/custom-images/flake.nix"
+
+concurrency:
+  group: release-pkg-versioned-images-main
+  cancel-in-progress: false
+
+env:
+  IMAGES_DIR: nix/custom-images/images
+  FLAKE: path:nix/custom-images
+  REGISTRY: ghcr.io
+  SYNC_TOOL: path:nix/scripts#sync-cog-packages
+
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.affected.outputs.matrix }}
+      any: ${{ steps.affected.outputs.any }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: cachix/install-nix-action@v27
+
+      - name: Build sync-cog-packages
+        run: nix build "${{ env.SYNC_TOOL }}" -o /tmp/sync-cog-packages-out
+
+      - name: List all externalPkgVersioned packages
+        run: |
+          /tmp/sync-cog-packages-out/bin/sync-cog-packages \
+            -images-dir "$IMAGES_DIR" -list=externalPkgVersioned \
+            > /tmp/category-b.json
+          cat /tmp/category-b.json
+
+      - name: Did flake.lock/flake.nix change?
+        id: lockdiff
+        run: |
+          if git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
+             | grep -qE '^nix/custom-images/flake\.(lock|nix)$'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Determine affected packages
+        id: affected
+        run: |
+          if [ "${{ steps.lockdiff.outputs.changed }}" = "true" ]; then
+            # Whole-fleet path: everything is potentially affected.
+            candidates="$(jq -c '[.[] | .name]' /tmp/category-b.json)"
+          else
+            changed_dirs="$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
+              | grep -oE "^${IMAGES_DIR}/[^/]+" | sed "s|^${IMAGES_DIR}/||" | sort -u)"
+            candidates="$(jq -c --argjson names "$(printf '%s\n' "$changed_dirs" | jq -R . | jq -s .)" \
+              '[.[] | select(.name as $n | $names | index($n)) | .name]' /tmp/category-b.json)"
+          fi
+
+          echo "Affected packages: $candidates"
+          echo "matrix=$candidates" >> "$GITHUB_OUTPUT"
+          if [ "$(echo "$candidates" | jq 'length')" -gt 0 ]; then
+            echo "any=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "any=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: resolve
+    if: needs.resolve.outputs.any == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        name: ${{ fromJson(needs.resolve.outputs.matrix) }}
+        system: [x86_64-linux, aarch64-linux]
+        include:
+          - system: x86_64-linux
+            runs-on: ubuntu-24.04
+          - system: aarch64-linux
+            runs-on: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runs-on }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v27
+
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            nix run nixpkgs#skopeo -- login "${{ env.REGISTRY }}" \
+              -u "${{ github.actor }}" --password-stdin
+
+      - name: Push per-arch image
+        run: |
+          nix run "${{ env.FLAKE }}#packages.${{ matrix.system }}.${{ matrix.name }}.copyToRegistry"
+
+  tag-and-release:
+    needs: [resolve, build]
+    if: needs.resolve.outputs.any == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        name: ${{ fromJson(needs.resolve.outputs.matrix) }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+
+      - name: Install crane
+        uses: imjasonh/setup-crane@v0.4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | crane auth login "${{ env.REGISTRY }}" -u "${{ github.actor }}" --password-stdin
+
+      - name: Derive refs and tag
+        id: refs
+        run: |
+          pkg="${{ matrix.name }}"
+          image_name=$(nix eval --raw "${{ env.FLAKE }}#packages.x86_64-linux.${pkg}.imageName")
+          x86_tag=$(nix eval --raw "${{ env.FLAKE }}#packages.x86_64-linux.${pkg}.imageTag")
+          arm_tag=$(nix eval --raw "${{ env.FLAKE }}#packages.aarch64-linux.${pkg}.imageTag")
+
+          final_tag="${x86_tag%-x86_64-linux}"
+          if [ "${arm_tag%-aarch64-linux}" != "$final_tag" ]; then
+            echo "::error::x86_64 and aarch64 image tags disagree on their base version (${x86_tag} vs ${arm_tag}) — refusing to publish a mismatched multi-arch index"
+            exit 1
+          fi
+
+          echo "x86_ref=${image_name}:${x86_tag}" >> "$GITHUB_OUTPUT"
+          echo "arm_ref=${image_name}:${arm_tag}" >> "$GITHUB_OUTPUT"
+          echo "final_ref=${image_name}:${final_tag}" >> "$GITHUB_OUTPUT"
+          echo "git_tag=${pkg}-v${final_tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Assemble multi-arch index
+        run: |
+          crane index append \
+            -m "${{ steps.refs.outputs.x86_ref }}" \
+            -m "${{ steps.refs.outputs.arm_ref }}" \
+            -t "${{ steps.refs.outputs.final_ref }}"
+
+      - name: Create git tag (idempotent)
+        id: gittag
+        run: |
+          tag="${{ steps.refs.outputs.git_tag }}"
+          if git rev-parse "refs/tags/${tag}" >/dev/null 2>&1; then
+            echo "Tag ${tag} already exists — resolved version unchanged, skipping tag/release."
+            echo "created=false" >> "$GITHUB_OUTPUT"
+          else
+            git tag "$tag" "${{ github.sha }}"
+            git push origin "$tag"
+            echo "created=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Write release notes
+        if: steps.gittag.outputs.created == 'true'
+        run: |
+          cat > /tmp/release-notes.md <<EOF
+          Automated release for \`${{ matrix.name }}\`, tracking nixpkgs
+          version \`${{ steps.refs.outputs.final_ref }}\`.
+
+          This package's version is derived from an upstream nixpkgs
+          package rather than cocogitto, so this release reflects an
+          image content change (directory update or flake.lock bump)
+          rather than a semantic version bump.
+          EOF
+
+      - name: Create GitHub Release
+        if: steps.gittag.outputs.created == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.refs.outputs.git_tag }}
+          body_path: /tmp/release-notes.md

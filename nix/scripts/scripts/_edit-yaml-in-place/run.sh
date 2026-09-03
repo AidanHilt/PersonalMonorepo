@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# @lib: printing-and-output
+
+FILENAME="$1"
+YQ_STRING="$2"
+TMP_FILE="/tmp/$(basename "${FILENAME}")"
+
+if [[ -z "${FILENAME}" || -z "${YQ_STRING}" ]]; then
+  print_error "Both filename and yq string must be provided"
+  exit 1
+fi
+
+print_debug "Applying yq transformation to $FILENAME"
+
+yq "${YQ_STRING}" "${FILENAME}" >"${TMP_FILE}"
+mv "${TMP_FILE}" "${FILENAME}"

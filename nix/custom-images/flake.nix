@@ -15,6 +15,8 @@
       # Support multiple systems
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
 
+      lib = nixpkgs.lib;
+
       forAllSystems = nixpkgs.lib.genAttrs systems;
 
       # Helper to get pkgs for a specific system
@@ -29,6 +31,7 @@
           pkgs = pkgsFor system;
           nix2containerInstance = nix2containerFor system;
 
+
           # Read all directories in ./images/
           imagesDir = ./images;
           imageDirs = builtins.attrNames (builtins.readDir imagesDir);
@@ -42,19 +45,47 @@
           buildImageForDir = imageName:
             let
               imageDir = imagesDir + "/${imageName}";
+              tag = "${getTagForImage imageName system}";
               values = import (imageDir + "/values.nix");
-              tag = values.tag or "latest";
+
+
+              getTagForImage = imageName: system:
+                let
+                  hasTag = values ? tag;
+                  hasVersionPackage = values ? versionPackage;
+
+                  versionPackagePath =
+                    if hasVersionPackage then lib.splitString "." values.versionPackage else null;
+
+                  baseVersion =
+                    if hasTag && hasVersionPackage then
+                      throw "image ${imageName}: values.nix sets both 'tag' and 'versionPackage' — only one is allowed"
+                    else if hasTag then
+                      values.tag
+                    else if hasVersionPackage then
+                      if lib.hasAttrByPath versionPackagePath pkgs then
+                        (lib.attrByPath versionPackagePath null pkgs).version
+                      else
+                        throw "image ${imageName}: versionPackage '${values.versionPackage}' not found in nixpkgs"
+                    else
+                      throw "image ${imageName}: values.nix must set either 'tag' or 'versionPackage' for ${imageName}";
+
+                  outputTag = "${baseVersion}-${system}";
+                in
+                outputTag;
 
               # Import the default.nix which should return image config
               imageConfig = import (imageDir + "/default.nix") {
                 inherit pkgs;
                 inherit (values) tag;
               };
+
+              fullImageName = "ghcr.io/aidanhilt/${imageName}";
             in
               nix2containerInstance.buildImage (imageConfig // {
-                name = imageName;
+                name = fullImageName;
                 tag = tag;
-              });
+              }) // { imageTag = tag; imageName = fullImageName; };
 
           # Create an attribute set of all images
           imagePackages = builtins.listToAttrs (

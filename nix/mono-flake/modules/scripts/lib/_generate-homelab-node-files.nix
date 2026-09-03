@@ -1,7 +1,7 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
 let
-generate-homelab-node-files = pkgs.writeShellScriptBin "generate-homelab-node-files" ''
+_generate-homelab-node-files = pkgs.writeShellScriptBin "_generate-homelab-node-files" ''
 #!/bin/bash
 
 set -euo pipefail
@@ -17,6 +17,6 @@ in
 
 {
   environment.systemPackages = [
-    generate-homelab-node-files
+    _generate-homelab-node-files
   ];
 }

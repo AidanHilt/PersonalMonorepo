@@ -1,0 +1,21 @@
+name: check-cog-sync
+
+on:
+  pull_request:
+    paths:
+      - "nix/custom-images/images/**"
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+
+      - name: Check cog.toml is in sync
+        run: |
+          nix run "path:nix/scripts#sync-cog-packages" -- \
+            -images-dir nix/custom-images/images -check

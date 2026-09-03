@@ -1,0 +1,127 @@
+name: release-internal-versioned-image
+
+# InternalVersioned only. Triggered by tags cocogitto/prepare-release
+# produces: <package>-v<semver>. Only the package name is parsed from
+# the ref — the actual pushed tag comes straight from nix2container's
+# own `imageName`/`imageTag` attributes on each built package, since
+# the flake feeds the resolved version into nix2container directly
+# and (per this iteration) also bakes the target system into the tag
+# per arch. That means the per-arch push needs no manually-constructed
+# destination at all: `copyToRegistry` already knows exactly where to
+# push. The only thing this workflow computes itself is the combined,
+# arch-less tag for the final multi-arch index, derived by stripping
+# the known "-<system>" suffix off a per-arch tag.
+
+on:
+  push:
+    tags:
+      - "*-v*.*.*"
+
+env:
+  FLAKE: path:nix/custom-images
+
+jobs:
+  parse-tag:
+    runs-on: ubuntu-24.04
+    outputs:
+      package: ${{ steps.parse.outputs.package }}
+    steps:
+      - id: parse
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          package="${tag%-v*}"
+          echo "package=$package" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: parse-tag
+    strategy:
+      fail-fast: false
+      matrix:
+        system: [x86_64-linux, aarch64-linux]
+        include:
+          - system: x86_64-linux
+            runner: ubuntu-24.04
+          - system: aarch64-linux
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            nix run nixpkgs#crane -- auth login ghcr.io \
+              --username "${{ github.actor }}" --password-stdin
+
+      - name: Push per-arch image
+        run: |
+          nix run "${{ env.FLAKE }}#packages.${{ matrix.system }}.${{ needs.parse-tag.outputs.package }}.copyToRegistry"
+
+  publish-manifest:
+    needs: [parse-tag, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+
+      - name: Install crane
+        uses: imjasonh/setup-crane@v0.4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | crane auth login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Derive refs
+        id: refs
+        run: |
+          pkg="${{ needs.parse-tag.outputs.package }}"
+          image_name=$(nix eval --raw "${{ env.FLAKE }}#packages.x86_64-linux.${pkg}.imageName")
+          x86_tag=$(nix eval --raw "${{ env.FLAKE }}#packages.x86_64-linux.${pkg}.imageTag")
+          arm_tag=$(nix eval --raw "${{ env.FLAKE }}#packages.aarch64-linux.${pkg}.imageTag")
+
+          # Both per-arch tags are expected to share a common prefix,
+          # with the flake appending "-<system>". Strip it to get the
+          # combined, arch-less tag for the multi-arch index.
+          final_tag="${x86_tag%-x86_64-linux}"
+          if [ "${arm_tag%-aarch64-linux}" != "$final_tag" ]; then
+            echo "::error::x86_64 and aarch64 image tags disagree on their base version (${x86_tag} vs ${arm_tag}) — refusing to publish a mismatched multi-arch index"
+            exit 1
+          fi
+
+          echo "x86_ref=${image_name}:${x86_tag}" >> "$GITHUB_OUTPUT"
+          echo "arm_ref=${image_name}:${arm_tag}" >> "$GITHUB_OUTPUT"
+          echo "final_ref=${image_name}:${final_tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Assemble multi-arch index
+        run: |
+          crane index append \
+            -m "${{ steps.refs.outputs.x86_ref }}" \
+            -m "${{ steps.refs.outputs.arm_ref }}" \
+            -t "${{ steps.refs.outputs.final_ref }}"
+          crane tag "${{ steps.refs.outputs.final_ref }}" latest
+
+      - name: Extract changelog excerpt
+        run: |
+          pkg="${{ needs.parse-tag.outputs.package }}"
+          changelog_path=$(git grep -A1 "^\[packages.${pkg}\]" cog.toml \
+            | grep changelog_path | sed -E 's/.*"(.*)".*/\1/')
+          awk '/^## /{c++} c==1{print} c==2{exit}' "$changelog_path" \
+            > /tmp/release-notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          body_path: /tmp/release-notes.md
