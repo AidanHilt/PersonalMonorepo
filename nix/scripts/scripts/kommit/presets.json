@@ -29,6 +29,15 @@
         "nix/mono-flake/*",
         "nix/scripts/*"
       ]
+    },
+    {
+      "name": "actions",
+      "type": "ci",
+      "scope": "deployment",
+      "paths": [
+        "nix/scripts/*",
+        ".github/*"
+      ]
     }
   ]
 }
