@@ -78,6 +78,40 @@ func resetStaged() error {
 	return err
 }
 
+// addAll stages every change in the working tree, tracked or untracked,
+// including dotfiles - git's own pathspec matching has no special-casing
+// of dotfiles the way old shell globs did.
+func addAll() error {
+	_, err := runGit("add", "-A")
+	return err
+}
+
+// stagePaths stages exactly the given paths if any are provided, otherwise
+// falls back to staging everything.
+func stagePaths(paths []string) error {
+	if len(paths) > 0 {
+		return addFiles(paths)
+	}
+	return addAll()
+}
+
+// addFilesLenient stages each path independently, skipping (and warning
+// about) any that match nothing rather than aborting the whole batch. Used
+// for a preset's own default paths, which are candidates that may not all
+// apply to every invocation (e.g. an npm lockfile that doesn't exist for a
+// yarn-managed package).
+func addFilesLenient(paths []string) []string {
+	var staged []string
+	for _, p := range paths {
+		if _, err := runGit("add", "--", p); err != nil {
+			warnf("skipping %s (no match)", p)
+			continue
+		}
+		staged = append(staged, p)
+	}
+	return staged
+}
+
 func addFiles(files []string) error {
 	if len(files) == 0 {
 		return nil
