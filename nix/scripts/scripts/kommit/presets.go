@@ -8,12 +8,13 @@ import (
 )
 
 type preset struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Scope       string `json:"scope,omitempty"`
-	Description string `json:"description"`
-	Body        string `json:"body,omitempty"`
-	Breaking    bool   `json:"breaking,omitempty"`
+	Name        string   `json:"name"`
+	Type        string   `json:"type"`
+	Scope       string   `json:"scope,omitempty"`
+	Description string   `json:"description"`
+	Body        string   `json:"body,omitempty"`
+	Breaking    bool     `json:"breaking,omitempty"`
+	Paths       []string `json:"paths,omitempty"`
 }
 
 type presetsConfig struct {
@@ -42,7 +43,9 @@ var placeholderPattern = regexp.MustCompile(`\{([a-zA-Z0-9_]+)\}`)
 func presetPlaceholders(p *preset) []string {
 	seen := map[string]bool{}
 	var order []string
-	for _, field := range []string{p.Type, p.Scope, p.Description, p.Body} {
+	fields := []string{p.Type, p.Scope, p.Description, p.Body}
+	fields = append(fields, p.Paths...)
+	for _, field := range fields {
 		for _, m := range placeholderPattern.FindAllStringSubmatch(field, -1) {
 			name := m[1]
 			if !seen[name] {
@@ -65,5 +68,10 @@ func fillPreset(p preset, values map[string]string) preset {
 	p.Scope = fill(p.Scope)
 	p.Description = fill(p.Description)
 	p.Body = fill(p.Body)
+	filledPaths := make([]string, len(p.Paths))
+	for i, path := range p.Paths {
+		filledPaths[i] = fill(path)
+	}
+	p.Paths = filledPaths
 	return p
 }
