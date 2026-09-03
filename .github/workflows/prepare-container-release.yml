@@ -45,12 +45,9 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # full history: cog needs prior tags
-          token: ${{ secrets.RELEASE_BOT_TOKEN }} # PAT/App token: default
-          # GITHUB_TOKEN pushes may be rejected by branch protection
-          # and won't reliably re-trigger tag-based workflows.
 
       - name: Install Nix
         uses: cachix/install-nix-action@v27
