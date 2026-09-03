@@ -97,7 +97,7 @@
       "flux-app"
       "rectangle"
       "flycut"
-      "iterm2"
+      "ghostty"
       "visual-studio-code"
     ];
   };

@@ -35,7 +35,7 @@
     dock = {
       persistent-apps = [
         #iTerm
-        "/Applications/iTerm.app"
+        "/Applications/Ghostty.app"
         #Settings
         "/System/Applications/System Settings.app"
         #Firefox
