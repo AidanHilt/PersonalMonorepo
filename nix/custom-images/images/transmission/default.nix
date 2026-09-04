@@ -13,7 +13,7 @@ in
   };
 
   config = {
-    Cmd = [ "${pkgs.transmission}/bin/transmission" ];
+    Cmd = [ "${pkgs.transmission_4}/bin/transmission" ];
     ExposedPorts = {
       "9091/tcp" = {};
     };
