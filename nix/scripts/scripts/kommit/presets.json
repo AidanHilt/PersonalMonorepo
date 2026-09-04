@@ -4,12 +4,40 @@
       "name": "dep-update",
       "type": "build",
       "scope": "deps",
-      "description": "bump {package} to {version}"
+      "description": "bump {package} to {version}",
+      "paths": [
+        "packages/{package}/package.json",
+        "packages/{package}/package-lock.json"
+      ]
     },
     {
       "name": "wip",
       "type": "chore",
       "description": "wip: {summary}"
+    },
+    {
+      "name": "argocd",
+      "scope": "deployment",
+      "paths": [
+        "kubernetes/*"
+      ]
+    },
+    {
+      "name": "mono-flake",
+      "scope": "deployment",
+      "paths": [
+        "nix/mono-flake/*",
+        "nix/scripts/*"
+      ]
+    },
+    {
+      "name": "actions",
+      "type": "ci",
+      "scope": "deployment",
+      "paths": [
+        "nix/scripts/*",
+        ".github/*"
+      ]
     }
   ]
 }

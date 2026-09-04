@@ -8,10 +8,7 @@
     ./rclone.nix
   ];
 
-  environment.systemPackages = [
-    pkgs.python313
-    #pkgs.poetry
-  ];
+  environment.systemPackages = [];
 
   homebrew = {
     casks = [
@@ -35,7 +32,7 @@
     dock = {
       persistent-apps = [
         #iTerm
-        "/Applications/iTerm.app"
+        "/Applications/Ghostty.app"
         #Settings
         "/System/Applications/System Settings.app"
         #Firefox
