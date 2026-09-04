@@ -1,21 +1,6 @@
 {
   "presets": [
     {
-      "name": "dep-update",
-      "type": "build",
-      "scope": "deps",
-      "description": "bump {package} to {version}",
-      "paths": [
-        "packages/{package}/package.json",
-        "packages/{package}/package-lock.json"
-      ]
-    },
-    {
-      "name": "wip",
-      "type": "chore",
-      "description": "wip: {summary}"
-    },
-    {
       "name": "argocd",
       "scope": "deployment",
       "paths": [
@@ -37,6 +22,12 @@
       "paths": [
         "nix/scripts/*",
         ".github/*"
+      ]
+    },
+    {
+      "name": "containers",
+      "paths": [
+        "nix/custom-images"
       ]
     }
   ]
