@@ -8,10 +8,7 @@
     ./rclone.nix
   ];
 
-  environment.systemPackages = [
-    pkgs.python313
-    #pkgs.poetry
-  ];
+  environment.systemPackages = [];
 
   homebrew = {
     casks = [
