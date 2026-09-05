@@ -78,7 +78,7 @@ jobs:
 
       - name: Validate conventional commits since last tags
         if: steps.reason.outputs.lockfile_changed == 'false'
-        run: cog check
+        run: cog check -l
 
       - name: Bump — scoped (normal path)
         if: steps.reason.outputs.lockfile_changed == 'false'

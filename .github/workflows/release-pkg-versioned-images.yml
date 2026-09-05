@@ -166,6 +166,7 @@ jobs:
           echo "x86_ref=${image_name}:${x86_tag}" >> "$GITHUB_OUTPUT"
           echo "arm_ref=${image_name}:${arm_tag}" >> "$GITHUB_OUTPUT"
           echo "final_ref=${image_name}:${final_tag}" >> "$GITHUB_OUTPUT"
+          echo "final_tag=${final_tag}" >> "$GITHUB_OUTPUT"
           echo "git_tag=${pkg}-v${final_tag}" >> "$GITHUB_OUTPUT"
 
       - name: Assemble multi-arch index
@@ -192,13 +193,12 @@ jobs:
         if: steps.gittag.outputs.created == 'true'
         run: |
           cat > /tmp/release-notes.md <<EOF
-          Automated release for \`${{ matrix.name }}\`, tracking nixpkgs
-          version \`${{ steps.refs.outputs.final_ref }}\`.
+          Automated release for \`${{ matrix.name }}\`, which tracks nixpkgs version \`${{ steps.refs.outputs.final_tag }}\`.
 
-          This package's version is derived from an upstream nixpkgs
-          package rather than cocogitto, so this release reflects an
-          image content change (directory update or flake.lock bump)
-          rather than a semantic version bump.
+          [\`${{ steps.refs.outputs.final_ref }}\`](\`${{ steps.refs.outputs.final_ref }}\`)
+
+          This package's version is derived from an upstream nixpkgs package rather than cocogitto, so this may reflect an
+          image content change (directory update or flake.lock bump) rather than a semantic version bump.
           EOF
 
       - name: Create GitHub Release
