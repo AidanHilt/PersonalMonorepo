@@ -1,0 +1,65 @@
+# Shared across every operator chart — copied verbatim by mk-operator.nix
+# into templates/generated/manager.yaml. Unlike crds/, this DOES go through
+# Helm's template engine, so the {{ }} expressions below are resolved at
+# `helm install`/`helm template` time, not at Nix build time.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/managed-by: Helm
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Chart.Name }}-manager-rolebinding
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/managed-by: Helm
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Chart.Name }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  # Must match roleName=${name} passed to controller-gen in mk-operator.nix,
+  # so this binding always points at the generated role, even though the
+  # role's own manifest lives in a different file (templates/generated/role.yaml).
+  name: {{ .Chart.Name }}
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-controller-manager
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/component: manager
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/component: manager
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Chart.Name }}
+        app.kubernetes.io/component: manager
+    spec:
+      serviceAccountName: {{ .Chart.Name }}
+      containers:
+        - name: manager
+          # image.repository is not one of the Nix-generated values keys
+          # (only image.digest and chart.version are) — set it via
+          # chart/values.yaml if the operator's image isn't published under
+          # a repository matching the chart name.
+          image: "{{ .Values.image.repository | default .Chart.Name }}@{{ .Values.image.digest }}"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              memory: 256Mi

@@ -1,0 +1,16 @@
+{{- if .Values.zot.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Chart.Name }}-zot
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/component: zot
+spec:
+  selector:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/component: zot
+  ports:
+    - port: 5000
+      targetPort: 5000
+{{- end }}

@@ -1,0 +1,13 @@
+# Hand-authored knobs for gitfunction-operator.
+#
+# Do NOT declare `image.digest` or `chart.version` here — those keys are
+# owned by the Nix-generated side (nix/mk-operator.nix) and merged in at
+# build time. This file owns everything else.
+
+zot:
+  enabled: true
+  storage:
+    size: 10Gi
+  image:
+    repository: ghcr.io/project-zot/zot
+    tag: v2.1.0
