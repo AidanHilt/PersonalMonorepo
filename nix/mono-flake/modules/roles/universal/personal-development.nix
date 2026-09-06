@@ -11,6 +11,7 @@
     nss
     syncthing
     vault
+    watchexec
     weechat
   ];
 
