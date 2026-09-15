@@ -24,6 +24,7 @@
       "prismlauncher"
       "crystalfetch"
       "dupeguru"
+      "remanager"
       "the-unarchiver"
     ];
   };

@@ -5,9 +5,11 @@
 
   environment.systemPackages = with pkgs; [
     inputs.scripts.packages.${pkgs.system}.all
+
     act
     agenix
     cocogitto
+    kubebuilder
     nss
     syncthing
     vault

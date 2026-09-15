@@ -6,7 +6,7 @@ shopt -s nullglob
 show_help() {
   echo "Usage: $0 <operator-name> [OPTIONS]"
   echo ""
-  echo "Watches \$PERSONAL_MONOREPO_LOCATION/kubernetes/operators/<operator-name>"
+  echo "Watches \$PERSONAL_MONOREPO_LOCATION/kubernetes/operators/operators/<operator-name>"
   echo "(plus the shared nix/, flake.nix, and flake.lock) for changes. On any"
   echo "change, rebuilds that operator, loads its image into a local kind"
   echo "cluster if it changed, and helm-upgrades it into a dev namespace."
@@ -33,14 +33,23 @@ resolve_namespace() {
 sync_operator() {
   local OPERATOR_NAME=$1
 
+  ARCH="$(uname -m)"
+  OS="$(uname -s)"
+
+  if [ "$OS" = "Linux" ] && [ "$ARCH" = "x86_64" ]; then
+    SYSTEM="x86_64-linux"
+  else
+    SYSTEM="aarch64-linux"
+  fi
+
   local IMAGE_PATH
-  if ! IMAGE_PATH=$(nix build ".#${OPERATOR_NAME}-image" --no-link --print-out-paths); then
+  if ! IMAGE_PATH=$(nix build "${PERSONAL_MONOREPO_LOCATION}/kubernetes/operators#packages.${SYSTEM}.${OPERATOR_NAME}-image" --no-link --print-out-paths); then
     print_error "Image build failed for ${OPERATOR_NAME}"
     return 1
   fi
 
   local CHART_PATH
-  if ! CHART_PATH=$(nix build ".#${OPERATOR_NAME}-chart" --no-link --print-out-paths); then
+  if ! CHART_PATH=$(nix build "${PERSONAL_MONOREPO_LOCATION}/kubernetes/operators#packages.${SYSTEM}.${OPERATOR_NAME}-chart" --no-link --print-out-paths); then
     print_error "Chart build failed for ${OPERATOR_NAME}"
     return 1
   fi
@@ -145,7 +154,6 @@ if [[ -z "$OPERATOR_NAME" ]]; then
   exit 1
 fi
 
-readonly OPERATOR_NAME
 readonly NAMESPACE_OVERRIDE
 readonly CLUSTER_NAME
 readonly SYNC_MODE
@@ -155,7 +163,7 @@ if [[ -z "${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
   exit 1
 fi
 
-readonly MONOREPO_ROOT="${PERSONAL_MONOREPO_LOCATION}/kubernetes"
+readonly MONOREPO_ROOT="${PERSONAL_MONOREPO_LOCATION}/kubernetes/operators"
 readonly OPERATORS_DIR="${MONOREPO_ROOT}/operators"
 readonly OPERATOR_DIR="${OPERATORS_DIR}/${OPERATOR_NAME}"
 readonly NIX_DIR="${MONOREPO_ROOT}/nix"
@@ -181,11 +189,12 @@ readonly STATE_DIR
 
 trap cleanup EXIT INT TERM
 
+NAMESPACE=$(resolve_namespace "$OPERATOR_NAME")
+
 print_debug "Watching ${OPERATOR_DIR} for changes"
 watchexec \
   --watch "$OPERATOR_DIR" \
   --watch "$NIX_DIR" \
   --watch "$FLAKE_FILE" \
   --watch "$FLAKE_LOCK" \
-  --debounce 500 \
-  -- "$0" "$OPERATOR_NAME" --sync --state-dir "$STATE_DIR" --namespace "$NAMESPACE_OVERRIDE" --cluster-name "$CLUSTER_NAME"
+  -- "$0" "$OPERATOR_NAME" --sync --state-dir "$STATE_DIR" --namespace "$NAMESPACE" --cluster-name "$CLUSTER_NAME"
