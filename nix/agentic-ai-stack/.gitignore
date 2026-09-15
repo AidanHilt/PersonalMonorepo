@@ -1,0 +1,19 @@
+# Secrets and local overrides — never commit these (spec §5, §7).
+.env
+kube/agent-kubeconfig.yaml
+kube/*.yaml
+!kube/.gitkeep
+
+# Local auth store, if ever pointed inside the repo by mistake.
+.config/
+auth-store/
+
+# Nix
+result
+result-*
+
+# The project the agent works on is expected to live outside this repo
+# in normal use, but if PI_PROJECT_DIR defaults into ./workspace here:
+/workspace/
+
+node_modules/

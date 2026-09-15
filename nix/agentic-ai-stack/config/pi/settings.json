@@ -1,0 +1,21 @@
+{
+  "_comment": "Bundled into the image per spec §5. No secrets belong here — see config/pi/README.md. Verify keys against the pi version pinned in containers/pi/npm-src/package.json (docs/settings.md) before relying on any of these; settings.json schema has been a moving target across pi releases.",
+
+  "shellPath": "/bin/bash",
+
+  "thinking": {
+    "default": "medium"
+  },
+
+  "notifications": {
+    "cacheMisses": true,
+    "compaction": true,
+    "providerRecovery": true
+  },
+
+  "npmCommand": ["npm"],
+
+  "compaction": {
+    "auto": true
+  }
+}

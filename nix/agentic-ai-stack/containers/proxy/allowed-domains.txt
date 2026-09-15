@@ -1,0 +1,7 @@
+# Extra domains to allow through the egress proxy, one per line.
+# Loaded by squid.conf's `allowed_dst` ACL (dstdomain match — a leading
+# dot matches the domain and all subdomains, e.g. `.example.com`).
+#
+# Empty by default. Add entries here rather than editing squid.conf
+# directly, and keep this list as short as possible — every line is a
+# hole in the sandbox's network boundary (spec §2/§3.2).

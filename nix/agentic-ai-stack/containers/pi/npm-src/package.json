@@ -1,0 +1,10 @@
+{
+  "name": "pi-sandbox-image-deps",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Pinned dependency set baked into the pi-image. Not published.",
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "0.85.1",
+    "@gotgenes/pi-permission-system": "32.0.2"
+  }
+}

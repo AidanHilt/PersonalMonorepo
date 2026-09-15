@@ -1,0 +1,117 @@
+# Plain, static compose file (spec §4 — no Arion/Nix-aware orchestration
+# layer; images are built+tagged by `nix run .#load` and are ordinary
+# images to Docker from that point on).
+#
+# Before `docker compose up`:
+#   1. nix run .#load                 # builds + loads pi/proxy images
+#   2. Ensure Ollama is running natively on the host (see ollama/README.md)
+#   3. Generate ./kube/agent-kubeconfig.yaml (see scripts/gen-kubeconfig.sh)
+#   4. Copy .env.example to .env and fill in what's needed (no secrets
+#      belong in this repo's git history — .env is gitignored)
+#
+# Then: docker compose up            (starts pi + proxy)
+#       docker compose --profile login up login   (on demand, for auth)
+
+networks:
+  internal:
+    driver: bridge
+    internal: true # no default route to the outside world at all
+  external:
+    driver: bridge # proxy's only leg with real internet access
+  default:
+    driver: bridge # bridged/normal network, only used by the `login` profile
+
+services:
+  proxy:
+    image: pi-sandbox/proxy:dev
+    networks:
+      - internal
+      - external
+    environment:
+      # Platform-specific host-loopback address for reaching the native
+      # Ollama process (spec §3.3/§9). Colima on macOS typically resolves
+      # `host.docker.internal` automatically; NixOS-native Docker may
+      # need `host-gateway` via extra_hosts (below) or the bridge
+      # gateway IP directly — confirm current behavior for the Docker/
+      # Colima version in use before relying on this.
+      OLLAMA_UPSTREAM: "${OLLAMA_UPSTREAM:-host.docker.internal:11434}"
+    extra_hosts:
+      # Harmless on platforms where host.docker.internal already
+      # resolves (e.g. Docker Desktop/Colima); required on plain Linux
+      # Docker (NixOS) for the same hostname to resolve to the host.
+      - "host.docker.internal:host-gateway"
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/spool/squid
+      - /var/log/squid
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  pi:
+    image: pi-sandbox/pi:dev
+    depends_on:
+      - proxy
+    networks:
+      - internal # no `external` network attachment — no direct internet route
+    environment:
+      HTTPS_PROXY: "http://proxy:3128"
+      HTTP_PROXY: "http://proxy:3128"
+      NO_PROXY: "proxy"
+      # Frontier provider API keys, if using key-based auth instead of
+      # the `login` flow (spec §7 default preference is actually
+      # OAuth-via-login; keys are supported for providers/tiers that
+      # need it). Pulled from `.env`, never committed.
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+    env_file:
+      - path: ./.env
+        required: false
+    volumes:
+      # Project directory: read-write, this is what pi actually works on.
+      - "${PI_PROJECT_DIR:-./workspace}:/workspace:rw"
+      # Scoped kubeconfig: read-only (spec §6). Generate with
+      # `nix run .#gen-kubeconfig` — never mount a real/production kubeconfig.
+      - "./kube/agent-kubeconfig.yaml:/home/pi/.kube/config:ro"
+      # Auth directory: read-write, host-side, outside the repo (spec §7).
+      # Mounted at /mnt/auth-store (NOT directly over ~/.pi/agent, which
+      # would shadow the baked-in settings.json/models.json/permission
+      # config) — entrypoint.sh symlinks auth.json in from here.
+      - "${PI_AUTH_DIR:-~/.config/pi-sandbox/auth}:/mnt/auth-store:rw"
+    read_only: true
+    tmpfs:
+      - /tmp
+      # Session persistence is intentionally NOT mounted by default —
+      # runs are stateless (spec §3.1). To persist session history
+      # across runs, add a named volume here for
+      # /home/pi/.pi/agent/sessions and drop --no-session from
+      # containers/pi/entrypoint.sh.
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    stdin_open: true
+    tty: true
+    restart: "no"
+
+  login:
+    image: pi-sandbox/pi:dev
+    profiles: ["login"] # never started by a plain `docker compose up`
+    # Interactive: once the session starts, run `/login` and pick a
+    # provider (see docs/providers.md upstream). This container has a
+    # normal/bridged network path specifically so the OAuth browser
+    # redirect/callback can complete — see spec §3.4/§7 for why this
+    # trade-off is scoped to an on-demand, manual profile only.
+    networks:
+      - default # bridged/normal network — needs a real path to the provider
+    environment:
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+    env_file:
+      - path: ./.env
+        required: false
+    volumes:
+      - "${PI_AUTH_DIR:-~/.config/pi-sandbox/auth}:/mnt/auth-store:rw"
+    stdin_open: true
+    tty: true

@@ -1,0 +1,17 @@
+{
+  "_comment": "baseUrl points at the `proxy` container's Ollama gate, NOT directly at the host's Ollama — pi never talks to Ollama directly (spec §3.2/§3.3). apiKey is a placeholder; Ollama ignores it, but pi requires a non-empty value before a keyless model shows up in /model.",
+
+  "providers": {
+    "ollama": {
+      "baseUrl": "http://proxy:11434/v1",
+      "api": "openai-completions",
+      "apiKey": "ollama",
+      "compat": {
+        "supportsDeveloperRole": false
+      },
+      "models": [
+        { "id": "qwen2.5-coder:7b" }
+      ]
+    }
+  }
+}
