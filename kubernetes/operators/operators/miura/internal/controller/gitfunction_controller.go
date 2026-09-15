@@ -7,7 +7,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	gitfunctionv1alpha1 "github.com/example/gitfunction-operator/api/v1alpha1"
+	gitfunctionv1alpha1 "miura/api/v1alpha1"
 )
 
 // GitFunctionReconciler reconciles a GitFunction object.
