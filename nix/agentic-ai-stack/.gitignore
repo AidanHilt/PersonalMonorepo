@@ -13,7 +13,7 @@ result
 result-*
 
 # The project the agent works on is expected to live outside this repo
-# in normal use, but if PI_PROJECT_DIR defaults into ./workspace here:
+# in normal use, but if PERSONAL_MONOREPO_LOCATION defaults into ./workspace here:
 /workspace/
 
 node_modules/

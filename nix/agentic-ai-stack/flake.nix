@@ -10,9 +10,14 @@
       url = "github:nlewo/nix2container";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    pi-packages = {
+      url = "github:gotgenes/pi-packages";
+      flake = false;
+    }
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix2container }:
+  outputs = { self, nixpkgs, flake-utils, nix2container, pi-packages }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
@@ -52,7 +57,8 @@
               set -euo pipefail
               echo "==> Docker context: $(docker context show 2>/dev/null || echo '(unknown)')"
               echo "==> Building + streaming ${imageNameForMsg} image into the Docker daemon..."
-              ${image.copyToDockerDaemon}/bin/copy-to-docker-daemon
+              nix build "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#${image}" --system aarch64-linux --print-build-logs
+              docker load < ./result
               echo "==> Loaded $(docker images --format '{{.Repository}}:{{.Tag}} ({{.ID}})' | grep ${imageNameForMsg} || true)"
             '';
           };
@@ -63,6 +69,7 @@
           pi-image = pi.image;
           proxy-image = proxy.image;
           default = pi.image;
+          pi-packages = import pi-packages.nix { inherit pkgs; src = pi-packages; };
         };
 
         apps = {

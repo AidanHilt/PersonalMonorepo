@@ -71,10 +71,10 @@ services:
         required: false
     volumes:
       # Project directory: read-write, this is what pi actually works on.
-      - "${PI_PROJECT_DIR:-./workspace}:/workspace:rw"
+      - "${PERSONAL_MONOREPO_LOCATION:-./workspace}:/workspace:rw"
       # Scoped kubeconfig: read-only (spec §6). Generate with
       # `nix run .#gen-kubeconfig` — never mount a real/production kubeconfig.
-      - "./kube/agent-kubeconfig.yaml:/home/pi/.kube/config:ro"
+      - "~/.config/pi-sandbox/agent-kubeconfig.yaml:/home/pi/.kube/config:ro"
       # Auth directory: read-write, host-side, outside the repo (spec §7).
       # Mounted at /mnt/auth-store (NOT directly over ~/.pi/agent, which
       # would shadow the baked-in settings.json/models.json/permission

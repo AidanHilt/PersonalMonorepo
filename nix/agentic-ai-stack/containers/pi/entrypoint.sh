@@ -9,7 +9,7 @@
 #      node process on `docker compose down`).
 set -euo pipefail
 
-PROJECT_DIR="${PI_PROJECT_DIR:-/workspace}"
+PROJECT_DIR="${PERSONAL_MONOREPO_LOCATION:-/workspace}"
 AGENT_DIR="${PI_AGENT_DIR:-$HOME/.pi/agent}"
 
 if [ ! -d "$PROJECT_DIR" ] || [ -z "$(ls -A "$PROJECT_DIR" 2>/dev/null)" ]; then
@@ -18,7 +18,7 @@ fi
 
 if [ ! -f "$PROJECT_DIR/AGENTS.md" ] && [ ! -f "$PROJECT_DIR/AGENTS.override.md" ]; then
   echo "info: no AGENTS.md in project root, using bundled default from $AGENT_DIR/defaults/AGENTS.md" >&2
-  cp "$AGENT_DIR/defaults/AGENTS.md" "$PROJECT_DIR/AGENTS.md" 2>/dev/null || \
+  cp "$AGENT_DIR/defaults/AGENTS.md" "$PROJECT_DIR/AGENTS.md" 2>/dev/null ||
     echo "warning: could not write default AGENTS.md (read-only project mount?) — continuing without one" >&2
 fi
 

@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
-# nix run .#start-agent
+# nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#start-agent
 #
 # Acceptance criterion (spec §11): a fresh host produces a working
 # pi+proxy stack with no manual steps beyond providing credentials —
 # this script starts Ollama (or verifies it), builds/loads images, and
-# brings the compose stack up; `nix run .#stop-agent` tears it down.
+# brings the compose stack up; `nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#stop-agent` tears it down.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 echo "==> Checking for a project directory to mount..."
-mkdir -p "${PI_PROJECT_DIR:-./workspace}"
+mkdir -p "${PERSONAL_MONOREPO_LOCATION:-./workspace}"
 
 echo "==> Checking for a generated kubeconfig..."
-if [ ! -f ./kube/agent-kubeconfig.yaml ]; then
-  echo "    none found — run: nix run .#gen-kubeconfig" >&2
-  echo "    (or place a pre-generated, dev/staging-scoped kubeconfig at ./kube/agent-kubeconfig.yaml)" >&2
+if [ ! -f ~/.config/pi-sandbox/agent-kubeconfig.yaml ]; then
+  echo "    none found — run: nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#gen-kubeconfig" >&2
+  echo "    (or place a pre-generated, dev/staging-scoped kubeconfig at ~/.config/pi-sandbox/agent-kubeconfig.yaml)" >&2
   exit 1
 fi
 
@@ -38,7 +38,7 @@ echo "    OK: Ollama is up."
 echo "==> Building and loading pi/proxy images into the active Docker context..."
 DOCKER_CTX="$(docker context show 2>/dev/null || echo 'default')"
 echo "    Active Docker context: $DOCKER_CTX"
-nix run .#load
+nix run "$PERSONAL_MONOREPO_LOCATION"/nix/agentic-ai-stack#load --system aarch64-linux
 
 echo "==> Starting docker compose stack (pi + proxy)..."
 docker compose up -d proxy
