@@ -56,17 +56,17 @@ for pkg in "${packages[@]}"; do
       printf '%s\n' "$out" >&2
       exit 1
     fi
-    python3 - "$pkg" "$hash" <<'PY'
+    python3 - "$pkg" "$hash" "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack/hashes.nix" <<'PY'
 import re, sys
-pkg, hash_value = sys.argv[1], sys.argv[2]
-with open("hashes.nix") as f:
+pkg, hash_value, hash_file_location = sys.argv[1], sys.argv[2], sys.argv[3]
+with open(hash_file_location) as f:
     content = f.read()
 pattern = re.compile(r'(%s\s*=\s*")[^"]*(";)' % re.escape(pkg))
 if pattern.search(content):
     content = pattern.sub(lambda m: m.group(1) + hash_value + m.group(2), content)
 else:
     content = re.sub(r'(packages\s*=\s*\{)', r'\1\n    %s = "%s";' % (pkg, hash_value), content, count=1)
-with open("hashes.nix", "w") as f:
+with open(hash_file_location, "w") as f:
     f.write(content)
 PY
     echo "    $pkg -> $hash"
