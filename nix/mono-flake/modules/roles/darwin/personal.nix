@@ -25,6 +25,7 @@
       "crystalfetch"
       "dupeguru"
       "the-unarchiver"
+      "ollama"
     ];
   };
 
