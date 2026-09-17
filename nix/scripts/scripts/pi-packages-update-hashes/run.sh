@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# update-hashes.sh
 #
 # Regenerates hashes.nix: for each pi-packages package, resolves its
 # pnpmDeps fixed-output hash by intentionally building with a wrong hash
@@ -17,10 +18,10 @@
 # Requires: nix (nix-command + flakes experimental features enabled),
 # python3.
 
-set -euo pipefail
-cd "$(dirname "$0")"
+#set -euo pipefail
+cd "$(dirname "$0")" || exit
 
-: "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must be set}"
+: "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must be set (path to your personal monorepo checkout)}"
 
 FLAKE="$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"
 SYSTEM=$(nix eval --impure --raw --expr 'builtins.currentSystem')
@@ -30,7 +31,9 @@ echo "==> Using flake: $FLAKE"
 echo "==> System: $SYSTEM"
 
 extract_hash() {
-  grep -oP 'got:\s*\K\S+' | tail -n1
+  # POSIX bracket expressions only (no -P/PCRE, no \K) so this works with
+  # both GNU grep (Linux) and BSD grep (macOS).
+  grep -o 'got:[[:space:]]*[^[:space:]]*' | tail -n1 | awk '{print $2}'
 }
 
 echo "==> Discovering packages under $PKGS_ATTR..."

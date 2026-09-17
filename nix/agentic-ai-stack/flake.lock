@@ -54,11 +54,28 @@
         "type": "github"
       }
     },
+    "pi-packages": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789609438,
+        "narHash": "sha256-Fcfp7nFDm1GeZIJtoUhXARKUejkDEUVP6caTI1ZNDvQ=",
+        "owner": "gotgenes",
+        "repo": "pi-packages",
+        "rev": "051eb2f344f00b03fb4240dbaa080291fb42c069",
+        "type": "github"
+      },
+      "original": {
+        "owner": "gotgenes",
+        "repo": "pi-packages",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
         "nix2container": "nix2container",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "pi-packages": "pi-packages"
       }
     },
     "systems": {

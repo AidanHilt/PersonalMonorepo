@@ -64,7 +64,7 @@ in
       name = "pi-image-root";
 
       paths = [
-        piPackages.pi-permission-system
+       # piPackages.pi-permission-system
         pkgs.pi-coding-agent
         pkgs.git
         pkgs.coreutils

@@ -43,6 +43,7 @@ let
       pnpmWorkspaces = [ workspace ];
 
       pnpmDeps = pnpm.fetchDeps {
+        fetcherVersion = 4;
         inherit (finalAttrs) pname version src pnpmWorkspaces;
         inherit hash;
       };

@@ -14,7 +14,7 @@
     pi-packages = {
       url = "github:gotgenes/pi-packages";
       flake = false;
-    }
+    };
   };
 
   outputs = { self, nixpkgs, flake-utils, nix2container, pi-packages }:
@@ -69,7 +69,7 @@
           pi-image = pi.image;
           proxy-image = proxy.image;
           default = pi.image;
-          pi-packages = import pi-packages.nix { inherit pkgs; src = pi-packages; };
+          pi-packages = import ./pi-packages.nix { inherit pkgs; src = pi-packages; };
         };
 
         apps = {
