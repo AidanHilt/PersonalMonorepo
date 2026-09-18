@@ -10,8 +10,8 @@
 
   environment.systemPackages = with pkgs; [
     lima
-    #inputs.scripts.packages.${pkgs.system}.devbox-setup
-    #inputs.scripts.packages.${pkgs.system}.devbox-ssh-config
+    inputs.scripts.packages.${pkgs.system}.devbox-setup
+    inputs.scripts.packages.${pkgs.system}.devbox-ssh-config
     inputs.scripts.packages.${pkgs.system}.kommit
   ];
 
