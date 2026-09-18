@@ -6,23 +6,6 @@ let
 
   rebuild-app = if pkgs.system == "aarch64-darwin" then "darwin-rebuild" else "nixos-rebuild";
 
-  # Shortcut scripts
-  argocd-commit = pkgs.writeShellScriptBin "argocd-commit" ''
-  cd $PERSONAL_MONOREPO_LOCATION
-  git add kubernetes/
-  git commit -m "Argocd commit"
-  git push
-'';
-
-  nix-commit = pkgs.writeShellScriptBin "nix-commit" ''
-  cd $PERSONAL_MONOREPO_LOCATION
-  git add nix/*
-  git commit -m "Nix commit"
-  if [[  $1 != "--no-push" ]]; then
-    git push
-  fi
-'';
-
   reset-docker = pkgs.writeShellScriptBin "reset-docker" ''
   docker container prune --force
   docker image prune -a --force

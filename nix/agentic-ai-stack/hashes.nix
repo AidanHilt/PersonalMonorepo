@@ -12,7 +12,8 @@
 # it's just an attrset of strings.
 
 {
-  # src = "sha256-...";   # filled in by update-hashes.sh
+
+  pnpmDeps = "sha256-6dN//ejDQIjwCviF5/5yeAm1mohpB2MvF2O7Qi2Oj6E=";# src = "sha256-...";   # filled in by update-hashes.sh
   packages = {
     pi-subagents-worktrees = "sha256-AQmixWLTOmAefeqBPVNQdd3xpeKqga3ILWGJQI9Pa9g=";
     pi-session-tools = "sha256-t1S1t1Bs2fvUFRi2nt5FSeiRkjJV/59UQTe/HtoZHGs=";

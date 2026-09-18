@@ -34,6 +34,7 @@
 
         pi = import ./containers/pi/image.nix {
           inherit pkgs n2c;
+          piPackages = import ./pi-packages.nix { inherit pkgs; src = pi-packages; };
           imageName = piImageName;
           imageTag = piTag;
         };
@@ -49,17 +50,51 @@
         # Docker setups than nix2container's own copyToDockerDaemon
         # skopeo-based push, and makes the "confirm active Docker context"
         # step explicit and scriptable.
-        mkLoadApp = image: imageNameForMsg:
+        mkLoadApp = imageName: imageTag:
+          let
+            linuxSystem = "x86_64-linux";
+          in
           pkgs.writeShellApplication {
-            name = "load-${imageNameForMsg}";
-            runtimeInputs = [ pkgs.docker ];
+            name = "load-${imageName}";
+
+            runtimeInputs = [
+              nix2container.packages.${system}.skopeo-nix2container
+              pkgs.nix
+            ];
+
             text = ''
-              set -euo pipefail
-              echo "==> Docker context: $(docker context show 2>/dev/null || echo '(unknown)')"
-              echo "==> Building + streaming ${imageNameForMsg} image into the Docker daemon..."
-              nix build "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#${image}" --system aarch64-linux --print-build-logs
-              docker load < ./result
-              echo "==> Loaded $(docker images --format '{{.Repository}}:{{.Tag}} ({{.ID}})' | grep ${imageNameForMsg} || true)"
+            set -euo pipefail
+
+            if ! command -v colima >/dev/null 2>&1; then
+              print_error "colima is not installed"
+              exit 1
+            fi
+
+            if ! colima status >/dev/null 2>&1; then
+              print_error "Colima is not running"
+              exit 1
+            fi
+
+            IMAGE_NAME=${pkgs.lib.escapeShellArg imageName}
+            IMAGE_TAG=${pkgs.lib.escapeShellArg imageTag}
+
+            IMAGE=$(
+              nix build \
+                --no-link \
+                --print-out-paths \
+                ${pkgs.lib.escapeShellArg ".#packages.${linuxSystem}.${imageName}-image"}
+            )
+
+            echo "$IMAGE"
+
+            DOCKER_HOST="unix://$HOME/.colima/default/docker.sock" \
+              skopeo --insecure-policy copy \
+                "nix:$IMAGE" \
+                "docker://localhost:5000/$IMAGE_NAME:$IMAGE_TAG" \
+                --dest-tls-verify=false
+                #"docker-daemon:$IMAGE_NAME:$IMAGE_TAG"
+
+            echo "Loaded $IMAGE_NAME:$IMAGE_TAG into Colima"
             '';
           };
 
@@ -81,8 +116,8 @@
               runtimeInputs = [ pkgs.docker ];
               text = ''
                 set -euo pipefail
-                "${(mkLoadApp pi.image "pi")}/bin/load-pi"
-                "${(mkLoadApp proxy.image "proxy")}/bin/load-proxy"
+                "${(mkLoadApp "pi" "dev")}/bin/load-pi"
+                "${(mkLoadApp "proxy" "dev")}/bin/load-proxy"
               '';
             };
           };

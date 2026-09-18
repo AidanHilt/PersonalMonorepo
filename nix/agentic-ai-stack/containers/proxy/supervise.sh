@@ -15,8 +15,8 @@ chmod 700 "$RUNTIME_DIR"
 # upstream address (spec §3.3/§9 — this differs between Colima and
 # native NixOS Docker, so it's resolved at container start, not baked
 # into the image).
-envsubst '${OLLAMA_UPSTREAM}' < /etc/proxy/ollama-gate.nginx.conf.template \
-  > "$RUNTIME_DIR/ollama-gate.nginx.conf"
+envsubst "${OLLAMA_UPSTREAM}" </etc/proxy/ollama-gate.nginx.conf.template \
+  >"$RUNTIME_DIR/ollama-gate.nginx.conf"
 
 # Squid needs an initialized (but empty, since cache is denied) spool
 # layout on first run.
