@@ -5,8 +5,6 @@
     (modulesPath + "/profiles/qemu-guest.nix")
   ];
 
-  boot.kernelPackages = pkgs.linuxPackages_6_18;
-
   services.lima.enable = true;
 
   boot.loader.grub = {
