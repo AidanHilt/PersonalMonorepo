@@ -20,21 +20,13 @@ set -euo pipefail
 
 VM_NAME="devbox"
 SSH_CONFIG="$HOME/.lima/${VM_NAME}/ssh.config"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SETUP_SCRIPT="$SCRIPT_DIR/setup-devbox.sh"
 
 MARK_BEGIN="# >>> devbox-autostart >>>"
 MARK_END="# <<< devbox-autostart <<<"
 
 if [[ ! -f "$SSH_CONFIG" ]]; then
   echo "Error: $SSH_CONFIG doesn't exist yet." >&2
-  echo "Run setup-devbox.sh first to create/start the VM." >&2
-  exit 1
-fi
-
-if [[ ! -x "$SETUP_SCRIPT" ]]; then
-  echo "Error: expected an executable setup-devbox.sh at $SETUP_SCRIPT" >&2
-  echo "(chmod +x it, and keep both scripts in the same directory.)" >&2
+  echo "Run devbox-setup first to create/start the VM." >&2
   exit 1
 fi
 
@@ -59,7 +51,7 @@ awk -v b="$MARK_BEGIN" -v e="$MARK_END" '
 # leak onto stdout and corrupt the SSH data stream. %h/%p expand to this
 # Host block's resolved HostName/Port (Lima's forwarded localhost port),
 # and `nc` hands the raw TCP connection back to ssh once the VM is up.
-awk -v hostline="$HOST_LINE" -v b="$MARK_BEGIN" -v e="$MARK_END" -v setup="$SETUP_SCRIPT" '
+awk -v hostline="$HOST_LINE" -v b="$MARK_BEGIN" -v e="$MARK_END" -v setup="devbox-setup" '
   { print }
   $0 == hostline {
     print b

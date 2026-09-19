@@ -37,8 +37,6 @@ DISK_GB=300
 TEMPLATE_URL="https://github.com/juspay/nixden/releases/latest/download/nixden-lima.yaml"
 SCRATCH_DIR="/tmp/lima-nixden" # fixed by the nixden template itself, independent of --name
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 MODE="interactive"
 if [[ "${1:-}" == "--ensure" ]]; then
   MODE="ensure"
@@ -93,11 +91,4 @@ else
   log "devbox created and running."
 fi
 
-if [[ "$MODE" == "interactive" ]]; then
-  if [[ -x "$SCRIPT_DIR/configure-ssh.sh" ]]; then
-    log "Refreshing SSH config..."
-    "$SCRIPT_DIR/configure-ssh.sh"
-  else
-    log "Note: configure-ssh.sh not found next to this script; skipping SSH config refresh."
-  fi
-fi
+devbox-ssh-config
