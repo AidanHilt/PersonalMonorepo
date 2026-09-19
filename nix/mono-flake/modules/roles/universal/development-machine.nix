@@ -41,8 +41,6 @@ in
     yarn
     yq-go
 
-    argocd-commit
-    nix-commit
     reset-docker
   ] ++ platform-apps;
 
