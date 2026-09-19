@@ -54,6 +54,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nixos-lima = {
+      url = "github:nixos-lima/nixos-lima/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/01ef07c1c8bc8d9db9c0c9c59a8fea701b7f5a34";
 
     # Darwin-specific items
