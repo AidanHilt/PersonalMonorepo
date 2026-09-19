@@ -23,4 +23,6 @@
     enable = true;
     mountTag = "vz-rosetta";
   };
+
+#  boot.kernelPackages = pkgs.linuxPackages_6_18;
 }
