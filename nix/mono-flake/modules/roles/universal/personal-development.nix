@@ -10,7 +10,7 @@
     cocogitto
     nss
     syncthing
-    vault
+    openbao
     weechat
   ];
 

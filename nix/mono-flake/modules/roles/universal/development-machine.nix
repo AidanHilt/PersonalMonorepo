@@ -36,7 +36,7 @@ in
     postgresql
     pre-commit
     rustc
-    terraform
+    opentofu
     terragrunt
     yarn
     yq-go
