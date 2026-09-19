@@ -13,6 +13,10 @@
     ../../../modules/roles/nixos/vscode-server.nix
   ];
 
+  environment.systemPackages = with pkgs; [
+    ghostty.terminfo
+  ];
+
   security.sudo.wheelNeedsPassword = false;
 
   virtualisation.rosetta = lib.mkIf pkgs.stdenv.hostPlatform.isAarch64 {
