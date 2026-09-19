@@ -10,7 +10,6 @@
 
     ../../../modules/shared-machine-configs/linux-desktop-terminal.nix
 
-    ../../../modules/roles/nixos/nvidia.nix
     ../../../modules/roles/nixos/vscode-server.nix
   ];
 
