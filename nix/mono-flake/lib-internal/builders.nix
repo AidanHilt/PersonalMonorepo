@@ -13,7 +13,7 @@ let
       platformModules = if moduleType == "nixosModules" then [
         inputs.wsl.nixosModules.wsl
         inputs.disko.nixosModules.disko
-        nixos-lima.nixosModules.lima
+        inputs.nixos-lima.nixosModules.lima
       ] else [];
 
       machine-config = values.getMachineConfig name system;
