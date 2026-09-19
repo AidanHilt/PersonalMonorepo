@@ -13,4 +13,11 @@
     ../../../modules/roles/nixos/nvidia.nix
     ../../../modules/roles/nixos/vscode-server.nix
   ];
+
+  security.sudo.wheelNeedsPassword = false;
+
+  virtualisation.rosetta = lib.mkIf pkgs.stdenv.hostPlatform.isAarch64 {
+    enable = true;
+    mountTag = "vz-rosetta";
+  };
 }

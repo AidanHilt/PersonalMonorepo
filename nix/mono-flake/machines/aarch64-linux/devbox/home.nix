@@ -3,7 +3,6 @@
 {
   imports = [
     ../../../home-manager/modules/git.nix
-    ../../../home-manager/modules/keepassxc.nix
     ../../../home-manager/modules/kubernetes.nix
     ../../../home-manager/modules/vim.nix
     ../../../home-manager/modules/vscode.nix
