@@ -3,7 +3,6 @@
 {
   imports = [
     (modulesPath + "/profiles/qemu-guest.nix")
-    ./nixden.nix
   ];
 
   services.lima.enable = true;
