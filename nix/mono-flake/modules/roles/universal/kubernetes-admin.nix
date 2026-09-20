@@ -173,7 +173,7 @@ in
     '')
   ];
 
-  age.secrets.kubeconfig = {
+  age.secrets.kubeconfig = lib.mkIf machine-config.secretMachine or false {
     file = ../../../secrets/kubeconfig.age;
     mode = "400";
     owner = "${machine-config.username}";
