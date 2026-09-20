@@ -31,7 +31,7 @@ in
 
   system.stateVersion = "26.05";
 
-  services.openssh.enable = true;
+  services.openssh.enable = true;s
 
   boot.kernelPackages = kernel70Pkgs.linuxPackages_7_0;
 

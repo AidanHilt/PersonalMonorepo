@@ -34,7 +34,7 @@ VM_NAME="devbox"
 VCPUS=6
 MEMORY_GIB=12
 DISK_GB=300
-TEMPLATE_URL="https://github.com/juspay/nixden/releases/latest/download/nixden-lima.yaml"
+TEMPLATE_URL="https://raw.githubusercontent.com/nixos-lima/nixos-lima/refs/heads/master/nixos.yaml"
 SCRATCH_DIR="/tmp/lima-nixden" # fixed by the nixden template itself, independent of --name
 
 MODE="interactive"
