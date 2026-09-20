@@ -93,7 +93,7 @@
         inputs.nix-vscode-extensions.overlays.default
         inputs.nix-cachyos-kernel.overlays.default
         (final: prev: {
-          linuxPackages_7_0 = inputs.kernel70Pkgs.linuxPackages_latest;
+          linuxPackages_7_0 = inputs.kernel70Pkgs.packages.linuxPackages_latest;
         })
       ];
 
