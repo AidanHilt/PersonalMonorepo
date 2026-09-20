@@ -38,4 +38,5 @@ in
   systemd.services.lima-guestagent.restartIfChanged = lib.mkForce false;
   systemd.services.lima-init.restartIfChanged = lib.mkForce false;
   systemd.services.sshd.restartIfChanged = lib.mkForce false;
+  networking.nftables.enable = true;
 }
