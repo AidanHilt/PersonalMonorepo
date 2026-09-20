@@ -35,7 +35,7 @@ in
 
   boot.kernelPackages = kernel70Pkgs.linuxPackages_7_0;
 
-  systemd.services.lima-guestagent.restartIfChanged = false;
-  systemd.services.lima-init.restartIfChanged = false;
-  systemd.services.sshd.restartIfChanged = false;
+  systemd.services.lima-guestagent.restartIfChanged = lib.mkForce false;
+  systemd.services.lima-init.restartIfChanged = lib.mkForce false;
+  systemd.services.sshd.restartIfChanged = lib.mkForce false;
 }
