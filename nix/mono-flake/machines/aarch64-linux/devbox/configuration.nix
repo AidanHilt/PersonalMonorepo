@@ -12,7 +12,8 @@ in
   imports = [
     ./hardware-configuration.nix
 
-    ../../../modules/shared-machine-configs/linux-desktop-terminal.nix
+    ../roles/universal/development-machine.nix
+    ../roles/universal/personal-development.nix
 
     ../../../modules/roles/nixos/vscode-server.nix
   ];
