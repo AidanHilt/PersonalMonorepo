@@ -163,7 +163,7 @@ in
     update-kubeconfig
 
     # REASON We need to access config, which is not available in the let statement
-    (pkgs.writeShellScriptBin "sync-kubeconfig" ''
+    lib.mkIf machine-config.secretMachine or false (pkgs.writeShellScriptBin "sync-kubeconfig" ''
       KUBECONFIG=''${KUBECONFIG:-$HOME/.kube/config}
       if [[ ! -d $(dirname $KUBECONFIG) ]]; then
         mkdir $(dirname $KUBECONFIG)
