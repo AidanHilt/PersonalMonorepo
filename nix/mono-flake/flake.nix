@@ -87,16 +87,11 @@
       allSystems = import inputs.systems;
       systems = nixpkgs.lib.filter (sys: builtins.pathExists (./machines + "/${sys}")) allSystems;
 
-      kernel70Pkgs = import inputs.kernel70Nixpkgs {};
-
       baseOverlays = [
         inputs.nur.overlays.default
         inputs.agenix.overlays.default
         inputs.nix-vscode-extensions.overlays.default
         inputs.nix-cachyos-kernel.overlays.default
-        (final: prev: {
-          linuxPackages_7_0 = kernel70Pkgs.linuxPackages_latest;
-        })
       ];
 
       platformOverlays = {

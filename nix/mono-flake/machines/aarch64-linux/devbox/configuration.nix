@@ -24,5 +24,7 @@
     mountTag = "vz-rosetta";
   };
 
-  boot.kernelPackages = pkgs.linuxPackages_7_0;
+  kernel70Pkgs = import inputs.kernel70Nixpkgs { system = pkgs.system; };
+
+  boot.kernelPackages = kernel70Pkgs.linuxPackages_7_0;
 }
