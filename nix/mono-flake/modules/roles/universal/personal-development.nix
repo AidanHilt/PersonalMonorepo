@@ -14,7 +14,7 @@
     weechat
   ];
 
-  age.secrets.github-token = pkgs.lib.mkIf machine-config.secretMachine or true {
+  age.secrets.github-token = {
     file = ../../../secrets/github-config.age;
     path = "/run/agenix/github-token";
     owner = "root";

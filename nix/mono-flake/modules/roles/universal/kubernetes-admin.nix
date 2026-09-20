@@ -163,7 +163,7 @@ in
     update-kubeconfig
 
     # REASON We need to access config, which is not available in the let statement
-    lib.mkIf machine-config.secretMachine or false (pkgs.writeShellScriptBin "sync-kubeconfig" ''
+    (pkgs.writeShellScriptBin "sync-kubeconfig" ''
       KUBECONFIG=''${KUBECONFIG:-$HOME/.kube/config}
       if [[ ! -d $(dirname $KUBECONFIG) ]]; then
         mkdir $(dirname $KUBECONFIG)
@@ -173,7 +173,7 @@ in
     '')
   ];
 
-  age.secrets.kubeconfig = pkgs.lib.mkIf machine-config.secretMachine or true {
+  age.secrets.kubeconfig = {
     file = ../../../secrets/kubeconfig.age;
     mode = "400";
     owner = "${machine-config.username}";
