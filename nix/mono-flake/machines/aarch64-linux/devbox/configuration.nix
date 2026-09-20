@@ -29,6 +29,8 @@ in
     mountTag = "vz-rosetta";
   };
 
+  system.stateVersion = "26.05";
+
   boot.kernelPackages = kernel70Pkgs.linuxPackages_7_0;
 
   services.dbus.implementation = "dbus";
