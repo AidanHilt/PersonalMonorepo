@@ -59,7 +59,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    kernel70Pkgs = {
+    kernel70Nixpkgs = {
       url = "github:nixos/nixpkgs/b12141ef619e0a9c1c84dc8c684040326f27cdcc";
     };
 
@@ -87,13 +87,15 @@
       allSystems = import inputs.systems;
       systems = nixpkgs.lib.filter (sys: builtins.pathExists (./machines + "/${sys}")) allSystems;
 
+      kernel70Pkgs = import inputs.kernel70Nixpkgs {};
+
       baseOverlays = [
         inputs.nur.overlays.default
         inputs.agenix.overlays.default
         inputs.nix-vscode-extensions.overlays.default
         inputs.nix-cachyos-kernel.overlays.default
         (final: prev: {
-          linuxPackages_7_0 = inputs.kernel70Pkgs.legacyPackages.linuxPackages_latest;
+          linuxPackages_7_0 = inputs.kernel70Pkgs.linuxPackages_latest;
         })
       ];
 
