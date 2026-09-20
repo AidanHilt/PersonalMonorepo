@@ -29,4 +29,6 @@ in
   };
 
   boot.kernelPackages = kernel70Pkgs.linuxPackages_7_0;
+
+  services.dbus.implementation = "dbus";
 }
