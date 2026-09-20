@@ -4,6 +4,10 @@
 
 { config, pkgs, machine-config, inputs, globals, lib, ... }:
 
+let
+  kernel70Pkgs = import inputs.kernel70Nixpkgs { system = pkgs.system; };
+in
+
 {
   imports = [
     ./hardware-configuration.nix
@@ -23,8 +27,6 @@
     enable = true;
     mountTag = "vz-rosetta";
   };
-
-  kernel70Pkgs = import inputs.kernel70Nixpkgs { system = pkgs.system; };
 
   boot.kernelPackages = kernel70Pkgs.linuxPackages_7_0;
 }
