@@ -4,13 +4,12 @@
 
 { config, pkgs, machine-config, inputs, globals, lib, ... }:
 
-let
-  kernel70Pkgs = import inputs.kernel70Nixpkgs { system = pkgs.system; };
-in
-
 {
   imports = [
     ./hardware-configuration.nix
+    ./disko.nix
+
+    ../../../modules/roles/nixos/linux-universal.nix
 
     ../../../modules/roles/universal/development-machine.nix
     ../../../modules/roles/universal/personal-development.nix
@@ -24,19 +23,13 @@ in
 
   security.sudo.wheelNeedsPassword = false;
 
-  virtualisation.rosetta = lib.mkIf pkgs.stdenv.hostPlatform.isAarch64 {
-    enable = true;
-    mountTag = "vz-rosetta";
+  # virtualisation.rosetta = lib.mkIf pkgs.stdenv.hostPlatform.isAarch64 {
+  #   enable = true;
+  #   mountTag = "vz-rosetta";
+  # };
+
+  users.users.root = {
+    initialPassword = "root";
   };
-
-  system.stateVersion = "26.05";
-
-  services.openssh.enable = true;
-
-  boot.kernelPackages = kernel70Pkgs.linuxPackages_7_0;
-
-  systemd.services.lima-guestagent.restartIfChanged = lib.mkForce false;
-  systemd.services.lima-init.restartIfChanged = lib.mkForce false;
-  systemd.services.sshd.restartIfChanged = lib.mkForce false;
-  networking.nftables.enable = true;
 }
+

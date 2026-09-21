@@ -7,19 +7,17 @@
 
   services.lima.enable = true;
 
-  boot.loader.grub = {
-    device = "nodev";
-    efiSupport = true;
-    efiInstallAsRemovable = true;
-  };
-  fileSystems."/boot" = {
-    device = lib.mkForce "/dev/vda1";
-    fsType = "vfat";
-  };
+  boot.loader.systemd-boot.enable = true;
+
+  boot.loader.efi.canTouchEfiVariables = false;
+
   fileSystems."/" = {
     device = "/dev/disk/by-label/nixos";
-    autoResize = true;
     fsType = "ext4";
-    options = [ "noatime" "nodiratime" "discard" ];
+  };
+
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-label/ESP";
+    fsType = "vfat";
   };
 }

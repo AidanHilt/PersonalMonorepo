@@ -9,7 +9,8 @@
   ];
 
   environment.systemPackages = with pkgs; [
-    lima
+    tart
+
     inputs.scripts.packages.${pkgs.system}.devbox-setup
     inputs.scripts.packages.${pkgs.system}.devbox-ssh-config
     inputs.scripts.packages.${pkgs.system}.kommit
@@ -25,12 +26,12 @@
       "spotify"
       "tor-browser"
       "postman"
-      "utm"
       "prismlauncher"
       "crystalfetch"
       "dupeguru"
       "the-unarchiver"
-      "ollama"
+      "ollama-app"
+      "utm"
     ];
   };
 
@@ -69,7 +70,7 @@
       config = {
         virtualisation = {
           darwin-builder = {
-            diskSize = 80 * 1024;
+            diskSize = 120 * 1024;
             memorySize = 12 * 1024;
           };
           cores = 8;
