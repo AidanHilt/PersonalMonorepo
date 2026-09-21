@@ -1,23 +1,14 @@
 { lib, modulesPath, ... }:
 
 {
-  imports = [
-    (modulesPath + "/profiles/qemu-guest.nix")
-  ];
+  # imports =
+  #   [ (modulesPath + "/profiles/qemu-guest.nix")
+  #   ];
 
-  services.lima.enable = true;
+  boot.initrd.availableKernelModules = [ "xhci_pci" "virtio_pci" "usbhid" "usb_storage" "sr_mod" ];
+  boot.initrd.kernelModules = [ ];
+  boot.kernelModules = [ ];
+  boot.extraModulePackages = [ ];
 
-  boot.loader.systemd-boot.enable = true;
-
-  boot.loader.efi.canTouchEfiVariables = false;
-
-  fileSystems."/" = {
-    device = "/dev/disk/by-label/nixos";
-    fsType = "ext4";
-  };
-
-  fileSystems."/boot" = {
-    device = "/dev/disk/by-label/ESP";
-    fsType = "vfat";
-  };
+  nixpkgs.hostPlatform = lib.mkDefault "aarch64-linux";
 }

@@ -31,5 +31,11 @@
   users.users.root = {
     initialPassword = "root";
   };
+
+  boot.loader.grub = {
+    enable = true;
+    efiSupport = true;
+    efiInstallAsRemovable = true;
+  };
 }
 
