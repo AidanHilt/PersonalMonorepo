@@ -9,7 +9,7 @@
 
   networking = {
     fixedIp = true;
-    address = "192.168.86.git p41";
+    address = "192.168.86.41";
 
     defaultGateway = "192.168.86.1";
     nameservers = [ "192.168.86.2" ];
