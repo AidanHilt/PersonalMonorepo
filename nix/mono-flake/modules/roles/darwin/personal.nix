@@ -9,9 +9,6 @@
   ];
 
   environment.systemPackages = with pkgs; [
-    tart
-
-    inputs.scripts.packages.${pkgs.system}.devbox-setup
     inputs.scripts.packages.${pkgs.system}.kommit
   ];
 
