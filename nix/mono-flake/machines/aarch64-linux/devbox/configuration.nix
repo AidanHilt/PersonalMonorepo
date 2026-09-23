@@ -54,6 +54,8 @@ in
     requires = [ "mnt-shared.mount" ];
     wantedBy = [ "multi-user.target" ];
 
+    path = [ pkgs.util-linux pkgs.coreutils ];
+
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
