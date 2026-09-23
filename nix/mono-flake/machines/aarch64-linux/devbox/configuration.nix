@@ -18,12 +18,13 @@ in
     ./hardware-configuration.nix
     ./disko.nix
 
+    ../../../modules/roles/nixos/vscode-server.nix
     ../../../modules/roles/nixos/linux-universal.nix
+    ../../../modules/roles/nixos/fixed-ip-machine.nix
+
 
     ../../../modules/roles/universal/development-machine.nix
     ../../../modules/roles/universal/personal-development.nix
-
-    ../../../modules/roles/nixos/vscode-server.nix
   ];
 
   environment.systemPackages = with pkgs; [
