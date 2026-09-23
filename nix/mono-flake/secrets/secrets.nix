@@ -49,6 +49,7 @@ let
   #External user 1
   external-user-1-machines = [external-user-1-machine-1-system];
   external-user-1-machine-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJlk3tURSKdo0EzrOpv26CE91m65pV4Ax01y5ZRF6Rvn noname";
+  devbox-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHlTUN203D+zEFtvCviK+aT29+0c+lg3Xvmkcjo0gVAd noname";
 in
 {
   "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
