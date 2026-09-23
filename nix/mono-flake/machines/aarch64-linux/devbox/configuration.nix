@@ -23,13 +23,14 @@
 
   security.sudo.wheelNeedsPassword = false;
 
-  # virtualisation.rosetta = lib.mkIf pkgs.stdenv.hostPlatform.isAarch64 {
+  # virtualisation.rosetta = {
   #   enable = true;
   #   mountTag = "vz-rosetta";
   # };
 
-  users.users.root = {
-    initialPassword = "root";
+  fileSystems."/mnt/shared" = {
+    device = "share";
+    fsType = "virtiofs";
   };
 
   boot.loader.grub = {
