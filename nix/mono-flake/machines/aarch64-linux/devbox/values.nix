@@ -10,6 +10,7 @@
   networking = {
     fixedIp = true;
     address = "192.168.86.41";
+    mainNetworkInterface = "enp0s1";
 
     defaultGateway = "192.168.86.1";
     nameservers = [ "192.168.86.2" ];
