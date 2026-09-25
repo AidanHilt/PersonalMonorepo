@@ -51,6 +51,8 @@ in
     efiInstallAsRemovable = true;
   };
 
+  users.users.aidan.extraGroups = ["10001"];
+
   systemd.services.mac-home-binds = {
     description = "Bind-mount Mac home subdirectories into ${homeDir}";
     after = [ "mnt-shared-aidan.mount" ];
