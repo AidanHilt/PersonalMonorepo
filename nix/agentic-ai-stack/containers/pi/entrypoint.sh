@@ -18,7 +18,7 @@ fi
 
 if [ ! -f "$PROJECT_DIR/AGENTS.md" ] && [ ! -f "$PROJECT_DIR/AGENTS.override.md" ]; then
   echo "info: no AGENTS.md in project root, using bundled default from $AGENT_DIR/defaults/AGENTS.md" >&2
-  cp "$AGENT_DIR/defaults/AGENTS.md" "$PROJECT_DIR/AGENTS.md" 2>/dev/null ||
+  cp "$AGENT_DIR/defaults/AGENTS.md" "$PROJECT_DIR/AGENTS.md" ||
     echo "warning: could not write default AGENTS.md (read-only project mount?) — continuing without one" >&2
 fi
 
@@ -30,7 +30,7 @@ fi
 AUTH_STORE=/mnt/auth-store
 if [ -d "$AUTH_STORE" ]; then
   mkdir -p "$AUTH_STORE"
-  touch "$AUTH_STORE/auth.json" 2>/dev/null || true
+  touch "$AUTH_STORE/auth.json"
   ln -sf "$AUTH_STORE/auth.json" "$AGENT_DIR/auth.json"
 else
   echo "info: no auth-store mount found; relying on env-var API keys for this run" >&2

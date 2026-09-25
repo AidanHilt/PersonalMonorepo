@@ -1,11 +1,10 @@
 {
   "_comment": "Schema/field names verified against @gotgenes/pi-permission-system 32.0.2 (README + ADR-0013). Four layers compose most-restrictive-wins: path (cross-cutting) -> external_directory -> per-tool (read/write/edit) -> bash patterns. Re-check this file against that package's docs/configuration.md whenever bumping its pinned version in containers/pi/npm-src/package.json.",
-
   "yoloMode": false,
   "debugLog": false,
   "permissionReviewLog": true,
-
   "permission": {
+    "*": "allow",
     "path": {
       "*": "allow",
       "*.env": "deny",
@@ -21,11 +20,9 @@
       "**/id_rsa*": "deny",
       "**/id_ed25519*": "deny"
     },
-
     "read": "allow",
     "write": "ask",
     "edit": "ask",
-
     "bash": {
       "*": "ask",
       "git *": "allow",
@@ -36,7 +33,6 @@
       "kubectl delete *": "deny",
       "kubectl exec *": "deny"
     },
-
     "external_directory": "ask"
   }
 }

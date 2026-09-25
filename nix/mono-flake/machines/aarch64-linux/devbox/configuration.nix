@@ -10,7 +10,7 @@ let
   homeDir = "/home/${user}";
 
   # Directories that get pulled in even though they start with a dot.
-  extraDotDirs = [ ".ssh" ".kube" ];
+  extraDotDirs = [ ".kube" ];
 in
 
 {
@@ -21,6 +21,7 @@ in
     ../../../modules/roles/nixos/vscode-server.nix
     ../../../modules/roles/nixos/linux-universal.nix
     ../../../modules/roles/nixos/fixed-ip-machine.nix
+    ../../../modules/roles/nixos/desktop/docker.nix
 
 
     ../../../modules/roles/universal/development-machine.nix
@@ -30,6 +31,7 @@ in
   environment.systemPackages = with pkgs; [
     ghostty.terminfo
   ];
+
 
   security.sudo.wheelNeedsPassword = false;
 

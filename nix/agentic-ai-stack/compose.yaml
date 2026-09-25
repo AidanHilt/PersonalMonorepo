@@ -45,7 +45,7 @@ services:
       - /tmp
       - /var/spool/squid
       - /var/log/squid
-    cap_drop: [ALL]
+    cap_drop: [ ALL ]
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
@@ -88,7 +88,7 @@ services:
       # across runs, add a named volume here for
       # /home/pi/.pi/agent/sessions and drop --no-session from
       # containers/pi/entrypoint.sh.
-    cap_drop: [ALL]
+    cap_drop: [ ALL ]
     security_opt:
       - no-new-privileges:true
     stdin_open: true
@@ -97,7 +97,8 @@ services:
 
   login:
     image: pi-sandbox/pi:dev
-    profiles: ["login"] # never started by a plain `docker compose up`
+    user: "${UID:-1000}:${GID:-1000}"
+    profiles: [ "login" ] # never started by a plain `docker compose up`
     # Interactive: once the session starts, run `/login` and pick a
     # provider (see docs/providers.md upstream). This container has a
     # normal/bridged network path specifically so the OAuth browser

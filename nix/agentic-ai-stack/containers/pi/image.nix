@@ -25,21 +25,23 @@ let
   };
 
   agentBundle = pkgs.runCommand "pi-agent-bundle" {} ''
-    mkdir -p $out/.pi/agent/extensions/pi-permission-system
+    mkdir -p $out/workspace
+
+    mkdir -p $out/home/pi/.pi/agent/extensions/pi-permission-system
 
     cp ${../../config/pi/settings.json} \
-      $out/.pi/agent/settings.json
+      $out/home/pi/.pi/agent/settings.json
 
     cp ${../../config/pi/models.json} \
-      $out/.pi/agent/models.json
+      $out/home/pi/.pi/agent/models.json
 
     cp ${../../config/pi/permission-system.config.json} \
-      $out/.pi/agent/extensions/pi-permission-system/config.json
+      $out/home/pi/.pi/agent/extensions/pi-permission-system/config.json
 
-    mkdir -p $out/.pi/agent/defaults
+    mkdir -p $out/home/pi/.pi/agent/defaults
 
     cp ${../../config/pi/AGENTS.md} \
-      $out/.pi/agent/defaults/AGENTS.md
+      $out/home/pi/.pi/agent/defaults/AGENTS.md
   '';
 
   entrypoint = pkgs.writeShellApplication {
@@ -60,7 +62,10 @@ in
     name = imageName;
     tag = imageTag;
 
-    copyToRoot = pkgs.buildEnv {
+    copyToRoot = [
+      agentBundle
+
+      (pkgs.buildEnv {
       name = "pi-image-root";
 
       paths = [
@@ -83,17 +88,10 @@ in
         "/etc"
         "/lib"
       ];
-    };
+      })
+    ];
 
     perms = [
-      # {
-      #   path = piPermissionSystem;
-      #   regex = ".*";
-      #   mode = "0755";
-      #   uid = pkgs.lib.toInt uid;
-      #   gid = pkgs.lib.toInt gid;
-      # }
-
       {
         path = agentBundle;
         regex = ".*";

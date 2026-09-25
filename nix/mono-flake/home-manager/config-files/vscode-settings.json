@@ -34,6 +34,7 @@
   "editor.tabSize": 2,
   "explorer.autoReveal": "focusNoScroll",
   "githubPullRequests.pullBranch": "never",
+  "window.restoreWindows": "all",
   "remote.SSH.defaultExtensions": [
     "mads-hartmann.bash-ide-vscode",
     "ms-azuretools.vscode-docker",

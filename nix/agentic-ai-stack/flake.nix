@@ -45,59 +45,36 @@
           imageTag = proxyTag;
         };
 
-        # ---- helper: load an image tarball into the local Docker daemon
-        # via `docker load`. This is more portable across Colima/NixOS
-        # Docker setups than nix2container's own copyToDockerDaemon
-        # skopeo-based push, and makes the "confirm active Docker context"
-        # step explicit and scriptable.
+        # ---- helper: load an image into the local Docker daemon using
+        # nix2container's built-in `copyToDockerDaemon` app. Since everything
+        # runs on a NixOS VM now, we can rely on a standard Docker daemon/socket
+        # instead of the old Colima-specific skopeo push-to-registry dance.
         mkLoadApp = imageName: imageTag:
-          let
-            linuxSystem = "x86_64-linux";
-          in
-          pkgs.writeShellApplication {
-            name = "load-${imageName}";
+        let
+          linuxSystem = "x86_64-linux";
+        in
+        pkgs.writeShellApplication {
+          name = "load-${imageName}";
 
-            runtimeInputs = [
-              nix2container.packages.${system}.skopeo-nix2container
-              pkgs.nix
-            ];
+          runtimeInputs = [ pkgs.nix pkgs.docker ];
 
-            text = ''
+          text = ''
             set -euo pipefail
 
-            if ! command -v colima >/dev/null 2>&1; then
-              print_error "colima is not installed"
-              exit 1
-            fi
-
-            if ! colima status >/dev/null 2>&1; then
-              print_error "Colima is not running"
+            if ! docker info >/dev/null 2>&1; then
+              echo "Docker daemon is not reachable" >&2
               exit 1
             fi
 
             IMAGE_NAME=${pkgs.lib.escapeShellArg imageName}
             IMAGE_TAG=${pkgs.lib.escapeShellArg imageTag}
 
-            IMAGE=$(
-              nix build \
-                --no-link \
-                --print-out-paths \
-                ${pkgs.lib.escapeShellArg ".#packages.${linuxSystem}.${imageName}-image"}
-            )
+            nix run --no-write-lock-file \
+              ${pkgs.lib.escapeShellArg ".#${imageName}-image.copyToDockerDaemon"}
 
-            echo "$IMAGE"
-
-            DOCKER_HOST="unix://$HOME/.colima/default/docker.sock" \
-              skopeo --insecure-policy copy \
-                "nix:$IMAGE" \
-                "docker://localhost:5000/$IMAGE_NAME:$IMAGE_TAG" \
-                --dest-tls-verify=false
-                #"docker-daemon:$IMAGE_NAME:$IMAGE_TAG"
-
-            echo "Loaded $IMAGE_NAME:$IMAGE_TAG into Colima"
-            '';
-          };
-
+            echo "Loaded $IMAGE_NAME:$IMAGE_TAG into the local Docker daemon"
+          '';
+        };
       in
       {
         packages = {
@@ -139,13 +116,21 @@
             };
           };
 
+        setup-auth-dir = flake-utils.lib.mkApp {
+          drv = pkgs.writeShellApplication {
+            name = "setup-auth-dir";
+            runtimeInputs = [ pkgs.coreutils pkgs.sudo ];
+            text = builtins.readFile ./scripts/setup-auth-dir.sh;
+          };
+        };
+
           login = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "login";
-              runtimeInputs = [ pkgs.docker pkgs.docker-compose ];
+              runtimeInputs = [ pkgs.docker ];
               text = ''
                 set -euo pipefail
-                cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+                cd ${self}
                 docker compose --profile login run --rm login
               '';
             };
