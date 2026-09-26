@@ -10,6 +10,7 @@
 
   environment.systemPackages = with pkgs; [
     inputs.scripts.packages.${pkgs.system}.kommit
+    inputs.scripts.packages.${pkgs.system}.pi-auth-port-forward
   ];
 
   homebrew = {

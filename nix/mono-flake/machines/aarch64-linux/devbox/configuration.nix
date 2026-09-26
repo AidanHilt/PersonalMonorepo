@@ -51,7 +51,11 @@ in
     efiInstallAsRemovable = true;
   };
 
-  users.users.aidan.extraGroups = ["10001"];
+  users.groups.pi = {
+    gid = 10001;
+  };
+
+  users.users.aidan.extraGroups = ["pi"];
 
   systemd.services.mac-home-binds = {
     description = "Bind-mount Mac home subdirectories into ${homeDir}";

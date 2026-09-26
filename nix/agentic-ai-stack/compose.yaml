@@ -18,8 +18,6 @@ networks:
     internal: true # no default route to the outside world at all
   external:
     driver: bridge # proxy's only leg with real internet access
-  default:
-    driver: bridge # bridged/normal network, only used by the `login` profile
 
 services:
   proxy:
@@ -94,25 +92,3 @@ services:
     stdin_open: true
     tty: true
     restart: "no"
-
-  login:
-    image: pi-sandbox/pi:dev
-    user: "${UID:-1000}:${GID:-1000}"
-    profiles: [ "login" ] # never started by a plain `docker compose up`
-    # Interactive: once the session starts, run `/login` and pick a
-    # provider (see docs/providers.md upstream). This container has a
-    # normal/bridged network path specifically so the OAuth browser
-    # redirect/callback can complete — see spec §3.4/§7 for why this
-    # trade-off is scoped to an on-demand, manual profile only.
-    networks:
-      - default # bridged/normal network — needs a real path to the provider
-    environment:
-      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
-      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
-    env_file:
-      - path: ./.env
-        required: false
-    volumes:
-      - "${PI_AUTH_DIR:-~/.config/pi-sandbox/auth}:/mnt/auth-store:rw"
-    stdin_open: true
-    tty: true

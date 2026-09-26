@@ -19,7 +19,7 @@ mkdir -p "$AUTH_DIR"
 # chown requires root unless you already own it as the target uid —
 # so always go through sudo rather than trying to detect and skip.
 sudo chown -R "${UID_TARGET}:${GID_TARGET}" "$AUTH_DIR"
-sudo chmod -R 0700 "$AUTH_DIR"
+sudo chmod -R 0774 "$AUTH_DIR"
 
 echo "info: done. current state:" >&2
-ls -la "$AUTH_DIR"
+sudo ls -la "$AUTH_DIR"
