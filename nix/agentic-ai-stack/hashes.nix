@@ -13,16 +13,16 @@
 
 {
 
-  pnpmDeps = "sha256-6dN//ejDQIjwCviF5/5yeAm1mohpB2MvF2O7Qi2Oj6E=";# src = "sha256-...";   # filled in by update-hashes.sh
+  pnpmDeps = "sha256-9yRXg2X2db+r7C7BEMu/HsXesXTIF7fTrkzkyWEs6u4=";# src = "sha256-...";   # filled in by update-hashes.sh
   packages = {
     pi-subagents-worktrees = "sha256-AQmixWLTOmAefeqBPVNQdd3xpeKqga3ILWGJQI9Pa9g=";
-    pi-session-tools = "sha256-t1S1t1Bs2fvUFRi2nt5FSeiRkjJV/59UQTe/HtoZHGs=";
-    pi-permission-system = "sha256-FGIOa/JqAxG/id5LIxmFm/REk6bbNUqMRT0n2XKIHm4=";
-    pi-permission-model-judge = "sha256-q5w7xgMx5I9eSBc+DQ5de9/+wQaVJXUvQ5XVXKAdKUM=";
-    pi-nocd = "sha256-t1S1t1Bs2fvUFRi2nt5FSeiRkjJV/59UQTe/HtoZHGs=";
-    pi-github-tools = "sha256-7qEDVYnWmC7z/GM2xB9XY08vOzLmUTc7DvdZ+cCoA/0=";
-    pi-colgrep = "sha256-7qEDVYnWmC7z/GM2xB9XY08vOzLmUTc7DvdZ+cCoA/0=";
-    pi-autoformat = "sha256-t1S1t1Bs2fvUFRi2nt5FSeiRkjJV/59UQTe/HtoZHGs=";
+    pi-session-tools = "sha256-VZDxELCph4V+LkZrz0ArDwaLT5hx5Dn1asm4TYdYFsk=";
+    pi-permission-system = "sha256-VZDxELCph4V+LkZrz0ArDwaLT5hx5Dn1asm4TYdYFsk=";
+    pi-permission-model-judge = "sha256-VZDxELCph4V+LkZrz0ArDwaLT5hx5Dn1asm4TYdYFsk=";
+    pi-nocd = "sha256-VZDxELCph4V+LkZrz0ArDwaLT5hx5Dn1asm4TYdYFsk=";
+    pi-github-tools = "sha256-VZDxELCph4V+LkZrz0ArDwaLT5hx5Dn1asm4TYdYFsk=";
+    pi-colgrep = "sha256-VZDxELCph4V+LkZrz0ArDwaLT5hx5Dn1asm4TYdYFsk=";
+    pi-autoformat = "sha256-VZDxELCph4V+LkZrz0ArDwaLT5hx5Dn1asm4TYdYFsk=";
     # pi-subagents = "sha256-1L8wUQN3cgVJKfZ4ufOxPZF8sey9z8W/bsmp7HAsDGQ=";
   };
 }

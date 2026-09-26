@@ -25,11 +25,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1788758950,
-        "narHash": "sha256-b3zONUcYXZHeoeYwDZdSDCzMj0s6ubmD6NT3D7sS+jU=",
+        "lastModified": 1790258944,
+        "narHash": "sha256-3bwtAiifsfGXVLIopwhJ/RNIkDABcLg6DxnlbaiE2xc=",
         "owner": "nlewo",
         "repo": "nix2container",
-        "rev": "b6ac40ef110c12ab1651fce5ea563f7837236439",
+        "rev": "08d8889b6d2528acfce6e2616b0cd41983dedb02",
         "type": "github"
       },
       "original": {
@@ -40,11 +40,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1789286504,
-        "narHash": "sha256-eiEK7cKZORNEvX0GeF3RtNEF/JXhgf2RqSp3230q13E=",
+        "lastModified": 1790185690,
+        "narHash": "sha256-xJ+X4hBtOcAFGBOe5nAMyMUeF9foJBmIOu3NjBqBycU=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "ef34387ddd751e1ab8857adf4676492d32eb24ec",
+        "rev": "4975466d324710c576dc11ad614684e6bd8cad8e",
         "type": "github"
       },
       "original": {
@@ -54,14 +54,30 @@
         "type": "github"
       }
     },
+    "pi-anthropic-auth": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790294517,
+        "narHash": "sha256-lc9l/AmthtrAs6JgLxml+OOwLTjBkVjLA0xNA9ZWK8k=",
+        "owner": "gotgenes",
+        "repo": "pi-anthropic-auth",
+        "rev": "830fccbe1abdfb3fe63b2c8baceae40abeb0641b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "gotgenes",
+        "repo": "pi-anthropic-auth",
+        "type": "github"
+      }
+    },
     "pi-packages": {
       "flake": false,
       "locked": {
-        "lastModified": 1789609438,
-        "narHash": "sha256-Fcfp7nFDm1GeZIJtoUhXARKUejkDEUVP6caTI1ZNDvQ=",
+        "lastModified": 1790364673,
+        "narHash": "sha256-YpqF0icTtifrnscJMPtQPOrf8UgzoeV4aMxHda/55WU=",
         "owner": "gotgenes",
         "repo": "pi-packages",
-        "rev": "051eb2f344f00b03fb4240dbaa080291fb42c069",
+        "rev": "74b80b30e290f154d3a64a493e62aa181bc616dd",
         "type": "github"
       },
       "original": {
@@ -75,6 +91,7 @@
         "flake-utils": "flake-utils",
         "nix2container": "nix2container",
         "nixpkgs": "nixpkgs",
+        "pi-anthropic-auth": "pi-anthropic-auth",
         "pi-packages": "pi-packages"
       }
     },

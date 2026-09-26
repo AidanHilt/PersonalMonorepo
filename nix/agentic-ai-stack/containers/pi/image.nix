@@ -48,6 +48,7 @@ let
     name = "pi-entrypoint";
     runtimeInputs = [
       pkgs.pi-coding-agent
+
       pkgs.git
       pkgs.coreutils
       pkgs.bash
@@ -63,6 +64,7 @@ in
     tag = imageTag;
 
     copyToRoot = [
+
       agentBundle
 
       (pkgs.buildEnv {
@@ -70,6 +72,7 @@ in
 
       paths = [
         piPackages.pi-permission-system
+        piPackages.pi-anthropic-auth
         pkgs.pi-coding-agent
         pkgs.git
         pkgs.coreutils

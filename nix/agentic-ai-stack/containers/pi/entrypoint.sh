@@ -22,6 +22,12 @@ if [ ! -f "$PROJECT_DIR/AGENTS.md" ] && [ ! -f "$PROJECT_DIR/AGENTS.override.md"
     echo "warning: could not write default AGENTS.md (read-only project mount?) — continuing without one" >&2
 fi
 
+if [ -f /home/pi/.kube/config ]; then
+  export KUBECONFIG=/home/pi/.kube/config
+else
+  unset KUBECONFIG
+fi
+
 # The auth directory (bind-mounted read-write at /mnt/auth-store, see
 # spec §7) holds ~/.pi/agent/auth.json as written by the `login`
 # profile. It's mounted outside ~/.pi/agent so it doesn't shadow the

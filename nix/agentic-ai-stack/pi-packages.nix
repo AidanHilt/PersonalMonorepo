@@ -14,18 +14,14 @@ let
   workspaceNameOf = dir:
     (builtins.fromJSON (builtins.readFile "${src}/packages/${dir}/package.json")).name;
 
-  mkPiPackage = dir:
-    let
-      workspace = workspaceNameOf dir;
-    in
+  mkPiPackageFromSrc = { pname, version, src, workspace, pnpmHash, subPath ? ".", homepage ? null }:
     pkgs.stdenv.mkDerivation (finalAttrs: {
-      pname = "pi-packages-${dir}";
-      inherit version src;
+      inherit pname version src;
 
       pnpmDeps = pkgs.fetchPnpmDeps {
         fetcherVersion = 4;
         inherit (finalAttrs) pname version src;
-        hash = hashes.pnpmDeps or pkgs.lib.fakeHash;
+        hash = pnpmHash;
       };
 
       nativeBuildInputs = [
@@ -44,22 +40,40 @@ let
 
         mkdir -p "$out"
 
-        cp -R "packages/${dir}/." "$out/"
+        cp -R "${subPath}/." "$out/"
 
         rm -rf "$out/node_modules"
 
-        cp -RL "packages/${dir}/node_modules" "$out/node_modules"
+        cp -RL "${subPath}/node_modules" "$out/node_modules"
 
         runHook postInstall
       '';
 
-      meta = with lib; {
-        description = "${workspace} -- a Pi agentic CLI extension from gotgenes/pi-packages";
-        homepage = "https://github.com/gotgenes/pi-packages/tree/main/packages/${dir}";
-        license = licenses.mit;
-      };
+      meta = with lib;
+        {
+          description = "${workspace} -- a Pi agentic CLI extension";
+          license = licenses.mit;
+        }
+        // lib.optionalAttrs (homepage != null) { inherit homepage; };
     });
+
+  mkPiPackage = dir:
+    let
+      workspace = workspaceNameOf dir;
+    in
+    mkPiPackageFromSrc {
+      pname = "pi-packages-${dir}";
+      inherit version src;
+      pnpmHash = hashes.packages.${dir};
+      subPath = "packages/${dir}";
+      inherit workspace;
+      homepage = "https://github.com/gotgenes/pi-packages/tree/main/packages/${dir}";
+    };
 
 in
 
-lib.genAttrs packageDirs mkPiPackage
+{
+  inherit mkPiPackage mkPiPackageFromSrc;
+
+  pi-packages = lib.genAttrs packageDirs mkPiPackage;
+}

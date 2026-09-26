@@ -1,0 +1,15 @@
+# Opt-in override: mounts a scoped kubeconfig into the `pi` container
+# (spec §6). Layered on top of the base docker-compose.yml automatically
+# by start-agent.sh whenever it finds a kubeconfig on the host; you can
+# also apply it by hand:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.kube.yml up -d proxy
+#   docker compose -f docker-compose.yml -f docker-compose.kube.yml run --rm pi
+#
+# Never mount a real/production kubeconfig — generate a scoped one with
+# `nix run .#gen-kubeconfig` (see scripts/gen-kubeconfig.sh).
+
+services:
+  pi:
+    volumes:
+      - "${PI_KUBECONFIG_PATH:-~/.config/pi-sandbox/agent-kubeconfig.yaml}:/home/pi/.kube/config:ro"

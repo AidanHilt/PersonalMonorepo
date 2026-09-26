@@ -15,13 +15,25 @@
       url = "github:gotgenes/pi-packages";
       flake = false;
     };
+
+    pi-anthropic-auth = {
+      url = "github:gotgenes/pi-anthropic-auth";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix2container, pi-packages }:
+  outputs = { self, nixpkgs, flake-utils, nix2container, pi-packages, pi-anthropic-auth }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
         n2c = nix2container.packages.${system}.nix2container;
+
+        mkPiPackageFromSrc = (import ./pi-packages.nix { inherit pkgs; src = pi-packages; }).mkPiPackageFromSrc;
+
+        piPackages = (import ./pi-packages.nix { inherit pkgs; src = pi-packages; }).pi-packages
+          // { pi-anthropic-auth = (mkPiPackageFromSrc
+            { pname = "pi-anthropic-auth"; pnpmHash = "sha256-9yRXg2X2db+r7C7BEMu/HsXesXTIF7fTrkzkyWEs6u4="; version = "3.3.2"; src = pi-anthropic-auth;
+            workspace = (builtins.fromJSON (builtins.readFile "${pi-anthropic-auth}/package.json")).name;});};
 
         # ---- Fixed, non-content-hash tags -----------------------------
         # A static compose.yaml needs tags that don't change on every
@@ -33,8 +45,7 @@
         proxyImageName = "pi-sandbox/proxy";
 
         pi = import ./containers/pi/image.nix {
-          inherit pkgs n2c;
-          piPackages = import ./pi-packages.nix { inherit pkgs; src = pi-packages; };
+          inherit pkgs n2c piPackages;
           imageName = piImageName;
           imageTag = piTag;
         };
@@ -81,7 +92,7 @@
           pi-image = pi.image;
           proxy-image = proxy.image;
           default = pi.image;
-          pi-packages = import ./pi-packages.nix { inherit pkgs; src = pi-packages; };
+          pi-packages = piPackages;
         };
 
         apps = {

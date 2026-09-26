@@ -2,10 +2,21 @@
 # layer; images are built+tagged by `nix run .#load` and are ordinary
 # images to Docker from that point on).
 #
+# This base file has NO Kubernetes dependency. If a scoped kubeconfig is
+# available at ~/.config/pi-sandbox/agent-kubeconfig.yaml (or wherever
+# PI_KUBECONFIG_PATH points), start-agent.sh layers
+# docker-compose.kube.yml on top to mount it read-only; otherwise the
+# stack comes up with no cluster access at all, and start-agent.sh warns
+# and continues.
+#
 # Before `docker compose up`:
 #   1. nix run .#load                 # builds + loads pi/proxy images
 #   2. Ensure Ollama is running natively on the host (see ollama/README.md)
-#   3. Generate ./kube/agent-kubeconfig.yaml (see scripts/gen-kubeconfig.sh)
+#      [NOTE: local Ollama support is currently deprecated — see
+#      start-agent.sh. We may revisit local AI in the future.]
+#   3. (Optional) generate ~/.config/pi-sandbox/agent-kubeconfig.yaml
+#      (see scripts/gen-kubeconfig.sh) to enable k8s access — see
+#      docker-compose.kube.yml
 #   4. Copy .env.example to .env and fill in what's needed (no secrets
 #      belong in this repo's git history — .env is gitignored)
 #
@@ -70,9 +81,11 @@ services:
     volumes:
       # Project directory: read-write, this is what pi actually works on.
       - "${PERSONAL_MONOREPO_LOCATION:-./workspace}:/workspace:rw"
-      # Scoped kubeconfig: read-only (spec §6). Generate with
-      # `nix run .#gen-kubeconfig` — never mount a real/production kubeconfig.
-      - "~/.config/pi-sandbox/agent-kubeconfig.yaml:/home/pi/.kube/config:ro"
+      # NOTE: no kubeconfig mount here by default. See
+      # docker-compose.kube.yml — start-agent.sh layers it in
+      # automatically when a scoped kubeconfig is found on the host, and
+      # otherwise this base file runs with no cluster access.
+      #
       # Auth directory: read-write, host-side, outside the repo (spec §7).
       # Mounted at /mnt/auth-store (NOT directly over ~/.pi/agent, which
       # would shadow the baked-in settings.json/models.json/permission

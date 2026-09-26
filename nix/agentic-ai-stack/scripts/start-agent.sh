@@ -1,52 +1,85 @@
-#!/usr/bin/env bash
-# nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#start-agent
-#
-# Acceptance criterion (spec §11): a fresh host produces a working
-# pi+proxy stack with no manual steps beyond providing credentials —
-# this script starts Ollama (or verifies it), builds/loads images, and
-# brings the compose stack up; `nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#stop-agent` tears it down.
+#!/bin/bash
+
+# @lib: printing-and-output
+
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
-cd "$REPO_ROOT"
+show_help () {
+  echo "Usage: $0 [OPTIONS]"
+  echo ""
+  echo "Build and start the pi + proxy compose stack."
+  echo ""
+  echo ""
+  echo "OPTIONS:"
+  echo "  --kubeconfig-path <path>   Path to a scoped kubeconfig"
+  echo "  --monorepo-path <path>     Path to the monorepo mounted as /workspace and containing the agentic-ai-stack flake"
+  echo "  --help, -h                 Show this help message"
+}
 
-echo "==> Checking for a project directory to mount..."
-mkdir -p "${PERSONAL_MONOREPO_LOCATION:-./workspace}"
+KUBECONFIG_PATH="${PI_KUBECONFIG_PATH:-${HOME}/.config/pi-sandbox/agent-kubeconfig.yaml}"
+MONOREPO_PATH="${PERSONAL_MONOREPO_LOCATION:-./workspace}"
 
-echo "==> Checking for a generated kubeconfig..."
-if [ ! -f ~/.config/pi-sandbox/agent-kubeconfig.yaml ]; then
-  echo "    none found — run: nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#gen-kubeconfig" >&2
-  echo "    (or place a pre-generated, dev/staging-scoped kubeconfig at ~/.config/pi-sandbox/agent-kubeconfig.yaml)" >&2
-  exit 1
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --kubeconfig-path)
+    KUBECONFIG_PATH="$2"
+    shift 2
+    ;;
+    --monorepo-path)
+    MONOREPO_PATH="$2"
+    shift 2
+    ;;
+    --help|-h)
+    show_help
+    exit 0
+    ;;
+    *)
+    print_error "Unknown option: $1"
+    exit 1
+    ;;
+  esac
+done
+
+readonly KUBECONFIG_PATH
+readonly MONOREPO_PATH
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+readonly REPO_ROOT
+
+if [[ -f "${KUBECONFIG_PATH}" ]]; then
+  print_debug "Found kubeconfig at ${KUBECONFIG_PATH}, enabling Kubernetes access."
+  COMPOSE_ARGS=(-f "${REPO_ROOT}/docker-compose.yml" -f "${REPO_ROOT}/docker-compose.kube.yml")
+else
+  print_warning "No kubeconfig found at ${KUBECONFIG_PATH}, continuing without Kubernetes access."
+  COMPOSE_ARGS=(-f "${REPO_ROOT}/docker-compose.yml")
 fi
+readonly -a COMPOSE_ARGS
 
-echo "==> Verifying Ollama is reachable natively on the host..."
-OLLAMA_HOST_URL="${OLLAMA_HOST_URL:-http://127.0.0.1:11434}"
-if ! curl -fsS --max-time 3 "$OLLAMA_HOST_URL/api/version" >/dev/null 2>&1; then
-  cat >&2 <<EOF
-    Ollama does not appear to be running at $OLLAMA_HOST_URL.
-    This stack runs Ollama natively on the host, not in a container
-    (spec §3.3 — GPU passthrough overhead). Start it first:
-      macOS:  ollama serve   (or the Ollama.app menu-bar app)
-      NixOS:  systemctl --user start ollama   (or: services.ollama.enable = true;)
-    Then re-run this script.
-EOF
-  exit 1
-fi
-echo "    OK: Ollama is up."
+# Local Ollama support is deprecated; we may revisit local AI in the future.
+# OLLAMA_HOST_URL="${OLLAMA_HOST_URL:-http://127.0.0.1:11434}"
+# if ! curl -fsS --max-time 3 "${OLLAMA_HOST_URL}/api/version" >/dev/null 2>&1; then
+#   print_error "Ollama does not appear to be running at ${OLLAMA_HOST_URL}."
+#   exit 1
+# fi
+# print_debug "Ollama is reachable at ${OLLAMA_HOST_URL}."
 
-echo "==> Building and loading pi/proxy images into the active Docker context..."
-DOCKER_CTX="$(docker context show 2>/dev/null || echo 'default')"
-echo "    Active Docker context: $DOCKER_CTX"
-nix run "$PERSONAL_MONOREPO_LOCATION"/nix/agentic-ai-stack#load --system aarch64-linux
+mkdir -p "${MONOREPO_PATH}"
 
-echo "==> Starting docker compose stack (pi + proxy)..."
-docker compose up -d proxy
+DOCKER_CONTEXT="$(docker context show 2>/dev/null || echo "default")"
+readonly DOCKER_CONTEXT
+print_debug "Active Docker context: ${DOCKER_CONTEXT}"
 
-cleanup() {
-  echo "==> Session finished — tearing down the compose stack..."
-  docker compose down --remove-orphans
+print_debug "Building and loading pi/proxy images."
+nix run "${MONOREPO_PATH}/nix/agentic-ai-stack#load" --system aarch64-linux
+
+cleanup () {
+  print_debug "Tearing down the compose stack."
+  PERSONAL_MONOREPO_LOCATION="${MONOREPO_PATH}" docker compose "${COMPOSE_ARGS[@]}" down --remove-orphans
 }
 trap cleanup EXIT
 
-docker compose run --rm pi
+print_debug "Starting the proxy container."
+PERSONAL_MONOREPO_LOCATION="${MONOREPO_PATH}" docker compose "${COMPOSE_ARGS[@]}" up -d proxy
+
+print_status "Stack is up, starting pi."
+PERSONAL_MONOREPO_LOCATION="${MONOREPO_PATH}" docker compose "${COMPOSE_ARGS[@]}" run --rm pi

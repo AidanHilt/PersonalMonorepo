@@ -9,6 +9,7 @@
     agenix
     cocogitto
     nss
+    python3
     syncthing
     openbao
     weechat
