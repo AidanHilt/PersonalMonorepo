@@ -8,7 +8,7 @@
 # erroring out. Re-run any time you're unsure of its state.
 set -euo pipefail
 
-AUTH_DIR="${PI_AUTH_DIR:-$HOME/.config/pi-sandbox/auth}"
+AUTH_DIR="${PI_AUTH_DIR:-$HOME/.config/pi-sandbox/agent}"
 UID_TARGET=10001
 GID_TARGET=10001
 

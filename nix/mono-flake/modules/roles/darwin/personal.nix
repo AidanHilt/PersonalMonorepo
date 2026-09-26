@@ -1,5 +1,9 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
+let
+  personalMonorepoLocation = "${machine-config.userBase}/${machine-config.username}/PersonalMonorepo";
+in
+
 {
   imports = [
     ./_smb-mount.nix
@@ -8,10 +12,15 @@
     ./rclone.nix
   ];
 
+  environment.variables = {
+    PERSONAL_MONOREPO_LOCATION = "${personalMonorepoLocation}";
+  };
+
   environment.systemPackages = with pkgs; [
     inputs.scripts.packages.${pkgs.system}.kommit
     inputs.scripts.packages.${pkgs.system}.pi-auth-port-forward
 
+    pre-commit
     socat
   ];
 

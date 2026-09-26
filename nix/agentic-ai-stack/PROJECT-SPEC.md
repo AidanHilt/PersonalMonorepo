@@ -107,7 +107,7 @@ All of the following live **inside the flake repo** and get baked into the `pi-i
 ## 7. Credentials
 
 - **Frontier provider credentials:** Do not prefer static API keys. Use a the `login` command and a similar process as below
-- **Auth persistence for any provider that does need OAuth:** a host-side directory outside the repo (e.g. `~/.config/pi-sandbox/auth/`), permissions locked to `0700`/`0600`, bind-mounted read-write into both the `pi` and `login` services. The `login` service (§3.4) is the only place this directory is ever written to via an interactive flow.
+- **Auth persistence for any provider that does need OAuth:** a host-side directory outside the repo (e.g. `~/.config/pi-sandbox/agent/`), permissions locked to `0700`/`0600`, bind-mounted read-write into both the `pi` and `login` services. The `login` service (§3.4) is the only place this directory is ever written to via an interactive flow.
 - **Ollama:** no credentials — it's a local, unauthenticated-by-design service, which is exactly why §3.3's network-gating matters.
 
 ## 8. Permission model (Pi-level)

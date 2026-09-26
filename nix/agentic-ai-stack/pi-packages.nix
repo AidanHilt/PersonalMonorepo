@@ -22,6 +22,7 @@ let
         fetcherVersion = 4;
         inherit (finalAttrs) pname version src;
         hash = pnpmHash;
+        #pnpmInstallFlags = ["--prod"];
       };
 
       nativeBuildInputs = [

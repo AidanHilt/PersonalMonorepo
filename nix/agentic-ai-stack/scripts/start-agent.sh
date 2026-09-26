@@ -1,85 +1,69 @@
-#!/bin/bash
-
-# @lib: printing-and-output
-
+#!/usr/bin/env bash
+# nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#start-agent
+#
+# Acceptance criterion (spec §11): a fresh host produces a working
+# pi+proxy stack with no manual steps beyond providing credentials —
+# this script builds/loads images and brings the compose stack up;
+# `nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#stop-agent` tears it down.
 set -euo pipefail
 
-show_help () {
-  echo "Usage: $0 [OPTIONS]"
-  echo ""
-  echo "Build and start the pi + proxy compose stack."
-  echo ""
-  echo ""
-  echo "OPTIONS:"
-  echo "  --kubeconfig-path <path>   Path to a scoped kubeconfig"
-  echo "  --monorepo-path <path>     Path to the monorepo mounted as /workspace and containing the agentic-ai-stack flake"
-  echo "  --help, -h                 Show this help message"
-}
+# --- Kubeconfig: always attempted, never required -------------------------
+# We no longer hard-fail when no kubeconfig is present. If a scoped
+# kubeconfig exists (default path below, or PI_KUBECONFIG_PATH), we layer
+# docker-compose.kube.yml on top to mount it read-only into the `pi`
+# container. If it's missing, we warn and continue without k8s access
+# rather than blocking the whole stack on it.
+KUBECONFIG_PATH="${PI_KUBECONFIG_PATH:-$HOME/.config/pi-sandbox/agent-kubeconfig.yaml}"
+COMPOSE_FILES=(-f compose.yaml)
 
-KUBECONFIG_PATH="${PI_KUBECONFIG_PATH:-${HOME}/.config/pi-sandbox/agent-kubeconfig.yaml}"
-MONOREPO_PATH="${PERSONAL_MONOREPO_LOCATION:-./workspace}"
-
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --kubeconfig-path)
-    KUBECONFIG_PATH="$2"
-    shift 2
-    ;;
-    --monorepo-path)
-    MONOREPO_PATH="$2"
-    shift 2
-    ;;
-    --help|-h)
-    show_help
-    exit 0
-    ;;
-    *)
-    print_error "Unknown option: $1"
-    exit 1
-    ;;
-  esac
-done
-
-readonly KUBECONFIG_PATH
-readonly MONOREPO_PATH
-
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-readonly REPO_ROOT
-
-if [[ -f "${KUBECONFIG_PATH}" ]]; then
-  print_debug "Found kubeconfig at ${KUBECONFIG_PATH}, enabling Kubernetes access."
-  COMPOSE_ARGS=(-f "${REPO_ROOT}/docker-compose.yml" -f "${REPO_ROOT}/docker-compose.kube.yml")
+echo "==> Checking for a generated kubeconfig..."
+if [ -f "$KUBECONFIG_PATH" ]; then
+  echo "    found: $KUBECONFIG_PATH — enabling k8s access for this run."
+  COMPOSE_FILES+=(-f compose.kube.yaml)
 else
-  print_warning "No kubeconfig found at ${KUBECONFIG_PATH}, continuing without Kubernetes access."
-  COMPOSE_ARGS=(-f "${REPO_ROOT}/docker-compose.yml")
+  cat >&2 <<EOF
+    WARNING: no kubeconfig found at $KUBECONFIG_PATH.
+    Continuing WITHOUT Kubernetes access for this run.
+    To enable it, generate a scoped, dev/staging-only kubeconfig with:
+      nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#gen-kubeconfig
+    (or place a pre-generated one at $KUBECONFIG_PATH / set PI_KUBECONFIG_PATH)
+EOF
 fi
-readonly -a COMPOSE_ARGS
 
-# Local Ollama support is deprecated; we may revisit local AI in the future.
+# --- Local Ollama support: DEPRECATED --------------------------------------
+# The native-Ollama-on-host flow below is deprecated and disabled. We may
+# revisit local AI in the future; leaving the logic here (commented out)
+# rather than deleting it in case we do.
+#
+# echo "==> Verifying Ollama is reachable natively on the host..."
 # OLLAMA_HOST_URL="${OLLAMA_HOST_URL:-http://127.0.0.1:11434}"
-# if ! curl -fsS --max-time 3 "${OLLAMA_HOST_URL}/api/version" >/dev/null 2>&1; then
-#   print_error "Ollama does not appear to be running at ${OLLAMA_HOST_URL}."
-#   exit 1
+# if ! curl -fsS --max-time 3 "$OLLAMA_HOST_URL/api/version" >/dev/null 2>&1; then
+# cat >&2 <<EOF
+#     Ollama does not appear to be running at $OLLAMA_HOST_URL.
+#     This stack runs Ollama natively on the host, not in a container
+#     (spec §3.3 — GPU passthrough overhead). Start it first:
+#       macOS:  ollama serve   (or the Ollama.app menu-bar app)
+#       NixOS:  systemctl --user start ollama   (or: services.ollama.enable = true;)
+#     Then re-run this script.
+# EOF
+# exit 1
 # fi
-# print_debug "Ollama is reachable at ${OLLAMA_HOST_URL}."
+# echo "    OK: Ollama is up."
 
-mkdir -p "${MONOREPO_PATH}"
+cd "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"
 
-DOCKER_CONTEXT="$(docker context show 2>/dev/null || echo "default")"
-readonly DOCKER_CONTEXT
-print_debug "Active Docker context: ${DOCKER_CONTEXT}"
+echo "==> Building and loading pi/proxy images into the active Docker context..."
+DOCKER_CTX="$(docker context show 2>/dev/null || echo 'default')"
+echo "    Active Docker context: $DOCKER_CTX"
+nix run "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#load"
 
-print_debug "Building and loading pi/proxy images."
-nix run "${MONOREPO_PATH}/nix/agentic-ai-stack#load" --system aarch64-linux
+echo "==> Starting docker compose stack (pi + proxy)..."
+docker compose "${COMPOSE_FILES[@]}" up -d proxy
 
-cleanup () {
-  print_debug "Tearing down the compose stack."
-  PERSONAL_MONOREPO_LOCATION="${MONOREPO_PATH}" docker compose "${COMPOSE_ARGS[@]}" down --remove-orphans
+cleanup() {
+echo "==> Session finished — tearing down the compose stack..."
+docker compose "${COMPOSE_FILES[@]}" down --remove-orphans
 }
 trap cleanup EXIT
 
-print_debug "Starting the proxy container."
-PERSONAL_MONOREPO_LOCATION="${MONOREPO_PATH}" docker compose "${COMPOSE_ARGS[@]}" up -d proxy
-
-print_status "Stack is up, starting pi."
-PERSONAL_MONOREPO_LOCATION="${MONOREPO_PATH}" docker compose "${COMPOSE_ARGS[@]}" run --rm pi
+docker compose "${COMPOSE_FILES[@]}" run --rm pi

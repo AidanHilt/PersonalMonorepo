@@ -12,8 +12,7 @@ This scaffold was authored without a live Nix daemon or Docker socket
 available, so a handful of things (the npm fixed-output-derivation
 hash, exact settings.json keys for the pi version in use) need one
 verification pass on a real Nix/Docker host. Everything else — the
-compose topology, the permission policy, the proxy allowlists, the
-package versions pinned in `containers/pi/npm-src/package-lock.json` —
+compose topology, the permission policy, the proxy allowlists,
 was checked against live upstream sources at authoring time.
 
 ## Layout
@@ -25,7 +24,6 @@ containers/
   pi/
     image.nix                  # nix2container build for the pi service
     entrypoint.sh
-    npm-src/                   # pinned package.json + real package-lock.json
   proxy/
     image.nix                  # nix2container build for the proxy service
     squid.conf                 # egress allowlist (pi's outbound traffic)

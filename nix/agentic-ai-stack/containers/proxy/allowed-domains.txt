@@ -5,3 +5,7 @@
 # Empty by default. Add entries here rather than editing squid.conf
 # directly, and keep this list as short as possible — every line is a
 # hole in the sandbox's network boundary (spec §2/§3.2).
+api.anthropic.com
+claude.ai
+claude.com
+platform.claude.com

@@ -50,10 +50,24 @@ services:
       # Docker (NixOS) for the same hostname to resolve to the host.
       - "host.docker.internal:host-gateway"
     read_only: true
-    tmpfs:
-      - /tmp
-      - /var/spool/squid
-      - /var/log/squid
+    volumes:
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 64m
+          mode: 1023
+      - type: tmpfs
+        target: /var/spool/squid
+        tmpfs:
+          size: 64m
+          mode: 1023
+      - type: tmpfs
+        target: /var/log/squid
+        tmpfs:
+          size: 64m
+          # Decimal equivalent of 01777 (octal permission number)
+          # This avoids the formatter removing leading zeroes
+          mode: 1023
     cap_drop: [ ALL ]
     security_opt:
       - no-new-privileges:true
@@ -90,7 +104,8 @@ services:
       # Mounted at /mnt/auth-store (NOT directly over ~/.pi/agent, which
       # would shadow the baked-in settings.json/models.json/permission
       # config) — entrypoint.sh symlinks auth.json in from here.
-      - "${PI_AUTH_DIR:-~/.config/pi-sandbox/auth}:/mnt/auth-store:rw"
+      - ~/.config/pi-sandbox:/home/pi/.pi/
+      #- "${PI_AUTH_DIR:-~/.config/pi-sandbox/auth}:/mnt/auth-store:rw"
     read_only: true
     tmpfs:
       - /tmp

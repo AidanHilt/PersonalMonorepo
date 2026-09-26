@@ -24,6 +24,21 @@ let
     '';
   };
 
+  extensions = [
+    piPackages.pi-permission-system
+    piPackages.pi-anthropic-auth
+  ];
+
+  extensionsLayer = pkgs.runCommand "pi-extensions-layer" { } (
+    ''
+      mkdir -p $out/home/.pi-extensions
+    ''
+    + pkgs.lib.concatMapStringsSep "\n" (ext: ''
+      mkdir -p "$out/home/.pi-extensions/${ext.name}"
+      cp -r --no-preserve=mode ${ext}/. "$out/home/.pi-extensions/${ext.name}/"
+    '') extensions
+    );
+
   agentBundle = pkgs.runCommand "pi-agent-bundle" {} ''
     mkdir -p $out/workspace
 
@@ -38,10 +53,10 @@ let
     cp ${../../config/pi/permission-system.config.json} \
       $out/home/pi/.pi/agent/extensions/pi-permission-system/config.json
 
-    mkdir -p $out/home/pi/.pi/agent/defaults
+    mkdir -p $out/home/pi/.pi-defaults
 
     cp ${../../config/pi/AGENTS.md} \
-      $out/home/pi/.pi/agent/defaults/AGENTS.md
+      $out/home/pi/.pi-defaults/AGENTS.md
   '';
 
   entrypoint = pkgs.writeShellApplication {
@@ -66,13 +81,14 @@ in
     copyToRoot = [
 
       agentBundle
+      #extensionsLayer
 
       (pkgs.buildEnv {
       name = "pi-image-root";
 
       paths = [
-        piPackages.pi-permission-system
-        piPackages.pi-anthropic-auth
+            piPackages.pi-permission-system
+    piPackages.pi-anthropic-auth
         pkgs.pi-coding-agent
         pkgs.git
         pkgs.coreutils

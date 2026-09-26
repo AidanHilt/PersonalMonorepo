@@ -15,8 +15,8 @@ chmod 700 "$RUNTIME_DIR"
 # upstream address (spec §3.3/§9 — this differs between Colima and
 # native NixOS Docker, so it's resolved at container start, not baked
 # into the image).
-envsubst "${OLLAMA_UPSTREAM}" </etc/proxy/ollama-gate.nginx.conf.template \
-  >"$RUNTIME_DIR/ollama-gate.nginx.conf"
+# envsubst "${OLLAMA_UPSTREAM}" </etc/proxy/ollama-gate.nginx.conf.template \
+#   >"$RUNTIME_DIR/ollama-gate.nginx.conf"
 
 # Squid needs an initialized (but empty, since cache is denied) spool
 # layout on first run.
@@ -29,8 +29,9 @@ pids=()
 squid -f /etc/proxy/squid.conf -N -d 1 &
 pids+=("$!")
 
-nginx -c "$RUNTIME_DIR/ollama-gate.nginx.conf" -g "daemon off;" &
-pids+=("$!")
+# TODO: This is deprecated, but may come back as the options for local AI improve/the economics get worse.
+#nginx -c "$RUNTIME_DIR/ollama-gate.nginx.conf" -g "daemon off;" &
+#pids+=("$!")
 
 term_handler() {
   echo "proxy: received signal, shutting down children" >&2

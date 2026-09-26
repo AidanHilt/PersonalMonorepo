@@ -26,7 +26,7 @@ let
     mkdir -p $out/etc/proxy $out/etc/squid
     cp ${./squid.conf} $out/etc/proxy/squid.conf
     cp ${./allowed-domains.txt} $out/etc/squid/allowed-domains.txt
-    cp ${./ollama-gate.nginx.conf.template} $out/etc/proxy/ollama-gate.nginx.conf.template
+    #cp ${./ollama-gate.nginx.conf.template} $out/etc/proxy/ollama-gate.nginx.conf.template
   '';
 
   supervise = pkgs.writeShellApplication {
@@ -61,7 +61,7 @@ in
     perms = [
       {
         path = pkgs.runCommand "squid-writable-dirs" { } ''
-          mkdir -p $out/var/spool/squid $out/var/log/squid
+          mkdir -p $out/var/spool/squid $out/var/log/squid $out/tmp $out/var/log/nginx
         '';
         regex = ".*";
         mode = "0755";

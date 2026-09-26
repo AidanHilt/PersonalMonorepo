@@ -9,6 +9,44 @@
 #      node process on `docker compose down`).
 set -euo pipefail
 
+PI_DEFAULTS_ROOT="${HOME}/.pi-defaults"
+PI_DEFAULTS_TARGET="${HOME}/.pi/agent/defaults"
+
+if [[ -d "$PI_DEFAULTS_ROOT" ]]; then
+  mkdir -p "$PI_DEFAULTS_TARGET"
+
+  if [[ "${PI_STACK__NO_OVERRIDE:-false}" == "true" ]]; then
+    no_override=true
+  else
+    no_override=false
+  fi
+
+  is_no_override_file() {
+    local path="$1"
+    local protected
+
+    while IFS= read -r protected; do
+      [[ -z "$protected" ]] && continue
+      [[ "$path" == "$protected" ]] && return 0
+    done <<< "${PI_STACK__NO_OVERRIDE_FILES:-}"
+
+    return 1
+  }
+
+  while IFS= read -r -d '' source; do
+    relative_path="${source#"$PI_DEFAULTS_ROOT"/}"
+    target="${PI_DEFAULTS_TARGET}/${relative_path}"
+
+    if [[ "$no_override" == true ]] || is_no_override_file "$relative_path"; then
+      [[ -e "$target" || -L "$target" ]] && continue
+    fi
+
+    rm -rf "$target"
+    mkdir -p "$(dirname "$target")"
+    cp -a "$source" "$target"
+  done < <(find "$PI_DEFAULTS_ROOT" -mindepth 1 -maxdepth 1 -print0)
+fi
+
 PROJECT_DIR="${PERSONAL_MONOREPO_LOCATION:-/workspace}"
 AGENT_DIR="${PI_AGENT_DIR:-$HOME/.pi/agent}"
 
@@ -16,11 +54,10 @@ if [ ! -d "$PROJECT_DIR" ] || [ -z "$(ls -A "$PROJECT_DIR" 2>/dev/null)" ]; then
   echo "warning: $PROJECT_DIR is empty or missing — check the project bind mount in compose.yaml" >&2
 fi
 
-if [ ! -f "$PROJECT_DIR/AGENTS.md" ] && [ ! -f "$PROJECT_DIR/AGENTS.override.md" ]; then
-  echo "info: no AGENTS.md in project root, using bundled default from $AGENT_DIR/defaults/AGENTS.md" >&2
-  cp "$AGENT_DIR/defaults/AGENTS.md" "$PROJECT_DIR/AGENTS.md" ||
-    echo "warning: could not write default AGENTS.md (read-only project mount?) — continuing without one" >&2
-fi
+echo "info: Clearing out installed extensions"
+rm -rf "$AGENT_DIR/extensions"
+
+cp /home/pi/.pi-extensions "$AGENT_DIR/extensions"
 
 if [ -f /home/pi/.kube/config ]; then
   export KUBECONFIG=/home/pi/.kube/config
@@ -33,14 +70,14 @@ fi
 # profile. It's mounted outside ~/.pi/agent so it doesn't shadow the
 # baked-in settings.json/models.json/permission config — symlink the
 # actual file in instead of mounting the directory over ~/.pi/agent.
-AUTH_STORE=/mnt/auth-store
-if [ -d "$AUTH_STORE" ]; then
-  mkdir -p "$AUTH_STORE"
-  touch "$AUTH_STORE/auth.json"
-  ln -sf "$AUTH_STORE/auth.json" "$AGENT_DIR/auth.json"
-else
-  echo "info: no auth-store mount found; relying on env-var API keys for this run" >&2
-fi
+# AUTH_STORE=/mnt/auth-store
+# if [ -d "$AUTH_STORE" ]; then
+#   mkdir -p "$AUTH_STORE"
+#   touch "$AUTH_STORE/auth.json"
+#   ln -sf "$AUTH_STORE/auth.json" "$AGENT_DIR/auth.json"
+# else
+#   echo "info: no auth-store mount found; relying on env-var API keys for this run" >&2
+# fi
 
 cd "$PROJECT_DIR"
 
