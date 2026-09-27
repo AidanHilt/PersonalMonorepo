@@ -7,14 +7,6 @@ ask/allow/deny prompts. See `PROJECT-SPEC.md` for the full design
 rationale and threat model; this README is the practical "how do I run
 it" summary.
 
-**Read `docs/NOTES-FOR-IMPLEMENTER.md` before your first real run.**
-This scaffold was authored without a live Nix daemon or Docker socket
-available, so a handful of things (the npm fixed-output-derivation
-hash, exact settings.json keys for the pi version in use) need one
-verification pass on a real Nix/Docker host. Everything else — the
-compose topology, the permission policy, the proxy allowlists,
-was checked against live upstream sources at authoring time.
-
 ## Layout
 
 ```
@@ -28,20 +20,18 @@ containers/
     image.nix                  # nix2container build for the proxy service
     squid.conf                 # egress allowlist (pi's outbound traffic)
     allowed-domains.txt        # user-editable extra egress entries
-    ollama-gate.nginx.conf.template  # narrow reverse proxy in front of host Ollama
-    supervise.sh                # PID 1: runs squid + nginx, fails closed if either dies
+    supervise.sh                # PID 1: runs squid; fails closed if it dies
 config/pi/                     # baked-in AGENTS.md / settings.json / models.json / permission policy — config only, never secrets
 scripts/                       # start-agent, stop-agent, gen-kubeconfig, verify-acceptance
-ollama/README.md               # native host setup + hardening notes
-docs/NOTES-FOR-IMPLEMENTER.md  # what's verified vs. what needs one more check
-kube/                          # generated kubeconfig lands here (gitignored)
+kube/                          # legacy/unused; kubeconfig now defaults to
+                                # ~/.config/pi-sandbox/agent-kubeconfig.yaml
+                                # (override with PI_KUBECONFIG_PATH), never in-repo
 ```
 
 ## Quickstart
 
 ```sh
 cp .env.example .env                       # fill in keys, or plan to use `nix run .#login`
-ollama pull qwen2.5-coder:7b               # on the host, natively — see ollama/README.md
 nix run .#gen-kubeconfig -- <dev-context>  # never a production context
 nix run .#login                            # if using OAuth; type /login once inside
 nix run .#start-agent                      # builds+loads images, verifies Ollama, brings up pi+proxy
@@ -60,11 +50,8 @@ a habit-forming guardrail, not the boundary. The real boundary is:
   the public internet except through `proxy`'s allowlist, no published
   ports, `cap_drop: [ALL]`, `read_only` root filesystem, `no-new-privileges`.
 - `proxy` is the only container with a leg on the external network, and
-  is deliberately minimal (squid + nginx, nothing else) since it's the
-  trust anchor.
-- Ollama runs natively on the host (not containerized, for GPU
-  throughput — see `ollama/README.md`) but is only reachable from
-  `pi` through `proxy`'s narrow inference-only gate, never directly.
+  is deliberately minimal (squid, nothing else) since it's the trust
+  anchor.
 - Kubernetes access is a generated, RBAC-scoped, read-only-mounted
   kubeconfig against a dev/staging cluster — never a real one.
 

@@ -5,18 +5,17 @@
 # This base file has NO Kubernetes dependency. If a scoped kubeconfig is
 # available at ~/.config/pi-sandbox/agent-kubeconfig.yaml (or wherever
 # PI_KUBECONFIG_PATH points), start-agent.sh layers
-# docker-compose.kube.yml on top to mount it read-only; otherwise the
+# compose.kube.yaml on top to mount it read-only; otherwise the
 # stack comes up with no cluster access at all, and start-agent.sh warns
 # and continues.
 #
 # Before `docker compose up`:
 #   1. nix run .#load                 # builds + loads pi/proxy images
-#   2. Ensure Ollama is running natively on the host (see ollama/README.md)
-#      [NOTE: local Ollama support is currently deprecated — see
-#      start-agent.sh. We may revisit local AI in the future.]
+#   2. (local Ollama support is currently disabled — see start-agent.sh
+#      and containers/proxy for the commented-out wiring. May revisit.)
 #   3. (Optional) generate ~/.config/pi-sandbox/agent-kubeconfig.yaml
 #      (see scripts/gen-kubeconfig.sh) to enable k8s access — see
-#      docker-compose.kube.yml
+#      compose.kube.yaml
 #   4. Copy .env.example to .env and fill in what's needed (no secrets
 #      belong in this repo's git history — .env is gitignored)
 #
@@ -36,19 +35,22 @@ services:
     networks:
       - internal
       - external
-    environment:
-      # Platform-specific host-loopback address for reaching the native
-      # Ollama process (spec §3.3/§9). Colima on macOS typically resolves
-      # `host.docker.internal` automatically; NixOS-native Docker may
-      # need `host-gateway` via extra_hosts (below) or the bridge
-      # gateway IP directly — confirm current behavior for the Docker/
-      # Colima version in use before relying on this.
-      OLLAMA_UPSTREAM: "${OLLAMA_UPSTREAM:-host.docker.internal:11434}"
-    extra_hosts:
-      # Harmless on platforms where host.docker.internal already
-      # resolves (e.g. Docker Desktop/Colima); required on plain Linux
-      # Docker (NixOS) for the same hostname to resolve to the host.
-      - "host.docker.internal:host-gateway"
+    # Ollama support is currently disabled (nginx gate is commented out
+    # in containers/proxy/supervise.sh / image.nix). Left here,
+    # commented out, in case it's revived later.
+    # environment:
+    #   # Platform-specific host-loopback address for reaching the native
+    #   # Ollama process (spec §3.3/§9). Colima on macOS typically resolves
+    #   # `host.docker.internal` automatically; NixOS-native Docker may
+    #   # need `host-gateway` via extra_hosts (below) or the bridge
+    #   # gateway IP directly — confirm current behavior for the Docker/
+    #   # Colima version in use before relying on this.
+    #   OLLAMA_UPSTREAM: "${OLLAMA_UPSTREAM:-host.docker.internal:11434}"
+    # extra_hosts:
+    #   # Harmless on platforms where host.docker.internal already
+    #   # resolves (e.g. Docker Desktop/Colima); required on plain Linux
+    #   # Docker (NixOS) for the same hostname to resolve to the host.
+    #   - "host.docker.internal:host-gateway"
     read_only: true
     volumes:
       - type: tmpfs
@@ -96,24 +98,32 @@ services:
       # Project directory: read-write, this is what pi actually works on.
       - "${PERSONAL_MONOREPO_LOCATION:-./workspace}:/workspace:rw"
       # NOTE: no kubeconfig mount here by default. See
-      # docker-compose.kube.yml — start-agent.sh layers it in
+      # compose.kube.yaml — start-agent.sh layers it in
       # automatically when a scoped kubeconfig is found on the host, and
       # otherwise this base file runs with no cluster access.
       #
-      # Auth directory: read-write, host-side, outside the repo (spec §7).
-      # Mounted at /mnt/auth-store (NOT directly over ~/.pi/agent, which
-      # would shadow the baked-in settings.json/models.json/permission
-      # config) — entrypoint.sh symlinks auth.json in from here.
-      - ~/.config/pi-sandbox:/home/pi/.pi/
-      #- "${PI_AUTH_DIR:-~/.config/pi-sandbox/auth}:/mnt/auth-store:rw"
+      # ~/.pi is a fresh tmpfs each run (below), seeded from the immutable
+      # .pi-seed baked into the image. Only the two genuinely mutable,
+      # host-persisted items are layered back in as narrow bind mounts on
+      # top of that tmpfs:
+      #   - auth.json: written by the host-side `login` flow (spec §7).
+      #   - sessions:  session history (only exercised once --no-session
+      #                is dropped in containers/pi/entrypoint.sh).
+      # Neither is part of the seed, so the entrypoint's seed copy never
+      # clobbers them. Run scripts/setup-auth-dir.sh once so these sources
+      # exist with uid:gid 10001 ownership before the first `up`.
+      - ${HOME}/.config/pi-sandbox/agent/auth.json:/home/pi/.pi-seed/agent/auth.json:rw
+      - ${HOME}/.config/pi-sandbox/agent/sessions:/home/pi/.pi-seed/agent/sessions:rw
+      # All of ~/.pi is writable-but-ephemeral. mode 1023 == 01777
+      # (leading-zero-safe decimal) so the uid:10001 process can populate
+      # it from .pi-seed at startup.
+      - type: tmpfs
+        target: /home/pi/.pi
+        tmpfs:
+          mode: 1023
     read_only: true
     tmpfs:
       - /tmp
-      # Session persistence is intentionally NOT mounted by default —
-      # runs are stateless (spec §3.1). To persist session history
-      # across runs, add a named volume here for
-      # /home/pi/.pi/agent/sessions and drop --no-session from
-      # containers/pi/entrypoint.sh.
     cap_drop: [ ALL ]
     security_opt:
       - no-new-privileges:true

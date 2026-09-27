@@ -9,55 +9,21 @@
 #      node process on `docker compose down`).
 set -euo pipefail
 
-PI_DEFAULTS_ROOT="${HOME}/.pi-defaults"
-PI_DEFAULTS_TARGET="${HOME}/.pi/agent/defaults"
-
-if [[ -d "$PI_DEFAULTS_ROOT" ]]; then
-  mkdir -p "$PI_DEFAULTS_TARGET"
-
-  if [[ "${PI_STACK__NO_OVERRIDE:-false}" == "true" ]]; then
-    no_override=true
-  else
-    no_override=false
-  fi
-
-  is_no_override_file() {
-    local path="$1"
-    local protected
-
-    while IFS= read -r protected; do
-      [[ -z "$protected" ]] && continue
-      [[ "$path" == "$protected" ]] && return 0
-    done <<< "${PI_STACK__NO_OVERRIDE_FILES:-}"
-
-    return 1
-  }
-
-  while IFS= read -r -d '' source; do
-    relative_path="${source#"$PI_DEFAULTS_ROOT"/}"
-    target="${PI_DEFAULTS_TARGET}/${relative_path}"
-
-    if [[ "$no_override" == true ]] || is_no_override_file "$relative_path"; then
-      [[ -e "$target" || -L "$target" ]] && continue
-    fi
-
-    rm -rf "$target"
-    mkdir -p "$(dirname "$target")"
-    cp -a "$source" "$target"
-  done < <(find "$PI_DEFAULTS_ROOT" -mindepth 1 -maxdepth 1 -print0)
-fi
+# Stage the immutable, baked agent config into the writable ~/.pi tmpfs.
+# Everything under ~/.pi is ephemeral by design; the source of truth is
+# the .pi-seed baked into the image (settings.json, models.json,
+# extensions, permission-system policy, default AGENTS.md). auth.json and
+# the sessions dir are bind-mounted on top of the tmpfs and are NOT part
+# of the seed, so this copy leaves them untouched.
+mkdir -p "$HOME/.pi"
+cp -a /home/pi/.pi-seed/* "$HOME/.pi/"
 
 PROJECT_DIR="${PERSONAL_MONOREPO_LOCATION:-/workspace}"
-AGENT_DIR="${PI_AGENT_DIR:-$HOME/.pi/agent}"
+#AGENT_DIR="${PI_AGENT_DIR:-$HOME/.pi/agent}"
 
 if [ ! -d "$PROJECT_DIR" ] || [ -z "$(ls -A "$PROJECT_DIR" 2>/dev/null)" ]; then
   echo "warning: $PROJECT_DIR is empty or missing — check the project bind mount in compose.yaml" >&2
 fi
-
-echo "info: Clearing out installed extensions"
-rm -rf "$AGENT_DIR/extensions"
-
-cp -r /home/pi/.pi-extensions "$AGENT_DIR/extensions"
 
 if [ -f /home/pi/.kube/config ]; then
   export KUBECONFIG=/home/pi/.kube/config
@@ -65,21 +31,11 @@ else
   unset KUBECONFIG
 fi
 
-# The auth directory (bind-mounted read-write at /mnt/auth-store, see
-# spec §7) holds ~/.pi/agent/auth.json as written by the `login`
-# profile. It's mounted outside ~/.pi/agent so it doesn't shadow the
-# baked-in settings.json/models.json/permission config — symlink the
-# actual file in instead of mounting the directory over ~/.pi/agent.
-# AUTH_STORE=/mnt/auth-store
-# if [ -d "$AUTH_STORE" ]; then
-#   mkdir -p "$AUTH_STORE"
-#   touch "$AUTH_STORE/auth.json"
-#   ln -sf "$AUTH_STORE/auth.json" "$AGENT_DIR/auth.json"
-# else
-#   echo "info: no auth-store mount found; relying on env-var API keys for this run" >&2
-# fi
+# auth.json is bind-mounted directly at ~/.pi/agent/auth.json (see
+# compose.yaml), written by the `login` flow on the host and persisted
+# there. No symlink/auth-store juggling needed anymore.
 
-cd "$PROJECT_DIR"
+cd "$PROJECT_DIR" || exit
 
 # `pi` binary lives in the pinned npm deps' .bin, already on PATH via
 # the image's Env. `--no-session` keeps runs stateless by default per

@@ -29,12 +29,18 @@ else
 fi
 
 echo "==> [3/5] Ollama model-management endpoints are unreachable via proxy"
-if docker compose exec -T pi sh -c \
-  "wget -q -T 3 -O- --post-data='{}' http://proxy:11434/api/pull" >/dev/null 2>&1; then
-  fail "proxy allowed /api/pull through to Ollama"
-else
-  pass "/api/pull was rejected by the proxy's Ollama gate"
-fi
+# Ollama support (and the proxy's nginx gate) is currently disabled
+# (see containers/proxy/supervise.sh); nothing listens on :11434 at
+# all right now, so this check would only prove the port is closed,
+# not that the gate is correctly denying /api/pull. Skipping until
+# Ollama support is revived.
+# if docker compose exec -T pi sh -c \
+#   "wget -q -T 3 -O- --post-data='{}' http://proxy:11434/api/pull" >/dev/null 2>&1; then
+#   fail "proxy allowed /api/pull through to Ollama"
+# else
+#   pass "/api/pull was rejected by the proxy's Ollama gate"
+# fi
+echo "  SKIP: Ollama support is currently disabled"
 
 echo "==> [4/5] no secret values in git history or the nix store"
 if git log --all -p 2>/dev/null | grep -Ei 'ANTHROPIC_API_KEY *= *[A-Za-z0-9]|OPENAI_API_KEY *= *[A-Za-z0-9]|sk-ant-|sk-proj-' >/dev/null; then
@@ -49,7 +55,7 @@ elif [ -f .env ]; then
 fi
 
 echo "==> [5/5] login flow populates the auth directory, default profile picks it up"
-AUTH_DIR="${PI_AUTH_DIR:-$HOME/.config/pi-sandbox/auth}"
+AUTH_DIR="${PI_AUTH_DIR:-$HOME/.config/pi-sandbox/agent}"
 if [ -s "$AUTH_DIR/auth.json" ]; then
   pass "auth.json exists and is non-empty at $AUTH_DIR — run a default-profile session to confirm no re-auth prompt appears"
 else

@@ -10,7 +10,7 @@ set -euo pipefail
 # --- Kubeconfig: always attempted, never required -------------------------
 # We no longer hard-fail when no kubeconfig is present. If a scoped
 # kubeconfig exists (default path below, or PI_KUBECONFIG_PATH), we layer
-# docker-compose.kube.yml on top to mount it read-only into the `pi`
+# compose.kube.yaml on top to mount it read-only into the `pi`
 # container. If it's missing, we warn and continue without k8s access
 # rather than blocking the whole stack on it.
 KUBECONFIG_PATH="${PI_KUBECONFIG_PATH:-$HOME/.config/pi-sandbox/agent-kubeconfig.yaml}"

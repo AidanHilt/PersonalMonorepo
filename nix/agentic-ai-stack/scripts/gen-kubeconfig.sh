@@ -13,7 +13,9 @@
 #     and widen deliberately, not the other way around)
 #   - a RoleBinding
 #   - a short-lived (1h, auto-renew by re-running this script) token
-#     bound into a standalone kubeconfig at ./kube/agent-kubeconfig.yaml
+#     bound into a standalone kubeconfig at $PI_KUBECONFIG_PATH (default:
+#     ~/.config/pi-sandbox/agent-kubeconfig.yaml), same default path
+#     start-agent.sh / compose.kube.yaml look for it at.
 #
 # Deny-by-default at the RBAC layer is the real backstop (spec §6) —
 # the permission-extension `deny` rules on kubectl apply/delete/exec
@@ -24,8 +26,8 @@ set -euo pipefail
 CONTEXT="${1:?usage: gen-kubeconfig.sh <kube-context> [service-account-name] [namespace]}"
 SA_NAME="${2:-pi-sandbox-agent}"
 NAMESPACE="${3:-default}"
-OUT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)/kube"
-OUT_FILE="$OUT_DIR/agent-kubeconfig.yaml"
+OUT_FILE="${PI_KUBECONFIG_PATH:-$HOME/.config/pi-sandbox/agent-kubeconfig.yaml}"
+OUT_DIR="$(dirname "$OUT_FILE")"
 
 echo "==> Target context: $CONTEXT   namespace: $NAMESPACE   service account: $SA_NAME"
 read -r -p "This must be a dev/staging context, never production. Continue? [y/N] " confirm
