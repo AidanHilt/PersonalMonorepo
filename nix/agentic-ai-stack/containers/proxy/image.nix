@@ -35,34 +35,42 @@ let
     text = builtins.readFile ./supervise.sh;
   };
 
+  rootEnv = pkgs.buildEnv {
+    name = "proxy-image-root";
+    paths = [
+      pkgs.squid
+      pkgs.nginx
+      pkgs.gettext # envsubst
+      pkgs.coreutils
+      pkgs.bash
+      pkgs.cacert
+      passwdFile
+      groupFile
+      proxyConfig
+      supervise
+    ];
+    pathsToLink = [ "/bin" "/etc" ];
+  };
+
+  writableDirs = pkgs.runCommand "squid-writable-dirs" { } ''
+    mkdir -p $out/var/spool/squid $out/var/log/squid $out/tmp $out/var/log/nginx
+  '';
+
+  # See containers/pi/image.nix for why this is safe/non-circular and what
+  # it's used for.
+  contentId = builtins.hashString "sha256" "${rootEnv}-${writableDirs}";
+
 in
 {
   image = n2c.buildImage {
     name = imageName;
     tag = imageTag;
 
-    copyToRoot = pkgs.buildEnv {
-      name = "proxy-image-root";
-      paths = [
-        pkgs.squid
-        pkgs.nginx
-        pkgs.gettext # envsubst
-        pkgs.coreutils
-        pkgs.bash
-        pkgs.cacert
-        passwdFile
-        groupFile
-        proxyConfig
-        supervise
-      ];
-      pathsToLink = [ "/bin" "/etc" ];
-    };
+    copyToRoot = rootEnv;
 
     perms = [
       {
-        path = pkgs.runCommand "squid-writable-dirs" { } ''
-          mkdir -p $out/var/spool/squid $out/var/log/squid $out/tmp $out/var/log/nginx
-        '';
+        path = writableDirs;
         regex = ".*";
         mode = "0755";
         uid = pkgs.lib.toInt uid;
@@ -79,6 +87,12 @@ in
       # No published ports in the image itself — compose.yaml controls
       # what's actually reachable (internal network only, no host
       # publish for either the egress proxy port or the Ollama gate).
+
+      Labels = {
+        "sh.pi-sandbox.content-id" = contentId;
+      };
     };
   };
+
+  inherit contentId;
 }

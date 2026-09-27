@@ -58,8 +58,10 @@ let
     '') extensions
     + ''
 
+      mkdir -p "$out/home/pi/.pi-seed/agent/extensions/pi-permission-system/"
+    
       cp ${../../config/pi/permission-system.config.json} \
-        "$out/home/pi/.pi-seed/agent/extensions/${piPackages.pi-permission-system.name}/config.json"
+        "$out/home/pi/.pi-seed/agent/extensions/pi-permission-system/config.json"
     ''
     );
 
@@ -75,6 +77,38 @@ let
     text = builtins.readFile ./entrypoint.sh;
   };
 
+  rootEnv = pkgs.buildEnv {
+    name = "pi-image-root";
+
+    paths = [
+      pkgs.pi-coding-agent
+      pkgs.git
+      pkgs.coreutils
+      pkgs.bash
+      pkgs.cacert
+      pkgs.gnugrep
+      pkgs.gnused
+      pkgs.findutils
+      passwdFile
+      groupFile
+      entrypoint
+    ];
+
+    pathsToLink = [
+      "/bin"
+      "/etc"
+      "/lib"
+    ];
+  };
+
+  # A cheap, non-circular fingerprint of everything that actually ends up
+  # in the image (the seed tree + the runtime closure). This only
+  # interpolates *input* store paths, so it never has to build anything to
+  # compute, and it changes iff the image's contents would change. Used by
+  # `nix run .#load` to skip re-importing into the Docker daemon when
+  # nothing actually changed.
+  contentId = builtins.hashString "sha256" "${piSeed}-${rootEnv}";
+
 in
 
 {
@@ -83,32 +117,8 @@ in
     tag = imageTag;
 
     copyToRoot = [
-
       piSeed
-
-      (pkgs.buildEnv {
-      name = "pi-image-root";
-
-      paths = [
-        pkgs.pi-coding-agent
-        pkgs.git
-        pkgs.coreutils
-        pkgs.bash
-        pkgs.cacert
-        pkgs.gnugrep
-        pkgs.gnused
-        pkgs.findutils
-        passwdFile
-        groupFile
-        entrypoint
-      ];
-
-      pathsToLink = [
-        "/bin"
-        "/etc"
-        "/lib"
-      ];
-      })
+      rootEnv
     ];
 
     perms = [
@@ -132,6 +142,12 @@ in
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
         "NO_COLOR=0"
       ];
+
+      Labels = {
+        "sh.pi-sandbox.content-id" = contentId;
+      };
     };
   };
+
+  inherit contentId;
 }

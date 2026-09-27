@@ -22,8 +22,14 @@ let
         fetcherVersion = 4;
         inherit (finalAttrs) pname version src;
         hash = pnpmHash;
-        #pnpmInstallFlags = ["--prod"];
       };
+
+      # Extensions are shipped as pure runtime artifacts baked into the pi
+      # image; devDependencies (test runners, bundlers, type stubs, etc.)
+      # have no business being on the image and were previously bloating
+      # every extension's node_modules (and therefore the final pi image).
+      # This flag is read by pnpmConfigHook's install step.
+      pnpmInstallFlags = [ "--prod" ];
 
       nativeBuildInputs = [
         pkgs.nodejs_22

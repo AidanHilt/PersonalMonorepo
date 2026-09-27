@@ -60,12 +60,22 @@
         # nix2container's built-in `copyToDockerDaemon` app. Since everything
         # runs on a NixOS VM now, we can rely on a standard Docker daemon/socket
         # instead of the old Colima-specific skopeo push-to-registry dance.
-        mkLoadApp = imageName: imageTag:
-        let
-          linuxSystem = "x86_64-linux";
-        in
+        # `contentId` is a cheap fingerprint (see containers/*/image.nix) of
+        # everything that ends up in the image, computed at eval time. It's
+        # baked into the image as a Docker label, so we can compare the
+        # content-id we're about to build against whatever is already
+        # loaded under imageName:imageTag and skip the (surprisingly not
+        # free) copyToDockerDaemon step entirely when nothing changed.
+        # `appSlug` selects the flake app/package to build+load (must match
+        # `packages.<appSlug>-image`). `imageName` is the *actual* Docker
+        # image reference (repo:tag) that ends up in the daemon, i.e. what
+        # image.nix's `imageName`/`imageTag` produced -- these are NOT the
+        # same string (e.g. appSlug "pi" vs image "pi-sandbox/pi"), so they
+        # must be threaded through separately or the up-to-date check below
+        # inspects a Docker image that never exists and "skip" never fires.
+        mkLoadApp = appSlug: imageName: imageTag: contentId:
         pkgs.writeShellApplication {
-          name = "load-${imageName}";
+          name = "load-${appSlug}";
 
           runtimeInputs = [ pkgs.nix pkgs.docker ];
 
@@ -79,9 +89,19 @@
 
             IMAGE_NAME=${pkgs.lib.escapeShellArg imageName}
             IMAGE_TAG=${pkgs.lib.escapeShellArg imageTag}
+            NEW_CONTENT_ID=${pkgs.lib.escapeShellArg contentId}
+
+            CURRENT_CONTENT_ID="$(docker image inspect \
+              --format '{{ index .Config.Labels "sh.pi-sandbox.content-id" }}' \
+              "$IMAGE_NAME:$IMAGE_TAG" 2>/dev/null || true)"
+
+            if [ -n "$CURRENT_CONTENT_ID" ] && [ "$CURRENT_CONTENT_ID" = "$NEW_CONTENT_ID" ]; then
+              echo "$IMAGE_NAME:$IMAGE_TAG is already up to date (content-id $NEW_CONTENT_ID); skipping load"
+              exit 0
+            fi
 
             nix run --no-write-lock-file \
-              ${pkgs.lib.escapeShellArg ".#${imageName}-image.copyToDockerDaemon"}
+              ${pkgs.lib.escapeShellArg ".#${appSlug}-image.copyToDockerDaemon"}
 
             echo "Loaded $IMAGE_NAME:$IMAGE_TAG into the local Docker daemon"
           '';
@@ -104,8 +124,8 @@
               runtimeInputs = [ pkgs.docker ];
               text = ''
                 set -euo pipefail
-                "${(mkLoadApp "pi" "dev")}/bin/load-pi"
-                "${(mkLoadApp "proxy" "dev")}/bin/load-proxy"
+                "${(mkLoadApp "pi" piImageName piTag pi.contentId)}/bin/load-pi"
+                "${(mkLoadApp "proxy" proxyImageName proxyTag proxy.contentId)}/bin/load-proxy"
               '';
             };
           };

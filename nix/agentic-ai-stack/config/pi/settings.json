@@ -1,5 +1,4 @@
 {
-  "_comment": "Bundled into the image per spec §5. No secrets belong here — see config/pi/README.md.",
   "shellPath": "/bin/bash",
   "defaultProvider": "anthropic",
   "defaultModel": "claude-sonnet-5",
