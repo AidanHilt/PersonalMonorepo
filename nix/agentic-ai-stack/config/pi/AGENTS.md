@@ -18,4 +18,5 @@ doesn't provide its own AGENTS.md or AGENTS.override.md.
 - This sandbox's isolation is container- and network-level, not just
   the permission prompts you see — don't assume a denied action can be
   worked around via another tool or a raw shell command. Instead of
-  attempting to
+  attempting to work around a denial, report it back to the user and
+  explain what you were trying to do and why it was blocked.

@@ -29,35 +29,39 @@ let
     piPackages.pi-anthropic-auth
   ];
 
-  extensionsLayer = pkgs.runCommand "pi-extensions-layer" { } (
+  # Single, self-contained seed of the entire ~/.pi/agent tree. At runtime
+  # the entrypoint copies this into the writable ~/.pi tmpfs in one shot;
+  # the source of truth stays immutable in the image. Extensions and the
+  # permission-system policy are baked into their final locations here, so
+  # the entrypoint needs no rm/cp dance or dynamic folder lookup.
+  piSeed = pkgs.runCommand "pi-seed" { } (
     ''
-      mkdir -p $out/home/pi/.pi-extensions
+      mkdir -p $out/workspace
+      mkdir -p $out/home/pi/.pi-seed/agent
+      mkdir -p $out/home/pi/.pi
+
+      cp ${../../config/pi/settings.json} \
+        $out/home/pi/.pi-seed/agent/settings.json
+
+      cp ${../../config/pi/models.json} \
+        $out/home/pi/.pi-seed/agent/models.json
+
+      mkdir -p $out/home/pi/.pi-seed/agent/defaults
+      cp ${../../config/pi/AGENTS.md} \
+        $out/home/pi/.pi-seed/agent/defaults/AGENTS.md
+
+      mkdir -p $out/home/pi/.pi-seed/agent/extensions
     ''
     + pkgs.lib.concatMapStringsSep "\n" (ext: ''
-      mkdir -p "$out/home/pi/.pi-extensions/${ext.name}"
-      cp -r --no-preserve=mode ${ext}/. "$out/home/pi/.pi-extensions/${ext.name}/"
+      mkdir -p "$out/home/pi/.pi-seed/agent/extensions/${ext.name}"
+      cp -r --no-preserve=mode ${ext}/. "$out/home/pi/.pi-seed/agent/extensions/${ext.name}/"
     '') extensions
+    + ''
+
+      cp ${../../config/pi/permission-system.config.json} \
+        "$out/home/pi/.pi-seed/agent/extensions/${piPackages.pi-permission-system.name}/config.json"
+    ''
     );
-
-  agentBundle = pkgs.runCommand "pi-agent-bundle" {} ''
-    mkdir -p $out/workspace
-
-    mkdir -p $out/home/pi/.pi/agent/extensions/pi-permission-system
-
-    cp ${../../config/pi/settings.json} \
-      $out/home/pi/.pi/agent/settings.json
-
-    cp ${../../config/pi/models.json} \
-      $out/home/pi/.pi/agent/models.json
-
-    cp ${../../config/pi/permission-system.config.json} \
-      $out/home/pi/.pi/agent/extensions/pi-permission-system/config.json
-
-    mkdir -p $out/home/pi/.pi-defaults
-
-    cp ${../../config/pi/AGENTS.md} \
-      $out/home/pi/.pi-defaults/AGENTS.md
-  '';
 
   entrypoint = pkgs.writeShellApplication {
     name = "pi-entrypoint";
@@ -80,8 +84,7 @@ in
 
     copyToRoot = [
 
-      agentBundle
-      extensionsLayer
+      piSeed
 
       (pkgs.buildEnv {
       name = "pi-image-root";
@@ -110,14 +113,7 @@ in
 
     perms = [
       {
-        path = agentBundle;
-        regex = ".*";
-        mode = "0700";
-        uid = pkgs.lib.toInt uid;
-        gid = pkgs.lib.toInt gid;
-      }
-      {
-        path = extensionsLayer;
+        path = piSeed;
         regex = ".*";
         mode = "0700";
         uid = pkgs.lib.toInt uid;

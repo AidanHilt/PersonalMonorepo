@@ -31,7 +31,7 @@ try {
     Set-ItemProperty -Path "HKCU:\AppEvents\Schemes\Apps\.Default\SystemHand\.Current" -Name "(Default)" -Value "" -ErrorAction SilentlyContinue
     Set-ItemProperty -Path "HKCU:\AppEvents\Schemes\Apps\.Default\SystemNotification\.Current" -Name "(Default)" -Value "" -ErrorAction SilentlyContinue
     Set-ItemProperty -Path "HKCU:\AppEvents\Schemes\Apps\.Default\SystemQuestion\.Current" -Name "(Default)" -Value "" -ErrorAction SilentlyContinue
-    
+
     # Disable Windows startup sound
     $startupPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI\BootAnimation"
     if (Test-Path $startupPath) {

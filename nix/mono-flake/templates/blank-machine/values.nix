@@ -1,6 +1,6 @@
 {
   # Only uncommented values actually need to be set. See other comments for notes on values
-  
+
   username = "aidan"; # Fuck it, it's mostly going to be me using it
 
   # This sets the password for the default user specified above. You don't HAVE to set it, but if you don't, you will
@@ -31,8 +31,8 @@
   #   Note that this is not the kubernetes load balancer IP that serves most of our services
   #   That isn't configured here (but maybe we can note it?)
   #   loadBalancerIp = "";
-  # 
-  #   Used for when we need a network interface, we'll assume all our machines only 
+  #
+  #   Used for when we need a network interface, we'll assume all our machines only
   #   have one we care about
   #   mainNetworkInterface = "enp0s1";
   # }

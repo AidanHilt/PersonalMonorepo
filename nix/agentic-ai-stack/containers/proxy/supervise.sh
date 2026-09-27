@@ -5,7 +5,7 @@
 # container down (fail-closed rather than silently losing one gate).
 set -euo pipefail
 
-: "${OLLAMA_UPSTREAM:?OLLAMA_UPSTREAM must be set (e.g. host.docker.internal:11434) — see compose.yaml}"
+#: "${OLLAMA_UPSTREAM:?OLLAMA_UPSTREAM must be set (e.g. host.docker.internal:11434) — see compose.yaml}"
 
 RUNTIME_DIR=/tmp/proxy-runtime
 mkdir -p "$RUNTIME_DIR" /tmp/squid-cache

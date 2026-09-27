@@ -11,8 +11,8 @@ that looks real enough to paste over by accident.**
 | File | Purpose |
 |---|---|
 | `AGENTS.md` | Fallback behavioral guidelines, used only if the mounted project has no AGENTS.md of its own. |
-| `settings.json` | Provider/model/compaction settings — see `docs/NOTES-FOR-IMPLEMENTER.md` item 2 before trusting the exact keys. |
-| `models.json` | Wires the `ollama` provider through `proxy`'s Ollama gate. |
+| `settings.json` | Provider/model/compaction settings. |
+| `models.json` | Wires the `ollama` provider through `proxy`'s Ollama gate. **Currently inert** — Ollama/proxy gate support is disabled (see `ollama/README.md`, `containers/proxy/supervise.sh`); this file is left in place for when it's revived. |
 | `permission-system.config.json` | The actual allow/ask/deny policy for `@gotgenes/pi-permission-system` (spec §8). |
 
 Credentials live at runtime, outside this directory and outside the

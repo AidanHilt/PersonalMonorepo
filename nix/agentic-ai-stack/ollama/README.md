@@ -1,11 +1,21 @@
 # Ollama: native host setup (spec §3.3)
 
+**Currently disabled.** Local-model support via Ollama has been
+disabled stack-wide (see `containers/proxy/supervise.sh`,
+`containers/proxy/image.nix`, `compose.yaml`, `.env.example`,
+`scripts/start-agent.sh`) — the proxy's Ollama gate isn't started,
+`start-agent.sh`'s reachability check is commented out, and nothing
+listens on the Ollama port. `config/pi/models.json` still declares the
+`ollama` provider but it's inert until this is revived. The rest of
+this document describes the design as it will work if/when local-model
+support comes back; treat it as reference, not current behavior.
+
 Ollama is **not** part of the compose stack. It runs natively on the
 host — on macOS/Apple Silicon this avoids the ~15-20% inference
 throughput cost of GPU passthrough into a Colima `krunkit` VM; on NixOS
 it just runs with direct hardware access by default. `nix run
-.#start-agent` checks that it's reachable and fails fast with a clear
-message if it isn't; it does not install or start Ollama for you.
+.#start-agent` would check that it's reachable and fail fast with a
+clear message if it isn't; it would not install or start Ollama for you.
 
 ## Install
 
