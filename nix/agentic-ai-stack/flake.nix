@@ -161,7 +161,7 @@
             runtimeInputs = [ pkgs.pi-coding-agent ];
             text = ''
               set -euo pipefail
-              export PI_AGENT_DIR="''${PI_AUTH_DIR:-$HOME/.config/pi-sandbox/agent}"
+              export PI_CODING_AGENT_DIR="''${PI_AUTH_DIR:-$HOME/.config/pi-sandbox/agent}"
               pi
             '';
           };

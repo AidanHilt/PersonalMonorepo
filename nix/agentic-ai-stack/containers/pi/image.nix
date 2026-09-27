@@ -27,6 +27,7 @@ let
   extensions = [
     piPackages.pi-permission-system
     piPackages.pi-anthropic-auth
+    piPackages.pi-subagents
   ];
 
   # Single, self-contained seed of the entire ~/.pi/agent tree. At runtime
@@ -51,6 +52,10 @@ let
         $out/home/pi/.pi-seed/agent/defaults/AGENTS.md
 
       mkdir -p $out/home/pi/.pi-seed/agent/extensions
+
+      mkdir -p $out/home/pi/.pi-seed/agents
+      cp ${../../config/pi/agents}/* \
+        $out/home/pi/.pi-seed/agents
     ''
     + pkgs.lib.concatMapStringsSep "\n" (ext: ''
       mkdir -p "$out/home/pi/.pi-seed/agent/extensions/${ext.name}"

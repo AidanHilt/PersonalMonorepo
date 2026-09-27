@@ -23,6 +23,6 @@
     pi-github-tools = "sha256-VZDxELCph4V+LkZrz0ArDwaLT5hx5Dn1asm4TYdYFsk=";
     pi-colgrep = "sha256-VZDxELCph4V+LkZrz0ArDwaLT5hx5Dn1asm4TYdYFsk=";
     pi-autoformat = "sha256-VZDxELCph4V+LkZrz0ArDwaLT5hx5Dn1asm4TYdYFsk=";
-    # pi-subagents = "sha256-1L8wUQN3cgVJKfZ4ufOxPZF8sey9z8W/bsmp7HAsDGQ=";
+    pi-subagents = "sha256-VZDxELCph4V+LkZrz0ArDwaLT5hx5Dn1asm4TYdYFsk=";
   };
 }
