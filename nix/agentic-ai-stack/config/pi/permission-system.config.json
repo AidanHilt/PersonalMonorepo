@@ -20,14 +20,22 @@
       "*id_ed25519*": "deny",
       ".git/*": "deny"
     },
+    "path_read": {
+      "/home/pi/.pi/*": "allow"
+    },
+    "path_write": {
+      "/home/pi/.pi/*": "deny"
+    },
     "read": "allow",
     "find": "allow",
     "grep": "allow",
     "ls": "allow",
-    "write": "ask",
-    "edit": "ask",
+    "write": "deny",
+    "edit": "deny",
     "bash": {
       "*": "ask",
+      "*>*": "deny",
+      "*>>*": "deny",
       "cd *": "allow",
       "ls *": "allow",
       "pwd": "allow",
@@ -35,28 +43,53 @@
       "head *": "allow",
       "tail *": "allow",
       "wc *": "allow",
-      "find *": "allow",
       "grep *": "allow",
       "rg *": "allow",
       "which *": "allow",
-      "git *": "ask",
-      "git status": "allow",
-      "git status *": "allow",
-      "git diff": "allow",
-      "git diff *": "allow",
-      "git log": "allow",
-      "git log *": "allow",
-      "git show *": "allow",
-      "git branch": "allow",
-      "git branch *": "allow",
-      "nix build *": "allow",
+      "tree *": "allow",
+      "stat *": "allow",
+      "diff *": "allow",
+      "dirname *": "allow",
+      "basename *": "allow",
+      "realpath *": "allow",
+      "jq *": "allow",
+      "python3": "deny",
+      "find *": "ask",
+      "find * -exec*": "deny",
+      "find * -execdir*": "deny",
+      "find * -ok*": "deny",
+      "find * -okdir*": "deny",
+      "find * -delete*": "deny",
+      "find * -fprint*": "deny",
+      "find * -fprintf*": "deny",
+      "find * -fls*": "deny",
+      "git *": "deny",
+      "nix *": "deny",
+      "sed *": "deny",
+      "xargs *": "deny",
+      "env *": "deny",
+      "printenv *": "deny",
+      "export *": "deny",
+      "set *": "deny",
+      "eval *": "deny",
+      "exec *": "deny",
+      "curl *": "deny",
+      "wget *": "deny",
+      "nc *": "deny",
+      "ssh *": "deny",
+      "scp *": "deny",
       "rm -rf *": "deny",
       "sudo *": "deny",
       "kubectl apply *": "deny",
       "kubectl delete *": "deny",
-      "kubectl exec *": "deny"
+      "kubectl exec *": "deny",
+      "echo *": "deny"
     },
-    "external_directory_read": "allow",
-    "external_directory_write": "ask"
+    "external_directory_read": {
+      "/home/pi/.pi/*": "allow"
+    },
+    "external_directory_write": {
+      "*": "deny"
+    }
   }
 }

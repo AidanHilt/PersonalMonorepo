@@ -7,14 +7,26 @@ thinking: medium
 locked: true
 prompt_mode: replace
 permission:
+  write: ask
+  edit: ask
   bash:
     "*": ask
     "rm -rf *": deny
     "sudo *": deny
-    "git push --force*": deny
+    "git push*": deny
     "kubectl apply *": deny
     "kubectl delete *": deny
     "kubectl exec *": deny
+    # Read-only git, layered on top of the global "git *: deny" — these
+    # exact/prefix patterns override the broader deny for their own text.
+    "git status": allow
+    "git diff *": allow
+    "git log *": allow
+    "git show *": allow
+    "git branch": allow
+    "git blame *": allow
+    "git ls-files *": allow
+    "git remote -v": allow
 ---
 
 You are the implementation agent. You receive a finalized plan and carry it
