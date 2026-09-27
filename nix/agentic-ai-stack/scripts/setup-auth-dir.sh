@@ -12,14 +12,14 @@ AUTH_DIR="${PI_AUTH_DIR:-$HOME/.config/pi-sandbox/agent}"
 UID_TARGET=10001
 GID_TARGET=10001
 
-echo "info: setting up auth dir at $AUTH_DIR (uid:gid ${UID_TARGET}:${GID_TARGET}, mode 0700)" >&2
+echo "info: setting up auth dir at $AUTH_DIR (uid:gid ${UID_TARGET}:${GID_TARGET}, mode 0770)" >&2
 
 mkdir -p "$AUTH_DIR"
 
 # chown requires root unless you already own it as the target uid —
 # so always go through sudo rather than trying to detect and skip.
 sudo chown -R "${UID_TARGET}:${GID_TARGET}" "$AUTH_DIR"
-sudo chmod -R 0774 "$AUTH_DIR"
+sudo chmod -R 0770 "$AUTH_DIR"
 
 echo "info: done. current state:" >&2
 sudo ls -la "$AUTH_DIR"

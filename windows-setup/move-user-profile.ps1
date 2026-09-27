@@ -17,7 +17,7 @@ if (-not (Test-Path "D:\")) {
 # Create new directory structure
 try {
     New-Item -Path $newUserProfile -ItemType Directory -Force
-    
+
     # Create standard user folders
     $folders = @(
         'Desktop',
@@ -27,7 +27,7 @@ try {
         'Music',
         'Videos'
     )
-    
+
     foreach ($folder in $folders) {
         New-Item -Path "$newUserProfile\$folder" -ItemType Directory -Force
     }
@@ -49,11 +49,11 @@ try {
 
 # Update registry settings
 try {
-    
+
     # Update Shell Folders locations
     $shellFolders = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders"
     $userShellFolders = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"
-    
+
     # Update paths for both Shell Folders keys
     @($shellFolders, $userShellFolders) | ForEach-Object {
         Set-ItemProperty -Path $_ -Name "Desktop" -Value "$newUserProfile\Desktop"
