@@ -31,11 +31,11 @@ let
 
   extensionsLayer = pkgs.runCommand "pi-extensions-layer" { } (
     ''
-      mkdir -p $out/home/.pi-extensions
+      mkdir -p $out/home/pi/.pi-extensions
     ''
     + pkgs.lib.concatMapStringsSep "\n" (ext: ''
-      mkdir -p "$out/home/.pi-extensions/${ext.name}"
-      cp -r --no-preserve=mode ${ext}/. "$out/home/.pi-extensions/${ext.name}/"
+      mkdir -p "$out/home/pi/.pi-extensions/${ext.name}"
+      cp -r --no-preserve=mode ${ext}/. "$out/home/pi/.pi-extensions/${ext.name}/"
     '') extensions
     );
 
@@ -81,14 +81,12 @@ in
     copyToRoot = [
 
       agentBundle
-      #extensionsLayer
+      extensionsLayer
 
       (pkgs.buildEnv {
       name = "pi-image-root";
 
       paths = [
-            piPackages.pi-permission-system
-    piPackages.pi-anthropic-auth
         pkgs.pi-coding-agent
         pkgs.git
         pkgs.coreutils
@@ -113,6 +111,13 @@ in
     perms = [
       {
         path = agentBundle;
+        regex = ".*";
+        mode = "0700";
+        uid = pkgs.lib.toInt uid;
+        gid = pkgs.lib.toInt gid;
+      }
+      {
+        path = extensionsLayer;
         regex = ".*";
         mode = "0700";
         uid = pkgs.lib.toInt uid;

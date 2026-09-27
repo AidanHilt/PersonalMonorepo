@@ -57,7 +57,7 @@ fi
 echo "info: Clearing out installed extensions"
 rm -rf "$AGENT_DIR/extensions"
 
-cp /home/pi/.pi-extensions "$AGENT_DIR/extensions"
+cp -r /home/pi/.pi-extensions "$AGENT_DIR/extensions"
 
 if [ -f /home/pi/.kube/config ]; then
   export KUBECONFIG=/home/pi/.kube/config
