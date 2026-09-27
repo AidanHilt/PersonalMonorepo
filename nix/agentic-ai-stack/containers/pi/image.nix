@@ -47,15 +47,14 @@ let
       cp ${../../config/pi/models.json} \
         $out/home/pi/.pi-seed/agent/models.json
 
-      mkdir -p $out/home/pi/.pi-seed/agent/defaults
       cp ${../../config/pi/AGENTS.md} \
-        $out/home/pi/.pi-seed/agent/defaults/AGENTS.md
+        $out/home/pi/.pi-seed/agent/AGENTS.md
 
       mkdir -p $out/home/pi/.pi-seed/agent/extensions
 
-      mkdir -p $out/home/pi/.pi-seed/agents
+      mkdir -p $out/home/pi/.pi-seed/agent/agents
       cp ${../../config/pi/agents}/* \
-        $out/home/pi/.pi-seed/agents
+        $out/home/pi/.pi-seed/agent/agents
     ''
     + pkgs.lib.concatMapStringsSep "\n" (ext: ''
       mkdir -p "$out/home/pi/.pi-seed/agent/extensions/${ext.name}"
@@ -64,7 +63,7 @@ let
     + ''
 
       mkdir -p "$out/home/pi/.pi-seed/agent/extensions/pi-permission-system/"
-    
+
       cp ${../../config/pi/permission-system.config.json} \
         "$out/home/pi/.pi-seed/agent/extensions/pi-permission-system/config.json"
     ''
