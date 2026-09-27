@@ -8,5 +8,5 @@ terraform {
 
 inputs = merge(local.vm_vars.inputs, {
   vm_name = "staging-cluster-3"
-  mac_address = "AE:C5:F8:BB:4E:AB" 
+  mac_address = "AE:C5:F8:BB:4E:AB"
 })

@@ -1,5 +1,9 @@
 { inputs, globals, pkgs, machine-config, lib, ...}:
 
+let
+  personalMonorepoLocation = "${machine-config.userBase}/${machine-config.username}/PersonalMonorepo";
+in
+
 {
   imports = [
     ./_smb-mount.nix
@@ -8,7 +12,17 @@
     ./rclone.nix
   ];
 
-  environment.systemPackages = [];
+  environment.variables = {
+    PERSONAL_MONOREPO_LOCATION = "${personalMonorepoLocation}";
+  };
+
+  environment.systemPackages = with pkgs; [
+    inputs.scripts.packages.${pkgs.system}.kommit
+    inputs.scripts.packages.${pkgs.system}.pi-auth-port-forward
+
+    pre-commit
+    socat
+  ];
 
   homebrew = {
     casks = [
@@ -20,11 +34,12 @@
       "spotify"
       "tor-browser"
       "postman"
-      "utm"
       "prismlauncher"
       "crystalfetch"
       "dupeguru"
       "the-unarchiver"
+      "ollama-app"
+      "utm"
     ];
   };
 
@@ -63,7 +78,7 @@
       config = {
         virtualisation = {
           darwin-builder = {
-            diskSize = 80 * 1024;
+            diskSize = 120 * 1024;
             memorySize = 12 * 1024;
           };
           cores = 8;

@@ -6,4 +6,8 @@
   ];
 
   virtualisation.docker.enable = true;
+
+  users.users."${machine-config.username}" = {
+    extraGroups = ["docker"];
+  };
 }

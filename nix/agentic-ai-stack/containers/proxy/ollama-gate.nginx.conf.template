@@ -1,0 +1,64 @@
+# Narrow reverse-proxy gate in front of the host's native Ollama
+# instance (spec §3.2.2 / §3.3). Listens only on the `internal` compose
+# network; `pi` reaches it as http://proxy:11434.
+#
+# OLLAMA_UPSTREAM is templated in at container start (see supervise.sh)
+# because the host-loopback address differs by platform:
+#   - Colima (macOS):  typically host.docker.internal
+#   - NixOS native Docker: typically the bridge gateway IP, or
+#     host-gateway via extra_hosts (see compose.yaml)
+# Verify the current mechanism for the Docker/Colima version in use
+# before deploying (spec §3.3, §9) — this has changed across versions.
+
+pid /tmp/nginx-ollama-gate.pid;
+worker_processes 1;
+error_log /dev/stderr warn;
+
+events { worker_connections 256; }
+
+http {
+  access_log /dev/stdout;
+  client_max_body_size 32m;
+
+  upstream ollama_upstream {
+    server ${OLLAMA_UPSTREAM};
+  }
+
+  server {
+    listen 11434;
+
+    # pi talks OpenAI-completions to this proxy (see config/pi/models.json),
+    # which Ollama serves under /v1/*. Only inference-relevant paths are
+    # allowed through; everything else — including all native /api/*
+    # model-management endpoints (pull/create/push/delete/copy) — is
+    # denied here regardless of what Ollama itself would do with it.
+    location = /v1/chat/completions { proxy_pass http://ollama_upstream; }
+    location = /v1/completions       { proxy_pass http://ollama_upstream; }
+    location = /v1/embeddings        { proxy_pass http://ollama_upstream; }
+    location = /v1/models            { limit_except GET { deny all; } proxy_pass http://ollama_upstream; }
+
+    # Native Ollama inference endpoints, allowed for completeness in
+    # case an extension or future model.json entry uses them directly
+    # instead of the OpenAI-compat surface. Still inference-only.
+    location = /api/generate { proxy_pass http://ollama_upstream; }
+    location = /api/chat     { proxy_pass http://ollama_upstream; }
+    location = /api/embed    { proxy_pass http://ollama_upstream; }
+
+    # Explicitly enumerated denials for the model-management surface
+    # that has carried real Ollama CVEs (path traversal, arbitrary file
+    # write) — spec §3.2. Listed explicitly (not just relying on the
+    # default deny below) so intent is unambiguous on read.
+    location = /api/pull   { return 403; }
+    location = /api/create { return 403; }
+    location = /api/push   { return 403; }
+    location = /api/delete { return 403; }
+    location = /api/copy   { return 403; }
+
+    # Default: deny everything not explicitly allowed above.
+    location / { return 403; }
+
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_read_timeout 300s;
+  }
+}

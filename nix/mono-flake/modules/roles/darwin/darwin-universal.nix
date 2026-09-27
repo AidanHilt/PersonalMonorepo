@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ./_docker.nix
+    #./_docker.nix
     ./_guided-setup.nix
 
     ../universal/universal-base.nix

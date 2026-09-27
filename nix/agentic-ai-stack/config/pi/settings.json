@@ -1,0 +1,20 @@
+{
+  "_comment": "Bundled into the image per spec §5. No secrets belong here — see config/pi/README.md.",
+  "shellPath": "/bin/bash",
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-sonnet-5",
+  "thinking": {
+    "default": "medium"
+  },
+  "notifications": {
+    "cacheMisses": true,
+    "compaction": true,
+    "providerRecovery": true
+  },
+  "npmCommand": [
+    "npm"
+  ],
+  "compaction": {
+    "auto": true
+  }
+}

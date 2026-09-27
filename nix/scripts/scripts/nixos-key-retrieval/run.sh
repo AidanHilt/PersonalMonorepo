@@ -18,7 +18,6 @@ cd "$SECRETS_DIR" || exit
 
 if command -v agenix >/dev/null 2>&1; then
   agenix -r
-  nix-commit --no-push
 else
   echo "Error: agenix command not found in PATH"
   echo "Make sure agenix is installed and available"

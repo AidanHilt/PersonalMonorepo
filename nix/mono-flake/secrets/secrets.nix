@@ -17,8 +17,10 @@ let
   # Real-life desktop machines
   big-boi-user = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICWRZws+JjItD7G/MgDqvcj6OCLzizV87AcYJvxEHXys aidan@big-boi-desktop";
   big-boi-desktop-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGTFgV4B3Woc3f4W3b9wth9RlKqgJ4gkzA8IB9nZSPfE noname";
+  lima = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL5abQDR8GPAsf4dCPBTtHJFxGc9jxUkNlLYB2C05dx8 aidan@nixos";
+  lima-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAWom5Jkr7Q1GZafiLLZHV2aQyw8DY533mpr/Fy5Nzf8 root@nixos";
 
-  user-machines = [hyperion-user hyperion-system wsl-user wsl-system vm-desktop-system big-boi-desktop-system big-boi-user];
+  user-machines = [hyperion-user hyperion-system wsl-user wsl-system vm-desktop-system big-boi-desktop-system big-boi-user lima lima-system];
 
   # ===========================
   # Our various server clusters
@@ -47,6 +49,7 @@ let
   #External user 1
   external-user-1-machines = [external-user-1-machine-1-system];
   external-user-1-machine-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJlk3tURSKdo0EzrOpv26CE91m65pV4Ax01y5ZRF6Rvn noname";
+  devbox-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHlTUN203D+zEFtvCviK+aT29+0c+lg3Xvmkcjo0gVAd noname";
 in
 {
   "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
