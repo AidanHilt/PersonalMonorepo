@@ -19,7 +19,14 @@ in
   environment.systemPackages = with pkgs; [
     inputs.scripts.packages.${pkgs.system}.kommit
     inputs.scripts.packages.${pkgs.system}.pi-auth-port-forward
+    inputs.scripts.packages.${pkgs.system}.pi-auth-port-forward-big-boi
+    inputs.scripts.packages.${pkgs.system}.nixos-build-aarch64-iso
+    inputs.scripts.packages.${pkgs.system}.nixos-remote-install
+    inputs.scripts.packages.${pkgs.system}.generate-desktop-files
+    inputs.scripts.packages.${pkgs.system}.nixos-key-retrieval
+    inputs.scripts.packages.${pkgs.system}._modify-secrets-nix-let-statement
 
+    agenix
     pre-commit
     socat
   ];
