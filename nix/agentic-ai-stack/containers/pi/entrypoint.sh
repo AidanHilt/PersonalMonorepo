@@ -53,7 +53,7 @@ fi
 PROJECT_DIR="${PERSONAL_MONOREPO_LOCATION:-/workspace}"
 #AGENT_DIR="${PI_AGENT_DIR:-$HOME/.pi/agent}"
 
-if [ ! -d "$PROJECT_DIR" ] || [ -z "$(ls -A "$PROJECT_DIR" 2>/dev/null)" ]; then
+if [ "${PI_LOGIN_FORWARD:-0}" != "1" ] && { [ ! -d "$PROJECT_DIR" ] || [ -z "$(ls -A "$PROJECT_DIR" 2>/dev/null)" ]; }; then
   echo "warning: $PROJECT_DIR is empty or missing — check the project bind mount in compose.yaml" >&2
 fi
 
@@ -68,5 +68,12 @@ PI_ARGS=()
 if [ "${PI_SESSIONS:-1}" = "0" ]; then
   PI_ARGS+=("--no-session")
 fi
+
+if [ "${PI_LOGIN_FORWARD:-0}" = "1" ]; then
+      socat "TCP-LISTEN:${PI_FORWARD_LISTEN:-53693},bind=0.0.0.0,fork,reuseaddr" \
+        "TCP:127.0.0.1:${PI_FORWARD_TARGET:-53692}" &
+fi
+
+exec "$@"
 
 exec pi "${PI_ARGS[@]}" "$@"

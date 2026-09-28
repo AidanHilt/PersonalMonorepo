@@ -24,12 +24,6 @@ let
     '';
   };
 
-  extensions = [
-    piPackages.pi-permission-system
-    piPackages.pi-anthropic-auth
-    piPackages.pi-subagents
-  ];
-
   # Single, self-contained seed of the entire ~/.pi/agent tree. At runtime
   # the entrypoint copies this into the writable ~/.pi tmpfs in one shot;
   # the source of truth stays immutable in the image. Extensions and the
@@ -46,14 +40,11 @@ let
       # extension's config.json already live at their final relative
       # paths under config/pi/), so this is a single recursive copy with
       # no per-file translation.
-      cp -r ${../../config/pi}/. $out/home/pi/.pi-seed/agent/
-
       mkdir -p $out/home/pi/.pi-seed/agent/extensions
+      cp -r --no-preserve=mode ${extraExtensions}/. $out/home/pi/.pi-seed/agent/extensions/
+
+      cp -r --no-preserve=mode ${../../config/pi}/. $out/home/pi/.pi-seed/agent/
     ''
-    + pkgs.lib.concatMapStringsSep "\n" (ext: ''
-      mkdir -p "$out/home/pi/.pi-seed/agent/extensions/${ext.name}"
-      cp -r --no-preserve=mode ${ext}/. "$out/home/pi/.pi-seed/agent/extensions/${ext.name}/"
-    '') extensions
     );
 
   # Empty placeholder directories for the persistent auth/session state.
@@ -75,6 +66,7 @@ let
       pkgs.git
       pkgs.coreutils
       pkgs.bash
+      pkgs.socat
     ];
     text = builtins.readFile ./entrypoint.sh;
   };
@@ -91,6 +83,7 @@ let
       pkgs.gnugrep
       pkgs.gnused
       pkgs.findutils
+      pkgs.socat
       passwdFile
       groupFile
       entrypoint
@@ -110,6 +103,8 @@ let
   # `nix run .#load` to skip re-importing into the Docker daemon when
   # nothing actually changed.
   contentId = builtins.hashString "sha256" "${piSeed}-${rootEnv}-${piState}";
+
+  extraExtensions = import ../../extra-extensions.nix { inherit pkgs; };
 
 in
 

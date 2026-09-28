@@ -159,11 +159,12 @@ services:
   login:
     image: pi-sandbox/pi:dev
     profiles: [ login ]
-    command: [ "login" ]
     networks:
       - external
+    environment:
+      PI_LOGIN_FORWARD: "1"
     ports:
-      - "53692:53692"
+      - "127.0.0.1:53692:53693"
     volumes:
       # Same auth/session volumes as `pi`, so a completed login is
       # immediately usable by the isolated default-profile service.
@@ -187,5 +188,5 @@ volumes:
   # Persistent auth/session state (spec §7), seeded with uid:gid 10001
   # ownership from the placeholder paths baked into the pi image (see
   # containers/pi/image.nix) the first time Docker initializes them.
-  pi-auth: { }
-  pi-sessions: { }
+  pi-auth: {}
+  pi-sessions: {}

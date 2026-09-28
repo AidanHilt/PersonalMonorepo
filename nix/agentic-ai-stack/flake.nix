@@ -177,7 +177,7 @@
                 nix run --no-write-lock-file .#load
 
                 echo "==> Starting the containerized login flow..."
-                docker compose --profile login run --rm login
+                docker compose --profile login run --rm --service-ports login
               '';
             };
           };
@@ -206,7 +206,7 @@
           update-pi-extensions = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "update-pi-extensions";
-              runtimeInputs = [ pkgs.nodejs_22 pkgs.nix-prefetch-github pkgs.nix pkgs.gnused pkgs.gnugrep ];
+              runtimeInputs = [ pkgs.nodejs_22 pkgs.nix-prefetch-github pkgs.nix pkgs.gnused pkgs.gnugrep pkgs.prefetch-npm-deps ];
               text = builtins.readFile ./scripts/update-pi-extensions.sh;
             };
           };

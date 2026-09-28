@@ -4,6 +4,10 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
+    "@firstpick/pi-extension-nixos-wiki-local": "0.1.7",
+    "@gotgenes/pi-permission-system": "31.1.0",
+    "@gotgenes/pi-anthropic-auth": "3.3.2",
+    "@gotgenes/pi-subagents": "21.8.0",
     "pi-web-access": "0.27.0"
   }
 }

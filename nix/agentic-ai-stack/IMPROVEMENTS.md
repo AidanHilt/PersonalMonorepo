@@ -85,3 +85,9 @@ general-purpose file-write escape hatch. Needs a decision on where that
 script lives and what guardrails it should enforce (e.g. only ever
 targeting a file literally named `.AGENT-PLAN.md`, refusing to write
 anywhere outside the repo, etc.).
+
+## 6. Troubleshooter role
+
+Create an agent with the permissions to run debugging commands and test. This
+should be a more powerful model with a lot of permissions. Might need to run in
+a second container
