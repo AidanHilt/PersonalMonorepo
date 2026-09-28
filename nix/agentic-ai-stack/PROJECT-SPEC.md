@@ -40,11 +40,11 @@ Four logical components, three of which are containers:
 
 - Built via `nix2container.buildImage`, contents = Pi + Node runtime + chosen permission extension + bundled config (see §5).
 - Non-root user baked in.
-- Runs with `--read-only` root filesystem. Explicit `tmpfs` mount for `/tmp`. A named volume or bind mount for Pi's session-persistence directory if session history should survive across runs (decide at implementation time whether this is desired; default to **not** persisting unless asked, to keep runs stateless).
+- Runs with `--read-only` root filesystem. Explicit `tmpfs` mount for `/tmp`. Session history persists across runs by default via a named Docker volume (`pi-sessions`); set `PI_SESSIONS=0` on the container to fall back to `--no-session` stateless runs.
 - Mounts:
   - Project directory: read-write bind mount.
   - Scoped kubeconfig (see §6): read-only bind mount.
-  - Auth directory (see §7): read-write bind mount, host-side path outside the repo.
+  - Auth state (see §7): read-write named Docker volume (`pi-auth`), not a host bind mount.
 - Attached **only** to the `internal` compose network. No published ports. No route to the internet except via `proxy`.
 - Capabilities dropped (`cap_drop: [ALL]`), `no-new-privileges` security opt, rootless if the runtime supports it cleanly on both target hosts (verify Colima's rootless story before committing to this — may differ from a NixOS-native Docker rootless setup).
 - Other tools (such as Git) as necessary
@@ -70,9 +70,10 @@ Four logical components, three of which are containers:
 
 ### 3.4 `login` (compose profile, not a default service)
 
-- Same image as `pi`, started only on demand (`--profile login`), not part of the default `up`.
-- Bridged/normal network — needs a real path to the provider's auth endpoint and, if OAuth is used, a way to complete a browser redirect/callback.
-- Writes credentials to the same host-side auth directory that the `pi` service mounts, so a completed login is immediately usable by the isolated service.
+- Implemented as an actual `login` service/profile in `compose.yaml` (started via `nix run .#login`, which wraps `docker compose --profile login run --rm login`), same image as `pi`, not part of the default `up`.
+- Attached only to the `external` network — needs a real, unproxied path to the provider's auth endpoint and, if OAuth is used, a way to complete a browser redirect/callback. Not attached to `internal`; skips the egress proxy entirely.
+- `containers/pi/entrypoint.sh` selects this mode when the container's first argument is `login` (wired via the compose service's `command: ["login"]`) and runs `pi`'s native interactive login instead of the normal workspace run.
+- Writes credentials to the `pi-auth` named Docker volume, the same volume the `pi` service mounts, so a completed login is immediately usable by the isolated service.
 - **Default assumption: prefer static API keys over OAuth** for exactly this reason — it avoids needing a less-isolated network path at all. Fall back to the OAuth login-service flow only for providers that don't offer key-based auth for the plan/tier in use.
 
 ## 4. Build & run flow
@@ -84,7 +85,7 @@ Nix's job stops once images are built and loaded into the local Docker daemon. F
    - `proxy-image` (same tagging approach).
 2. A flake app (`nix run .#load`) calls `copyToDockerDaemon` for both images. This uses the `docker` CLI under the hood and respects whatever Docker context is active — confirm Colima has set itself as the active context (it does this automatically on `colima start`) or export `DOCKER_HOST` explicitly if not.
 3. `docker compose up` (default profile) starts `pi` and `proxy`, attached to the `internal` network as specified. Ollama is assumed already running natively on the host (a setup/health-check step should verify this and fail fast with a clear message if not).
-4. `docker compose --profile login up login` is run manually, once, whenever a credential needs to be established or refreshed.
+4. `nix run .#login` (wraps `docker compose --profile login run --rm login`) is run manually, once, whenever a credential needs to be established or refreshed.
 
 ## 5. Configuration bundling
 
@@ -107,7 +108,7 @@ All of the following live **inside the flake repo** and get baked into the `pi-i
 ## 7. Credentials
 
 - **Frontier provider credentials:** Do not prefer static API keys. Use a the `login` command and a similar process as below
-- **Auth persistence for any provider that does need OAuth:** a host-side directory outside the repo (e.g. `~/.config/pi-sandbox/agent/`), permissions locked to `0700`/`0600`, bind-mounted read-write into both the `pi` and `login` services. The `login` service (§3.4) is the only place this directory is ever written to via an interactive flow.
+- **Auth persistence for any provider that does need OAuth:** a named Docker volume (`pi-auth`), not a host-side directory, mounted read-write into both the `pi` and `login` services at `/home/pi/.pi-state/auth`; `containers/pi/entrypoint.sh` symlinks `auth.json` from there into `~/.pi/agent/`. The image bakes uid:gid 10001 ownership/mode `0700` onto the placeholder path the volume is seeded from (§5/`containers/pi/image.nix`), so Docker picks that up automatically the first time the (empty) volume is initialized — no host-side chown step needed. The `login` service (§3.4) is the only place this volume is ever written to via an interactive flow. Trade-off versus the old host bind mount: no plain host filesystem path to eyeball or back up `auth.json`/session history directly — use `docker run --rm -v pi-auth:/data ...` (or similar) instead.
 - **Ollama:** no credentials — it's a local, unauthenticated-by-design service, which is exactly why §3.3's network-gating matters.
 
 ## 8. Permission model (Pi-level)
@@ -142,4 +143,4 @@ Revisit this rule set after initial usage — it's a starting point, not a final
 - `pi` container's root filesystem is read-only — verified by attempting a write outside the mounted paths and confirming it fails.
 - Ollama's model-management endpoints are unreachable from the `internal` network — verified by attempting `/api/pull` (or current equivalent) through the path the `pi` container would use, and confirming it's rejected by `proxy`.
 - No secret values appear in `git log`, `git diff`, or `nix path-info` output for any built derivation.
-- A fresh `login` run correctly populates the host-side auth directory, and a subsequent default-profile `pi` run picks up those credentials without re-authenticating.
+- A fresh `login` run correctly populates the `pi-auth` Docker volume, and a subsequent default-profile `pi` run picks up those credentials without re-authenticating.

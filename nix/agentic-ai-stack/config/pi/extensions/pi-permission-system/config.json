@@ -34,12 +34,10 @@
     "edit": "deny",
     "bash": {
       "*": "ask",
-      "*>*": "deny",
-      "*>>*": "deny",
       "cd *": "allow",
       "ls *": "allow",
       "pwd": "allow",
-      "cat *": "allow",
+      "sort *": "allow",
       "head *": "allow",
       "tail *": "allow",
       "wc *": "allow",
@@ -83,7 +81,10 @@
       "kubectl apply *": "deny",
       "kubectl delete *": "deny",
       "kubectl exec *": "deny",
-      "echo *": "deny"
+      "echo *": "deny",
+      "cp *": "deny",
+      "rm *": "deny",
+      "mkdir *": "deny"
     },
     "external_directory_read": {
       "/home/pi/.pi/*": "allow"

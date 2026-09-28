@@ -20,7 +20,20 @@
 #      belong in this repo's git history — .env is gitignored)
 #
 # Then: docker compose up            (starts pi + proxy)
-#       docker compose --profile login up login   (on demand, for auth)
+#       nix run .#login              (on demand, for auth — wraps
+#                                      `docker compose --profile login
+#                                      run --rm login`, see flake.nix)
+#
+# auth.json and session history persist across runs on two named Docker
+# volumes (pi-auth, pi-sessions — see `volumes:` below), not a host bind
+# mount. The image bakes correct uid:gid 10001 ownership onto the
+# placeholder paths those volumes are seeded from (containers/pi/image.nix),
+# so there's no more host-side setup script (scripts/setup-auth-dir.sh is
+# gone) to run before first use. Trade-off: no plain host filesystem path
+# to eyeball/back up auth.json or session history anymore — inspect or
+# back them up with something like
+#   docker run --rm -v pi-auth:/data alpine cat /data/auth.json
+# instead.
 
 networks:
   internal:
@@ -103,17 +116,20 @@ services:
       # otherwise this base file runs with no cluster access.
       #
       # ~/.pi is a fresh tmpfs each run (below), seeded from the immutable
-      # .pi-seed baked into the image. Only the two genuinely mutable,
-      # host-persisted items are layered back in as narrow bind mounts on
-      # top of that tmpfs:
-      #   - auth.json: written by the host-side `login` flow (spec §7).
-      #   - sessions:  session history (only exercised once --no-session
-      #                is dropped in containers/pi/entrypoint.sh).
-      # Neither is part of the seed, so the entrypoint's seed copy never
-      # clobbers them. Run scripts/setup-auth-dir.sh once so these sources
-      # exist with uid:gid 10001 ownership before the first `up`.
-      - ${HOME}/.config/pi-sandbox/agent/auth.json:/home/pi/.pi-seed/agent/auth.json:rw
-      - ${HOME}/.config/pi-sandbox/agent/sessions:/home/pi/.pi-seed/agent/sessions:rw
+      # .pi-seed baked into the image. The two genuinely mutable,
+      # host-persisted items — auth.json and session history (spec §7) —
+      # live on named Docker volumes instead of host bind mounts, mounted
+      # at /home/pi/.pi-state/{auth,sessions}; containers/pi/entrypoint.sh
+      # symlinks $HOME/.pi/agent/{auth.json,sessions} into them after the
+      # seed copy, so the seed copy itself never touches this state.
+      # Named volumes pick up the uid:gid 10001 ownership/mode baked onto
+      # the matching placeholder paths in containers/pi/image.nix the
+      # first time Docker initializes them, so — unlike the old host bind
+      # mount — there's no setup script to run first. The trade-off: no
+      # plain host filesystem path into these anymore (see compose.yaml's
+      # header comment for how to inspect/back them up).
+      - pi-auth:/home/pi/.pi-state/auth
+      - pi-sessions:/home/pi/.pi-state/sessions
       # All of ~/.pi is writable-but-ephemeral. mode 1023 == 01777
       # (leading-zero-safe decimal) so the uid:10001 process can populate
       # it from .pi-seed at startup.
@@ -130,3 +146,46 @@ services:
     stdin_open: true
     tty: true
     restart: "no"
+
+  # On-demand OAuth login flow (spec §3.4), started via `nix run .#login`
+  # (which wraps `docker compose --profile login run --rm login`) —
+  # never part of the default `docker compose up`. Same image as `pi`,
+  # but deliberately NOT attached to `internal`: it needs a real,
+  # unproxied route to the provider's auth endpoint (and, for OAuth, a
+  # browser redirect/callback), so it only gets the `external` network
+  # and skips the egress proxy entirely. `command: ["login"]` selects the
+  # login-mode branch in containers/pi/entrypoint.sh, which runs `pi`'s
+  # native interactive login instead of the normal workspace run.
+  login:
+    image: pi-sandbox/pi:dev
+    profiles: [ login ]
+    command: [ "login" ]
+    networks:
+      - external
+    ports:
+      - "53692:53692"
+    volumes:
+      # Same auth/session volumes as `pi`, so a completed login is
+      # immediately usable by the isolated default-profile service.
+      - pi-auth:/home/pi/.pi-state/auth
+      - pi-sessions:/home/pi/.pi-state/sessions
+      - type: tmpfs
+        target: /home/pi/.pi
+        tmpfs:
+          mode: 1023
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ ALL ]
+    security_opt:
+      - no-new-privileges:true
+    stdin_open: true
+    tty: true
+    restart: "no"
+
+volumes:
+  # Persistent auth/session state (spec §7), seeded with uid:gid 10001
+  # ownership from the placeholder paths baked into the pi image (see
+  # containers/pi/image.nix) the first time Docker initializes them.
+  pi-auth: { }
+  pi-sessions: { }

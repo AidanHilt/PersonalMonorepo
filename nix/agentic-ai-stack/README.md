@@ -43,7 +43,7 @@ the acceptance criteria from the spec against a running stack:
 
 ## The actual security boundary
 
-Pi's permission prompts (`config/pi/permission-system.config.json`) are
+Pi's permission prompts (`config/pi/extensions/pi-permission-system/config.json`) are
 a habit-forming guardrail, not the boundary. The real boundary is:
 
 - `pi` is attached only to the `internal` compose network — no route to

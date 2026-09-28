@@ -113,6 +113,13 @@
           proxy-image = proxy.image;
           default = pi.image;
           pi-packages = piPackages;
+
+          # Standalone, opt-in convenience path for pre-built npm/git
+          # extensions (see extra-extensions.nix, extensions/README.md).
+          # Deliberately NOT wired into pi-image/pi.contentId or anything
+          # else image-related -- exposed here only so it's inspectable
+          # via `nix build .#pi-extra-extensions` / `nix eval`.
+          pi-extra-extensions = import ./extra-extensions.nix { inherit pkgs; };
         };
 
         apps = {
@@ -147,25 +154,33 @@
             };
           };
 
-        setup-auth-dir = flake-utils.lib.mkApp {
-          drv = pkgs.writeShellApplication {
-            name = "setup-auth-dir";
-            runtimeInputs = [ pkgs.coreutils ];
-            text = builtins.readFile ./scripts/setup-auth-dir.sh;
-          };
-        };
+          # nix run .#login -> builds/loads images if needed (same as
+          # `nix run .#load`), then runs the containerized, on-demand OAuth
+          # login flow (spec §3.4) via the `login` compose profile. auth.json
+          # ends up on the `pi-auth` named volume, shared with the `pi`
+          # service (see compose.yaml). Assumes it's run from within this
+          # flake's checkout (same assumption `load` already makes, since it
+          # resolves the `.#*-image` flake refs relative to cwd).
+          login = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellApplication {
+              name = "login";
+              runtimeInputs = [ pkgs.docker pkgs.docker-compose pkgs.nix ];
+              text = ''
+                set -euo pipefail
 
-        login = flake-utils.lib.mkApp {
-          drv = pkgs.writeShellApplication {
-            name = "login";
-            runtimeInputs = [ pkgs.pi-coding-agent ];
-            text = ''
-              set -euo pipefail
-              export PI_CODING_AGENT_DIR="''${PI_AUTH_DIR:-$HOME/.config/pi-sandbox/agent}"
-              pi
-            '';
+                if ! docker info >/dev/null 2>&1; then
+                  echo "Docker daemon is not reachable" >&2
+                  exit 1
+                fi
+
+                echo "==> Building and loading pi image into the active Docker context..."
+                nix run --no-write-lock-file .#load
+
+                echo "==> Starting the containerized login flow..."
+                docker compose --profile login run --rm login
+              '';
+            };
           };
-        };
 
           gen-kubeconfig = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
@@ -180,6 +195,19 @@
               name = "verify";
               runtimeInputs = [ pkgs.docker pkgs.docker-compose pkgs.curl ];
               text = builtins.readFile ./scripts/verify-acceptance.sh;
+            };
+          };
+
+          # nix run .#update-pi-extensions -> refreshes extensions/package-lock.json
+          # and fills in unset hashes in extensions/git-extensions.nix for the
+          # standalone pre-built npm/git extensions convenience path (see
+          # extra-extensions.nix, extensions/README.md). Not part of the
+          # reproducible pi-packages.nix pipeline; requires network access.
+          update-pi-extensions = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellApplication {
+              name = "update-pi-extensions";
+              runtimeInputs = [ pkgs.nodejs_22 pkgs.nix-prefetch-github pkgs.nix pkgs.gnused pkgs.gnugrep ];
+              text = builtins.readFile ./scripts/update-pi-extensions.sh;
             };
           };
         };

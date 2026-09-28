@@ -54,10 +54,14 @@ elif [ -f .env ]; then
   fail ".env exists but is NOT git-ignored — fix .gitignore before committing"
 fi
 
-echo "==> [5/5] login flow populates the auth directory, default profile picks it up"
-AUTH_DIR="${PI_AUTH_DIR:-$HOME/.config/pi-sandbox/agent}"
-if [ -s "$AUTH_DIR/auth.json" ]; then
-  pass "auth.json exists and is non-empty at $AUTH_DIR — run a default-profile session to confirm no re-auth prompt appears"
+echo "==> [5/5] login flow populates the auth volume, default profile picks it up"
+# auth.json now lives on the pi-auth named Docker volume (not a host
+# bind mount — see compose.yaml/PROJECT-SPEC.md §7), so check it via a
+# throwaway container instead of a host path.
+if ! docker volume inspect pi-auth >/dev/null 2>&1; then
+  echo "  SKIP: pi-auth volume does not exist yet — run 'nix run .#login' first"
+elif docker run --rm -v pi-auth:/data alpine test -s /data/auth.json >/dev/null 2>&1; then
+  pass "auth.json exists and is non-empty on the pi-auth volume — run a default-profile session to confirm no re-auth prompt appears"
 else
   echo "  SKIP: no auth.json yet — run 'nix run .#login' first, this check only confirms the file exists"
 fi

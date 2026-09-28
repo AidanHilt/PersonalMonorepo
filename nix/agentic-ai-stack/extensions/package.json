@@ -1,0 +1,9 @@
+{
+  "//": "Template for the pre-built npm extensions convenience path. Edit this file to add/remove npm-sourced pi extensions, then run `nix run .#update-pi-extensions` to refresh package-lock.json. See ./README.md and ../extra-extensions.nix. This is a plain npm project (not pnpm) -- deliberately separate tooling from pi-packages.nix's pnpm workspace.",
+  "name": "pi-extra-extensions",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "pi-web-access": "0.27.0"
+  }
+}

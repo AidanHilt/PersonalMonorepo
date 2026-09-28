@@ -41,33 +41,31 @@ let
       mkdir -p $out/home/pi/.pi-seed/agent
       mkdir -p $out/home/pi/.pi
 
-      cp ${../../config/pi/settings.json} \
-        $out/home/pi/.pi-seed/agent/settings.json
-
-      cp ${../../config/pi/models.json} \
-        $out/home/pi/.pi-seed/agent/models.json
-
-      cp ${../../config/pi/AGENTS.md} \
-        $out/home/pi/.pi-seed/agent/AGENTS.md
+      # config/pi/ is a direct, 1:1 mirror of the final ~/.pi/agent/ tree
+      # (settings.json, models.json, AGENTS.md, agents/*, and each
+      # extension's config.json already live at their final relative
+      # paths under config/pi/), so this is a single recursive copy with
+      # no per-file translation.
+      cp -r ${../../config/pi}/. $out/home/pi/.pi-seed/agent/
 
       mkdir -p $out/home/pi/.pi-seed/agent/extensions
-
-      mkdir -p $out/home/pi/.pi-seed/agent/agents
-      cp ${../../config/pi/agents}/* \
-        $out/home/pi/.pi-seed/agent/agents
     ''
     + pkgs.lib.concatMapStringsSep "\n" (ext: ''
       mkdir -p "$out/home/pi/.pi-seed/agent/extensions/${ext.name}"
       cp -r --no-preserve=mode ${ext}/. "$out/home/pi/.pi-seed/agent/extensions/${ext.name}/"
     '') extensions
-    + ''
-
-      mkdir -p "$out/home/pi/.pi-seed/agent/extensions/pi-permission-system/"
-
-      cp ${../../config/pi/permission-system.config.json} \
-        "$out/home/pi/.pi-seed/agent/extensions/pi-permission-system/config.json"
-    ''
     );
+
+  # Empty placeholder directories for the persistent auth/session state.
+  # These paths get named Docker volumes mounted onto them at runtime
+  # (see compose.yaml); baking them into the image with the right
+  # ownership/mode means Docker seeds a brand-new (empty) named volume
+  # from this image content instead of defaulting to root:root, so the
+  # uid:10001 process can write to them with no runtime chown step.
+  piState = pkgs.runCommand "pi-state" { } ''
+    mkdir -p $out/home/pi/.pi-state/auth
+    mkdir -p $out/home/pi/.pi-state/sessions
+  '';
 
   entrypoint = pkgs.writeShellApplication {
     name = "pi-entrypoint";
@@ -111,7 +109,7 @@ let
   # compute, and it changes iff the image's contents would change. Used by
   # `nix run .#load` to skip re-importing into the Docker daemon when
   # nothing actually changed.
-  contentId = builtins.hashString "sha256" "${piSeed}-${rootEnv}";
+  contentId = builtins.hashString "sha256" "${piSeed}-${rootEnv}-${piState}";
 
 in
 
@@ -122,12 +120,20 @@ in
 
     copyToRoot = [
       piSeed
+      piState
       rootEnv
     ];
 
     perms = [
       {
         path = piSeed;
+        regex = ".*";
+        mode = "0700";
+        uid = pkgs.lib.toInt uid;
+        gid = pkgs.lib.toInt gid;
+      }
+      {
+        path = piState;
         regex = ".*";
         mode = "0700";
         uid = pkgs.lib.toInt uid;
