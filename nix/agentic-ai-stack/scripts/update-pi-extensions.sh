@@ -47,8 +47,7 @@
 #
 # This script edits extensions/package-lock.json, extensions/
 # git-extensions.nix, and the single `npmDepsHash` line in
-# extra-extensions.nix. It does NOT touch pi-packages.nix, hashes.nix, or
-# anything else in the reproducible pnpm-workspace extension pipeline.
+# extra-extensions.nix. It does not touch anything else.
 set -euo pipefail
 
 AGENTIC_AI_STACK="$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"

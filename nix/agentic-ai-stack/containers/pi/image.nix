@@ -1,4 +1,4 @@
-{ pkgs, n2c, imageName, imageTag, piPackages }:
+{ pkgs, n2c, imageName, imageTag }:
 
 let
   user = "pi";

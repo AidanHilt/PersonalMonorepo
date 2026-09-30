@@ -133,13 +133,10 @@ services:
       # All of ~/.pi is writable-but-ephemeral. mode 1023 == 01777
       # (leading-zero-safe decimal) so the uid:10001 process can populate
       # it from .pi-seed at startup.
-      - type: tmpfs
-        target: /home/pi/.pi
-        tmpfs:
-          mode: 1023
     read_only: true
     tmpfs:
       - /tmp
+      - /home/pi/.pi:exec,uid=10001,gid=10001,mode=0700
     cap_drop: [ ALL ]
     security_opt:
       - no-new-privileges:true

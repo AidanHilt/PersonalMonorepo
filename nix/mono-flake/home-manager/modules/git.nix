@@ -17,6 +17,10 @@ in
         name = userName;
       };
 
+      safe = {
+        directory = ["/home/aidan/PersonalMonorepo"];
+      };
+
 
       push = {
         autoSetupRemote = true;

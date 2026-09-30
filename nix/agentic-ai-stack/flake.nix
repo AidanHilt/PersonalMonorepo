@@ -11,29 +11,26 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    pi-packages = {
-      url = "github:gotgenes/pi-packages";
-      flake = false;
-    };
-
-    pi-anthropic-auth = {
-      url = "github:gotgenes/pi-anthropic-auth";
-      flake = false;
+    # Same remote ref as nix/mono-flake's `scripts` input (see
+    # nix/mono-flake/flake.nix). Not wired into the built pi/proxy container
+    # images -- only into devShells/apps here, so the `agent-plan-create`
+    # launcher script (and anything else under nix/scripts) is resolvable
+    # via `nix build`/`nix develop` from this flake. Anyone developing from
+    # within this monorepo checkout can point this at their local
+    # nix/scripts checkout instead by running `nix run .#scripts-shell`
+    # (see the `scripts-shell` app below), which mirrors the
+    # `--override-input scripts path:...` gating in
+    # nix/mono-flake/modules/roles/universal/_update.nix.
+    scripts = {
+      url = "github:aidanhilt/PersonalMonorepo/project-lockstep/release-mgmt?dir=nix/scripts";
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix2container, pi-packages, pi-anthropic-auth }:
+  outputs = { self, nixpkgs, flake-utils, nix2container, scripts }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
         n2c = nix2container.packages.${system}.nix2container;
-
-        mkPiPackageFromSrc = (import ./pi-packages.nix { inherit pkgs; src = pi-packages; }).mkPiPackageFromSrc;
-
-        piPackages = (import ./pi-packages.nix { inherit pkgs; src = pi-packages; }).pi-packages
-          // { pi-anthropic-auth = (mkPiPackageFromSrc
-            { pname = "pi-anthropic-auth"; pnpmHash = "sha256-9yRXg2X2db+r7C7BEMu/HsXesXTIF7fTrkzkyWEs6u4="; version = "3.3.2"; src = pi-anthropic-auth;
-            workspace = (builtins.fromJSON (builtins.readFile "${pi-anthropic-auth}/package.json")).name;});};
 
         # ---- Fixed, non-content-hash tags -----------------------------
         # A static compose.yaml needs tags that don't change on every
@@ -45,7 +42,7 @@
         proxyImageName = "pi-sandbox/proxy";
 
         pi = import ./containers/pi/image.nix {
-          inherit pkgs n2c piPackages;
+          inherit pkgs n2c;
           imageName = piImageName;
           imageTag = piTag;
         };
@@ -112,7 +109,6 @@
           pi-image = pi.image;
           proxy-image = proxy.image;
           default = pi.image;
-          pi-packages = piPackages;
 
           # Standalone, opt-in convenience path for pre-built npm/git
           # extensions (see extra-extensions.nix, extensions/README.md).
@@ -200,9 +196,8 @@
 
           # nix run .#update-pi-extensions -> refreshes extensions/package-lock.json
           # and fills in unset hashes in extensions/git-extensions.nix for the
-          # standalone pre-built npm/git extensions convenience path (see
-          # extra-extensions.nix, extensions/README.md). Not part of the
-          # reproducible pi-packages.nix pipeline; requires network access.
+          # extensions build pipeline (see extra-extensions.nix,
+          # extensions/README.md). Requires network access.
           update-pi-extensions = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "update-pi-extensions";
@@ -210,10 +205,37 @@
               text = builtins.readFile ./scripts/update-pi-extensions.sh;
             };
           };
+
+          # nix run .#scripts-shell -> drops into `nix develop` with the
+          # `scripts` flake input overridden to a local nix/scripts checkout,
+          # when run from within this monorepo (PERSONAL_MONOREPO_LOCATION
+          # set and $PERSONAL_MONOREPO_LOCATION/nix/scripts exists). Falls
+          # back to the pinned remote `scripts` input otherwise. Mirrors the
+          # gating in nix/mono-flake/modules/roles/universal/_update.nix.
+          scripts-shell = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellApplication {
+              name = "scripts-shell";
+              runtimeInputs = [ pkgs.nix ];
+              text = ''
+                set -euo pipefail
+
+                override_flag=()
+                if [ -n "''${PERSONAL_MONOREPO_LOCATION:-}" ] && [ -d "$PERSONAL_MONOREPO_LOCATION/nix/scripts" ]; then
+                  override_flag=(--override-input scripts "path:$PERSONAL_MONOREPO_LOCATION/nix/scripts")
+                  echo "==> Using local nix/scripts checkout at $PERSONAL_MONOREPO_LOCATION/nix/scripts"
+                fi
+
+                exec nix develop "''${override_flag[@]}" .
+              '';
+            };
+          };
         };
 
         devShells.default = pkgs.mkShell {
-          packages = [ pkgs.docker pkgs.docker-compose pkgs.nodejs_22 pkgs.jq pkgs.kubectl ];
+          # yq-go (mikefarah/yq) sits alongside jq -- chosen over the
+          # Python-based kislyuk/yq to avoid pulling Python into the
+          # environment (see RESEARCH-NOTES.md).
+          packages = [ pkgs.docker pkgs.docker-compose pkgs.nodejs_22 pkgs.jq pkgs.yq-go pkgs.kubectl scripts.packages.${system}.agent-plan-create ];
         };
       });
 }

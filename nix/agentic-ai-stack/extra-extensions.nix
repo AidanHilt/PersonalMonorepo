@@ -1,29 +1,36 @@
 # extra-extensions.nix
 #
-# Standalone, OPT-IN convenience path for pre-built pi extensions sourced
-# directly from npm and/or git, as an alternative to pi-packages.nix's
-# fully-reproducible pinned-pnpm-workspace approach.
+# Build pipeline for pre-built pi extensions sourced directly from npm
+# and/or git. This is wired into the image build: containers/pi/image.nix
+# copies this derivation's output straight into
+# $out/home/pi/.pi-seed/agent/extensions/.
 #
-# This module is NOT wired into containers/pi/image.nix (or anywhere else
-# in the image build). Using it trades away the reproducibility guarantees
-# of pi-packages.nix -- npm-sourced extensions resolve through package.json/
-# package-lock.json like any other npm project, and git-sourced ones are
-# just pinned-by-rev fetchFromGitHub fetches, neither of which get the
-# fetcherVersion/pnpmDeps FOD treatment pi-packages.nix's workspace gets.
+# npm-sourced extensions resolve through package.json/package-lock.json like
+# any other npm project (via pkgs.buildNpmPackage's fixed-output npm cache),
+# and git-sourced ones are pinned-by-rev fetchFromGitHub fetches.
 #
-# The user is responsible for:
-#   - Deciding whether to consume this at all.
-#   - Manually copying this derivation's output into their own image build
-#     (e.g. `cp -r ${extraExtensions}/. ~/.pi/agent/extensions/`, mirroring
-#     the per-extension copy loop image.nix already does for piPackages).
-#   - Merging `packagesListFragment` into their own settings.json's
-#     `packages` array by hand.
+# Native binaries: npm packages may ship prebuilt ELF binaries (.so / .node /
+# executables) built against a conventional glibc layout. On a Nix-built image
+# those fail to load ("cannot open shared object file" for libgcc_s/libstdc++,
+# or a missing ELF interpreter). Patching is OPT-IN per extension: pass the
+# extension names in `autoPatchExtensions` (npm package names as they appear in
+# extensions/package.json, or git repo dir names). For each one, the final step
+# of `extraExtensions` runs autoPatchelf over that extension's directory AND its
+# transitive dependency closure inside the shared node_modules (native addons
+# are usually hoisted optionalDependencies, not inside the extension's own dir).
+# Nothing else in the output is touched. See `nativeRuntimeLibs` below for how
+# to supply extra libraries.
 #
 # See ./extensions/README.md for the day-to-day "how do I add one" workflow,
 # and ./extensions/git-extensions.nix for the git-hash pinning convention
-# (mirrors ./hashes.nix).
+# (a hand-editable map of "git:github.com/owner/repo@rev" specs to
+# fetchFromGitHub output hashes).
 
-{ pkgs }:
+{ pkgs
+, # Extensions to run autoPatchelf on (see "Native binaries" above). Names are
+  # package.json dependency names (e.g. "@ff-labs/pi-fff") or git repo names.
+  autoPatchExtensions ? [ "@ff-labs/pi-fff" ]
+}:
 
 let
   lib = pkgs.lib;
@@ -38,17 +45,39 @@ let
   # this must be regenerated). If it ever goes stale the build fails with a
   # fixed-output hash mismatch that prints the correct `got:` value to paste
   # in (or just re-run update-pi-extensions).
-  npmDepsHash = "sha256-RWfFSccIsTDIsSvoHL4p77qiP1Ht9OoTAFFWuuiGywA=";
+  npmDepsHash = "sha256-kiq/9P6ZPh5Ys1eTE+XJ8r6yjDunQ6riKMa4lBCirP8=";
+
+  # ---- shared libraries for prebuilt native binaries ----------------------
+  # Libraries autoPatchelf may point prebuilt binaries at. glibc itself is
+  # resolved automatically by the hook; what prebuilt Rust/C++ addons usually
+  # also need is the GCC runtime (libgcc_s.so.1, libstdc++.so.6), which lives in
+  # stdenv.cc.cc.lib.
+  #
+  # If the build fails with "auto-patchelf could not satisfy dependency
+  # libfoo.so.N wanted by <file>", add the package providing libfoo here
+  # (e.g. pkgs.openssl, pkgs.zlib) rather than silencing the error.
+  nativeRuntimeLibs = [
+    pkgs.stdenv.cc.cc.lib
+  ];
+
+  # Sonames autoPatchelf should NOT fail on. npm ships both -gnu and -musl
+  # variants of platform packages (e.g. @ff-labs/fff-bin-linux-arm64-musl,
+  # @yuuang/ffi-rs-linux-arm64-musl); the musl builds want a musl libc that
+  # doesn't exist here. Loaders on a glibc system never select them, so we leave
+  # them in place (keeps the package layout intact for loaders that probe for
+  # them) and just tell autoPatchelf not to fail on their missing libc.
+  ignoreMissingNativeDeps = [
+    "libc.musl-aarch64.so.1"
+    "libc.musl-x86_64.so.1"
+  ];
 
   # ---- npm-sourced extensions --------------------------------------------
   # ./extensions/package.json + ./extensions/package-lock.json are a plain
-  # npm project (not pnpm -- deliberately different tooling from
-  # pi-packages.nix) declaring the npm-sourced extensions to pull in.
+  # npm project declaring the npm-sourced extensions to pull in.
   #
   # We resolve them with pkgs.buildNpmPackage, whose fetchNpmDeps builds a
   # fixed-output, offline npm cache from package-lock.json and then runs a
-  # normal `npm ci` against it. nodejs is pinned to pkgs.nodejs_22 for
-  # consistency with pi-packages.nix's node version pin.
+  # normal `npm ci` against it. nodejs is pinned to pkgs.nodejs_22.
   #
   # Why NOT pkgs.importNpmLock (the more obvious "build node_modules from a
   # lockfile" helper, and what this used to use): importNpmLock rewrites
@@ -109,8 +138,9 @@ let
     # If a dependency's postinstall script fails in the build sandbox (most
     # commonly because it wants network, which the sandbox denies), set:
     #   npmFlags = [ "--ignore-scripts" ];
-    # The extensions here are JS and none is currently known to need a
-    # postinstall-built native artifact at pi runtime.
+    # The extensions here are JS; native pieces (e.g. @ff-labs/fff-bin-*,
+    # @yuuang/ffi-rs-*) arrive as prebuilt optionalDependencies rather than via
+    # a postinstall build, and are patched for Nix in `extraExtensions` below.
   };
 
   # Parsed manifest -- the single source of truth for which packages are
@@ -180,6 +210,21 @@ let
   # can't be used as a single path component).
   gitExtensionDirName = spec: (parseGitSpec spec).repo;
 
+  # ---- opt-in native patching ---------------------------------------------
+  # Every requested name must be a known extension, so a typo fails at eval time
+  # instead of silently patching nothing.
+  knownExtensionNames =
+    npmExtensionNames ++ map gitExtensionDirName (builtins.attrNames gitExtensions);
+  unknownPatchTargets =
+    lib.filter (n: !(builtins.elem n knownExtensionNames)) autoPatchExtensions;
+  patchTargets =
+    assert lib.assertMsg (unknownPatchTargets == [ ])
+      "extra-extensions.nix: autoPatchExtensions names unknown extension(s): ${lib.concatStringsSep ", " unknownPatchTargets}";
+    autoPatchExtensions;
+
+  # Flattened output dir for each target (scope stripped; same rule as above).
+  patchTargetDirs = map npmExtensionDirName patchTargets;
+
   # ---- combined output -----------------------------------------------------
   # Layout: a shared $out/node_modules/ (the full hoisted dependency tree)
   # plus $out/<name>/ for every extension, npm or git alike. The shared
@@ -189,12 +234,28 @@ let
   # $out/node_modules/.pi-package-installed/<name> marker-file scheme. The
   # marker files are dropped here on purpose: it's unverified whether pi's
   # actual extension loader needs/expects that marker convention, and the flat
-  # <name>/ layout already matches how piPackages extensions get copied into
-  # ~/.pi/agent/extensions/<name>/ elsewhere in this repo (see
-  # containers/pi/image.nix), so a consumer can `cp -r ${out}/. dest/` and get
-  # every extension in place directly.
+  # <name>/ layout matches how containers/pi/image.nix copies this
+  # derivation's output into ~/.pi/agent/extensions/<name>/ directly.
   extraExtensions = pkgs.runCommand "pi-extra-extensions"
-    { }
+    {
+      # autoPatchelfHook is used here as a *function provider*: runCommand has
+      # no fixup phase, so the hook doesn't run by itself. Sourcing it via
+      # nativeBuildInputs makes the `autoPatchelf` shell function available,
+      # which the builder calls explicitly at the end. (If a future nixpkgs
+      # stops exposing `autoPatchelf` this way, convert this to
+      # stdenv.mkDerivation with dontUnpack = true and let the hook run in
+      # fixupPhase; add dontStrip/dontPatchShebangs to keep it from touching
+      # node_modules contents.)
+      # jq is used to walk each target's dependency closure.
+      nativeBuildInputs = [ pkgs.autoPatchelfHook pkgs.jq ];
+
+      # Where autoPatchelf looks for the sonames the binaries ask for.
+      buildInputs = nativeRuntimeLibs;
+
+      # See ignoreMissingNativeDeps above. Passed through to the hook's
+      # environment; a list of sonames/patterns on current nixpkgs.
+      autoPatchelfIgnoreMissingDeps = ignoreMissingNativeDeps;
+    }
     ''
       mkdir -p "$out"
 
@@ -234,6 +295,37 @@ let
             cp -RL "${drv}/." "$out/${name}/"
           '')
         gitExtFetched)}
+
+      # Make prebuilt native binaries loadable on Nix -- only for the extensions
+      # named in autoPatchExtensions. For each: patch its flattened dir, then
+      # walk package.json dependencies + optionalDependencies through the shared
+      # node_modules (hoisted native addons live there, not in the extension's
+      # own dir) and patch every package reached. Packages that aren't installed
+      # (other-arch/OS optional deps) are skipped. `cp -RL` leaves the store
+      # copies read-only, so chmod just the selected dirs before patchelf runs.
+      # An unsatisfied library fails the build loudly; see nativeRuntimeLibs.
+      patchDirs=()
+      seenPkgs=" "
+      walkDeps() {
+        local pkg="$1" pj dep
+        case "$seenPkgs" in *" $pkg "*) return 0;; esac
+        seenPkgs="$seenPkgs$pkg "
+        pj="$out/node_modules/$pkg/package.json"
+        [ -f "$pj" ] || return 0
+        patchDirs+=("$out/node_modules/$pkg")
+        for dep in $(jq -r '((.dependencies // {}) + (.optionalDependencies // {})) | keys[]' "$pj"); do
+          walkDeps "$dep"
+        done
+      }
+      ${lib.concatStringsSep "\n" (lib.zipListsWith (name: dir: ''
+        patchDirs+=("$out/${dir}")
+        walkDeps "${name}"
+      '') patchTargets patchTargetDirs)}
+
+      if [ "''${#patchDirs[@]}" -gt 0 ]; then
+        chmod -R u+w "''${patchDirs[@]}"
+        autoPatchelf "''${patchDirs[@]}"
+      fi
     '';
 
   # The full list of spec strings a user needs to merge by hand into their
