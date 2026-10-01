@@ -7,6 +7,7 @@ thinking: medium
 locked: true
 prompt_mode: replace
 permission:
+  read: allow
   write: allow
   edit: allow
   bash:

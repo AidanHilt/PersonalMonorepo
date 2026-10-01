@@ -42,7 +42,7 @@
         proxyImageName = "pi-sandbox/proxy";
 
         pi = import ./containers/pi/image.nix {
-          inherit pkgs n2c;
+          inherit pkgs n2c scripts;
           imageName = piImageName;
           imageTag = piTag;
         };
@@ -97,8 +97,14 @@
               exit 0
             fi
 
+            override_flag=()
+            if [ -n "''${PERSONAL_MONOREPO_LOCATION:-}" ] && [ -d "$PERSONAL_MONOREPO_LOCATION/nix/scripts" ]; then
+              override_flag=(--override-input scripts "path:$PERSONAL_MONOREPO_LOCATION/nix/scripts")
+              echo "==> Using local nix/scripts checkout at $PERSONAL_MONOREPO_LOCATION/nix/scripts"
+            fi
+
             nix run --no-write-lock-file \
-              ${pkgs.lib.escapeShellArg ".#${appSlug}-image.copyToDockerDaemon"}
+              ${pkgs.lib.escapeShellArg ".#${appSlug}-image.copyToDockerDaemon"} "''${override_flag[@]}"
 
             echo "Loaded $IMAGE_NAME:$IMAGE_TAG into the local Docker daemon"
           '';
@@ -203,30 +209,6 @@
               name = "update-pi-extensions";
               runtimeInputs = [ pkgs.nodejs_22 pkgs.nix-prefetch-github pkgs.nix pkgs.gnused pkgs.gnugrep pkgs.prefetch-npm-deps ];
               text = builtins.readFile ./scripts/update-pi-extensions.sh;
-            };
-          };
-
-          # nix run .#scripts-shell -> drops into `nix develop` with the
-          # `scripts` flake input overridden to a local nix/scripts checkout,
-          # when run from within this monorepo (PERSONAL_MONOREPO_LOCATION
-          # set and $PERSONAL_MONOREPO_LOCATION/nix/scripts exists). Falls
-          # back to the pinned remote `scripts` input otherwise. Mirrors the
-          # gating in nix/mono-flake/modules/roles/universal/_update.nix.
-          scripts-shell = flake-utils.lib.mkApp {
-            drv = pkgs.writeShellApplication {
-              name = "scripts-shell";
-              runtimeInputs = [ pkgs.nix ];
-              text = ''
-                set -euo pipefail
-
-                override_flag=()
-                if [ -n "''${PERSONAL_MONOREPO_LOCATION:-}" ] && [ -d "$PERSONAL_MONOREPO_LOCATION/nix/scripts" ]; then
-                  override_flag=(--override-input scripts "path:$PERSONAL_MONOREPO_LOCATION/nix/scripts")
-                  echo "==> Using local nix/scripts checkout at $PERSONAL_MONOREPO_LOCATION/nix/scripts"
-                fi
-
-                exec nix develop "''${override_flag[@]}" .
-              '';
             };
           };
         };

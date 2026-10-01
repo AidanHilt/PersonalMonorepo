@@ -1,4 +1,4 @@
-{ pkgs, n2c, imageName, imageTag }:
+{ pkgs, n2c, imageName, imageTag, scripts }:
 
 let
   user = "pi";
@@ -62,7 +62,7 @@ let
     name = "pi-entrypoint";
     runtimeInputs = [
       pkgs.pi-coding-agent
-
+      
       pkgs.git
       pkgs.coreutils
       pkgs.bash
@@ -75,6 +75,7 @@ let
     name = "pi-image-root";
 
     paths = [
+      scripts.packages.${pkgs.system}.agent-plan-create
       pkgs.pi-coding-agent
       pkgs.git
       pkgs.coreutils

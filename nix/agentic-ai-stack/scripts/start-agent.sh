@@ -55,7 +55,14 @@ cd "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"
 echo "==> Building and loading pi/proxy images into the active Docker context..."
 DOCKER_CTX="$(docker context show 2>/dev/null || echo 'default')"
 echo "    Active Docker context: $DOCKER_CTX"
-nix run "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#load"
+
+override_flag=()
+if [ -n "${PERSONAL_MONOREPO_LOCATION:-}" ] && [ -d "$PERSONAL_MONOREPO_LOCATION/nix/scripts" ]; then
+  override_flag=(--override-input scripts "path:$PERSONAL_MONOREPO_LOCATION/nix/scripts")
+  echo "==> Using local nix/scripts checkout at $PERSONAL_MONOREPO_LOCATION/nix/scripts"
+fi
+
+nix run "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#load" "${override_flag[@]}"
 
 echo "==> Starting docker compose stack (pi + proxy)..."
 docker compose "${COMPOSE_FILES[@]}" up -d proxy
