@@ -19,6 +19,7 @@ in
   environment.systemPackages = with pkgs; [
     inputs.scripts.packages.${pkgs.system}.kommit
     inputs.scripts.packages.${pkgs.system}.pi-auth-port-forward
+    inputs.scripts.packages.${pkgs.system}.pi-auth-port-forward-big-boi
 
     pre-commit
     socat
