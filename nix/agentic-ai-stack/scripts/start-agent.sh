@@ -9,12 +9,65 @@ set -euo pipefail
 
 # --- Kubeconfig: always attempted, never required -------------------------
 # We no longer hard-fail when no kubeconfig is present. If a scoped
-# kubeconfig exists (default path below, or PI_KUBECONFIG_PATH), we layer
-# compose.kube.yaml on top to mount it read-only into the `pi`
+# kubeconfig exists (default path below, or PI_SANDBOX__KUBECONFIG_PATH), we
+# layer compose.kube.yaml on top to mount it read-only into the `pi`
 # container. If it's missing, we warn and continue without k8s access
 # rather than blocking the whole stack on it.
-KUBECONFIG_PATH="${PI_KUBECONFIG_PATH:-$HOME/.config/pi-sandbox/agent-kubeconfig.yaml}"
+KUBECONFIG_PATH="${PI_SANDBOX__KUBECONFIG_PATH:-$HOME/.config/pi-sandbox/agent-kubeconfig.yaml}"
 COMPOSE_FILES=(-f compose.yaml)
+
+# --- Secrets: arbitrary-name injection, never decrypted here --------------
+# This script performs NO secret retrieval/decryption of its own. It only
+# accepts already-decrypted values via two channels and forwards them into
+# the `pi` container as `-e NAME=VALUE` on `docker compose run`:
+#   1. Repeatable `--secret NAME=VALUE` CLI flags.
+#   2. Host env vars namespaced `PI_SANDBOX__SECRET__<NAME>` (prefix
+#      stripped to get NAME).
+# The namespace scan runs first, then `--secret` flags are appended after
+# it, so a `--secret` flag always wins over a same-named namespaced env var
+# (later `-e` wins when docker encounters a duplicate name).
+SECRET_ENV_ARGS=()
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --secret)
+      shift
+      secret_arg="${1:?--secret requires a NAME=VALUE argument}"
+      secret_name="${secret_arg%%=*}"
+      if [ -z "$secret_name" ] || [ "$secret_arg" = "${secret_arg#*=}" ]; then
+        echo "error: --secret requires a NAME=VALUE argument with a non-empty NAME (got: $secret_arg)" >&2
+        exit 1
+      fi
+      SECRET_ENV_ARGS+=(-e "$secret_arg")
+      shift
+      ;;
+    --secret=*)
+      secret_arg="${1#--secret=}"
+      secret_name="${secret_arg%%=*}"
+      if [ -z "$secret_name" ] || [ "$secret_arg" = "${secret_arg#*=}" ]; then
+        echo "error: --secret requires a NAME=VALUE argument with a non-empty NAME (got: $secret_arg)" >&2
+        exit 1
+      fi
+      SECRET_ENV_ARGS+=(-e "$secret_arg")
+      shift
+      ;;
+    *)
+      echo "error: unrecognized argument: $1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+SECRET_NAMESPACE_ARGS=()
+while IFS= read -r var_name; do
+  [ -n "$var_name" ] || continue
+  secret_name="${var_name#PI_SANDBOX__SECRET__}"
+  SECRET_NAMESPACE_ARGS+=(-e "${secret_name}=${!var_name}")
+done < <(compgen -v PI_SANDBOX__SECRET__ || true)
+
+# Namespace-discovered values first, explicit --secret flags appended
+# after, so flags take precedence on a NAME collision.
+SECRET_ENV_ARGS=("${SECRET_NAMESPACE_ARGS[@]}" "${SECRET_ENV_ARGS[@]}")
 
 echo "==> Checking for a generated kubeconfig..."
 if [ -f "$KUBECONFIG_PATH" ]; then
@@ -26,7 +79,7 @@ else
     Continuing WITHOUT Kubernetes access for this run.
     To enable it, generate a scoped, dev/staging-only kubeconfig with:
       nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#gen-kubeconfig
-    (or place a pre-generated one at $KUBECONFIG_PATH / set PI_KUBECONFIG_PATH)
+    (or place a pre-generated one at $KUBECONFIG_PATH / set PI_SANDBOX__KUBECONFIG_PATH)
 EOF
 fi
 
@@ -73,4 +126,4 @@ docker compose "${COMPOSE_FILES[@]}" down --remove-orphans
 }
 trap cleanup EXIT
 
-docker compose "${COMPOSE_FILES[@]}" run --rm pi
+docker compose "${COMPOSE_FILES[@]}" run --rm "${SECRET_ENV_ARGS[@]}" pi

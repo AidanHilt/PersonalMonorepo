@@ -1,8 +1,9 @@
 # Secrets and local overrides — never commit these (spec §5, §7).
 .env
 # gen-kubeconfig.sh now writes outside the repo by default
-# (~/.config/pi-sandbox/agent-kubeconfig.yaml, or $PI_KUBECONFIG_PATH);
-# these entries are defense-in-depth in case anything still lands here.
+# (~/.config/pi-sandbox/agent-kubeconfig.yaml, or
+# $PI_SANDBOX__KUBECONFIG_PATH); these entries are defense-in-depth in
+# case anything still lands here.
 kube/agent-kubeconfig.yaml
 kube/*.yaml
 !kube/.gitkeep

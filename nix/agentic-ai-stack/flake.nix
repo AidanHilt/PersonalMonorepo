@@ -175,8 +175,14 @@
                   exit 1
                 fi
 
+                override_flag=()
+                if [ -n "''${PERSONAL_MONOREPO_LOCATION:-}" ] && [ -d "$PERSONAL_MONOREPO_LOCATION/nix/scripts" ]; then
+                  override_flag=(--override-input scripts "path:$PERSONAL_MONOREPO_LOCATION/nix/scripts")
+                  echo "==> Using local nix/scripts checkout at $PERSONAL_MONOREPO_LOCATION/nix/scripts"
+                fi
+
                 echo "==> Building and loading pi image into the active Docker context..."
-                nix run --no-write-lock-file .#load
+                nix run .#load "''${override_flag[@]}"
 
                 echo "==> Starting the containerized login flow..."
                 docker compose --profile login run --rm --service-ports login

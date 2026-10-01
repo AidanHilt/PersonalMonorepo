@@ -9,3 +9,11 @@ api.anthropic.com
 claude.ai
 claude.com
 platform.claude.com
+# Starter set for pi-web-access (GitHub/Exa search) secrets support —
+# not yet verified against actual exercised calls; may need adjustment
+# once pi-web-access's GitHub/Exa traffic is observed against this proxy.
+github.com
+api.github.com
+raw.githubusercontent.com
+codeload.github.com
+api.exa.ai

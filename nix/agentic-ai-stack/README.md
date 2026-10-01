@@ -25,17 +25,39 @@ config/pi/                     # baked-in AGENTS.md / settings.json / models.jso
 scripts/                       # start-agent, stop-agent, gen-kubeconfig, verify-acceptance
 kube/                          # legacy/unused; kubeconfig now defaults to
                                 # ~/.config/pi-sandbox/agent-kubeconfig.yaml
-                                # (override with PI_KUBECONFIG_PATH), never in-repo
+                                # (override with PI_SANDBOX__KUBECONFIG_PATH), never in-repo
 ```
 
 ## Quickstart
 
 ```sh
-cp .env.example .env                       # fill in keys, or plan to use `nix run .#login`
 nix run .#gen-kubeconfig -- <dev-context>  # never a production context
 nix run .#login                            # if using OAuth; type /login once inside
 nix run .#start-agent                      # builds+loads images, verifies Ollama, brings up pi+proxy
 ```
+
+### Credentials / secrets
+
+`start-agent.sh` never retrieves or decrypts secrets itself — it only
+accepts already-decrypted values and injects them into the `pi`
+container as runtime env vars. No secret name is hardcoded, so adding a
+new third-party API key (e.g. `EXA_API_KEY`, `GITHUB_TOKEN`) never
+requires editing `compose.yaml` or `start-agent.sh`. Two ways to supply
+a secret, usable interchangeably and together:
+
+```sh
+# 1. Repeatable --secret NAME=VALUE flags on start-agent.sh
+nix run .#start-agent -- --secret ANTHROPIC_API_KEY=sk-... --secret EXA_API_KEY=...
+
+# 2. Host env vars namespaced PI_SANDBOX__SECRET__<NAME>
+export PI_SANDBOX__SECRET__GITHUB_TOKEN=ghp_...
+nix run .#start-agent
+```
+
+If both are set for the same name, the `--secret` flag wins. `.env` /
+`.env.example` remain, but are now only for non-secret vars Compose
+interpolates into `compose.yaml` (e.g. `PERSONAL_MONOREPO_LOCATION`) —
+no API keys belong there anymore.
 
 Tear down: `nix run .#stop-agent` (or `docker compose down`). Verify
 the acceptance criteria from the spec against a running stack:

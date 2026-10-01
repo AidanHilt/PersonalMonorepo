@@ -4,7 +4,7 @@
 #
 # This base file has NO Kubernetes dependency. If a scoped kubeconfig is
 # available at ~/.config/pi-sandbox/agent-kubeconfig.yaml (or wherever
-# PI_KUBECONFIG_PATH points), start-agent.sh layers
+# PI_SANDBOX__KUBECONFIG_PATH points), start-agent.sh layers
 # compose.kube.yaml on top to mount it read-only; otherwise the
 # stack comes up with no cluster access at all, and start-agent.sh warns
 # and continues.
@@ -16,8 +16,16 @@
 #   3. (Optional) generate ~/.config/pi-sandbox/agent-kubeconfig.yaml
 #      (see scripts/gen-kubeconfig.sh) to enable k8s access — see
 #      compose.kube.yaml
-#   4. Copy .env.example to .env and fill in what's needed (no secrets
-#      belong in this repo's git history — .env is gitignored)
+#   4. Provide any API keys/secrets the agent needs (frontier provider
+#      keys, EXA_API_KEY, GITHUB_TOKEN, etc.) via start-agent.sh's
+#      repeatable `--secret NAME=VALUE` flag, or by exporting a
+#      `PI_SANDBOX__SECRET__<NAME>` env var on the host before running
+#      it. start-agent.sh never retrieves or decrypts secrets itself —
+#      it only injects already-decrypted values as `-e` on
+#      `docker compose run`, so no secret value is ever written into
+#      this repo, an image, or a file on disk.
+#      (.env.example / .env remain, but now only for Compose's
+#      interpolation of non-secret vars like PERSONAL_MONOREPO_LOCATION.)
 #
 # Then: docker compose up            (starts pi + proxy)
 #       nix run .#login              (on demand, for auth — wraps
@@ -98,15 +106,15 @@ services:
       HTTPS_PROXY: "http://proxy:3128"
       HTTP_PROXY: "http://proxy:3128"
       NO_PROXY: "proxy"
-      # Frontier provider API keys, if using key-based auth instead of
-      # the `login` flow (spec §7 default preference is actually
-      # OAuth-via-login; keys are supported for providers/tiers that
-      # need it). Pulled from `.env`, never committed.
-      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
-      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
-    env_file:
-      - path: ./.env
-        required: false
+      # Frontier provider API keys and any other third-party secrets
+      # (EXA_API_KEY, GITHUB_TOKEN, etc.), if using key-based auth
+      # instead of the `login` flow (spec §7 default preference is
+      # actually OAuth-via-login; keys are supported for providers/tiers
+      # that need it), are injected at `docker compose run` time via
+      # `-e` flags by start-agent.sh's `--secret NAME=VALUE` flag /
+      # `PI_SANDBOX__SECRET__<NAME>` host env var mechanism — never
+      # declared here, so adding a new secret name never requires
+      # editing this file.
     volumes:
       # Project directory: read-write, this is what pi actually works on.
       - "${PERSONAL_MONOREPO_LOCATION:-./workspace}:/workspace:rw"
@@ -159,7 +167,7 @@ services:
     networks:
       - external
     environment:
-      PI_LOGIN_FORWARD: "1"
+      PI_SANDBOX__LOGIN_FORWARD: "1"
     ports:
       - "127.0.0.1:53692:53693"
     volumes:

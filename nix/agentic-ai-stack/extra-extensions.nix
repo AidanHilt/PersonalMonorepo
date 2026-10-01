@@ -122,6 +122,26 @@ let
     # very fetcher rather than a standalone tool.
     npmDepsFetcherVersion = 2;
 
+    # Omit peerDependencies from the actual `npm ci` install (npm >=8.3's
+    # --omit=peer). This is an install-time filter only -- it changes what
+    # npm ci materializes into node_modules/, not what fetchNpmDeps prefetches
+    # into the offline cache from package-lock.json (that's keyed off the
+    # whole lockfile regardless of omit), so npmDepsHash above does NOT need
+    # to be regenerated for this. The main beneficiary is
+    # @earendil-works/pi-coding-agent (package-lock.json's only top-level
+    # "peer": true dependency, pulled in solely to satisfy peerDependencies
+    # ranges declared by @gotgenes/pi-permission-system, pi-lens, etc.) and
+    # its entire duplicate AWS/Google/OpenAI SDK transitive tree -- the real
+    # `pi` binary that extensions run inside of is supplied natively via
+    # pkgs.pi-coding-agent in image.nix, not via this npm copy, so no
+    # extension should ever require() this package at runtime. Verified by
+    # inspecting a running image's ~/.pi/agent/extensions/node_modules/ tree:
+    # @earendil-works, @anthropic-ai, @aws, @aws-sdk, and @google all exist
+    # there as empty directories, confirming @earendil-works/pi-coding-agent
+    # and @earendil-works/pi-ai (and their SDK trees) are correctly omitted
+    # by --omit=peer.
+    npmFlags = [ "--omit=peer" ];
+
     # Copy the npm cache into a writable location at build time. Doesn't
     # affect npmDepsHash; it just lets npm write its own logs (otherwise an
     # error gets buried under a secondary "can't write to _logs" message),
@@ -270,6 +290,21 @@ let
       # this is purely additive and doesn't disturb other extensions copied
       # into the same directory.)
       cp -RL "${npmExtensions}/node_modules" "$out/node_modules"
+
+      # Prebuilt native binaries always ship both -gnu and -musl variants for
+      # a given platform (e.g. @ast-grep/napi-linux-x64-musl,
+      # @ff-labs/fff-bin-linux-arm64-musl, @yuuang/ffi-rs-linux-x64-musl); the
+      # image is glibc-based, so the musl copies never load and are pure
+      # dead weight. Strip the whole naming convention (node_modules/@*/*-musl)
+      # rather than an explicit list, so any future musl variant pulled in by
+      # a lockfile bump is caught too. ignoreMissingNativeDeps above is kept
+      # regardless, in case anything still probes for the removed sonames.
+      chmod -R u+w "$out/node_modules"
+      shopt -s nullglob
+      for d in "$out"/node_modules/@*/*-musl; do
+        rm -rf -- "$d"
+      done
+      shopt -u nullglob
 
       # Each declared npm extension, surfaced flat at $out/<dir>/ where pi
       # discovers extensions -- <dir> is the package basename with any npm

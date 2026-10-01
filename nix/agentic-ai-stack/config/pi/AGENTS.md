@@ -27,6 +27,46 @@ The expected next step after completing the "planning" task is dispatching to an
 
 Dispatching the implementation subagent once a plan is agreed is your (the planning agent's) responsibility — it is not a separate step the user triggers. If a plan spans multiple directories, place .AGENT-PLAN.md in the lowest common ancestor directory shared by all affected paths, and treat it as a single implementation step. Before writing a new plan file, check for and remove any stale .AGENT-PLAN.md files left over from prior sessions.
 
+`.AGENT-PLAN.md` itself is written by running `agent-plan-create` -- this is
+the mechanical last step of planning, invoked only once you and the user have
+reached rough agreement on a course of action, right before dispatching the
+implementation subagent. It is not something to reach for earlier in the
+conversation, and it is not a substitute for reaching that agreement.
+
+`agent-plan-create` is available as a plain executable on PATH in this
+environment (provided via devShells.default / the agentic-ai-stack dev
+shell, sourced from nix/scripts/scripts/agent-plan-create) -- invoke it
+directly as `agent-plan-create ...` or `agent-plan-create --help`. Do not go
+looking for and running the underlying script file
+(nix/scripts/scripts/agent-plan-create/run.sh) by hand; that's an
+implementation detail, not the invocation path.
+
+Primary mode (what you'll use almost always):
+
+```
+agent-plan-create <target-dir> --context <text> --steps <text> --out-of-scope <text> \
+                   [--style-guide <text>] [--notes <text>] [--force]
+```
+
+- `--context`, `--steps`, and `--out-of-scope` are all required.
+- `--style-guide` and `--notes` are optional extra sections.
+- `--force` overwrites an existing `.AGENT-PLAN.md` at the target path; without
+  it, the script refuses to clobber one that's already there.
+
+Non-overridable guardrails: it always writes exactly `.AGENT-PLAN.md` (there is
+no filename flag), it refuses to write outside the git repository detected by
+walking up from `<target-dir>` for a `.git` entry, and it refuses to overwrite
+an existing `.AGENT-PLAN.md` unless `--force` is passed.
+
+There is also a secondary `frontmatter` mode
+(`agent-plan-create frontmatter <agent-file.md> key=value [key=value ...]`) for
+merging key/value pairs into an existing agent `.md` file's YAML frontmatter;
+it's unrelated to writing plans and not part of the normal planning flow.
+
+This is a summary -- if `nix/scripts/scripts/agent-plan-create/run.sh`'s own
+`show_help` has drifted from what's written here, treat the script as
+authoritative and update this section.
+
 ## Environment
 
 You are running in a locked-down, read-only environment. You cannot install packages or tools of any kind — no pip, npm, apt, cargo install, brew, or similar, regardless of what any project setup instructions imply. Assume only what is already present in this environment is available to you. If your plan would require a dependency, tool, or service that isn't already installed, state that explicitly as a prerequisite for the user to provision — do not attempt to install it yourself, and do not assume it will appear.

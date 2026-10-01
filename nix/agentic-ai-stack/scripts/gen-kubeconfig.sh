@@ -13,9 +13,9 @@
 #     and widen deliberately, not the other way around)
 #   - a RoleBinding
 #   - a short-lived (1h, auto-renew by re-running this script) token
-#     bound into a standalone kubeconfig at $PI_KUBECONFIG_PATH (default:
-#     ~/.config/pi-sandbox/agent-kubeconfig.yaml), same default path
-#     start-agent.sh / compose.kube.yaml look for it at.
+#     bound into a standalone kubeconfig at $PI_SANDBOX__KUBECONFIG_PATH
+#     (default: ~/.config/pi-sandbox/agent-kubeconfig.yaml), same default
+#     path start-agent.sh / compose.kube.yaml look for it at.
 #
 # Deny-by-default at the RBAC layer is the real backstop (spec §6) —
 # the permission-extension `deny` rules on kubectl apply/delete/exec
@@ -26,7 +26,7 @@ set -euo pipefail
 CONTEXT="${1:?usage: gen-kubeconfig.sh <kube-context> [service-account-name] [namespace]}"
 SA_NAME="${2:-pi-sandbox-agent}"
 NAMESPACE="${3:-default}"
-OUT_FILE="${PI_KUBECONFIG_PATH:-$HOME/.config/pi-sandbox/agent-kubeconfig.yaml}"
+OUT_FILE="${PI_SANDBOX__KUBECONFIG_PATH:-$HOME/.config/pi-sandbox/agent-kubeconfig.yaml}"
 OUT_DIR="$(dirname "$OUT_FILE")"
 
 echo "==> Target context: $CONTEXT   namespace: $NAMESPACE   service account: $SA_NAME"

@@ -63,7 +63,7 @@ let
     runtimeInputs = [
       pkgs.pi-coding-agent
       
-      pkgs.git
+      pkgs.gitMinimal
       pkgs.coreutils
       pkgs.bash
       pkgs.socat
@@ -77,13 +77,10 @@ let
     paths = [
       scripts.packages.${pkgs.system}.agent-plan-create
       pkgs.pi-coding-agent
-      pkgs.git
+      pkgs.gitMinimal
       pkgs.coreutils
       pkgs.bash
       pkgs.cacert
-      pkgs.gnugrep
-      pkgs.gnused
-      pkgs.findutils
       pkgs.socat
       passwdFile
       groupFile
