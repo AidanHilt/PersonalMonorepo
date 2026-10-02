@@ -5,10 +5,12 @@ import (
 	"strings"
 )
 
-var commitTypes = []string{
-	"feat", "fix", "chore", "docs", "style", "refactor",
-	"perf", "test", "build", "ci", "revert",
-}
+// commitTypes is loaded from presets.json's "types" array (see
+// presets.go/parsePresets) and set once in main's run(). It intentionally
+// has no hardcoded default here so presets.json stays the single source
+// of truth; the embedded presets.json still ships the historical 11
+// types so out-of-the-box behavior is unchanged.
+var commitTypes []string
 
 func buildCommitMessage(commitType, scope, description string, breaking bool, body string) string {
 	var head strings.Builder
@@ -36,40 +38,37 @@ type commitDefaults struct {
 	scopeOverride string
 	typeDefault   string
 	scopeDefault  string
+	breaking      bool
+	bodyOverride  string
+	knownScopes   []string
 }
 
 // runInteractiveCommit walks the user through building and creating one
 // commit covering the given (already staged) files.
+//
+// Flow (per plan step 4): build the head line, show it, and ask "Commit
+// this?" (default yes) as the only step before committing in the happy
+// path. Only if the user declines does $EDITOR open, pre-filled with the
+// same template as before; whatever remains after the editor closes is
+// committed immediately (aborting only if the head line ends up empty).
 func runInteractiveCommit(files []string, defaults commitDefaults) error {
-	commitType := defaults.typeOverride
-	if commitType == "" {
-		idx := 0
-		for i, t := range commitTypes {
-			if t == defaults.typeDefault {
-				idx = i
-			}
-		}
-		if defaults.typeDefault == "" {
-			idx = -1
-		}
-		chosen, err := selectPrompt("Commit type:", commitTypes, idx)
-		if err != nil {
-			return err
-		}
-		commitType = chosen
-	} else {
-		debugf("using --type override: %s", commitType)
+	commitType, err := resolveCommitType(defaults)
+	if err != nil {
+		return err
 	}
 
 	scope := defaults.scopeOverride
-	if scope == "" {
-		chosen, err := textPrompt("Scope (optional)", defaults.scopeDefault)
-		if err != nil {
-			return err
-		}
-		scope = chosen
-	} else {
+	if scope != "" {
 		debugf("using --scope override: %s", scope)
+	} else {
+		scope = defaults.scopeDefault
+		if scope == "" && isInteractiveTTY() {
+			chosen, err := resolveScopeTUI(defaults.knownScopes)
+			if err != nil {
+				return err
+			}
+			scope = chosen
+		}
 	}
 
 	description, err := requiredTextPrompt("Short description")
@@ -77,23 +76,12 @@ func runInteractiveCommit(files []string, defaults commitDefaults) error {
 		return err
 	}
 
-	breaking, err := confirmPrompt("Breaking change?", false)
-	if err != nil {
-		return err
-	}
+	breaking := defaults.breaking
 
-	template := buildEditorTemplate(commitType, scope, description, breaking, files)
-	body, err := editorPrompt(template)
-	if err != nil {
-		return err
-	}
-	// The first non-comment line the editor produced is the head line;
-	// anything the user added below it is the body.
-	head, editedBody := splitEditedMessage(body, commitType, scope, description, breaking)
-
+	head := buildCommitMessage(commitType, scope, description, breaking, "")
 	message := head
-	if strings.TrimSpace(editedBody) != "" {
-		message = head + "\n\n" + strings.TrimSpace(editedBody)
+	if strings.TrimSpace(defaults.bodyOverride) != "" {
+		message = head + "\n\n" + strings.TrimSpace(defaults.bodyOverride)
 	}
 
 	fmt.Println("\n---")
@@ -103,10 +91,62 @@ func runInteractiveCommit(files []string, defaults commitDefaults) error {
 	if err != nil {
 		return err
 	}
-	if !ok {
-		warnf("commit aborted")
+	if ok {
+		if err := commitWithMessage(message); err != nil {
+			return err
+		}
+		statusf("committed: %s", head)
 		return nil
 	}
+
+	template := buildEditorTemplate(commitType, scope, description, breaking, files)
+	edited, err := editorPrompt(template)
+	if err != nil {
+		return err
+	}
+	editedHead, editedBody := splitEditedMessage(edited)
+	if strings.TrimSpace(editedHead) == "" {
+		return fmt.Errorf("commit aborted: empty commit message")
+	}
+
+	finalMessage := editedHead
+	if body := strings.TrimSpace(editedBody); body != "" {
+		finalMessage = editedHead + "\n\n" + body
+	}
+
+	if err := commitWithMessage(finalMessage); err != nil {
+		return err
+	}
+	statusf("committed: %s", editedHead)
+	return nil
+}
+
+// runNonInteractiveCommit implements the --non-interactive path (plan
+// step 3): no prompts, no TUI, no editor. Type must come from --type or
+// inference; scope resolves the same priority chain as the interactive
+// path but is simply left empty if unresolved; description must come
+// from --description; breaking/body only come from their respective
+// flags.
+func runNonInteractiveCommit(files []string, defaults commitDefaults, description string) error {
+	commitType := defaults.typeOverride
+	if commitType == "" {
+		commitType = defaults.typeDefault
+	}
+	if commitType == "" {
+		return fmt.Errorf("--non-interactive requires a commit type via --type or successful rule inference")
+	}
+
+	scope := defaults.scopeOverride
+	if scope == "" {
+		scope = defaults.scopeDefault
+	}
+
+	if strings.TrimSpace(description) == "" {
+		return fmt.Errorf("--non-interactive requires --description")
+	}
+
+	message := buildCommitMessage(commitType, scope, description, defaults.breaking, defaults.bodyOverride)
+	head := strings.SplitN(message, "\n", 2)[0]
 
 	if err := commitWithMessage(message); err != nil {
 		return err
@@ -131,13 +171,14 @@ func buildEditorTemplate(commitType, scope, description string, breaking bool, f
 }
 
 // splitEditedMessage separates the (possibly user-edited) head line from
-// the rest of the body, since editorPrompt returns the whole stripped file.
-func splitEditedMessage(edited, fallbackType, fallbackScope, fallbackDescription string, fallbackBreaking bool) (head, body string) {
+// the rest of the body, since editorPrompt returns the whole stripped
+// file. Unlike the previous implementation, an empty head line is
+// returned as-is (empty) rather than silently falling back to a
+// reconstructed default -- callers are expected to abort on an empty
+// head, per plan step 4.
+func splitEditedMessage(edited string) (head, body string) {
 	lines := strings.SplitN(edited, "\n", 2)
 	head = strings.TrimSpace(lines[0])
-	if head == "" {
-		head = buildCommitMessage(fallbackType, fallbackScope, fallbackDescription, fallbackBreaking, "")
-	}
 	if len(lines) > 1 {
 		body = lines[1]
 	}

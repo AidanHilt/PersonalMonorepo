@@ -28,6 +28,16 @@
     {
       "type": "ci",
       "path": ".github/workflows/**"
+    },
+    {
+      "field": "scope",
+      "scope": "deployment",
+      "path": "kubernetes/**"
+    },
+    {
+      "field": "scope",
+      "scope": "ci",
+      "path": ".github/workflows/**"
     }
   ]
 }

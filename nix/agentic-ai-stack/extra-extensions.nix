@@ -45,7 +45,7 @@ let
   # this must be regenerated). If it ever goes stale the build fails with a
   # fixed-output hash mismatch that prints the correct `got:` value to paste
   # in (or just re-run update-pi-extensions).
-  npmDepsHash = "sha256-kiq/9P6ZPh5Ys1eTE+XJ8r6yjDunQ6riKMa4lBCirP8=";
+  npmDepsHash = "sha256-2mghuuWIkzuZh8VSufruaxY4VV2QMmOXVrh0UAEPrPQ=";
 
   # ---- shared libraries for prebuilt native binaries ----------------------
   # Libraries autoPatchelf may point prebuilt binaries at. glibc itself is

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 )
 
@@ -121,20 +122,70 @@ func addFiles(files []string) error {
 	return err
 }
 
+// commitWithMessage writes the message to a stable, discoverable path
+// under the repo's .git dir (rather than an os.CreateTemp auto-named
+// file) and only removes it once git commit has actually succeeded, so a
+// pre-commit hook failure leaves a resumable file behind instead of
+// silently deleting the user's composed message (plan step 5).
+//
+// If the initial commit fails, the working tree is snapshotted before and
+// after: if a pre-commit hook modified/reformatted tracked files (the
+// snapshot differs), those paths are re-staged (git add -A, acceptable
+// here since this is hook-recovery, not the original user-staging path)
+// and the commit is retried exactly once. If nothing changed, or the
+// retry also fails, the error and the message file's path are surfaced to
+// the caller and the file is left in place for manual resume via
+// `git commit -F <path>`.
 func commitWithMessage(message string) error {
-	tmp, err := os.CreateTemp("", "kommit-msg-*.txt")
+	root, err := repoRoot()
 	if err != nil {
 		return err
 	}
-	defer os.Remove(tmp.Name())
-	if _, err := tmp.WriteString(message); err != nil {
+	msgPath := path.Join(root, ".git", "KOMMIT_MSG.txt")
+	if err := os.WriteFile(msgPath, []byte(message), 0o644); err != nil {
 		return err
 	}
-	if err := tmp.Close(); err != nil {
+
+	before, err := runGit("status", "--porcelain")
+	if err != nil {
 		return err
 	}
-	_, err = runGit("commit", "-F", tmp.Name())
-	return err
+
+	if _, commitErr := runGit("commit", "-F", msgPath); commitErr == nil {
+		os.Remove(msgPath)
+		return nil
+	} else {
+		warnf("commit failed, checking whether a pre-commit hook modified the tree: %v", commitErr)
+
+		after, statusErr := runGit("status", "--porcelain")
+		if statusErr != nil {
+			warnf("could not re-check working tree after failed commit: %v", statusErr)
+			return commitFailureError(commitErr, msgPath)
+		}
+
+		if after == before {
+			debugf("working tree unchanged after hook failure; not retrying")
+			return commitFailureError(commitErr, msgPath)
+		}
+
+		debugf("working tree changed after hook failure; re-staging and retrying commit once")
+		if addErr := addAll(); addErr != nil {
+			warnf("could not re-stage after hook modified files: %v", addErr)
+			return commitFailureError(commitErr, msgPath)
+		}
+
+		if _, retryErr := runGit("commit", "-F", msgPath); retryErr != nil {
+			return commitFailureError(retryErr, msgPath)
+		}
+
+		os.Remove(msgPath)
+		statusf("commit succeeded on retry after a pre-commit hook modified files")
+		return nil
+	}
+}
+
+func commitFailureError(commitErr error, msgPath string) error {
+	return fmt.Errorf("%w\ncommit message preserved at: %s\nresume with: git commit -F %s", commitErr, msgPath, msgPath)
 }
 
 func splitLines(s string) []string {

@@ -34,6 +34,7 @@
     "edit": "deny",
     "ask_user_question": "allow",
     "ask_parent": "allow",
+    "notify_parent": "allow",
     "bash": {
       "*": "ask",
       "find *": "deny",
