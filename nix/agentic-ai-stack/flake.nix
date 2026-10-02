@@ -23,13 +23,18 @@
     # nix/mono-flake/modules/roles/universal/_update.nix.
     scripts = {
       url = "github:aidanhilt/PersonalMonorepo/project-lockstep/release-mgmt?dir=nix/scripts";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
   outputs = { self, nixpkgs, flake-utils, nix2container, scripts }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import nixpkgs { inherit system; };
+        pkgs = import nixpkgs { 
+          inherit system; 
+          overlays = [(import ./pi-coding-agent-overlay.nix)]
+        };
+        
         n2c = nix2container.packages.${system}.nix2container;
 
         # ---- Fixed, non-content-hash tags -----------------------------
@@ -103,8 +108,9 @@
               echo "==> Using local nix/scripts checkout at $PERSONAL_MONOREPO_LOCATION/nix/scripts"
             fi
 
-            nix run --no-write-lock-file \
-              ${pkgs.lib.escapeShellArg ".#${appSlug}-image.copyToDockerDaemon"} "''${override_flag[@]}"
+            echo "''${override_flag[@]}"
+
+            nix run "''${override_flag[@]}" ${pkgs.lib.escapeShellArg ".#${appSlug}-image.copyToDockerDaemon"} 
 
             echo "Loaded $IMAGE_NAME:$IMAGE_TAG into the local Docker daemon"
           '';
@@ -122,6 +128,26 @@
           # else image-related -- exposed here only so it's inspectable
           # via `nix build .#pi-extra-extensions` / `nix eval`.
           pi-extra-extensions = import ./extra-extensions.nix { inherit pkgs; };
+
+          rootEnv = pkgs.buildEnv {
+            name = "pi-image-root";
+
+            paths = [
+              scripts.packages.${pkgs.system}.agent-plan-create
+              pkgs.pi-coding-agent
+              pkgs.gitMinimal
+              pkgs.coreutils
+              pkgs.bash
+              pkgs.cacert
+              pkgs.socat
+            ];
+
+            pathsToLink = [
+              "/bin"
+              "/etc"
+              "/lib"
+            ];
+          };
         };
 
         apps = {
@@ -213,7 +239,7 @@
           update-pi-extensions = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "update-pi-extensions";
-              runtimeInputs = [ pkgs.nodejs_22 pkgs.nix-prefetch-github pkgs.nix pkgs.gnused pkgs.gnugrep pkgs.prefetch-npm-deps ];
+              runtimeInputs = [ pkgs.nodejs-slim_24 pkgs.nix-prefetch-github pkgs.nix pkgs.gnused pkgs.gnugrep pkgs.prefetch-npm-deps ];
               text = builtins.readFile ./scripts/update-pi-extensions.sh;
             };
           };
@@ -223,7 +249,7 @@
           # yq-go (mikefarah/yq) sits alongside jq -- chosen over the
           # Python-based kislyuk/yq to avoid pulling Python into the
           # environment (see RESEARCH-NOTES.md).
-          packages = [ pkgs.docker pkgs.docker-compose pkgs.nodejs_22 pkgs.jq pkgs.yq-go pkgs.kubectl scripts.packages.${system}.agent-plan-create ];
+          packages = [ pkgs.docker pkgs.docker-compose pkgs.nodejs-slim_24 pkgs.jq pkgs.yq-go pkgs.kubectl scripts.packages.${system}.agent-plan-create ];
         };
       });
 }

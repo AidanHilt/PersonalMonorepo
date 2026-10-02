@@ -77,7 +77,7 @@ let
   #
   # We resolve them with pkgs.buildNpmPackage, whose fetchNpmDeps builds a
   # fixed-output, offline npm cache from package-lock.json and then runs a
-  # normal `npm ci` against it. nodejs is pinned to pkgs.nodejs_22.
+  # normal `npm ci` against it. nodejs is pinned to pkgs.nodejs-slim_24.
   #
   # Why NOT pkgs.importNpmLock (the more obvious "build node_modules from a
   # lockfile" helper, and what this used to use): importNpmLock rewrites
@@ -101,7 +101,7 @@ let
     version = "0.0.0";
     src = ./extensions;
     inherit npmDepsHash;
-    nodejs = pkgs.nodejs_22;
+    nodejs = pkgs.nodejs_24;
 
     # ./extensions is a manifest, not a buildable package -- there's no
     # build step and nothing to compile, we only want the resolved
