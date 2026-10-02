@@ -15,11 +15,18 @@
 # or a missing ELF interpreter). Patching is OPT-IN per extension: pass the
 # extension names in `autoPatchExtensions` (npm package names as they appear in
 # extensions/package.json, or git repo dir names). For each one, the final step
-# of `extraExtensions` runs autoPatchelf over that extension's directory AND its
-# transitive dependency closure inside the shared node_modules (native addons
-# are usually hoisted optionalDependencies, not inside the extension's own dir).
-# Nothing else in the output is touched. See `nativeRuntimeLibs` below for how
-# to supply extra libraries.
+# of `extraExtensions` strips and then runs autoPatchelf over that extension's
+# directory AND its transitive dependency closure inside the shared
+# node_modules (native addons are usually hoisted optionalDependencies, not
+# inside the extension's own dir). Nothing else in the output is touched. See
+# `nativeRuntimeLibs` below for how to supply extra libraries.
+#
+# Closure size: the runtime output must never reference the full `nodejs`
+# wrapper (which drags in npm + corepack). npm needs full node at BUILD time,
+# so npmExtensions repoints the patchShebangs'd node_modules scripts at
+# nodejs-slim afterwards, and disallowedReferences makes any regression a build
+# failure. Everything size-related here is pattern-based or driven by
+# package.json, so arbitrary extensions can still be added.
 #
 # See ./extensions/README.md for the day-to-day "how do I add one" workflow,
 # and ./extensions/git-extensions.nix for the git-hash pinning convention
@@ -77,7 +84,9 @@ let
   #
   # We resolve them with pkgs.buildNpmPackage, whose fetchNpmDeps builds a
   # fixed-output, offline npm cache from package-lock.json and then runs a
-  # normal `npm ci` against it. nodejs is pinned to pkgs.nodejs-slim_24.
+  # normal `npm ci` against it. The BUILD uses the full pkgs.nodejs_24 (npm is
+  # required); the OUTPUT is repointed at pkgs.nodejs-slim_24 in postFixup
+  # below so npm/corepack never enter the runtime closure.
   #
   # Why NOT pkgs.importNpmLock (the more obvious "build node_modules from a
   # lockfile" helper, and what this used to use): importNpmLock rewrites
@@ -122,25 +131,34 @@ let
     # very fetcher rather than a standalone tool.
     npmDepsFetcherVersion = 2;
 
-    # Omit peerDependencies from the actual `npm ci` install (npm >=8.3's
-    # --omit=peer). This is an install-time filter only -- it changes what
-    # npm ci materializes into node_modules/, not what fetchNpmDeps prefetches
-    # into the offline cache from package-lock.json (that's keyed off the
-    # whole lockfile regardless of omit), so npmDepsHash above does NOT need
-    # to be regenerated for this. The main beneficiary is
-    # @earendil-works/pi-coding-agent (package-lock.json's only top-level
-    # "peer": true dependency, pulled in solely to satisfy peerDependencies
-    # ranges declared by @gotgenes/pi-permission-system, pi-lens, etc.) and
-    # its entire duplicate AWS/Google/OpenAI SDK transitive tree -- the real
-    # `pi` binary that extensions run inside of is supplied natively via
-    # pkgs.pi-coding-agent in image.nix, not via this npm copy, so no
-    # extension should ever require() this package at runtime. Verified by
-    # inspecting a running image's ~/.pi/agent/extensions/node_modules/ tree:
-    # @earendil-works, @anthropic-ai, @aws, @aws-sdk, and @google all exist
-    # there as empty directories, confirming @earendil-works/pi-coding-agent
-    # and @earendil-works/pi-ai (and their SDK trees) are correctly omitted
-    # by --omit=peer.
-    npmFlags = [ "--omit=peer" ];
+    # Install-time filters passed to `npm ci`. None of these change what
+    # fetchNpmDeps prefetches into the offline cache (that's keyed off the
+    # whole lockfile), so npmDepsHash above does NOT need to be regenerated.
+    #
+    # --omit=peer: omit peerDependencies from the actual install (npm >=8.3).
+    #   The main beneficiary is @earendil-works/pi-coding-agent
+    #   (package-lock.json's only top-level "peer": true dependency, pulled in
+    #   solely to satisfy peerDependencies ranges declared by
+    #   @gotgenes/pi-permission-system, pi-lens, etc.) and its entire duplicate
+    #   AWS/Google/OpenAI SDK transitive tree -- the real `pi` binary that
+    #   extensions run inside of is supplied natively via pkgs.pi-coding-agent
+    #   in image.nix, not via this npm copy, so no extension should ever
+    #   require() this package at runtime. Verified by inspecting a running
+    #   image's ~/.pi/agent/extensions/node_modules/ tree: @earendil-works,
+    #   @anthropic-ai, @aws, @aws-sdk, and @google all exist there as empty
+    #   directories, confirming @earendil-works/pi-coding-agent and
+    #   @earendil-works/pi-ai (and their SDK trees) are correctly omitted.
+    #
+    # --omit=dev: extensions are declared under `dependencies`, so devDependencies
+    #   (of the manifest and, for packages with them listed, of nothing else --
+    #   npm never installs a dependency's devDependencies) are never needed at
+    #   runtime.
+    #
+    # --libc=glibc: tell npm (>=10.4) to skip optionalDependencies whose
+    #   package.json `libc` field says musl, so the -musl platform variants are
+    #   never installed. Older npm ignores unknown config with a warning; the
+    #   musl cleanup loop in extraExtensions remains as a fallback either way.
+    npmFlags = [ "--omit=peer" "--omit=dev" "--libc=glibc" ];
 
     # Copy the npm cache into a writable location at build time. Doesn't
     # affect npmDepsHash; it just lets npm write its own logs (otherwise an
@@ -155,9 +173,25 @@ let
       runHook postInstall
     '';
 
+    # patchShebangs (fixup) rewrites every `#!/usr/bin/env node` under $out to
+    # the full ${pkgs.nodejs_24}/bin/node, whose closure includes npm and
+    # corepack. Those files get copied into the image via extraExtensions, so
+    # without this the full nodejs wrapper leaks into the runtime closure.
+    # Repoint to nodejs-slim (same version, no npm/corepack). Text files only
+    # (-I) so ELF binaries are never rewritten; grep -r doesn't follow
+    # symlinks, so .bin links are fine (they point at the rewritten targets).
+    postFixup = ''
+      grep -rIlZ "${pkgs.nodejs_24}" "$out" \
+        | xargs -0 -r sed -i "s|${pkgs.nodejs_24}|${pkgs.nodejs-slim_24}|g"
+    '';
+
+    # Fail the build (naming the offending file) if any reference to the full
+    # nodejs survives, so this can't silently regress after a lockfile bump.
+    disallowedReferences = [ pkgs.nodejs_24 ];
+
     # If a dependency's postinstall script fails in the build sandbox (most
-    # commonly because it wants network, which the sandbox denies), set:
-    #   npmFlags = [ "--ignore-scripts" ];
+    # commonly because it wants network, which the sandbox denies), add
+    # "--ignore-scripts" to npmFlags above.
     # The extensions here are JS; native pieces (e.g. @ff-labs/fff-bin-*,
     # @yuuang/ffi-rs-*) arrive as prebuilt optionalDependencies rather than via
     # a postinstall build, and are patched for Nix in `extraExtensions` below.
@@ -245,6 +279,15 @@ let
   # Flattened output dir for each target (scope stripped; same rule as above).
   patchTargetDirs = map npmExtensionDirName patchTargets;
 
+  # `find` prune clauses that skip every declared extension's own directory
+  # inside the shared node_modules, so cruft trimming only touches third-party
+  # dependencies. Extensions may legitimately ship .d.ts/.map/etc. that they
+  # (or pi) load, and we can't know in advance which.
+  pruneDeclaredExtensions =
+    lib.concatMapStringsSep " "
+      (n: ''-path "$out/node_modules/${n}" -prune -o'')
+      npmExtensionNames;
+
   # ---- combined output -----------------------------------------------------
   # Layout: a shared $out/node_modules/ (the full hoisted dependency tree)
   # plus $out/<name>/ for every extension, npm or git alike. The shared
@@ -275,6 +318,12 @@ let
       # See ignoreMissingNativeDeps above. Passed through to the hook's
       # environment; a list of sonames/patterns on current nixpkgs.
       autoPatchelfIgnoreMissingDeps = ignoreMissingNativeDeps;
+
+      # Guard against the full nodejs (npm + corepack) re-entering the image
+      # closure via any copied file. npmExtensions already enforces this for
+      # node_modules; this also covers the git-extension sources and anything
+      # else added to this output later.
+      disallowedReferences = [ pkgs.nodejs_24 ];
     }
     ''
       mkdir -p "$out"
@@ -297,14 +346,29 @@ let
       # image is glibc-based, so the musl copies never load and are pure
       # dead weight. Strip the whole naming convention (node_modules/@*/*-musl)
       # rather than an explicit list, so any future musl variant pulled in by
-      # a lockfile bump is caught too. ignoreMissingNativeDeps above is kept
-      # regardless, in case anything still probes for the removed sonames.
+      # a lockfile bump is caught too. (--libc=glibc in npmFlags should already
+      # have prevented these; this is the fallback.) ignoreMissingNativeDeps
+      # above is kept regardless, in case anything still probes for the removed
+      # sonames.
       chmod -R u+w "$out/node_modules"
       shopt -s nullglob
       for d in "$out"/node_modules/@*/*-musl; do
         rm -rf -- "$d"
       done
       shopt -u nullglob
+
+      # Drop source maps, type declarations and tsbuildinfo from third-party
+      # dependencies (never loaded at runtime). Declared extensions' own
+      # directories are skipped (see pruneDeclaredExtensions). Deliberately NOT
+      # removing *.md (pi packages ship skills/prompt templates as markdown) or
+      # *.ts (pi loads extension TypeScript directly). -exec rather than
+      # -delete, because -delete implies -depth and breaks -prune. Done before
+      # the flat per-extension copies below, so they inherit the trim.
+      find "$out/node_modules" \
+        ${pruneDeclaredExtensions} \
+        -type f \( -name '*.map' -o -name '*.d.ts' -o -name '*.d.mts' \
+                   -o -name '*.d.cts' -o -name '*.tsbuildinfo' \) \
+        -exec rm -f {} +
 
       # Each declared npm extension, surfaced flat at $out/<dir>/ where pi
       # discovers extensions -- <dir> is the package basename with any npm
@@ -359,6 +423,21 @@ let
 
       if [ "''${#patchDirs[@]}" -gt 0 ]; then
         chmod -R u+w "''${patchDirs[@]}"
+
+        # Strip prebuilt ELF binaries/addons (they usually ship unstripped,
+        # often tens of MB of symbols). Must happen BEFORE autoPatchelf so
+        # patchelf's edits are not undone. runCommand has no fixup phase, so
+        # nothing strips for us. Only real ELF files are touched (magic-byte
+        # check), so scripts and data files are left alone.
+        elfmagic="$(printf '\177ELF')"
+        while IFS= read -r -d "" f; do
+          if [ "$(head -c4 "$f" 2>/dev/null)" = "$elfmagic" ]; then
+            strip --strip-unneeded "$f" 2>/dev/null || true
+          fi
+        done < <(find "''${patchDirs[@]}" -type f \
+                   \( -name '*.node' -o -name '*.so' -o -name '*.so.*' -o -perm -u+x \) \
+                   -print0)
+
         autoPatchelf "''${patchDirs[@]}"
       fi
     '';

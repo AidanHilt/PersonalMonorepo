@@ -32,9 +32,9 @@
       let
         pkgs = import nixpkgs { 
           inherit system; 
-          overlays = [(import ./pi-coding-agent-overlay.nix)]
+          overlays = [(import ./pi-coding-agent-overlay.nix)];
         };
-        
+
         n2c = nix2container.packages.${system}.nix2container;
 
         # ---- Fixed, non-content-hash tags -----------------------------

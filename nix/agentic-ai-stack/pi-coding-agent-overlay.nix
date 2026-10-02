@@ -49,7 +49,7 @@ in
 
       # 5. General third-party cruft (skip our own @earendil-works packages, which
       #    may read their README/docs at runtime).
-      find "$nm" -path "$nm/@earendil-works" -prune -o \
+      find "$nm" -path "$nm/@earendil-works" -depth -o \
         -type f \( -name '*.map' -o -name '*.md' -o -name '*.markdown' -o -name '*.d.ts' \
                    -o -name '*.d.mts' -o -name '*.d.cts' -o -name '*.tsbuildinfo' \) -delete
       find "$nm" -path "$nm/@earendil-works" -prune -o \
