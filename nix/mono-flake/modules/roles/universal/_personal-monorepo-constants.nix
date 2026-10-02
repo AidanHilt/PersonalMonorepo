@@ -3,6 +3,7 @@
 let
   personalMonorepoLocation = "${machine-config.userBase}/${machine-config.username}/PersonalMonorepo";
 
+  atilsConfigDirectory = "${machine-config.userBase}/${machine-config.username}/.atils";
   atilsHelmDir = "${personalMonorepoLocation}/kubernetes/helm-charts";
 in
 
@@ -11,5 +12,6 @@ in
     PERSONAL_MONOREPO_LOCATION = personalMonorepoLocation;
     ATILS_HELM_DIR = atilsHelmDir;
     ATILS_JOB_DIR = "${atilsHelmDir}/jobs";
+    ATILS_CONFIG_DIRECTORY = "atilsConfigDirectory";
   };
 }
