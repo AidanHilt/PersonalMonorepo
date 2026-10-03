@@ -1,0 +1,40 @@
+# Opt-in override: swaps pkg-broker's default, isolated `nix-store`
+# Docker volume for the host's real /nix (store + nix-daemon socket), so
+# pkg-broker can reuse whatever the host already has in its store instead
+# of building/fetching everything into a brand-new, empty store on first
+# use (see containers/pkg-broker/README.md for the full tradeoff).
+#
+#   docker compose -f compose.yaml -f compose.pkgbroker-host-store.yaml up -d
+#
+# IMPORTANT: this changes the trust boundary. With this override applied,
+# the host's nix-daemon (and everything already in the host's /nix/store)
+# becomes reachable from pkg-broker, and transitively from anything
+# pkg-broker resolves on pkg-broker's behalf. Only apply this on a host
+# where that tradeoff is acceptable to you -- it is deliberately NOT the
+# default (see compose.yaml's `pkg-broker` service / README.md).
+#
+# `pi` is untouched here -- it still only ever gets a read-only bind of
+# whatever `/nix` pkg-broker is using (via the shared `nix-store` volume
+# mount, compose.yaml), never a nix-daemon socket or write access, under
+# either backend.
+services:
+  pkg-broker:
+    environment:
+      # Tells the `nix` CLI inside pkg-broker to talk to the daemon over
+      # the socket below instead of operating directly against a local
+      # store directory (nix's normal single-user vs. daemon-mode
+      # switch -- no pkg-broker application code needs to know which
+      # mode it's in, see containers/pkg-broker/README.md).
+      NIX_REMOTE: "daemon"
+    volumes:
+      # Replaces the `nix-store` named volume mount from compose.yaml at
+      # the same /nix path -- the host's real nix store, read-write
+      # (nix itself still enforces store immutability/permissions; this
+      # is no more permissive than any other process on the host talking
+      # to its own nix-daemon).
+      - type: bind
+        source: /nix
+        target: /nix
+      - type: bind
+        source: /nix/var/nix/daemon-socket/socket
+        target: /nix/var/nix/daemon-socket/socket

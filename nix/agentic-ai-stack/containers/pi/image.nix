@@ -76,6 +76,14 @@ let
 
     paths = [
       scripts.packages.${pkgs.system}.agent-plan-create
+      # pkg-install (nix/scripts/scripts/pkg-install) is the only client
+      # of the pkg-broker sidecar service (see
+      # containers/pkg-broker/README.md, PROJECT-SPEC.md). It is
+      # deliberately NOT allow-listed in config/pi/extensions/
+      # pi-permission-system/config.json -- bundling the binary here just
+      # makes it available on PATH for a human operator to run manually
+      # (e.g. via `nix run .#shell-agent`).
+      scripts.packages.${pkgs.system}.pkg-install
       pkgs.pi-coding-agent
       pkgs.gitMinimal
       pkgs.coreutils

@@ -10,7 +10,7 @@
 # and continues.
 #
 # Before `docker compose up`:
-#   1. nix run .#load                 # builds + loads pi/proxy images
+#   1. nix run .#load                 # builds + loads pi/proxy/pkg-broker images
 #   2. (local Ollama support is currently disabled — see start-agent.sh
 #      and containers/proxy for the commented-out wiring. May revisit.)
 #   3. (Optional) generate ~/.config/pi-sandbox/agent-kubeconfig.yaml
@@ -27,7 +27,7 @@
 #      (.env.example / .env remain, but now only for Compose's
 #      interpolation of non-secret vars like PERSONAL_MONOREPO_LOCATION.)
 #
-# Then: docker compose up            (starts pi + proxy)
+# Then: docker compose up            (starts pi + proxy + pkg-broker)
 #       nix run .#login              (on demand, for auth — wraps
 #                                      `docker compose --profile login
 #                                      run --rm login`, see flake.nix)
@@ -96,16 +96,59 @@ services:
       - no-new-privileges:true
     restart: unless-stopped
 
+  # pkg-broker: lets `pi` (via the `pkg-install` CLI) install arbitrary
+  # nixpkgs software on demand, without growing the baked pi image and
+  # without giving `pi` itself a nix toolchain, a nix-daemon socket, or
+  # broad network access (see containers/pkg-broker/README.md,
+  # PROJECT-SPEC.md). Dual-homed like `proxy`, but pkg-broker's
+  # `external` leg is its own thing -- it does NOT sit in `pi`'s egress
+  # path, and it deliberately bypasses the Squid allowlist entirely for
+  # its own cache/source fetches (same precedent as proxy/login's own
+  # external leg). The one HTTP endpoint it exposes is only reachable
+  # from `internal` -- no published host port, no `external`-reachable
+  # listener.
+  pkg-broker:
+    image: pi-sandbox/pkg-broker:dev
+    networks:
+      - internal
+      - external
+    volumes:
+      # Resolved bin/* entries, published here (rw) and mounted
+      # read-only into `pi` at /usr/local/bin (see below).
+      - pkg-bin:/srv/pkg-broker/bin
+      # Default/isolated nix store backend (rw here, ro into `pi` at the
+      # same absolute /nix path so symlinked binaries' store-path
+      # references and RPATH/dynamic-linker deps resolve identically in
+      # both containers). Swap this out for the host's real /nix (store +
+      # nix-daemon socket) via compose.pkgbroker-host-store.yaml -- see
+      # containers/pkg-broker/README.md for that tradeoff.
+      - nix-store:/nix
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 512m
+          mode: 1023
+    cap_drop: [ ALL ]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
   pi:
     image: pi-sandbox/pi:dev
     depends_on:
       - proxy
+      - pkg-broker
     networks:
       - internal # no `external` network attachment — no direct internet route
     environment:
       HTTPS_PROXY: "http://proxy:3128"
       HTTP_PROXY: "http://proxy:3128"
       NO_PROXY: "proxy"
+      # Base URL pkg-install (nix/scripts/scripts/pkg-install) calls --
+      # reachable because `pi` and `pkg-broker` share the `internal`
+      # network. Not proxied through `proxy` -- pkg-broker is a separate,
+      # narrow surface, not part of pi's general egress allowlist.
+      PKG_BROKER_URL: "http://pkg-broker:8080"
       # Frontier provider API keys and any other third-party secrets
       # (EXA_API_KEY, GITHUB_TOKEN, etc.), if using key-based auth
       # instead of the `login` flow (spec §7 default preference is
@@ -138,6 +181,17 @@ services:
       # header comment for how to inspect/back them up).
       - pi-auth:/home/pi/.pi-state/auth
       - pi-sessions:/home/pi/.pi-state/sessions
+      # pkg-broker's shared volumes (read-only here -- see the
+      # `pkg-broker` service above and containers/pkg-broker/README.md).
+      # /usr/local/bin is on the OCI/Docker default $PATH but otherwise
+      # empty in this image (everything else lives under /bin, from
+      # pi-image's own buildEnv closure -- see containers/pi/image.nix),
+      # so mounting pkg-bin here adds resolved binaries to pi's PATH
+      # without shadowing anything already there. /nix is needed too so
+      # the symlinks pkg-broker publishes (which point at absolute
+      # /nix/store/... paths) actually resolve inside `pi`.
+      - pkg-bin:/usr/local/bin:ro
+      - nix-store:/nix:ro
       # All of ~/.pi is writable-but-ephemeral. mode 1023 == 01777
       # (leading-zero-safe decimal) so the uid:10001 process can populate
       # it from .pi-seed at startup.
@@ -195,3 +249,12 @@ volumes:
   # containers/pi/image.nix) the first time Docker initializes them.
   pi-auth: {}
   pi-sessions: {}
+  # pkg-broker's shared volumes (containers/pkg-broker/README.md). Seeded
+  # with uid:gid 10003 ownership/mode 0755 from the placeholder paths
+  # baked into the pkg-broker image (containers/pkg-broker/image.nix) the
+  # first time Docker initializes them -- readable by `pi` (uid 10001)
+  # since they're a different uid than pi's own state volumes above.
+  # `nix-store` is the default/isolated store backend; see
+  # compose.pkgbroker-host-store.yaml for the host-shared-store override.
+  pkg-bin: {}
+  nix-store: {}

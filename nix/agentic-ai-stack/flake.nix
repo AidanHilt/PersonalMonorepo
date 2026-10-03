@@ -43,8 +43,10 @@
         # image, which would force editing compose.yaml on every build).
         piTag = "dev";
         proxyTag = "dev";
+        pkgBrokerTag = "dev";
         piImageName = "pi-sandbox/pi";
         proxyImageName = "pi-sandbox/proxy";
+        pkgBrokerImageName = "pi-sandbox/pkg-broker";
 
         pi = import ./containers/pi/image.nix {
           inherit pkgs n2c scripts;
@@ -56,6 +58,12 @@
           inherit pkgs n2c;
           imageName = proxyImageName;
           imageTag = proxyTag;
+        };
+
+        pkgBroker = import ./containers/pkg-broker/image.nix {
+          inherit pkgs n2c;
+          imageName = pkgBrokerImageName;
+          imageTag = pkgBrokerTag;
         };
 
         # ---- helper: load an image into the local Docker daemon using
@@ -120,6 +128,7 @@
         packages = {
           pi-image = pi.image;
           proxy-image = proxy.image;
+          pkg-broker-image = pkgBroker.image;
           default = pi.image;
 
           # Standalone, opt-in convenience path for pre-built npm/git
@@ -134,6 +143,7 @@
 
             paths = [
               scripts.packages.${pkgs.system}.agent-plan-create
+              scripts.packages.${pkgs.system}.pkg-install
               pkgs.pi-coding-agent
               pkgs.gitMinimal
               pkgs.coreutils
@@ -161,6 +171,7 @@
                 set -euo pipefail
                 "${(mkLoadApp "pi" piImageName piTag pi.contentId)}/bin/load-pi"
                 "${(mkLoadApp "proxy" proxyImageName proxyTag proxy.contentId)}/bin/load-proxy"
+                "${(mkLoadApp "pkg-broker" pkgBrokerImageName pkgBrokerTag pkgBroker.contentId)}/bin/load-pkg-broker"
               '';
             };
           };
@@ -179,6 +190,19 @@
               name = "stop-agent";
               runtimeInputs = [ pkgs.docker pkgs.docker-compose ];
               text = builtins.readFile ./scripts/stop-agent.sh;
+            };
+          };
+
+          # nix run .#shell-agent -> execs an interactive shell into the
+          # already-running default-profile `pi` service container (see
+          # scripts/shell-agent.sh). Fails with a clear message instead of
+          # starting anything itself if `pi` isn't already up (start it
+          # first via `nix run .#start-agent`).
+          shell-agent = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellApplication {
+              name = "shell-agent";
+              runtimeInputs = [ pkgs.docker pkgs.docker-compose ];
+              text = builtins.readFile ./scripts/shell-agent.sh;
             };
           };
 

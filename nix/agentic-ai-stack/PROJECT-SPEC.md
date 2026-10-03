@@ -27,12 +27,13 @@ This document specifies the target architecture and the concrete pieces to build
 
 ## 3. Component overview
 
-Four logical components, three of which are containers:
+Five logical components, four of which are containers:
 
 | Component | Runs as | Network access |
 |---|---|---|
 | `pi` | Container (Nix-built image) | Internal network only — no direct internet route |
 | `proxy` | Container (Nix-built image) | Internal network + external internet (allowlisted egress) |
+| `pkg-broker` | Container (Nix-built image), always-on | Internal network + external internet (its own unproxied leg — not part of `pi`'s egress path) |
 | `ollama` | **Native process on host** (not containerized) | Bound to a narrow interface; reachable from internal network only through `proxy`'s API gate |
 | `login` | Same image as `pi`, alternate compose profile | Bridged/normal network (only run interactively, on demand) |
 
@@ -52,11 +53,60 @@ Four logical components, three of which are containers:
 ### 3.2 `proxy` container
 
 - Built via `nix2container.buildImage`. Deliberately minimal — this is the trust anchor of the whole design, keep its own attack surface small.
-- Attached to **both** the `internal` network and the external/default network (i.e., it's the only container with real internet access).
+- Attached to **both** the `internal` network and the external/default network. (`pkg-broker`, §3.2a, is the only other container with a leg on the external network — a separate, narrow concern, not part of `pi`'s egress path.)
 - Two responsibilities, which can be one process or two, implementer's choice:
   1. **Egress allowlist** for `pi`'s outbound traffic: permit only the configured model provider API(s) (e.g. Anthropic, OpenAI) and, if extension installation from npm/PyPI is desired, the relevant package registries. Deny everything else by default.
   2. **Ollama API gate**: a narrow reverse proxy in front of the host's native Ollama instance (see §3.3). Allow only inference endpoints — `/api/generate`, `/api/chat`, `/api/embed` (verify current Ollama API path names against upstream docs at implementation time). Deny model-management endpoints (`/api/pull`, `/api/create`, `/api/push`, `/api/delete`, `/api/copy`, and any tensor-transfer endpoints) — these have been the source of real, remotely-exploitable Ollama CVEs (path traversal, arbitrary file write) and are not needed for the agent's actual workflow. Model management is a manual, host-side operation performed outside this stack.
 - No filesystem mounts beyond its own config.
+
+### 3.2a `pkg-broker`
+
+Lets `pi` (via the `pkg-install` CLI) install arbitrary nixpkgs software
+on demand, without growing the baked `pi` image and without giving `pi`
+itself a nix toolchain, a nix-daemon socket, or broad network access.
+See `containers/pkg-broker/README.md` for the full design and
+`containers/pkg-broker/FOLLOWUP.md` for the deliberately-deferred
+fuzzy/by-binary-name lookup feature.
+
+- Built via `nix2container.buildImage`, bundling a nix toolchain and a
+  small stdlib-only Go HTTP server. Deliberately minimal, same spirit as
+  `proxy`.
+- Dual-homed on the `internal` and `external` networks (same shape as
+  `proxy`), but does **not** sit in `pi`'s egress path — its `external`
+  leg exists so attribute resolution can fall back to building from
+  source on a binary-cache miss, bypassing the Squid allowlist entirely
+  by design (same precedent as `proxy`/`login`'s own external legs).
+- Exposes exactly one HTTP endpoint (`POST /resolve`), reachable only
+  from `internal`, never published to the host, never on `external`:
+  given an exact nixpkgs attribute name (validated strictly — no flake
+  refs, no arbitrary nix expressions), resolves it via `nix-build -A`
+  against this flake's own pinned `nixpkgs` input, then publishes the
+  resulting `bin/*` entries into the shared `pkg-bin` volume.
+- Two shared named Docker volumes, read-write into `pkg-broker` and
+  **read-only** into `pi`: `pkg-bin` (resolved binaries, mounted onto
+  `/usr/local/bin` in `pi` — on `pi`'s default `$PATH` but otherwise
+  empty) and `nix-store` (mounted at `/nix` in both, so the `pkg-bin`
+  symlinks' absolute `/nix/store/...` targets and the resolved binaries'
+  own RPATH/dynamic-linker references resolve inside `pi`). `pi` never
+  gets write access to either, and never gets a nix-daemon socket of its
+  own.
+- The `nix-store` backend is configurable: by default, an isolated store
+  owned by `pkg-broker` alone; `compose.pkgbroker-host-store.yaml` is an
+  opt-in override that swaps in the host's real `/nix/store` and
+  nix-daemon socket for cache reuse — this changes the trust boundary
+  (the host nix-daemon becomes reachable from `pkg-broker`), so it is not
+  the default. See `containers/pkg-broker/README.md`.
+- `pkg-install` (`nix/scripts/scripts/pkg-install/`) is the only client —
+  a thin CLI, baked into the `pi` image's PATH, that makes a single
+  blocking HTTP call to `pkg-broker` and reports pass/fail. It is
+  deliberately **not** allow-listed in `pi`'s own permission policy
+  (`config/pi/extensions/pi-permission-system/config.json`) by default —
+  this build only builds the capability, it does not grant the agent
+  access to it. A human operator runs it manually via
+  `nix run .#shell-agent` (an interactive shell into the running `pi`
+  container, bypassing Pi's own agent harness/permission prompts
+  entirely, but still bound by the same network sandboxing) until that's
+  revisited.
 
 ### 3.3 `ollama` (native on host, not containerized)
 
@@ -83,8 +133,9 @@ Nix's job stops once images are built and loaded into the local Docker daemon. F
 1. `nix build` (or a flake app wrapping it) builds:
    - `pi-image` (tag pinned to a stable string, e.g. `pi-sandbox/pi:dev` — **do not** rely on `nix2container`'s default content-hash tag here, since a static compose file needs a tag that doesn't change every rebuild).
    - `proxy-image` (same tagging approach).
-2. A flake app (`nix run .#load`) calls `copyToDockerDaemon` for both images. This uses the `docker` CLI under the hood and respects whatever Docker context is active — confirm Colima has set itself as the active context (it does this automatically on `colima start`) or export `DOCKER_HOST` explicitly if not.
-3. `docker compose up` (default profile) starts `pi` and `proxy`, attached to the `internal` network as specified. Ollama is assumed already running natively on the host (a setup/health-check step should verify this and fail fast with a clear message if not).
+   - `pkg-broker-image` (same tagging approach; see §3.2a).
+2. A flake app (`nix run .#load`) calls `copyToDockerDaemon` for all three images. This uses the `docker` CLI under the hood and respects whatever Docker context is active — confirm Colima has set itself as the active context (it does this automatically on `colima start`) or export `DOCKER_HOST` explicitly if not.
+3. `docker compose up` (default profile) starts `pi`, `proxy`, and `pkg-broker`, attached to the `internal` network as specified (`pkg-broker` also gets `external`, see §3.2a). Ollama is assumed already running natively on the host (a setup/health-check step should verify this and fail fast with a clear message if not).
 4. `nix run .#login` (wraps `docker compose --profile login run --rm login`) is run manually, once, whenever a credential needs to be established or refreshed.
 
 ## 5. Configuration bundling
@@ -145,3 +196,4 @@ Revisit this rule set after initial usage — it's a starting point, not a final
 - Ollama's model-management endpoints are unreachable from the `internal` network — verified by attempting `/api/pull` (or current equivalent) through the path the `pi` container would use, and confirming it's rejected by `proxy`.
 - No secret values appear in `git log`, `git diff`, or `nix path-info` output for any built derivation.
 - A fresh `login` run correctly populates the `pi-auth` Docker volume, and a subsequent default-profile `pi` run picks up those credentials without re-authenticating.
+- `pi` cannot reach `pkg-broker`'s nix store or a nix-daemon socket directly — only `pkg-broker`'s narrow `POST /resolve` HTTP endpoint over the `internal` network (`pi` has no nix-daemon socket and only a read-only bind of the shared `nix-store`/`pkg-bin` volumes, never write access).

@@ -105,7 +105,7 @@ fi
 
 cd "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"
 
-echo "==> Building and loading pi/proxy images into the active Docker context..."
+echo "==> Building and loading pi/proxy/pkg-broker images into the active Docker context..."
 DOCKER_CTX="$(docker context show 2>/dev/null || echo 'default')"
 echo "    Active Docker context: $DOCKER_CTX"
 
@@ -117,8 +117,8 @@ fi
 
 nix run "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#load" "${override_flag[@]}"
 
-echo "==> Starting docker compose stack (pi + proxy)..."
-docker compose "${COMPOSE_FILES[@]}" up -d proxy
+echo "==> Starting docker compose stack (pi + proxy + pkg-broker)..."
+docker compose "${COMPOSE_FILES[@]}" up -d proxy pkg-broker
 
 cleanup() {
 echo "==> Session finished — tearing down the compose stack..."
