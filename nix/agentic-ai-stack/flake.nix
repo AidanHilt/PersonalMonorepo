@@ -31,9 +31,26 @@
       url = "github:aidanhilt/PersonalMonorepo/project-lockstep/release-mgmt?dir=nix/scripts";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Prebuilt nix-index database, used lazily (via `nix run`, not baked
+    # into any image closure) by pkg-broker's /lookup-binary endpoint to
+    # answer "which nixpkgs attribute provides binary X" -- see
+    # containers/pkg-broker/README.md and FOLLOWUP.md. Deliberately NOT
+    # `inputs.nixpkgs.follows`'d: the `nix run <ref>#nix-index-with-db`
+    # invocation at request time resolves against THIS flake's own lock
+    # (whatever nixpkgs Mic92/nix-index-database itself pins), not against
+    # this repo's pinned nixpkgs -- the index DB and the nixpkgs revision it
+    # was built from need to stay together. Only its `rev` is consumed here
+    # (to build a pinned `github:Mic92/nix-index-database/<rev>` ref string
+    # baked into the pkg-broker image as an env var); the input itself is
+    # never added to any image's closure/rootEnv/copyToRoot.
+    nix-index-database = {
+      url = "github:Mic92/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, flake-utils, nix2container, scripts }:
+  outputs = { self, nixpkgs, nixpkgs-unstable, flake-utils, nix2container, scripts, nix-index-database }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { 
@@ -47,6 +64,25 @@
 
         n2c = nix2container.packages.${system}.nix2container;
 
+        # Pinned `github:Mic92/nix-index-database/<rev>` flake ref string,
+        # derived from the nix-index-database input's own locked rev (so
+        # flake.lock owns the pin, see the input's comment above) rather than
+        # hand-maintained here. Baked into the pkg-broker image as
+        # PKG_BROKER_NIX_INDEX_REF (see containers/pkg-broker/image.nix) and
+        # invoked lazily via `nix run` at request time, never added to any
+        # image's closure. Falls back to an unpinned ref (with a loud trace
+        # warning, not a hard eval failure) if the input somehow has no
+        # locked rev -- e.g. a dirty/path-overridden input during local dev.
+        nixIndexRef =
+          let rev = nix-index-database.rev or null;
+          in
+            if rev != null
+            then "github:Mic92/nix-index-database/${rev}"
+            else
+              builtins.trace
+                "WARNING: nix-index-database input has no locked rev (dirty/overridden input?) -- pkg-broker's /lookup-binary will use an UNPINNED github:Mic92/nix-index-database ref. Run `nix flake lock` to pin it."
+                "github:Mic92/nix-index-database";
+
         # ---- Fixed, non-content-hash tags -----------------------------
         # A static compose.yaml needs tags that don't change on every
         # rebuild (nix2container's default tag *is* a content hash of the
@@ -54,9 +90,11 @@
         piTag = "dev";
         proxyTag = "dev";
         pkgBrokerTag = "dev";
+        workspaceMounterTag = "dev";
         piImageName = "pi-sandbox/pi";
         proxyImageName = "pi-sandbox/proxy";
         pkgBrokerImageName = "pi-sandbox/pkg-broker";
+        workspaceMounterImageName = "pi-sandbox/workspace-mounter";
 
         pi = import ./containers/pi/image.nix {
           pkgs = pkgsUnstable;
@@ -72,9 +110,15 @@
         };
 
         pkgBroker = import ./containers/pkg-broker/image.nix {
-          inherit pkgs n2c;
+          inherit pkgs n2c nixIndexRef;
           imageName = pkgBrokerImageName;
           imageTag = pkgBrokerTag;
+        };
+
+        workspaceMounter = import ./containers/workspace-mounter/image.nix {
+          inherit pkgs n2c;
+          imageName = workspaceMounterImageName;
+          imageTag = workspaceMounterTag;
         };
 
         # ---- helper: load an image into the local Docker daemon using
@@ -140,6 +184,7 @@
           pi-image = pi.image;
           proxy-image = proxy.image;
           pkg-broker-image = pkgBroker.image;
+          workspace-mounter-image = workspaceMounter.image;
           default = pi.image;
 
           # Standalone, opt-in convenience path for pre-built npm/git
@@ -183,6 +228,7 @@
                 "${(mkLoadApp "pi" piImageName piTag pi.contentId)}/bin/load-pi"
                 "${(mkLoadApp "proxy" proxyImageName proxyTag proxy.contentId)}/bin/load-proxy"
                 "${(mkLoadApp "pkg-broker" pkgBrokerImageName pkgBrokerTag pkgBroker.contentId)}/bin/load-pkg-broker"
+                "${(mkLoadApp "workspace-mounter" workspaceMounterImageName workspaceMounterTag workspaceMounter.contentId)}/bin/load-workspace-mounter"
               '';
             };
           };

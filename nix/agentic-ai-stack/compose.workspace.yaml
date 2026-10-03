@@ -1,0 +1,90 @@
+# /workspace content, built from --add/--clone extras (scripts/start-agent.sh
+# --help / its own header comment has the full flag/layout-rule writeup).
+# Layered by start-agent.sh ONLY when at least one extra was given; with zero
+# extras, `pi` just gets the plain tmpfs /workspace from compose.yaml's base
+# `volumes:` entry (long syntax, merged by `target` below -- same mechanism
+# compose.nixstore-overlay.yaml uses for pi's /nix/store bind).
+#
+# The actual list of source volumes (one bind per extra) can't live in this
+# static file -- the set of extras is only known at `start-agent.sh`
+# invocation time -- so start-agent.sh additionally generates and layers a
+# small compose file (compose.workspace-extras.generated.yaml, written under
+# the pi-sandbox cache dir) that adds those to the `workspace-mounter`
+# service's `volumes:` list, keyed by the same service name so Compose merges
+# the two.
+#
+# How it works (mirrors containers/nix-store-mounter, but using `bindfs`
+# (FUSE) instead of an overlay -- see containers/workspace-mounter/mount.sh
+# for why):
+#   - workspace-mounter bindfs-translates each extra's host ownership to
+#     pi's uid:gid (10001) for reads, while writes still land on the host
+#     under the real host uid:gid, regardless of the extra's actual host
+#     permissions.
+#   - It publishes the merged result onto /srv/merged, a bind of a host
+#     directory with rshared propagation, so the mount becomes visible on
+#     the host at ${PI_SANDBOX__WORKSPACE_SOURCE}.
+#   - `pi` binds that same host directory read-write with rslave
+#     propagation (receives the mount, cannot push back).
+#
+# Requirements: native Linux Docker (not Colima/Docker Desktop), host path on
+# a shared mount (same requirement nix-store-mounter already has), /dev/fuse
+# available on the host.
+
+services:
+  workspace-mounter:
+    image: pi-sandbox/workspace-mounter:dev
+    user: "0:0"
+    entrypoint: [ "/bin/bash", "/mount.sh" ]
+    command: []
+    network_mode: none
+    read_only: true
+    cap_drop: [ ALL ]
+    cap_add: [ SYS_ADMIN ]
+    devices:
+      - /dev/fuse
+    security_opt:
+      - no-new-privileges:true
+      # docker-default AppArmor denies mount(2) (and FUSE's implicit mount
+      # via /dev/fuse). Replace with a narrow custom profile if you want to
+      # tighten this further.
+      - apparmor:unconfined
+    environment:
+      WORKSPACE_MODE: "${WORKSPACE_MODE:?set by start-agent.sh}"
+      WORKSPACE_ITEMS: "${WORKSPACE_ITEMS:?set by start-agent.sh}"
+      WORKSPACE_HOST_UID: "${WORKSPACE_HOST_UID:?set by start-agent.sh}"
+      WORKSPACE_HOST_GID: "${WORKSPACE_HOST_GID:?set by start-agent.sh}"
+    healthcheck:
+      test: [ "CMD", "/bin/bash", "-c", "test -e /tmp/ready" ]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    volumes:
+      # Mount propagation back to the host.
+      - type: bind
+        source: "${PI_SANDBOX__WORKSPACE_SOURCE:?set by start-agent.sh}"
+        target: /srv/merged
+        bind:
+          propagation: rshared
+      - type: bind
+        source: ./containers/workspace-mounter/mount.sh
+        target: /mount.sh
+        read_only: true
+      - type: tmpfs
+        target: /tmp
+      # Scratch space for file-extra parent-dir bindfs mounts -- never
+      # exposed to the host/pi, only used internally by mount.sh.
+      - type: tmpfs
+        target: /srv/internal
+      # Per-extra source volumes are added here by start-agent.sh's
+      # generated compose.workspace-extras.generated.yaml layer (one bind
+      # per --add/--clone extra, at /srv/sources/<name>).
+    restart: unless-stopped
+
+  pi:
+    volumes:
+      - type: bind
+        source: "${PI_SANDBOX__WORKSPACE_SOURCE:?set by start-agent.sh}"
+        target: /workspace
+        read_only: false
+        bind:
+          propagation: rslave

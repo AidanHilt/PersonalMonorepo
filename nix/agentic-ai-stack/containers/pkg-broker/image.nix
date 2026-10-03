@@ -1,4 +1,11 @@
-{ pkgs, n2c, imageName, imageTag }:
+# nixIndexRef: a pinned "github:Mic92/nix-index-database/<rev>" flake ref
+# string (or an unpinned fallback, see flake.nix's nixIndexRef derivation),
+# baked in below as PKG_BROKER_NIX_INDEX_REF and used ONLY at request time by
+# main.go's /lookup-binary handler, via `nix run <nixIndexRef>#nix-index-with-db`.
+# This is just a string arg -- nix-index-database itself is NOT part of this
+# image's closure/rootEnv/copyToRoot, so it never bloats the image or needs
+# rebuilding when unrelated to fuzzy lookup (see README.md/FOLLOWUP.md).
+{ pkgs, n2c, imageName, imageTag, nixIndexRef }:
 
 let
   user = "pkg-broker";
@@ -93,7 +100,10 @@ let
     mkdir -p $out/srv/shared-nix $out/srv/pkg-broker/bin $out/srv/pkg-broker/nixpkgs $out/tmp $out/var/empty
   '';
 
-  contentId = builtins.hashString "sha256" "${rootEnv}-${nixpkgsConfig}-${writableDirs}-${entrypointScript}";
+  # Includes nixIndexRef so the image's content-id (and thus `nix run
+  # .#load`'s rebuild/reload decision) changes whenever the nix-index-database
+  # pin moves, even though the pin itself never enters rootEnv/copyToRoot.
+  contentId = builtins.hashString "sha256" "${rootEnv}-${nixpkgsConfig}-${writableDirs}-${entrypointScript}-${nixIndexRef}";
 
 in
 {
@@ -133,6 +143,10 @@ in
         # Read by entrypoint.sh.
         "PKG_BROKER_SERVER=/bin/pkg-broker"
         "PKG_BROKER_STORE_ROOT=/srv/shared-nix"
+        # Consumed by /lookup-binary (main.go) to invoke
+        # `nix run $PKG_BROKER_NIX_INDEX_REF#nix-index-with-db -- ...`
+        # lazily, at request time -- see the nixIndexRef comment above.
+        "PKG_BROKER_NIX_INDEX_REF=${nixIndexRef}"
       ];
       # No published ports in the image itself -- compose.yaml attaches
       # pkg-broker to `internal` (so `pi` can reach it at

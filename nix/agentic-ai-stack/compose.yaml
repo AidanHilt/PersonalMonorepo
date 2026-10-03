@@ -25,7 +25,17 @@
 #      `docker compose run`, so no secret value is ever written into
 #      this repo, an image, or a file on disk.
 #      (.env.example / .env remain, but now only for Compose's
-#      interpolation of non-secret vars like PERSONAL_MONOREPO_LOCATION.)
+#      interpolation of non-secret vars like PERSONAL_MONOREPO_LOCATION,
+#      which is no longer a default /workspace bind mount -- see below.)
+#
+# /workspace has NO default content: this base file mounts an empty tmpfs
+# there. Pass `--add PATH` / `--clone URL` (repeatable) to start-agent.sh to
+# give `pi` something to work on; start-agent.sh then layers
+# compose.workspace.yaml (+ a small generated extras file) on top, which
+# overrides this tmpfs entry with a real, read-write bind mount built by the
+# `workspace-mounter` sidecar. See scripts/start-agent.sh's own header
+# comment for the full flag/layout-rule writeup and
+# containers/workspace-mounter/mount.sh for the mechanism.
 #
 # Then: docker compose up            (starts pi + proxy + pkg-broker)
 #       nix run .#login              (on demand, for auth — wraps
@@ -184,9 +194,20 @@ services:
       # `PI_SANDBOX__SECRET__<NAME>` host env var mechanism — never
       # declared here, so adding a new secret name never requires
       # editing this file.
+      #
+      # Informational only (entrypoint.sh uses this to decide whether the
+      # empty-/workspace warning should fire) -- start-agent.sh exports the
+      # real value when extras are given; otherwise /workspace is
+      # deliberately empty, see the tmpfs volume entry below.
+      WORKSPACE_MODE: "${WORKSPACE_MODE:-empty}"
     volumes:
-      # Project directory: read-write, this is what pi actually works on.
-      - "${PERSONAL_MONOREPO_LOCATION:-./workspace}:/workspace:rw"
+      # /workspace: empty tmpfs by default (see this file's header comment).
+      # compose.workspace.yaml overrides this exact entry (same `target`) with
+      # a real bind mount when --add/--clone extras are given.
+      - type: tmpfs
+        target: /workspace
+        tmpfs:
+          mode: 1023
       # NOTE: no kubeconfig mount here by default. See
       # compose.kube.yaml — start-agent.sh layers it in
       # automatically when a scoped kubeconfig is found on the host, and

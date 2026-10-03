@@ -43,7 +43,14 @@ Five logical components, four of which are containers:
 - Non-root user baked in.
 - Runs with `--read-only` root filesystem. Explicit `tmpfs` mount for `/tmp`. Session history persists across runs by default via a named Docker volume (`pi-sessions`); set `PI_SESSIONS=0` on the container to fall back to `--no-session` stateless runs.
 - Mounts:
-  - Project directory: read-write bind mount.
+  - `/workspace`: empty tmpfs by default. Populated only when `start-agent.sh`'s
+    repeatable `--add PATH` / `--clone URL` flags are used, via a dedicated
+    `workspace-mounter` sidecar (CAP_SYS_ADMIN + bindfs, modeled on the
+    `nix-store-mounter` pattern below) that translates each source's host
+    ownership to `pi`'s uid:gid for reads while writes still land on the
+    host under the real host uid:gid. See `compose.workspace.yaml` /
+    `containers/workspace-mounter/` and `scripts/start-agent.sh`'s header
+    comment for the full layout rules (single extra vs. sibling mode).
   - Scoped kubeconfig (see §6): read-only bind mount.
   - Auth state (see §7): read-write named Docker volume (`pi-auth`), not a host bind mount.
 - Attached **only** to the `internal` compose network. No published ports. No route to the internet except via `proxy`.

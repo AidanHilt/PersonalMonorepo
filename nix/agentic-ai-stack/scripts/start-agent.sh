@@ -34,10 +34,105 @@ SECRET_ENV_ARGS=()
 # Either the flag or the env var being '1' is enough to opt in (OR semantics).
 HOST_STORE_FLAG=0
 
+# --- Workspace contents: repeatable --add PATH / --clone URL --------------
+# /workspace has NO default content anymore (no more implicit
+# PERSONAL_MONOREPO_LOCATION bind mount, see compose.yaml). What `pi` sees
+# at /workspace is built up entirely from these two repeatable flags, in the
+# order given:
+#   --add PATH    an existing host file or directory, resolved to an
+#                 absolute realpath.
+#   --clone URL   cloned on the HOST (so host git credentials/ssh-agent/
+#                 credential helpers are used, not anything inside the
+#                 container) into
+#                 ${XDG_CACHE_HOME:-$HOME/.cache}/pi-sandbox/clones/<repo-name>
+#                 (<repo-name> = URL basename, .git suffix stripped). If
+#                 that clone already exists, only `git fetch` runs -- the
+#                 working tree is never touched -- then it's treated
+#                 exactly like `--add <that dir>`.
+# Layout rules (see compose.workspace.yaml / containers/workspace-mounter):
+#   - Zero extras: /workspace is an empty tmpfs (no sidecar is started).
+#   - Exactly one extra, a directory: mounted directly AT /workspace.
+#   - Exactly one extra, a file: rejected -- a lone --add/--clone must
+#     resolve to a directory.
+#   - Two or more extras: /workspace is a neutral root; each extra (file or
+#     directory) appears as a sibling at /workspace/<basename>.
+# Two extras sharing a basename is an error (ambiguous sibling name).
+EXTRAS=()  # ordered "name:type:hostpath" entries; type is "dir" or "file"
+
+add_extra() {
+  local hostpath="$1" type="$2" name existing existing_name
+  name="$(basename "$hostpath")"
+  for existing in "${EXTRAS[@]:-}"; do
+    [ -n "$existing" ] || continue
+    existing_name="${existing%%:*}"
+    if [ "$existing_name" = "$name" ]; then
+      echo "error: two --add/--clone extras share the same basename '$name' ($hostpath vs. the earlier one) -- rename/relocate one of them." >&2
+      exit 1
+    fi
+  done
+  EXTRAS+=("$name:$type:$hostpath")
+}
+
+handle_add() {
+  local add_path="${1:?--add requires a PATH argument}" resolved
+  if [ ! -e "$add_path" ]; then
+    echo "error: --add path does not exist: $add_path" >&2
+    exit 1
+  fi
+  resolved="$(realpath "$add_path")"
+  if [ -d "$resolved" ]; then
+    add_extra "$resolved" dir
+  elif [ -f "$resolved" ]; then
+    add_extra "$resolved" file
+  else
+    echo "error: --add path is neither a regular file nor a directory: $resolved" >&2
+    exit 1
+  fi
+}
+
+handle_clone() {
+  local url="${1:?--clone requires a URL argument}" repo_name clones_dir dest
+  repo_name="$(basename "$url")"
+  repo_name="${repo_name%.git}"
+  if [ -z "$repo_name" ]; then
+    echo "error: --clone could not derive a repo name from URL: $url" >&2
+    exit 1
+  fi
+  clones_dir="${XDG_CACHE_HOME:-$HOME/.cache}/pi-sandbox/clones"
+  mkdir -p "$clones_dir"
+  dest="$clones_dir/$repo_name"
+  if [ -d "$dest/.git" ]; then
+    echo "==> --clone: $repo_name already cloned at $dest -- fetching only (working tree left untouched)."
+    git -C "$dest" fetch
+  else
+    echo "==> --clone: cloning $url into $dest..."
+    git clone "$url" "$dest"
+  fi
+  add_extra "$dest" dir
+}
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --host-store)
       HOST_STORE_FLAG=1
+      shift
+      ;;
+    --add)
+      shift
+      handle_add "${1:?--add requires a PATH argument}"
+      shift
+      ;;
+    --add=*)
+      handle_add "${1#--add=}"
+      shift
+      ;;
+    --clone)
+      shift
+      handle_clone "${1:?--clone requires a URL argument}"
+      shift
+      ;;
+    --clone=*)
+      handle_clone "${1#--clone=}"
       shift
       ;;
     --secret)
@@ -139,6 +234,91 @@ fi
 
 cd "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"
 
+# --- Resolve the workspace layout from the --add/--clone extras above -----
+# Must run from the stack dir (cd above) since the generated extras compose
+# file is written under the same cache root as the other merged-dir state.
+WORKSPACE_MODE="empty"
+if [ "${#EXTRAS[@]}" -eq 1 ]; then
+  IFS=':' read -r _ex_name ex_type _ex_path <<< "${EXTRAS[0]}"
+  if [ "$ex_type" = "file" ]; then
+    echo "error: a single --add/--clone extra must be a directory (got a file). Pass a second extra to use sibling mode, or point --add at its containing directory instead." >&2
+    exit 1
+  fi
+  WORKSPACE_MODE="single"
+elif [ "${#EXTRAS[@]}" -gt 1 ]; then
+  WORKSPACE_MODE="sibling"
+fi
+
+WORKSPACE_MERGED_DIR=""
+if [ "$WORKSPACE_MODE" != "empty" ]; then
+  echo "==> Preparing workspace staging directory (populated by workspace-mounter)..."
+  WORKSPACE_MERGED_DIR="${PI_SANDBOX__WORKSPACE_MERGED_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/pi-sandbox/workspace-merged}"
+  mkdir -p "$WORKSPACE_MERGED_DIR"
+
+  # A leftover mount (crashed mounter) would shadow the fresh one.
+  while mountpoint -q "$WORKSPACE_MERGED_DIR"; do
+    echo "    stale mount found at $WORKSPACE_MERGED_DIR -- unmounting (sudo)."
+    sudo umount "$WORKSPACE_MERGED_DIR"
+  done
+
+  # Docker only accepts rshared/rslave binds from a shared (or slave) mount.
+  prop="$(findmnt -n -o PROPAGATION -T "$WORKSPACE_MERGED_DIR" 2>/dev/null || true)"
+  case "$prop" in
+    *shared*|*slave*) ;;
+    *) echo "    WARNING: $WORKSPACE_MERGED_DIR is on a mount with propagation '${prop:-unknown}', not shared." >&2
+       echo "    The merged workspace will not be visible to pi. Fix with: sudo mount --make-rshared /" >&2 ;;
+  esac
+
+  export PI_SANDBOX__WORKSPACE_SOURCE="$WORKSPACE_MERGED_DIR"
+  export WORKSPACE_MODE
+  export WORKSPACE_HOST_UID
+  export WORKSPACE_HOST_GID
+  
+  WORKSPACE_HOST_UID="$(id -u)"
+  WORKSPACE_HOST_GID="$(id -g)"
+
+  # One bind-mount volume per extra, feeding the workspace-mounter service
+  # (compose.workspace.yaml) -- generated fresh each run since the set of
+  # extras is only known at invocation time, not something a static compose
+  # file can express. WORKSPACE_ITEMS (an ordered "name:type,..." list,
+  # exported below) tells containers/workspace-mounter/mount.sh how to
+  # consume each of these mounted sources by matching index/name.
+  WORKSPACE_EXTRAS_COMPOSE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/pi-sandbox/compose.workspace-extras.generated.yaml"
+  mkdir -p "$(dirname "$WORKSPACE_EXTRAS_COMPOSE_FILE")"
+  {
+    echo "# Auto-generated by start-agent.sh -- do not edit by hand, regenerated"
+    echo "# fresh on every invocation. Adds one bind-mount source volume per"
+    echo "# --add/--clone extra to the workspace-mounter service defined in"
+    echo "# compose.workspace.yaml."
+    echo "services:"
+    echo "  workspace-mounter:"
+    echo "    volumes:"
+    items_str=""
+    for extra in "${EXTRAS[@]}"; do
+      IFS=':' read -r ex_name ex_type ex_path <<< "$extra"
+      if [ -n "$items_str" ]; then items_str+=","; fi
+      items_str+="${ex_name}:${ex_type}"
+      # Directory extras: bind the directory itself. File extras: bind the
+      # file's PARENT directory (mount.sh bindfs-translates that whole
+      # parent internally, then exposes only the one file) -- see
+      # containers/workspace-mounter/mount.sh for why.
+      if [ "$ex_type" = "dir" ]; then
+        host_mount_src="$ex_path"
+      else
+        host_mount_src="$(dirname "$ex_path")"
+      fi
+      printf '      - type: bind\n        source: "%s"\n        target: "/srv/sources/%s"\n' "$host_mount_src" "$ex_name"
+    done
+    # shellcheck disable=SC2034
+    export WORKSPACE_ITEMS="$items_str"
+  } > "$WORKSPACE_EXTRAS_COMPOSE_FILE"
+
+  echo "    layering compose.workspace.yaml + generated extras file (mode=$WORKSPACE_MODE, items=$WORKSPACE_ITEMS)"
+  COMPOSE_FILES+=(-f compose.workspace.yaml -f "$WORKSPACE_EXTRAS_COMPOSE_FILE")
+else
+  echo "==> No --add/--clone extras given -- /workspace will start empty (tmpfs, no workspace-mounter)."
+fi
+
 echo "==> Building and loading pi/proxy/pkg-broker images into the active Docker context..."
 DOCKER_CTX="$(docker context show 2>/dev/null || echo 'default')"
 echo "    Active Docker context: $DOCKER_CTX"
@@ -190,7 +370,11 @@ else
   UP_SERVICES+=(nix-store-mounter)
 fi
 
-echo "==> Starting docker compose stack (pi + proxy + pkg-broker${NIX_STORE_MERGED_DIR:+ + nix-store-mounter})..."
+if [ -n "$WORKSPACE_MERGED_DIR" ]; then
+  UP_SERVICES+=(workspace-mounter)
+fi
+
+echo "==> Starting docker compose stack (pi + proxy + pkg-broker${NIX_STORE_MERGED_DIR:+ + nix-store-mounter}${WORKSPACE_MERGED_DIR:+ + workspace-mounter})..."
 docker compose "${COMPOSE_FILES[@]}" up -d --wait "${UP_SERVICES[@]}"
 
 cleanup() {
@@ -200,6 +384,12 @@ if [ -n "${NIX_STORE_MERGED_DIR:-}" ]; then
   # nix-store-mounter unmounts on SIGTERM; this only catches a killed one.
   while mountpoint -q "$NIX_STORE_MERGED_DIR" 2>/dev/null; do
     sudo umount "$NIX_STORE_MERGED_DIR" || break
+  done
+fi
+if [ -n "${WORKSPACE_MERGED_DIR:-}" ]; then
+  # workspace-mounter unmounts on SIGTERM; this only catches a killed one.
+  while mountpoint -q "$WORKSPACE_MERGED_DIR" 2>/dev/null; do
+    sudo umount "$WORKSPACE_MERGED_DIR" || break
   done
 fi
 }

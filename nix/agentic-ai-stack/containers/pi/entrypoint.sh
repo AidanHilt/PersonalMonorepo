@@ -50,11 +50,19 @@ if [ "${1:-}" = "login" ]; then
   exec pi "$@"
 fi
 
-PROJECT_DIR="${PERSONAL_MONOREPO_LOCATION:-/workspace}"
+# /workspace's actual content (nothing, a single mounted dir, or several
+# sibling extras) is entirely determined by the --add/--clone flags passed
+# to start-agent.sh -- see compose.yaml/compose.workspace.yaml and
+# scripts/start-agent.sh's header comment. No PERSONAL_MONOREPO_LOCATION
+# fallback here anymore; that var is only used host-side, to locate this
+# stack's own checkout.
+PROJECT_DIR="/workspace"
 #AGENT_DIR="${PI_AGENT_DIR:-$HOME/.pi/agent}"
 
-if [ "${PI_SANDBOX__LOGIN_FORWARD:-0}" != "1" ] && { [ ! -d "$PROJECT_DIR" ] || [ -z "$(ls -A "$PROJECT_DIR" 2>/dev/null)" ]; }; then
-  echo "warning: $PROJECT_DIR is empty or missing — check the project bind mount in compose.yaml" >&2
+if [ "${PI_SANDBOX__LOGIN_FORWARD:-0}" != "1" ] && [ "${WORKSPACE_MODE:-empty}" = "empty" ]; then
+  echo "note: /workspace is empty -- no --add/--clone extras were passed to start-agent.sh for this run." >&2
+elif [ "${PI_SANDBOX__LOGIN_FORWARD:-0}" != "1" ] && { [ ! -d "$PROJECT_DIR" ] || [ -z "$(ls -A "$PROJECT_DIR" 2>/dev/null)" ]; }; then
+  echo "warning: $PROJECT_DIR is empty or missing — check the workspace-mounter sidecar / the --add,--clone sources passed to start-agent.sh" >&2
 fi
 
 cd "$PROJECT_DIR" || exit

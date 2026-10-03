@@ -10,9 +10,10 @@ it" summary.
 ## Layout
 
 ```
-flake.nix                      # packages: pi-image, proxy-image, pkg-broker-image; apps: load, start-agent, stop-agent, shell-agent, login, gen-kubeconfig, verify
+flake.nix                      # packages: pi-image, proxy-image, pkg-broker-image, workspace-mounter-image; apps: load, start-agent, stop-agent, shell-agent, login, gen-kubeconfig, verify
 compose.yaml                   # static compose file; images are just images to it once loaded
 compose.pkgbroker-host-store.yaml  # opt-in override: pkg-broker uses the host's real nix store/daemon
+compose.workspace.yaml         # opt-in: layered when --add/--clone extras are given (see below)
 containers/
   pi/
     image.nix                  # nix2container build for the pi service
@@ -27,12 +28,52 @@ containers/
     main.go                    # single POST /resolve endpoint (nixpkgs attr -> published bin/*)
     README.md                  # design, volumes, store-backend tradeoff
     FOLLOWUP.md                # deferred: fuzzy/by-binary-name lookup
+  nix-store-mounter/
+    mount.sh                   # CAP_SYS_ADMIN sidecar, overlays pi's own + pkg-broker's /nix/store
+  workspace-mounter/
+    image.nix                  # nix2container build for the workspace-mounter sidecar
+    mount.sh                   # CAP_SYS_ADMIN+bindfs sidecar, builds /workspace from --add/--clone extras
 config/pi/                     # baked-in AGENTS.md / settings.json / models.json / permission policy — config only, never secrets
 scripts/                       # start-agent, stop-agent, shell-agent, gen-kubeconfig, verify-acceptance
 kube/                          # legacy/unused; kubeconfig now defaults to
                                 # ~/.config/pi-sandbox/agent-kubeconfig.yaml
                                 # (override with PI_SANDBOX__KUBECONFIG_PATH), never in-repo
 ```
+
+### Giving `pi` something to work on (`/workspace`)
+
+`/workspace` has no default content — it starts as an empty tmpfs unless you
+pass one or more of these repeatable flags to `start-agent.sh`:
+
+```sh
+# A single existing directory, mounted directly AT /workspace:
+nix run .#start-agent -- --add ~/code/my-project
+
+# A fresh/cached clone (on the HOST, using your own git credentials),
+# also mounted directly AT /workspace since it's the only extra:
+nix run .#start-agent -- --clone git@github.com:me/my-project.git
+
+# Two or more extras become siblings under /workspace/<basename>:
+nix run .#start-agent -- --add ~/code/my-project --add ~/notes/todo.md
+#  -> /workspace/my-project/, /workspace/todo.md
+```
+
+A lone `--add`/`--clone` must resolve to a directory (a single bare file is
+rejected — point at its containing directory, or add a second extra to use
+sibling mode). Two extras sharing a basename is an error. Clones are cached
+in `${XDG_CACHE_HOME:-~/.cache}/pi-sandbox/clones/<repo-name>`; re-running
+`--clone` against an already-cloned repo only runs `git fetch`, it never
+touches the working tree.
+
+When any extras are given, `start-agent.sh` layers `compose.workspace.yaml`
+(plus a small generated compose file listing that run's extra source
+volumes) on top of the base stack, bringing up the `workspace-mounter`
+sidecar (`containers/workspace-mounter/`) to build the merged view — see
+that sidecar's `mount.sh` and `scripts/start-agent.sh`'s own header comment
+for the full mechanism. This needs native Linux Docker (not Colima/Docker
+Desktop), `/dev/fuse` available on the host, and the same shared mount
+propagation `nix-store-mounter` already requires (`sudo mount --make-rshared /`
+if `start-agent.sh` warns about it).
 
 `nix/scripts/scripts/pkg-install/` (in the sibling `nix/scripts` flake) is
 the thin CLI that calls `pkg-broker` from inside the `pi` container; see

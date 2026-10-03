@@ -10,14 +10,14 @@ service itself.
 
 Deliberately minimal, in the same spirit as `containers/proxy` (also a
 trust-boundary-adjacent component): a single Go binary (stdlib only, no
-third-party deps), one HTTP endpoint, no persistent install-state beyond
-what the nix store naturally provides.
+third-party deps), two narrow HTTP endpoints, no persistent install-state
+beyond what the nix store naturally provides.
 
 ## What it does
 
 `pkg-broker` is dual-homed on both the `internal` and `external` compose
 networks (same shape as `proxy`), but unlike `proxy` it does **not** sit
-in `pi`'s egress path at all. It exposes exactly one endpoint, reachable
+in `pi`'s egress path at all. It exposes two endpoints, both reachable
 only from the `internal` network (never published to the host, never on
 `external`):
 
@@ -41,6 +41,93 @@ POST /resolve
    by design — same precedent as `proxy`/`login`'s own external leg).
 3. Symlinks every entry under the resolved store path(s)' `bin/`
    directory into the shared `pkg-bin` volume.
+
+```
+POST /lookup-binary
+{"binary": "protoc"}
+```
+
+1. Validates `binary` is a plain executable name (letters/digits/`_`/`.`/
+   `+`/`-`, no `/`, no leading `-`, no whitespace or shell metacharacters)
+   — see `main.go`'s `binaryPattern`/`validateBinaryName`.
+2. Answers "which nixpkgs attribute(s) provide a binary named `<binary>`"
+   by invoking a prebuilt **nix-index** database **lazily, at request
+   time**, via:
+
+   ```
+   nix run <PKG_BROKER_NIX_INDEX_REF>#nix-index-with-db -- \
+     --at-root --whole-name --minimal -- /bin/<binary>
+   ```
+
+   (nix-locate restricts to top-level nixpkgs attrs by default now -- no
+   `--top-level` flag is passed; `--all` would disable that default.)
+
+   `PKG_BROKER_NIX_INDEX_REF` is a pinned
+   `github:Mic92/nix-index-database/<rev>` flake ref baked into the image
+   (see "Pinning nix-index-database" below) — never a locally-built index,
+   and never baked into the image's own closure. This is the first thing
+   that differs from `/resolve`: `nix.conf` needs the `flakes` experimental
+   feature enabled (alongside `nix-command`) for `nix run <flakeref>` to
+   work at all — see `nix.conf`'s comments; `/resolve`'s plain
+   `nix-build -A` never needed it.
+3. **The very first `/lookup-binary` call ever made against a given
+   `PKG_BROKER_NIX_INDEX_REF` downloads the whole nix-index database** —
+   this can take a while (minutes, depending on network conditions), which
+   is why the server gives this call a generous (10 minute) timeout.
+   Subsequent calls reuse `nix`'s own eval/store cache and are fast.
+   `pkg-broker`'s server also serializes all `/lookup-binary` calls with a
+   mutex so concurrent first-time requests don't race to download the
+   database independently (see `main.go`'s `dbMu`).
+4. Parses the resulting candidate attribute names (nix-index's `--minimal`
+   output), strips any nix output suffix (e.g. `protobuf.out` →
+   `protobuf`), re-validates each one against the same `attrPattern` used
+   by `/resolve` (defense in depth — this is third-party tool output, not
+   fully trusted), deduplicates, and sorts.
+5. Returns the candidate list and nothing else. **`/lookup-binary` never
+   builds or publishes anything** — unlike `/resolve`, it has no
+   build-from-source cost and makes no change to the shared `pkg-bin`/
+   `nix-store` volumes. Zero candidates is reported as a clear error
+   (HTTP 404), one or more candidates as a plain JSON list (HTTP 200). A
+   caller (`pkg-install --by-binary`, or a human) picks a candidate and
+   makes a **separate** `/resolve` call to actually install it — that
+   second call goes through `/resolve`'s own independent validation and
+   `nix-build`, so a candidate surfaced here is never trusted or installed
+   without being revalidated end to end.
+
+### Pinning nix-index-database
+
+`nix-index-database` (`github:Mic92/nix-index-database`) is a flake
+**input** of `nix/agentic-ai-stack/flake.nix` — pinned the same way every
+other input is, via `flake.lock` — but it is deliberately **not** wired
+into `pkg-broker`'s image closure/`rootEnv`/`copyToRoot` the way e.g.
+`nixpkgs` is. Only a derived string, `github:Mic92/nix-index-database/<locked
+rev>` (computed from `inputs.nix-index-database.rev` in `flake.nix`), is
+passed into `image.nix` and baked in as the `PKG_BROKER_NIX_INDEX_REF` env
+var. This keeps the (sizeable) index database itself out of every image
+build — it's fetched by `nix run` lazily, directly from `pkg-broker`'s own
+unproxied `external` network leg, only the first time someone actually
+uses `/lookup-binary` — while still letting `flake.lock` own the pin (so
+`nix flake lock` / `nix flake update nix-index-database` control exactly
+which database revision gets used, same as any other input). The pin is
+included in `image.nix`'s `contentId`, so `nix run .#load` reloads the
+image whenever it changes, even though the input itself never touches the
+image's actual contents. `inputs.nixpkgs.follows` is deliberately **not**
+set on this input — the lazy `nix run` invocation resolves against
+`nix-index-database`'s own flake lock, not this repo's pinned nixpkgs, so
+the index database and the nixpkgs revision it was actually built from
+stay matched to each other.
+
+### Trust note
+
+`/lookup-binary`'s output is **candidate attribute names derived from
+third-party tool output** (a community-maintained nix-index database), not
+from this repo's own pinned nixpkgs evaluation the way `/resolve`'s
+validation is. Treat it as advisory, not authoritative: candidates are
+regex-validated the same as any other attribute name before being
+returned, but their *existence* in current nixpkgs is not verified by
+`/lookup-binary` itself — that verification happens for free the moment a
+caller actually sends one to `/resolve`, which is exactly why
+`/lookup-binary` never auto-resolves or auto-installs a candidate itself.
 
 `pi` never talks to `pkg-broker` directly — the `pkg-install` CLI
 (`nix/scripts/scripts/pkg-install/`) is the only client, and it's not
@@ -191,8 +278,10 @@ a `./path` expression, so stripping modes (the previous
 and caused silent cache misses against `cache.nixos.org` -- rebuilding
 everything from `bootstrap-stage0` instead of substituting.
 
-## Deferred follow-up
+## Fuzzy/by-binary-name package discovery
 
-Fuzzy/by-binary-name package discovery (e.g. "what package provides
-`protoc`?") was deliberately deferred out of this pass — see
-`FOLLOWUP.md`.
+"What nixpkgs package provides the `protoc` binary?" is answered by
+`POST /lookup-binary` (see above) — implemented using a prebuilt
+nix-index database (`Mic92/nix-index-database`), invoked lazily via
+`nix run`, candidates-only (never builds/installs). See `FOLLOWUP.md` for
+the original design discussion/deferral this implements.

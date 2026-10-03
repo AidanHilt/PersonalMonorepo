@@ -36,7 +36,12 @@ docker compose --profile login down --remove-orphans
 # start-agent.sh.
 MERGED_DIR="${PI_SANDBOX__NIX_STORE_MERGED_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/pi-sandbox/nix-store-merged}"
 OLD_OVERLAY_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/pi-sandbox/nix-store-overlay"
-for dir in "$MERGED_DIR" "$OLD_OVERLAY_DIR"; do
+# Same backstop for the workspace-mounter staging dir (compose.workspace.yaml /
+# containers/workspace-mounter) -- normally unmounted by its own SIGTERM
+# trap, this only catches a killed/crashed mounter. Path must match
+# start-agent.sh.
+WORKSPACE_MERGED_DIR="${PI_SANDBOX__WORKSPACE_MERGED_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/pi-sandbox/workspace-merged}"
+for dir in "$MERGED_DIR" "$OLD_OVERLAY_DIR" "$WORKSPACE_MERGED_DIR"; do
   # Loop: a crash-and-restart can leave several stacked mounts.
   while mountpoint -q "$dir" 2>/dev/null; do
     echo "==> Unmounting leftover store overlay at $dir..."
