@@ -1,0 +1,72 @@
+# Default-mode /nix/store for `pi`: pi's own image store UNION the shared
+# nix-store volume (what pkg-broker builds), without giving pi any capability
+# and without pkg-broker ever seeing pi's closure.
+#
+# Layered on by start-agent.sh when NOT in --host-store mode. In host-store
+# mode this file is not used and pi binds the host's /nix/store directly.
+#
+# How it works:
+#   - nix-store-mounter runs the *pi* image (so its /nix/store is pi's
+#     closure) with CAP_SYS_ADMIN, no network, and mounts an overlay of
+#       lowerdir = /nix/store (pi's) : <shared volume>/nix/store (broker's)
+#     onto /srv/merged.
+#   - /srv/merged is a bind of a host directory with rshared propagation, so
+#     the overlay shows up on the host at ${PI_SANDBOX__NIX_STORE_SOURCE}.
+#   - `pi` (same bind source, as in compose.yaml) gets it read-only with
+#     rslave propagation. The volume entry below merges with the one in
+#     compose.yaml by target path (/nix/store); it only adds `propagation`.
+#
+# Requirements: native Linux Docker (not Colima/Docker Desktop), host path on
+# a shared mount, `mount` available in the pi image (pkgs.util-linux).
+
+services:
+  nix-store-mounter:
+    image: pi-sandbox/pi:dev
+    user: "0:0"
+    entrypoint: [ "/bin/bash", "/mount.sh" ]
+    command: []
+    depends_on:
+      - pkg-broker
+    network_mode: none
+    read_only: true
+    cap_drop: [ ALL ]
+    cap_add: [ SYS_ADMIN ]
+    security_opt:
+      - no-new-privileges:true
+      # docker-default AppArmor denies mount(2). Replace with a narrow custom
+      # profile if you want to tighten this further.
+      - apparmor:unconfined
+    healthcheck:
+      test: [ "CMD", "/bin/bash", "-c", "test -e /tmp/ready" ]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    volumes:
+      # The broker's build output, read-only here. Only its nix/store
+      # subdirectory is used.
+      - type: volume
+        source: nix-store
+        target: /srv/shared-nix
+        read_only: true
+      # Mount propagation back to the host.
+      - type: bind
+        source: "${PI_SANDBOX__NIX_STORE_SOURCE:?set by start-agent.sh}"
+        target: /srv/merged
+        bind:
+          propagation: rshared
+      - type: bind
+        source: ./containers/nix-store-mounter/mount.sh
+        target: /mount.sh
+        read_only: true
+      - type: tmpfs
+        target: /tmp
+    restart: unless-stopped
+
+  pi:
+    volumes:
+      - type: bind
+        source: "${PI_SANDBOX__NIX_STORE_SOURCE:?set by start-agent.sh}"
+        target: /nix/store
+        read_only: true
+        bind:
+          propagation: rslave

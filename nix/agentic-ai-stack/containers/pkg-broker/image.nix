@@ -32,15 +32,21 @@ let
     vendorHash = null;
   };
 
+  # Wrapper that prepares the broker's store (chroot store on the shared
+  # volume) and then execs the server. See entrypoint.sh. patchShebangs
+  # rewrites `#!/usr/bin/env bash` to a store path; this image has no
+  # /usr/bin/env.
+  entrypointScript = pkgs.runCommand "pkg-broker-entrypoint" { } ''
+    mkdir -p $out/bin
+    cp ${./entrypoint.sh} $out/bin/pkg-broker-entrypoint
+    chmod 0555 $out/bin/pkg-broker-entrypoint
+    patchShebangs $out/bin/pkg-broker-entrypoint
+  '';
+
   # The exact, pinned nixpkgs source tree this flake's `pkgs` was
-  # instantiated from (same input as everything else in this flake --
-  # see flake.nix's `nixpkgs` input). This is what "validate it resolves
-  # against the repo's pinned nixpkgs input" (decision 2) means in
-  # practice: `nix-build -A <attr> <this path>`, no flake refs, no
-  # arbitrary expressions. Baking the actual source tree in (rather than
-  # a flake registry entry) means attribute resolution never depends on
-  # pkg-broker's external network leg being reachable at eval time --
-  # only at fetch/build time, for sources/substitutes themselves.
+  # instantiated from (see flake.nix's `nixpkgs` input). entrypoint.sh
+  # copies it to a plain path at first start, because evaluating a
+  # store-path source through a chroot store can fail ("path is not valid").
   nixpkgsConfig = pkgs.runCommand "pkg-broker-nixpkgs-config" { } ''
     mkdir -p $out/etc/nix $out/etc/pkg-broker
     cp ${./nix.conf} $out/etc/nix/nix.conf
@@ -60,24 +66,28 @@ let
       passwdFile
       groupFile
       server
+      entrypointScript
     ];
     pathsToLink = [ "/bin" "/etc" ];
   };
 
-  # Writable mount points for the two shared volumes (compose.yaml):
-  #   - /nix               the nix-store volume (decision 3/4): pkg-broker's
-  #                        own store by default, or the host's real
-  #                        /nix (store + daemon socket) via
-  #                        compose.pkgbroker-host-store.yaml.
-  #   - /srv/pkg-broker/bin the pkg-bin volume (decision 4): resolved
-  #                        bin/* symlinks, mounted read-only into `pi`.
-  # Mode 0755 (not 0700, unlike pi/proxy's placeholders) because `pi`
-  # reads these as a *different* uid (10001) -- see PROJECT-SPEC.md.
+  # Writable directories (compose.yaml):
+  #   - /srv/shared-nix          the nix-store volume mount point. Used as a
+  #                              Nix *chroot store* root (NIX_REMOTE=local?root=...),
+  #                              so builds land in /srv/shared-nix/nix/store while
+  #                              the broker's own closure stays in the image's
+  #                              /nix/store and is never copied to the volume.
+  #   - /srv/pkg-broker/bin      the pkg-bin volume: resolved bin/* symlinks,
+  #                              mounted read-only into `pi`.
+  #   - /srv/pkg-broker/nixpkgs  plain-path copy of the pinned nixpkgs
+  #                              (container layer only, NOT shared with pi).
+  # Mode 0755 (not 0700) because `pi` reads the shared volumes as a different
+  # uid (10001).
   writableDirs = pkgs.runCommand "pkg-broker-writable-dirs" { } ''
-    mkdir -p $out/nix $out/srv/pkg-broker/bin $out/tmp
+    mkdir -p $out/srv/shared-nix $out/srv/pkg-broker/bin $out/srv/pkg-broker/nixpkgs $out/tmp
   '';
 
-  contentId = builtins.hashString "sha256" "${rootEnv}-${nixpkgsConfig}-${writableDirs}";
+  contentId = builtins.hashString "sha256" "${rootEnv}-${nixpkgsConfig}-${writableDirs}-${entrypointScript}";
 
 in
 {
@@ -99,7 +109,7 @@ in
 
     config = {
       User = "${uid}:${gid}";
-      Entrypoint = [ "/bin/pkg-broker" ];
+      Entrypoint = [ "/bin/pkg-broker-entrypoint" ];
       Env = [
         "HOME=/var/empty"
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
@@ -107,6 +117,9 @@ in
         "PKG_BROKER_NIXPKGS_PATH=/etc/pkg-broker/nixpkgs"
         "PKG_BROKER_BIN_DIR=/srv/pkg-broker/bin"
         "PKG_BROKER_LISTEN=:8080"
+        # Read by entrypoint.sh.
+        "PKG_BROKER_SERVER=/bin/pkg-broker"
+        "PKG_BROKER_STORE_ROOT=/srv/shared-nix"
       ];
       # No published ports in the image itself -- compose.yaml attaches
       # pkg-broker to `internal` (so `pi` can reach it at

@@ -14,9 +14,13 @@
 # default (see compose.yaml's `pkg-broker` service / README.md).
 #
 # `pi` is untouched here -- it still only ever gets a read-only bind of
-# whatever `/nix` pkg-broker is using (via the shared `nix-store` volume
-# mount, compose.yaml), never a nix-daemon socket or write access, under
-# either backend.
+# /nix/store (via scripts/start-agent.sh, which resolves the right source
+# for compose.yaml's PI_SANDBOX__NIX_STORE_SOURCE depending on which
+# backend is active -- see compose.yaml's `pi` service), never a
+# nix-daemon socket or write access, under either backend. Set
+# PI_SANDBOX__PKGBROKER_HOST_STORE=1 before running start-agent.sh to
+# have it layer this override in automatically, instead of invoking
+# `docker compose` with both `-f` flags by hand.
 services:
   pkg-broker:
     environment:

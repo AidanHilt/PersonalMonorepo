@@ -116,13 +116,21 @@ services:
       # Resolved bin/* entries, published here (rw) and mounted
       # read-only into `pi` at /usr/local/bin (see below).
       - pkg-bin:/srv/pkg-broker/bin
-      # Default/isolated nix store backend (rw here, ro into `pi` at the
-      # same absolute /nix path so symlinked binaries' store-path
-      # references and RPATH/dynamic-linker deps resolve identically in
-      # both containers). Swap this out for the host's real /nix (store +
-      # nix-daemon socket) via compose.pkgbroker-host-store.yaml -- see
+      # Default/isolated nix store backend (rw here). `pi` does NOT bind
+      # this volume directly -- see `pi`'s own /nix/store entry below for
+      # why (its own image bakes a separate closure under /nix/store that
+      # this isolated volume alone doesn't have) and scripts/start-agent.sh
+      # for how `pi`'s /nix/store source is actually resolved from this
+      # volume's host directory. Swap this backend out for the host's
+      # real /nix (store + nix-daemon socket) via
+      # compose.pkgbroker-host-store.yaml -- see
       # containers/pkg-broker/README.md for that tradeoff.
-      - nix-store:/nix
+      # Shared volume = the Nix chroot-store ROOT (entrypoint sets
+      # NIX_REMOTE=local?root=/srv/shared-nix), NOT mounted over /nix, so the
+      # broker keeps its own image closure in /nix/store. Builds land in
+      # /srv/shared-nix/nix/store. pi sees it via nix-store-mounter
+      # (compose.nixstore-overlay.yaml).
+      - nix-store:/srv/shared-nix
       - type: tmpfs
         target: /tmp
         tmpfs:
@@ -187,11 +195,39 @@ services:
       # empty in this image (everything else lives under /bin, from
       # pi-image's own buildEnv closure -- see containers/pi/image.nix),
       # so mounting pkg-bin here adds resolved binaries to pi's PATH
-      # without shadowing anything already there. /nix is needed too so
-      # the symlinks pkg-broker publishes (which point at absolute
-      # /nix/store/... paths) actually resolve inside `pi`.
+      # without shadowing anything already there.
       - pkg-bin:/usr/local/bin:ro
-      - nix-store:/nix:ro
+      # /nix/store (only -- not the rest of /nix: pi has no need for
+      # /nix/var's daemon state/profiles/gcroots) is needed so the
+      # symlinks pkg-broker publishes into pkg-bin (which point at
+      # absolute /nix/store/... paths) actually resolve inside `pi`.
+      #
+      # Unlike pkg-bin above, this ISN'T a plain named-volume mount: pi's
+      # own image already bakes a real runtime closure (pi-coding-agent,
+      # bash, coreutils, gitMinimal, cacert, socat, the entrypoint
+      # script, etc. -- see containers/pi/image.nix) directly under
+      # /nix/store inside the image itself. pkg-broker's default,
+      # isolated 'nix-store' docker volume is a SEPARATE store from the
+      # host's real /nix/store and doesn't contain those baked-closure
+      # paths, so binding it straight onto pi's /nix/store would shadow
+      # pi's own baked closure wholesale. start-agent.sh resolves the
+      # right source for this bind mount and exports it as
+      # PI_SANDBOX__NIX_STORE_SOURCE before `docker compose up`:
+      #   - default/isolated pkg-broker store backend: a host-local
+      #     directory where start-agent.sh has overlay-mounted (ro,
+      #     lowerdir-only) the host's real /nix/store together with
+      #     pkg-broker's isolated volume's own store/ directory, so pi
+      #     sees the union of both.
+      #   - compose.pkgbroker-host-store.yaml override active: just the
+      #     host's real /nix/store directly -- pkg-broker's store IS the
+      #     host's store in that mode, so there's no shadowing conflict
+      #     to resolve and no overlay needed.
+      # See scripts/start-agent.sh and scripts/stop-agent.sh (which
+      # unmounts the overlay on teardown) for the full mechanics.
+      - type: bind
+        source: "${PI_SANDBOX__NIX_STORE_SOURCE:?set by start-agent.sh}"
+        target: /nix/store
+        read_only: true
       # All of ~/.pi is writable-but-ephemeral. mode 1023 == 01777
       # (leading-zero-safe decimal) so the uid:10001 process can populate
       # it from .pi-seed at startup.
@@ -254,6 +290,9 @@ volumes:
   # baked into the pkg-broker image (containers/pkg-broker/image.nix) the
   # first time Docker initializes them -- readable by `pi` (uid 10001)
   # since they're a different uid than pi's own state volumes above.
+  # `pkg-bin` is bound straight into `pi`; `nix-store` is NOT (see `pi`'s
+  # own /nix/store volume entry above) -- start-agent.sh reads this
+  # volume's host directory to build the bind source `pi` actually gets.
   # `nix-store` is the default/isolated store backend; see
   # compose.pkgbroker-host-store.yaml for the host-shared-store override.
   pkg-bin: {}
