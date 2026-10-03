@@ -90,21 +90,106 @@ nix-daemon socket:
 docker compose -f compose.yaml -f compose.pkgbroker-host-store.yaml up -d
 ```
 
+The override also sets `PKG_BROKER_HOST_STORE=1`, which is what
+`entrypoint.sh` keys its host-store branch off of (alongside providing
+its own `NIX_REMOTE=daemon`) — without it, `entrypoint.sh` falls through
+to its default chroot-store setup instead.
+
 **This changes the trust boundary**: the host's nix-daemon becomes part
 of what `pkg-broker` (and transitively, anything `pkg-broker` resolves)
 can reach. Only use this override on a host where that's an acceptable
 tradeoff for you — it is not the default for exactly this reason.
 
+**Nixpkgs path differs by mode.** In the default, isolated mode,
+`entrypoint.sh` copies the pinned nixpkgs tree to a plain path at
+`/srv/pkg-broker/nixpkgs` on first start (see "Pinned nixpkgs copy mode
+preservation" below) and resolves `nix-build` against that copy — needed
+because evaluating a store-path source through a chroot store can fail.
+In host-store mode there is no chroot store, so `entrypoint.sh` skips the
+copy entirely and points `PKG_BROKER_NIXPKGS_PATH` straight at
+`/etc/pkg-broker/nixpkgs` (the image's baked symlink to its pinned
+`pkgs.path`), resolved through the host's real `/nix/store` (now
+bind-mounted in at `/nix`, replacing the image's own store view).
+
+**Prerequisite for host-store mode**: the image must have been built on
+the *same host* it's run on in this mode. Because the host's real
+`/nix/store` is bind-mounted over the image's own, the target of
+`/etc/pkg-broker/nixpkgs` must already exist in the host's store —
+an image built on a different host (or whose closure was since garbage
+collected from this host's store) will fail fast at startup with a clear
+error instead of serving broken `/resolve` requests. This is not made
+robust beyond that fail-fast check; it's a documented constraint of this
+opt-in mode, not something worked around here.
+
 ## Sandbox note
 
-`pkg-broker`'s baked `nix.conf` sets `sandbox = false` and runs
-single-user (no `build-users-group`). This container has no spare
-privilege to set up nix's own build sandbox (user namespaces / bind
-mounts), and — per `PROJECT-SPEC.md` §2's stated philosophy — the actual
-security boundary for this whole stack is the container + network
-isolation around each service, not nix's own build sandbox nested inside
-one of them. Builds still run as `pkg-broker`'s own unprivileged uid
-(10003), never root.
+`pkg-broker`'s baked `nix.conf` sets `sandbox = true`. This is required
+because `pkg-broker` builds against a *chroot store*
+(`NIX_REMOTE=local?root=/srv/shared-nix`, see `entrypoint.sh`): the
+store's logical dir (`/nix/store`) differs from its physical on-disk
+location (`$ROOT/nix/store`). `entrypoint.sh` also exports
+`PKG_BROKER_STORE_READ_ROOT` so the Go server knows where to actually
+read resolved packages' `bin/` dirs from on disk (`$ROOT` in this mode,
+or `/` in host-store mode, where logical and physical paths coincide) —
+symlinks published into `pkg-bin` still point at the logical path, which
+`pi` resolves via its own store view. Separately, the Nix sandbox is what bind-mounts
+that physical location onto `/nix/store` inside each builder. Without
+the sandbox, an unsandboxed build execs `/nix/store/...` builder paths
+against the *broker image's own* `/nix/store` instead of the chroot
+store's, and fails (`executing .../bash-static-5.3/bin/bash: No such
+file or directory`). Builds still run as `pkg-broker`'s own
+unprivileged uid (10003), never root -- still single-user Nix, no
+`build-users-group`; the sandbox itself uses Linux user namespaces, not
+setuid build users.
+
+For the sandbox to work inside Docker, `pkg-broker`'s compose service
+needs three targeted `security_opt` opt-outs (see `compose.yaml`) --
+deliberately not `privileged: true` and no added capabilities:
+
+- `seccomp:unconfined` -- the sandbox needs `unshare(CLONE_NEWUSER)`
+  (user namespaces), which Docker's default seccomp profile blocks.
+- `apparmor:unconfined` -- the sandbox needs to mount-bind the chroot
+  store's real paths onto `/nix/store`, which Docker's default AppArmor
+  profile blocks.
+- `systempaths=unconfined` -- the sandbox needs a fresh `/proc` mounted
+  inside its new user namespace, which Docker's masked `/proc` paths
+  otherwise block.
+
+The trade-off: these are real, if narrow, relaxations of Docker's
+default container hardening (still scoped to `pkg-broker`'s own
+service, still with `cap_drop: [ ALL ]` and `no-new-privileges:true`),
+accepted so the chroot-store design doesn't require giving `pkg-broker`
+the host's real store (see "Store backend" above) just to get working
+builds.
+
+`entrypoint.sh` runs a startup self-test in the default (chroot-store)
+mode -- a tiny, uniquely-named sandboxed build -- before accepting any
+`/resolve` traffic, and refuses to start (with a message pointing at
+the likely causes) if sandboxed builds don't actually work. This step
+is skipped in host-store mode (`compose.pkgbroker-host-store.yaml`),
+where the *host's* nix-daemon does the building, not this container.
+
+**Host prerequisite:** the host kernel must allow unprivileged user
+namespaces (the default on most modern Linux distros). Some
+distros/configurations restrict this further even with the above
+opt-outs applied -- e.g. Ubuntu 24.04+ with
+`kernel.apparmor_restrict_unprivileged_userns=1` -- in which case the
+startup self-test will fail with a clear error; relaxing that sysctl is
+a host-side fix outside this repo's scope.
+
+### Pinned nixpkgs copy mode preservation (isolated mode only)
+
+This section applies only to the default, isolated (chroot-store) mode.
+Host-store mode never copies nixpkgs at all -- see "Store backend" above.
+
+The pinned-nixpkgs copy described above (`entrypoint.sh`, first start
+only, isolated mode) preserves file modes and drops only ownership
+(`cp -r --no-preserve=ownership`, then `chmod -R u+w`). Nix hashes a
+source path's file modes (including the executable bit) when importing
+a `./path` expression, so stripping modes (the previous
+`--no-preserve=mode,ownership`) changed the computed derivation hashes
+and caused silent cache misses against `cache.nixos.org` -- rebuilding
+everything from `bootstrap-stage0` instead of substituting.
 
 ## Deferred follow-up
 

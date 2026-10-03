@@ -15,27 +15,39 @@
 # running -- start it first with `nix run .#start-agent`.
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
-cd "$REPO_ROOT"
+# Find the container by the labels Compose puts on it, using plain `docker`
+# instead of `docker compose`. Why:
+#   - `docker compose exec` only reliably sees containers started by `up`,
+#     but start-agent.sh starts pi with `docker compose run`, which creates
+#     a one-off container (agentic-ai-stack-pi-run-<id>).
+#   - Every `docker compose` command has to parse compose.yaml, which needs
+#     PI_SANDBOX__NIX_STORE_SOURCE set and the working directory to be the
+#     stack directory. Under `nix run` this script lives in the Nix store,
+#     so neither can be assumed.
+# Label lookup needs none of that. The project name defaults to the stack
+# directory's name; override with COMPOSE_PROJECT_NAME if you changed it.
+PROJECT="${COMPOSE_PROJECT_NAME:-agentic-ai-stack}"
 
-# `docker compose run --rm pi` (what start-agent.sh uses) creates a
-# service container that doesn't reliably show up under plain
-# `docker compose ps` across Compose versions (it's a one-off run
-# container, not a long-lived `up -d` service) -- so rather than parsing
-# `ps` output, just try the thing we actually care about: can we exec
-# into it right now.
-if ! docker compose exec -T pi true >/dev/null 2>&1; then
-  cat >&2 <<'EOF'
-error: the `pi` service container is not currently running (or is not
-reachable via `docker compose exec`).
+# Newest first; take the first match. Matches both `run` (oneoff=True) and
+# `up` (oneoff=False) containers of the `pi` service. The `login` service
+# has its own service label, so it never matches.
+CONTAINER_ID="$(docker ps -q \
+  --filter "label=com.docker.compose.project=${PROJECT}" \
+  --filter "label=com.docker.compose.service=pi" \
+  | head -n1)"
+
+if [ -z "$CONTAINER_ID" ]; then
+  cat >&2 <<EOF
+error: no running \`pi\` container found for compose project '${PROJECT}'.
 
 Start it first:
   nix run .#start-agent
 
-...then re-run `nix run .#shell-agent` from another terminal.
+...then re-run \`nix run .#shell-agent\` from another terminal.
+(If you changed the compose project name, set COMPOSE_PROJECT_NAME.)
 EOF
   exit 1
 fi
 
-echo "==> Shelling into the running pi container..."
-exec docker compose exec pi bash
+echo "==> Shelling into the running pi container ($(docker inspect --format '{{.Name}}' "$CONTAINER_ID" | sed 's|^/||'))..."
+exec docker exec -it "$CONTAINER_ID" bash

@@ -55,13 +55,29 @@ type server struct {
 	nixpkgsPath string
 	binDir      string
 	buildTO     time.Duration
+	// storeReadRoot is the PHYSICAL filesystem root that logical nix store
+	// paths (as reported by nix-build, e.g. /nix/store/...) actually live
+	// under, from this process's own point of view. entrypoint.sh sets this
+	// via PKG_BROKER_STORE_READ_ROOT: "/" in host-store mode (logical and
+	// physical coincide -- the host's real /nix is mounted here too), or the
+	// chroot store's $ROOT in the default chroot-store mode (logical paths
+	// are physically at $ROOT/nix/store/..., not at this container's own
+	// /nix/store). See publishBinaries.
+	storeReadRoot string
 }
 
 func main() {
+	storeReadRoot, ok := os.LookupEnv("PKG_BROKER_STORE_READ_ROOT")
+	if !ok || storeReadRoot == "" {
+		log.Printf("pkg-broker: PKG_BROKER_STORE_READ_ROOT not set, defaulting to \"/\" -- entrypoint.sh is expected to set this")
+		storeReadRoot = "/"
+	}
+
 	s := &server{
-		nixpkgsPath: envOrDefault("PKG_BROKER_NIXPKGS_PATH", "/etc/pkg-broker/nixpkgs"),
-		binDir:      envOrDefault("PKG_BROKER_BIN_DIR", "/srv/pkg-broker/bin"),
-		buildTO:     20 * time.Minute, // generous enough for a cold build-from-source fallback
+		nixpkgsPath:   envOrDefault("PKG_BROKER_NIXPKGS_PATH", "/etc/pkg-broker/nixpkgs"),
+		binDir:        envOrDefault("PKG_BROKER_BIN_DIR", "/srv/pkg-broker/bin"),
+		buildTO:       20 * time.Minute, // generous enough for a cold build-from-source fallback
+		storeReadRoot: storeReadRoot,
 	}
 
 	if err := os.MkdirAll(s.binDir, 0o755); err != nil {
@@ -73,7 +89,7 @@ func main() {
 	mux.HandleFunc("/resolve", s.handleResolve)
 
 	addr := envOrDefault("PKG_BROKER_LISTEN", ":8080")
-	log.Printf("pkg-broker: listening on %s (nixpkgs=%s, bin-dir=%s)", addr, s.nixpkgsPath, s.binDir)
+	log.Printf("pkg-broker: listening on %s (nixpkgs=%s, bin-dir=%s, store-read-root=%s)", addr, s.nixpkgsPath, s.binDir, s.storeReadRoot)
 	log.Fatal(http.ListenAndServe(addr, mux))
 }
 
@@ -186,21 +202,43 @@ func (s *server) nixBuild(ctx context.Context, attr string) ([]string, error) {
 // publishBinaries symlinks every entry under each store path's bin/
 // directory (if present) into the shared pkg-bin volume (s.binDir),
 // which is mounted read-only onto an existing-on-PATH directory inside
-// the `pi` container (see compose.yaml). Symlinks point at the absolute
-// /nix/store path, which resolves correctly inside `pi` because the same
-// nix-store volume is also mounted (read-only) into `pi` at /nix (see
-// decision 4 in .AGENT-PLAN.md / PROJECT-SPEC.md) — this is what lets the
-// binaries' RPATH/dynamic-linker dependency references resolve.
+// the `pi` container (see compose.yaml).
+//
+// nix-build reports LOGICAL store paths (/nix/store/...), but this
+// process's own filesystem view of where those paths physically live
+// depends on which store backend entrypoint.sh set up:
+//   - host-store mode: logical and physical coincide (storeReadRoot "/"),
+//     since the host's real /nix is mounted here too.
+//   - chroot-store mode (default): logical paths are physically at
+//     $ROOT/nix/store/..., not at this container's own /nix/store, so
+//     reads must go through storeReadRoot while symlink targets stay
+//     logical.
+//
+// All READS here go through the physical path (s.storeReadRoot joined
+// with the logical path); the symlink TARGETS published to s.binDir
+// stay the LOGICAL path, since `pi` resolves /nix/store/... via its own
+// overlay/bind of the same store (see decision 4 in .AGENT-PLAN.md /
+// PROJECT-SPEC.md) — this is what lets the binaries' RPATH/dynamic-linker
+// dependency references resolve inside `pi`.
 func (s *server) publishBinaries(storePaths []string) ([]string, error) {
 	var published []string
 	for _, sp := range storePaths {
+		phys := filepath.Join(s.storeReadRoot, sp)
+		if _, err := os.Stat(phys); err != nil {
+			if os.IsNotExist(err) {
+				return published, fmt.Errorf("store path %s not found at physical location %s (check PKG_BROKER_STORE_READ_ROOT)", sp, phys)
+			}
+			return published, fmt.Errorf("stat %s: %w", phys, err)
+		}
+
 		binDir := filepath.Join(sp, "bin")
-		entries, err := os.ReadDir(binDir)
+		physBinDir := filepath.Join(phys, "bin")
+		entries, err := os.ReadDir(physBinDir)
 		if err != nil {
 			if os.IsNotExist(err) {
 				continue // not every derivation ships a bin/ dir (e.g. libraries)
 			}
-			return published, fmt.Errorf("reading %s: %w", binDir, err)
+			return published, fmt.Errorf("reading %s: %w", physBinDir, err)
 		}
 		for _, e := range entries {
 			name := e.Name()

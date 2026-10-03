@@ -5,35 +5,20 @@
 # an external service this stack consumes, not one it owns).
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
-cd "$REPO_ROOT"
-
-# --- Tear down pi's /nix/store overlay, if start-agent.sh set one up ------
-# Only present when pkg-broker's default/isolated store backend was in
-# use (PI_SANDBOX__PKGBROKER_HOST_STORE unset/0) -- the host-store-override
-# backend binds /nix/store directly and has nothing of ours to unmount.
-# This path must match the one start-agent.sh computes and mounts.
-NIX_STORE_OVERLAY_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/pi-sandbox/nix-store-overlay"
-if mountpoint -q "$NIX_STORE_OVERLAY_DIR" 2>/dev/null; then
-  echo "==> Unmounting pi's /nix/store overlay at $NIX_STORE_OVERLAY_DIR..."
-  if ! sudo umount "$NIX_STORE_OVERLAY_DIR"; then
-    echo "    WARNING: failed to unmount $NIX_STORE_OVERLAY_DIR -- leaving it mounted." >&2
-    echo "    Unmount it manually later with: sudo umount \"$NIX_STORE_OVERLAY_DIR\"" >&2
-  fi
+# Under `nix run` this script lives in the Nix store, so a path derived from
+# $BASH_SOURCE has no compose.yaml next to it. Same lookup as start-agent.sh:
+# use the monorepo checkout, and fall back to the script-relative path for
+# running it straight out of the repo.
+STACK_DIR="${PERSONAL_MONOREPO_LOCATION:+$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack}"
+if [ -z "$STACK_DIR" ] || [ ! -f "$STACK_DIR/compose.yaml" ]; then
+  STACK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
 fi
-
-echo "==> Stopping compose stack..."
-docker compose --profile login down --remove-orphans
-echo "==> Done. (Ollama on the host was left running — stop it separately if desired.)"
-#!/usr/bin/env bash
-# nix run .#stop-agent — shuts down the compose stack (both default and
-# login profiles). Does NOT stop the host's native Ollama process,
-# since other things on the host may depend on it (spec §3.3: Ollama is
-# an external service this stack consumes, not one it owns).
-set -euo pipefail
-
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
-cd "$REPO_ROOT"
+if [ ! -f "$STACK_DIR/compose.yaml" ]; then
+  echo "error: can't find compose.yaml (tried \$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack and the script's parent dir)." >&2
+  echo "       Set PERSONAL_MONOREPO_LOCATION and re-run." >&2
+  exit 1
+fi
+cd "$STACK_DIR"
 
 # compose.yaml requires this variable at parse time (start-agent.sh exports
 # the real value). `down` doesn't use it, so a placeholder is enough here.
@@ -63,4 +48,4 @@ for dir in "$MERGED_DIR" "$OLD_OVERLAY_DIR"; do
   done
 done
 
-echo "==> Done. (Ollama on the host was left running — stop it separately if desired.)"
+echo "==> Done."

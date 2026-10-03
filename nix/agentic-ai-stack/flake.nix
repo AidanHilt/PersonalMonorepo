@@ -2,7 +2,13 @@
   description = "Pi sandbox stack: containerized Pi coding agent + egress-gated proxy + native Ollama";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
+    # Only the pi container image tracks unstable HEAD directly (via its
+    # own, independently-locked input) so pkg.pi-coding-agent and the rest
+    # of the pi image keep getting frequent updates, while proxy and
+    # pkg-broker build against the stable, cache-hit-reliable nixos-26.05
+    # pin above (matching nix/mono-flake's pin).
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     # nlewo/nix2container gives us buildImage + copyToDockerDaemon without
     # needing a full OCI toolchain, and produces reproducible layers.
@@ -27,11 +33,15 @@
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix2container, scripts }:
+  outputs = { self, nixpkgs, nixpkgs-unstable, flake-utils, nix2container, scripts }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { 
           inherit system; 
+        };
+
+        pkgsUnstable = import nixpkgs-unstable {
+          inherit system;
           overlays = [(import ./pi-coding-agent-overlay.nix)];
         };
 
@@ -49,7 +59,8 @@
         pkgBrokerImageName = "pi-sandbox/pkg-broker";
 
         pi = import ./containers/pi/image.nix {
-          inherit pkgs n2c scripts;
+          pkgs = pkgsUnstable;
+          inherit n2c scripts;
           imageName = piImageName;
           imageTag = piTag;
         };
@@ -144,7 +155,7 @@
             paths = [
               scripts.packages.${pkgs.system}.agent-plan-create
               scripts.packages.${pkgs.system}.pkg-install
-              pkgs.pi-coding-agent
+              pkgsUnstable.pi-coding-agent
               pkgs.gitMinimal
               pkgs.coreutils
               pkgs.bash

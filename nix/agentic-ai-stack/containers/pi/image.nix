@@ -85,6 +85,7 @@ let
       # (e.g. via `nix run .#shell-agent`).
       scripts.packages.${pkgs.system}.pkg-install
       pkgs.pi-coding-agent
+      pkgs.mount
       pkgs.gitMinimal
       pkgs.coreutils
       pkgs.bash

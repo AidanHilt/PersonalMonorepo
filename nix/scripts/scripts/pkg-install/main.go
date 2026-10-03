@@ -118,7 +118,7 @@ func install(baseURL, attr string, timeout time.Duration) error {
 	}
 
 	if len(res.Binaries) == 0 {
-		fmt.Printf("pkg-install: PASS: %q resolved (%v) but published no binaries (no bin/ in the output -- a library, maybe?)\n", attr, res.StorePaths)
+		fmt.Printf("pkg-install: PASS: %q resolved (%v) but published no binaries (no bin/ in the output -- a library, maybe? %q)\n", attr, res.StorePaths, res)
 		return nil
 	}
 

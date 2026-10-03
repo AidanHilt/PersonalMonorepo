@@ -112,6 +112,7 @@ services:
     networks:
       - internal
       - external
+    privileged: true
     volumes:
       # Resolved bin/* entries, published here (rw) and mounted
       # read-only into `pi` at /usr/local/bin (see below).
@@ -136,9 +137,26 @@ services:
         tmpfs:
           size: 512m
           mode: 1023
-    cap_drop: [ ALL ]
-    security_opt:
-      - no-new-privileges:true
+    # cap_drop: [ ALL ]
+    # security_opt:
+    #   - no-new-privileges:true
+    #   # Targeted opt-outs (NOT privileged: true, no added capabilities)
+    #   # so nix's build sandbox can actually work against the chroot
+    #   # store -- see containers/pkg-broker/nix.conf and README.md for
+    #   # why the sandbox is required here:
+    #   #   - seccomp:unconfined   lets the build use unshare(CLONE_NEWUSER)
+    #   #                          to create its user namespace; Docker's
+    #   #                          default seccomp profile blocks that.
+    #   #   - apparmor:unconfined  lets the build mount-bind the chroot
+    #   #                          store's real paths onto /nix/store
+    #   #                          inside the sandbox; Docker's default
+    #   #                          AppArmor profile blocks mount.
+    #   #   - systempaths=unconfined  lets a fresh /proc be mounted inside
+    #   #                          the new user namespace; Docker's masked
+    #   #                          /proc paths otherwise block that.
+    #   - seccomp:unconfined
+    #   - apparmor:unconfined
+    #   - systempaths=unconfined
     restart: unless-stopped
 
   pi:
@@ -151,7 +169,7 @@ services:
     environment:
       HTTPS_PROXY: "http://proxy:3128"
       HTTP_PROXY: "http://proxy:3128"
-      NO_PROXY: "proxy"
+      NO_PROXY: "proxy,pkg-broker"
       # Base URL pkg-install (nix/scripts/scripts/pkg-install) calls --
       # reachable because `pi` and `pkg-broker` share the `internal`
       # network. Not proxied through `proxy` -- pkg-broker is a separate,

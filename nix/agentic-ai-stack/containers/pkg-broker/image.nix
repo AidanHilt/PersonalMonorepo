@@ -44,9 +44,15 @@ let
   '';
 
   # The exact, pinned nixpkgs source tree this flake's `pkgs` was
-  # instantiated from (see flake.nix's `nixpkgs` input). entrypoint.sh
-  # copies it to a plain path at first start, because evaluating a
-  # store-path source through a chroot store can fail ("path is not valid").
+  # instantiated from (see flake.nix's `nixpkgs` input). In isolated
+  # (chroot-store) mode, entrypoint.sh copies this to a plain path at first
+  # start, because evaluating a store-path source through a chroot store can
+  # fail ("path is not valid"). In host-store mode entrypoint.sh points
+  # PKG_BROKER_NIXPKGS_PATH straight at this symlink instead (no copy
+  # needed, since there's no chroot store) -- which only resolves if this
+  # image was built on the same host that's running it in host-store mode,
+  # since the host's real /nix/store is bind-mounted over the image's own
+  # (see containers/pkg-broker/README.md).
   nixpkgsConfig = pkgs.runCommand "pkg-broker-nixpkgs-config" { } ''
     mkdir -p $out/etc/nix $out/etc/pkg-broker
     cp ${./nix.conf} $out/etc/nix/nix.conf
@@ -84,7 +90,7 @@ let
   # Mode 0755 (not 0700) because `pi` reads the shared volumes as a different
   # uid (10001).
   writableDirs = pkgs.runCommand "pkg-broker-writable-dirs" { } ''
-    mkdir -p $out/srv/shared-nix $out/srv/pkg-broker/bin $out/srv/pkg-broker/nixpkgs $out/tmp
+    mkdir -p $out/srv/shared-nix $out/srv/pkg-broker/bin $out/srv/pkg-broker/nixpkgs $out/tmp $out/var/empty
   '';
 
   contentId = builtins.hashString "sha256" "${rootEnv}-${nixpkgsConfig}-${writableDirs}-${entrypointScript}";
@@ -95,7 +101,11 @@ in
     name = imageName;
     tag = imageTag;
 
-    copyToRoot = [ rootEnv nixpkgsConfig ];
+    # writableDirs must be in copyToRoot too: nix2container only applies
+    # `perms` to paths that are actually in a layer. Without it the dirs
+    # aren't baked into the image, Docker creates the volume mount points
+    # itself as root:root, and the uid 10003 broker can't write to them.
+    copyToRoot = [ rootEnv nixpkgsConfig writableDirs ];
 
     perms = [
       {
@@ -114,7 +124,10 @@ in
         "HOME=/var/empty"
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
         "NIX_CONF_DIR=/etc/nix"
-        "PKG_BROKER_NIXPKGS_PATH=/etc/pkg-broker/nixpkgs"
+        "NIX_REMOTE=local?root=/srv/shared-nix"
+        # Default (isolated-mode) value; entrypoint.sh's host-store branch
+        # overrides this to /etc/pkg-broker/nixpkgs (see nixpkgsConfig above).
+        "PKG_BROKER_NIXPKGS_PATH=/srv/pkg-broker/nixpkgs"
         "PKG_BROKER_BIN_DIR=/srv/pkg-broker/bin"
         "PKG_BROKER_LISTEN=:8080"
         # Read by entrypoint.sh.
