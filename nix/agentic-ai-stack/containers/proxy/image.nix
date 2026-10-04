@@ -29,9 +29,23 @@ let
     #cp ${./ollama-gate.nginx.conf.template} $out/etc/proxy/ollama-gate.nginx.conf.template
   '';
 
+  # The session-scoped, runtime domain-allowlist service -- see
+  # containers/proxy/domain-gate/main.go. Stdlib only (no go.sum), same
+  # convention as pkg-broker/main.go and nix/scripts' mkGo.
+  domainGate = pkgs.buildGoModule {
+    pname = "domain-gate";
+    version = "0.1.0";
+    src = ./domain-gate;
+    proxyVendor = true;
+    vendorHash = null;
+  };
+
   supervise = pkgs.writeShellApplication {
     name = "proxy-entrypoint";
-    runtimeInputs = [ pkgs.squid pkgs.nginx pkgs.gettext pkgs.coreutils pkgs.bash ];
+    # domain-gate must be on PATH too -- supervise.sh execs it by name
+    # alongside squid, and domain-gate itself execs `squid -k
+    # reconfigure`, so both need pkgs.squid here regardless.
+    runtimeInputs = [ pkgs.squid pkgs.nginx pkgs.gettext pkgs.coreutils pkgs.bash domainGate ];
     text = builtins.readFile ./supervise.sh;
   };
 
@@ -47,6 +61,7 @@ let
       passwdFile
       groupFile
       proxyConfig
+      domainGate
       supervise
     ];
     pathsToLink = [ "/bin" "/etc" ];

@@ -71,6 +71,7 @@
       "curl *": "deny",
       "wget *": "deny",
       "nc *": "deny",
+      "*proxy:8081*": "deny",
       "ssh *": "deny",
       "scp *": "deny",
       "rm -rf *": "deny",

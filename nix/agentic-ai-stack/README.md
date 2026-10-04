@@ -21,8 +21,10 @@ containers/
   proxy/
     image.nix                  # nix2container build for the proxy service
     squid.conf                 # egress allowlist (pi's outbound traffic)
-    allowed-domains.txt        # user-editable extra egress entries
-    supervise.sh                # PID 1: runs squid; fails closed if it dies
+    allowed-domains.txt        # user-editable extra egress entries (permanent, baked into the image)
+    supervise.sh                # PID 1: runs squid + domain-gate; fails closed if either dies
+    domain-gate/
+      main.go                  # POST /allow: adds one hostname to the egress allowlist for this proxy container's lifetime only
   pkg-broker/
     image.nix                  # nix2container build for the pkg-broker service
     main.go                    # single POST /resolve endpoint (nixpkgs attr -> published bin/*)
@@ -78,6 +80,8 @@ if `start-agent.sh` warns about it).
 `nix/scripts/scripts/pkg-install/` (in the sibling `nix/scripts` flake) is
 the thin CLI that calls `pkg-broker` from inside the `pi` container; see
 `containers/pkg-broker/README.md` for how the two fit together.
+`nix/scripts/scripts/request-domain/` is the analogous CLI for
+`domain-gate` — see "Requesting an extra domain at runtime" below.
 
 ## Quickstart
 
@@ -128,6 +132,37 @@ nix run .#shell-agent    # requires `pi` already running (nix run .#start-agent)
 # inside the container:
 pkg-install ripgrep
 ```
+
+### Requesting an extra domain at runtime (`domain-gate`)
+
+The `proxy` container also runs a small `domain-gate` sidecar process
+(`containers/proxy/domain-gate/`) alongside squid, listening internally on
+port 8081 (never published to the host). It lets `pi` ask, at runtime, for
+one exact hostname to be added to squid's egress allowlist — without
+editing `allowed-domains.txt` or rebuilding/reloading the `proxy` image:
+
+```sh
+# from inside the pi container:
+request-domain example.com --reason "fetching release notes for X"
+```
+
+This is **session-scoped only**: the grant lives in
+`/tmp/proxy-runtime/dynamic-domains.txt` on the `proxy` container's tmpfs,
+so it's wiped the moment that container restarts — there's no revocation
+command, just restart `proxy` to clear every dynamic grant at once. For a
+permanent addition, edit `containers/proxy/allowed-domains.txt` instead and
+rebuild/reload the image as usual. Only one exact hostname per call — no
+wildcards/subdomains, no IP literals, no internal-looking or compose
+service names (`domain-gate`'s own validation enforces this; see its
+`main.go`).
+
+Approval is entirely `pi`'s own permission system: `request-domain` is
+deliberately **not** allow-listed in `config/pi/extensions/pi-permission-system/config.json`
+(bash's default is `ask`), so every invocation prompts a human before it
+runs — there's no separate pending-request queue. `domain-gate`'s HTTP
+endpoint itself is internal-network-only (no host port published), and the
+permission policy additionally denies any direct bash access to
+`proxy:8081` so `request-domain` stays the only path to it.
 
 ## The actual security boundary
 

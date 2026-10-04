@@ -84,3 +84,21 @@ Workspace is a monorepo that covers most of the users projects. At a high level,
 3. "agentic-ai-stack": nix/agentic-ai-stack, it's the flake that builds the environment you are running in. It is a great shorthand source of truth for the tooling and configuration available to you in this system, and is where updates to that environment should generally be applied (note that they won't happen in your session). This environment is ephemeral, so when asked to modify these instructions or agent extensions, default to editing the source under nix/agentic-ai-stack/config/pi/ (e.g. this file lives at nix/agentic-ai-stack/config/pi/AGENTS.md) rather than the deployed copy under /home/pi/.pi/agent/, since only the source path persists across sessions.
 
 You will quickly find this is not an exhaustive list, so always feel free to flag that you didn't find anything, and ask the user clarifying questions before exploring. The users wishes to be forced to keep their documentation up to date.
+
+## Egress / network access
+
+This sandbox has no direct internet route — all outbound HTTPS from this
+container goes through the `proxy` container's squid egress allowlist
+(nix/agentic-ai-stack/containers/proxy/). If a site you need is blocked, use
+`request-domain <exact-hostname> --reason "<why>"` (nix/scripts/scripts/request-domain)
+instead of trying to route around the proxy. One exact hostname per call, no
+wildcards/subdomains/IP literals — pick the narrowest host that actually
+serves what you need. This CLI is deliberately not allow-listed in the
+permission policy, so it will always prompt for approval before it runs;
+that prompt *is* the approval step, there's no separate queue. The grant
+only lasts for the current `proxy` container's lifetime (cleared on its next
+restart) — see nix/agentic-ai-stack/README.md's "Requesting an extra domain
+at runtime" section for details, and ask the user if a domain needs to be
+added permanently instead (that means editing
+containers/proxy/allowed-domains.txt and rebuilding the proxy image, which
+is out of this session's reach).

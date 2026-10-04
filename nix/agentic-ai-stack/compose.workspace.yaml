@@ -34,12 +34,14 @@ services:
   workspace-mounter:
     image: pi-sandbox/workspace-mounter:dev
     user: "0:0"
+    stop_grace_period: 30s
+    init: true
     entrypoint: [ "/bin/bash", "/mount.sh" ]
     command: []
     network_mode: none
     read_only: true
     cap_drop: [ ALL ]
-    cap_add: [ SYS_ADMIN ]
+    cap_add: [ SYS_ADMIN, DAC_OVERRIDE, CHOWN, FOWNER ]
     devices:
       - /dev/fuse
     security_opt:

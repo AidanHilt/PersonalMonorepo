@@ -200,6 +200,7 @@
             paths = [
               scripts.packages.${pkgs.system}.agent-plan-create
               scripts.packages.${pkgs.system}.pkg-install
+              scripts.packages.${pkgs.system}.request-domain
               pkgsUnstable.pi-coding-agent
               pkgs.gitMinimal
               pkgs.coreutils

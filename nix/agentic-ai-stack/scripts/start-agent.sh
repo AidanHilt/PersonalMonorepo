@@ -253,7 +253,12 @@ WORKSPACE_MERGED_DIR=""
 if [ "$WORKSPACE_MODE" != "empty" ]; then
   echo "==> Preparing workspace staging directory (populated by workspace-mounter)..."
   WORKSPACE_MERGED_DIR="${PI_SANDBOX__WORKSPACE_MERGED_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/pi-sandbox/workspace-merged}"
-  mkdir -p "$WORKSPACE_MERGED_DIR"
+   if ! stat "$WORKSPACE_MERGED_DIR" >/dev/null 2>&1 \
+      && grep -q " $WORKSPACE_MERGED_DIR " /proc/self/mountinfo; then
+     echo "Stale mount at $WORKSPACE_MERGED_DIR; clearing (needs sudo)..." >&2
+     sudo umount -l "$WORKSPACE_MERGED_DIR"
+   fi
+   mkdir -p "$WORKSPACE_MERGED_DIR"
 
   # A leftover mount (crashed mounter) would shadow the fresh one.
   while mountpoint -q "$WORKSPACE_MERGED_DIR"; do

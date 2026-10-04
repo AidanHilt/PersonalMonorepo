@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# Entrypoint for the `proxy` container: runs squid (egress allowlist)
-# and nginx (Ollama API gate) as two supervised children of this
-# script, which is PID 1. Either process dying brings the whole
-# container down (fail-closed rather than silently losing one gate).
+# Entrypoint for the `proxy` container: runs squid (egress allowlist),
+# domain-gate (runtime, session-scoped allowlist additions -- see
+# containers/proxy/domain-gate/main.go) and nginx (Ollama API gate,
+# currently disabled) as supervised children of this script, which is
+# PID 1. Any process dying brings the whole container down (fail-closed
+# rather than silently losing one gate).
 set -euo pipefail
 
 #: "${OLLAMA_UPSTREAM:?OLLAMA_UPSTREAM must be set (e.g. host.docker.internal:11434) — see compose.yaml}"
@@ -10,6 +12,12 @@ set -euo pipefail
 RUNTIME_DIR=/tmp/proxy-runtime
 mkdir -p "$RUNTIME_DIR" /tmp/squid-cache
 chmod 700 "$RUNTIME_DIR"
+
+# Fresh, empty dynamic allowlist every container start (tmpfs /tmp, so
+# this is also wiped on restart regardless -- see squid.conf's
+# allowed_dynamic ACL). squid refuses to start if an acl's dstdomain
+# file is missing, so this must exist before squid starts below.
+: >"$RUNTIME_DIR/dynamic-domains.txt"
 
 # Render the nginx gate config with the platform-specific Ollama
 # upstream address (spec §3.3/§9 — this differs between Colima and
@@ -27,6 +35,13 @@ fi
 pids=()
 
 squid -f /etc/proxy/squid.conf -N -d 1 &
+pids+=("$!")
+
+# domain-gate: the only writer of dynamic-domains.txt and the only
+# process that issues `squid -k reconfigure` -- see
+# containers/proxy/domain-gate/main.go. Listens on the internal compose
+# network only (0.0.0.0:8081, not published in compose.yaml).
+domain-gate &
 pids+=("$!")
 
 # TODO: This is deprecated, but may come back as the options for local AI improve/the economics get worse.

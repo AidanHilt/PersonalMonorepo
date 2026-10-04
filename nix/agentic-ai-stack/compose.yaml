@@ -185,6 +185,15 @@ services:
       # network. Not proxied through `proxy` -- pkg-broker is a separate,
       # narrow surface, not part of pi's general egress allowlist.
       PKG_BROKER_URL: "http://pkg-broker:8080"
+      # Base URL request-domain (nix/scripts/scripts/request-domain) calls
+      # to ask the `proxy` container's domain-gate sidecar to add a single
+      # hostname to squid's egress allowlist for the lifetime of the
+      # current proxy container (see containers/proxy/domain-gate/main.go,
+      # README.md's "Requesting an extra domain at runtime"). Reachable
+      # because `pi` and `proxy` share the `internal` network, and "proxy"
+      # is already in NO_PROXY above so this call itself isn't routed
+      # through the HTTP(S) proxy it's trying to reconfigure.
+      DOMAIN_GATE_URL: "http://proxy:8081"
       # Frontier provider API keys and any other third-party secrets
       # (EXA_API_KEY, GITHUB_TOKEN, etc.), if using key-based auth
       # instead of the `login` flow (spec §7 default preference is

@@ -53,6 +53,7 @@ cleanup() {
   for ((idx = ${#MOUNTED_PATHS[@]} - 1; idx >= 0; idx--)); do
     umount "${MOUNTED_PATHS[$idx]}" 2>/dev/null || true
   done
+  umount -l "$TARGET" 2>/dev/null || true
   rm -f /tmp/ready
   exit 0
 }
