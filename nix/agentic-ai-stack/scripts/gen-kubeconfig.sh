@@ -19,7 +19,7 @@
 #
 # Deny-by-default at the RBAC layer is the real backstop (spec §6) —
 # the permission-extension `deny` rules on kubectl apply/delete/exec
-# (config/pi/permission-system.config.json) are defense in depth on
+# (config/agent/permission-system.config.json) are defense in depth on
 # top of this, not a substitute for it.
 set -euo pipefail
 

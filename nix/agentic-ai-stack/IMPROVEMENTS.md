@@ -9,8 +9,8 @@ conversation before it becomes a `.AGENT-PLAN.md`.
 Question to resolve: can a subagent be granted broader `write`/`edit`/
 `bash` access scoped specifically to the directory (or directories) it's
 actually supposed to touch, rather than either a fixed static policy
-(today's `config/pi/extensions/pi-permission-system/config.json` /
-`config/pi/agents/*.md` frontmatter) or blanket `yoloMode`? Needs research
+(today's `config/agent/extensions/pi-permission-system/config.json` /
+`config/agent/agents/*.md` frontmatter) or blanket `yoloMode`? Needs research
 into what `@gotgenes/pi-permission-system` actually supports today (path
 globs are already a first-class concept in its config — see the `path`,
 `path_read`, `path_write` blocks — so this may be more "wire it up

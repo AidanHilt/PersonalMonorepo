@@ -180,6 +180,13 @@ services:
       HTTPS_PROXY: "http://proxy:3128"
       HTTP_PROXY: "http://proxy:3128"
       NO_PROXY: "proxy,pkg-broker"
+      # Node's global fetch() (used by pi-web-access's fetch_content, etc.)
+      # ignores HTTP(S)_PROXY/NO_PROXY above by default -- Node only reads
+      # them when NODE_USE_ENV_PROXY=1 is set (available Node >=22.21 /
+      # >=24). Without this, fetch tries to resolve hosts like github.com
+      # directly and fails with getaddrinfo EAI_AGAIN since `pi` has no
+      # direct internet route.
+      NODE_USE_ENV_PROXY: "1"
       # Base URL pkg-install (nix/scripts/scripts/pkg-install) calls --
       # reachable because `pi` and `pkg-broker` share the `internal`
       # network. Not proxied through `proxy` -- pkg-broker is a separate,

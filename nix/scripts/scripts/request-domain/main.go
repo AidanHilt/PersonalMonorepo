@@ -43,7 +43,7 @@ type allowResponse struct {
 
 func showHelp() {
 	fmt.Fprintln(os.Stderr, `Usage:
-  request-domain <domain> --reason "<why>"
+  request-domain <domain> -reason "<why>"
 
 Asks the proxy container's domain-gate sidecar to add <domain> (exactly
 one hostname, no wildcards/subdomains) to squid's egress allowlist.
@@ -68,14 +68,31 @@ func main() {
 	flag.Usage = showHelp
 	reason := flag.String("reason", "", "why this domain needs to be reachable (required)")
 	timeoutFlag := flag.Int("timeout", 0, "HTTP client timeout in seconds (default: 30, or REQUEST_DOMAIN_TIMEOUT_SECONDS)")
-	flag.Parse()
 
-	args := flag.Args()
-	if len(args) != 1 || args[0] == "" || *reason == "" {
+	// flag.Parse() stops at the first non-flag argument, so flags and the
+	// positional <domain> argument can appear in any order (e.g.
+	// `-reason x domain`, `domain -reason x`, or `-timeout 5 domain
+	// -reason x`). Repeatedly parse, stashing away each positional arg
+	// encountered, until there's nothing left to parse.
+	fs := flag.CommandLine
+	argv := os.Args[1:]
+	var positional []string
+	for {
+		if err := fs.Parse(argv); err != nil {
+			os.Exit(2)
+		}
+		if fs.NArg() == 0 {
+			break
+		}
+		positional = append(positional, fs.Arg(0))
+		argv = fs.Args()[1:]
+	}
+
+	if len(positional) != 1 || positional[0] == "" || *reason == "" {
 		showHelp()
 		os.Exit(2)
 	}
-	domain := args[0]
+	domain := positional[0]
 
 	baseURL := os.Getenv("DOMAIN_GATE_URL")
 	if baseURL == "" {

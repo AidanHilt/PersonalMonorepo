@@ -8,7 +8,7 @@ search, so every claim is tagged:
 - **[inferred]** my reasoning from documented behavior; verify before relying on it
 - **[unknown]** could not determine; needs a test or a look at the repo
 
-Not visible to me: `containers/pi/image.nix`, `config/pi/**`, `flake.nix`. Any
+Not visible to me: `containers/pi/image.nix`, `config/agent/**`, `flake.nix`. Any
 statement about "your current setup" below is a question for whoever can read them.
 
 ---

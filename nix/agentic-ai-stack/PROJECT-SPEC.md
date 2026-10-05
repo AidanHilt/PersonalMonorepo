@@ -107,7 +107,7 @@ fuzzy/by-binary-name lookup feature.
   a thin CLI, baked into the `pi` image's PATH, that makes a single
   blocking HTTP call to `pkg-broker` and reports pass/fail. It is
   deliberately **not** allow-listed in `pi`'s own permission policy
-  (`config/pi/extensions/pi-permission-system/config.json`) by default —
+  (`config/agent/extensions/pi-permission-system/config.json`) by default —
   this build only builds the capability, it does not grant the agent
   access to it. A human operator runs it manually via
   `nix run .#shell-agent` (an interactive shell into the running `pi`
@@ -191,7 +191,7 @@ Revisit this rule set after initial usage — it's a starting point, not a final
 ## 10. Open decisions for the implementer to resolve (these have been resolved and answers provided)
 
 - [x] Which Pi permission extension to adopt (§8) — evaluate current options for maintenance activity and read the source: gotgenes/pi-packages (pi-permission-system, v32.0.2 pinned)
-- [x] Which local model(s) to run under Ollama, and whether that decision affects Ollama's resource/host requirements: qwen2.5-coder:7b, override via `.env` / `config/pi/models.json`
+- [x] Which local model(s) to run under Ollama, and whether that decision affects Ollama's resource/host requirements: qwen2.5-coder:7b, override via `.env` / `config/agent/models.json`
 - [ ] Exact Ollama API endpoint allowlist for the `proxy` gate (§3.2) — verify current path names against the Ollama version being deployed, since API surface has shifted across versions.
 - [ ] Confirm current Colima/Docker host-loopback mechanism (§3.3) on the actual Colima version in use.
 

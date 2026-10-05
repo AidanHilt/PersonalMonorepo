@@ -24,9 +24,10 @@ let
     '';
   };
 
-  # Single, self-contained seed of the entire ~/.pi/agent tree. At runtime
-  # the entrypoint copies this into the writable ~/.pi tmpfs in one shot;
-  # the source of truth stays immutable in the image. Extensions and the
+  # Single, self-contained seed of the entire ~/.pi tree (agent/ config
+  # plus top-level files like web-search.json). At runtime the entrypoint
+  # copies this into the writable ~/.pi tmpfs in one shot; the source of
+  # truth stays immutable in the image. Extensions and the
   # permission-system policy are baked into their final locations here, so
   # the entrypoint needs no rm/cp dance or dynamic folder lookup.
   piSeed = pkgs.runCommand "pi-seed" { } (
@@ -35,15 +36,17 @@ let
       mkdir -p $out/home/pi/.pi-seed/agent
       mkdir -p $out/home/pi/.pi
 
-      # config/pi/ is a direct, 1:1 mirror of the final ~/.pi/agent/ tree
-      # (settings.json, models.json, AGENTS.md, agents/*, and each
-      # extension's config.json already live at their final relative
-      # paths under config/pi/), so this is a single recursive copy with
-      # no per-file translation.
+      # config/ is a direct, 1:1 mirror of the final ~/.pi/ tree:
+      # config/agent/ mirrors ~/.pi/agent/ (settings.json, models.json,
+      # AGENTS.md, agents/*, and each extension's config.json already
+      # live at their final relative paths under config/agent/), and
+      # config/web-search.json mirrors ~/.pi/web-search.json. So this is
+      # a single recursive copy of the whole config/ tree with no
+      # per-file translation.
       mkdir -p $out/home/pi/.pi-seed/agent/extensions
       cp -r --no-preserve=mode ${extraExtensions}/. $out/home/pi/.pi-seed/agent/extensions/
 
-      cp -r --no-preserve=mode ${../../config/pi}/. $out/home/pi/.pi-seed/agent/
+      cp -r --no-preserve=mode ${../../config}/. $out/home/pi/.pi-seed/
     ''
     );
 
@@ -79,11 +82,12 @@ let
       # pkg-install (nix/scripts/scripts/pkg-install) is the only client
       # of the pkg-broker sidecar service (see
       # containers/pkg-broker/README.md, PROJECT-SPEC.md). It is
-      # deliberately NOT allow-listed in config/pi/extensions/
+      # deliberately NOT allow-listed in config/agent/extensions/
       # pi-permission-system/config.json -- bundling the binary here just
       # makes it available on PATH for a human operator to run manually
       # (e.g. via `nix run .#shell-agent`).
       scripts.packages.${pkgs.system}.pkg-install
+      scripts.packages.${pkgs.system}.request-domain
       pkgs.pi-coding-agent
       pkgs.mount
       pkgs.gitMinimal

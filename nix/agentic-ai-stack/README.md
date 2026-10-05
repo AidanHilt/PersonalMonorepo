@@ -35,7 +35,9 @@ containers/
   workspace-mounter/
     image.nix                  # nix2container build for the workspace-mounter sidecar
     mount.sh                   # CAP_SYS_ADMIN+bindfs sidecar, builds /workspace from --add/--clone extras
-config/pi/                     # baked-in AGENTS.md / settings.json / models.json / permission policy — config only, never secrets
+config/                        # 1:1 mirror of ~/.pi/ -- config only, never secrets
+  agent/                       # mirrors ~/.pi/agent/: baked-in AGENTS.md / settings.json / models.json / permission policy
+  web-search.json              # mirrors ~/.pi/web-search.json: pi-web-access ssrf.trustEnvProxy config
 scripts/                       # start-agent, stop-agent, shell-agent, gen-kubeconfig, verify-acceptance
 kube/                          # legacy/unused; kubeconfig now defaults to
                                 # ~/.config/pi-sandbox/agent-kubeconfig.yaml
@@ -157,16 +159,29 @@ service names (`domain-gate`'s own validation enforces this; see its
 `main.go`).
 
 Approval is entirely `pi`'s own permission system: `request-domain` is
-deliberately **not** allow-listed in `config/pi/extensions/pi-permission-system/config.json`
+deliberately **not** allow-listed in `config/agent/extensions/pi-permission-system/config.json`
 (bash's default is `ask`), so every invocation prompts a human before it
 runs — there's no separate pending-request queue. `domain-gate`'s HTTP
 endpoint itself is internal-network-only (no host port published), and the
 permission policy additionally denies any direct bash access to
 `proxy:8081` so `request-domain` stays the only path to it.
 
+Note: `pi`'s `compose.yaml` environment also sets `NODE_USE_ENV_PROXY: "1"`
+alongside `HTTP(S)_PROXY`/`NO_PROXY` — Node's global `fetch()` (used by
+the `fetch_content` tool etc.) otherwise ignores those proxy env vars and
+fails with `getaddrinfo EAI_AGAIN` instead of actually going through
+`proxy`'s allowlist. That alone is not sufficient for the `pi-web-access`
+extension's `fetch_content`/`web_search` tools, though: that extension's
+SSRF pre-flight does its own local DNS lookup on the target host before
+honoring any proxy env vars, and `pi` has no DNS resolver (only `proxy`
+does) — it fails `getaddrinfo EAI_AGAIN` too, just from a different code
+path. `config/web-search.json`'s `ssrf.trustEnvProxy: true` (seeded to
+`~/.pi/web-search.json`) tells that extension to skip its own DNS lookup
+and trust `HTTPS_PROXY` instead; both settings are required.
+
 ## The actual security boundary
 
-Pi's permission prompts (`config/pi/extensions/pi-permission-system/config.json`) are
+Pi's permission prompts (`config/agent/extensions/pi-permission-system/config.json`) are
 a habit-forming guardrail, not the boundary. The real boundary is:
 
 - `pi` is attached only to the `internal` compose network — no route to

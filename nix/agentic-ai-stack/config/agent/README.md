@@ -1,4 +1,4 @@
-# config/pi/
+# config/agent/
 
 Everything in this directory is baked into the `pi-image` at build time
 (spec §5) and therefore ends up in the Nix store, which is world-readable
@@ -9,7 +9,9 @@ This directory is a direct, 1:1 mirror of the final `~/.pi/agent/` tree
 inside the container: every file already lives at its final relative
 path (`settings.json`, `models.json`, `AGENTS.md`, `agents/*`,
 `extensions/<name>/config.json`, ...), so `image.nix` bakes it in with a
-single recursive copy — no per-file translation.
+single recursive copy — no per-file translation. It's a sibling of the
+top-level `config/`, which is itself a 1:1 mirror of `~/.pi/` (e.g.
+`config/web-search.json` mirrors `~/.pi/web-search.json`).
 
 **Config only. Never a secret, token, or key — not even a placeholder
 that looks real enough to paste over by accident.**
