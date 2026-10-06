@@ -41,6 +41,7 @@ type cliOptions struct {
 	body           string
 	breaking       bool
 	presetValues   stringSliceFlag
+	noPush         bool
 }
 
 func main() {
@@ -56,12 +57,32 @@ func main() {
 	flag.StringVar(&opts.body, "body", "", "commit body text (optional; editor is never opened in --non-interactive mode)")
 	flag.BoolVar(&opts.breaking, "breaking", false, "mark the commit as a breaking change")
 	flag.Var(&opts.presetValues, "preset-value", "supply a preset placeholder as name=value (repeatable); required for all placeholders in --non-interactive mode")
+	flag.BoolVar(&opts.noPush, "no-push", false, "skip pushing after commit")
 	flag.Usage = showHelp
 	flag.Parse()
+
+	if envNoPush() {
+		opts.noPush = true
+	}
 
 	if err := run(opts); err != nil {
 		errorf("%v", err)
 		os.Exit(1)
+	}
+}
+
+// envNoPush treats KOMMIT_NO_PUSH as opting out of the default push
+// unless it's unset, empty, "0", or "false" (case-insensitive).
+func envNoPush() bool {
+	v := strings.TrimSpace(os.Getenv("KOMMIT_NO_PUSH"))
+	if v == "" {
+		return false
+	}
+	switch strings.ToLower(v) {
+	case "0", "false":
+		return false
+	default:
+		return true
 	}
 }
 
@@ -77,7 +98,17 @@ func parsePresetValues(raw []string) (map[string]string, error) {
 	return values, nil
 }
 
+// run wraps runCommit with the default post-commit push (plan step 4):
+// on a successful commit (nil error from runCommit), it attempts to push
+// unless opted out. A failed or aborted commit never triggers a push.
 func run(opts cliOptions) error {
+	if err := runCommit(opts); err != nil {
+		return err
+	}
+	return maybePush(opts)
+}
+
+func runCommit(opts cliOptions) error {
 	presetsData := embeddedPresets
 	if opts.presetsFile != "" {
 		data, err := os.ReadFile(opts.presetsFile)
@@ -334,6 +365,26 @@ func runPresetCommit(cfg *presetsConfig, name string, opts presetRunOptions) err
 	return nil
 }
 
+// maybePush implements the default post-commit push (plan step 3): a
+// no-op when opted out via --no-push/KOMMIT_NO_PUSH, a skip-with-warning
+// when the current branch has no upstream, and otherwise a best-effort
+// `git push` whose failure is only ever warned about (exit stays 0).
+func maybePush(opts cliOptions) error {
+	if opts.noPush {
+		return nil
+	}
+	if !hasUpstream() {
+		warnf("no upstream configured for current branch; skipping push")
+		return nil
+	}
+	if err := pushCurrent(); err != nil {
+		warnf("%v", err)
+		return nil
+	}
+	statusf("pushed")
+	return nil
+}
+
 func showHelp() {
 	fmt.Fprintln(os.Stderr, "Usage: kommit [OPTIONS]")
 	fmt.Fprintln(os.Stderr, "")
@@ -349,6 +400,12 @@ func showHelp() {
 	fmt.Fprintln(os.Stderr, "--breaking, and body (optional) from --body; no editor is ever opened.")
 	fmt.Fprintln(os.Stderr, "With --preset in --non-interactive mode, every preset placeholder must")
 	fmt.Fprintln(os.Stderr, "be supplied via a repeatable --preset-value name=value flag.")
+	fmt.Fprintln(os.Stderr, "")
+	fmt.Fprintln(os.Stderr, "After a successful commit (or set of split commits), kommit pushes the")
+	fmt.Fprintln(os.Stderr, "current branch by default, skipping with a warning if no upstream is")
+	fmt.Fprintln(os.Stderr, "configured and warning (without failing) if the push itself fails. Use")
+	fmt.Fprintln(os.Stderr, "--no-push or set KOMMIT_NO_PUSH (to anything other than empty/0/false)")
+	fmt.Fprintln(os.Stderr, "to skip pushing.")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "OPTIONS:")
 	flag.PrintDefaults()

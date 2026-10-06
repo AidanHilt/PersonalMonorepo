@@ -79,6 +79,20 @@ func resetStaged() error {
 	return err
 }
 
+// hasUpstream reports whether the current branch has an upstream
+// configured; a non-nil error from git (e.g. no upstream set) is treated
+// as "no upstream" rather than propagated.
+func hasUpstream() bool {
+	_, err := runGit("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}")
+	return err == nil
+}
+
+// pushCurrent pushes the current branch to its configured upstream.
+func pushCurrent() error {
+	_, err := runGit("push")
+	return err
+}
+
 // addAll stages every change in the working tree, tracked or untracked,
 // including dotfiles - git's own pathspec matching has no special-casing
 // of dotfiles the way old shell globs did.
