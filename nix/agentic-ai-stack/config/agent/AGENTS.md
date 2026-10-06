@@ -95,10 +95,13 @@ instead of trying to route around the proxy. One exact hostname per call, no
 wildcards/subdomains/IP literals — pick the narrowest host that actually
 serves what you need. This CLI is deliberately not allow-listed in the
 permission policy, so it will always prompt for approval before it runs;
-that prompt *is* the approval step, there's no separate queue. The grant
-only lasts for the current `proxy` container's lifetime (cleared on its next
-restart) — see nix/agentic-ai-stack/README.md's "Requesting an extra domain
-at runtime" section for details, and ask the user if a domain needs to be
-added permanently instead (that means editing
+that prompt *is* the approval step, there's no separate queue. By default
+the grant only lasts for the current `proxy` container's lifetime (cleared
+on its next restart) — whether that's actually true for the stack you're
+talking to depends on whether it was started with `--persist-domains` /
+`PI_SANDBOX__PERSIST_DOMAINS=1`, which makes grants survive a restart
+instead — see nix/agentic-ai-stack/README.md's "Requesting an extra domain
+at runtime" and "Persistence flags" sections for details, and ask the user
+if a domain needs to be added permanently instead (that means editing
 containers/proxy/allowed-domains.txt and rebuilding the proxy image, which
 is out of this session's reach).

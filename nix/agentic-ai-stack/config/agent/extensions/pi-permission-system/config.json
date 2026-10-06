@@ -35,6 +35,13 @@
     "ask_user_question": "allow",
     "ask_parent": "allow",
     "notify_parent": "allow",
+    "skill": {
+      "*": "deny",
+      "golang-design-patterns": "allow",
+      "golang-security": "allow",
+      "kubernetes-skill": "allow",
+      "nixos-managing": "allow"
+    },
     "bash": {
       "*": "ask",
       "find *": "deny",
@@ -45,7 +52,7 @@
       "head *": "allow",
       "tail *": "allow",
       "wc *": "allow",
-      "grep *": "deny",
+      "grep *": "allow",
       "tree *": "allow",
       "stat *": "allow",
       "diff *": "allow",

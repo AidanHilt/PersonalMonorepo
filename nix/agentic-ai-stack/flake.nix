@@ -48,9 +48,45 @@
       url = "github:Mic92/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # ---- build-time pinned agent skills -----------------------------------
+    # agent-skills-nix supplies ONLY its library (lib.agent-skills:
+    # discoverCatalog / allowlistFor / selectSkills / mkBundle), consumed by
+    # ./extra-skills.nix to build a skills bundle the exact same way
+    # extra-extensions.nix builds the extensions bundle. Its home-manager
+    # module and install apps are deliberately NOT used -- skills are copied
+    # into the image seed at build time instead (see containers/pi/image.nix).
+    agent-skills = {
+      url = "github:Kyure-A/agent-skills-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # Build-time skill source: samber/cc-skills-golang, a collection of Go
+    # skills under skills/. Not a flake -- fetched as plain source and
+    # pinned by flake.lock like any other `flake = false` input.
+    skills-golang = {
+      url = "github:samber/cc-skills-golang";
+      flake = false;
+    };
+
+    # Build-time skill source: LukasNiessen/kubernetes-skill. SKILL.md lives
+    # at the repo root (alongside references/, docs/, etc.), not under a
+    # skills/ subdirectory.
+    skills-kubernetes = {
+      url = "github:LukasNiessen/kubernetes-skill";
+      flake = false;
+    };
+
+    # Build-time skill source: michalzubkowicz/nixos-management-skill. The
+    # actual skill directory is nixos-managing/ one level below the repo
+    # root.
+    skills-nixos = {
+      url = "github:michalzubkowicz/nixos-management-skill";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, flake-utils, nix2container, scripts, nix-index-database }:
+  outputs = { self, nixpkgs, nixpkgs-unstable, flake-utils, nix2container, scripts, nix-index-database, agent-skills, skills-golang, skills-kubernetes, skills-nixos }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { 
@@ -98,7 +134,7 @@
 
         pi = import ./containers/pi/image.nix {
           pkgs = pkgsUnstable;
-          inherit n2c scripts;
+          inherit n2c scripts agent-skills skills-golang skills-kubernetes skills-nixos;
           imageName = piImageName;
           imageTag = piTag;
         };
@@ -194,6 +230,20 @@
           # via `nix build .#pi-extra-extensions` / `nix eval`.
           pi-extra-extensions = import ./extra-extensions.nix { inherit pkgs; };
 
+          # Standalone, opt-in convenience path for the build-time pinned
+          # agent skills bundle (see extra-skills.nix). Deliberately NOT
+          # wired into pi-image/pi.contentId or anything else image-related
+          # beyond what containers/pi/image.nix itself does -- exposed here
+          # only so it's inspectable via `nix build .#pi-extra-skills` /
+          # `nix eval`.
+          pi-extra-skills = import ./extra-skills.nix {
+            pkgs = pkgsUnstable;
+            agentSkills = agent-skills;
+            skillsGolang = skills-golang;
+            skillsKubernetes = skills-kubernetes;
+            skillsNixos = skills-nixos;
+          };
+
           rootEnv = pkgs.buildEnv {
             name = "pi-image-root";
 
@@ -246,7 +296,11 @@
           stop-agent = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "stop-agent";
-              runtimeInputs = [ pkgs.docker pkgs.docker-compose ];
+              # jq: resolves pkg-bin/nix-store/proxy-domains' actual
+              # project-prefixed volume names via `docker compose config
+              # --format json` before the non-persisted-volume cleanup (see
+              # scripts/stop-agent.sh).
+              runtimeInputs = [ pkgs.docker pkgs.docker-compose pkgs.jq ];
               text = builtins.readFile ./scripts/stop-agent.sh;
             };
           };

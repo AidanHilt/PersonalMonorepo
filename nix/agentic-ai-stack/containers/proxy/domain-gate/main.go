@@ -12,11 +12,15 @@
 // this service, it is already approved; this service's job is purely to
 // validate the hostname and apply the change safely.
 //
-// Entries are written to /tmp/proxy-runtime/dynamic-domains.txt, which
-// lives on the container's tmpfs /tmp -- NOT the static,
-// image-baked /etc/squid/allowed-domains.txt -- so every dynamic grant
-// is wiped the moment the proxy container restarts. Permanent additions
-// still go through the static file and an image rebuild, same as today.
+// Entries are written to /var/lib/proxy-domains/dynamic-domains.txt, a
+// dedicated named Docker volume (NOT the static, image-baked
+// /etc/squid/allowed-domains.txt). By default, supervise.sh truncates
+// that file on every container start, so every dynamic grant is wiped the
+// moment the proxy container restarts -- set PI_SANDBOX__PERSIST_DOMAINS=1
+// (start-agent.sh's --persist-domains flag) to keep grants across
+// restarts instead; see containers/proxy/supervise.sh. Permanent
+// additions still go through the static file and an image rebuild, same
+// as today.
 //
 // Stdlib only, matching the project's Go convention (see
 // nix/scripts/scripts/pkg-install and containers/pkg-broker/main.go).
@@ -42,7 +46,7 @@ import (
 )
 
 const (
-	dynamicDomainsPath = "/tmp/proxy-runtime/dynamic-domains.txt"
+	dynamicDomainsPath = "/var/lib/proxy-domains/dynamic-domains.txt"
 	squidConfigPath    = "/etc/proxy/squid.conf"
 	maxDynamicDomains  = 50
 	maxDomainLength    = 253

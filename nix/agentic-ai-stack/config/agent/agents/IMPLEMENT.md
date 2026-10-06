@@ -37,6 +37,27 @@ permission:
     # explicit rule. Now an intentional, explicit allow.
     "unlink *": allow
     "rm -rf *": deny
+  # Implementation-only skills (see extra-skills.nix,
+  # nix/agentic-ai-stack README "Agent skills" section): denied at the
+  # global/planner scope (permission.skill."*" = deny there) since the
+  # planner never writes code and shouldn't pay their description-token
+  # cost. Allowed here because this agent does. Shared skills
+  # (golang-design-patterns, golang-security, kubernetes-skill,
+  # nixos-managing) are already allowed at the global scope and inherited
+  # here unchanged -- no entry needed for those.
+  skill:
+    "golang-code-style": allow
+    "golang-data-structures": allow
+    "golang-database": allow
+    "golang-documentation": allow
+    "golang-error-handling": allow
+    "golang-how-to": allow
+    "golang-modernize": allow
+    "golang-naming": allow
+    "golang-refactoring": allow
+    "golang-safety": allow
+    "golang-testing": allow
+    "golang-troubleshooting": allow
 ---
 
 You are the implementation agent. You receive a finalized plan and carry it

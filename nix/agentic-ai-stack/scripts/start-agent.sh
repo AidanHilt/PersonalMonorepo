@@ -34,6 +34,70 @@ SECRET_ENV_ARGS=()
 # Either the flag or the env var being '1' is enough to opt in (OR semantics).
 HOST_STORE_FLAG=0
 
+# --- Persistence: pkg-bin / nix-store / proxy-domains volumes -------------
+# Defaults (see compose.yaml's top-level `volumes:` comment and
+# README.md): pkg-bin=ephemeral, nix-store=persistent, proxy-domains=
+# ephemeral. Only flags that CHANGE a default exist (no --no-persist-pkgs,
+# no --persist-store, no --no-persist-domains) -- but the matching
+# PI_SANDBOX__PERSIST_* env var may express either value. A CLI flag
+# always overrides its env var. "Ephemeral" means this script removes the
+# volume with an explicit `docker volume rm` (never tmpfs, never an
+# `external: true` volume) -- see compose.yaml. pi-auth/pi-sessions are
+# NEVER touched by this logic.
+PERSIST_PKGS_FLAG=""
+PERSIST_STORE_FLAG=""
+PERSIST_DOMAINS_FLAG=""
+
+print_help() {
+  cat <<'EOF'
+Usage: start-agent.sh [FLAGS]
+
+Brings up the pi+proxy+pkg-broker compose stack (nix run .#start-agent).
+
+Flags:
+  --add PATH               Mount an existing host file/directory into
+                            /workspace (repeatable). See README.md.
+  --clone URL               Clone a URL on the host and mount it into
+                            /workspace (repeatable). See README.md.
+  --secret NAME=VALUE       Inject an already-decrypted secret as an env
+                            var into the pi container (repeatable).
+  --host-store               Alias for PI_SANDBOX__PKGBROKER_HOST_STORE=1:
+                            pkg-broker shares the host's real /nix/store +
+                            nix-daemon instead of its own isolated volume.
+  --persist-pkgs             Keep the pkg-bin volume (pkg-broker's
+                            resolved binaries) across runs instead of
+                            removing it on teardown. Default: off
+                            (ephemeral).
+  --no-persist-store         Remove the nix-store volume (pkg-broker's
+                            own nix store) on teardown instead of keeping
+                            it. Default: on (persistent). Mutually
+                            exclusive with --host-store (nix-store is
+                            unused in that mode).
+  --persist-domains          Keep runtime request-domain grants
+                            (dynamic-domains.txt, see domain-gate) across
+                            proxy restarts instead of clearing them on
+                            every start. Default: off (cleared every
+                            start).
+  --help, -h                  Show this help and exit. No docker/sudo/nix
+                            work is performed.
+
+Environment variables (a CLI flag above always overrides the matching one):
+  PI_SANDBOX__PERSIST_PKGS=0|1          Same as --persist-pkgs. Default: 0.
+  PI_SANDBOX__PERSIST_STORE=0|1         Inverse of --no-persist-store.
+                                         Default: 1.
+  PI_SANDBOX__PERSIST_DOMAINS=0|1       Same as --persist-domains.
+                                         Default: 0.
+  PI_SANDBOX__PKGBROKER_HOST_STORE=0|1  Same as --host-store.
+  PI_SANDBOX__KUBECONFIG_PATH           Override the default kubeconfig
+                                         path.
+  PI_SANDBOX__SECRET__<NAME>            Same as --secret NAME=VALUE.
+  PERSONAL_MONOREPO_LOCATION             Path to the monorepo checkout.
+
+See README.md for the full writeup (persistence model, workspace extras,
+secrets, kubeconfig, store backends).
+EOF
+}
+
 # --- Workspace contents: repeatable --add PATH / --clone URL --------------
 # /workspace has NO default content anymore (no more implicit
 # PERSONAL_MONOREPO_LOCATION bind mount, see compose.yaml). What `pi` sees
@@ -113,8 +177,24 @@ handle_clone() {
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    --help|-h)
+      print_help
+      exit 0
+      ;;
     --host-store)
       HOST_STORE_FLAG=1
+      shift
+      ;;
+    --persist-pkgs)
+      PERSIST_PKGS_FLAG=1
+      shift
+      ;;
+    --no-persist-store)
+      PERSIST_STORE_FLAG=0
+      shift
+      ;;
+    --persist-domains)
+      PERSIST_DOMAINS_FLAG=1
       shift
       ;;
     --add)
@@ -211,6 +291,63 @@ else
   echo "    Using pkg-broker's default, isolated 'nix-store' volume (set PI_SANDBOX__PKGBROKER_HOST_STORE=1 or pass --host-store to share the host's real store instead)."
   COMPOSE_FILES+=(-f compose.nixstore-overlay.yaml)
 fi
+
+# --- Resolve persistence choices (flag > env var > default) ---------------
+if [ -n "$PERSIST_PKGS_FLAG" ]; then
+  PERSIST_PKGS="$PERSIST_PKGS_FLAG"
+else
+  PERSIST_PKGS="${PI_SANDBOX__PERSIST_PKGS:-0}"
+fi
+if [ -n "$PERSIST_STORE_FLAG" ]; then
+  PERSIST_STORE="$PERSIST_STORE_FLAG"
+else
+  PERSIST_STORE="${PI_SANDBOX__PERSIST_STORE:-1}"
+fi
+if [ -n "$PERSIST_DOMAINS_FLAG" ]; then
+  PERSIST_DOMAINS="$PERSIST_DOMAINS_FLAG"
+else
+  PERSIST_DOMAINS="${PI_SANDBOX__PERSIST_DOMAINS:-0}"
+fi
+
+if [ "$PERSIST_STORE" = "0" ] && [ "$PKGBROKER_HOST_STORE" = "1" ]; then
+  echo "error: --no-persist-store / PI_SANDBOX__PERSIST_STORE=0 is mutually exclusive with --host-store / PI_SANDBOX__PKGBROKER_HOST_STORE=1 (the nix-store volume is unused in host-store mode)." >&2
+  exit 1
+fi
+if [ "$PERSIST_PKGS" = "1" ] && [ "$PERSIST_STORE" = "0" ]; then
+  echo "    WARNING: --persist-pkgs together with --no-persist-store will leave pkg-bin's symlinks dangling after teardown (they point into paths inside the nix-store volume, which will be removed). Consider persisting both or neither." >&2
+fi
+
+export PI_SANDBOX__PERSIST_DOMAINS="$PERSIST_DOMAINS"
+
+echo "==> Persistence: pkg-bin=$( [ "$PERSIST_PKGS" = "1" ] && echo persistent || echo ephemeral ), nix-store=$( [ "$PERSIST_STORE" = "1" ] && echo persistent || echo ephemeral ), proxy-domains=$( [ "$PERSIST_DOMAINS" = "1" ] && echo persistent || echo ephemeral )"
+
+# Removes any of pkg-bin/nix-store/proxy-domains NOT marked persistent
+# above, resolving their actual (project-name-prefixed) volume names via
+# `docker compose config` rather than hardcoding a project-name prefix.
+# Called twice: once below (before `up`, to clear leftovers from a
+# crashed previous run) and once more from cleanup() after `down`.
+# pi-auth/pi-sessions are never referenced here -- they must never be
+# removed.
+remove_nonpersisted_volumes() {
+  local volumes_json pkg_bin_vol nix_store_vol proxy_domains_vol
+  volumes_json="$(docker compose "${COMPOSE_FILES[@]}" config --format json 2>/dev/null)" || return 0
+  pkg_bin_vol="$(jq -r '.volumes["pkg-bin"].name // empty' <<<"$volumes_json")"
+  nix_store_vol="$(jq -r '.volumes["nix-store"].name // empty' <<<"$volumes_json")"
+  proxy_domains_vol="$(jq -r '.volumes["proxy-domains"].name // empty' <<<"$volumes_json")"
+
+  if [ "$PERSIST_PKGS" != "1" ] && [ -n "$pkg_bin_vol" ]; then
+    echo "    removing non-persisted volume: $pkg_bin_vol (pkg-bin -- pass --persist-pkgs to keep it)"
+    docker volume rm "$pkg_bin_vol" >/dev/null 2>&1 || true
+  fi
+  if [ "$PERSIST_STORE" != "1" ] && [ -n "$nix_store_vol" ]; then
+    echo "    removing non-persisted volume: $nix_store_vol (nix-store -- omit --no-persist-store to keep it)"
+    docker volume rm "$nix_store_vol" >/dev/null 2>&1 || true
+  fi
+  if [ "$PERSIST_DOMAINS" != "1" ] && [ -n "$proxy_domains_vol" ]; then
+    echo "    removing non-persisted volume: $proxy_domains_vol (proxy-domains -- pass --persist-domains to keep it)"
+    docker volume rm "$proxy_domains_vol" >/dev/null 2>&1 || true
+  fi
+}
 
 # --- Local Ollama support: DEPRECATED --------------------------------------
 # The native-Ollama-on-host flow below is deprecated and disabled. We may
@@ -379,12 +516,17 @@ if [ -n "$WORKSPACE_MERGED_DIR" ]; then
   UP_SERVICES+=(workspace-mounter)
 fi
 
+echo "==> Clearing any leftover non-persisted volumes from a previous/crashed run..."
+remove_nonpersisted_volumes
+
 echo "==> Starting docker compose stack (pi + proxy + pkg-broker${NIX_STORE_MERGED_DIR:+ + nix-store-mounter}${WORKSPACE_MERGED_DIR:+ + workspace-mounter})..."
 docker compose "${COMPOSE_FILES[@]}" up -d --wait "${UP_SERVICES[@]}"
 
 cleanup() {
 echo "==> Session finished — tearing down the compose stack..."
 docker compose "${COMPOSE_FILES[@]}" down --remove-orphans
+echo "==> Removing non-persisted volumes..."
+remove_nonpersisted_volumes
 if [ -n "${NIX_STORE_MERGED_DIR:-}" ]; then
   # nix-store-mounter unmounts on SIGTERM; this only catches a killed one.
   while mountpoint -q "$NIX_STORE_MERGED_DIR" 2>/dev/null; do

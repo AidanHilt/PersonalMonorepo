@@ -156,6 +156,17 @@ read-only into `pi` (see `compose.yaml`):
 `pi` never gets write access to either volume, and never gets a
 nix-daemon socket of its own.
 
+**Persistence across runs** is opt-in/opt-out per volume via
+`scripts/start-agent.sh`/`scripts/stop-agent.sh` flags or
+`PI_SANDBOX__PERSIST_*` env vars (see the top-level `README.md`'s
+"Persistence flags" section): `pkg-bin` defaults to **ephemeral** (removed
+on teardown, so resolved binaries have to be re-resolved next run unless
+`--persist-pkgs` is passed), while `nix-store` defaults to **persistent**
+(kept across runs by default, so the store built up here survives
+teardown; pass `--no-persist-store` to make it ephemeral too). Neither is
+an `external: true` volume — these scripts just choose whether to run
+`docker volume rm` on them, never tmpfs.
+
 ## Store backend (default vs. host-shared)
 
 By default, `nix-store` is an isolated Docker volume owned by

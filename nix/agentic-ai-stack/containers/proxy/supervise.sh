@@ -13,11 +13,23 @@ RUNTIME_DIR=/tmp/proxy-runtime
 mkdir -p "$RUNTIME_DIR" /tmp/squid-cache
 chmod 700 "$RUNTIME_DIR"
 
-# Fresh, empty dynamic allowlist every container start (tmpfs /tmp, so
-# this is also wiped on restart regardless -- see squid.conf's
-# allowed_dynamic ACL). squid refuses to start if an acl's dstdomain
-# file is missing, so this must exist before squid starts below.
-: >"$RUNTIME_DIR/dynamic-domains.txt"
+# Session-scoped request-domain grants (domain-gate, see
+# containers/proxy/domain-gate/main.go) live on the proxy-domains named
+# volume at /var/lib/proxy-domains, not tmpfs -- see compose.yaml. By
+# default (PI_SANDBOX__PERSIST_DOMAINS unset/0) every grant is wiped on
+# container start, same observable behavior as the old tmpfs-backed file;
+# set PI_SANDBOX__PERSIST_DOMAINS=1 (start-agent.sh's --persist-domains
+# flag) to keep grants across restarts instead. squid refuses to start if
+# an acl's dstdomain file is missing, so this must exist either way before
+# squid starts below.
+DOMAINS_DIR=/var/lib/proxy-domains
+DOMAINS_FILE="$DOMAINS_DIR/dynamic-domains.txt"
+mkdir -p "$DOMAINS_DIR"
+if [ "${PI_SANDBOX__PERSIST_DOMAINS:-0}" = "1" ]; then
+  : >>"$DOMAINS_FILE" # create if missing, keep existing contents otherwise
+else
+  : >"$DOMAINS_FILE" # fresh, empty dynamic allowlist every container start
+fi
 
 # Render the nginx gate config with the platform-specific Ollama
 # upstream address (spec §3.3/§9 — this differs between Colima and

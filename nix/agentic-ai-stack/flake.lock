@@ -1,5 +1,25 @@
 {
   "nodes": {
+    "agent-skills": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1790154098,
+        "narHash": "sha256-SviEpvFefXCPOmQ2b41c4ujE7BzWYJ/h8p/HZNxD2B8=",
+        "owner": "Kyure-A",
+        "repo": "agent-skills-nix",
+        "rev": "dc122af897ab9a685c20ae54c639021619dbbb52",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Kyure-A",
+        "repo": "agent-skills-nix",
+        "type": "github"
+      }
+    },
     "flake-utils": {
       "inputs": {
         "systems": "systems"
@@ -110,12 +130,16 @@
     },
     "root": {
       "inputs": {
+        "agent-skills": "agent-skills",
         "flake-utils": "flake-utils",
         "nix-index-database": "nix-index-database",
         "nix2container": "nix2container",
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable",
-        "scripts": "scripts"
+        "scripts": "scripts",
+        "skills-golang": "skills-golang",
+        "skills-kubernetes": "skills-kubernetes",
+        "skills-nixos": "skills-nixos"
       }
     },
     "scripts": {
@@ -139,6 +163,54 @@
         "owner": "aidanhilt",
         "ref": "project-lockstep/release-mgmt",
         "repo": "PersonalMonorepo",
+        "type": "github"
+      }
+    },
+    "skills-golang": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790857932,
+        "narHash": "sha256-GYayraudW1jRetezgPZe3BUOSAc7N94HH/hlAGNXjzc=",
+        "owner": "samber",
+        "repo": "cc-skills-golang",
+        "rev": "8e899e20ff0cd4dc524af3993e4c62d8ee8c5717",
+        "type": "github"
+      },
+      "original": {
+        "owner": "samber",
+        "repo": "cc-skills-golang",
+        "type": "github"
+      }
+    },
+    "skills-kubernetes": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789299655,
+        "narHash": "sha256-Egg6N8VUT6UTf8S0jqWtCqsoU+JOQgMIv4r4QKpw7ZA=",
+        "owner": "LukasNiessen",
+        "repo": "kubernetes-skill",
+        "rev": "34f93c1e409156958cc7c410ab1aa88ab512f10f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "LukasNiessen",
+        "repo": "kubernetes-skill",
+        "type": "github"
+      }
+    },
+    "skills-nixos": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1784388419,
+        "narHash": "sha256-PUFWSO5+dNjmgK49xUbbgNtVqxjDsfexeMm4m/FfHkg=",
+        "owner": "michalzubkowicz",
+        "repo": "nixos-management-skill",
+        "rev": "aa1e3a3cec56308cd55e8de897eb728c5051b26d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "michalzubkowicz",
+        "repo": "nixos-management-skill",
         "type": "github"
       }
     },

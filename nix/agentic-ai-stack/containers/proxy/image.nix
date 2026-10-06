@@ -68,7 +68,7 @@ let
   };
 
   writableDirs = pkgs.runCommand "squid-writable-dirs" { } ''
-    mkdir -p $out/var/spool/squid $out/var/log/squid $out/tmp $out/var/log/nginx
+    mkdir -p $out/var/spool/squid $out/var/log/squid $out/tmp $out/var/log/nginx $out/var/lib/proxy-domains
   '';
 
   # See containers/pi/image.nix for why this is safe/non-circular and what
@@ -81,7 +81,10 @@ in
     name = imageName;
     tag = imageTag;
 
-    copyToRoot = rootEnv;
+    copyToRoot = [
+      rootEnv
+      writableDirs
+    ];
 
     perms = [
       {

@@ -51,7 +51,18 @@
 # to eyeball/back up auth.json or session history anymore — inspect or
 # back them up with something like
 #   docker run --rm -v pi-auth:/data alpine cat /data/auth.json
-# instead.
+# instead. pi-auth/pi-sessions are ALWAYS persistent and are NEVER removed
+# by start-agent.sh/stop-agent.sh, unlike the volumes below.
+#
+# pkg-bin, nix-store (pkg-broker's shared volumes) and proxy-domains
+# (domain-gate's runtime grant file) are plain project volumes whose
+# persistence across runs is opt-in/opt-out per-volume via
+# start-agent.sh/stop-agent.sh flags or PI_SANDBOX__PERSIST_* env vars (see
+# scripts/start-agent.sh --help and README.md): pkg-bin defaults to
+# ephemeral, nix-store defaults to persistent, proxy-domains defaults to
+# ephemeral. "Ephemeral" here means start-agent.sh/stop-agent.sh run an
+# explicit `docker volume rm` after `docker compose down`, not tmpfs/
+# in-memory storage or an `external: true` volume declaration.
 
 networks:
   internal:
@@ -82,6 +93,12 @@ services:
     #   # resolves (e.g. Docker Desktop/Colima); required on plain Linux
     #   # Docker (NixOS) for the same hostname to resolve to the host.
     #   - "host.docker.internal:host-gateway"
+    environment:
+      # Whether runtime request-domain grants (domain-gate, see below)
+      # should survive a container restart/recreate. Default off (plain
+      # project volume, removed by start-agent.sh/stop-agent.sh on
+      # teardown) -- see scripts/start-agent.sh's --persist-domains flag.
+      PI_SANDBOX__PERSIST_DOMAINS: "${PI_SANDBOX__PERSIST_DOMAINS:-0}"
     read_only: true
     volumes:
       - type: tmpfs
@@ -101,6 +118,14 @@ services:
           # Decimal equivalent of 01777 (octal permission number)
           # This avoids the formatter removing leading zeroes
           mode: 1023
+      # Session-scoped request-domain grants (domain-gate, see
+      # containers/proxy/domain-gate/main.go). NOT tmpfs: proxy is
+      # read_only, so a writable path needs a real volume. Plain project
+      # volume by default -- start-agent.sh/stop-agent.sh remove it with
+      # `docker volume rm` on teardown unless --persist-domains /
+      # PI_SANDBOX__PERSIST_DOMAINS=1 is set, in which case it's left in
+      # place and supervise.sh does not truncate it at container start.
+      - proxy-domains:/var/lib/proxy-domains
     cap_drop: [ ALL ]
     security_opt:
       - no-new-privileges:true
@@ -122,7 +147,6 @@ services:
     networks:
       - internal
       - external
-    privileged: true
     volumes:
       # Resolved bin/* entries, published here (rw) and mounted
       # read-only into `pi` at /usr/local/bin (see below).
@@ -147,26 +171,26 @@ services:
         tmpfs:
           size: 512m
           mode: 1023
-    # cap_drop: [ ALL ]
-    # security_opt:
-    #   - no-new-privileges:true
-    #   # Targeted opt-outs (NOT privileged: true, no added capabilities)
-    #   # so nix's build sandbox can actually work against the chroot
-    #   # store -- see containers/pkg-broker/nix.conf and README.md for
-    #   # why the sandbox is required here:
-    #   #   - seccomp:unconfined   lets the build use unshare(CLONE_NEWUSER)
-    #   #                          to create its user namespace; Docker's
-    #   #                          default seccomp profile blocks that.
-    #   #   - apparmor:unconfined  lets the build mount-bind the chroot
-    #   #                          store's real paths onto /nix/store
-    #   #                          inside the sandbox; Docker's default
-    #   #                          AppArmor profile blocks mount.
-    #   #   - systempaths=unconfined  lets a fresh /proc be mounted inside
-    #   #                          the new user namespace; Docker's masked
-    #   #                          /proc paths otherwise block that.
-    #   - seccomp:unconfined
-    #   - apparmor:unconfined
-    #   - systempaths=unconfined
+    cap_drop: [ ALL ]
+    security_opt:
+      - no-new-privileges:true
+      # Targeted opt-outs (NOT privileged: true, no added capabilities)
+      # so nix's build sandbox can actually work against the chroot
+      # store -- see containers/pkg-broker/nix.conf and README.md for
+      # why the sandbox is required here:
+      #   - seccomp:unconfined   lets the build use unshare(CLONE_NEWUSER)
+      #                          to create its user namespace; Docker's
+      #                          default seccomp profile blocks that.
+      #   - apparmor:unconfined  lets the build mount-bind the chroot
+      #                          store's real paths onto /nix/store
+      #                          inside the sandbox; Docker's default
+      #                          AppArmor profile blocks mount.
+      #   - systempaths=unconfined  lets a fresh /proc be mounted inside
+      #                          the new user namespace; Docker's masked
+      #                          /proc paths otherwise block that.
+      - seccomp:unconfined
+      - apparmor:unconfined
+      - systempaths=unconfined
     restart: unless-stopped
 
   pi:
@@ -350,5 +374,18 @@ volumes:
   # volume's host directory to build the bind source `pi` actually gets.
   # `nix-store` is the default/isolated store backend; see
   # compose.pkgbroker-host-store.yaml for the host-shared-store override.
+  #
+  # Persistence (see scripts/start-agent.sh --help / README.md): these are
+  # all plain project volumes -- NOT `external: true` -- so Docker creates
+  # them the same as any other project volume; start-agent.sh/stop-agent.sh
+  # just choose whether to `docker volume rm` them on teardown.
+  #   - pkg-bin: ephemeral by default, persisted with --persist-pkgs /
+  #     PI_SANDBOX__PERSIST_PKGS=1.
+  #   - nix-store: persistent by default, made ephemeral with
+  #     --no-persist-store / PI_SANDBOX__PERSIST_STORE=0.
+  #   - proxy-domains (see the `proxy` service above): ephemeral by
+  #     default, persisted with --persist-domains /
+  #     PI_SANDBOX__PERSIST_DOMAINS=1.
   pkg-bin: {}
   nix-store: {}
+  proxy-domains: {}

@@ -120,6 +120,43 @@ Tear down: `nix run .#stop-agent` (or `docker compose down`). Verify
 the acceptance criteria from the spec against a running stack:
 `nix run .#verify`.
 
+### Persistence flags
+
+Three named Docker volumes other than `pi-auth`/`pi-sessions` (which are
+**always** persistent and never touched by this logic) have per-volume,
+opt-in-or-opt-out persistence, controlled by `start-agent.sh`/`stop-agent.sh`
+flags or matching `PI_SANDBOX__PERSIST_*` env vars (a CLI flag always wins
+over its env var). Only the flag that *changes* a default exists — no
+`--no-persist-pkgs`, no `--persist-store`, no `--no-persist-domains` — but
+the env var can express either value:
+
+| Volume          | Holds                                   | Default      | Flag to change it      | Env var                          |
+|-----------------|------------------------------------------|--------------|-------------------------|-----------------------------------|
+| `pkg-bin`       | pkg-broker's resolved binaries           | ephemeral    | `--persist-pkgs`        | `PI_SANDBOX__PERSIST_PKGS=1`      |
+| `nix-store`     | pkg-broker's own nix store               | persistent   | `--no-persist-store`    | `PI_SANDBOX__PERSIST_STORE=0`     |
+| `proxy-domains` | `request-domain` runtime grants          | ephemeral    | `--persist-domains`     | `PI_SANDBOX__PERSIST_DOMAINS=1`   |
+
+"Ephemeral" means `start-agent.sh`/`stop-agent.sh` run an explicit `docker
+volume rm` on that volume — never tmpfs/in-memory storage, and never an
+`external: true` volume declaration (this stack does not want to own
+external volume lifecycle). `start-agent.sh` removes non-persisted volumes
+twice: once at the start of a run (to clear leftovers from a crashed
+previous run that never reached its own teardown) and once more after
+`docker compose down` on normal exit; `stop-agent.sh` does the equivalent
+removal after its own `down`.
+
+`--no-persist-store` together with `--host-store` is a hard error: in
+host-store mode `pkg-broker` uses the host's real `/nix` instead of the
+`nix-store` volume, so that volume is simply unused there and the flag is
+meaningless. Combining `--persist-pkgs` with `--no-persist-store` is
+allowed but warned about: `pkg-bin`'s symlinks point into paths that live
+in the `nix-store` volume, so persisting the symlinks while discarding the
+store they point into leaves them dangling.
+
+Run `nix run .#start-agent -- --help` / `nix run .#stop-agent -- --help`
+for the full flag/env var reference (printed before any docker/sudo/nix
+work runs).
+
 ### Installing extra nixpkgs software on demand (`pkg-broker`)
 
 An always-on `pkg-broker` sidecar (see `containers/pkg-broker/README.md`)
@@ -148,15 +185,20 @@ editing `allowed-domains.txt` or rebuilding/reloading the `proxy` image:
 request-domain example.com --reason "fetching release notes for X"
 ```
 
-This is **session-scoped only**: the grant lives in
-`/tmp/proxy-runtime/dynamic-domains.txt` on the `proxy` container's tmpfs,
-so it's wiped the moment that container restarts — there's no revocation
-command, just restart `proxy` to clear every dynamic grant at once. For a
-permanent addition, edit `containers/proxy/allowed-domains.txt` instead and
-rebuild/reload the image as usual. Only one exact hostname per call — no
-wildcards/subdomains, no IP literals, no internal-looking or compose
-service names (`domain-gate`'s own validation enforces this; see its
-`main.go`).
+By default this is **session-scoped only**: the grant lives in
+`dynamic-domains.txt` on the `proxy-domains` named Docker volume (mounted at
+`/var/lib/proxy-domains` — `proxy`'s root filesystem is read-only, so a
+writable path needs a real volume, not tmpfs), and `supervise.sh` truncates
+that file on every container start, so a default-mode grant is wiped the
+moment `proxy` restarts — there's no revocation command, just restart
+`proxy` (or the whole stack) to clear every dynamic grant at once. Pass
+`--persist-domains` to `start-agent.sh` (or set
+`PI_SANDBOX__PERSIST_DOMAINS=1`) to keep grants across restarts instead —
+see "Persistence flags" below. For a permanent addition, edit
+`containers/proxy/allowed-domains.txt` instead and rebuild/reload the image
+as usual. Only one exact hostname per call — no wildcards/subdomains, no IP
+literals, no internal-looking or compose service names (`domain-gate`'s own
+validation enforces this; see its `main.go`).
 
 Approval is entirely `pi`'s own permission system: `request-domain` is
 deliberately **not** allow-listed in `config/agent/extensions/pi-permission-system/config.json`
@@ -178,6 +220,60 @@ does) — it fails `getaddrinfo EAI_AGAIN` too, just from a different code
 path. `config/web-search.json`'s `ssrf.trustEnvProxy: true` (seeded to
 `~/.pi/web-search.json`) tells that extension to skip its own DNS lookup
 and trust `HTTPS_PROXY` instead; both settings are required.
+
+## Agent skills (build-time, pinned)
+
+Like extensions (`extra-extensions.nix`, `extensions/README.md`), skills are
+**build-time flake inputs**, not something `pi` fetches or installs at
+runtime. `extra-skills.nix` is the skills counterpart of
+`extra-extensions.nix`: it pulls in a curated set of third-party
+[SKILL.md](https://github.com/Kyure-A/agent-skills-nix)-style skill
+directories, pinned by `flake.lock` like any other input, and its output is
+copied straight into `$out/home/pi/.pi-seed/agent/skills/` by
+`containers/pi/image.nix` — the same mechanism `extra-extensions.nix` uses
+for `.../agent/extensions/`. At runtime, the entrypoint copies the whole
+`~/.pi-seed` tree into the `~/.pi` tmpfs (see `piSeed` in
+`containers/pi/image.nix`), landing skills at their final
+`~/.pi/agent/skills/<name>/SKILL.md` location.
+
+Selection/filtering of which skills from each source actually ship is done
+with [Kyure-A/agent-skills-nix](https://github.com/Kyure-A/agent-skills-nix)'s
+**library only** (`lib.agent-skills`: `discoverCatalog` / `allowlistFor` /
+`selectSkills` / `mkBundle`) — its home-manager module and install apps are
+deliberately unused, since this stack has no `$HOME` for home-manager to
+manage and nothing here should run an installer at build time.
+
+**Lazy loading**: `pi` only puts each skill's name + description in the
+system prompt (~100 tokens each); the full `SKILL.md` body is read on demand
+when the skill is actually invoked. This is why the enabled list in
+`extra-skills.nix` is a deliberately curated subset rather than everything a
+source offers — every extra enabled skill is a permanent system-prompt cost
+even if it's never used.
+
+**Adding a skill**:
+
+1. Add a `flake = false` input for its source repo to `flake.nix` (pinned by
+   `flake.lock` after running `nix flake lock`), and thread it into
+   `containers/pi/image.nix`'s call into `extra-skills.nix` the same way
+   `skills-golang`/`skills-kubernetes`/`skills-nixos` are.
+2. Add a `sources.<name>` entry in `extra-skills.nix` (`path`, optionally
+   `subdir`) and add the skill's id to the `enable` list — or, if the
+   source doesn't fit `agent-skills-nix`'s discovery (e.g. a repo with
+   `SKILL.md` at its root instead of nested under a scanned subdir), copy
+   it by hand with a small `pkgs.runCommand`, as `extra-skills.nix` does
+   for `kubernetes-skill`. Either way, the final directory name inside the
+   bundle **must** equal the skill's `SKILL.md` frontmatter `name` — `pi`
+   warns on a mismatch.
+3. Set its permission: add it to `permission.skill` in
+   `config/agent/extensions/pi-permission-system/config.json` (shared
+   planner+implementer policy) and/or to the `skill:` block in
+   `config/agent/agents/IMPLEMENT.md`'s frontmatter (implementer-only —
+   rules are last-match-wins and merge per-pattern across scopes, so an
+   agent-specific file only needs to list the patterns it adds/overrides,
+   not the whole surface).
+4. Before enabling anything, read its `SKILL.md` and any bundled
+   scripts/assets for anything malicious or that needs a tool not already
+   in the image.
 
 ## The actual security boundary
 

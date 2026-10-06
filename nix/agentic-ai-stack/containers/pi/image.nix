@@ -1,4 +1,4 @@
-{ pkgs, n2c, imageName, imageTag, scripts }:
+{ pkgs, n2c, imageName, imageTag, scripts, agent-skills, skills-golang, skills-kubernetes, skills-nixos }:
 
 let
   user = "pi";
@@ -27,9 +27,10 @@ let
   # Single, self-contained seed of the entire ~/.pi tree (agent/ config
   # plus top-level files like web-search.json). At runtime the entrypoint
   # copies this into the writable ~/.pi tmpfs in one shot; the source of
-  # truth stays immutable in the image. Extensions and the
-  # permission-system policy are baked into their final locations here, so
-  # the entrypoint needs no rm/cp dance or dynamic folder lookup.
+  # truth stays immutable in the image. Extensions, build-time pinned
+  # agent skills, and the permission-system policy are all baked into
+  # their final locations here, so the entrypoint needs no rm/cp dance or
+  # dynamic folder lookup.
   piSeed = pkgs.runCommand "pi-seed" { } (
     ''
       mkdir -p $out/workspace
@@ -45,6 +46,13 @@ let
       # per-file translation.
       mkdir -p $out/home/pi/.pi-seed/agent/extensions
       cp -r --no-preserve=mode ${extraExtensions}/. $out/home/pi/.pi-seed/agent/extensions/
+
+      # Build-time pinned agent skills (see ../../extra-skills.nix). Copied
+      # in next to extensions above, before the config/ copy below -- config/
+      # has no skills/ dir today, so copy order doesn't matter yet, but this
+      # keeps it consistent with the extensions copy for when it does.
+      mkdir -p $out/home/pi/.pi-seed/agent/skills
+      cp -r --no-preserve=mode ${extraSkills}/. $out/home/pi/.pi-seed/agent/skills/
 
       cp -r --no-preserve=mode ${../../config}/. $out/home/pi/.pi-seed/
     ''
@@ -116,6 +124,14 @@ let
   contentId = builtins.hashString "sha256" "${piSeed}-${rootEnv}-${piState}";
 
   extraExtensions = import ../../extra-extensions.nix { inherit pkgs; };
+
+  extraSkills = import ../../extra-skills.nix {
+    inherit pkgs;
+    agentSkills = agent-skills;
+    skillsGolang = skills-golang;
+    skillsKubernetes = skills-kubernetes;
+    skillsNixos = skills-nixos;
+  };
 
 in
 
