@@ -27,7 +27,7 @@ http {
   server {
     listen 11434;
 
-    # pi talks OpenAI-completions to this proxy (see config/pi/models.json),
+    # pi talks OpenAI-completions to this proxy (see config/agent/models.json),
     # which Ollama serves under /v1/*. Only inference-relevant paths are
     # allowed through; everything else — including all native /api/*
     # model-management endpoints (pull/create/push/delete/copy) — is

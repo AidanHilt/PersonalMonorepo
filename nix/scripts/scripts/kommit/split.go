@@ -7,8 +7,11 @@ import (
 
 // runSplit unstages everything and walks the user through one commit per
 // touched package, followed by a final commit for files matching no
-// package (if any).
-func runSplit(touched map[string][]string, unmatched []string, rules []inferenceRule, overrideType, overrideScope string) error {
+// package (if any). Callers are expected to have already rejected
+// --non-interactive before reaching here (see run() in main.go) -- this
+// keeps the per-package split UX itself unchanged, per the plan's
+// out-of-scope note.
+func runSplit(touched map[string][]string, unmatched []string, rules []inferenceRule, knownScopes []string, overrideType, overrideScope string) error {
 	var allOriginal []string
 	for _, files := range touched {
 		allOriginal = append(allOriginal, files...)
@@ -52,10 +55,10 @@ func runSplit(touched map[string][]string, unmatched []string, rules []inference
 		addedLines := collectAddedLines(files)
 		typeDefault, _ := inferType(files, addedLines, rules)
 		defaults := commitDefaults{
-			typeOverride:  overrideType,
-			scopeOverride: overrideScope,
-			typeDefault:   typeDefault,
-			scopeDefault:  pkgName,
+			typeOverride: overrideType,
+			typeDefault:  typeDefault,
+			scopeDefault: pkgName,
+			knownScopes:  knownScopes,
 		}
 		// scope is the package name for a split commit; don't let a blank
 		// --scope override erase that unless explicitly given.
@@ -76,11 +79,16 @@ func runSplit(touched map[string][]string, unmatched []string, rules []inference
 		}
 		addedLines := collectAddedLines(unmatched)
 		typeDefault, _ := inferType(unmatched, addedLines, rules)
+		scopeDefault := ""
+		if s, ok := inferScope(unmatched, addedLines, rules); ok {
+			scopeDefault = s
+		}
 		defaults := commitDefaults{
 			typeOverride:  overrideType,
 			scopeOverride: overrideScope,
 			typeDefault:   typeDefault,
-			scopeDefault:  "",
+			scopeDefault:  scopeDefault,
+			knownScopes:   knownScopes,
 		}
 		if err := runInteractiveCommit(unmatched, defaults); err != nil {
 			return err

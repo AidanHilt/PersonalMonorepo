@@ -5,7 +5,7 @@ disabled stack-wide (see `containers/proxy/supervise.sh`,
 `containers/proxy/image.nix`, `compose.yaml`, `.env.example`,
 `scripts/start-agent.sh`) — the proxy's Ollama gate isn't started,
 `start-agent.sh`'s reachability check is commented out, and nothing
-listens on the Ollama port. `config/pi/models.json` still declares the
+listens on the Ollama port. `config/agent/models.json` still declares the
 `ollama` provider but it's inert until this is revived. The rest of
 this document describes the design as it will work if/when local-model
 support comes back; treat it as reference, not current behavior.
@@ -57,7 +57,7 @@ ollama pull qwen2.5-coder:7b
 ```
 
 To use a different model, override it in `.env` /
-`config/pi/models.json`, and pass `--override-model` to
+`config/agent/models.json`, and pass `--override-model` to
 `start-agent` if you've wired that flag into your local copy of the
 script (spec §10 asks for a start-agent override option — add a
 `MODEL=` env passthrough here if the default doesn't fit your

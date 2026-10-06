@@ -85,3 +85,28 @@ func sortedPackageNames(touched map[string][]string) []string {
 	sort.Strings(names)
 	return names
 }
+
+// knownScopeValues returns the union of cog.toml package names and any
+// scope values referenced by "field": "scope" entries in the inference
+// rules, sorted, for use as the option list in the scope TUI fallback.
+func knownScopeValues(cfg *cogConfig, rules []inferenceRule) []string {
+	seen := map[string]bool{}
+	var scopes []string
+	for name := range cfg.Packages {
+		if !seen[name] {
+			seen[name] = true
+			scopes = append(scopes, name)
+		}
+	}
+	for _, r := range rules {
+		if r.field() != "scope" || r.Scope == "" {
+			continue
+		}
+		if !seen[r.Scope] {
+			seen[r.Scope] = true
+			scopes = append(scopes, r.Scope)
+		}
+	}
+	sort.Strings(scopes)
+	return scopes
+}

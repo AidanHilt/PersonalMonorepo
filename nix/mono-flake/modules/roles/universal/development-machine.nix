@@ -21,9 +21,7 @@ in
     ./kubernetes-admin.nix
   ];
 
-  environment.variables = {
-    PERSONAL_MONOREPO_LOCATION = "${personalMonorepoLocation}";
-  };
+  environment.variables = (import ./_personal-monorepo-constants.nix {inherit machine-config;}).variables;
 
   environment.systemPackages = with pkgs; [
     cargo

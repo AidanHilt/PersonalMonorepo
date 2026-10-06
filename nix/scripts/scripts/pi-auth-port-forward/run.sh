@@ -57,4 +57,4 @@ print_debug "Remote port: ${remote_port}"
 
 print_status "Forwarding localhost:${local_port} to ${remote_host}:${remote_port}"
 
-exec socat "TCP-LISTEN:${local_port},reuseaddr" "TCP:${remote_host}:${remote_port}"
+exec ssh -N -L 53692:127.0.0.1:53692 aidan@192.168.86.41

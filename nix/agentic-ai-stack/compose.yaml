@@ -4,23 +4,65 @@
 #
 # This base file has NO Kubernetes dependency. If a scoped kubeconfig is
 # available at ~/.config/pi-sandbox/agent-kubeconfig.yaml (or wherever
-# PI_KUBECONFIG_PATH points), start-agent.sh layers
+# PI_SANDBOX__KUBECONFIG_PATH points), start-agent.sh layers
 # compose.kube.yaml on top to mount it read-only; otherwise the
 # stack comes up with no cluster access at all, and start-agent.sh warns
 # and continues.
 #
 # Before `docker compose up`:
-#   1. nix run .#load                 # builds + loads pi/proxy images
+#   1. nix run .#load                 # builds + loads pi/proxy/pkg-broker images
 #   2. (local Ollama support is currently disabled — see start-agent.sh
 #      and containers/proxy for the commented-out wiring. May revisit.)
 #   3. (Optional) generate ~/.config/pi-sandbox/agent-kubeconfig.yaml
 #      (see scripts/gen-kubeconfig.sh) to enable k8s access — see
 #      compose.kube.yaml
-#   4. Copy .env.example to .env and fill in what's needed (no secrets
-#      belong in this repo's git history — .env is gitignored)
+#   4. Provide any API keys/secrets the agent needs (frontier provider
+#      keys, EXA_API_KEY, GITHUB_TOKEN, etc.) via start-agent.sh's
+#      repeatable `--secret NAME=VALUE` flag, or by exporting a
+#      `PI_SANDBOX__SECRET__<NAME>` env var on the host before running
+#      it. start-agent.sh never retrieves or decrypts secrets itself —
+#      it only injects already-decrypted values as `-e` on
+#      `docker compose run`, so no secret value is ever written into
+#      this repo, an image, or a file on disk.
+#      (.env.example / .env remain, but now only for Compose's
+#      interpolation of non-secret vars like PERSONAL_MONOREPO_LOCATION,
+#      which is no longer a default /workspace bind mount -- see below.)
 #
-# Then: docker compose up            (starts pi + proxy)
-#       docker compose --profile login up login   (on demand, for auth)
+# /workspace has NO default content: this base file mounts an empty tmpfs
+# there. Pass `--add PATH` / `--clone URL` (repeatable) to start-agent.sh to
+# give `pi` something to work on; start-agent.sh then layers
+# compose.workspace.yaml (+ a small generated extras file) on top, which
+# overrides this tmpfs entry with a real, read-write bind mount built by the
+# `workspace-mounter` sidecar. See scripts/start-agent.sh's own header
+# comment for the full flag/layout-rule writeup and
+# containers/workspace-mounter/mount.sh for the mechanism.
+#
+# Then: docker compose up            (starts pi + proxy + pkg-broker)
+#       nix run .#login              (on demand, for auth — wraps
+#                                      `docker compose --profile login
+#                                      run --rm login`, see flake.nix)
+#
+# auth.json and session history persist across runs on two named Docker
+# volumes (pi-auth, pi-sessions — see `volumes:` below), not a host bind
+# mount. The image bakes correct uid:gid 10001 ownership onto the
+# placeholder paths those volumes are seeded from (containers/pi/image.nix),
+# so there's no more host-side setup script (scripts/setup-auth-dir.sh is
+# gone) to run before first use. Trade-off: no plain host filesystem path
+# to eyeball/back up auth.json or session history anymore — inspect or
+# back them up with something like
+#   docker run --rm -v pi-auth:/data alpine cat /data/auth.json
+# instead. pi-auth/pi-sessions are ALWAYS persistent and are NEVER removed
+# by start-agent.sh/stop-agent.sh, unlike the volumes below.
+#
+# pkg-bin, nix-store (pkg-broker's shared volumes) and proxy-domains
+# (domain-gate's runtime grant file) are plain project volumes whose
+# persistence across runs is opt-in/opt-out per-volume via
+# start-agent.sh/stop-agent.sh flags or PI_SANDBOX__PERSIST_* env vars (see
+# scripts/start-agent.sh --help and README.md): pkg-bin defaults to
+# ephemeral, nix-store defaults to persistent, proxy-domains defaults to
+# ephemeral. "Ephemeral" here means start-agent.sh/stop-agent.sh run an
+# explicit `docker volume rm` after `docker compose down`, not tmpfs/
+# in-memory storage or an `external: true` volume declaration.
 
 networks:
   internal:
@@ -51,6 +93,12 @@ services:
     #   # resolves (e.g. Docker Desktop/Colima); required on plain Linux
     #   # Docker (NixOS) for the same hostname to resolve to the host.
     #   - "host.docker.internal:host-gateway"
+    environment:
+      # Whether runtime request-domain grants (domain-gate, see below)
+      # should survive a container restart/recreate. Default off (plain
+      # project volume, removed by start-agent.sh/stop-agent.sh on
+      # teardown) -- see scripts/start-agent.sh's --persist-domains flag.
+      PI_SANDBOX__PERSIST_DOMAINS: "${PI_SANDBOX__PERSIST_DOMAINS:-0}"
     read_only: true
     volumes:
       - type: tmpfs
@@ -70,53 +118,232 @@ services:
           # Decimal equivalent of 01777 (octal permission number)
           # This avoids the formatter removing leading zeroes
           mode: 1023
+      # Session-scoped request-domain grants (domain-gate, see
+      # containers/proxy/domain-gate/main.go). NOT tmpfs: proxy is
+      # read_only, so a writable path needs a real volume. Plain project
+      # volume by default -- start-agent.sh/stop-agent.sh remove it with
+      # `docker volume rm` on teardown unless --persist-domains /
+      # PI_SANDBOX__PERSIST_DOMAINS=1 is set, in which case it's left in
+      # place and supervise.sh does not truncate it at container start.
+      - proxy-domains:/var/lib/proxy-domains
     cap_drop: [ ALL ]
     security_opt:
       - no-new-privileges:true
+    restart: unless-stopped
+
+  # pkg-broker: lets `pi` (via the `pkg-install` CLI) install arbitrary
+  # nixpkgs software on demand, without growing the baked pi image and
+  # without giving `pi` itself a nix toolchain, a nix-daemon socket, or
+  # broad network access (see containers/pkg-broker/README.md,
+  # PROJECT-SPEC.md). Dual-homed like `proxy`, but pkg-broker's
+  # `external` leg is its own thing -- it does NOT sit in `pi`'s egress
+  # path, and it deliberately bypasses the Squid allowlist entirely for
+  # its own cache/source fetches (same precedent as proxy/login's own
+  # external leg). The one HTTP endpoint it exposes is only reachable
+  # from `internal` -- no published host port, no `external`-reachable
+  # listener.
+  pkg-broker:
+    image: pi-sandbox/pkg-broker:dev
+    networks:
+      - internal
+      - external
+    volumes:
+      # Resolved bin/* entries, published here (rw) and mounted
+      # read-only into `pi` at /usr/local/bin (see below).
+      - pkg-bin:/srv/pkg-broker/bin
+      # Default/isolated nix store backend (rw here). `pi` does NOT bind
+      # this volume directly -- see `pi`'s own /nix/store entry below for
+      # why (its own image bakes a separate closure under /nix/store that
+      # this isolated volume alone doesn't have) and scripts/start-agent.sh
+      # for how `pi`'s /nix/store source is actually resolved from this
+      # volume's host directory. Swap this backend out for the host's
+      # real /nix (store + nix-daemon socket) via
+      # compose.pkgbroker-host-store.yaml -- see
+      # containers/pkg-broker/README.md for that tradeoff.
+      # Shared volume = the Nix chroot-store ROOT (entrypoint sets
+      # NIX_REMOTE=local?root=/srv/shared-nix), NOT mounted over /nix, so the
+      # broker keeps its own image closure in /nix/store. Builds land in
+      # /srv/shared-nix/nix/store. pi sees it via nix-store-mounter
+      # (compose.nixstore-overlay.yaml).
+      - nix-store:/srv/shared-nix
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 512m
+          mode: 1023
+    cap_drop: [ ALL ]
+    security_opt:
+      - no-new-privileges:true
+      # Targeted opt-outs (NOT privileged: true, no added capabilities)
+      # so nix's build sandbox can actually work against the chroot
+      # store -- see containers/pkg-broker/nix.conf and README.md for
+      # why the sandbox is required here:
+      #   - seccomp:unconfined   lets the build use unshare(CLONE_NEWUSER)
+      #                          to create its user namespace; Docker's
+      #                          default seccomp profile blocks that.
+      #   - apparmor:unconfined  lets the build mount-bind the chroot
+      #                          store's real paths onto /nix/store
+      #                          inside the sandbox; Docker's default
+      #                          AppArmor profile blocks mount.
+      #   - systempaths=unconfined  lets a fresh /proc be mounted inside
+      #                          the new user namespace; Docker's masked
+      #                          /proc paths otherwise block that.
+      - seccomp:unconfined
+      - apparmor:unconfined
+      - systempaths=unconfined
     restart: unless-stopped
 
   pi:
     image: pi-sandbox/pi:dev
     depends_on:
       - proxy
+      - pkg-broker
     networks:
       - internal # no `external` network attachment — no direct internet route
     environment:
       HTTPS_PROXY: "http://proxy:3128"
       HTTP_PROXY: "http://proxy:3128"
-      NO_PROXY: "proxy"
-      # Frontier provider API keys, if using key-based auth instead of
-      # the `login` flow (spec §7 default preference is actually
-      # OAuth-via-login; keys are supported for providers/tiers that
-      # need it). Pulled from `.env`, never committed.
-      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
-      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
-    env_file:
-      - path: ./.env
-        required: false
+      NO_PROXY: "proxy,pkg-broker"
+      # Node's global fetch() (used by pi-web-access's fetch_content, etc.)
+      # ignores HTTP(S)_PROXY/NO_PROXY above by default -- Node only reads
+      # them when NODE_USE_ENV_PROXY=1 is set (available Node >=22.21 /
+      # >=24). Without this, fetch tries to resolve hosts like github.com
+      # directly and fails with getaddrinfo EAI_AGAIN since `pi` has no
+      # direct internet route.
+      NODE_USE_ENV_PROXY: "1"
+      # Base URL pkg-install (nix/scripts/scripts/pkg-install) calls --
+      # reachable because `pi` and `pkg-broker` share the `internal`
+      # network. Not proxied through `proxy` -- pkg-broker is a separate,
+      # narrow surface, not part of pi's general egress allowlist.
+      PKG_BROKER_URL: "http://pkg-broker:8080"
+      # Base URL request-domain (nix/scripts/scripts/request-domain) calls
+      # to ask the `proxy` container's domain-gate sidecar to add a single
+      # hostname to squid's egress allowlist for the lifetime of the
+      # current proxy container (see containers/proxy/domain-gate/main.go,
+      # README.md's "Requesting an extra domain at runtime"). Reachable
+      # because `pi` and `proxy` share the `internal` network, and "proxy"
+      # is already in NO_PROXY above so this call itself isn't routed
+      # through the HTTP(S) proxy it's trying to reconfigure.
+      DOMAIN_GATE_URL: "http://proxy:8081"
+      # Frontier provider API keys and any other third-party secrets
+      # (EXA_API_KEY, GITHUB_TOKEN, etc.), if using key-based auth
+      # instead of the `login` flow (spec §7 default preference is
+      # actually OAuth-via-login; keys are supported for providers/tiers
+      # that need it), are injected at `docker compose run` time via
+      # `-e` flags by start-agent.sh's `--secret NAME=VALUE` flag /
+      # `PI_SANDBOX__SECRET__<NAME>` host env var mechanism — never
+      # declared here, so adding a new secret name never requires
+      # editing this file.
+      #
+      # Informational only (entrypoint.sh uses this to decide whether the
+      # empty-/workspace warning should fire) -- start-agent.sh exports the
+      # real value when extras are given; otherwise /workspace is
+      # deliberately empty, see the tmpfs volume entry below.
+      WORKSPACE_MODE: "${WORKSPACE_MODE:-empty}"
     volumes:
-      # Project directory: read-write, this is what pi actually works on.
-      - "${PERSONAL_MONOREPO_LOCATION:-./workspace}:/workspace:rw"
+      # /workspace: empty tmpfs by default (see this file's header comment).
+      # compose.workspace.yaml overrides this exact entry (same `target`) with
+      # a real bind mount when --add/--clone extras are given.
+      - type: tmpfs
+        target: /workspace
+        tmpfs:
+          mode: 1023
       # NOTE: no kubeconfig mount here by default. See
       # compose.kube.yaml — start-agent.sh layers it in
       # automatically when a scoped kubeconfig is found on the host, and
       # otherwise this base file runs with no cluster access.
       #
       # ~/.pi is a fresh tmpfs each run (below), seeded from the immutable
-      # .pi-seed baked into the image. Only the two genuinely mutable,
-      # host-persisted items are layered back in as narrow bind mounts on
-      # top of that tmpfs:
-      #   - auth.json: written by the host-side `login` flow (spec §7).
-      #   - sessions:  session history (only exercised once --no-session
-      #                is dropped in containers/pi/entrypoint.sh).
-      # Neither is part of the seed, so the entrypoint's seed copy never
-      # clobbers them. Run scripts/setup-auth-dir.sh once so these sources
-      # exist with uid:gid 10001 ownership before the first `up`.
-      - ${HOME}/.config/pi-sandbox/agent/auth.json:/home/pi/.pi-seed/agent/auth.json:rw
-      - ${HOME}/.config/pi-sandbox/agent/sessions:/home/pi/.pi-seed/agent/sessions:rw
+      # .pi-seed baked into the image. The two genuinely mutable,
+      # host-persisted items — auth.json and session history (spec §7) —
+      # live on named Docker volumes instead of host bind mounts, mounted
+      # at /home/pi/.pi-state/{auth,sessions}; containers/pi/entrypoint.sh
+      # symlinks $HOME/.pi/agent/{auth.json,sessions} into them after the
+      # seed copy, so the seed copy itself never touches this state.
+      # Named volumes pick up the uid:gid 10001 ownership/mode baked onto
+      # the matching placeholder paths in containers/pi/image.nix the
+      # first time Docker initializes them, so — unlike the old host bind
+      # mount — there's no setup script to run first. The trade-off: no
+      # plain host filesystem path into these anymore (see compose.yaml's
+      # header comment for how to inspect/back them up).
+      - pi-auth:/home/pi/.pi-state/auth
+      - pi-sessions:/home/pi/.pi-state/sessions
+      # pkg-broker's shared volumes (read-only here -- see the
+      # `pkg-broker` service above and containers/pkg-broker/README.md).
+      # /usr/local/bin is on the OCI/Docker default $PATH but otherwise
+      # empty in this image (everything else lives under /bin, from
+      # pi-image's own buildEnv closure -- see containers/pi/image.nix),
+      # so mounting pkg-bin here adds resolved binaries to pi's PATH
+      # without shadowing anything already there.
+      - pkg-bin:/usr/local/bin:ro
+      # /nix/store (only -- not the rest of /nix: pi has no need for
+      # /nix/var's daemon state/profiles/gcroots) is needed so the
+      # symlinks pkg-broker publishes into pkg-bin (which point at
+      # absolute /nix/store/... paths) actually resolve inside `pi`.
+      #
+      # Unlike pkg-bin above, this ISN'T a plain named-volume mount: pi's
+      # own image already bakes a real runtime closure (pi-coding-agent,
+      # bash, coreutils, gitMinimal, cacert, socat, the entrypoint
+      # script, etc. -- see containers/pi/image.nix) directly under
+      # /nix/store inside the image itself. pkg-broker's default,
+      # isolated 'nix-store' docker volume is a SEPARATE store from the
+      # host's real /nix/store and doesn't contain those baked-closure
+      # paths, so binding it straight onto pi's /nix/store would shadow
+      # pi's own baked closure wholesale. start-agent.sh resolves the
+      # right source for this bind mount and exports it as
+      # PI_SANDBOX__NIX_STORE_SOURCE before `docker compose up`:
+      #   - default/isolated pkg-broker store backend: a host-local
+      #     directory where start-agent.sh has overlay-mounted (ro,
+      #     lowerdir-only) the host's real /nix/store together with
+      #     pkg-broker's isolated volume's own store/ directory, so pi
+      #     sees the union of both.
+      #   - compose.pkgbroker-host-store.yaml override active: just the
+      #     host's real /nix/store directly -- pkg-broker's store IS the
+      #     host's store in that mode, so there's no shadowing conflict
+      #     to resolve and no overlay needed.
+      # See scripts/start-agent.sh and scripts/stop-agent.sh (which
+      # unmounts the overlay on teardown) for the full mechanics.
+      - type: bind
+        source: "${PI_SANDBOX__NIX_STORE_SOURCE:?set by start-agent.sh}"
+        target: /nix/store
+        read_only: true
       # All of ~/.pi is writable-but-ephemeral. mode 1023 == 01777
       # (leading-zero-safe decimal) so the uid:10001 process can populate
       # it from .pi-seed at startup.
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /home/pi/.pi:exec,uid=10001,gid=10001,mode=0700
+    cap_drop: [ ALL ]
+    security_opt:
+      - no-new-privileges:true
+    stdin_open: true
+    tty: true
+    restart: "no"
+
+  # On-demand OAuth login flow (spec §3.4), started via `nix run .#login`
+  # (which wraps `docker compose --profile login run --rm login`) —
+  # never part of the default `docker compose up`. Same image as `pi`,
+  # but deliberately NOT attached to `internal`: it needs a real,
+  # unproxied route to the provider's auth endpoint (and, for OAuth, a
+  # browser redirect/callback), so it only gets the `external` network
+  # and skips the egress proxy entirely. `command: ["login"]` selects the
+  # login-mode branch in containers/pi/entrypoint.sh, which runs `pi`'s
+  # native interactive login instead of the normal workspace run.
+  login:
+    image: pi-sandbox/pi:dev
+    profiles: [ login ]
+    networks:
+      - external
+    environment:
+      PI_SANDBOX__LOGIN_FORWARD: "1"
+    ports:
+      - "127.0.0.1:53692:53693"
+    volumes:
+      # Same auth/session volumes as `pi`, so a completed login is
+      # immediately usable by the isolated default-profile service.
+      - pi-auth:/home/pi/.pi-state/auth
+      - pi-sessions:/home/pi/.pi-state/sessions
       - type: tmpfs
         target: /home/pi/.pi
         tmpfs:
@@ -130,3 +357,35 @@ services:
     stdin_open: true
     tty: true
     restart: "no"
+
+volumes:
+  # Persistent auth/session state (spec §7), seeded with uid:gid 10001
+  # ownership from the placeholder paths baked into the pi image (see
+  # containers/pi/image.nix) the first time Docker initializes them.
+  pi-auth: {}
+  pi-sessions: {}
+  # pkg-broker's shared volumes (containers/pkg-broker/README.md). Seeded
+  # with uid:gid 10003 ownership/mode 0755 from the placeholder paths
+  # baked into the pkg-broker image (containers/pkg-broker/image.nix) the
+  # first time Docker initializes them -- readable by `pi` (uid 10001)
+  # since they're a different uid than pi's own state volumes above.
+  # `pkg-bin` is bound straight into `pi`; `nix-store` is NOT (see `pi`'s
+  # own /nix/store volume entry above) -- start-agent.sh reads this
+  # volume's host directory to build the bind source `pi` actually gets.
+  # `nix-store` is the default/isolated store backend; see
+  # compose.pkgbroker-host-store.yaml for the host-shared-store override.
+  #
+  # Persistence (see scripts/start-agent.sh --help / README.md): these are
+  # all plain project volumes -- NOT `external: true` -- so Docker creates
+  # them the same as any other project volume; start-agent.sh/stop-agent.sh
+  # just choose whether to `docker volume rm` them on teardown.
+  #   - pkg-bin: ephemeral by default, persisted with --persist-pkgs /
+  #     PI_SANDBOX__PERSIST_PKGS=1.
+  #   - nix-store: persistent by default, made ephemeral with
+  #     --no-persist-store / PI_SANDBOX__PERSIST_STORE=0.
+  #   - proxy-domains (see the `proxy` service above): ephemeral by
+  #     default, persisted with --persist-domains /
+  #     PI_SANDBOX__PERSIST_DOMAINS=1.
+  pkg-bin: {}
+  nix-store: {}
+  proxy-domains: {}

@@ -1,0 +1,101 @@
+{
+  "yoloMode": false,
+  "debugLog": false,
+  "permissionReviewLog": true,
+  "permission": {
+    "*": "ask",
+    "path": {
+      "*": "allow",
+      "*.env.example": "allow",
+      "*/.kube/*": "deny",
+      "*/.ssh/*": "deny",
+      "*/.aws/*": "deny",
+      "*/.config/gcloud/*": "deny",
+      "*.pem": "deny",
+      "*serviceaccount*.json": "deny",
+      "*id_rsa*": "deny",
+      "*id_ed25519*": "deny",
+      ".git/*": "deny"
+    },
+    "path_read": {
+      "/home/pi/.pi/*": "allow"
+    },
+    "path_write": {
+      "/home/pi/.pi/*": "deny"
+    },
+    "read": "allow",
+    "find": "deny",
+    "grep": "allow",
+    "ls": "allow",
+    "ffgrep": "allow",
+    "fffind": "allow",
+    "write": "deny",
+    "python3": "deny",
+    "edit": "deny",
+    "ask_user_question": "allow",
+    "ask_parent": "allow",
+    "notify_parent": "allow",
+    "skill": {
+      "*": "deny",
+      "golang-design-patterns": "allow",
+      "golang-security": "allow",
+      "kubernetes-skill": "allow",
+      "nixos-managing": "allow"
+    },
+    "bash": {
+      "*": "ask",
+      "find *": "deny",
+      "cd *": "allow",
+      "ls *": "allow",
+      "pwd": "allow",
+      "sort *": "allow",
+      "head *": "allow",
+      "tail *": "allow",
+      "wc *": "allow",
+      "grep *": "allow",
+      "tree *": "allow",
+      "stat *": "allow",
+      "diff *": "allow",
+      "cat *": "allow",
+      "dirname *": "allow",
+      "basename *": "allow",
+      "realpath *": "allow",
+      "jq *": "allow",
+      "yq *": "allow",
+      "fff *": "allow",
+      "agent-plan-create *": "allow",
+      "python3": "deny",
+      "git *": "deny",
+      "nix *": "deny",
+      "sed *": "deny",
+      "xargs *": "deny",
+      "env *": "deny",
+      "printenv *": "deny",
+      "export *": "deny",
+      "set *": "deny",
+      "eval *": "deny",
+      "exec *": "deny",
+      "curl *": "deny",
+      "wget *": "deny",
+      "nc *": "deny",
+      "*proxy:8081*": "deny",
+      "ssh *": "deny",
+      "scp *": "deny",
+      "rm -rf *": "deny",
+      "sudo *": "deny",
+      "kubectl apply *": "deny",
+      "kubectl delete *": "deny",
+      "kubectl exec *": "deny",
+      "echo *": "deny",
+      "cp *": "deny",
+      "rm *": "deny",
+      "mkdir *": "deny"
+    },
+    "external_directory_read": {
+      "/home/pi/.pi/*": "allow"
+    },
+    "external_directory_write": {
+      "*": "deny"
+    }
+  }
+}

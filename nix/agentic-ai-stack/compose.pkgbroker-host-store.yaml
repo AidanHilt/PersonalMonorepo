@@ -1,0 +1,67 @@
+# Opt-in override: swaps pkg-broker's default, isolated `nix-store`
+# Docker volume for the host's real /nix (store + nix-daemon socket), so
+# pkg-broker can reuse whatever the host already has in its store instead
+# of building/fetching everything into a brand-new, empty store on first
+# use (see containers/pkg-broker/README.md for the full tradeoff).
+#
+#   docker compose -f compose.yaml -f compose.pkgbroker-host-store.yaml up -d
+#
+# IMPORTANT: this changes the trust boundary. With this override applied,
+# the host's nix-daemon (and everything already in the host's /nix/store)
+# becomes reachable from pkg-broker, and transitively from anything
+# pkg-broker resolves on pkg-broker's behalf. Only apply this on a host
+# where that tradeoff is acceptable to you -- it is deliberately NOT the
+# default (see compose.yaml's `pkg-broker` service / README.md).
+#
+# `pi` is untouched here -- it still only ever gets a read-only bind of
+# /nix/store (via scripts/start-agent.sh, which resolves the right source
+# for compose.yaml's PI_SANDBOX__NIX_STORE_SOURCE depending on which
+# backend is active -- see compose.yaml's `pi` service), never a
+# nix-daemon socket or write access, under either backend. Set
+# PI_SANDBOX__PKGBROKER_HOST_STORE=1 before running start-agent.sh to
+# have it layer this override in automatically, instead of invoking
+# `docker compose` with both `-f` flags by hand.
+# Note: this override does not touch `cap_drop` / `security_opt` --
+# compose.yaml's pkg-broker `security_opt` list (including the
+# seccomp/apparmor/systempaths opt-outs the sandbox needs) is untouched
+# and still applies under this override. It's unused in this mode
+# though: host-store mode talks to the HOST's nix-daemon over the
+# socket below, so the *host* daemon does the sandboxed building, not
+# this container -- entrypoint.sh's host-store branch execs the server
+# immediately, before the chroot-store setup/sandbox self-test that
+# needs those opt-outs ever runs.
+#
+# PREREQUISITE: this image must have been built on the SAME host it's run
+# on in host-store mode. entrypoint.sh's host-store branch points
+# PKG_BROKER_NIXPKGS_PATH at /etc/pkg-broker/nixpkgs (a symlink to the
+# pinned pkgs.path baked at image build time), resolved through the
+# bind-mounted host /nix/store above -- which hides the image's own
+# /nix/store, so that symlink's target must already exist in the host's
+# store. If it doesn't (image built elsewhere, or GC'd since), entrypoint.sh
+# fails fast with a clear error instead of starting. See
+# containers/pkg-broker/README.md's host-store section.
+services:
+  pkg-broker:
+    environment:
+      # Tells the `nix` CLI inside pkg-broker to talk to the daemon over
+      # the socket below instead of operating directly against a local
+      # store directory (nix's normal single-user vs. daemon-mode
+      # switch -- no pkg-broker application code needs to know which
+      # mode it's in, see containers/pkg-broker/README.md).
+      NIX_REMOTE: "daemon"
+      # entrypoint.sh keys its host-store branch off this -- without it,
+      # entrypoint.sh falls through to its default chroot-store setup and
+      # overwrites NIX_REMOTE set above.
+      PKG_BROKER_HOST_STORE: "1"
+    volumes:
+      # Replaces the `nix-store` named volume mount from compose.yaml at
+      # the same /nix path -- the host's real nix store, read-write
+      # (nix itself still enforces store immutability/permissions; this
+      # is no more permissive than any other process on the host talking
+      # to its own nix-daemon).
+      - type: bind
+        source: /nix
+        target: /nix
+      - type: bind
+        source: /nix/var/nix/daemon-socket/socket
+        target: /nix/var/nix/daemon-socket/socket

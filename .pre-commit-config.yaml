@@ -36,3 +36,13 @@ repos:
         pass_filenames: false
         files: >-
           ^nix/custom-images/(images/.*|flake\.(nix|lock))$
+      - id: sync-pi-extensions
+        name: Sync pi pre-built extensions lockfile/hashes
+        entry: >-
+          bash -c 'nix run path:nix/agentic-ai-stack#update-pi-extensions --
+          && git add nix/agentic-ai-stack/extensions/package-lock.json
+          nix/agentic-ai-stack/extensions/git-extensions.nix'
+        language: system
+        pass_filenames: false
+        files: >-
+          ^nix/agentic-ai-stack/extensions/(package\.json|git-extensions\.nix)$

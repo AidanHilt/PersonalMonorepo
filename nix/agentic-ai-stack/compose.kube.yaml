@@ -12,4 +12,4 @@
 services:
   pi:
     volumes:
-      - "${PI_KUBECONFIG_PATH:-${HOME}/.config/pi-sandbox/agent-kubeconfig.yaml}:/home/pi/.kube/config:ro"
+      - "${PI_SANDBOX__KUBECONFIG_PATH:-${HOME}/.config/pi-sandbox/agent-kubeconfig.yaml}:/home/pi/.kube/config:ro"

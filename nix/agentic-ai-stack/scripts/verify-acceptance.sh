@@ -2,7 +2,7 @@
 # nix run .#verify
 #
 # Runs the checks from spec §11 against an already-running stack
-# (`docker compose up -d proxy pi` or `nix run .#start-agent` first, in
+# (`docker compose up -d proxy pkg-broker pi` or `nix run .#start-agent` first, in
 # another terminal, or leave `pi` as a long-lived shell for this).
 # This is a smoke test, not a substitute for reading the results.
 set -euo pipefail
@@ -14,21 +14,21 @@ pass() { echo "  PASS: $1"; }
 fail() { echo "  FAIL: $1"; FAILED=1; }
 FAILED=0
 
-echo "==> [1/5] pi has no route to the internet except via proxy's allowlist"
+echo "==> [1/7] pi has no route to the internet except via proxy's allowlist"
 if docker compose exec -T pi sh -c 'wget -q -T 3 -O- https://example.com' >/dev/null 2>&1; then
   fail "pi reached a non-allowlisted host directly — egress isolation is broken"
 else
   pass "direct outbound connection to a non-allowlisted host failed, as expected"
 fi
 
-echo "==> [2/5] pi's root filesystem is read-only"
+echo "==> [2/7] pi's root filesystem is read-only"
 if docker compose exec -T pi sh -c 'touch /this-should-fail 2>/dev/null'; then
   fail "pi container's root filesystem accepted a write outside mounted paths"
 else
   pass "write outside mounted paths was rejected"
 fi
 
-echo "==> [3/5] Ollama model-management endpoints are unreachable via proxy"
+echo "==> [3/7] Ollama model-management endpoints are unreachable via proxy"
 # Ollama support (and the proxy's nginx gate) is currently disabled
 # (see containers/proxy/supervise.sh); nothing listens on :11434 at
 # all right now, so this check would only prove the port is closed,
@@ -42,7 +42,7 @@ echo "==> [3/5] Ollama model-management endpoints are unreachable via proxy"
 # fi
 echo "  SKIP: Ollama support is currently disabled"
 
-echo "==> [4/5] no secret values in git history or the nix store"
+echo "==> [4/7] no secret values in git history or the nix store"
 if git log --all -p 2>/dev/null | grep -Ei 'ANTHROPIC_API_KEY *= *[A-Za-z0-9]|OPENAI_API_KEY *= *[A-Za-z0-9]|sk-ant-|sk-proj-' >/dev/null; then
   fail "a plausible secret pattern was found in git history — investigate before trusting this repo"
 else
@@ -54,12 +54,49 @@ elif [ -f .env ]; then
   fail ".env exists but is NOT git-ignored — fix .gitignore before committing"
 fi
 
-echo "==> [5/5] login flow populates the auth directory, default profile picks it up"
-AUTH_DIR="${PI_AUTH_DIR:-$HOME/.config/pi-sandbox/agent}"
-if [ -s "$AUTH_DIR/auth.json" ]; then
-  pass "auth.json exists and is non-empty at $AUTH_DIR — run a default-profile session to confirm no re-auth prompt appears"
+echo "==> [5/7] pi cannot reach pkg-broker's store/daemon directly, only the narrow HTTP endpoint"
+# pi should have no nix-daemon socket and no write access to the shared
+# nix-store/pkg-bin volumes (containers/pkg-broker/README.md) -- it only
+# ever talks to pkg-broker's POST /resolve over the internal network.
+if docker compose exec -T pi sh -c 'test -S /nix/var/nix/daemon-socket/socket' >/dev/null 2>&1; then
+  fail "pi has a nix-daemon socket available at /nix/var/nix/daemon-socket/socket -- it should not"
+else
+  pass "no nix-daemon socket is reachable from pi"
+fi
+if docker compose exec -T pi sh -c 'touch /usr/local/bin/pkg-broker-write-test 2>/dev/null'; then
+  fail "pi was able to write to the pkg-bin volume -- it should be read-only"
+else
+  pass "pkg-bin volume is read-only from pi, as expected"
+fi
+if docker compose exec -T pi sh -c 'wget -q -T 3 -O- http://pkg-broker:8080/resolve' >/dev/null 2>&1; then
+  fail "pi's GET to pkg-broker's /resolve endpoint unexpectedly succeeded (expected a method-not-allowed/4xx, not a hang/connection failure -- if this is a 405, this check is too strict and should be revisited)"
+else
+  pass "pkg-broker's endpoint is reachable but rejects a bare GET, as expected (a wget -q failure on a non-2xx status is the expected outcome here)"
+fi
+
+echo "==> [6/7] login flow populates the auth volume, default profile picks it up"
+# auth.json now lives on the pi-auth named Docker volume (not a host
+# bind mount — see compose.yaml/PROJECT-SPEC.md §7), so check it via a
+# throwaway container instead of a host path.
+if ! docker volume inspect pi-auth >/dev/null 2>&1; then
+  echo "  SKIP: pi-auth volume does not exist yet — run 'nix run .#login' first"
+elif docker run --rm -v pi-auth:/data alpine test -s /data/auth.json >/dev/null 2>&1; then
+  pass "auth.json exists and is non-empty on the pi-auth volume — run a default-profile session to confirm no re-auth prompt appears"
 else
   echo "  SKIP: no auth.json yet — run 'nix run .#login' first, this check only confirms the file exists"
+fi
+
+echo "==> [7/7] domain-gate (runtime egress exception path) rejects an invalid hostname"
+# domain-gate (containers/proxy/domain-gate/) listens only on the internal
+# network, no published host port -- reachability from pi plus strict
+# validation (rejecting a single-label/internal-looking name here) is the
+# smoke-testable part; see README.md's "Requesting an extra domain at
+# runtime" section for the full request-domain flow.
+if docker compose exec -T pi sh -c \
+  "wget -q -T 3 -O- --post-data='{\"domain\":\"pkg-broker\",\"reason\":\"verify-acceptance smoke test\"}' --header='Content-Type: application/json' http://proxy:8081/allow" >/dev/null 2>&1; then
+  fail "domain-gate accepted an internal-looking/single-label hostname ('pkg-broker') -- validation is broken"
+else
+  pass "domain-gate rejected an internal-looking hostname, as expected (wget treats domain-gate's 4xx error response as a failure)"
 fi
 
 if [ "$FAILED" = "1" ]; then

@@ -27,12 +27,13 @@ This document specifies the target architecture and the concrete pieces to build
 
 ## 3. Component overview
 
-Four logical components, three of which are containers:
+Five logical components, four of which are containers:
 
 | Component | Runs as | Network access |
 |---|---|---|
 | `pi` | Container (Nix-built image) | Internal network only — no direct internet route |
 | `proxy` | Container (Nix-built image) | Internal network + external internet (allowlisted egress) |
+| `pkg-broker` | Container (Nix-built image), always-on | Internal network + external internet (its own unproxied leg — not part of `pi`'s egress path) |
 | `ollama` | **Native process on host** (not containerized) | Bound to a narrow interface; reachable from internal network only through `proxy`'s API gate |
 | `login` | Same image as `pi`, alternate compose profile | Bridged/normal network (only run interactively, on demand) |
 
@@ -40,11 +41,18 @@ Four logical components, three of which are containers:
 
 - Built via `nix2container.buildImage`, contents = Pi + Node runtime + chosen permission extension + bundled config (see §5).
 - Non-root user baked in.
-- Runs with `--read-only` root filesystem. Explicit `tmpfs` mount for `/tmp`. A named volume or bind mount for Pi's session-persistence directory if session history should survive across runs (decide at implementation time whether this is desired; default to **not** persisting unless asked, to keep runs stateless).
+- Runs with `--read-only` root filesystem. Explicit `tmpfs` mount for `/tmp`. Session history persists across runs by default via a named Docker volume (`pi-sessions`); set `PI_SESSIONS=0` on the container to fall back to `--no-session` stateless runs.
 - Mounts:
-  - Project directory: read-write bind mount.
+  - `/workspace`: empty tmpfs by default. Populated only when `start-agent.sh`'s
+    repeatable `--add PATH` / `--clone URL` flags are used, via a dedicated
+    `workspace-mounter` sidecar (CAP_SYS_ADMIN + bindfs, modeled on the
+    `nix-store-mounter` pattern below) that translates each source's host
+    ownership to `pi`'s uid:gid for reads while writes still land on the
+    host under the real host uid:gid. See `compose.workspace.yaml` /
+    `containers/workspace-mounter/` and `scripts/start-agent.sh`'s header
+    comment for the full layout rules (single extra vs. sibling mode).
   - Scoped kubeconfig (see §6): read-only bind mount.
-  - Auth directory (see §7): read-write bind mount, host-side path outside the repo.
+  - Auth state (see §7): read-write named Docker volume (`pi-auth`), not a host bind mount.
 - Attached **only** to the `internal` compose network. No published ports. No route to the internet except via `proxy`.
 - Capabilities dropped (`cap_drop: [ALL]`), `no-new-privileges` security opt, rootless if the runtime supports it cleanly on both target hosts (verify Colima's rootless story before committing to this — may differ from a NixOS-native Docker rootless setup).
 - Other tools (such as Git) as necessary
@@ -52,11 +60,60 @@ Four logical components, three of which are containers:
 ### 3.2 `proxy` container
 
 - Built via `nix2container.buildImage`. Deliberately minimal — this is the trust anchor of the whole design, keep its own attack surface small.
-- Attached to **both** the `internal` network and the external/default network (i.e., it's the only container with real internet access).
+- Attached to **both** the `internal` network and the external/default network. (`pkg-broker`, §3.2a, is the only other container with a leg on the external network — a separate, narrow concern, not part of `pi`'s egress path.)
 - Two responsibilities, which can be one process or two, implementer's choice:
-  1. **Egress allowlist** for `pi`'s outbound traffic: permit only the configured model provider API(s) (e.g. Anthropic, OpenAI) and, if extension installation from npm/PyPI is desired, the relevant package registries. Deny everything else by default.
+  1. **Egress allowlist** for `pi`'s outbound traffic: permit only the configured model provider API(s) (e.g. Anthropic, OpenAI) and, if extension installation from npm/PyPI is desired, the relevant package registries. Deny everything else by default. A `domain-gate` sidecar process (`containers/proxy/domain-gate/`), supervised alongside the allowlist process itself, extends this with a runtime, session-scoped exception path: `pi` can ask (via the `request-domain` CLI, approved purely through `pi`'s own permission prompt — no separate queue) for one exact hostname to be added, and that grant lives on a dedicated `proxy-domains` named Docker volume (not tmpfs — `proxy`'s root filesystem is read-only). By default the grant is still cleared on `proxy`'s next restart (`supervise.sh` truncates the volume's file at container start); passing `--persist-domains` to `start-agent.sh` (or `PI_SANDBOX__PERSIST_DOMAINS=1`) keeps grants across restarts instead. The static allowlist file is untouched by this path; permanent additions still require editing it and rebuilding the image. See `README.md`'s "Requesting an extra domain at runtime" and "Persistence flags" sections.
   2. **Ollama API gate**: a narrow reverse proxy in front of the host's native Ollama instance (see §3.3). Allow only inference endpoints — `/api/generate`, `/api/chat`, `/api/embed` (verify current Ollama API path names against upstream docs at implementation time). Deny model-management endpoints (`/api/pull`, `/api/create`, `/api/push`, `/api/delete`, `/api/copy`, and any tensor-transfer endpoints) — these have been the source of real, remotely-exploitable Ollama CVEs (path traversal, arbitrary file write) and are not needed for the agent's actual workflow. Model management is a manual, host-side operation performed outside this stack.
 - No filesystem mounts beyond its own config.
+
+### 3.2a `pkg-broker`
+
+Lets `pi` (via the `pkg-install` CLI) install arbitrary nixpkgs software
+on demand, without growing the baked `pi` image and without giving `pi`
+itself a nix toolchain, a nix-daemon socket, or broad network access.
+See `containers/pkg-broker/README.md` for the full design and
+`containers/pkg-broker/FOLLOWUP.md` for the deliberately-deferred
+fuzzy/by-binary-name lookup feature.
+
+- Built via `nix2container.buildImage`, bundling a nix toolchain and a
+  small stdlib-only Go HTTP server. Deliberately minimal, same spirit as
+  `proxy`.
+- Dual-homed on the `internal` and `external` networks (same shape as
+  `proxy`), but does **not** sit in `pi`'s egress path — its `external`
+  leg exists so attribute resolution can fall back to building from
+  source on a binary-cache miss, bypassing the Squid allowlist entirely
+  by design (same precedent as `proxy`/`login`'s own external legs).
+- Exposes exactly one HTTP endpoint (`POST /resolve`), reachable only
+  from `internal`, never published to the host, never on `external`:
+  given an exact nixpkgs attribute name (validated strictly — no flake
+  refs, no arbitrary nix expressions), resolves it via `nix-build -A`
+  against this flake's own pinned `nixpkgs` input, then publishes the
+  resulting `bin/*` entries into the shared `pkg-bin` volume.
+- Two shared named Docker volumes, read-write into `pkg-broker` and
+  **read-only** into `pi`: `pkg-bin` (resolved binaries, mounted onto
+  `/usr/local/bin` in `pi` — on `pi`'s default `$PATH` but otherwise
+  empty) and `nix-store` (mounted at `/nix` in both, so the `pkg-bin`
+  symlinks' absolute `/nix/store/...` targets and the resolved binaries'
+  own RPATH/dynamic-linker references resolve inside `pi`). `pi` never
+  gets write access to either, and never gets a nix-daemon socket of its
+  own.
+- The `nix-store` backend is configurable: by default, an isolated store
+  owned by `pkg-broker` alone; `compose.pkgbroker-host-store.yaml` is an
+  opt-in override that swaps in the host's real `/nix/store` and
+  nix-daemon socket for cache reuse — this changes the trust boundary
+  (the host nix-daemon becomes reachable from `pkg-broker`), so it is not
+  the default. See `containers/pkg-broker/README.md`.
+- `pkg-install` (`nix/scripts/scripts/pkg-install/`) is the only client —
+  a thin CLI, baked into the `pi` image's PATH, that makes a single
+  blocking HTTP call to `pkg-broker` and reports pass/fail. It is
+  deliberately **not** allow-listed in `pi`'s own permission policy
+  (`config/agent/extensions/pi-permission-system/config.json`) by default —
+  this build only builds the capability, it does not grant the agent
+  access to it. A human operator runs it manually via
+  `nix run .#shell-agent` (an interactive shell into the running `pi`
+  container, bypassing Pi's own agent harness/permission prompts
+  entirely, but still bound by the same network sandboxing) until that's
+  revisited.
 
 ### 3.3 `ollama` (native on host, not containerized)
 
@@ -70,9 +127,10 @@ Four logical components, three of which are containers:
 
 ### 3.4 `login` (compose profile, not a default service)
 
-- Same image as `pi`, started only on demand (`--profile login`), not part of the default `up`.
-- Bridged/normal network — needs a real path to the provider's auth endpoint and, if OAuth is used, a way to complete a browser redirect/callback.
-- Writes credentials to the same host-side auth directory that the `pi` service mounts, so a completed login is immediately usable by the isolated service.
+- Implemented as an actual `login` service/profile in `compose.yaml` (started via `nix run .#login`, which wraps `docker compose --profile login run --rm login`), same image as `pi`, not part of the default `up`.
+- Attached only to the `external` network — needs a real, unproxied path to the provider's auth endpoint and, if OAuth is used, a way to complete a browser redirect/callback. Not attached to `internal`; skips the egress proxy entirely.
+- `containers/pi/entrypoint.sh` selects this mode when the container's first argument is `login` (wired via the compose service's `command: ["login"]`) and runs `pi`'s native interactive login instead of the normal workspace run.
+- Writes credentials to the `pi-auth` named Docker volume, the same volume the `pi` service mounts, so a completed login is immediately usable by the isolated service.
 - **Default assumption: prefer static API keys over OAuth** for exactly this reason — it avoids needing a less-isolated network path at all. Fall back to the OAuth login-service flow only for providers that don't offer key-based auth for the plan/tier in use.
 
 ## 4. Build & run flow
@@ -82,9 +140,10 @@ Nix's job stops once images are built and loaded into the local Docker daemon. F
 1. `nix build` (or a flake app wrapping it) builds:
    - `pi-image` (tag pinned to a stable string, e.g. `pi-sandbox/pi:dev` — **do not** rely on `nix2container`'s default content-hash tag here, since a static compose file needs a tag that doesn't change every rebuild).
    - `proxy-image` (same tagging approach).
-2. A flake app (`nix run .#load`) calls `copyToDockerDaemon` for both images. This uses the `docker` CLI under the hood and respects whatever Docker context is active — confirm Colima has set itself as the active context (it does this automatically on `colima start`) or export `DOCKER_HOST` explicitly if not.
-3. `docker compose up` (default profile) starts `pi` and `proxy`, attached to the `internal` network as specified. Ollama is assumed already running natively on the host (a setup/health-check step should verify this and fail fast with a clear message if not).
-4. `docker compose --profile login up login` is run manually, once, whenever a credential needs to be established or refreshed.
+   - `pkg-broker-image` (same tagging approach; see §3.2a).
+2. A flake app (`nix run .#load`) calls `copyToDockerDaemon` for all three images. This uses the `docker` CLI under the hood and respects whatever Docker context is active — confirm Colima has set itself as the active context (it does this automatically on `colima start`) or export `DOCKER_HOST` explicitly if not.
+3. `docker compose up` (default profile) starts `pi`, `proxy`, and `pkg-broker`, attached to the `internal` network as specified (`pkg-broker` also gets `external`, see §3.2a). Ollama is assumed already running natively on the host (a setup/health-check step should verify this and fail fast with a clear message if not).
+4. `nix run .#login` (wraps `docker compose --profile login run --rm login`) is run manually, once, whenever a credential needs to be established or refreshed.
 
 ## 5. Configuration bundling
 
@@ -107,8 +166,9 @@ All of the following live **inside the flake repo** and get baked into the `pi-i
 ## 7. Credentials
 
 - **Frontier provider credentials:** Do not prefer static API keys. Use a the `login` command and a similar process as below
-- **Auth persistence for any provider that does need OAuth:** a host-side directory outside the repo (e.g. `~/.config/pi-sandbox/agent/`), permissions locked to `0700`/`0600`, bind-mounted read-write into both the `pi` and `login` services. The `login` service (§3.4) is the only place this directory is ever written to via an interactive flow.
+- **Auth persistence for any provider that does need OAuth:** a named Docker volume (`pi-auth`), not a host-side directory, mounted read-write into both the `pi` and `login` services at `/home/pi/.pi-state/auth`; `containers/pi/entrypoint.sh` symlinks `auth.json` from there into `~/.pi/agent/`. The image bakes uid:gid 10001 ownership/mode `0700` onto the placeholder path the volume is seeded from (§5/`containers/pi/image.nix`), so Docker picks that up automatically the first time the (empty) volume is initialized — no host-side chown step needed. The `login` service (§3.4) is the only place this volume is ever written to via an interactive flow. Trade-off versus the old host bind mount: no plain host filesystem path to eyeball or back up `auth.json`/session history directly — use `docker run --rm -v pi-auth:/data ...` (or similar) instead.
 - **Ollama:** no credentials — it's a local, unauthenticated-by-design service, which is exactly why §3.3's network-gating matters.
+- **Static API keys / arbitrary third-party secrets (e.g. `EXA_API_KEY`, `GITHUB_TOKEN`):** the sanctioned mechanism is `start-agent.sh`'s repeatable `--secret NAME=VALUE` flag and/or host env vars namespaced `PI_SANDBOX__SECRET__<NAME>`, both forwarded into the `pi` container as runtime `-e` vars on `docker compose run` — never written to a file on disk, never declared by name in `compose.yaml`, so a new secret never requires a code change. `start-agent.sh` performs no retrieval or decryption of its own; it only accepts and injects already-decrypted values supplied by the caller.
 
 ## 8. Permission model (Pi-level)
 
@@ -131,7 +191,7 @@ Revisit this rule set after initial usage — it's a starting point, not a final
 ## 10. Open decisions for the implementer to resolve (these have been resolved and answers provided)
 
 - [x] Which Pi permission extension to adopt (§8) — evaluate current options for maintenance activity and read the source: gotgenes/pi-packages (pi-permission-system, v32.0.2 pinned)
-- [x] Which local model(s) to run under Ollama, and whether that decision affects Ollama's resource/host requirements: qwen2.5-coder:7b, override via `.env` / `config/pi/models.json`
+- [x] Which local model(s) to run under Ollama, and whether that decision affects Ollama's resource/host requirements: qwen2.5-coder:7b, override via `.env` / `config/agent/models.json`
 - [ ] Exact Ollama API endpoint allowlist for the `proxy` gate (§3.2) — verify current path names against the Ollama version being deployed, since API surface has shifted across versions.
 - [ ] Confirm current Colima/Docker host-loopback mechanism (§3.3) on the actual Colima version in use.
 
@@ -142,4 +202,5 @@ Revisit this rule set after initial usage — it's a starting point, not a final
 - `pi` container's root filesystem is read-only — verified by attempting a write outside the mounted paths and confirming it fails.
 - Ollama's model-management endpoints are unreachable from the `internal` network — verified by attempting `/api/pull` (or current equivalent) through the path the `pi` container would use, and confirming it's rejected by `proxy`.
 - No secret values appear in `git log`, `git diff`, or `nix path-info` output for any built derivation.
-- A fresh `login` run correctly populates the host-side auth directory, and a subsequent default-profile `pi` run picks up those credentials without re-authenticating.
+- A fresh `login` run correctly populates the `pi-auth` Docker volume, and a subsequent default-profile `pi` run picks up those credentials without re-authenticating.
+- `pi` cannot reach `pkg-broker`'s nix store or a nix-daemon socket directly — only `pkg-broker`'s narrow `POST /resolve` HTTP endpoint over the `internal` network (`pi` has no nix-daemon socket and only a read-only bind of the shared `nix-store`/`pkg-bin` volumes, never write access).
