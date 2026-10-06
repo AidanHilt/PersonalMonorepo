@@ -75,6 +75,18 @@ cd "$PROJECT_DIR" || exit
 PI_ARGS=()
 if [ "${PI_SESSIONS:-1}" = "0" ]; then
   PI_ARGS+=("--no-session")
+  if [ "${PI_SANDBOX__RESUME:-0}" = "1" ]; then
+    echo "warning: PI_SANDBOX__RESUME=1 (--resume) has no effect with PI_SESSIONS=0 (--no-session) -- sessions are disabled for this run." >&2
+  fi
+# --name/--resume (scripts/start-agent.sh) -- both only apply with
+# sessions enabled (handled above), and are mutually exclusive by the
+# time they reach the container (start-agent.sh already enforces this).
+# --resume runs pi's own built-in interactive session picker against the
+# pi-sessions volume; --name instead starts a fresh, named session.
+elif [ "${PI_SANDBOX__RESUME:-0}" = "1" ]; then
+  PI_ARGS+=("--resume")
+elif [ -n "${PI_SANDBOX__SESSION_NAME:-}" ]; then
+  PI_ARGS+=("--name" "$PI_SANDBOX__SESSION_NAME")
 fi
 
 if [ "${PI_SANDBOX__LOGIN_FORWARD:-0}" = "1" ]; then
@@ -84,4 +96,4 @@ fi
 
 exec "$@"
 
-exec pi "${PI_ARGS[@]}" "$@"
+exec pi "${PI_ARGS[@]:-}" "$@"

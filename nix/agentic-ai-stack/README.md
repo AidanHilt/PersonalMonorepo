@@ -157,6 +157,35 @@ Run `nix run .#start-agent -- --help` / `nix run .#stop-agent -- --help`
 for the full flag/env var reference (printed before any docker/sudo/nix
 work runs).
 
+### Session naming & resuming
+
+Every run of `start-agent.sh` gives the session a display name, persisted
+(along with its history) on the always-on `pi-sessions` volume (see
+"Credentials / secrets" above for the volumes this stack never removes).
+Two mutually exclusive flags control this:
+
+```sh
+# Name this run's session, prefixed with 'release-notes':
+nix run .#start-agent -- --name release-notes
+# -> container gets PI_SANDBOX__SESSION_NAME=release-notes-20240521-153000
+
+# Skip naming a new session; instead open pi's own built-in --resume
+# session picker inside the container, against the pi-sessions volume:
+nix run .#start-agent -- --resume
+```
+
+With no `--name`, the prefix defaults to `pi` (e.g.
+`pi-20240521-153000`), so every run still gets a unique, timestamped name
+even with no flags at all. `start-agent.sh` computes the full name and
+forwards it (or `PI_SANDBOX__RESUME=1` for `--resume`) into the `pi`
+container as a plain `-e` env var on `docker compose run` — the same
+mechanism `--secret` uses — and prints the chosen name/mode before
+starting. `containers/pi/entrypoint.sh` translates that into pi's own
+`--name`/`--resume` flags. Passing both `--name` and `--resume` is a
+hard error. Neither has any effect if `PI_SESSIONS=0` is set on the `pi`
+container (sessions disabled outright; `--resume` combined with it only
+logs a warning).
+
 ### Installing extra nixpkgs software on demand (`pkg-broker`)
 
 An always-on `pkg-broker` sidecar (see `containers/pkg-broker/README.md`)

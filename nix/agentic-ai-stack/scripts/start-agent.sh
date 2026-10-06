@@ -34,6 +34,24 @@ SECRET_ENV_ARGS=()
 # Either the flag or the env var being '1' is enough to opt in (OR semantics).
 HOST_STORE_FLAG=0
 
+# --- Session naming / resume: CLI flags for pi's own --name/--resume -----
+# '--name NAME' / '--name=NAME' sets a prefix for this run's session
+# display name; the actual name passed into the container is always
+# "${NAME:-pi}-$(date +%Y%m%d-%H%M%S)" (computed below, once, right before
+# the final `docker compose run`), so re-running with the same --name
+# never collides with a previous session. '--resume' is a plain boolean
+# that instead tells the container to run pi's own built-in interactive
+# session picker (`pi --resume`) against the pi-sessions volume -- no name
+# is set in that case. The two are mutually exclusive (checked once both
+# are fully parsed, below). Neither flag has a matching
+# PI_SANDBOX__PERSIST_*-style env var: both are forwarded into the
+# container purely as `-e PI_SANDBOX__SESSION_NAME=...` /
+# `-e PI_SANDBOX__RESUME=1` on the final `docker compose run`, the same
+# mechanism SECRET_ENV_ARGS uses (see containers/pi/entrypoint.sh for how
+# they're consumed).
+NAME_FLAG=""
+RESUME_FLAG=0
+
 # --- Persistence: pkg-bin / nix-store / proxy-domains volumes -------------
 # Defaults (see compose.yaml's top-level `volumes:` comment and
 # README.md): pkg-bin=ephemeral, nix-store=persistent, proxy-domains=
@@ -61,6 +79,16 @@ Flags:
                             /workspace (repeatable). See README.md.
   --secret NAME=VALUE       Inject an already-decrypted secret as an env
                             var into the pi container (repeatable).
+  --name NAME, --name=NAME Prefix for this run's session display name
+                            (the container gets "NAME-YYYYmmdd-HHMMSS";
+                            default prefix is 'pi'). Mutually exclusive
+                            with --resume.
+  --resume                   Skip naming a new session and instead run
+                            pi's own built-in --resume session picker
+                            inside the container (pi-sessions volume).
+                            Mutually exclusive with --name. Has no
+                            effect if PI_SESSIONS=0 is set on the pi
+                            container (sessions disabled).
   --host-store               Alias for PI_SANDBOX__PKGBROKER_HOST_STORE=1:
                             pkg-broker shares the host's real /nix/store +
                             nix-daemon instead of its own isolated volume.
@@ -92,6 +120,14 @@ Environment variables (a CLI flag above always overrides the matching one):
                                          path.
   PI_SANDBOX__SECRET__<NAME>            Same as --secret NAME=VALUE.
   PERSONAL_MONOREPO_LOCATION             Path to the monorepo checkout.
+
+Session naming / resume (no matching env var to set directly -- these are
+computed by this script from --name/--resume and forwarded into the pi
+container as PI_SANDBOX__SESSION_NAME / PI_SANDBOX__RESUME, consumed by
+containers/pi/entrypoint.sh):
+  --name NAME / --name=NAME             Prefix for this run's session name.
+  --resume                               Open pi's built-in session picker
+                                         instead.
 
 See README.md for the full writeup (persistence model, workspace extras,
 secrets, kubeconfig, store backends).
@@ -197,6 +233,19 @@ while [ $# -gt 0 ]; do
       PERSIST_DOMAINS_FLAG=1
       shift
       ;;
+    --name)
+      shift
+      NAME_FLAG="${1:?--name requires a NAME argument}"
+      shift
+      ;;
+    --name=*)
+      NAME_FLAG="${1#--name=}"
+      shift
+      ;;
+    --resume)
+      RESUME_FLAG=1
+      shift
+      ;;
     --add)
       shift
       handle_add "${1:?--add requires a PATH argument}"
@@ -242,6 +291,25 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+if [ "$RESUME_FLAG" = "1" ] && [ -n "$NAME_FLAG" ]; then
+  echo "error: --resume and --name are mutually exclusive -- --resume runs pi's own session picker instead of starting a newly-named session." >&2
+  exit 1
+fi
+
+# Computed once, here, and forwarded into the pi container purely as env
+# vars (see containers/pi/entrypoint.sh) -- same -e mechanism as
+# SECRET_ENV_ARGS, appended separately below so secrets-flag precedence
+# semantics (namespace-scan-then-flags) are untouched.
+SESSION_ENV_ARGS=()
+if [ "$RESUME_FLAG" = "1" ]; then
+  echo "==> --resume: this run will open pi's built-in session picker instead of starting a newly-named session."
+  SESSION_ENV_ARGS+=(-e "PI_SANDBOX__RESUME=1")
+else
+  SESSION_NAME="${NAME_FLAG:-pi}-$(date +%Y%m%d-%H%M%S)"
+  echo "==> Session name: $SESSION_NAME"
+  SESSION_ENV_ARGS+=(-e "PI_SANDBOX__SESSION_NAME=$SESSION_NAME")
+fi
 
 SECRET_NAMESPACE_ARGS=()
 while IFS= read -r var_name; do
@@ -542,4 +610,4 @@ fi
 }
 trap cleanup EXIT
 
-docker compose "${COMPOSE_FILES[@]}" run --rm "${SECRET_ENV_ARGS[@]}" pi
+docker compose "${COMPOSE_FILES[@]}" run --rm "${SECRET_ENV_ARGS[@]}" "${SESSION_ENV_ARGS[@]}" pi
