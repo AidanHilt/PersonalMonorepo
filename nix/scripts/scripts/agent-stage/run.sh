@@ -26,13 +26,15 @@ passed:
   4. The tree_sha recorded in that artifact must match a tree_sha
      recomputed from the branch's own tree (same exclusions: .agent/ and
      validate.sh, computed via a temporary index -- never the real one).
-  5. If --expect-sha is given and differs from the artifact's                                                                                                               
-    validate_sh_sha256 field, a warning is printed. This is advisory only                                                                                                  
-    and never blocks staging; check 4 (tree_sha) is the enforced guarantee. 
+  5. If --expect-sha is given and differs from the artifact's
+     validate_sh_sha256 field, a warning is printed. This is advisory only
+     and never blocks staging; check 4 (tree_sha) is the enforced guarantee.
 
 Any of checks 3-5 failing is reported with which check failed and exits
 non-zero, UNLESS --force is given, in which case a loud warning is printed
 and staging proceeds anyway.
+
+git and jq must be on PATH for this script to run.
 
 On success: runs `git merge --squash <branch>`, then removes validate.sh
 and .agent/ from the index and working tree if the squash brought them in
@@ -44,11 +46,26 @@ tree behind.
 Prints a summary of the changed files, the branch's commit log, and the
 next step (review the staged changes, then run kommit).
 
-     --expect-sha <sha>   Optional. Warn if the artifact's validate_sh_sha256                                                                                                  
-                           differs from <sha> (advisory only; see check 5).                                                                                                    
-     --force              Skip checks 3-4 (missing artifact / tree mismatch)                                                                                                   
-                           and stage anyway, with a warning.  
+     --expect-sha <sha>   Optional. Warn if the artifact's validate_sh_sha256
+                           differs from <sha> (advisory only; see check 5).
+     --force              Skip checks 3-4 (missing artifact / tree mismatch)
+                           and stage anyway, with a warning.
 EOF
+}
+
+require_tool() {
+  local tool="$1"
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    print_error "Required tool '$tool' not found on PATH. Install it and retry."
+    exit 1
+  fi
+}
+
+require_tools() {
+  local tool
+  for tool in "$@"; do
+    require_tool "$tool"
+  done
 }
 
 require_clean_worktree() {
@@ -80,6 +97,13 @@ compute_branch_tree_sha() {
 
 main() {
   local branch="" expect_sha="" force=0
+
+  if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    show_help
+    exit 0
+  fi
+
+  require_tools git jq
 
   if [[ $# -eq 0 ]]; then
     print_error "Missing required <branch> argument"
@@ -130,10 +154,12 @@ main() {
 
   if ! artifact_json="$(git show "$branch:.agent/validated.json" 2>/dev/null)"; then
     problem="'.agent/validated.json' not found on branch '$branch'"
+  elif ! printf '%s' "$artifact_json" | jq -e . >/dev/null; then
+    problem="'.agent/validated.json' on '$branch' is not valid JSON"
   else
     local artifact_tree_sha recomputed_tree_sha artifact_sha
-    artifact_tree_sha="$(printf '%s' "$artifact_json" | jq -r '.tree_sha // empty' 2>/dev/null || true)"
-    artifact_sha="$(printf '%s' "$artifact_json" | jq -r '.validate_sh_sha256 // empty' 2>/dev/null || true)"
+    artifact_tree_sha="$(printf '%s' "$artifact_json" | jq -r '.tree_sha // empty')"
+    artifact_sha="$(printf '%s' "$artifact_json" | jq -r '.validate_sh_sha256 // empty')"
 
     if [[ -z "$artifact_tree_sha" ]]; then
       problem="'.agent/validated.json' on '$branch' has no usable tree_sha field"
@@ -142,10 +168,10 @@ main() {
     elif [[ "$recomputed_tree_sha" != "$artifact_tree_sha" ]]; then
       problem="tree_sha mismatch: artifact says '$artifact_tree_sha', branch tree is actually '$recomputed_tree_sha' (working tree changed after validate.sh ran)"
     fi
-    
-    if [[ -n "$expect_sha" && "$expect_sha" != "$artifact_sha" ]]; then                                                                                                     
-      print_warning "validate.sh sha256 differs from --expect-sha (expected '$expect_sha', artifact recorded '$artifact_sha'). Not a failure: only tree_sha is enforced."   
-    fi 
+
+    if [[ -n "$expect_sha" && "$expect_sha" != "$artifact_sha" ]]; then
+      print_warning "validate.sh sha256 differs from --expect-sha (expected '$expect_sha', artifact recorded '$artifact_sha'). Not a failure: only tree_sha is enforced."
+    fi
   fi
 
   if [[ -n "$problem" ]]; then
