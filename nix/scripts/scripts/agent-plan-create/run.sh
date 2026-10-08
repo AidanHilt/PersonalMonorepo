@@ -242,6 +242,17 @@ classify_paths() {
   done
 }
 
+relativize_paths() {                                                                                                                                                        
+  local repo_root="$1" name i                                                                                                                                               
+  for name in BASH_FILES GO_MODULE_DIRS YAML_FILES HELM_CHART_DIRS NIX_FILES NIX_FLAKE_DIRS TF_DIRS DOCKERFILES; do                                                                                                                                  
+    local -n arr="$name"                                                                                                                                                    
+    for i in "${!arr[@]}"; do                                                                                                                                               
+      arr[i]="$(realpath -m --relative-to="$repo_root" -- "${arr[i]}")"                                                                                                     
+    done                                                                                                                                                                    
+    unset -n arr                                                                                                                                                            
+  done                                                                                                                                                                      
+}  
+
 # --- required tool computation ---------------------------------------------
 
 required_tools_for_profiles() {
@@ -514,6 +525,10 @@ compute_tree_sha() {
 }
 
 VALIDATE_BODY
+  cd "$(git rev-parse --show-toplevel)" || {                                                                                                                                  
+    printf 'Not inside a git work tree\n' >&2                                                                                                                                 
+    exit 20                                                                                                                                                                   
+  }   
 
   printf '\n# --- FORMAT phase (mutating; reformatting itself is not a failure) --------\n\n'
   emit_format_phase
@@ -627,6 +642,7 @@ run_create() {
   fi
 
   classify_paths "$paths" "$repo_root"
+  relativize_paths "$repo_root"
 
   if [[ ${#UNKNOWN_PATHS[@]} -gt 0 ]]; then
     print_warning "No checks generated for: ${UNKNOWN_PATHS[*]}"

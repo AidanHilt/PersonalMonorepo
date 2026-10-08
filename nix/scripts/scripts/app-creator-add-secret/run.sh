@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # @lib: printing-and-output
-# @lib: modify-secret-values}
+# @lib: _modify-secret-values
 
 show_help() {
 	echo "Usage: $0 [OPTIONS]"

@@ -88,7 +88,6 @@
       "kubectl apply *": "deny",
       "kubectl delete *": "deny",
       "kubectl exec *": "deny",
-      "echo *": "deny",
       "cp *": "deny",
       "rm *": "deny",
       "mkdir *": "deny"

@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-# @lib: printing-and-output.printing-and-output
+# @lib: printing-and-output
 # @lib: modify-master-stack-values
 
 show_help() {
