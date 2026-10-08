@@ -21,30 +21,16 @@ permission:
     "bash ./validate.sh": allow
     "./validate.sh": allow
     "sudo *": deny
+    "git *": "allow",
     "git push*": deny
     "kubectl apply *": deny
     "kubectl delete *": deny
     "kubectl exec *": deny
-    # Read-only git, layered on top of the global "git *: deny" — these
-    # exact/prefix patterns override the broader deny for their own text.
-    "git status": allow
-    "git diff *": allow
-    "git log *": allow
-    "git show *": allow
-    "git branch": allow
-    "git blame *": allow
-    "git ls-files *": allow
-    "git remote -v": allow
     # Intentional delete permission. Rules are last-match-wins, so the
     # broader "rm *"/"git rm *" allows must come *before* the narrower
     # "rm -rf *" deny for the recursive-force case to still win.
     "rm *": allow
     "git rm *": allow
-    # Closes the `unlink` gap (see IMPROVEMENTS.md item 4 / RESEARCH-NOTES.md
-    # item 5): previously fell through to the bash "*" default instead of an
-    # explicit rule. Now an intentional, explicit allow.
-    "unlink *": allow
-    "rm -rf *": deny
     # Explicitly out of reach for this agent: installing tools and
     # requesting network domains are the main agent's job, done BEFORE
     # dispatch (see AGENTS.md); fetching things directly is never allowed;
