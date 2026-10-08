@@ -242,14 +242,18 @@ classify_paths() {
   done
 }
 
+relativize_array() {                                                                                                                                                        
+  local -n _rel_arr="$1"                                                                                                                                                    
+  local repo_root="$2" i                                                                                                                                                    
+  for i in "${!_rel_arr[@]}"; do                                                                                                                                            
+    _rel_arr[i]="$(realpath -m --relative-to="$repo_root" -- "${_rel_arr[i]}")"                                                                                             
+  done                                                                                                                                                                      
+} 
+
 relativize_paths() {                                                                                                                                                        
-  local repo_root="$1" name i                                                                                                                                               
+  local repo_root="$1" name                                                                                                                                                 
   for name in BASH_FILES GO_MODULE_DIRS YAML_FILES HELM_CHART_DIRS NIX_FILES NIX_FLAKE_DIRS TF_DIRS DOCKERFILES; do                                                                                                                                  
-    local -n arr="$name"                                                                                                                                                    
-    for i in "${!arr[@]}"; do                                                                                                                                               
-      arr[i]="$(realpath -m --relative-to="$repo_root" -- "${arr[i]}")"                                                                                                     
-    done                                                                                                                                                                    
-    unset -n arr                                                                                                                                                            
+    relativize_array "$name" "$repo_root"                                                                                                                                   
   done                                                                                                                                                                      
 }  
 
