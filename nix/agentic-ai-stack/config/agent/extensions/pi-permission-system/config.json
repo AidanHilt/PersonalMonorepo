@@ -94,7 +94,8 @@
       "mkdir *": "deny"
     },
     "external_directory_read": {
-      "/home/pi/.pi/*": "allow"
+      "/home/pi/.pi/*": "allow",
+      "/tmp/*": "allow"
     },
     "external_directory_write": {
       "*": "deny"

@@ -171,16 +171,16 @@ classify_file() {
     fi
     return
     ;;
+  Chart.yaml)
+    add_unique HELM_CHART_DIRS "$dir"
+    return
+    ;;
   *.yaml | *.yml)
     add_unique YAML_FILES "$f"
     local chart_dir
     if chart_dir="$(walk_up_for_marker "$dir" "Chart.yaml" "$repo_root")"; then
       add_unique HELM_CHART_DIRS "$chart_dir"
     fi
-    return
-    ;;
-  Chart.yaml)
-    add_unique HELM_CHART_DIRS "$dir"
     return
     ;;
   *.nix)
@@ -699,12 +699,17 @@ run_create() {
 
     printf '\n## Definition of Done\n\n'
     printf -- '- The plan above is implemented.\n'
+    # shellcheck disable=SC2016
     printf -- '- `./validate.sh` (written byte-for-byte from the fenced block below) exits 0 and `.agent/validated.json` exists.\n'
+    # shellcheck disable=SC2016
     printf -- '- Your final report includes the exit code of the last `validate.sh` run, the failure count, and whether the artifact was written.\n'
 
     printf '\n## validate.sh\n\n'
+    # shellcheck disable=SC2016
     printf 'Write the following script byte-for-byte to `./validate.sh` (do not edit it, do not add or remove checks), then run it as `bash ./validate.sh`. It is the only command you may run in bash.\n\n'
+    # shellcheck disable=SC2016
     printf 'Expected sha256 of validate.sh once written: `%s`\n\n' "$validate_sha"
+    # shellcheck disable=SC2016
     printf '```bash\n%s\n```\n' "$validate_script"
   }
 

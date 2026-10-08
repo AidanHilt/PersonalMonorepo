@@ -201,6 +201,10 @@ services:
     networks:
       - internal # no `external` network attachment — no direct internet route
     environment:
+      GIT_AUTHOR_NAME: agentic-ai-stack
+      GIT_AUTHOR_EMAIL: noemail@nodomain.com
+      GIT_COMMITTER_NAME: Aidan Hilt
+      GIT_COMMITTER_EMAIL: aidanhilt2@gmail.com
       HTTPS_PROXY: "http://proxy:3128"
       HTTP_PROXY: "http://proxy:3128"
       NO_PROXY: "proxy,pkg-broker"

@@ -87,6 +87,7 @@ let
 
     paths = [
       scripts.packages.${pkgs.system}.agent-plan-create
+      scripts.packages.${pkgs.system}.agent-stage
       # pkg-install (nix/scripts/scripts/pkg-install) is the only client
       # of the pkg-broker sidecar service (see
       # containers/pkg-broker/README.md, PROJECT-SPEC.md). It is
