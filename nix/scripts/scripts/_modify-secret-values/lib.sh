@@ -1,6 +1,8 @@
 #!/bin/bash
+# Concatenated into writeShellApplication's run.sh, which applies
+# set -euo pipefail; keep this safe under those options.
 
-_modify-secret-values() {
+modify-secret-values() {
   local YQ_STRING="$1"
   local FILE_NAME="$2"
 

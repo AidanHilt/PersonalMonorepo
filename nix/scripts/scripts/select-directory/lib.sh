@@ -1,20 +1,25 @@
 #!/bin/bash
+# Concatenated into writeShellApplication's run.sh, which applies
+# set -euo pipefail; keep this safe under those options.
 
 select-directory() {
   echo "Available directories in $OUTPUT_DIR:"
   local dirs=()
   local i=1
+  local rel_path
+  local choice
+  local new_dir
 
   # Find all directories (including subdirectories)
   while IFS= read -r -d "" dir; do
     # Get relative path from modules directory
-    rel_path="''${dir#"$OUTPUT_DIR"/}"
+    rel_path="${dir#"$OUTPUT_DIR"/}"
     dirs+=("$rel_path")
     echo "$i) $rel_path"
     ((i++))
   done < <(find "$OUTPUT_DIR" -type d -not -path "$OUTPUT_DIR" -print0 | sort -z)
 
-  if [[ ''${#dirs[@]} -eq 0 ]]; then
+  if [[ ${#dirs[@]} -eq 0 ]]; then
     SELECTED_DIR="$OUTPUT_DIR"
   else
     echo "$i) Create new directory"

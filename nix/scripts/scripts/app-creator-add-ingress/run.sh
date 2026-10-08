@@ -136,4 +136,4 @@ if [[ "$DESTINATION_PORT" != 80 ]]; then
   ISTIO_YQ_STRING+="| .$APP_NAME.destinationPort=\"$DESTINATION_PORT\""
 fi
 
-_modify-ingress-values "$ISTIO_YQ_STRING" "$ISTIO_VALUES_FILE"
+modify-ingress-values "$ISTIO_YQ_STRING" "$ISTIO_VALUES_FILE"
