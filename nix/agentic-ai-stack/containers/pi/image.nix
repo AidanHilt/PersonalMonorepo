@@ -104,6 +104,7 @@ let
       pkgs.bash
       pkgs.cacert
       pkgs.socat
+      pkgs.findutils
       passwdFile
       groupFile
       entrypoint
