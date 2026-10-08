@@ -279,14 +279,15 @@ required_tools_for_profiles() {
 # a runtime re-scan. Phases run in a fixed global order: all FORMAT checks
 # across every profile, then all LINT checks, then all BUILD/TEST checks.
 
-quote_list() {
-  # Shell-quotes each argument on its own for safe embedding in the
-  # generated script (printf %q is bash-specific but validate.sh is bash).
-  local x
-  for x in "$@"; do
-    printf '%q ' "$x"
-  done
-}
+quote_list() {                                                                                                                                                              
+  # Shell-quotes each argument and joins them with single spaces, with no                                                                                                   
+  # trailing space (trailing whitespace does not survive prompt transport).                                                                                                 
+  local out="" x                                                                                                                                                            
+  for x in "$@"; do                                                                                                                                                         
+    out+="$(printf '%q' "$x") "                                                                                                                                             
+  done                                                                                                                                                                      
+  printf '%s' "${out% }"                                                                                                                                                    
+}  
 
 emit_format_phase() {
   if [[ ${#BASH_FILES[@]} -gt 0 ]]; then
