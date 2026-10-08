@@ -45,6 +45,7 @@
     },
     "bash": {
       "*": "ask",
+      "rg": "allow",
       "find *": "deny",
       "cd *": "allow",
       "ls *": "allow",

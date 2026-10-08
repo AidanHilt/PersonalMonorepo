@@ -242,20 +242,20 @@ classify_paths() {
   done
 }
 
-relativize_array() {                                                                                                                                                        
-  local -n _rel_arr="$1"                                                                                                                                                    
-  local repo_root="$2" i                                                                                                                                                    
-  for i in "${!_rel_arr[@]}"; do                                                                                                                                            
-    _rel_arr[i]="$(realpath -m --relative-to="$repo_root" -- "${_rel_arr[i]}")"                                                                                             
-  done                                                                                                                                                                      
-} 
+relativize_array() {
+  local -n _rel_arr="$1"
+  local repo_root="$2" i
+  for i in "${!_rel_arr[@]}"; do
+    _rel_arr[i]="$(realpath -m --relative-to="$repo_root" -- "${_rel_arr[i]}")"
+  done
+}
 
-relativize_paths() {                                                                                                                                                        
-  local repo_root="$1" name                                                                                                                                                 
-  for name in BASH_FILES GO_MODULE_DIRS YAML_FILES HELM_CHART_DIRS NIX_FILES NIX_FLAKE_DIRS TF_DIRS DOCKERFILES; do                                                                                                                                  
-    relativize_array "$name" "$repo_root"                                                                                                                                   
-  done                                                                                                                                                                      
-}  
+relativize_paths() {
+  local repo_root="$1" name
+  for name in BASH_FILES GO_MODULE_DIRS YAML_FILES HELM_CHART_DIRS NIX_FILES NIX_FLAKE_DIRS TF_DIRS DOCKERFILES; do
+    relativize_array "$name" "$repo_root"
+  done
+}
 
 # --- required tool computation ---------------------------------------------
 
@@ -378,9 +378,9 @@ emit_build_test_phase() {
 }
 
 any_checks_emitted() {
-  [[ ${#BASH_FILES[@]} -gt 0 || ${#GO_MODULE_DIRS[@]} -gt 0 || ${#YAML_FILES[@]} -gt 0 \
-    || ${#HELM_CHART_DIRS[@]} -gt 0 || ${#NIX_FILES[@]} -gt 0 || ${#NIX_FLAKE_DIRS[@]} -gt 0 \
-    || ${#TF_DIRS[@]} -gt 0 || ${#DOCKERFILES[@]} -gt 0 ]]
+  [[ ${#BASH_FILES[@]} -gt 0 || ${#GO_MODULE_DIRS[@]} -gt 0 || ${#YAML_FILES[@]} -gt 0 ||
+    ${#HELM_CHART_DIRS[@]} -gt 0 || ${#NIX_FILES[@]} -gt 0 || ${#NIX_FLAKE_DIRS[@]} -gt 0 ||
+    ${#TF_DIRS[@]} -gt 0 || ${#DOCKERFILES[@]} -gt 0 ]]
 }
 
 generate_validate_script() {
@@ -517,25 +517,25 @@ rm -f "$ARTIFACT"
 
 # --- tree_sha helper (excludes .agent/ and validate.sh) ---------------------
 
-compute_tree_sha() {                                                                                                                                                        
-  local tmp_index                                                                                                                                                           
-  tmp_index="$(mktemp -u)"                                                                                                                                                  
-  # Seed from HEAD so tracked-but-gitignored files (e.g. .secrets.baseline)                                                                                                 
-  # are kept, matching what the worktree commit records.                                                                                                                    
-  GIT_INDEX_FILE="$tmp_index" git read-tree HEAD >/dev/null 2>&1 || true                                                                                                    
-  GIT_INDEX_FILE="$tmp_index" git add -A -- :/ >/dev/null 2>&1 || true                                                                                                      
-  GIT_INDEX_FILE="$tmp_index" git rm -r --cached --ignore-unmatch -q .agent validate.sh >/dev/null 2>&1 || true                                                             
-  GIT_INDEX_FILE="$tmp_index" git write-tree 2>/dev/null                                                                                                                    
-  local rc=$?                                                                                                                                                               
-  rm -f "$tmp_index"                                                                                                                                                        
-  return $rc                                                                                                                                                                
-}  
+compute_tree_sha() {
+  local tmp_index
+  tmp_index="$(mktemp -u)"
+  # Seed from HEAD so tracked-but-gitignored files (e.g. .secrets.baseline)
+  # are kept, matching what the worktree commit records.
+  GIT_INDEX_FILE="$tmp_index" git read-tree HEAD >/dev/null 2>&1 || true
+  GIT_INDEX_FILE="$tmp_index" git add -A -- :/ >/dev/null 2>&1 || true
+  GIT_INDEX_FILE="$tmp_index" git rm -r --cached --ignore-unmatch -q .agent validate.sh >/dev/null 2>&1 || true
+  GIT_INDEX_FILE="$tmp_index" git write-tree 2>/dev/null
+  local rc=$?
+  rm -f "$tmp_index"
+  return $rc
+}
 
 VALIDATE_BODY
-  cd "$(git rev-parse --show-toplevel)" || {                                                                                                                                  
-    printf 'Not inside a git work tree\n' >&2                                                                                                                                 
-    exit 20                                                                                                                                                                   
-  }   
+  cd "$(git rev-parse --show-toplevel)" || {
+    printf 'Not inside a git work tree\n' >&2
+    exit 20
+  }
 
   printf '\n# --- FORMAT phase (mutating; reformatting itself is not a failure) --------\n\n'
   emit_format_phase
