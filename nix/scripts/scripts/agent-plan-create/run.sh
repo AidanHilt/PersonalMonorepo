@@ -279,15 +279,15 @@ required_tools_for_profiles() {
 # a runtime re-scan. Phases run in a fixed global order: all FORMAT checks
 # across every profile, then all LINT checks, then all BUILD/TEST checks.
 
-quote_list() {                                                                                                                                                              
-  # Shell-quotes each argument and joins them with single spaces, with no                                                                                                   
-  # trailing space (trailing whitespace does not survive prompt transport).                                                                                                 
-  local out="" x                                                                                                                                                            
-  for x in "$@"; do                                                                                                                                                         
-    out+="$(printf '%q' "$x") "                                                                                                                                             
-  done                                                                                                                                                                      
-  printf '%s' "${out% }"                                                                                                                                                    
-}  
+quote_list() {
+  # Shell-quotes each argument and joins them with single spaces, with no
+  # trailing space (trailing whitespace does not survive prompt transport).
+  local out="" x
+  for x in "$@"; do
+    out+="$(printf '%q' "$x") "
+  done
+  printf '%s' "${out% }"
+}
 
 emit_format_phase() {
   if [[ ${#BASH_FILES[@]} -gt 0 ]]; then
@@ -406,19 +406,23 @@ failcount_file() {
 }
 
 read_failcount() {
-  local f
+  local f count
   f="$(failcount_file)"
   if [[ -f "$f" ]]; then
-    cat "$f"
+    count="$(cat "$f")" || die_artifact "could not read failure count from $f"
   else
-    printf '0\n'
+    count=0
   fi
+  if [[ ! "$count" =~ ^[0-9]+$ ]]; then
+    die_artifact "$f contains a non-numeric failure count ('$count')"
+  fi
+  printf '%s\n' "$count"
 }
 
 write_failcount() {
   local f
   f="$(failcount_file)"
-  printf '%s\n' "$1" >"$f"
+  printf '%s\n' "$1" >"$f" || die_artifact "could not write failure count to $f"
 }
 
 classify_error() {
@@ -485,6 +489,16 @@ run_check() {
   fi
 }
 
+# An expected artifact value (validate_sha, tree_sha, timestamp, or a tool
+# version) could not be computed. Silent degradation (writing "unknown" or
+# an empty value) is unacceptable, so abort instead: remove any partial
+# artifact and exit with a dedicated code rather than exit 0 or 10.
+die_artifact() {
+  printf 'ARTIFACT ERROR: %s\n' "$1" >&2
+  rm -f "$ARTIFACT"
+  exit 23
+}
+
 VALIDATE_HEADER
 
   printf '\n# --- required tools ---------------------------------------------------------\n\n'
@@ -519,17 +533,42 @@ rm -f "$ARTIFACT"
 # --- tree_sha helper (excludes .agent/ and validate.sh) ---------------------
 
 compute_tree_sha() {
-  local tmp_index
+  local tmp_index out rc
   tmp_index="$(mktemp -u)"
   # Seed from HEAD so tracked-but-gitignored files (e.g. .secrets.baseline)
   # are kept, matching what the worktree commit records.
-  GIT_INDEX_FILE="$tmp_index" git read-tree HEAD >/dev/null 2>&1 || true
-  GIT_INDEX_FILE="$tmp_index" git add -A -- :/ >/dev/null 2>&1 || true
-  GIT_INDEX_FILE="$tmp_index" git rm -r --cached --ignore-unmatch -q .agent validate.sh >/dev/null 2>&1 || true
-  GIT_INDEX_FILE="$tmp_index" git write-tree 2>/dev/null
-  local rc=$?
+  out="$(GIT_INDEX_FILE="$tmp_index" git read-tree HEAD 2>&1)"
+  rc=$?
+  if [[ $rc -ne 0 ]]; then
+    printf '%s\n' "$out" >&2
+    rm -f "$tmp_index"
+    return $rc
+  fi
+  out="$(GIT_INDEX_FILE="$tmp_index" git add -A -- :/ 2>&1)"
+  rc=$?
+  if [[ $rc -ne 0 ]]; then
+    printf '%s\n' "$out" >&2
+    rm -f "$tmp_index"
+    return $rc
+  fi
+  # --ignore-unmatch legitimately may match nothing (no .agent/validate.sh
+  # tracked yet), but any other failure must still propagate.
+  out="$(GIT_INDEX_FILE="$tmp_index" git rm -r --cached --ignore-unmatch -q .agent validate.sh 2>&1)"
+  rc=$?
+  if [[ $rc -ne 0 ]]; then
+    printf '%s\n' "$out" >&2
+    rm -f "$tmp_index"
+    return $rc
+  fi
+  out="$(GIT_INDEX_FILE="$tmp_index" git write-tree 2>&1)"
+  rc=$?
   rm -f "$tmp_index"
-  return $rc
+  if [[ $rc -ne 0 ]]; then
+    printf '%s\n' "$out" >&2
+    return $rc
+  fi
+  printf '%s\n' "$out"
+  return 0
 }
 
 VALIDATE_BODY
@@ -550,21 +589,61 @@ VALIDATE_BODY
   cat <<'VALIDATE_FOOTER'
 
 # --- all phases passed: write the artifact ----------------------------------
+#
+# Every value below is required for the artifact to be trustworthy. Silent
+# degradation (empty strings, "unknown", or an empty tool_versions object)
+# is unacceptable -- if a value can't be computed exactly as expected,
+# die_artifact aborts (exit 23) instead of writing a degraded artifact.
 
 mkdir -p .agent
-validate_sha="$(sha256sum validate.sh 2>/dev/null | cut -d' ' -f1)"
-tree_sha="$(compute_tree_sha || echo "unknown")"
-ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-tool_versions="{}"
-if command -v jq >/dev/null 2>&1; then
-  tool_versions_obj="{}"
-  for t in "${REQUIRED_TOOLS[@]}"; do
-    v="$("$t" --version 2>&1 | head -1 || true)"
-    tool_versions_obj="$(printf '%s' "$tool_versions_obj" | jq --arg k "$t" --arg v "$v" '. + {($k): $v}')"
-  done
-  tool_versions="$tool_versions_obj"
+validate_sha="$(sha256sum validate.sh | cut -d' ' -f1)" || die_artifact "sha256sum validate.sh failed"
+if [[ ! "$validate_sha" =~ ^[0-9a-f]{64}$ ]]; then
+  die_artifact "validate_sh_sha256 did not come out as a 64-hex-digit sha256 ('$validate_sha')"
 fi
+
+tree_sha="$(compute_tree_sha)" || die_artifact "compute_tree_sha failed"
+if [[ ! "$tree_sha" =~ ^[0-9a-f]{40,64}$ ]]; then
+  die_artifact "tree_sha did not come out as a git tree object id ('$tree_sha')"
+fi
+
+ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)" || die_artifact "date failed"
+if [[ ! "$ts" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]; then
+  die_artifact "timestamp did not come out in the expected UTC format ('$ts')"
+fi
+
+# Per-tool version lookups: most tools support --version, but a handful
+# need a different invocation. Falls through to "<tool> --version" for
+# anything not special-cased.
+tool_version() {
+  local t="$1"
+  case "$t" in
+  go)
+    go version 2>&1 | head -1
+    ;;
+  helm)
+    helm version --short 2>&1 | head -1
+    ;;
+  kubeconform)
+    kubeconform -v 2>&1 | head -1
+    ;;
+  *)
+    "$t" --version 2>&1 | head -1
+    ;;
+  esac
+}
+
+tool_versions_obj="{}"
+for t in "${REQUIRED_TOOLS[@]}"; do
+  v="$(tool_version "$t")"
+  rc=$?
+  if [[ $rc -ne 0 || -z "$v" ]]; then
+    die_artifact "could not determine a version string for required tool '$t' (exit $rc, output: '$v')"
+  fi
+  tool_versions_obj="$(printf '%s' "$tool_versions_obj" | jq --arg k "$t" --arg v "$v" '. + {($k): $v}')" ||
+    die_artifact "jq failed while recording the version of '$t'"
+done
+tool_versions="$tool_versions_obj"
 
 {
   printf '{\n'
@@ -575,7 +654,7 @@ fi
   printf '  "results": [%s],\n' "$(IFS=,; echo "${RESULTS[*]+"${RESULTS[*]}"}")"
   printf '  "tool_versions": %s\n' "$tool_versions"
   printf '}\n'
-} >"$ARTIFACT"
+} >"$ARTIFACT" || die_artifact "failed to write $ARTIFACT"
 
 printf 'All checks passed. Wrote %s\n' "$ARTIFACT"
 write_failcount 0
@@ -667,8 +746,12 @@ run_create() {
   else
     extra_list=()
   fi
+  # Baseline tools validate.sh itself always relies on (failcount/artifact
+  # bookkeeping, tree_sha computation, tool-version reporting), regardless
+  # of which file-type profiles were detected.
+  local baseline_tools=(git jq sha256sum cut head tail grep mktemp date cat)
   local t
-  for t in "${tools_list[@]+"${tools_list[@]}"}" "${extra_list[@]+"${extra_list[@]}"}"; do
+  for t in "${tools_list[@]+"${tools_list[@]}"}" "${extra_list[@]+"${extra_list[@]}"}" "${baseline_tools[@]}"; do
     [[ -z "$t" ]] && continue
     array_contains "$t" "${all_tools[@]+"${all_tools[@]}"}" || all_tools+=("$t")
   done

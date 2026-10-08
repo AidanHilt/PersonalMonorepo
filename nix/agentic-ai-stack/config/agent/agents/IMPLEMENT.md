@@ -120,10 +120,13 @@ command through a different wrapper or shell trick.
    - `20` — a required tool is missing (you cannot install it).
    - `21` — a network error (you cannot request more domains).
    - `22` — a permission error.
+   - `23` — an expected artifact value could not be computed; validate.sh
+     aborted without writing the artifact rather than degrade it
+     silently.
    - `99` — the 10-failed-run budget is exhausted.
    Likewise stop and report once you've accumulated 10 failed
-   (non-zero, non-20/21/22) `validate.sh` runs even if the script itself
-   hasn't yet reported exit 99.
+   (non-zero, non-20/21/22/23) `validate.sh` runs even if the script
+   itself hasn't yet reported exit 99.
 5. If a step in the plan cannot be completed for a reason other than the
    above — a conflict with the current state of the repo, a genuinely
    missing piece of context — stop and report the failure clearly rather

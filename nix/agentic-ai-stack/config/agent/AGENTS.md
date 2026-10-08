@@ -96,7 +96,10 @@ tree excluding `.agent/` and `validate.sh`, per-check results, tool
 versions, and a timestamp). Exit codes: `0` everything passed and the
 artifact was written; `10` a check failed (counts against a 10-failed-run
 budget); `20` a required tool is missing; `21` a network error; `22` a
-permission error; `99` the failure budget is exhausted. `agent-stage`
+permission error; `23` an expected artifact value (validate_sha, tree_sha,
+timestamp, or a tool version) could not be computed -- validate.sh aborted
+without writing the artifact rather than degrade it silently; `99` the
+failure budget is exhausted. `agent-stage`
 recomputes that same `tree_sha` from the branch itself before staging, so a
 mismatch (or missing artifact) means the branch's working tree moved after
 validate.sh last ran clean -- don't take that on faith.
