@@ -21,8 +21,8 @@ permission:
     "bash ./validate.sh": allow
     "./validate.sh": allow
     "sudo *": deny
-    "git *": allow,
-    "git push*": deny,
+    "git *": allow
+    "git push*": deny
     "kubectl apply *": deny
     "kubectl delete *": deny
     "kubectl exec *": deny
