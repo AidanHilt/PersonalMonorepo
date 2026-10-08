@@ -290,7 +290,7 @@ quote_list() {
 
 emit_format_phase() {
   if [[ ${#BASH_FILES[@]} -gt 0 ]]; then
-    printf 'run_check FORMAT "shfmt" shfmt -w %s\n' "$(quote_list "${BASH_FILES[@]}")"
+    printf 'run_check FORMAT "shfmt" shfmt -i 2 -w %s\n' "$(quote_list "${BASH_FILES[@]}")"
   fi
   if [[ ${#GO_MODULE_DIRS[@]} -gt 0 ]]; then
     local d
@@ -517,16 +517,19 @@ rm -f "$ARTIFACT"
 
 # --- tree_sha helper (excludes .agent/ and validate.sh) ---------------------
 
-compute_tree_sha() {
-  local tmp_index
-  tmp_index="$(mktemp -u)"
-  GIT_INDEX_FILE="$tmp_index" git add -A -- . >/dev/null 2>&1 || true
-  GIT_INDEX_FILE="$tmp_index" git rm -r --cached --ignore-unmatch -q .agent validate.sh >/dev/null 2>&1 || true
-  GIT_INDEX_FILE="$tmp_index" git write-tree 2>/dev/null
-  local rc=$?
-  rm -f "$tmp_index"
-  return $rc
-}
+compute_tree_sha() {                                                                                                                                                        
+  local tmp_index                                                                                                                                                           
+  tmp_index="$(mktemp -u)"                                                                                                                                                  
+  # Seed from HEAD so tracked-but-gitignored files (e.g. .secrets.baseline)                                                                                                 
+  # are kept, matching what the worktree commit records.                                                                                                                    
+  GIT_INDEX_FILE="$tmp_index" git read-tree HEAD >/dev/null 2>&1 || true                                                                                                    
+  GIT_INDEX_FILE="$tmp_index" git add -A -- :/ >/dev/null 2>&1 || true                                                                                                      
+  GIT_INDEX_FILE="$tmp_index" git rm -r --cached --ignore-unmatch -q .agent validate.sh >/dev/null 2>&1 || true                                                             
+  GIT_INDEX_FILE="$tmp_index" git write-tree 2>/dev/null                                                                                                                    
+  local rc=$?                                                                                                                                                               
+  rm -f "$tmp_index"                                                                                                                                                        
+  return $rc                                                                                                                                                                
+}  
 
 VALIDATE_BODY
   cd "$(git rev-parse --show-toplevel)" || {                                                                                                                                  
