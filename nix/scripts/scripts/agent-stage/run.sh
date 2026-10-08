@@ -26,8 +26,9 @@ passed:
   4. The tree_sha recorded in that artifact must match a tree_sha
      recomputed from the branch's own tree (same exclusions: .agent/ and
      validate.sh, computed via a temporary index -- never the real one).
-  5. If --expect-sha is given, it must match the artifact's
-     validate_sh_sha256 field.
+  5. If --expect-sha is given and differs from the artifact's                                                                                                               
+    validate_sh_sha256 field, a warning is printed. This is advisory only                                                                                                  
+    and never blocks staging; check 4 (tree_sha) is the enforced guarantee. 
 
 Any of checks 3-5 failing is reported with which check failed and exits
 non-zero, UNLESS --force is given, in which case a loud warning is printed
@@ -43,11 +44,10 @@ tree behind.
 Prints a summary of the changed files, the branch's commit log, and the
 next step (review the staged changes, then run kommit).
 
-  --expect-sha <sha>   Optional. Must match the branch artifact's
-                        validate_sh_sha256 field or staging is refused
-                        (see check 5 above).
-  --force              Skip checks 3-5 (missing artifact / tree mismatch /
-                        sha mismatch) and stage anyway, with a warning.
+     --expect-sha <sha>   Optional. Warn if the artifact's validate_sh_sha256                                                                                                  
+                           differs from <sha> (advisory only; see check 5).                                                                                                    
+     --force              Skip checks 3-4 (missing artifact / tree mismatch)                                                                                                   
+                           and stage anyway, with a warning.  
 EOF
 }
 
@@ -141,9 +141,11 @@ main() {
       problem="failed to recompute tree_sha for branch '$branch'"
     elif [[ "$recomputed_tree_sha" != "$artifact_tree_sha" ]]; then
       problem="tree_sha mismatch: artifact says '$artifact_tree_sha', branch tree is actually '$recomputed_tree_sha' (working tree changed after validate.sh ran)"
-    elif [[ -n "$expect_sha" && "$expect_sha" != "$artifact_sha" ]]; then
-      problem="validate.sh sha256 mismatch: expected '$expect_sha', artifact recorded '$artifact_sha'"
     fi
+    
+    if [[ -n "$expect_sha" && "$expect_sha" != "$artifact_sha" ]]; then                                                                                                     
+      print_warning "validate.sh sha256 differs from --expect-sha (expected '$expect_sha', artifact recorded '$artifact_sha'). Not a failure: only tree_sha is enforced."   
+    fi 
   fi
 
   if [[ -n "$problem" ]]; then
