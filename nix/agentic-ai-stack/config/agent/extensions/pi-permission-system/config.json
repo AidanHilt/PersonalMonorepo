@@ -98,6 +98,7 @@
       "/tmp/*": "allow"
     },
     "external_directory_write": {
+      "/tmp/*": "allow",
       "*": "deny"
     }
   }
