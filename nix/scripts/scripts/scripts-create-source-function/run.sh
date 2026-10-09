@@ -1,38 +1,20 @@
 #!/bin/bash
 
 # @lib: printing-and-output
+# @lib: args-and-help
 
 set -euo pipefail
 
-show_help () {
-  echo "Usage: $0 [OPTIONS]"
-  echo ""
-  echo "Create a new source function directory with a blank source.sh file"
-  echo ""
-  echo ""
-  echo "OPTIONS:"
-  echo "  --source-function-name <name>   Name of the source function to create (prompted if omitted)"
-  echo "  --help, -h                        Show this help message"
-}
-
 SOURCE_FUNCTION_NAME_ARG=""
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    --source-function-name)
-      SOURCE_FUNCTION_NAME_ARG="$2"
-      shift 2
-      ;;
-    --help|-h)
-      show_help
-      exit 0
-      ;;
-    *)
-      print_error "Unknown option: $1"
-      exit 1
-      ;;
-  esac
-done
+args_description "Create a new source function directory with a blank source.sh file"
+args_example "$(basename "$0") --source-function-name my-function"
+args_value "" "--source-function-name" SOURCE_FUNCTION_NAME_ARG "NAME" "Name of the source function to create (prompted if omitted)"
+
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
+}
 
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must be set}"
 

@@ -2,41 +2,25 @@
 
 set -euo pipefail
 
+# @lib: printing-and-output
+# @lib: args-and-help
+
 if [[ -z "${ATILS_CONTEXTS_DIRECTORY}" ]]; then
   echo "Error: ATILS_CONTEXTS_DIRECTORY environment variable is not set"
   echo "Please set it to your desired contexts directory path"
   exit 1
 fi
 
-show_usage() {
-  echo "Usage: $0 --context <context_name>"
-  echo "     $0 -c <context_name>"
-  echo
-  echo "Options:"
-  echo "  --name, -n  Name of the context to delete"
-  echo "  --help, -h     Show this help message"
-  echo
-}
-
 CONTEXT_NAME=""
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  --name | -n)
-    CONTEXT_NAME="$2"
-    shift 2
-    ;;
-  --help | -h)
-    show_usage
-    exit 0
-    ;;
-  *)
-    echo "Error: Unknown option $1"
-    show_usage
-    exit 1
-    ;;
-  esac
-done
+args_description "Delete a context directory."
+args_example "$(basename "$0") -n my-context"
+args_value "-n" "--name" CONTEXT_NAME "NAME" "Name of the context to delete"
+
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
+}
 
 if [[ -z "$CONTEXT_NAME" ]]; then
   _context-context-selector
