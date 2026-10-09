@@ -105,6 +105,7 @@ let
       pkgs.cacert
       pkgs.socat
       pkgs.jq
+      pkgs.gnugrep
       pkgs.findutils
       passwdFile
       groupFile
