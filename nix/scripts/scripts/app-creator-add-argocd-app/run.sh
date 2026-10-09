@@ -4,6 +4,7 @@ set -euo pipefail
 
 # @lib: printing-and-output
 # @lib: modify-master-stack-values
+# @lib: env-checks
 
 show_help() {
   echo "Usage: $0 [OPTIONS]"
@@ -105,6 +106,8 @@ while [[ $# -gt 0 ]]; do
     ;;
   esac
 done
+
+require_monorepo
 
 if [[ -z "$app_name" ]]; then
   read -rp "Enter the name of your app: " app_name

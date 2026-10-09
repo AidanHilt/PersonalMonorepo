@@ -4,6 +4,7 @@ set -euo pipefail
 
 # @lib: printing-and-output
 # @lib: args-and-help
+# @lib: env-checks
 
 # Default values
 IP_ADDRESS=""
@@ -23,11 +24,7 @@ args_parse "$@" || {
 # Environment variables:
 #   PERSONAL_MONOREPO_LOCATION  Path to your personal monorepo
 
-# Check if PERSONAL_MONOREPO_LOCATION is set
-if [[ -z "${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
-  echo "Error: PERSONAL_MONOREPO_LOCATION environment variable is not set"
-  exit 1
-fi
+require_monorepo
 
 MACHINES_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/machines"
 

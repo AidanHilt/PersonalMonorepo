@@ -5,8 +5,7 @@ set -euo pipefail
 # @lib: printing-and-output
 # @lib: args-and-help
 # @lib: modify-ingress-values
-
-ISTIO_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/istio-ingress-config/values.yaml
+# @lib: env-checks
 
 APP_NAME=""
 PREFIXES=()
@@ -27,6 +26,10 @@ args_parse "$@" || {
   rc=$?
   exit "$(args_rc "$rc")"
 }
+
+require_monorepo
+
+ISTIO_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/istio-ingress-config/values.yaml
 
 if [[ -z "$APP_NAME" ]]; then
   read -rp "Enter the name of the app: " APP_NAME

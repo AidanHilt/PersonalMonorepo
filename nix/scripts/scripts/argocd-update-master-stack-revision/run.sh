@@ -3,6 +3,7 @@
 set -euo pipefail
 
 # @lib: printing-and-output
+# @lib: env-checks
 
 CURRENT_BRANCH=""
 
@@ -32,6 +33,8 @@ while [[ $# -gt 0 ]]; do
     ;;
   esac
 done
+
+require_monorepo
 
 cd "$PERSONAL_MONOREPO_LOCATION" || {
   print_error "Failed to change directory to $PERSONAL_MONOREPO_LOCATION"

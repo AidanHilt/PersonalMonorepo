@@ -2,10 +2,11 @@
 
 # @lib: printing-and-output
 # @lib: args-and-help
+# @lib: env-checks
 
 set -euo pipefail
 
-flake_path="${PERSONAL_MONOREPO_LOCATION}/nix/mono-flake"
+flake_path=""
 flake_attr="devbox"
 vm_name="devbox"
 cpu_count="6"
@@ -28,6 +29,11 @@ args_parse "$@" || {
   rc=$?
   exit "$(args_rc "$rc")"
 }
+
+if [[ -z "$flake_path" ]]; then
+  require_monorepo
+  flake_path="${PERSONAL_MONOREPO_LOCATION}/nix/mono-flake"
+fi
 
 readonly FLAKE_PATH="${flake_path}"
 readonly FLAKE_ATTR="${flake_attr}"

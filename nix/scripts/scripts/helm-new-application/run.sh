@@ -4,6 +4,7 @@ set -euo pipefail
 
 # @lib: printing-and-output
 # @lib: args-and-help
+# @lib: env-checks
 
 CHART_NAME=""
 #RESOURCE_TYPE=""
@@ -25,6 +26,8 @@ if [[ -z "$CHART_NAME" ]]; then
   print_error "Chart name cannot be empty"
   exit 1
 fi
+
+require_monorepo
 
 SOURCE_DIR="${PERSONAL_MONOREPO_LOCATION}/kubernetes/helm-charts/templates/application"
 DEST_DIR="${PERSONAL_MONOREPO_LOCATION}/kubernetes/helm-charts/applications/${CHART_NAME}"

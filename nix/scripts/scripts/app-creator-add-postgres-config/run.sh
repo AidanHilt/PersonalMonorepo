@@ -3,6 +3,7 @@
 set -euo pipefail
 
 # @lib: printing-and-output
+# @lib: env-checks
 
 show_help() {
   echo "Usage: $0 [OPTIONS]"
@@ -72,6 +73,8 @@ else
     esac
   done
 fi
+
+require_monorepo
 
 VALUES_FILE="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/postgres-config/values.yaml"
 

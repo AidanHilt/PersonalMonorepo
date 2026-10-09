@@ -5,6 +5,7 @@ set -euo pipefail
 # @lib: printing-and-output
 # @lib: args-and-help
 # @lib: _modify-secret-values
+# @lib: env-checks
 
 secret_name=""
 destination_namespace=""
@@ -34,6 +35,8 @@ args_parse "$@" || {
   rc=$?
   exit "$(args_rc "$rc")"
 }
+
+require_monorepo
 
 if [[ -z "$secret_name" ]]; then
   read -rp "Enter the name of the secret: " secret_name

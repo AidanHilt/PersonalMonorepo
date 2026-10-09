@@ -2,6 +2,7 @@
 
 # @lib: printing-and-output
 # @lib: args-and-help
+# @lib: env-checks
 
 set -euo pipefail
 
@@ -16,7 +17,7 @@ args_parse "$@" || {
   exit "$(args_rc "$rc")"
 }
 
-: "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must be set}"
+require_monorepo
 
 if [[ -z "$SOURCE_FUNCTION_NAME_ARG" ]]; then
   print_debug "No source function name provided, prompting user"

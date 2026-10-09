@@ -5,8 +5,7 @@ set -euo pipefail
 # @lib: printing-and-output
 # @lib: args-and-help
 # @lib: modify-ingress-values
-
-HOMEPAGE_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/homepage-config/values.yaml
+# @lib: env-checks
 
 APP_NAME=""
 PREFIX=""
@@ -29,6 +28,10 @@ args_parse "$@" || {
   rc=$?
   exit "$(args_rc "$rc")"
 }
+
+require_monorepo
+
+HOMEPAGE_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/homepage-config/values.yaml
 
 if [[ -z "$APP_NAME" ]]; then
   while true; do

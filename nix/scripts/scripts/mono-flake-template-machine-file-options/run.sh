@@ -33,7 +33,7 @@ fi
 # Step 2 & 3: Create newline-separated list of files with prepended/appended newlines
 # with relative paths from destination to options files
 FILE_LIST=""
-FILE_LIST+="\n"  # Prepend newline
+FILE_LIST+="\n" # Prepend newline
 
 # Get destination directory for relative path calculation
 DEST_DIR=$(dirname "$DESTINATION_FILE")
@@ -60,12 +60,12 @@ for file in "$OPTIONS_PATH"/*; do
   fi
 done
 
-FILE_LIST+="\n  "  # Append newline
+FILE_LIST+="\n  " # Append newline
 
 # Step 3: Export the target variable with the file list
 export "$TARGET_VARIABLE"="$FILE_LIST"
 
 # Step 4: Run envsubst on source file and copy result to destination
-envsubst < "$SOURCE_FILE" | awk '{gsub("\\\\n","\n")};1' > "$DESTINATION_FILE"
+envsubst <"$SOURCE_FILE" | awk '{gsub("\\\\n","\n")};1' >"$DESTINATION_FILE"
 
 echo "Successfully processed '$SOURCE_FILE' -> '$DESTINATION_FILE'"

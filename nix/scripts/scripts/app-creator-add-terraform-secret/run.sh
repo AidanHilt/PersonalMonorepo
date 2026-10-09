@@ -3,6 +3,7 @@
 set -euo pipefail
 
 # @lib: printing-and-output
+# @lib: env-checks
 
 show_help() {
   echo "Usage: $0 [OPTIONS]"
@@ -91,6 +92,8 @@ while [[ $# -gt 0 ]]; do
     ;;
   esac
 done
+
+require_monorepo
 
 if [ -z "$SECRET_NAME" ]; then
   SECRET_NAME="$(get_input "Enter secret name" "")"

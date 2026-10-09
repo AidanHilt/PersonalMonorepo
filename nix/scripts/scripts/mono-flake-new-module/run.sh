@@ -4,29 +4,9 @@ set -euo pipefail
 
 # @lib: printing-and-output
 # @lib: args-and-help
-
-# Check if PERSONAL_MONOREPO_LOCATION is set
-if [[ -z "$PERSONAL_MONOREPO_LOCATION" ]]; then
-  echo "Error: PERSONAL_MONOREPO_LOCATION environment variable is not set"
-  exit 1
-fi
-
-MODULES_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules"
-TEMPLATE_FILE="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/module.nix"
+# @lib: env-checks
 
 HOME_MANAGER=false
-
-# Check if template file exists
-if [[ ! -f "$TEMPLATE_FILE" ]]; then
-  echo "Error: Template file not found at $TEMPLATE_FILE"
-  exit 1
-fi
-
-# Check if modules directory exists
-if [[ ! -d "$MODULES_DIR" ]]; then
-  echo "Error: Modules directory not found at $MODULES_DIR"
-  exit 1
-fi
 
 # Function to select directory interactively
 select_directory() {
@@ -89,6 +69,23 @@ args_parse "$@" || {
   rc=$?
   exit "$(args_rc "$rc")"
 }
+
+require_monorepo
+
+MODULES_DIR="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/modules"
+TEMPLATE_FILE="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake/templates/module.nix"
+
+# Check if template file exists
+if [[ ! -f "$TEMPLATE_FILE" ]]; then
+  echo "Error: Template file not found at $TEMPLATE_FILE"
+  exit 1
+fi
+
+# Check if modules directory exists
+if [[ ! -d "$MODULES_DIR" ]]; then
+  echo "Error: Modules directory not found at $MODULES_DIR"
+  exit 1
+fi
 
 # If module path is provided, use it directly
 if [[ -n "$module_path" ]]; then
