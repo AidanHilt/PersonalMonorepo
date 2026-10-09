@@ -3,48 +3,21 @@
 set -euo pipefail
 
 # @lib: printing-and-output
+# @lib: args-and-help
 
 NAMESPACE=""
 PVC_NAME=""
 
-show_help() {
-  cat <<EOF
-Usage: $(basename "$0") [OPTIONS]
+args_description "Attach a debug shell to a pod mounting a Persistent Volume Claim, or spin up a temporary debug pod for it."
+args_example "$(basename "$0") -n production -p my-data-pvc"
+args_example "$(basename "$0") --namespace staging --pvc app-storage"
+args_value "-n" "--namespace" NAMESPACE "NAMESPACE" "Kubernetes namespace to use"
+args_value "-p" "--pvc" PVC_NAME "PVC_NAME" "Persistent Volume Claim name"
 
-Options:
-  -n, --namespace NAMESPACE
-                       Kubernetes namespace to use
-  -p, --pvc PVC_NAME   Persistent Volume Claim name
-  -h, --help           Display this help message and exit
-
-Example:
-  $(basename "$0") -n production -p my-data-pvc
-  $(basename "$0") --namespace staging --pvc app-storage
-
-EOF
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
 }
-
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  -n | --namespace)
-    NAMESPACE="$2"
-    shift 2
-    ;;
-  -p | --pvc)
-    PVC_NAME="$2"
-    shift 2
-    ;;
-  -h | --help)
-    show_help
-    exit 0
-    ;;
-  *)
-    print_error "Unknown option: $1"
-    echo "Use -h or --help for usage information"
-    exit 1
-    ;;
-  esac
-done
 
 if [ -z "$NAMESPACE" ]; then
   CURRENT_NAMESPACE=$(kubectl config view --minify --output 'jsonpath={..namespace}')

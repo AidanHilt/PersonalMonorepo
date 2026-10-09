@@ -3,38 +3,18 @@
 set -euo pipefail
 
 # @lib: printing-and-output
-
-show_help() {
-  echo "Usage: $0 [OPTIONS]"
-  echo ""
-  echo "OPTIONS:"
-  echo "  --chart-name NAME    Name of the helm chart to create"
-  echo "  --help               Show this help message"
-}
+# @lib: args-and-help
 
 CHART_NAME=""
 RESOURCE_TYPE=""
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  --chart-name)
-    CHART_NAME="$2"
-    shift 2
-    ;;
-  --resource-type)
-    RESOURCE_TYPE="$2"
-    shift 2
-    ;;
-  --help)
-    show_help
-    exit 0
-    ;;
-  *)
-    print_error "Unknown option: $1"
-    exit 1
-    ;;
-  esac
-done
+args_value "" "--chart-name" CHART_NAME "NAME" "Name of the helm chart to create"
+args_value "" "--resource-type" RESOURCE_TYPE "TYPE" "Resource type to substitute into the template"
+
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
+}
 
 if [[ -z "$CHART_NAME" ]]; then
   read -rp "Enter chart name: " CHART_NAME
