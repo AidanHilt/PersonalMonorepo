@@ -3,22 +3,8 @@
 set -euo pipefail
 
 # @lib: printing-and-output
+# @lib: args-and-help
 # @lib: _modify-secret-values
-
-show_help() {
-  echo "Usage: $0 [OPTIONS]"
-  echo ""
-  echo "Add a new secret to the vault-config chart"
-  echo ""
-  echo "OPTIONS:"
-  echo "--secret-name: The name of the secret"
-  echo "--destination-namespace: The destination namespace for the secret"
-  echo "--resource-name: Override for the resource name"
-  echo "--service-account-create: Takes no arguments. If provided, set service account create to true"
-  echo "--service-account-name: The name of the service account"
-  echo "--postgres-secret: Whether or not this secret is a postgres user"
-  echo ""
-}
 
 secret_name=""
 destination_namespace=""
@@ -29,46 +15,25 @@ service_account_namespace=""
 #destination_config=""
 #postgres_secret=""
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  --secret-name)
-    secret_name="$2"
-    shift 2
-    ;;
-  --destination-namespace)
-    destination_namespace="$2"
-    shift 2
-    ;;
-  --resource-name)
-    resource_name="$2"
-    shift 2
-    ;;
-  --service-account-name)
-    service_account_name="$2"
-    shift 2
-    ;;
-  --service-account-create)
-    service_account_create="true"
-    shift 1
-    ;;
-  --service-account-namespace)
-    service_account_namespace="$2"
-    shift 2
-    ;;
-  # --postgres-secret)
-  #   postgres_secret="$2"
-  #   shift 2
-  #   ;;
-  --help | -h)
-    show_help
-    exit 0
-    ;;
-  *)
-    print_error "Unknown argument: $1"
-    exit 1
-    ;;
-  esac
-done
+# --postgres-secret was never wired up as a real option (kept here, still
+# unused/commented, exactly as in the hand-rolled parser this replaced):
+#   --postgres-secret)
+#     postgres_secret="$2"
+#     shift 2
+#     ;;
+
+args_description "Add a new secret to the vault-config chart"
+args_value "" "--secret-name" secret_name "NAME" "The name of the secret"
+args_value "" "--destination-namespace" destination_namespace "NAMESPACE" "The destination namespace for the secret"
+args_value "" "--resource-name" resource_name "NAME" "Override for the resource name"
+args_flag "" "--service-account-create" service_account_create "Takes no arguments. If provided, set service account create to true"
+args_value "" "--service-account-name" service_account_name "NAME" "The name of the service account"
+args_value "" "--service-account-namespace" service_account_namespace "NAMESPACE" "The namespace of the service account"
+
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
+}
 
 if [[ -z "$secret_name" ]]; then
   read -rp "Enter the name of the secret: " secret_name
