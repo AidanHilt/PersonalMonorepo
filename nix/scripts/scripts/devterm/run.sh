@@ -3,52 +3,21 @@
 set -euo pipefail
 
 # @lib: printing-and-output
+# @lib: args-and-help
 IMAGE="aidanhilt/atils-debug:latest"
 NAMESPACE=""
 COMMAND="zsh"
 
-show_help() {
-  cat <<EOF
-Usage: $(basename "$0") [OPTIONS]
+args_description "Launch a debug pod in a Kubernetes cluster and exec into it."
+args_example "$(basename "$0") --image myapp:latest --namespace production --command \"npm start\""
+args_value "" "--image" IMAGE "IMAGE" "Docker/container image to use"
+args_value "" "--namespace" NAMESPACE "NAMESPACE" "Kubernetes namespace to target"
+args_value "" "--command" COMMAND "COMMAND" "Command to execute"
 
-Options:
-  --image IMAGE        Docker/container image to use
-  --namespace NAMESPACE
-                       Kubernetes namespace to target
-  --command COMMAND    Command to execute
-  --help               Display this help message and exit
-
-Example:
-  $(basename "$0") --image myapp:latest --namespace production --command "npm start"
-
-EOF
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
 }
-
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  --image)
-    IMAGE="$2"
-    shift 2
-    ;;
-  --namespace)
-    NAMESPACE="$2"
-    shift 2
-    ;;
-  --command)
-    COMMAND="$2"
-    shift 2
-    ;;
-  --help)
-    show_help
-    exit 0
-    ;;
-  *)
-    print_error "Unknown argument: $1"
-    echo "Use --help for usage information"
-    exit 1
-    ;;
-  esac
-done
 
 if [ -z "${NAMESPACE}" ]; then
   NAMESPACE=$(kubectl config view --minify -o jsonpath='{..namespace}')

@@ -1,32 +1,22 @@
 #!/bin/bash
 
+# @lib: printing-and-output
+# @lib: args-and-help
+
 set -euo pipefail
 
 #Default values
 PASSWORD=""
 
-usage() {
-  echo "Usage: $0 [OPTIONS]"
-  echo "Options:"
-  echo "  -p --password-string  A text string representing the password you want to hash"
-  echo "Examples:"
-  echo "  $0                   # Interactive mode"
-  echo "  $0 -p some-password # Named password argument"
-  exit 1
-}
+args_description "Generate a hashed password, interactively or from a given string."
+args_example "$0                   # Interactive mode"
+args_example "$0 -p some-password # Named password argument"
+args_value "-p" "--password-string" PASSWORD "PASSWORD" "A text string representing the password you want to hash"
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  -p | --password-string)
-    PASSWORD="$2"
-    shift 2
-    ;;
-  *)
-    echo "Unknown option $1"
-    usage
-    ;;
-  esac
-done
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
+}
 
 if [[ -z "$PASSWORD" ]]; then
   while true; do
