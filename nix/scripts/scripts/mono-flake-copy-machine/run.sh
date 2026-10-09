@@ -2,52 +2,27 @@
 
 set -euo pipefail
 
+# @lib: printing-and-output
+# @lib: args-and-help
+
 SOURCE_MACHINE=""
 DESTINATION_MACHINE=""
 DESTINATION_SYSTEM=""
 
-# Function to display usage
-usage() {
-  echo "Usage: $0 [OPTIONS]"
-  echo "Options:"
-  echo "  -s, --source SOURCE_MACHINE    Source machine name"
-  echo "  -d, --destination DEST_MACHINE   Destination machine name"
-  echo "  -t, --target-system SYSTEM     Target system (e.g., x86_64-linux)"
-  echo "  -h, --help             Show this help message"
-  echo ""
-  echo "Environment variables:"
-  echo "  PERSONAL_MONOREPO_LOCATION  Path to your personal monorepo"
-  echo ""
-  echo "Examples:"
-  echo "  $0                          # Interactive mode"
-  echo "  $0 -s web-server -d web-server-02 -t x86_64-linux   # Non-interactive mode"
-  exit 1
+args_description "Copy a machine configuration to a new destination machine."
+args_example "$(basename "$0")                          # Interactive mode"
+args_example "$(basename "$0") -s web-server -d web-server-02 -t x86_64-linux   # Non-interactive mode"
+args_value "-s" "--source" SOURCE_MACHINE "SOURCE_MACHINE" "Source machine name"
+args_value "-d" "--destination" DESTINATION_MACHINE "DEST_MACHINE" "Destination machine name"
+args_value "-t" "--target-system" DESTINATION_SYSTEM "SYSTEM" "Target system (e.g., x86_64-linux)"
+
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
 }
 
-# Parse command line arguments
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  -s | --source)
-    SOURCE_MACHINE="$2"
-    shift 2
-    ;;
-  -d | --destination)
-    DESTINATION_MACHINE="$2"
-    shift 2
-    ;;
-  -t | --target-system)
-    DESTINATION_SYSTEM="$2"
-    shift 2
-    ;;
-  -h | --help)
-    usage
-    ;;
-  *)
-    echo "Unknown option: $1"
-    usage
-    ;;
-  esac
-done
+# Environment variables:
+#   PERSONAL_MONOREPO_LOCATION  Path to your personal monorepo
 
 # Check if PERSONAL_MONOREPO_LOCATION is set
 if [[ -z "${PERSONAL_MONOREPO_LOCATION:-}" ]]; then

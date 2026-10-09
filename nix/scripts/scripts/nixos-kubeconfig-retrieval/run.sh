@@ -2,21 +2,8 @@
 
 set -euo pipefail
 
-# Function to display usage
-usage() {
-  echo "Usage: $0 <username> <ip-address> [--cluster-name <name>] [--overwrite-ip <ip>]"
-  echo "  username: The username to use for SSH"
-  echo "  ip-address: The IP address to use for SSH"
-  echo "  --cluster-name: optional cluster name (will prompt if not provided)"
-  echo "  --overwrite-ip: optional IP to replace 127.0.0.1 with in the retrieved kubeconfig (uses SSH host IP if not provided)"
-  echo ""
-  echo "Examples:"
-  echo "  $0 root 192.168.1.100"
-  echo "  $0 root 192.168.1.100 --cluster-name my-cluster"
-  echo "  $0 root 192.168.1.100 --cluster-name prod-cluster --overwrite-ip 10.0.0.100"
-  echo "  $0 root 192.168.1.100 --overwrite-ip 10.0.0.100"
-  exit 1
-}
+# @lib: printing-and-output
+# @lib: args-and-help
 
 # Check if required tools are available
 for cmd in ssh sed kubecm; do
@@ -27,47 +14,25 @@ for cmd in ssh sed kubecm; do
 done
 
 # Parse arguments
-#SSH_CONNECTION=""
 CLUSTER_NAME=""
 OVERWRITE_IP=""
+USERNAME=""
+IP_ADDRESS=""
 
-# First argument must be SSH connection string
-if [ $# -lt 2 ]; then
-  usage
-fi
+args_description "Retrieve an RKE2 kubeconfig from a remote host and register it with kubecm."
+args_example "$(basename "$0") root 192.168.1.100"
+args_example "$(basename "$0") root 192.168.1.100 --cluster-name my-cluster"
+args_example "$(basename "$0") root 192.168.1.100 --cluster-name prod-cluster --overwrite-ip 10.0.0.100"
+args_example "$(basename "$0") root 192.168.1.100 --overwrite-ip 10.0.0.100"
+args_value "" "--cluster-name" CLUSTER_NAME "NAME" "Optional cluster name (will prompt if not provided)"
+args_value "" "--overwrite-ip" OVERWRITE_IP "IP" "Optional IP to replace 127.0.0.1 with in the retrieved kubeconfig (uses SSH host IP if not provided)"
+args_positional "username" USERNAME "The username to use for SSH" required
+args_positional "ip-address" IP_ADDRESS "The IP address to use for SSH" required
 
-USERNAME="$1"
-IP_ADDRESS="$2"
-shift
-shift
-
-# Parse optional arguments
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  --cluster-name)
-    if [ -n "$2" ] && [[ $2 != --* ]]; then
-      CLUSTER_NAME="$2"
-      shift 2
-    else
-      echo "Error: --cluster-name requires a value"
-      usage
-    fi
-    ;;
-  --overwrite-ip)
-    if [ -n "$2" ] && [[ $2 != --* ]]; then
-      OVERWRITE_IP="$2"
-      shift 2
-    else
-      echo "Error: --overwrite-ip requires a value"
-      usage
-    fi
-    ;;
-  *)
-    echo "Error: Unknown option $1"
-    usage
-    ;;
-  esac
-done
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
+}
 
 # Step 1: Check for RKE2 kubeconfig on remote host
 echo "Step 1: Checking for RKE2 kubeconfig on remote host..."
