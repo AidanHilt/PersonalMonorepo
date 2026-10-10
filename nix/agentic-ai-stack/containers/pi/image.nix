@@ -109,13 +109,11 @@ let
       pkgs.pi-coding-agent
       pkgs.mount
       pkgs.gitMinimal
-      pkgs.coreutils
+      pkgs.busybox
       pkgs.bash
       pkgs.cacert
       pkgs.socat
       pkgs.jq
-      pkgs.gnugrep
-      pkgs.findutils
       passwdFile
       groupFile
       entrypoint

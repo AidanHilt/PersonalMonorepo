@@ -61,8 +61,10 @@ Secondary mode ("frontmatter"): merges key=value pairs into the YAML
 frontmatter block of an existing agent .md file, leaving all other
 frontmatter keys and the body untouched, and/or grants an exact-match bash
 allow rule via `--allow-bash <cmd>` (sets
-`.permission.bash["<cmd>"] = "allow"`). Requires the "yq" (mikefarah/yq)
-binary on PATH. Refuses to operate on non-.md files. Refuses to write
+`.permission.bash["<cmd>"] = "allow"`, written as a single-line
+double-quoted mapping key so the pi permission system can parse it -- see
+the --allow-bash case in run_frontmatter for why). Requires the "yq"
+(mikefarah/yq) binary on PATH. Refuses to operate on non-.md files. Refuses to write
 outside the detected repository UNLESS the target file is inside the
 resolved agents_dir (${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents) --
 that tmpfs directory holds the per-dispatch agent definitions this script's
@@ -378,7 +380,8 @@ run_frontmatter() {
   sed -n "2,$((end_line - 1))p" "$agent_file" >"$frontmatter_file"
   sed -n "$((end_line + 1)),\$p" "$agent_file" >"$body_file"
 
-  local kv key value cmd
+  local kv key value cmd escaped_cmd allow_bash_set=""
+  local placeholder_key='__AGENT_PLAN_ALLOW_PLACEHOLDER__'
   while [[ $# -gt 0 ]]; do
     case "$1" in
     --allow-bash)
@@ -388,7 +391,40 @@ run_frontmatter() {
       fi
       cmd="$2"
       print_debug "Allowing bash command '$cmd'"
-      CMD="$cmd" yq eval -i '.permission.bash[strenv(CMD)] = "allow"' "$frontmatter_file"
+
+      # go-yaml's emitter (mikefarah/yq v4) switches to YAML's explicit-key
+      # form ('? key' / ': allow') for any mapping key longer than 128
+      # chars, which the pi permission system does not parse, silently
+      # falling through to deny. agent-validate's --path ... invocation is
+      # routinely longer than that, so we can't let yq write the long key
+      # directly: set a short placeholder key instead (short keys keep
+      # yq's plain one-line form), then hand-rewrite that one line into a
+      # single-line double-quoted key via awk, with the real command value
+      # passed through the environment (never interpolated into the awk
+      # program text).
+      yq eval -i ".permission.bash[\"${placeholder_key}\"] = \"allow\"" "$frontmatter_file"
+
+      if ! grep -q -F -- "$placeholder_key" "$frontmatter_file"; then
+        print_error "Internal error: placeholder key '$placeholder_key' not found in '$frontmatter_file' after yq merge"
+        exit 1
+      fi
+
+      # Escape backslash then double-quote for a YAML double-quoted scalar.
+      escaped_cmd="${cmd//\\/\\\\}"
+      escaped_cmd="${escaped_cmd//\"/\\\"}"
+
+      PLACEHOLDER="$placeholder_key" ESCAPED_CMD="$escaped_cmd" awk '
+        index($0, ENVIRON["PLACEHOLDER"]) {
+          match($0, /^[ \t]*/)
+          indent = substr($0, RSTART, RLENGTH)
+          print indent "\"" ENVIRON["ESCAPED_CMD"] "\": allow"
+          next
+        }
+        { print }
+      ' "$frontmatter_file" >"$frontmatter_file.tmp"
+      mv "$frontmatter_file.tmp" "$frontmatter_file"
+
+      allow_bash_set=1
       shift 2
       ;;
     *)
@@ -411,6 +447,18 @@ run_frontmatter() {
       ;;
     esac
   done
+
+  if [[ -n "$allow_bash_set" ]]; then
+    local expected_allow_line="\"${escaped_cmd}\": allow"
+    if ! grep -q -F -- "$expected_allow_line" "$frontmatter_file"; then
+      print_error "Internal error: expected allow rule line not found in '$frontmatter_file' after merge"
+      exit 1
+    fi
+    if grep -q '^[[:space:]]*? ' "$frontmatter_file"; then
+      print_error "Internal error: '$frontmatter_file' contains a YAML explicit-key ('? ') line after merge -- the allow rule would not be parsed by the permission system"
+      exit 1
+    fi
+  fi
 
   {
     printf -- '---\n'
