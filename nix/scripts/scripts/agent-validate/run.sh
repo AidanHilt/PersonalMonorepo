@@ -229,6 +229,18 @@ json_string_array() {
 }
 
 main() {
+  # writeShellApplication (the Nix builder for this script) prepends
+  # 'set -o errexit' to the built binary, but this file is written
+  # assuming errexit is OFF: run_check and friends rely on capturing a
+  # failing command's exit status via `rc=$?` after a plain assignment
+  # (e.g. `out="$("$@" 2>&1)"`), which errexit would instead treat as a
+  # fatal error and abort the whole script on, before that capture ever
+  # runs -- silently skipping the documented exit codes (10/20/21/22/99),
+  # the FAILED message, and the failure-budget counter. Turn errexit back
+  # off here so this script's own explicit exit-code handling is what
+  # actually runs; -u and pipefail (set above) are left untouched.
+  set +e
+
   if [[ $# -eq 0 ]]; then
     print_error "Missing arguments"
     show_help

@@ -334,7 +334,8 @@ emit_build_test_phase() {
   if [[ ${#NIX_FLAKE_DIRS[@]} -gt 0 ]]; then
     local d
     for d in "${NIX_FLAKE_DIRS[@]}"; do
-      printf 'run_check BUILD_TEST "nix flake check(%s)" bash -c %s\n' "$d" "$(printf '%q' "nix flake check $(printf '%q' "$d")")"
+      printf 'run_check BUILD_TEST "nix flake check(%s)" bash -c %s\n' "$d" \
+        "$(printf '%q' "nix --extra-experimental-features 'nix-command flakes' flake check $(printf '%q' "$d")")"
     done
   fi
 }
