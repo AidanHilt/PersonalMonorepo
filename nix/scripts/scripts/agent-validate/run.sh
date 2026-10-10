@@ -76,6 +76,7 @@ write_failcount() {
   printf '%s\n' "$1" >"$f" || die_artifact "could not write failure count to $f"
 }
 
+#shellcheck disable=SC2329
 classify_error() {
   local out="$1"
   if printf '%s' "$out" | grep -qiE 'could not resolve host|connection refused|connection timed out|timed out after|network is unreachable|certificate verify failed|tls handshake|ssl certificate problem|no route to host|name or service not known|temporary failure in name resolution'; then
@@ -87,14 +88,17 @@ classify_error() {
   fi
 }
 
+#shellcheck disable=SC2329
 print_tail() {
   printf '%s\n' "$1" | tail -n 40
 }
 
+#shellcheck disable=SC2329
 record_pass() {
   RESULTS+=("{\"phase\":\"$1\",\"check\":\"$2\",\"status\":\"pass\"}")
 }
 
+#shellcheck disable=SC2329
 handle_failure() {
   local phase="$1" name="$2" rc="$3" out="$4"
   local kind
@@ -126,6 +130,7 @@ handle_failure() {
   esac
 }
 
+#shellcheck disable=SC2329
 run_check() {
   local phase="$1" name="$2"
   shift 2

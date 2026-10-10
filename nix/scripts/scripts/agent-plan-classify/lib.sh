@@ -28,6 +28,8 @@ NIX_FILES=()
 NIX_FLAKE_DIRS=()
 TF_DIRS=()
 DOCKERFILES=()
+#shellcheck disable=SC2034
+UNKNOWN_PATHS=()
 
 #shellcheck disable=SC2329
 array_contains() {
