@@ -368,7 +368,9 @@ run_frontmatter() {
 
   local tmp_dir
   tmp_dir="$(mktemp -d)"
-  trap 'rm -rf "$tmp_dir"' EXIT
+  # shellcheck disable=SC2064 # intentional: expand tmp_dir now so cleanup
+  # does not depend on the local variable's scope at EXIT time
+  trap "rm -rf '$tmp_dir'" EXIT
 
   local frontmatter_file="$tmp_dir/frontmatter.yaml"
   local body_file="$tmp_dir/body.md"

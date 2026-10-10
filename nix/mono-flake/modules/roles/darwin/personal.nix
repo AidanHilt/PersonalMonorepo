@@ -1,4 +1,11 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 let
   personalMonorepoLocation = "${machine-config.userBase}/${machine-config.username}/PersonalMonorepo";
@@ -19,7 +26,6 @@ in
   environment.systemPackages = with pkgs; [
     inputs.scripts.packages.${pkgs.system}.kommit
     inputs.scripts.packages.${pkgs.system}.pi-auth-port-forward
-    inputs.scripts.packages.${pkgs.system}.pi-auth-port-forward-big-boi
 
     pre-commit
     socat
@@ -73,9 +79,16 @@ in
     linux-builder = {
       enable = true;
       ephemeral = false;
-      supportedFeatures = [ "kvm" "benchmark" "big-parallel" ];
-      systems = ["x86_64-linux" "aarch64-linux"];
-      config.boot.binfmt.emulatedSystems = ["x86_64-linux"];
+      supportedFeatures = [
+        "kvm"
+        "benchmark"
+        "big-parallel"
+      ];
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
+      config.boot.binfmt.emulatedSystems = [ "x86_64-linux" ];
       config = {
         virtualisation = {
           darwin-builder = {
