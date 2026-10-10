@@ -3,6 +3,7 @@
 set -euo pipefail
 
 # @lib: printing-and-output
+# @lib: yaml-edit
 # @lib: modify-master-stack-values
 # @lib: env-checks
 

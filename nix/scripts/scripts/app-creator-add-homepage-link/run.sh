@@ -4,6 +4,7 @@ set -euo pipefail
 
 # @lib: printing-and-output
 # @lib: args-and-help
+# @lib: yaml-edit
 # @lib: modify-ingress-values
 # @lib: env-checks
 
