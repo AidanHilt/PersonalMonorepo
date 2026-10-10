@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+# @lib: printing-and-output
+# @lib: args-and-help
+
 # Check if ATILS_CONTEXTS_DIRECTORY is set
 if [[ -z "${ATILS_CONTEXTS_DIRECTORY}" ]]; then
   echo "Error: ATILS_CONTEXTS_DIRECTORY environment variable is not set"
@@ -30,18 +33,14 @@ validate_context_name() {
 
 CONTEXT_NAME=""
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  -n | --name)
-    CONTEXT_NAME="$2"
-    shift 2
-    ;;
-  *)
-    echo "Unknown option: $1"
-    usage
-    ;;
-  esac
-done
+args_description "Create a new context directory with an .env file and scripts subdirectory."
+args_example "$(basename "$0") -n my-context"
+args_value "-n" "--name" CONTEXT_NAME "NAME" "Name of the context to create"
+
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
+}
 
 if [[ -z "$CONTEXT_NAME" ]]; then
   read -rp "Enter context name: " CONTEXT_NAME

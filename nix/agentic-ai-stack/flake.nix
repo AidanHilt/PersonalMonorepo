@@ -86,16 +86,30 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, flake-utils, nix2container, scripts, nix-index-database, agent-skills, skills-golang, skills-kubernetes, skills-nixos }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      nixpkgs-unstable,
+      flake-utils,
+      nix2container,
+      scripts,
+      nix-index-database,
+      agent-skills,
+      skills-golang,
+      skills-kubernetes,
+      skills-nixos,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
-        pkgs = import nixpkgs { 
-          inherit system; 
+        pkgs = import nixpkgs {
+          inherit system;
         };
 
         pkgsUnstable = import nixpkgs-unstable {
           inherit system;
-          overlays = [(import ./pi-coding-agent-overlay.nix)];
+          overlays = [ (import ./pi-coding-agent-overlay.nix) ];
         };
 
         n2c = nix2container.packages.${system}.nix2container;
@@ -110,14 +124,13 @@
         # warning, not a hard eval failure) if the input somehow has no
         # locked rev -- e.g. a dirty/path-overridden input during local dev.
         nixIndexRef =
-          let rev = nix-index-database.rev or null;
+          let
+            rev = nix-index-database.rev or null;
           in
-            if rev != null
-            then "github:Mic92/nix-index-database/${rev}"
-            else
-              builtins.trace
-                "WARNING: nix-index-database input has no locked rev (dirty/overridden input?) -- pkg-broker's /lookup-binary will use an UNPINNED github:Mic92/nix-index-database ref. Run `nix flake lock` to pin it."
-                "github:Mic92/nix-index-database";
+          if rev != null then
+            "github:Mic92/nix-index-database/${rev}"
+          else
+            builtins.trace "WARNING: nix-index-database input has no locked rev (dirty/overridden input?) -- pkg-broker's /lookup-binary will use an UNPINNED github:Mic92/nix-index-database ref. Run `nix flake lock` to pin it." "github:Mic92/nix-index-database";
 
         # ---- Fixed, non-content-hash tags -----------------------------
         # A static compose.yaml needs tags that don't change on every
@@ -134,7 +147,14 @@
 
         pi = import ./containers/pi/image.nix {
           pkgs = pkgsUnstable;
-          inherit n2c scripts agent-skills skills-golang skills-kubernetes skills-nixos;
+          inherit
+            n2c
+            scripts
+            agent-skills
+            skills-golang
+            skills-kubernetes
+            skills-nixos
+            ;
           imageName = piImageName;
           imageTag = piTag;
         };
@@ -174,46 +194,50 @@
         # same string (e.g. appSlug "pi" vs image "pi-sandbox/pi"), so they
         # must be threaded through separately or the up-to-date check below
         # inspects a Docker image that never exists and "skip" never fires.
-        mkLoadApp = appSlug: imageName: imageTag: contentId:
-        pkgs.writeShellApplication {
-          name = "load-${appSlug}";
+        mkLoadApp =
+          appSlug: imageName: imageTag: contentId:
+          pkgs.writeShellApplication {
+            name = "load-${appSlug}";
 
-          runtimeInputs = [ pkgs.nix pkgs.docker ];
+            runtimeInputs = [
+              pkgs.nix
+              pkgs.docker
+            ];
 
-          text = ''
-            set -euo pipefail
+            text = ''
+              set -euo pipefail
 
-            if ! docker info >/dev/null 2>&1; then
-              echo "Docker daemon is not reachable" >&2
-              exit 1
-            fi
+              if ! docker info >/dev/null 2>&1; then
+                echo "Docker daemon is not reachable" >&2
+                exit 1
+              fi
 
-            IMAGE_NAME=${pkgs.lib.escapeShellArg imageName}
-            IMAGE_TAG=${pkgs.lib.escapeShellArg imageTag}
-            NEW_CONTENT_ID=${pkgs.lib.escapeShellArg contentId}
+              IMAGE_NAME=${pkgs.lib.escapeShellArg imageName}
+              IMAGE_TAG=${pkgs.lib.escapeShellArg imageTag}
+              NEW_CONTENT_ID=${pkgs.lib.escapeShellArg contentId}
 
-            CURRENT_CONTENT_ID="$(docker image inspect \
-              --format '{{ index .Config.Labels "sh.pi-sandbox.content-id" }}' \
-              "$IMAGE_NAME:$IMAGE_TAG" 2>/dev/null || true)"
+              CURRENT_CONTENT_ID="$(docker image inspect \
+                --format '{{ index .Config.Labels "sh.pi-sandbox.content-id" }}' \
+                "$IMAGE_NAME:$IMAGE_TAG" 2>/dev/null || true)"
 
-            if [ -n "$CURRENT_CONTENT_ID" ] && [ "$CURRENT_CONTENT_ID" = "$NEW_CONTENT_ID" ]; then
-              echo "$IMAGE_NAME:$IMAGE_TAG is already up to date (content-id $NEW_CONTENT_ID); skipping load"
-              exit 0
-            fi
+              if [ -n "$CURRENT_CONTENT_ID" ] && [ "$CURRENT_CONTENT_ID" = "$NEW_CONTENT_ID" ]; then
+                echo "$IMAGE_NAME:$IMAGE_TAG is already up to date (content-id $NEW_CONTENT_ID); skipping load"
+                exit 0
+              fi
 
-            override_flag=()
-            if [ -n "''${PERSONAL_MONOREPO_LOCATION:-}" ] && [ -d "$PERSONAL_MONOREPO_LOCATION/nix/scripts" ]; then
-              override_flag=(--override-input scripts "path:$PERSONAL_MONOREPO_LOCATION/nix/scripts")
-              echo "==> Using local nix/scripts checkout at $PERSONAL_MONOREPO_LOCATION/nix/scripts"
-            fi
+              override_flag=()
+              if [ -n "''${PERSONAL_MONOREPO_LOCATION:-}" ] && [ -d "$PERSONAL_MONOREPO_LOCATION/nix/scripts" ]; then
+                override_flag=(--override-input scripts "path:$PERSONAL_MONOREPO_LOCATION/nix/scripts")
+                echo "==> Using local nix/scripts checkout at $PERSONAL_MONOREPO_LOCATION/nix/scripts"
+              fi
 
-            echo "''${override_flag[@]}"
+              echo "''${override_flag[@]}"
 
-            nix run "''${override_flag[@]}" ${pkgs.lib.escapeShellArg ".#${appSlug}-image.copyToDockerDaemon"} 
+              nix run "''${override_flag[@]}" ${pkgs.lib.escapeShellArg ".#${appSlug}-image.copyToDockerDaemon"} 
 
-            echo "Loaded $IMAGE_NAME:$IMAGE_TAG into the local Docker daemon"
-          '';
-        };
+              echo "Loaded $IMAGE_NAME:$IMAGE_TAG into the local Docker daemon"
+            '';
+          };
       in
       {
         packages = {
@@ -278,8 +302,14 @@
                 set -euo pipefail
                 "${(mkLoadApp "pi" piImageName piTag pi.contentId)}/bin/load-pi"
                 "${(mkLoadApp "proxy" proxyImageName proxyTag proxy.contentId)}/bin/load-proxy"
-                "${(mkLoadApp "pkg-broker" pkgBrokerImageName pkgBrokerTag pkgBroker.contentId)}/bin/load-pkg-broker"
-                "${(mkLoadApp "workspace-mounter" workspaceMounterImageName workspaceMounterTag workspaceMounter.contentId)}/bin/load-workspace-mounter"
+                "${
+                  (mkLoadApp "pkg-broker" pkgBrokerImageName pkgBrokerTag pkgBroker.contentId)
+                }/bin/load-pkg-broker"
+                "${
+                  (mkLoadApp "workspace-mounter" workspaceMounterImageName workspaceMounterTag
+                    workspaceMounter.contentId
+                  )
+                }/bin/load-workspace-mounter"
               '';
             };
           };
@@ -288,7 +318,14 @@
           start-agent = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "start-agent";
-              runtimeInputs = [ pkgs.docker pkgs.docker-compose pkgs.jq pkgs.gnugrep pkgs.curl pkgs.nix ];
+              runtimeInputs = [
+                pkgs.docker
+                pkgs.docker-compose
+                pkgs.jq
+                pkgs.gnugrep
+                pkgs.curl
+                pkgs.nix
+              ];
               text = builtins.readFile ./scripts/start-agent.sh;
             };
           };
@@ -300,7 +337,11 @@
               # project-prefixed volume names via `docker compose config
               # --format json` before the non-persisted-volume cleanup (see
               # scripts/stop-agent.sh).
-              runtimeInputs = [ pkgs.docker pkgs.docker-compose pkgs.jq ];
+              runtimeInputs = [
+                pkgs.docker
+                pkgs.docker-compose
+                pkgs.jq
+              ];
               text = builtins.readFile ./scripts/stop-agent.sh;
             };
           };
@@ -313,7 +354,10 @@
           shell-agent = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "shell-agent";
-              runtimeInputs = [ pkgs.docker pkgs.docker-compose ];
+              runtimeInputs = [
+                pkgs.docker
+                pkgs.docker-compose
+              ];
               text = builtins.readFile ./scripts/shell-agent.sh;
             };
           };
@@ -328,7 +372,11 @@
           login = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "login";
-              runtimeInputs = [ pkgs.docker pkgs.docker-compose pkgs.nix ];
+              runtimeInputs = [
+                pkgs.docker
+                pkgs.docker-compose
+                pkgs.nix
+              ];
               text = ''
                 set -euo pipefail
 
@@ -355,7 +403,10 @@
           gen-kubeconfig = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "gen-kubeconfig";
-              runtimeInputs = [ pkgs.kubectl pkgs.jq ];
+              runtimeInputs = [
+                pkgs.kubectl
+                pkgs.jq
+              ];
               text = builtins.readFile ./scripts/gen-kubeconfig.sh;
             };
           };
@@ -363,7 +414,11 @@
           verify = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "verify";
-              runtimeInputs = [ pkgs.docker pkgs.docker-compose pkgs.curl ];
+              runtimeInputs = [
+                pkgs.docker
+                pkgs.docker-compose
+                pkgs.curl
+              ];
               text = builtins.readFile ./scripts/verify-acceptance.sh;
             };
           };
@@ -375,7 +430,14 @@
           update-pi-extensions = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "update-pi-extensions";
-              runtimeInputs = [ pkgs.nodejs-slim_24 pkgs.nix-prefetch-github pkgs.nix pkgs.gnused pkgs.gnugrep pkgs.prefetch-npm-deps ];
+              runtimeInputs = [
+                pkgs.nodejs-slim_24
+                pkgs.nix-prefetch-github
+                pkgs.nix
+                pkgs.gnused
+                pkgs.gnugrep
+                pkgs.prefetch-npm-deps
+              ];
               text = builtins.readFile ./scripts/update-pi-extensions.sh;
             };
           };
@@ -385,7 +447,17 @@
           # yq-go (mikefarah/yq) sits alongside jq -- chosen over the
           # Python-based kislyuk/yq to avoid pulling Python into the
           # environment (see RESEARCH-NOTES.md).
-          packages = [ pkgs.docker pkgs.docker-compose pkgs.nodejs-slim_24 pkgs.jq pkgs.yq-go pkgs.kubectl scripts.packages.${system}.agent-plan-create ];
+          packages = [
+            pkgs.docker
+            pkgs.docker-compose
+            pkgs.nodejs-slim_24
+            pkgs.jq
+            pkgs.yq-go
+            pkgs.kubectl
+            scripts.packages.${system}.agent-plan-create
+            scripts.packages.${system}.agent-validate
+          ];
         };
-      });
+      }
+    );
 }

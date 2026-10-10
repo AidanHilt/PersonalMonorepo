@@ -32,7 +32,7 @@ aws-assume-role() {
     if [[ -n "$BASH_VERSION" ]]; then
       read -rp "Enter AWS Account ID: " account_id
     elif [[ -n "$ZSH_VERSION" ]]; then
-      read "account_id?Enter AWS Account ID: "
+      read -r "account_id?Enter AWS Account ID: "
     fi
     if [[ -z "$account_id" ]]; then
       echo "Error: Account ID is required"
@@ -44,7 +44,7 @@ aws-assume-role() {
     if [[ -n "$BASH_VERSION" ]]; then
       read -rp "Enter Role Name: " role_name
     elif [[ -n "$ZSH_VERSION" ]]; then
-      read "role_name?Enter Role Name: "
+      read -r "role_name?Enter Role Name: "
     fi
     if [[ -z "$role_name" ]]; then
       echo "Error: Role name is required"
@@ -58,13 +58,11 @@ aws-assume-role() {
 
   # Assume the role and capture credentials
   local assume_output
-  assume_output=$(aws sts assume-role \
+  if ! assume_output=$(aws sts assume-role \
     --role-arn "$role_arn" \
     --role-session-name "$session_name" \
     --output text \
-    --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken,Expiration]' 2>&1)
-
-  if [[ $? -ne 0 ]]; then
+    --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken,Expiration]' 2>&1); then
     echo "Error assuming role:"
     echo "$assume_output"
   fi

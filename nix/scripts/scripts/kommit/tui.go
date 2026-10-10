@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 // errAborted is returned by the TUI helpers when the user cancels
@@ -41,9 +41,9 @@ func (i listItem) FilterValue() string { return string(i) }
 // styling dependency.
 type simpleDelegate struct{}
 
-func (d simpleDelegate) Height() int                               { return 1 }
-func (d simpleDelegate) Spacing() int                               { return 0 }
-func (d simpleDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd    { return nil }
+func (d simpleDelegate) Height() int                             { return 1 }
+func (d simpleDelegate) Spacing() int                            { return 0 }
+func (d simpleDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
 func (d simpleDelegate) Render(w io.Writer, m list.Model, index int, li list.Item) {
 	it, ok := li.(listItem)
 	if !ok {

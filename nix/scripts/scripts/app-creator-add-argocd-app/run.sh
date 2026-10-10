@@ -2,8 +2,10 @@
 
 set -euo pipefail
 
-# @lib: printing-and-output.printing-and-output
+# @lib: printing-and-output
+# @lib: yaml-edit
 # @lib: modify-master-stack-values
+# @lib: env-checks
 
 show_help() {
   echo "Usage: $0 [OPTIONS]"
@@ -105,6 +107,8 @@ while [[ $# -gt 0 ]]; do
     ;;
   esac
 done
+
+require_monorepo
 
 if [[ -z "$app_name" ]]; then
   read -rp "Enter the name of your app: " app_name
@@ -255,6 +259,6 @@ print_debug "Constructed yq string: $YQ_STRING"
 
 TARGET_FILE="$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/master-stack/values.yaml"
 
-_modify-master-stack-values "$YQ_STRING" "$TARGET_FILE"
+modify-master-stack-values "$YQ_STRING" "$TARGET_FILE"
 
 print_status "Application '$app_name' configuration added to master stack"

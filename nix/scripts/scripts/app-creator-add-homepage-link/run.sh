@@ -3,9 +3,10 @@
 set -euo pipefail
 
 # @lib: printing-and-output
+# @lib: args-and-help
+# @lib: yaml-edit
 # @lib: modify-ingress-values
-
-HOMEPAGE_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/homepage-config/values.yaml
+# @lib: env-checks
 
 APP_NAME=""
 PREFIX=""
@@ -15,61 +16,23 @@ ICON=""
 SUBDOMAIN=""
 DISPLAY_NAME=""
 
-show_help() {
-  echo "Usage: $0 [OPTIONS]"
-  echo ""
-  # Description goes here
-  echo "Create ingress resources for istio"
-  echo ""
-  echo "OPTIONS:"
-  echo "  --app-name, -a: The name of the app to create ingress for"
-  echo "  --prefix, -r: A prefix used for path-based routing. Can be provided multiple times"
-  echo "  --subdomain, -s: The subdomain this app is to be served on"
-  echo "  --description, -d: A short blurb about the app to display on the homepage"
-  echo "  --group, -g: The group this app belongs under on the homepage"
-  echo "  --icon, -i: The icon to use. Can be a URL, or following this guide: https://gethomepage.dev/configs/services/#icons"
+args_description "Create ingress resources for istio"
+args_value "-a" "--app-name" APP_NAME "APP_NAME" "The name of the app to create ingress for"
+args_value "-r" "--prefix" PREFIX "PREFIX" "A prefix used for path-based routing. Can be provided multiple times"
+args_value "-s" "--subdomain" SUBDOMAIN "SUBDOMAIN" "The subdomain this app is to be served on"
+args_value "-d" "--description" DESCRIPTION "DESCRIPTION" "A short blurb about the app to display on the homepage"
+args_value "-g" "--group" GROUP "GROUP" "The group this app belongs under on the homepage"
+args_value "-i" "--icon" ICON "ICON" "The icon to use. Can be a URL, or following this guide: https://gethomepage.dev/configs/services/#icons"
+args_value "-n" "--display-name" DISPLAY_NAME "DISPLAY_NAME" "Override the display name shown on the homepage"
+
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
 }
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  --app-name | -a)
-    APP_NAME="$2"
-    shift 2
-    ;;
-  --description | -d)
-    DESCRIPTION="$2"
-    shift 2
-    ;;
-  --group | -g)
-    GROUP="$2"
-    shift 2
-    ;;
-  --icon | -i)
-    ICON="$2"
-    shift 2
-    ;;
-  --prefix | -r)
-    PREFIX="$2"
-    shift 2
-    ;;
-  --subdomain | -s)
-    SUBDOMAIN="$2"
-    shift 2
-    ;;
-  --display-name | -n)
-    DISPLAY_NAME="$2"
-    shift 2
-    ;;
-  --help | -h)
-    show_help
-    exit 0
-    ;;
-  *)
-    print_error "Unknown option: $1"
-    exit 1
-    ;;
-  esac
-done
+require_monorepo
+
+HOMEPAGE_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/homepage-config/values.yaml
 
 if [[ -z "$APP_NAME" ]]; then
   while true; do
@@ -142,4 +105,4 @@ HOMEPAGE_YQ_STRING+="| .$APP_NAME.description=\"$DESCRIPTION\""
 HOMEPAGE_YQ_STRING+="| .$APP_NAME.icon=\"$ICON\""
 HOMEPAGE_YQ_STRING+="| .$APP_NAME.group=\"$GROUP\""
 
-_modify-ingress-values "$HOMEPAGE_YQ_STRING" "$HOMEPAGE_VALUES_FILE"
+modify-ingress-values "$HOMEPAGE_YQ_STRING" "$HOMEPAGE_VALUES_FILE"

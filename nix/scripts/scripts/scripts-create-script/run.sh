@@ -1,40 +1,23 @@
 #!/bin/bash
 
 # @lib: printing-and-output
+# @lib: args-and-help
+# @lib: env-checks
 
 set -euo pipefail
 
-show_help () {
-  echo "Usage: $0 [OPTIONS]"
-  echo ""
-  echo "Create a new script directory with a blank run.sh file"
-  echo ""
-  echo ""
-  echo "OPTIONS:"
-  echo "  --script-name <name>   Name of the script to create (prompted if omitted)"
-  echo "  --help, -h              Show this help message"
-}
-
 SCRIPT_NAME_ARG=""
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    --script-name)
-      SCRIPT_NAME_ARG="$2"
-      shift 2
-      ;;
-    --help|-h)
-      show_help
-      exit 0
-      ;;
-    *)
-      print_error "Unknown option: $1"
-      exit 1
-      ;;
-  esac
-done
+args_description "Create a new script directory with a blank run.sh file"
+args_example "$(basename "$0") --script-name my-script"
+args_value "" "--script-name" SCRIPT_NAME_ARG "NAME" "Name of the script to create (prompted if omitted)"
 
-: "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must be set}"
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
+}
+
+require_monorepo
 
 if [[ -z "$SCRIPT_NAME_ARG" ]]; then
   print_debug "No script name provided, prompting user"

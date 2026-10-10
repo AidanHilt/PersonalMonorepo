@@ -1,6 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -euo pipefail
+
+# @lib: printing-and-output
+# @lib: env-checks
 
 if [ $# -ne 1 ]; then
   echo "Usage: $0 <machine-name>"
@@ -9,11 +12,7 @@ fi
 
 MACHINE_NAME="$1"
 
-# Check if PERSONAL_MONOREPO_LOCATION is set
-if [ -z "$PERSONAL_MONOREPO_LOCATION" ]; then
-  echo "Error: PERSONAL_MONOREPO_LOCATION environment variable is not set"
-  exit 1
-fi
+require_monorepo
 
 MONO_FLAKE_PATH="$PERSONAL_MONOREPO_LOCATION/nix/mono-flake"
 MACHINES_PATH="$MONO_FLAKE_PATH/machines"

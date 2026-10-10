@@ -3,9 +3,10 @@
 set -euo pipefail
 
 # @lib: printing-and-output
+# @lib: args-and-help
+# @lib: yaml-edit
 # @lib: modify-ingress-values
-
-ISTIO_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/istio-ingress-config/values.yaml
+# @lib: env-checks
 
 APP_NAME=""
 PREFIXES=()
@@ -14,57 +15,22 @@ SERVICE_NAME=""
 DESTINATION_PORT=""
 SUBDOMAIN=""
 
-show_help() {
-  echo "Usage: $0 [OPTIONS]"
-  echo ""
-  # Description goes here
-  echo "Create ingress resources for istio"
-  echo ""
-  echo "OPTIONS:"
-  echo "  --app-name, -a: The name of the app to create ingress for"
-  echo "  --namespace, -n: The namespace the app will live in. Needed to properly route requests"
-  echo "  --service-name, -s: The name of the kubernetes service associated with this app"
-  echo "  --port, -p: The port number used by the service. Defaults to 80"
-  echo "  --prefix, -r: A prefix used for path-based routing. Can be provided multiple times"
-  echo "  --subdomain, -d: The subdomain this app is to be served on"
+args_description "Create ingress resources for istio"
+args_value "-a" "--app-name" APP_NAME "APP_NAME" "The name of the app to create ingress for"
+args_value "-n" "--namespace" NAMESPACE "NAMESPACE" "The namespace the app will live in. Needed to properly route requests"
+args_value "-s" "--service-name" SERVICE_NAME "SERVICE_NAME" "The name of the kubernetes service associated with this app"
+args_value "-p" "--port" DESTINATION_PORT "PORT" "The port number used by the service. Defaults to 80"
+args_repeat "-r" "--prefix" PREFIXES "PREFIX" "A prefix used for path-based routing. Can be provided multiple times"
+args_value "-d" "--subdomain" SUBDOMAIN "SUBDOMAIN" "The subdomain this app is to be served on"
+
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
 }
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  --app-name | -a)
-    APP_NAME="$2"
-    shift 2
-    ;;
-  --namespace | -n)
-    NAMESPACE="$2"
-    shift 2
-    ;;
-  --service-name | -s)
-    SERVICE_NAME="$2"
-    shift 2
-    ;;
-  --port | -p)
-    DESTINATION_PORT="$2"
-    shift 2
-    ;;
-  --prefix | -r)
-    PREFIXES+=("$2")
-    shift 2
-    ;;
-  --subdomain | -d)
-    SUBDOMAIN="$2"
-    shift 2
-    ;;
-  --help | -h)
-    show_help
-    exit 0
-    ;;
-  *)
-    print_error "Unknown option: $1"
-    exit 1
-    ;;
-  esac
-done
+require_monorepo
+
+ISTIO_VALUES_FILE=$PERSONAL_MONOREPO_LOCATION/kubernetes/helm-charts/k8s-resources/istio-ingress-config/values.yaml
 
 if [[ -z "$APP_NAME" ]]; then
   read -rp "Enter the name of the app: " APP_NAME
@@ -136,4 +102,4 @@ if [[ "$DESTINATION_PORT" != 80 ]]; then
   ISTIO_YQ_STRING+="| .$APP_NAME.destinationPort=\"$DESTINATION_PORT\""
 fi
 
-_modify-ingress-values "$ISTIO_YQ_STRING" "$ISTIO_VALUES_FILE"
+modify-ingress-values "$ISTIO_YQ_STRING" "$ISTIO_VALUES_FILE"

@@ -85,8 +85,6 @@ if [ "${PI_SESSIONS:-1}" = "0" ]; then
 # pi-sessions volume; --name instead starts a fresh, named session.
 elif [ "${PI_SANDBOX__RESUME:-0}" = "1" ]; then
   PI_ARGS+=("--resume")
-elif [ -n "${PI_SANDBOX__SESSION_NAME:-}" ]; then
-  PI_ARGS+=("--name" "$PI_SANDBOX__SESSION_NAME")
 fi
 
 if [ "${PI_SANDBOX__LOGIN_FORWARD:-0}" = "1" ]; then

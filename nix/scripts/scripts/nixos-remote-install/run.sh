@@ -1,8 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -euo pipefail
 
 # @lib: printing-and-output
+# @lib: env-checks
 
 # False by default
 NIXOS_ANYWHERE_ARGS_PROVIDED=0
@@ -120,12 +121,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Check if PERSONAL_MONOREPO_LOCATION is set
-if [[ -z "${PERSONAL_MONOREPO_LOCATION:-}" ]]; then
-  print_error "PERSONAL_MONOREPO_LOCATION environment variable is not set"
-  print_status "Please set this variable to point to your personal monorepo location"
-  exit 1
-fi
+require_monorepo
 
 print_status "Using monorepo location: $PERSONAL_MONOREPO_LOCATION"
 

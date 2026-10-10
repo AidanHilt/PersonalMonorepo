@@ -1,4 +1,6 @@
 #!/bin/zsh
+# Sourced file is lint-checked as bash (see flake.nix sourceChecks).
+# shellcheck shell=bash
 
 _context-context-selector() {
   if [[ -z "${ATILS_CONTEXTS_DIRECTORY}" ]]; then
@@ -8,6 +10,7 @@ _context-context-selector() {
   fi
 
   if [[ -d "$ATILS_CONTEXTS_DIRECTORY" ]]; then
+    # shellcheck disable=SC2207 # zsh-only: array assignment word-splits here; mapfile is unavailable in zsh
     contexts=($(ls -1 "$ATILS_CONTEXTS_DIRECTORY" 2>/dev/null))
     if [[ ${#contexts[@]} -eq 0 ]]; then
       echo "No contexts found"
@@ -19,7 +22,8 @@ _context-context-selector() {
       ((i++))
     done
     echo -n "Select a context: "
-    read CONTEXT_SELECTION
+    read -r CONTEXT_SELECTION
+    # shellcheck disable=SC2034 # CONTEXT_NAME is a global side effect consumed by the caller after sourcing
     if [[ -z "${ZSH_VERSION-}" ]]; then
       CONTEXT_NAME=${contexts[$CONTEXT_SELECTION - 1]}
     else

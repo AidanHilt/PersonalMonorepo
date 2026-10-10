@@ -3,21 +3,7 @@
 set -euo pipefail
 
 # @lib: printing-and-output
-
-show_help() {
-  print_status "Usage: $0 [OPTIONS]"
-  print_status ""
-  print_status "Reads a secret from a Kubernetes cluster and launches a pod that connects using those credentials."
-  print_status ""
-  print_status "OPTIONS:"
-  print_status "  --secret-name NAME      Name of the Kubernetes secret to retrieve"
-  print_status "  --namespace NAMESPACE   Kubernetes namespace containing the secret"
-  print_status "  --username-key KEY      Key in the secret containing the username"
-  print_status "  --password-key KEY      Key in the secret containing the password"
-  print_status "  --postgres-endpoint URL PostgreSQL endpoint URL"
-  print_status "  --database NAME         Database name to connect to"
-  print_status "  --help                  Show this help message"
-}
+# @lib: args-and-help
 
 SECRET_NAME="postgres-config-secret"
 NAMESPACE="postgres"
@@ -26,42 +12,18 @@ PASSWORD_KEY="password"
 POSTGRES_ENDPOINT="postgres-cluster-rw.postgres.svc.cluster.local"
 DATABASE="postgres"
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  --secret-name)
-    SECRET_NAME="$2"
-    shift 2
-    ;;
-  --namespace)
-    NAMESPACE="$2"
-    shift 2
-    ;;
-  --username-key)
-    USERNAME_KEY="$2"
-    shift 2
-    ;;
-  --password-key)
-    PASSWORD_KEY="$2"
-    shift 2
-    ;;
-  --postgres-endpoint)
-    POSTGRES_ENDPOINT="$2"
-    shift 2
-    ;;
-  --database)
-    DATABASE="$2"
-    shift 2
-    ;;
-  --help)
-    show_help
-    exit
-    ;;
-  *)
-    print_error "Unknown argument: $1"
-    exit 1
-    ;;
-  esac
-done
+args_description "Reads a secret from a Kubernetes cluster and launches a pod that connects using those credentials."
+args_value "" "--secret-name" SECRET_NAME "NAME" "Name of the Kubernetes secret to retrieve"
+args_value "" "--namespace" NAMESPACE "NAMESPACE" "Kubernetes namespace containing the secret"
+args_value "" "--username-key" USERNAME_KEY "KEY" "Key in the secret containing the username"
+args_value "" "--password-key" PASSWORD_KEY "KEY" "Key in the secret containing the password"
+args_value "" "--postgres-endpoint" POSTGRES_ENDPOINT "URL" "PostgreSQL endpoint URL"
+args_value "" "--database" DATABASE "NAME" "Database name to connect to"
+
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
+}
 
 print_status "Reading secret ${SECRET_NAME} from namespace ${NAMESPACE}"
 

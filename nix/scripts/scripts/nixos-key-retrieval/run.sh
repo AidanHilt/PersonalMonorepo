@@ -1,4 +1,10 @@
 #!/bin/bash
+
+# @lib: printing-and-output
+# @lib: env-checks
+
+require_monorepo
+
 SSH_PUBKEY=$(cat "$1")
 MACHINE_NAME=$2
 
