@@ -1,4 +1,14 @@
-{ pkgs, n2c, imageName, imageTag, scripts, agent-skills, skills-golang, skills-kubernetes, skills-nixos }:
+{
+  pkgs,
+  n2c,
+  imageName,
+  imageTag,
+  scripts,
+  agent-skills,
+  skills-golang,
+  skills-kubernetes,
+  skills-nixos,
+}:
 
 let
   user = "pi";
@@ -31,32 +41,30 @@ let
   # agent skills, and the permission-system policy are all baked into
   # their final locations here, so the entrypoint needs no rm/cp dance or
   # dynamic folder lookup.
-  piSeed = pkgs.runCommand "pi-seed" { } (
-    ''
-      mkdir -p $out/workspace
-      mkdir -p $out/home/pi/.pi-seed/agent
-      mkdir -p $out/home/pi/.pi
+  piSeed = pkgs.runCommand "pi-seed" { } (''
+    mkdir -p $out/workspace
+    mkdir -p $out/home/pi/.pi-seed/agent
+    mkdir -p $out/home/pi/.pi
 
-      # config/ is a direct, 1:1 mirror of the final ~/.pi/ tree:
-      # config/agent/ mirrors ~/.pi/agent/ (settings.json, models.json,
-      # AGENTS.md, agents/*, and each extension's config.json already
-      # live at their final relative paths under config/agent/), and
-      # config/web-search.json mirrors ~/.pi/web-search.json. So this is
-      # a single recursive copy of the whole config/ tree with no
-      # per-file translation.
-      mkdir -p $out/home/pi/.pi-seed/agent/extensions
-      cp -r --no-preserve=mode ${extraExtensions}/. $out/home/pi/.pi-seed/agent/extensions/
+    # config/ is a direct, 1:1 mirror of the final ~/.pi/ tree:
+    # config/agent/ mirrors ~/.pi/agent/ (settings.json, models.json,
+    # AGENTS.md, agents/*, and each extension's config.json already
+    # live at their final relative paths under config/agent/), and
+    # config/web-search.json mirrors ~/.pi/web-search.json. So this is
+    # a single recursive copy of the whole config/ tree with no
+    # per-file translation.
+    mkdir -p $out/home/pi/.pi-seed/agent/extensions
+    cp -r --no-preserve=mode ${extraExtensions}/. $out/home/pi/.pi-seed/agent/extensions/
 
-      # Build-time pinned agent skills (see ../../extra-skills.nix). Copied
-      # in next to extensions above, before the config/ copy below -- config/
-      # has no skills/ dir today, so copy order doesn't matter yet, but this
-      # keeps it consistent with the extensions copy for when it does.
-      mkdir -p $out/home/pi/.pi-seed/agent/skills
-      cp -r --no-preserve=mode ${extraSkills}/. $out/home/pi/.pi-seed/agent/skills/
+    # Build-time pinned agent skills (see ../../extra-skills.nix). Copied
+    # in next to extensions above, before the config/ copy below -- config/
+    # has no skills/ dir today, so copy order doesn't matter yet, but this
+    # keeps it consistent with the extensions copy for when it does.
+    mkdir -p $out/home/pi/.pi-seed/agent/skills
+    cp -r --no-preserve=mode ${extraSkills}/. $out/home/pi/.pi-seed/agent/skills/
 
-      cp -r --no-preserve=mode ${../../config}/. $out/home/pi/.pi-seed/
-    ''
-    );
+    cp -r --no-preserve=mode ${../../config}/. $out/home/pi/.pi-seed/
+  '');
 
   # Empty placeholder directories for the persistent auth/session state.
   # These paths get named Docker volumes mounted onto them at runtime
@@ -73,7 +81,7 @@ let
     name = "pi-entrypoint";
     runtimeInputs = [
       pkgs.pi-coding-agent
-      
+
       pkgs.gitMinimal
       pkgs.coreutils
       pkgs.bash
@@ -88,6 +96,7 @@ let
     paths = [
       scripts.packages.${pkgs.system}.agent-plan-create
       scripts.packages.${pkgs.system}.agent-stage
+      scripts.packages.${pkgs.system}.agent-validate
       # pkg-install (nix/scripts/scripts/pkg-install) is the only client
       # of the pkg-broker sidecar service (see
       # containers/pkg-broker/README.md, PROJECT-SPEC.md). It is

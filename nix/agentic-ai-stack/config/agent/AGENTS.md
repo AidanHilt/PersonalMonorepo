@@ -43,14 +43,17 @@ triggers. Before dispatch, in order:
    Both must happen now -- the subagent can do neither itself.
 2. Run `agent-plan-create` (below) to assemble the dispatch prompt. If it
    exits complaining about missing tools, go back to step 1 and retry.
-3. Dispatch the IMPLEMENT subagent with that prompt. Worktree isolation is
-   automatic (see "Worktrees" below) -- nothing extra to do for it.
-4. Once the subagent finishes, run `agent-stage <branch> --expect-sha <sha>`
-   (the sha agent-plan-create printed to stderr) to stage its changes onto
-   the current branch for review, without committing. If `agent-stage`
-   refuses because the artifact is missing or mismatched, don't reach for
-   `--force` as a default -- run the checks yourself first and only force
-   past it once you've confirmed the work is actually sound.
+3. Dispatch the subagent_type stated in the prompt (`IMPLEMENT-<n>`, one of
+   a fixed 4-slot pool -- `agent-plan-create` also prints the slot number
+   `<n>` to stderr on its own line). Worktree isolation is automatic (see
+   "Worktrees" below) -- nothing extra to do for it.
+4. Once the subagent finishes, run `agent-stage <branch> --slot <n>` (the
+   same `<n>` from step 3) to stage its changes onto the current branch
+   for review, without committing, and free the dispatch slot. If
+   `agent-stage` refuses because the artifact is missing or mismatched,
+   don't reach for `--force` as a default -- run the checks yourself first
+   and only force past it once you've confirmed the work is actually
+   sound.
 5. Tell the user to review the staged diff and run `kommit` themselves.
    Planning/dispatch agents never commit.
 
@@ -73,53 +76,75 @@ agent-plan-create --paths <files/dirs> --context <text> --steps <text> --out-of-
 
 - `--paths`, `--context`, `--steps`, and `--out-of-scope` are all required.
   `--paths` is a space- and/or comma-separated list of the files/directories
-  the subagent will touch; it drives which validate.sh checks get generated
-  and what they're scoped to.
+  the subagent will touch; it drives which tools are required and the
+  `agent-validate --path ...` command the subagent is granted permission to
+  run.
 - `--style-guide`, `--notes`, and `--research` are optional extra sections.
 - `--domains` records which network domains you already granted via
   `request-domain`; the subagent can't request more itself.
 - `--tools` adds extra required tool names beyond what `--paths` infers.
 
-It writes no files -- it prints the full dispatch prompt to stdout, and
-status/diagnostics (including the generated validate.sh's sha256) to stderr.
-If a tool the generated validate.sh will need isn't on PATH, it exits
-non-zero and lists the missing tools instead of printing a prompt; install
-them with `pkg-install` and retry.
+It writes no plan files -- it prints the full dispatch prompt to stdout, and
+status/diagnostics to stderr -- but it DOES allocate a per-dispatch agent
+definition as a side effect: it picks the first free slot `n` in 1..4 for
+which `${agents_dir}/IMPLEMENT-n.md` doesn't already exist (`agents_dir`
+resolves to `${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents`, a tmpfs path
+outside the repo), copies the global `${agents_dir}/IMPLEMENT.md` template
+to `${agents_dir}/IMPLEMENT-n.md`, and grants that copy permission to run
+exactly one bash command: the `agent-validate --path ...` invocation
+covering `--paths`. If all 4 slots are taken, or a tool the detected
+profiles need isn't on PATH, it exits non-zero without printing a prompt or
+allocating a slot; install missing tools with `pkg-install`, or free a slot
+(normally done by `agent-stage --slot <n>` after that dispatch finishes),
+then retry.
 
-The prompt embeds a generated `validate.sh` verbatim. The subagent writes it
-byte-for-byte to `./validate.sh` and runs `bash ./validate.sh` as the only
-bash command it's permitted to run at all. validate.sh runs three phases in
-fixed order -- FORMAT (mutating formatters), LINT (boolean checks), then
-BUILD/TEST -- and on full success writes `.agent/validated.json` (schema
-version, the sha256 of validate.sh as written, a `tree_sha` of the working
-tree excluding `.agent/` and `validate.sh`, per-check results, tool
+Unlike the old generated-validate.sh flow, `agent-validate` is a committed
+command installed on PATH outside the worktree (so the subagent cannot
+tamper with it) that discovers its checks AT RUN TIME: it re-classifies
+`--path` (re-expanding directories) when the subagent actually runs it, so
+files the subagent creates during the work are covered too, not just what
+existed at dispatch time. It runs the same three phases in the same fixed
+order -- FORMAT (mutating formatters), LINT (boolean checks), then
+BUILD/TEST -- against the same 10-run failure budget, and on full success
+writes `.agent/validated.json` (schema version, `validator` identifying the
+agent-validate executable that ran, a `tree_sha` of the working tree
+excluding only `.agent/`, the `--path` arguments, per-check results, tool
 versions, and a timestamp). Exit codes: `0` everything passed and the
-artifact was written; `10` a check failed (counts against a 10-failed-run
+artifact was written; `10` a check failed (counts against the failure
 budget); `20` a required tool is missing; `21` a network error; `22` a
-permission error; `23` an expected artifact value (validate_sha, tree_sha,
-timestamp, or a tool version) could not be computed -- validate.sh aborted
-without writing the artifact rather than degrade it silently; `99` the
-failure budget is exhausted. `agent-stage`
-recomputes that same `tree_sha` from the branch itself before staging, so a
-mismatch (or missing artifact) means the branch's working tree moved after
-validate.sh last ran clean -- don't take that on faith.
+permission error; `23` an expected artifact value (tree_sha, timestamp, or
+a tool version) could not be computed -- agent-validate aborted without
+writing the artifact rather than degrade it silently; `99` the failure
+budget is exhausted. `agent-stage` recomputes that same `tree_sha` from the
+branch itself before staging, so a mismatch (or missing artifact) means the
+branch's working tree moved after agent-validate last ran clean -- don't
+take that on faith.
 
-There is also a secondary `frontmatter` mode
-(`agent-plan-create frontmatter <agent-file.md> key=value [key=value ...]`) for
-merging key/value pairs into an existing agent `.md` file's YAML frontmatter;
-it's unrelated to the plan-prompt workflow above.
+There is also a secondary `frontmatter` mode (`agent-plan-create frontmatter
+<agent-file.md> key=value [key=value ...] [--allow-bash <cmd>]`), used
+internally by the primary mode to set up each per-dispatch
+`IMPLEMENT-n.md`, for merging key/value pairs into an existing agent `.md`
+file's YAML frontmatter and/or granting an exact-match bash allow rule.
 
 ### Worktrees
 The IMPLEMENT subagent runs in an isolated git worktree, via the
 `@gotgenes/pi-subagents-worktrees` extension (opted in for the `IMPLEMENT`
-agent type only, through `subagents-worktrees.json` -- see
-nix/agentic-ai-stack/config/agent/subagents-worktrees.json). The worktree is
-a DETACHED checkout of HEAD: uncommitted/untracked files do not appear
-there, so everything the subagent needs must either be in the dispatch
-prompt or already committed. On finish, its changes land on a branch named
+agent type and its four per-dispatch slot copies -- `IMPLEMENT-1` ..
+`IMPLEMENT-4` -- through `subagents-worktrees.json` -- see
+nix/agentic-ai-stack/config/agent/subagents-worktrees.json, read once at
+extension startup, which is why the slot names are a fixed pool rather than
+generated dynamically). agent-plan-create dispatches a per-dispatch copy
+(`IMPLEMENT-n.md`, holding only that dispatch's `agent-validate` allow
+rule), not the bare `IMPLEMENT` type, so parallel dispatches each get their
+own worktree and their own narrow permission. The worktree is a DETACHED
+checkout of HEAD: uncommitted/untracked files do not appear there, so
+everything the subagent needs must either be in the dispatch prompt or
+already committed. On finish, its changes land on a branch named
 `pi-agent-<id>`; if it made no changes, the worktree (and branch) are
 removed instead. The extension deliberately does not merge for you -- that's
-what `agent-stage` is for (see above).
+what `agent-stage` is for (see above). `agent-stage --slot <n>` removes
+`${agents_dir}/IMPLEMENT-n.md` after a successful stage, freeing the slot
+for a future dispatch.
 
 This is a summary -- if `nix/scripts/scripts/agent-plan-create/run.sh`'s own
 `show_help` (or `nix/scripts/scripts/agent-stage/run.sh`'s) has drifted from

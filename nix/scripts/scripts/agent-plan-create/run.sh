@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # @lib: printing-and-output
+# @lib: agent-plan-classify
 
 set -euo pipefail
 
@@ -10,16 +11,26 @@ Usage:
   agent-plan-create --paths <list> --context <text> --steps <text> --out-of-scope <text> \
                      [--style-guide <text>] [--notes <text>] [--research <text>] \
                      [--domains <comma-list>] [--tools <comma-list>]
-  agent-plan-create frontmatter <agent-file.md> key=value [key=value ...]
+  agent-plan-create frontmatter <agent-file.md> key=value [key=value ...] [--allow-bash <cmd>]
 
 Primary mode: assembles a self-contained IMPLEMENT-subagent dispatch prompt
 and prints it to stdout (status/diagnostics go to stderr). It writes no
-files. Pass the stdout of this command as the subagent's dispatch prompt.
+plan files, but it DOES allocate a per-dispatch agent definition: it picks
+the first free slot n in 1..4 for which
+${agents_dir}/IMPLEMENT-n.md does not already exist (agents_dir resolves to
+${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents), copies the global
+${agents_dir}/IMPLEMENT.md template to ${agents_dir}/IMPLEMENT-n.md, and
+grants that copy permission to run exactly one bash command: the
+`agent-validate --path ...` invocation covering --paths, via an exact-match
+permission.bash allow rule. Pass the printed prompt as the dispatch prompt
+for subagent_type IMPLEMENT-n (stated in the prompt itself); the slot
+number is also printed to stderr on its own line.
 
   --paths <list>           Required. Space- and/or comma-separated list of
                             files/directories that will be touched. Used to
-                            pick which validate.sh checks are generated and
-                            to scope them to the relevant paths.
+                            pick the required tools and to build the
+                            `agent-validate --path ...` command the
+                            subagent is granted permission to run.
   --context <text>         Required. Free text for the "Context" section.
   --steps <text>           Required. Free text for the "Steps" section.
   --out-of-scope <text>    Required. Free text for the "Out of scope" section.
@@ -37,47 +48,34 @@ Required-tools handling: the tool list is computed from the file-type
 profiles detected in --paths, plus --tools. Every tool is checked with
 `command -v` in THIS environment (the one the subagent worktree will
 share). If any are missing, they are printed to stderr as a list and the
-command exits non-zero WITHOUT printing a prompt -- install them with
-pkg-install and retry.
+command exits non-zero WITHOUT printing a prompt or allocating a slot --
+install them with pkg-install and retry.
 
-The prompt embeds a generated validate.sh verbatim in a fenced block. The
-subagent must write it byte-for-byte to ./validate.sh (no edits, no added
-or removed checks) and run it as `bash ./validate.sh`. The sha256 of the
-generated validate.sh is printed to stderr and also stated inside the
-prompt, so the main agent can later pass it to `agent-stage --expect-sha`.
+Unlike the old generated-validate.sh flow, `agent-validate` discovers its
+checks AT RUN TIME when the subagent runs it (re-classifying --paths,
+including directories, from scratch), so files the subagent creates during
+the work are covered too -- not just the files/dirs that existed at
+dispatch time.
 
 Secondary mode ("frontmatter"): merges key=value pairs into the YAML
 frontmatter block of an existing agent .md file, leaving all other
-frontmatter keys and the body untouched. Requires the "yq" (mikefarah/yq)
-binary on PATH. Refuses to operate on non-.md files, and refuses to write
-outside the detected repository. Does NOT compute or infer values -- every
-key=value pair must be supplied explicitly by the caller.
+frontmatter keys and the body untouched, and/or grants an exact-match bash
+allow rule via `--allow-bash <cmd>` (sets
+`.permission.bash["<cmd>"] = "allow"`). Requires the "yq" (mikefarah/yq)
+binary on PATH. Refuses to operate on non-.md files. Refuses to write
+outside the detected repository UNLESS the target file is inside the
+resolved agents_dir (${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents) --
+that tmpfs directory holds the per-dispatch agent definitions this script's
+primary mode writes, and is never part of the repo. Does NOT compute or
+infer key=value values -- every pair must be supplied explicitly by the
+caller.
 EOF
 }
 
 # --- shared repo-root guardrail (frontmatter mode only still writes) -----
 
-# Walks up from a starting path looking for a `.git` entry (directory or,
-# for worktrees, a file). Prints the repo root and returns 0 on success;
-# returns 1 if none was found by the time it reaches `/`.
-find_repo_root() {
-  local dir="$1"
-  while :; do
-    if [[ -e "$dir/.git" ]]; then
-      printf '%s\n' "$dir"
-      return 0
-    fi
-    if [[ "$dir" == "/" ]]; then
-      return 1
-    fi
-    dir="$(dirname "$dir")"
-  done
-}
-
-# Resolves $1 to an absolute path even if it doesn't exist yet (realpath -m
-# resolves the deepest existing ancestor and appends the rest literally).
-resolve_path() {
-  realpath -m -- "$1"
+resolve_agents_dir() {
+  printf '%s/agents\n' "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
 }
 
 require_within_repo() {
@@ -98,568 +96,6 @@ require_within_repo() {
   esac
 
   printf '%s\n' "$repo_root"
-}
-
-# --- path classification ---------------------------------------------------
-#
-# Splits --paths on commas and whitespace, resolves each entry, and sorts
-# it into profile buckets by file type. These buckets drive both the
-# required-tool list and the concrete, path-scoped commands embedded in the
-# generated validate.sh.
-
-BASH_FILES=()
-GO_MODULE_DIRS=()
-YAML_FILES=()
-HELM_CHART_DIRS=()
-NIX_FILES=()
-NIX_FLAKE_DIRS=()
-TF_DIRS=()
-DOCKERFILES=()
-UNKNOWN_PATHS=()
-
-# Walks upward from a starting directory looking for a marker file
-# (go.mod / flake.nix), bounded at the repo root. Prints the directory
-# containing the marker, or nothing if not found.
-walk_up_for_marker() {
-  local dir="$1" marker="$2" repo_root="$3"
-  while :; do
-    if [[ -e "$dir/$marker" ]]; then
-      printf '%s\n' "$dir"
-      return 0
-    fi
-    if [[ "$dir" == "$repo_root" || "$dir" == "/" ]]; then
-      return 1
-    fi
-    dir="$(dirname "$dir")"
-  done
-}
-
-array_contains() {
-  local needle="$1"
-  shift
-  local x
-  for x in "$@"; do
-    [[ "$x" == "$needle" ]] && return 0
-  done
-  return 1
-}
-
-add_unique() {
-  # add_unique <array-name> <value>
-  local -n arr="$1"
-  local val="$2"
-  array_contains "$val" "${arr[@]+"${arr[@]}"}" || arr+=("$val")
-}
-
-classify_file() {
-  local f="$1" repo_root="$2"
-  local base dir
-  base="$(basename "$f")"
-  dir="$(dirname "$f")"
-
-  case "$base" in
-  *.sh)
-    add_unique BASH_FILES "$f"
-    return
-    ;;
-  *.go)
-    local mod_dir
-    if mod_dir="$(walk_up_for_marker "$dir" "go.mod" "$repo_root")"; then
-      add_unique GO_MODULE_DIRS "$mod_dir"
-    else
-      add_unique UNKNOWN_PATHS "$f (no go.mod found)"
-    fi
-    return
-    ;;
-  Chart.yaml)
-    add_unique HELM_CHART_DIRS "$dir"
-    return
-    ;;
-  *.yaml | *.yml)
-    add_unique YAML_FILES "$f"
-    local chart_dir
-    if chart_dir="$(walk_up_for_marker "$dir" "Chart.yaml" "$repo_root")"; then
-      add_unique HELM_CHART_DIRS "$chart_dir"
-    fi
-    return
-    ;;
-  *.nix)
-    add_unique NIX_FILES "$f"
-    local flake_dir
-    if flake_dir="$(walk_up_for_marker "$dir" "flake.nix" "$repo_root")"; then
-      add_unique NIX_FLAKE_DIRS "$flake_dir"
-    fi
-    return
-    ;;
-  *.tf)
-    add_unique TF_DIRS "$dir"
-    return
-    ;;
-  Dockerfile | Dockerfile.* | *.dockerfile)
-    add_unique DOCKERFILES "$f"
-    return
-    ;;
-  *)
-    # Fall back to shebang sniffing for extensionless scripts.
-    if [[ -f "$f" ]] && head -c 64 -- "$f" 2>/dev/null | head -1 | grep -qE '^#!.*\b(bash|sh)\b'; then
-      add_unique BASH_FILES "$f"
-    else
-      add_unique UNKNOWN_PATHS "$f"
-    fi
-    return
-    ;;
-  esac
-}
-
-classify_dir() {
-  local d="$1" repo_root="$2"
-  local f
-  while IFS= read -r -d '' f; do
-    classify_file "$f" "$repo_root"
-  done < <(find "$d" -type f \( \
-    -name '*.sh' -o -name '*.go' -o -name '*.yaml' -o -name '*.yml' \
-    -o -name 'Chart.yaml' -o -name '*.nix' -o -name '*.tf' \
-    -o -name 'Dockerfile' -o -name 'Dockerfile.*' -o -name '*.dockerfile' \
-    \) -print0)
-}
-
-classify_paths() {
-  local raw="$1" repo_root="$2"
-  local normalized p
-  # Commas and whitespace are both accepted as separators.
-  normalized="${raw//,/ }"
-  for p in $normalized; do
-    [[ -z "$p" ]] && continue
-    local resolved
-    resolved="$(resolve_path "$p")"
-    if [[ -f "$resolved" ]]; then
-      classify_file "$resolved" "$repo_root"
-    elif [[ -d "$resolved" ]]; then
-      classify_dir "$resolved" "$repo_root"
-    else
-      add_unique UNKNOWN_PATHS "$p (not found on disk)"
-    fi
-  done
-}
-
-relativize_array() {
-  local -n _rel_arr="$1"
-  local repo_root="$2" i
-  for i in "${!_rel_arr[@]}"; do
-    _rel_arr[i]="$(realpath -m --relative-to="$repo_root" -- "${_rel_arr[i]}")"
-  done
-}
-
-relativize_paths() {
-  local repo_root="$1" name
-  for name in BASH_FILES GO_MODULE_DIRS YAML_FILES HELM_CHART_DIRS NIX_FILES NIX_FLAKE_DIRS TF_DIRS DOCKERFILES; do
-    relativize_array "$name" "$repo_root"
-  done
-}
-
-# --- required tool computation ---------------------------------------------
-
-required_tools_for_profiles() {
-  local tools=()
-  [[ ${#BASH_FILES[@]} -gt 0 ]] && tools+=(shfmt shellcheck bash)
-  [[ ${#GO_MODULE_DIRS[@]} -gt 0 ]] && tools+=(go)
-  [[ ${#YAML_FILES[@]} -gt 0 || ${#HELM_CHART_DIRS[@]} -gt 0 ]] && tools+=(yamllint)
-  [[ ${#HELM_CHART_DIRS[@]} -gt 0 ]] && tools+=(helm kubeconform)
-  [[ ${#NIX_FILES[@]} -gt 0 ]] && tools+=(nixfmt statix)
-  [[ ${#NIX_FLAKE_DIRS[@]} -gt 0 ]] && tools+=(nix)
-  [[ ${#TF_DIRS[@]} -gt 0 ]] && tools+=(terraform)
-  [[ ${#DOCKERFILES[@]} -gt 0 ]] && tools+=(hadolint)
-  printf '%s\n' "${tools[@]+"${tools[@]}"}"
-}
-
-# --- validate.sh generation --------------------------------------------------
-#
-# Emits a concrete, path-scoped validate.sh: every command below is a
-# literal invocation over the specific files/dirs classify_paths found, not
-# a runtime re-scan. Phases run in a fixed global order: all FORMAT checks
-# across every profile, then all LINT checks, then all BUILD/TEST checks.
-
-quote_list() {
-  # Shell-quotes each argument and joins them with single spaces, with no
-  # trailing space (trailing whitespace does not survive prompt transport).
-  local out="" x
-  for x in "$@"; do
-    out+="$(printf '%q' "$x") "
-  done
-  printf '%s' "${out% }"
-}
-
-emit_format_phase() {
-  if [[ ${#BASH_FILES[@]} -gt 0 ]]; then
-    printf 'run_check FORMAT "shfmt" shfmt -i 2 -w %s\n' "$(quote_list "${BASH_FILES[@]}")"
-  fi
-  if [[ ${#GO_MODULE_DIRS[@]} -gt 0 ]]; then
-    local d
-    for d in "${GO_MODULE_DIRS[@]}"; do
-      printf 'run_check FORMAT "go fmt(%s)" bash -c %s\n' "$d" "$(printf '%q' "cd $(printf '%q' "$d") && go fmt ./...")"
-    done
-  fi
-  if [[ ${#NIX_FILES[@]} -gt 0 ]]; then
-    printf 'run_check FORMAT "nixfmt" nixfmt %s\n' "$(quote_list "${NIX_FILES[@]}")"
-  fi
-  if [[ ${#TF_DIRS[@]} -gt 0 ]]; then
-    local d
-    for d in "${TF_DIRS[@]}"; do
-      printf 'run_check FORMAT "terraform fmt(%s)" terraform fmt %s\n' "$d" "$(quote_list "$d")"
-    done
-  fi
-  if [[ ${#YAML_FILES[@]} -eq 0 && ${#HELM_CHART_DIRS[@]} -eq 0 ]]; then
-    :
-  else
-    printf '# NOTE: no YAML formatter is available in this stack; YAML/Helm files are linted but not auto-formatted.\n'
-  fi
-}
-
-emit_lint_phase() {
-  if [[ ${#BASH_FILES[@]} -gt 0 ]]; then
-    printf 'run_check LINT "shellcheck" shellcheck %s\n' "$(quote_list "${BASH_FILES[@]}")"
-    local f
-    for f in "${BASH_FILES[@]}"; do
-      printf 'run_check LINT "bash -n(%s)" bash -n %s\n' "$f" "$(quote_list "$f")"
-    done
-  fi
-  if [[ ${#GO_MODULE_DIRS[@]} -gt 0 ]]; then
-    local d
-    for d in "${GO_MODULE_DIRS[@]}"; do
-      printf 'run_check LINT "go vet(%s)" bash -c %s\n' "$d" "$(printf '%q' "cd $(printf '%q' "$d") && go vet ./...")"
-    done
-  fi
-  if [[ ${#HELM_CHART_DIRS[@]} -gt 0 ]]; then
-    local d
-    for d in "${HELM_CHART_DIRS[@]}"; do
-      printf 'run_check LINT "helm lint(%s)" helm lint %s\n' "$d" "$(quote_list "$d")"
-    done
-  fi
-  if [[ ${#YAML_FILES[@]} -gt 0 ]]; then
-    printf 'run_check LINT "yamllint" yamllint %s\n' "$(quote_list "${YAML_FILES[@]}")"
-  fi
-  if [[ ${#NIX_FILES[@]} -gt 0 ]]; then
-    printf 'run_check LINT "statix check" statix check %s\n' "$(quote_list "${NIX_FILES[@]}")"
-  fi
-  if [[ ${#TF_DIRS[@]} -gt 0 ]]; then
-    local d
-    for d in "${TF_DIRS[@]}"; do
-      printf 'run_check LINT "terraform validate(%s)" bash -c %s\n' "$d" "$(printf '%q' "cd $(printf '%q' "$d") && terraform validate")"
-    done
-  fi
-  if [[ ${#DOCKERFILES[@]} -gt 0 ]]; then
-    local f
-    for f in "${DOCKERFILES[@]}"; do
-      printf 'run_check LINT "hadolint(%s)" hadolint %s\n' "$f" "$(quote_list "$f")"
-    done
-  fi
-}
-
-emit_build_test_phase() {
-  if [[ ${#GO_MODULE_DIRS[@]} -gt 0 ]]; then
-    local d
-    for d in "${GO_MODULE_DIRS[@]}"; do
-      printf 'run_check BUILD_TEST "go build(%s)" bash -c %s\n' "$d" "$(printf '%q' "cd $(printf '%q' "$d") && go build ./...")"
-      printf 'run_check BUILD_TEST "go test(%s)" bash -c %s\n' "$d" "$(printf '%q' "cd $(printf '%q' "$d") && go test ./...")"
-    done
-  fi
-  if [[ ${#HELM_CHART_DIRS[@]} -gt 0 ]]; then
-    local d
-    for d in "${HELM_CHART_DIRS[@]}"; do
-      printf 'run_check BUILD_TEST "helm template|kubeconform(%s)" bash -c %s\n' "$d" \
-        "$(printf '%q' "set -o pipefail; helm template $(printf '%q' "$d") | kubeconform -strict -summary")"
-    done
-  fi
-  if [[ ${#NIX_FLAKE_DIRS[@]} -gt 0 ]]; then
-    local d
-    for d in "${NIX_FLAKE_DIRS[@]}"; do
-      printf 'run_check BUILD_TEST "nix flake check(%s)" bash -c %s\n' "$d" "$(printf '%q' "nix flake check $(printf '%q' "$d")")"
-    done
-  fi
-}
-
-any_checks_emitted() {
-  [[ ${#BASH_FILES[@]} -gt 0 || ${#GO_MODULE_DIRS[@]} -gt 0 || ${#YAML_FILES[@]} -gt 0 ||
-    ${#HELM_CHART_DIRS[@]} -gt 0 || ${#NIX_FILES[@]} -gt 0 || ${#NIX_FLAKE_DIRS[@]} -gt 0 ||
-    ${#TF_DIRS[@]} -gt 0 || ${#DOCKERFILES[@]} -gt 0 ]]
-}
-
-generate_validate_script() {
-  local required_tools_str="$1"
-
-  cat <<'VALIDATE_HEADER'
-#!/bin/bash
-# Generated by agent-plan-create. Do not hand-edit; regenerate the plan
-# prompt instead if checks need to change.
-set -uo pipefail
-
-FAILURE_BUDGET=10
-ARTIFACT=".agent/validated.json"
-RESULTS=()
-
-git_dir() { git rev-parse --git-dir 2>/dev/null; }
-
-failcount_file() {
-  local gd
-  gd="$(git_dir)" || { printf '%s\n' "/tmp/.pi-validate-failcount"; return; }
-  printf '%s/pi-validate-failcount\n' "$gd"
-}
-
-read_failcount() {
-  local f count
-  f="$(failcount_file)"
-  if [[ -f "$f" ]]; then
-    count="$(cat "$f")" || die_artifact "could not read failure count from $f"
-  else
-    count=0
-  fi
-  if [[ ! "$count" =~ ^[0-9]+$ ]]; then
-    die_artifact "$f contains a non-numeric failure count ('$count')"
-  fi
-  printf '%s\n' "$count"
-}
-
-write_failcount() {
-  local f
-  f="$(failcount_file)"
-  printf '%s\n' "$1" >"$f" || die_artifact "could not write failure count to $f"
-}
-
-classify_error() {
-  local out="$1"
-  if printf '%s' "$out" | grep -qiE 'could not resolve host|connection refused|connection timed out|timed out after|network is unreachable|certificate verify failed|tls handshake|ssl certificate problem|no route to host|name or service not known|temporary failure in name resolution'; then
-    printf 'network\n'
-  elif printf '%s' "$out" | grep -qiE 'permission denied|operation not permitted|forbidden|eacces|access denied'; then
-    printf 'permission\n'
-  else
-    printf 'check\n'
-  fi
-}
-
-print_tail() {
-  printf '%s\n' "$1" | tail -n 40
-}
-
-record_pass() {
-  RESULTS+=("{\"phase\":\"$1\",\"check\":\"$2\",\"status\":\"pass\"}")
-}
-
-handle_failure() {
-  local phase="$1" name="$2" rc="$3" out="$4"
-  local kind
-  kind="$(classify_error "$out")"
-  case "$kind" in
-  network)
-    printf '[%s] NETWORK ERROR in "%s" (exit %s)\n' "$phase" "$name" "$rc" >&2
-    print_tail "$out" >&2
-    exit 21
-    ;;
-  permission)
-    printf '[%s] PERMISSION ERROR in "%s" (exit %s)\n' "$phase" "$name" "$rc" >&2
-    print_tail "$out" >&2
-    exit 22
-    ;;
-  *)
-    local count
-    count="$(read_failcount)"
-    count=$((count + 1))
-    write_failcount "$count"
-    printf '[%s] FAILED "%s" (exit %s) -- failed run %s/%s\n' "$phase" "$name" "$rc" "$count" "$FAILURE_BUDGET" >&2
-    print_tail "$out" >&2
-    if [[ "$count" -ge "$FAILURE_BUDGET" ]]; then
-      printf 'Failure budget (%s) exhausted.\n' "$FAILURE_BUDGET" >&2
-      exit 99
-    fi
-    exit 10
-    ;;
-  esac
-}
-
-run_check() {
-  local phase="$1" name="$2"
-  shift 2
-  local out rc
-  out="$("$@" 2>&1)"
-  rc=$?
-  if [[ $rc -eq 0 ]]; then
-    printf '[%s] ok: %s\n' "$phase" "$name"
-    record_pass "$phase" "$name"
-  else
-    handle_failure "$phase" "$name" "$rc" "$out"
-  fi
-}
-
-# An expected artifact value (validate_sha, tree_sha, timestamp, or a tool
-# version) could not be computed. Silent degradation (writing "unknown" or
-# an empty value) is unacceptable, so abort instead: remove any partial
-# artifact and exit with a dedicated code rather than exit 0 or 10.
-die_artifact() {
-  printf 'ARTIFACT ERROR: %s\n' "$1" >&2
-  rm -f "$ARTIFACT"
-  exit 23
-}
-
-VALIDATE_HEADER
-
-  printf '\n# --- required tools ---------------------------------------------------------\n\n'
-  printf 'REQUIRED_TOOLS=(\n'
-  while IFS= read -r t; do
-    [[ -z "$t" ]] && continue
-    printf '  %q\n' "$t"
-  done <<<"$required_tools_str"
-  printf ')\n'
-
-  cat <<'VALIDATE_BODY'
-
-missing=()
-for t in "${REQUIRED_TOOLS[@]}"; do
-  command -v "$t" >/dev/null 2>&1 || missing+=("$t")
-done
-if [[ ${#missing[@]} -gt 0 ]]; then
-  printf 'Missing required tools: %s\n' "${missing[*]}" >&2
-  exit 20
-fi
-
-# --- failure budget check (before doing any work) ---------------------------
-
-current_failcount="$(read_failcount)"
-if [[ "$current_failcount" -ge "$FAILURE_BUDGET" ]]; then
-  printf 'Failure budget (%s) already exhausted from prior runs.\n' "$FAILURE_BUDGET" >&2
-  exit 99
-fi
-
-rm -f "$ARTIFACT"
-
-# --- tree_sha helper (excludes .agent/ and validate.sh) ---------------------
-
-compute_tree_sha() {
-  local tmp_index out rc
-  tmp_index="$(mktemp -u)"
-  # Seed from HEAD so tracked-but-gitignored files (e.g. .secrets.baseline)
-  # are kept, matching what the worktree commit records.
-  out="$(GIT_INDEX_FILE="$tmp_index" git read-tree HEAD 2>&1)"
-  rc=$?
-  if [[ $rc -ne 0 ]]; then
-    printf '%s\n' "$out" >&2
-    rm -f "$tmp_index"
-    return $rc
-  fi
-  out="$(GIT_INDEX_FILE="$tmp_index" git add -A -- :/ 2>&1)"
-  rc=$?
-  if [[ $rc -ne 0 ]]; then
-    printf '%s\n' "$out" >&2
-    rm -f "$tmp_index"
-    return $rc
-  fi
-  # --ignore-unmatch legitimately may match nothing (no .agent/validate.sh
-  # tracked yet), but any other failure must still propagate.
-  out="$(GIT_INDEX_FILE="$tmp_index" git rm -r --cached --ignore-unmatch -q .agent validate.sh 2>&1)"
-  rc=$?
-  if [[ $rc -ne 0 ]]; then
-    printf '%s\n' "$out" >&2
-    rm -f "$tmp_index"
-    return $rc
-  fi
-  out="$(GIT_INDEX_FILE="$tmp_index" git write-tree 2>&1)"
-  rc=$?
-  rm -f "$tmp_index"
-  if [[ $rc -ne 0 ]]; then
-    printf '%s\n' "$out" >&2
-    return $rc
-  fi
-  printf '%s\n' "$out"
-  return 0
-}
-
-VALIDATE_BODY
-  cd "$(git rev-parse --show-toplevel)" || {
-    printf 'Not inside a git work tree\n' >&2
-    exit 20
-  }
-
-  printf '\n# --- FORMAT phase (mutating; reformatting itself is not a failure) --------\n\n'
-  emit_format_phase
-
-  printf '\n# --- LINT phase --------------------------------------------------------------\n\n'
-  emit_lint_phase
-
-  printf '\n# --- BUILD/TEST phase ---------------------------------------------------------\n\n'
-  emit_build_test_phase
-
-  cat <<'VALIDATE_FOOTER'
-
-# --- all phases passed: write the artifact ----------------------------------
-#
-# Every value below is required for the artifact to be trustworthy. Silent
-# degradation (empty strings, "unknown", or an empty tool_versions object)
-# is unacceptable -- if a value can't be computed exactly as expected,
-# die_artifact aborts (exit 23) instead of writing a degraded artifact.
-
-mkdir -p .agent
-
-validate_sha="$(sha256sum validate.sh | cut -d' ' -f1)" || die_artifact "sha256sum validate.sh failed"
-if [[ ! "$validate_sha" =~ ^[0-9a-f]{64}$ ]]; then
-  die_artifact "validate_sh_sha256 did not come out as a 64-hex-digit sha256 ('$validate_sha')"
-fi
-
-tree_sha="$(compute_tree_sha)" || die_artifact "compute_tree_sha failed"
-if [[ ! "$tree_sha" =~ ^[0-9a-f]{40,64}$ ]]; then
-  die_artifact "tree_sha did not come out as a git tree object id ('$tree_sha')"
-fi
-
-ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)" || die_artifact "date failed"
-if [[ ! "$ts" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]; then
-  die_artifact "timestamp did not come out in the expected UTC format ('$ts')"
-fi
-
-# Per-tool version lookups: most tools support --version, but a handful
-# need a different invocation. Falls through to "<tool> --version" for
-# anything not special-cased.
-tool_version() {
-  local t="$1"
-  case "$t" in
-  go)
-    go version 2>&1 | head -1
-    ;;
-  helm)
-    helm version --short 2>&1 | head -1
-    ;;
-  kubeconform)
-    kubeconform -v 2>&1 | head -1
-    ;;
-  *)
-    "$t" --version 2>&1 | head -1
-    ;;
-  esac
-}
-
-tool_versions_obj="{}"
-for t in "${REQUIRED_TOOLS[@]}"; do
-  v="$(tool_version "$t")"
-  rc=$?
-  if [[ $rc -ne 0 || -z "$v" ]]; then
-    die_artifact "could not determine a version string for required tool '$t' (exit $rc, output: '$v')"
-  fi
-  tool_versions_obj="$(printf '%s' "$tool_versions_obj" | jq --arg k "$t" --arg v "$v" '. + {($k): $v}')" ||
-    die_artifact "jq failed while recording the version of '$t'"
-done
-tool_versions="$tool_versions_obj"
-
-{
-  printf '{\n'
-  printf '  "schema_version": 1,\n'
-  printf '  "validate_sh_sha256": "%s",\n' "$validate_sha"
-  printf '  "tree_sha": "%s",\n' "$tree_sha"
-  printf '  "timestamp": "%s",\n' "$ts"
-  printf '  "results": [%s],\n' "$(IFS=,; echo "${RESULTS[*]+"${RESULTS[*]}"}")"
-  printf '  "tool_versions": %s\n' "$tool_versions"
-  printf '}\n'
-} >"$ARTIFACT" || die_artifact "failed to write $ARTIFACT"
-
-printf 'All checks passed. Wrote %s\n' "$ARTIFACT"
-write_failcount 0
-exit 0
-VALIDATE_FOOTER
 }
 
 # --- primary mode: assemble dispatch prompt ---------------------------------
@@ -736,7 +172,7 @@ run_create() {
   fi
 
   if ! any_checks_emitted; then
-    print_warning "No recognized file types in --paths; validate.sh will have no checks beyond the artifact write."
+    print_warning "No recognized file types in --paths; agent-validate will have no checks beyond the artifact write."
   fi
 
   local tools_list extra_list all_tools=()
@@ -746,10 +182,11 @@ run_create() {
   else
     extra_list=()
   fi
-  # Baseline tools validate.sh itself always relies on (failcount/artifact
-  # bookkeeping, tree_sha computation, tool-version reporting), regardless
-  # of which file-type profiles were detected.
-  local baseline_tools=(git jq sha256sum cut head tail grep mktemp date cat)
+  # Baseline tools agent-validate itself always relies on (failcount/artifact
+  # bookkeeping, tree_sha computation, tool-version reporting), plus yq
+  # (needed below to write the per-dispatch agent definition), regardless
+  # of which file-type profiles were detected in --paths.
+  local baseline_tools=(git jq yq sha256sum cut head tail grep mktemp date cat)
   local t
   for t in "${tools_list[@]+"${tools_list[@]}"}" "${extra_list[@]+"${extra_list[@]}"}" "${baseline_tools[@]}"; do
     [[ -z "$t" ]] && continue
@@ -767,22 +204,76 @@ run_create() {
     exit 1
   fi
 
-  local required_tools_str
-  required_tools_str="$(printf '%s\n' "${all_tools[@]+"${all_tools[@]}"}")"
-
-  local validate_script
-  validate_script="$(generate_validate_script "$required_tools_str")"
-
-  local validate_sha
-  validate_sha="$(printf '%s' "$validate_script" | sha256sum | cut -d' ' -f1)"
-
-  print_status "Generated validate.sh (sha256: $validate_sha)"
   print_status "Required tools: ${all_tools[*]+"${all_tools[*]}"}"
+
+  # --- build the ordered, repo-relative --path arguments for agent-validate --
+
+  local ordered_paths=() normalized p resolved rel
+  normalized="${paths//,/ }"
+  for p in $normalized; do
+    [[ -z "$p" ]] && continue
+    resolved="$(resolve_path "$p")"
+    rel="$(realpath -m --relative-to="$repo_root" -- "$resolved")"
+    ordered_paths+=("$rel")
+  done
+
+  if [[ ${#ordered_paths[@]} -eq 0 ]]; then
+    print_error "No usable entries found in --paths"
+    exit 1
+  fi
+
+  local validate_cmd="agent-validate"
+  for p in "${ordered_paths[@]}"; do
+    validate_cmd+=" --path $(printf '%q' "$p")"
+  done
+
+  # --- allocate a dispatch slot and grant it the exact-match allow rule -----
+
+  local agents_dir
+  agents_dir="$(resolve_agents_dir)"
+
+  local template="$agents_dir/IMPLEMENT.md"
+  if [[ ! -f "$template" ]]; then
+    print_error "Template '$template' not found; cannot allocate a dispatch slot"
+    exit 1
+  fi
+
+  local slot="" n per_dispatch_file
+  for n in 1 2 3 4; do
+    if [[ ! -e "$agents_dir/IMPLEMENT-$n.md" ]]; then
+      slot="$n"
+      break
+    fi
+  done
+
+  if [[ -z "$slot" ]]; then
+    print_error "All dispatch slots (IMPLEMENT-1..IMPLEMENT-4) are taken. Wait for one to finish (its agent file is removed on completion by 'agent-stage --slot <n>'), or clean up a stale ${agents_dir}/IMPLEMENT-<n>.md yourself, then retry."
+    exit 1
+  fi
+
+  per_dispatch_file="$agents_dir/IMPLEMENT-$slot.md"
+  cp -- "$template" "$per_dispatch_file"
+
+  run_frontmatter "$per_dispatch_file" --allow-bash "$validate_cmd"
+
+  print_status "Allocated dispatch slot IMPLEMENT-$slot ($per_dispatch_file)"
+  printf '%s\n' "$slot" >&2
 
   # --- assemble the prompt ---------------------------------------------------
 
   {
     printf '# Plan\n\n'
+    printf '## Dispatch\n\n'
+    # shellcheck disable=SC2016
+    printf -- 'Dispatch this prompt to subagent_type `IMPLEMENT-%s`. That subagent has\n' "$slot"
+    printf 'already been granted permission to run exactly one bash command -- the\n'
+    printf 'following, and no other -- as its only validation step:\n\n'
+    # shellcheck disable=SC2016
+    printf '```\n%s\n```\n\n' "$validate_cmd"
+    # shellcheck disable=SC2016
+    printf 'Run it verbatim from the repo root. It discovers its checks at run time\n'
+    printf 'by re-classifying the --path arguments above (directories are re-expanded),\n'
+    printf 'so files you create during the work are covered too.\n\n'
     printf '## Context\n\n%s\n\n' "$context"
     printf '## Steps\n\n%s\n\n' "$steps"
     if [[ -n "$style_guide" ]]; then
@@ -807,27 +298,19 @@ run_create() {
     printf '\n## Definition of Done\n\n'
     printf -- '- The plan above is implemented.\n'
     # shellcheck disable=SC2016
-    printf -- '- `./validate.sh` (written byte-for-byte from the fenced block below) exits 0 and `.agent/validated.json` exists.\n'
+    printf -- '- `%s` (the exact command above, run verbatim) exits 0 and `.agent/validated.json` exists.\n' "$validate_cmd"
     # shellcheck disable=SC2016
-    printf -- '- Your final report includes the exit code of the last `validate.sh` run, the failure count, and whether the artifact was written.\n'
-
-    printf '\n## validate.sh\n\n'
-    # shellcheck disable=SC2016
-    printf 'Write the following script byte-for-byte to `./validate.sh` (do not edit it, do not add or remove checks), then run it as `bash ./validate.sh`. It is the only command you may run in bash.\n\n'
-    # shellcheck disable=SC2016
-    printf 'Expected sha256 of validate.sh once written: `%s`\n\n' "$validate_sha"
-    # shellcheck disable=SC2016
-    printf '```bash\n%s\n```\n' "$validate_script"
+    printf -- '- Your final report includes the exit code of the last `agent-validate` run, the failure count, and whether the artifact was written.\n'
   }
 
-  print_status "Prompt assembled. Pass this script's stdout as the subagent dispatch prompt."
+  print_status "Prompt assembled for subagent_type IMPLEMENT-$slot. Pass this script's stdout as the subagent dispatch prompt."
 }
 
 # --- secondary mode: frontmatter merge ------------------------------------
 
 run_frontmatter() {
   if [[ $# -lt 2 ]]; then
-    print_error "Usage: agent-plan-create frontmatter <agent-file.md> key=value [key=value ...]"
+    print_error "Usage: agent-plan-create frontmatter <agent-file.md> key=value [key=value ...] [--allow-bash <cmd>]"
     exit 1
   fi
 
@@ -855,7 +338,17 @@ run_frontmatter() {
     exit 1
   fi
 
-  require_within_repo "$(dirname "$agent_file")" >/dev/null
+  local agents_dir
+  agents_dir="$(resolve_agents_dir)"
+
+  case "$agent_file" in
+  "$agents_dir"/*) ;; # Inside the per-dispatch agents dir: not part of any
+  # repo (it's the tmpfs ~/.pi/agent/agents tree), so the
+  # within-repo guard doesn't apply here.
+  *)
+    require_within_repo "$(dirname "$agent_file")" >/dev/null
+    ;;
+  esac
 
   # Locate the frontmatter delimiters: line 1 must be exactly "---", and
   # the next bare "---" line closes the block.
@@ -883,22 +376,38 @@ run_frontmatter() {
   sed -n "2,$((end_line - 1))p" "$agent_file" >"$frontmatter_file"
   sed -n "$((end_line + 1)),\$p" "$agent_file" >"$body_file"
 
-  local kv key value
-  for kv in "$@"; do
-    if [[ "$kv" != *=* ]]; then
-      print_error "Invalid key=value pair: '$kv'"
-      exit 1
-    fi
-    key="${kv%%=*}"
-    value="${kv#*=}"
+  local kv key value cmd
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --allow-bash)
+      if [[ $# -lt 2 ]]; then
+        print_error "--allow-bash requires a value"
+        exit 1
+      fi
+      cmd="$2"
+      print_debug "Allowing bash command '$cmd'"
+      CMD="$cmd" yq eval -i '.permission.bash[strenv(CMD)] = "allow"' "$frontmatter_file"
+      shift 2
+      ;;
+    *)
+      kv="$1"
+      if [[ "$kv" != *=* ]]; then
+        print_error "Invalid key=value pair: '$kv'"
+        exit 1
+      fi
+      key="${kv%%=*}"
+      value="${kv#*=}"
 
-    if [[ ! "$key" =~ ^[A-Za-z_][A-Za-z0-9_.-]*$ ]]; then
-      print_error "Invalid frontmatter key: '$key'"
-      exit 1
-    fi
+      if [[ ! "$key" =~ ^[A-Za-z_][A-Za-z0-9_.-]*$ ]]; then
+        print_error "Invalid frontmatter key: '$key'"
+        exit 1
+      fi
 
-    print_debug "Setting frontmatter key '$key'"
-    VALUE="$value" yq eval -i ".${key} = strenv(VALUE)" "$frontmatter_file"
+      print_debug "Setting frontmatter key '$key'"
+      VALUE="$value" yq eval -i ".${key} = strenv(VALUE)" "$frontmatter_file"
+      shift
+      ;;
+    esac
   done
 
   {

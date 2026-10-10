@@ -15,12 +15,15 @@ own flags and exit behavior.
 - Only ever stages a branch matching `pi-agent-*` -- the naming convention
   the worktrees extension uses.
 - Before staging, verifies the branch's own `.agent/validated.json`
-  artifact (written by a passing `./validate.sh` run inside the subagent's
-  worktree) actually matches the branch's tree, so a human never stages
-  code that the subagent itself never finished validating. `--force` skips
-  this at the user's own risk.
+  artifact (written by a passing `agent-validate` run inside the
+  subagent's worktree) actually matches the branch's tree, so a human
+  never stages code that the subagent itself never finished validating.
+  `--force` skips this at the user's own risk.
 - Uses `git merge --squash` (stages into the working tree and index, no
-  commit), and strips `validate.sh`/`.agent/` back out of what gets staged
-  if the squash introduced them.
+  commit), and strips `.agent/` back out of what gets staged if the squash
+  introduced it.
+- `--slot <n>` frees a dispatch slot after a successful stage by removing
+  the per-dispatch `IMPLEMENT-<n>.md` agent-plan-create allocated (see
+  `nix/agentic-ai-stack/config/agent/AGENTS.md`'s "Worktrees" section).
 - Never commits, never deletes the branch, never pushes. Committing is the
   user's job (`kommit`).

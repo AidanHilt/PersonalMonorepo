@@ -22,7 +22,7 @@ that looks real enough to paste over by accident.**
 | `settings.json` | Provider/model/compaction settings. |
 | `models.json` | Wires the `ollama` provider through `proxy`'s Ollama gate. **Currently inert** — Ollama/proxy gate support is disabled (see `ollama/README.md`, `containers/proxy/supervise.sh`); this file is left in place for when it's revived. |
 | `extensions/pi-permission-system/config.json` | The actual allow/ask/deny policy for `@gotgenes/pi-permission-system` (spec §8). |
-| `subagents-worktrees.json` | Opts the `IMPLEMENT` agent type into isolated git worktrees via `@gotgenes/pi-subagents-worktrees` (`{"worktreeAgents": ["IMPLEMENT"]}`). See AGENTS.md's "Worktrees" section for how that fits the dispatch/validate/stage workflow. |
+| `subagents-worktrees.json` | Opts the `IMPLEMENT` agent type and its per-dispatch `IMPLEMENT-1`..`IMPLEMENT-4` slot copies into isolated git worktrees via `@gotgenes/pi-subagents-worktrees` (`{"worktreeAgents": ["IMPLEMENT", "IMPLEMENT-1", "IMPLEMENT-2", "IMPLEMENT-3", "IMPLEMENT-4"]}`). See AGENTS.md's "Worktrees" section for how that fits the dispatch/validate/stage workflow. |
 
 Credentials live at runtime, outside this directory and outside the
 repo entirely — see spec §7 and `compose.yaml`'s auth-store mount.
