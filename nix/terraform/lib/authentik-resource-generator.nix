@@ -1,9 +1,16 @@
 { lib, ... }:
 
 let
-  mkProxyApplication = applicationName: internalHost: externalHost: environment: {authentikHostBrowser ? "", authentikApplicationName ? "", subdomain ? ""}:
+  mkProxyApplication =
+    applicationName: internalHost: externalHost: environment:
+    {
+      authentikHostBrowser ? "",
+      authentikApplicationName ? "",
+      subdomain ? "",
+    }:
     let
-      capitalize = s:
+      capitalize =
+        s:
         let
           first = builtins.substring 0 1 s;
           rest = builtins.substring 1 (builtins.stringLength s - 1) s;
@@ -11,31 +18,41 @@ let
         (lib.toUpper first) + rest;
 
       resolvedApplicationName =
-        if authentikApplicationName != null && authentikApplicationName != ""
-        then authentikApplicationName
-        else capitalize applicationName;
+        if authentikApplicationName != null && authentikApplicationName != "" then
+          authentikApplicationName
+        else
+          capitalize applicationName;
 
-
-      splitProtocol = url:
+      splitProtocol =
+        url:
         let
           m = builtins.match "^([a-zA-Z][a-zA-Z0-9+.-]*://)(.*)$" url;
         in
-        if m == null
-        then { protocol = ""; rest = url; }
-        else { protocol = builtins.elemAt m 0; rest = builtins.elemAt m 1; };
+        if m == null then
+          {
+            protocol = "";
+            rest = url;
+          }
+        else
+          {
+            protocol = builtins.elemAt m 0;
+            rest = builtins.elemAt m 1;
+          };
 
       # Strip everything up to and including the first dot, leaving the "base" domain
-      stripSubdomains = host:
+      stripSubdomains =
+        host:
         let
           parts = lib.splitString "." host;
         in
-        if builtins.length parts <= 2
-        then host
-        else lib.concatStringsSep "." (lib.drop (builtins.length parts - 2) parts);
+        if builtins.length parts <= 2 then
+          host
+        else
+          lib.concatStringsSep "." (lib.drop (builtins.length parts - 2) parts);
 
       resolvedHostBrowser =
-        if authentikHostBrowser != null && authentikHostBrowser != ""
-        then authentikHostBrowser
+        if authentikHostBrowser != null && authentikHostBrowser != "" then
+          authentikHostBrowser
         else
           let
             split = splitProtocol externalHost;
@@ -49,8 +66,7 @@ let
           # We'll have to identify if a hostname is secure or not, and change this based on that
           protocol = "https://";
         in
-        if subdomain != null && subdomain != ""
-        then
+        if subdomain != null && subdomain != "" then
           let
             split = splitProtocol externalHost;
           in
@@ -58,11 +74,12 @@ let
         else
           protocol + externalHost;
 
-      safeExternalHost = builtins.replaceStrings ["."] ["-"] externalHost;
+      safeExternalHost = builtins.replaceStrings [ "." ] [ "-" ] externalHost;
     in
     {
       locals = {
-        "authentik_url_${safeExternalHost}" = "\${var.secure ? \"https\" : \"http\"}://\${var.authentik_subdomain}.${externalHost}";
+        "authentik_url_${safeExternalHost}" =
+          "\${var.secure ? \"https\" : \"http\"}://\${var.authentik_subdomain}.${externalHost}";
       };
 
       variable = {
@@ -101,7 +118,7 @@ let
             count = "\${var.${environment} ? 1 : 0}";
 
             config = builtins.toJSON {
-              authentik_host         = "http://authentik-server.authentik.svc.cluster.local";
+              authentik_host = "http://authentik-server.authentik.svc.cluster.local";
               authentik_host_browser = "\${local.authentik_url_${safeExternalHost}}";
             };
 
