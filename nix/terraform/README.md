@@ -36,8 +36,8 @@ Concretely:
   conflict).
 - The result is an attrset `{ <env1> = merged1; <env2> = merged2; ...;
   original = base; }` — one merged value set per configured environment, plus
-  `original` (the unmodified base values, under the key every
-  `configuration-data` directory would otherwise collide with).
+  `original`: the unmerged base `values.yaml`, returned alongside the
+  per-environment merged attrsets.
 
 Because `personalMonorepo` is a pinned GitHub ref and not this working tree,
 changes to `values.yaml`/`master-stack.yaml` must be **pushed** before they
@@ -69,7 +69,7 @@ environment).
 | Module | Purpose | Helm values consumed | Key variables | Provider notes |
 | --- | --- | --- | --- | --- |
 | `vault` | Creates the Vault Kubernetes auth backend + config, then one Vault KV-v2 mount/policy/auth-role/secret per enabled `vault-config` entry, per environment. | `vault-config` (every entry with `enabled: true`) | Per-entry `tfVar`s declared in `data.*` (e.g. `access_key`, `email`), plus `vault_url`, `vault_token`, `kubeconfig_*` (from the providers) | `standalone = true` — creates the `vault_auth_backend.kubernetes` resource itself. **Must be applied before every other module.** |
-| `vault-pki` | Per environment, per non-template hostname in `istio-ingress-config`, creates a root CA, an intermediate CA, and a `cert-manager` Vault role/policy/Kubernetes auth role. | `istio-ingress-config` (`hostnames` list per env) | None beyond the environment bools | `standalone = false` — reads the Kubernetes auth backend via `data.vault_auth_backend.kubernetes`, so it needs `vault` applied first. |
+| `vault-pki` | Per environment, per hostname in `istio-ingress-config` (every hostname, including bare IPs — no filtering), creates a root CA, an intermediate CA, and a `cert-manager` Vault role/policy/Kubernetes auth role. | `istio-ingress-config` (`hostnames` list per env) | None beyond the environment bools | `standalone = false` — reads the Kubernetes auth backend via `data.vault_auth_backend.kubernetes`, so it needs `vault` applied first. |
 | `authentik` | Per environment, per non-IP hostname, per `istio-ingress-config` entry with `auth.proxy.enabled: true`, creates an Authentik proxy provider, application, and outpost. | `istio-ingress-config` (every entry with `auth.proxy.enabled: true`) | `authentik_access_url`, `authentik_token`, `authentik_insecure`, `authentik_subdomain`, `secure` | `standalone = false`. Requires a running Authentik instance + API token. |
 | `seaweedfs` | Per environment: an admin master secret (if `vault-config`'s `seaweedfs` entry is `enabled: true`), plus a bucket + IAM user + Vault secret for every `vault-config` entry with `seaweedfsSecret.enabled: true` (currently `rxresu`, `tandoor`). | `vault-config` (`seaweedfs` entry + any entry's `seaweedfsSecret.enabled`) | `access_key`, `secret_key` (admin creds), `seaweedfs_endpoint` (default `http://localhost:8333`), `kubeconfig_*` | `standalone = false`. Requires a running SeaweedFS instance reachable at `seaweedfs_endpoint`, with admin `access_key`/`secret_key` already provisioned. |
 
@@ -105,9 +105,12 @@ rxresu:
   all for a given environment (`enabled` here is base-`false`; a cluster's
   `master-stack.yaml` flips it to `true` to opt that service in for that
   environment).
-- `mount`/`namespace`/`serviceAccounts` (singular `namespace` in this file is
-  informational only — the generator reads plural `namespaces`/
-  `serviceAccounts`, falling back to `[mount or key]` / `[key]` if absent).
+- `mount` defaults to the entry key (`rxresu` here) if omitted. The
+  generator reads the plural `namespaces` and `serviceAccounts` keys
+  (each a string or a list of strings); `namespaces` falls back to
+  `[mount or key]` and `serviceAccounts` falls back to `[key]` if not set.
+  The singular `namespace` key shown above is **not** read by terraform
+  generation — it's informational here / used by the Helm chart.
 - `postgresSecret: true` additionally binds the Kubernetes auth role to the
   `postgres-cluster` service account in the `postgres` namespace.
 - `seaweedfsSecret.enabled: true` is what makes the `seaweedfs` module create
@@ -152,8 +155,9 @@ prowlarr:
    (either directly in `values.yaml`, or via the relevant cluster's
    `master-stack.yaml`).
 2. Make sure the `vault-config`'s own `seaweedfs` entry is `enabled: true`
-   for that environment too (the `seaweedfs` module's admin master secret
-   needs to exist for the provider to authenticate).
+   for that environment too, so the `seaweedfs` module has admin
+   credentials available to authenticate against the running SeaweedFS
+   instance.
 3. Push the change (helm-linked values are read from the pinned
    `personalMonorepo` input, not your working tree — see
    [IMPLEMENTERS.md](IMPLEMENTERS.md)) and update the flake input.
