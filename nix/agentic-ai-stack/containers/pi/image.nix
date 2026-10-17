@@ -109,7 +109,11 @@ let
       pkgs.pi-coding-agent
       pkgs.mount
       pkgs.gitMinimal
-      pkgs.busybox
+      pkgs.coreutils
+      pkgs.findtools
+      pkgs.gnused
+      pkgs.gnugrep
+      pkgs.gawk
       pkgs.bash
       pkgs.cacert
       pkgs.socat
