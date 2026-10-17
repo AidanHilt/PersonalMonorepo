@@ -4,6 +4,7 @@ set -euo pipefail
 
 # @lib: printing-and-output
 # @lib: env-checks
+# @lib: generate-node-files
 
 # False by default
 NIXOS_ANYWHERE_ARGS_PROVIDED=0
@@ -251,9 +252,15 @@ if [[ "$CLUSTER_NAME_ARG_PROVIDED" != true ]] && [[ "$HOMELAB_NODE" = true ]]; t
 fi
 
 if [[ "$HOMELAB_NODE" = true ]]; then
-  FILES_FOR_NEW_MACHINE=$(generate-homelab-node-files "$CLUSTER_NAME")
+  FILES_FOR_NEW_MACHINE=$(generate_homelab_node_files "$CLUSTER_NAME") || {
+    print_error "Failed to generate homelab node files"
+    exit 1
+  }
 else
-  FILES_FOR_NEW_MACHINE=$(generate-desktop-files)
+  FILES_FOR_NEW_MACHINE=$(generate_desktop_files) || {
+    print_error "Failed to generate desktop files"
+    exit 1
+  }
 fi
 
 PUBKEY_LOCATION="$FILES_FOR_NEW_MACHINE/etc/ssh/ssh_host_ed25519_key.pub"
