@@ -110,7 +110,7 @@ let
       pkgs.mount
       pkgs.gitMinimal
       pkgs.coreutils
-      pkgs.findtools
+      pkgs.findutils
       pkgs.gnused
       pkgs.gnugrep
       pkgs.gawk
