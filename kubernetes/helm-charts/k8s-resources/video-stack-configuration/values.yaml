@@ -23,7 +23,7 @@ bazarr:
     use_sonarr: true
     use_radarr: true
     use_plex: false
-    flask_secret_key: "99a806946f2e4bd760f89373ec95af77"
+    flask_secret_key: ""
 
   postgresql:
     enabled: false
