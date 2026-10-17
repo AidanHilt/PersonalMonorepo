@@ -1,7 +1,7 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "jellyfin.harcodedValues" -}}
+{{- define "jellyfin.hardcodedValues" -}}
 env:
   {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
   - name: JELLYFIN__BASE_URL
@@ -45,5 +45,5 @@ secrets:
 {{- end }}
 
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "jellyfin.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "jellyfin.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

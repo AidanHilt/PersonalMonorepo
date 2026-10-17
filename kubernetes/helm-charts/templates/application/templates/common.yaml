@@ -1,9 +1,9 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "$CHART_NAME.harcodedValues" -}}
+{{- define "$CHART_NAME.hardcodedValues" -}}
 
 
 {{- end -}}
-{{- $UNDERSCORE := mergeOverwrite .Values (include "$CHART_NAME.harcodedValues" . | fromYaml) -}}
+{{- $UNDERSCORE := mergeOverwrite .Values (include "$CHART_NAME.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

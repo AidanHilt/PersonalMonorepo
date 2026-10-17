@@ -1,7 +1,7 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "your-spotify.harcodedValues" -}}
+{{- define "your-spotify.hardcodedValues" -}}
 
 {{ $defaultSecretName := printf "%v-%v" .Release.Name "config-secret"}}
 
@@ -62,5 +62,5 @@ secrets:
 {{- end }}
 
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "your-spotify.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "your-spotify.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

@@ -1,7 +1,7 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "bazarr.harcodedValues" -}}
+{{- define "bazarr.hardcodedValues" -}}
   {{- if .Values.bazarr.postgres.enabled }}
 env:
   {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
@@ -65,5 +65,5 @@ initContainers:
 {{- end }}
 
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "bazarr.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "bazarr.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

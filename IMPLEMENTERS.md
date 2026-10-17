@@ -67,8 +67,8 @@ nearest component `IMPLEMENTERS.md` to the code you're touching.
   - `trailing-whitespace` — strips trailing whitespace (excludes `*.age`).
   - `check-executables-have-shebangs`, `check-json`, `detect-private-key`,
     `no-commit-to-branch` — standard pre-commit-hooks checks.
-  - `check-jsonschema` — validates `.atils_buildconfig.json` and
-    `.atils_jobconfig.json` against schemas in `json-schemas/`.
+  - `check-jsonschema` — validates `.atils_jobconfig.json` against
+    schemas in `json-schemas/`.
   - `sync-cog-packages` (local) — keeps `cog.toml`'s generated section in
     sync with `nix/custom-images/images/`.
   - `sync-pi-extensions` (local) — keeps
@@ -110,7 +110,7 @@ nearest component `IMPLEMENTERS.md` to the code you're touching.
 ## Naming note
 
 "atils" is a legacy project name that predates the current repository
-layout. It's still reused in places (image names, config file names such
-as `.atils_buildconfig.json`) — keep using it where it already exists
-rather than renaming on sight.
+layout. It's still reused in places (image names such as `atils-avp`,
+config file names such as `.atils_jobconfig.json`) — keep using it where
+it already exists rather than renaming on sight.
 

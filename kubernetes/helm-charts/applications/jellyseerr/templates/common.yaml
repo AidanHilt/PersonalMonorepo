@@ -1,7 +1,7 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "jellyseerr.harcodedValues" -}}
+{{- define "jellyseerr.hardcodedValues" -}}
 {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
 env:
   - name: API_KEY
@@ -41,5 +41,5 @@ secrets:
 
 
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "jellyseerr.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "jellyseerr.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

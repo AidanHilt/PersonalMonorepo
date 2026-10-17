@@ -1,9 +1,9 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 # {{/* Append the hardcoded settings */}}
-# {{- define "calibre-web.harcodedValues" -}}
+# {{- define "calibre-web.hardcodedValues" -}}
 
 
 # {{- end -}}
-# {{- $_ := mergeOverwrite .Values (include "calibre-web.harcodedValues" . | fromYaml) -}}
+# {{- $_ := mergeOverwrite .Values (include "calibre-web.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

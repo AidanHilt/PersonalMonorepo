@@ -1,7 +1,7 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "romm.harcodedValues" -}}
+{{- define "romm.hardcodedValues" -}}
 env:
   # Database configuration
   DB_ENABLED: '{{ .Values.romm.database.enabled }}'
@@ -39,5 +39,5 @@ env:
 
 enableServiceLinks: false
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "romm.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "romm.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}
