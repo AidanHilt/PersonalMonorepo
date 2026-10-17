@@ -1,7 +1,7 @@
 bazarr:
   enabled: true
   auth:
-    apikey: "1c9f199e176117fca40fabbd33211e4d"
+    apikey: ""
     type: null
     username: ""
     password: ""
