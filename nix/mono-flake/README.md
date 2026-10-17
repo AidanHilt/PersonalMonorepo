@@ -15,16 +15,6 @@ contains a `configuration.nix` becomes `<flake>#<name>` for that system.
 There's no separate host registry to edit — adding the directory is
 enough (see "Common tasks" below for the script that does this for you).
 
-Current hosts, by system (from `machines/`):
-
-- `aarch64-darwin`: `hyperion`, `work-macbook`
-- `aarch64-linux`: `devbox`, `iso-image-aarch64`, `laptop-cluster-1`,
-  `laptop-cluster-2`, `vm-desktop`
-- `x86_64-linux`: `big-boi-desktop`, `external-user-1-machine-1`,
-  `gaming-pc-node`, `iso-image-x86_64`, `laptop-node`, `optiplex-node`,
-  `staging-cluster-1`, `staging-cluster-2`, `staging-cluster-3`,
-  `wsl-machine`
-
 ## Assumption: `PERSONAL_MONOREPO_LOCATION`
 
 Most of the day-2 scripts referenced below (and `finish-setup` on Darwin)
