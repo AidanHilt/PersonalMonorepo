@@ -12,6 +12,7 @@ READMEs describe how to *use* a project. IMPLEMENTERS.md describes how to *modif
 | [nix/mono-flake](nix/mono-flake/README.md) | NixOS, nix-darwin and home-manager configuration for all hosts/machines. |
 | [nix/scripts](nix/scripts/README.md) | A flake of ~80 bash/go utility scripts (`app-creator-*`, `argocd-*`, `nixos-*`, `vault-*`, `kommit`, `tg`, and more), used across the rest of the repository. |
 | [nix/terraform](nix/terraform/README.md) | Nix modules that generate Terraform (via terranix) for Authentik, SeaweedFS, Vault, and Vault PKI. The generated modules are run by `terragrunt/`, and `terraform/staging-cluster-vm` is a plain Terraform module that creates VMs for a staging cluster. |
+| [terragrunt](terragrunt/README.md) | Runs the Terraform modules from `nix/terraform` per cluster; also drives a plain Terraform VM module. |
 | [nix/custom-images](nix/custom-images/README.md) | Nix-built container images (e.g. it-tools, transmission). |
 | [kubernetes/helm-charts](kubernetes/helm-charts/README.md) | Application and cluster-resource Helm charts, built on the bjw-s common library chart. |
 | [kubernetes](kubernetes/README.md) | ArgoCD/GitOps cluster configuration (`master-stack` + per-cluster values); see [kubernetes/helm-charts](kubernetes/helm-charts/README.md) for the charts it deploys. |
