@@ -5,8 +5,10 @@ SeaweedFS, Vault, and Vault PKI. The generated modules are run by
 [terragrunt/](../../terragrunt).
 
 See the [root IMPLEMENTERS.md](../../IMPLEMENTERS.md) for the repo-wide
-convention and architecture overview, and [README.md](README.md) for the
-"helm-linked terraform" concept and usage.
+convention and architecture overview, [README.md](README.md) for the
+"helm-linked terraform" concept and usage, and
+[IMPROVEMENTS.md](IMPROVEMENTS.md) for known issues and cleanups not yet
+scheduled.
 
 ## Overview
 
@@ -198,14 +200,8 @@ selectively applied per cluster with `-var <env>=true`.
   See "How it works" above — don't assume `original` is uniformly excluded
   across every generator; check the specific one you're touching.
 - **`seaweedfs` and `vault` can both generate the same admin master
-  secret — known, untested overlap.** `modules/vault/infra.nix` calls
-  `mkVaultSecrets` over every enabled `vault-config` entry, which includes
-  the `seaweedfs` entry whenever it's `enabled: true`; `modules/seaweedfs/infra.nix`
-  separately calls `mkVaultSecret "seaweedfs" { ... }` itself for the same
-  entry. Both resolve to the same `seaweedfs-<env>` KV-v2 mount/secret (key
-  `seaweedfs`, no `mount` override in either call, so `mountName` falls back
-  to the key in both). This is a known duplication, not an intentional
-  split of responsibility. The `seaweedfs` module was refactored to be
-  helm-linked and has not been evaluated or tested since that refactor —
-  treat this overlap as untested rather than confirmed-working or
-  confirmed-broken, and re-check it during the full end-to-end test.
+  secret — known, untested overlap.** The `seaweedfs` module was refactored
+  to be helm-linked and has not been evaluated or tested since that
+  refactor — treat this overlap as untested rather than confirmed-working
+  or confirmed-broken, and re-check it during the full end-to-end test. See
+  [IMPROVEMENTS.md](IMPROVEMENTS.md) for the details of the duplication.
