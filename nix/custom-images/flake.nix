@@ -13,7 +13,7 @@
   outputs = { self, nixpkgs, nix2container }:
     let
       # Support multiple systems
-      systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
+      systems = [ "x86_64-linux" "aarch64-linux" ];
 
       lib = nixpkgs.lib;
 

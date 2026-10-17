@@ -84,19 +84,19 @@ nearest component `IMPLEMENTERS.md` to the code you're touching.
   - `prepare-container-release.yml` — on pushes touching
     `nix/custom-images/images/**` or its flake files, syncs `cog.toml`
     and runs `cog bump` (scoped per-package normally, or force-bumping
-    every Category A package when the images flake's lock/nix files
+    every self-versioned package when the images flake's lock/nix files
     changed) to prepare container image releases.
   - `release-container-pr-merged.yml` — once a `release/auto` PR from
     `prepare-container-release.yml` merges (PR release mode only), pushes
     the computed tags so tag-triggered release workflows can fire.
   - `release-internal-versioned-image.yml` — on `<package>-v<semver>`
     tags, builds and pushes per-arch images for cocogitto-managed
-    ("InternalVersioned") packages and assembles/publishes a multi-arch
+    ("self-versioned") packages and assembles/publishes a multi-arch
     index plus a GitHub Release.
   - `release-pkg-versioned-images.yml` — on pushes touching
     `nix/custom-images/images/**` or its flake files, builds, tags and
     releases packages whose version tracks an upstream nixpkgs package
-    ("externalPkgVersioned") rather than being cocogitto-managed.
+    ("package-versioned") rather than being cocogitto-managed.
 
 ## Legacy
 
