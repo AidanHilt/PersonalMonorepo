@@ -132,7 +132,7 @@ if ! err=$(nix-build --no-out-link --store "$NIX_REMOTE" \
   echo "$err"
   echo "pkg-broker-entrypoint: sandboxed test build failed -- refusing to start." >&2
   echo "  nix-build output:" >&2
-  while IFS= read -r line; do echo "    $line" >&2; done <<< "$err"
+  while IFS= read -r line; do echo "    $line" >&2; done <<<"$err"
   echo "  nix.conf requires sandbox = true (needed for the chroot store, see nix.conf)." >&2
   echo "  Likely causes:" >&2
   echo "    - compose.yaml's pkg-broker service is missing one of the required" >&2

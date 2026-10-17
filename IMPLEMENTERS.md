@@ -104,8 +104,6 @@ nearest component `IMPLEMENTERS.md` to the code you're touching.
   `atils-postgres-client`, `buildarr`, `jellyfin`, `longhorn-*-nixos`) is
   slated for removal in favor of `nix/custom-images`. See
   [custom-images/TODO](custom-images/TODO).
-- `docs/` exists (currently just a placeholder `index.md`) but its future
-  is not yet decided — TODO: document once its status is settled.
 
 ## Naming note
 
@@ -113,4 +111,3 @@ nearest component `IMPLEMENTERS.md` to the code you're touching.
 layout. It's still reused in places (image names such as `atils-avp`,
 config file names such as `.atils_jobconfig.json`) — keep using it where
 it already exists rather than renaming on sight.
-

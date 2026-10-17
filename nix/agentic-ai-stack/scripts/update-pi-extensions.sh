@@ -119,7 +119,7 @@ else
     echo "==> $key -> $integrity"
     jq --arg k "$key" --arg i "$integrity" \
       '.packages[$k].integrity = $i' \
-      "$LOCK_FILE" > "$LOCK_FILE.tmp" && mv "$LOCK_FILE.tmp" "$LOCK_FILE"
+      "$LOCK_FILE" >"$LOCK_FILE.tmp" && mv "$LOCK_FILE.tmp" "$LOCK_FILE"
   done
 
   echo "==> Integrity backfill complete."
@@ -188,8 +188,8 @@ for entry in "${PENDING_LINES[@]}"; do
   rev="${repo_rev##*@}"
 
   echo "==> Prefetching $owner/$repo@$rev..."
-  new_hash="$(nix-prefetch-github "$owner" "$repo" --rev "$rev" | \
-    grep -oE '"hash"\s*:\s*"[^"]+"' | \
+  new_hash="$(nix-prefetch-github "$owner" "$repo" --rev "$rev" |
+    grep -oE '"hash"\s*:\s*"[^"]+"' |
     sed -E 's/.*"hash"\s*:\s*"([^"]+)".*/\1/')"
 
   if [ -z "$new_hash" ]; then

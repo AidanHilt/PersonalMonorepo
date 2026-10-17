@@ -4,7 +4,7 @@
 # main.go's /lookup-binary handler, via `nix run <nixIndexRef>#nix-index-with-db`.
 # This is just a string arg -- nix-index-database itself is NOT part of this
 # image's closure/rootEnv/copyToRoot, so it never bloats the image or needs
-# rebuilding when unrelated to fuzzy lookup (see README.md/FOLLOWUP.md).
+# rebuilding when unrelated to fuzzy lookup (see README.md).
 { pkgs, n2c, imageName, imageTag, nixIndexRef }:
 
 let

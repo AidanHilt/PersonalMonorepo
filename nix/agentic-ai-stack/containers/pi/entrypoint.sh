@@ -13,13 +13,13 @@ set -euo pipefail
 
 # Stage the immutable, baked agent config into the writable ~/.pi tmpfs.
 # Everything under ~/.pi is ephemeral by design; the source of truth is
-# the .pi-seed baked into the image (settings.json, models.json,
-# extensions, permission-system policy, default AGENTS.md).
+# the .pi-seed baked into the image (settings.json, extensions,
+# permission-system policy, default AGENTS.md).
 mkdir -p "$HOME/.pi"
 cp -a /home/pi/.pi-seed/* "$HOME/.pi/"
 
 # auth.json and the sessions dir are the two genuinely mutable,
-# host-persisted items (spec §7). They live on named Docker volumes
+# host-persisted items. They live on named Docker volumes
 # mounted at /home/pi/.pi-state/{auth,sessions} (see compose.yaml), not
 # inside the seed. Replace whatever the seed copy put at their paths
 # (normally nothing — the seed doesn't ship either) with symlinks into
@@ -88,8 +88,8 @@ elif [ "${PI_SANDBOX__RESUME:-0}" = "1" ]; then
 fi
 
 if [ "${PI_SANDBOX__LOGIN_FORWARD:-0}" = "1" ]; then
-      socat "TCP-LISTEN:${PI_FORWARD_LISTEN:-53693},bind=0.0.0.0,fork,reuseaddr" \
-        "TCP:127.0.0.1:${PI_FORWARD_TARGET:-53692}" &
+  socat "TCP-LISTEN:${PI_FORWARD_LISTEN:-53693},bind=0.0.0.0,fork,reuseaddr" \
+    "TCP:127.0.0.1:${PI_FORWARD_TARGET:-53692}" &
 fi
 
 exec "$@"

@@ -8,8 +8,8 @@
 //
 // This is the only new surface pkg-broker's capability is exposed
 // through to `pi` — `pi` itself is never given nix/network permissions
-// directly (see nix/agentic-ai-stack/.AGENT-PLAN.md decision 5/6 and
-// PROJECT-SPEC.md). pkg-install is deliberately NOT allow-listed in
+// directly (see nix/agentic-ai-stack/containers/pkg-broker/README.md).
+// pkg-install is deliberately NOT allow-listed in
 // pi's own permission policy by default; a human operator runs it
 // manually (e.g. via `nix run .#shell-agent`) until that's revisited.
 //

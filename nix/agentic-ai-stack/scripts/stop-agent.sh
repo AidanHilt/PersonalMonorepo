@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # nix run .#stop-agent — shuts down the compose stack (both default and
-# login profiles). Does NOT stop the host's native Ollama process,
-# since other things on the host may depend on it (spec §3.3: Ollama is
-# an external service this stack consumes, not one it owns).
+# login profiles).
 set -euo pipefail
 
 # --- Persistence: pkg-bin / nix-store / proxy-domains volumes -------------
@@ -45,26 +43,26 @@ EOF
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --help|-h)
-      print_help
-      exit 0
-      ;;
-    --persist-pkgs)
-      PERSIST_PKGS_FLAG=1
-      shift
-      ;;
-    --no-persist-store)
-      PERSIST_STORE_FLAG=0
-      shift
-      ;;
-    --persist-domains)
-      PERSIST_DOMAINS_FLAG=1
-      shift
-      ;;
-    *)
-      echo "error: unrecognized argument: $1" >&2
-      exit 1
-      ;;
+  --help | -h)
+    print_help
+    exit 0
+    ;;
+  --persist-pkgs)
+    PERSIST_PKGS_FLAG=1
+    shift
+    ;;
+  --no-persist-store)
+    PERSIST_STORE_FLAG=0
+    shift
+    ;;
+  --persist-domains)
+    PERSIST_DOMAINS_FLAG=1
+    shift
+    ;;
+  *)
+    echo "error: unrecognized argument: $1" >&2
+    exit 1
+    ;;
   esac
 done
 
@@ -83,7 +81,7 @@ if [ -n "$PERSIST_DOMAINS_FLAG" ]; then
 else
   PERSIST_DOMAINS="${PI_SANDBOX__PERSIST_DOMAINS:-0}"
 fi
-echo "==> Persistence: pkg-bin=$( [ "$PERSIST_PKGS" = "1" ] && echo persistent || echo ephemeral ), nix-store=$( [ "$PERSIST_STORE" = "1" ] && echo persistent || echo ephemeral ), proxy-domains=$( [ "$PERSIST_DOMAINS" = "1" ] && echo persistent || echo ephemeral )"
+echo "==> Persistence: pkg-bin=$([ "$PERSIST_PKGS" = "1" ] && echo persistent || echo ephemeral), nix-store=$([ "$PERSIST_STORE" = "1" ] && echo persistent || echo ephemeral), proxy-domains=$([ "$PERSIST_DOMAINS" = "1" ] && echo persistent || echo ephemeral)"
 
 # Under `nix run` this script lives in the Nix store, so a path derived from
 # $BASH_SOURCE has no compose.yaml next to it. Same lookup as start-agent.sh:

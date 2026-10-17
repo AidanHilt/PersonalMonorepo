@@ -1,6 +1,6 @@
 // pkg-broker is the single-purpose HTTP server behind the `pkg-broker`
 // compose service (see nix/agentic-ai-stack/containers/pkg-broker/README.md
-// and PROJECT-SPEC.md for the full design rationale). It exposes two narrow
+// for the full design rationale). It exposes two narrow
 // endpoints, both reachable only from the `internal` compose network:
 //
 //   - POST /resolve: given an exact nixpkgs attribute name, validates the
@@ -14,7 +14,7 @@
 //     nixIndexRef/PKG_BROKER_NIX_INDEX_REF) to find candidate nixpkgs
 //     attributes that provide it. Returns candidates only -- it never
 //     builds or publishes anything; callers make a separate /resolve call
-//     with whichever candidate they want. See README.md/FOLLOWUP.md.
+//     with whichever candidate they want. See README.md.
 //
 // Deliberately minimal and dependency-free (stdlib only) in the same
 // spirit as the `proxy` container: this is new trust-boundary-adjacent
@@ -430,8 +430,7 @@ func (s *server) nixBuild(ctx context.Context, attr string) ([]string, error) {
 // All READS here go through the physical path (s.storeReadRoot joined
 // with the logical path); the symlink TARGETS published to s.binDir
 // stay the LOGICAL path, since `pi` resolves /nix/store/... via its own
-// overlay/bind of the same store (see decision 4 in .AGENT-PLAN.md /
-// PROJECT-SPEC.md) — this is what lets the binaries' RPATH/dynamic-linker
+// overlay/bind of the same store — this is what lets the binaries' RPATH/dynamic-linker
 // dependency references resolve inside `pi`.
 func (s *server) publishBinaries(storePaths []string) ([]string, error) {
 	var published []string

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # nix run .#verify
 #
-# Runs the checks from spec §11 against an already-running stack
+# Runs the acceptance checks against an already-running stack
 # (`docker compose up -d proxy pkg-broker pi` or `nix run .#start-agent` first, in
 # another terminal, or leave `pi` as a long-lived shell for this).
 # This is a smoke test, not a substitute for reading the results.
@@ -11,38 +11,27 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 pass() { echo "  PASS: $1"; }
-fail() { echo "  FAIL: $1"; FAILED=1; }
+fail() {
+  echo "  FAIL: $1"
+  FAILED=1
+}
 FAILED=0
 
-echo "==> [1/7] pi has no route to the internet except via proxy's allowlist"
+echo "==> [1/6] pi has no route to the internet except via proxy's allowlist"
 if docker compose exec -T pi sh -c 'wget -q -T 3 -O- https://example.com' >/dev/null 2>&1; then
   fail "pi reached a non-allowlisted host directly — egress isolation is broken"
 else
   pass "direct outbound connection to a non-allowlisted host failed, as expected"
 fi
 
-echo "==> [2/7] pi's root filesystem is read-only"
+echo "==> [2/6] pi's root filesystem is read-only"
 if docker compose exec -T pi sh -c 'touch /this-should-fail 2>/dev/null'; then
   fail "pi container's root filesystem accepted a write outside mounted paths"
 else
   pass "write outside mounted paths was rejected"
 fi
 
-echo "==> [3/7] Ollama model-management endpoints are unreachable via proxy"
-# Ollama support (and the proxy's nginx gate) is currently disabled
-# (see containers/proxy/supervise.sh); nothing listens on :11434 at
-# all right now, so this check would only prove the port is closed,
-# not that the gate is correctly denying /api/pull. Skipping until
-# Ollama support is revived.
-# if docker compose exec -T pi sh -c \
-#   "wget -q -T 3 -O- --post-data='{}' http://proxy:11434/api/pull" >/dev/null 2>&1; then
-#   fail "proxy allowed /api/pull through to Ollama"
-# else
-#   pass "/api/pull was rejected by the proxy's Ollama gate"
-# fi
-echo "  SKIP: Ollama support is currently disabled"
-
-echo "==> [4/7] no secret values in git history or the nix store"
+echo "==> [3/6] no secret values in git history or the nix store"
 if git log --all -p 2>/dev/null | grep -Ei 'ANTHROPIC_API_KEY *= *[A-Za-z0-9]|OPENAI_API_KEY *= *[A-Za-z0-9]|sk-ant-|sk-proj-' >/dev/null; then
   fail "a plausible secret pattern was found in git history — investigate before trusting this repo"
 else
@@ -54,7 +43,7 @@ elif [ -f .env ]; then
   fail ".env exists but is NOT git-ignored — fix .gitignore before committing"
 fi
 
-echo "==> [5/7] pi cannot reach pkg-broker's store/daemon directly, only the narrow HTTP endpoint"
+echo "==> [4/6] pi cannot reach pkg-broker's store/daemon directly, only the narrow HTTP endpoint"
 # pi should have no nix-daemon socket and no write access to the shared
 # nix-store/pkg-bin volumes (containers/pkg-broker/README.md) -- it only
 # ever talks to pkg-broker's POST /resolve over the internal network.
@@ -74,10 +63,10 @@ else
   pass "pkg-broker's endpoint is reachable but rejects a bare GET, as expected (a wget -q failure on a non-2xx status is the expected outcome here)"
 fi
 
-echo "==> [6/7] login flow populates the auth volume, default profile picks it up"
+echo "==> [5/6] login flow populates the auth volume, default profile picks it up"
 # auth.json now lives on the pi-auth named Docker volume (not a host
-# bind mount — see compose.yaml/PROJECT-SPEC.md §7), so check it via a
-# throwaway container instead of a host path.
+# bind mount — see compose.yaml), so check it via a throwaway container
+# instead of a host path.
 if ! docker volume inspect pi-auth >/dev/null 2>&1; then
   echo "  SKIP: pi-auth volume does not exist yet — run 'nix run .#login' first"
 elif docker run --rm -v pi-auth:/data alpine test -s /data/auth.json >/dev/null 2>&1; then
@@ -86,7 +75,7 @@ else
   echo "  SKIP: no auth.json yet — run 'nix run .#login' first, this check only confirms the file exists"
 fi
 
-echo "==> [7/7] domain-gate (runtime egress exception path) rejects an invalid hostname"
+echo "==> [6/6] domain-gate (runtime egress exception path) rejects an invalid hostname"
 # domain-gate (containers/proxy/domain-gate/) listens only on the internal
 # network, no published host port -- reachability from pi plus strict
 # validation (rejecting a single-label/internal-looking name here) is the

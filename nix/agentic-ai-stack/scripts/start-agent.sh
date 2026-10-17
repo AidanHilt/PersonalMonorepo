@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#start-agent
 #
-# Acceptance criterion (spec §11): a fresh host produces a working
-# pi+proxy stack with no manual steps beyond providing credentials —
-# this script builds/loads images and brings the compose stack up;
+# Acceptance criterion (see scripts/verify-acceptance.sh): a fresh host
+# produces a working pi+proxy stack with no manual steps beyond providing
+# credentials — this script builds/loads images and brings the compose
+# stack up;
 # `nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#stop-agent` tears it down.
 set -euo pipefail
 
@@ -157,7 +158,7 @@ EOF
 #   - Two or more extras: /workspace is a neutral root; each extra (file or
 #     directory) appears as a sibling at /workspace/<basename>.
 # Two extras sharing a basename is an error (ambiguous sibling name).
-EXTRAS=()  # ordered "name:type:hostpath" entries; type is "dir" or "file"
+EXTRAS=() # ordered "name:type:hostpath" entries; type is "dir" or "file"
 
 add_extra() {
   local hostpath="$1" type="$2" name existing existing_name
@@ -213,82 +214,82 @@ handle_clone() {
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --help|-h)
-      print_help
-      exit 0
-      ;;
-    --host-store)
-      HOST_STORE_FLAG=1
-      shift
-      ;;
-    --persist-pkgs)
-      PERSIST_PKGS_FLAG=1
-      shift
-      ;;
-    --no-persist-store)
-      PERSIST_STORE_FLAG=0
-      shift
-      ;;
-    --persist-domains)
-      PERSIST_DOMAINS_FLAG=1
-      shift
-      ;;
-    --name)
-      shift
-      NAME_FLAG="${1:?--name requires a NAME argument}"
-      shift
-      ;;
-    --name=*)
-      NAME_FLAG="${1#--name=}"
-      shift
-      ;;
-    --resume)
-      RESUME_FLAG=1
-      shift
-      ;;
-    --add)
-      shift
-      handle_add "${1:?--add requires a PATH argument}"
-      shift
-      ;;
-    --add=*)
-      handle_add "${1#--add=}"
-      shift
-      ;;
-    --clone)
-      shift
-      handle_clone "${1:?--clone requires a URL argument}"
-      shift
-      ;;
-    --clone=*)
-      handle_clone "${1#--clone=}"
-      shift
-      ;;
-    --secret)
-      shift
-      secret_arg="${1:?--secret requires a NAME=VALUE argument}"
-      secret_name="${secret_arg%%=*}"
-      if [ -z "$secret_name" ] || [ "$secret_arg" = "${secret_arg#*=}" ]; then
-        echo "error: --secret requires a NAME=VALUE argument with a non-empty NAME (got: $secret_arg)" >&2
-        exit 1
-      fi
-      SECRET_ENV_ARGS+=(-e "$secret_arg")
-      shift
-      ;;
-    --secret=*)
-      secret_arg="${1#--secret=}"
-      secret_name="${secret_arg%%=*}"
-      if [ -z "$secret_name" ] || [ "$secret_arg" = "${secret_arg#*=}" ]; then
-        echo "error: --secret requires a NAME=VALUE argument with a non-empty NAME (got: $secret_arg)" >&2
-        exit 1
-      fi
-      SECRET_ENV_ARGS+=(-e "$secret_arg")
-      shift
-      ;;
-    *)
-      echo "error: unrecognized argument: $1" >&2
+  --help | -h)
+    print_help
+    exit 0
+    ;;
+  --host-store)
+    HOST_STORE_FLAG=1
+    shift
+    ;;
+  --persist-pkgs)
+    PERSIST_PKGS_FLAG=1
+    shift
+    ;;
+  --no-persist-store)
+    PERSIST_STORE_FLAG=0
+    shift
+    ;;
+  --persist-domains)
+    PERSIST_DOMAINS_FLAG=1
+    shift
+    ;;
+  --name)
+    shift
+    NAME_FLAG="${1:?--name requires a NAME argument}"
+    shift
+    ;;
+  --name=*)
+    NAME_FLAG="${1#--name=}"
+    shift
+    ;;
+  --resume)
+    RESUME_FLAG=1
+    shift
+    ;;
+  --add)
+    shift
+    handle_add "${1:?--add requires a PATH argument}"
+    shift
+    ;;
+  --add=*)
+    handle_add "${1#--add=}"
+    shift
+    ;;
+  --clone)
+    shift
+    handle_clone "${1:?--clone requires a URL argument}"
+    shift
+    ;;
+  --clone=*)
+    handle_clone "${1#--clone=}"
+    shift
+    ;;
+  --secret)
+    shift
+    secret_arg="${1:?--secret requires a NAME=VALUE argument}"
+    secret_name="${secret_arg%%=*}"
+    if [ -z "$secret_name" ] || [ "$secret_arg" = "${secret_arg#*=}" ]; then
+      echo "error: --secret requires a NAME=VALUE argument with a non-empty NAME (got: $secret_arg)" >&2
       exit 1
-      ;;
+    fi
+    SECRET_ENV_ARGS+=(-e "$secret_arg")
+    shift
+    ;;
+  --secret=*)
+    secret_arg="${1#--secret=}"
+    secret_name="${secret_arg%%=*}"
+    if [ -z "$secret_name" ] || [ "$secret_arg" = "${secret_arg#*=}" ]; then
+      echo "error: --secret requires a NAME=VALUE argument with a non-empty NAME (got: $secret_arg)" >&2
+      exit 1
+    fi
+    SECRET_ENV_ARGS+=(-e "$secret_arg")
+    shift
+    ;;
+  *)
+    echo "error: unrecognized argument: $1" >&2
+    exit 1
+    ;;
   esac
 done
 
@@ -341,7 +342,7 @@ fi
 # COMPOSE_FILES, rather than something this script decides on its own.
 # Set PI_SANDBOX__PKGBROKER_HOST_STORE=1 (or pass '--host-store') to swap
 # pkg-broker's default, empty 'nix-store' docker volume for the host's real
-# /nix/store + 
+# /nix/store +
 # nix-daemon socket (compose.pkgbroker-host-store.yaml -- see
 # containers/pkg-broker/README.md for the trust-boundary tradeoff that
 # override makes). Resolved again, below, once we know which backend is
@@ -387,7 +388,7 @@ fi
 
 export PI_SANDBOX__PERSIST_DOMAINS="$PERSIST_DOMAINS"
 
-echo "==> Persistence: pkg-bin=$( [ "$PERSIST_PKGS" = "1" ] && echo persistent || echo ephemeral ), nix-store=$( [ "$PERSIST_STORE" = "1" ] && echo persistent || echo ephemeral ), proxy-domains=$( [ "$PERSIST_DOMAINS" = "1" ] && echo persistent || echo ephemeral )"
+echo "==> Persistence: pkg-bin=$([ "$PERSIST_PKGS" = "1" ] && echo persistent || echo ephemeral), nix-store=$([ "$PERSIST_STORE" = "1" ] && echo persistent || echo ephemeral), proxy-domains=$([ "$PERSIST_DOMAINS" = "1" ] && echo persistent || echo ephemeral)"
 
 # Removes any of pkg-bin/nix-store/proxy-domains NOT marked persistent
 # above, resolving their actual (project-name-prefixed) volume names via
@@ -417,26 +418,6 @@ remove_nonpersisted_volumes() {
   fi
 }
 
-# --- Local Ollama support: DEPRECATED --------------------------------------
-# The native-Ollama-on-host flow below is deprecated and disabled. We may
-# revisit local AI in the future; leaving the logic here (commented out)
-# rather than deleting it in case we do.
-#
-# echo "==> Verifying Ollama is reachable natively on the host..."
-# OLLAMA_HOST_URL="${OLLAMA_HOST_URL:-http://127.0.0.1:11434}"
-# if ! curl -fsS --max-time 3 "$OLLAMA_HOST_URL/api/version" >/dev/null 2>&1; then
-# cat >&2 <<EOF
-#     Ollama does not appear to be running at $OLLAMA_HOST_URL.
-#     This stack runs Ollama natively on the host, not in a container
-#     (spec §3.3 — GPU passthrough overhead). Start it first:
-#       macOS:  ollama serve   (or the Ollama.app menu-bar app)
-#       NixOS:  systemctl --user start ollama   (or: services.ollama.enable = true;)
-#     Then re-run this script.
-# EOF
-# exit 1
-# fi
-# echo "    OK: Ollama is up."
-
 cd "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"
 
 # --- Resolve the workspace layout from the --add/--clone extras above -----
@@ -444,7 +425,7 @@ cd "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"
 # file is written under the same cache root as the other merged-dir state.
 WORKSPACE_MODE="empty"
 if [ "${#EXTRAS[@]}" -eq 1 ]; then
-  IFS=':' read -r _ex_name ex_type _ex_path <<< "${EXTRAS[0]}"
+  IFS=':' read -r _ex_name ex_type _ex_path <<<"${EXTRAS[0]}"
   if [ "$ex_type" = "file" ]; then
     echo "error: a single --add/--clone extra must be a directory (got a file). Pass a second extra to use sibling mode, or point --add at its containing directory instead." >&2
     exit 1
@@ -458,12 +439,12 @@ WORKSPACE_MERGED_DIR=""
 if [ "$WORKSPACE_MODE" != "empty" ]; then
   echo "==> Preparing workspace staging directory (populated by workspace-mounter)..."
   WORKSPACE_MERGED_DIR="${PI_SANDBOX__WORKSPACE_MERGED_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/pi-sandbox/workspace-merged}"
-   if ! stat "$WORKSPACE_MERGED_DIR" >/dev/null 2>&1 \
-      && grep -q " $WORKSPACE_MERGED_DIR " /proc/self/mountinfo; then
-     echo "Stale mount at $WORKSPACE_MERGED_DIR; clearing (needs sudo)..." >&2
-     sudo umount -l "$WORKSPACE_MERGED_DIR"
-   fi
-   mkdir -p "$WORKSPACE_MERGED_DIR"
+  if ! stat "$WORKSPACE_MERGED_DIR" >/dev/null 2>&1 &&
+    grep -q " $WORKSPACE_MERGED_DIR " /proc/self/mountinfo; then
+    echo "Stale mount at $WORKSPACE_MERGED_DIR; clearing (needs sudo)..." >&2
+    sudo umount -l "$WORKSPACE_MERGED_DIR"
+  fi
+  mkdir -p "$WORKSPACE_MERGED_DIR"
 
   # A leftover mount (crashed mounter) would shadow the fresh one.
   while mountpoint -q "$WORKSPACE_MERGED_DIR"; do
@@ -474,16 +455,18 @@ if [ "$WORKSPACE_MODE" != "empty" ]; then
   # Docker only accepts rshared/rslave binds from a shared (or slave) mount.
   prop="$(findmnt -n -o PROPAGATION -T "$WORKSPACE_MERGED_DIR" 2>/dev/null || true)"
   case "$prop" in
-    *shared*|*slave*) ;;
-    *) echo "    WARNING: $WORKSPACE_MERGED_DIR is on a mount with propagation '${prop:-unknown}', not shared." >&2
-       echo "    The merged workspace will not be visible to pi. Fix with: sudo mount --make-rshared /" >&2 ;;
+  *shared* | *slave*) ;;
+  *)
+    echo "    WARNING: $WORKSPACE_MERGED_DIR is on a mount with propagation '${prop:-unknown}', not shared." >&2
+    echo "    The merged workspace will not be visible to pi. Fix with: sudo mount --make-rshared /" >&2
+    ;;
   esac
 
   export PI_SANDBOX__WORKSPACE_SOURCE="$WORKSPACE_MERGED_DIR"
   export WORKSPACE_MODE
   export WORKSPACE_HOST_UID
   export WORKSPACE_HOST_GID
-  
+
   WORKSPACE_HOST_UID="$(id -u)"
   WORKSPACE_HOST_GID="$(id -g)"
 
@@ -505,7 +488,7 @@ if [ "$WORKSPACE_MODE" != "empty" ]; then
     echo "    volumes:"
     items_str=""
     for extra in "${EXTRAS[@]}"; do
-      IFS=':' read -r ex_name ex_type ex_path <<< "$extra"
+      IFS=':' read -r ex_name ex_type ex_path <<<"$extra"
       if [ -n "$items_str" ]; then items_str+=","; fi
       items_str+="${ex_name}:${ex_type}"
       # Directory extras: bind the directory itself. File extras: bind the
@@ -521,7 +504,7 @@ if [ "$WORKSPACE_MODE" != "empty" ]; then
     done
     # shellcheck disable=SC2034
     export WORKSPACE_ITEMS="$items_str"
-  } > "$WORKSPACE_EXTRAS_COMPOSE_FILE"
+  } >"$WORKSPACE_EXTRAS_COMPOSE_FILE"
 
   echo "    layering compose.workspace.yaml + generated extras file (mode=$WORKSPACE_MODE, items=$WORKSPACE_ITEMS)"
   COMPOSE_FILES+=(-f compose.workspace.yaml -f "$WORKSPACE_EXTRAS_COMPOSE_FILE")
@@ -571,9 +554,11 @@ else
   # Docker only accepts rshared/rslave binds from a shared (or slave) mount.
   prop="$(findmnt -n -o PROPAGATION -T "$NIX_STORE_MERGED_DIR" 2>/dev/null || true)"
   case "$prop" in
-    *shared*|*slave*) ;;
-    *) echo "    WARNING: $NIX_STORE_MERGED_DIR is on a mount with propagation '${prop:-unknown}', not shared." >&2
-       echo "    The overlay will not be visible to pi. Fix with: sudo mount --make-rshared /" >&2 ;;
+  *shared* | *slave*) ;;
+  *)
+    echo "    WARNING: $NIX_STORE_MERGED_DIR is on a mount with propagation '${prop:-unknown}', not shared." >&2
+    echo "    The overlay will not be visible to pi. Fix with: sudo mount --make-rshared /" >&2
+    ;;
   esac
 
   export PI_SANDBOX__NIX_STORE_SOURCE="$NIX_STORE_MERGED_DIR"
@@ -591,22 +576,22 @@ echo "==> Starting docker compose stack (pi + proxy + pkg-broker${NIX_STORE_MERG
 docker compose "${COMPOSE_FILES[@]}" up -d --wait "${UP_SERVICES[@]}"
 
 cleanup() {
-echo "==> Session finished — tearing down the compose stack..."
-docker compose "${COMPOSE_FILES[@]}" down --remove-orphans
-echo "==> Removing non-persisted volumes..."
-remove_nonpersisted_volumes
-if [ -n "${NIX_STORE_MERGED_DIR:-}" ]; then
-  # nix-store-mounter unmounts on SIGTERM; this only catches a killed one.
-  while mountpoint -q "$NIX_STORE_MERGED_DIR" 2>/dev/null; do
-    sudo umount "$NIX_STORE_MERGED_DIR" || break
-  done
-fi
-if [ -n "${WORKSPACE_MERGED_DIR:-}" ]; then
-  # workspace-mounter unmounts on SIGTERM; this only catches a killed one.
-  while mountpoint -q "$WORKSPACE_MERGED_DIR" 2>/dev/null; do
-    sudo umount "$WORKSPACE_MERGED_DIR" || break
-  done
-fi
+  echo "==> Session finished — tearing down the compose stack..."
+  docker compose "${COMPOSE_FILES[@]}" down --remove-orphans
+  echo "==> Removing non-persisted volumes..."
+  remove_nonpersisted_volumes
+  if [ -n "${NIX_STORE_MERGED_DIR:-}" ]; then
+    # nix-store-mounter unmounts on SIGTERM; this only catches a killed one.
+    while mountpoint -q "$NIX_STORE_MERGED_DIR" 2>/dev/null; do
+      sudo umount "$NIX_STORE_MERGED_DIR" || break
+    done
+  fi
+  if [ -n "${WORKSPACE_MERGED_DIR:-}" ]; then
+    # workspace-mounter unmounts on SIGTERM; this only catches a killed one.
+    while mountpoint -q "$WORKSPACE_MERGED_DIR" 2>/dev/null; do
+      sudo umount "$WORKSPACE_MERGED_DIR" || break
+    done
+  fi
 }
 trap cleanup EXIT
 

@@ -4,9 +4,10 @@ An always-on sidecar service that lets the `pi` container (and the human
 operator, via `pkg-install`, see `nix/scripts/scripts/pkg-install/`)
 install arbitrary nixpkgs software on demand, without growing the baked
 `pi` image and without giving the sandboxed `pi` container itself a nix
-toolchain, a nix-daemon socket, or broad network access. See
-`PROJECT-SPEC.md` for the full design rationale; this file documents the
-service itself.
+toolchain, a nix-daemon socket, or broad network access. This file
+documents the service itself; see the repo-wide
+[IMPLEMENTERS.md](../../IMPLEMENTERS.md) for the broader design
+rationale.
 
 Deliberately minimal, in the same spirit as `containers/proxy` (also a
 trust-boundary-adjacent component): a single Go binary (stdlib only, no
@@ -131,9 +132,9 @@ caller actually sends one to `/resolve`, which is exactly why
 
 `pi` never talks to `pkg-broker` directly — the `pkg-install` CLI
 (`nix/scripts/scripts/pkg-install/`) is the only client, and it's not
-allow-listed in `pi`'s own permission policy by default (see
-`.AGENT-PLAN.md` decision 6 / `PROJECT-SPEC.md`) — a human operator runs
-it manually via `nix run .#shell-agent` until that's revisited.
+allow-listed in `pi`'s own permission policy by default — a human
+operator runs it manually via `nix run .#shell-agent` until that's
+revisited.
 
 ## Volumes
 
@@ -294,5 +295,4 @@ everything from `bootstrap-stage0` instead of substituting.
 "What nixpkgs package provides the `protoc` binary?" is answered by
 `POST /lookup-binary` (see above) — implemented using a prebuilt
 nix-index database (`Mic92/nix-index-database`), invoked lazily via
-`nix run`, candidates-only (never builds/installs). See `FOLLOWUP.md` for
-the original design discussion/deferral this implements.
+`nix run`, candidates-only (never builds/installs).

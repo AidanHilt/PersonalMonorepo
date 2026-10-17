@@ -3,9 +3,9 @@
 A Nix-built, Docker-Compose-run sandbox for running the [Pi coding
 agent](https://github.com/earendil-works/pi) against real projects with
 a hard, container/network-level isolation boundary — not just Pi's own
-ask/allow/deny prompts. See `PROJECT-SPEC.md` for the full design
-rationale and threat model; this README is the practical "how do I run
-it" summary.
+ask/allow/deny prompts. See [IMPLEMENTERS.md](IMPLEMENTERS.md) for the
+full design rationale and threat model; this README is the practical
+"how do I run it" summary.
 
 ## Layout
 
@@ -29,19 +29,15 @@ containers/
     image.nix                  # nix2container build for the pkg-broker service
     main.go                    # single POST /resolve endpoint (nixpkgs attr -> published bin/*)
     README.md                  # design, volumes, store-backend tradeoff
-    FOLLOWUP.md                # deferred: fuzzy/by-binary-name lookup
   nix-store-mounter/
     mount.sh                   # CAP_SYS_ADMIN sidecar, overlays pi's own + pkg-broker's /nix/store
   workspace-mounter/
     image.nix                  # nix2container build for the workspace-mounter sidecar
     mount.sh                   # CAP_SYS_ADMIN+bindfs sidecar, builds /workspace from --add/--clone extras
 config/                        # 1:1 mirror of ~/.pi/ -- config only, never secrets
-  agent/                       # mirrors ~/.pi/agent/: baked-in AGENTS.md / settings.json / models.json / permission policy
+  agent/                       # mirrors ~/.pi/agent/: baked-in AGENTS.md / settings.json / permission policy
   web-search.json              # mirrors ~/.pi/web-search.json: pi-web-access ssrf.trustEnvProxy config
 scripts/                       # start-agent, stop-agent, shell-agent, gen-kubeconfig, verify-acceptance
-kube/                          # legacy/unused; kubeconfig now defaults to
-                                # ~/.config/pi-sandbox/agent-kubeconfig.yaml
-                                # (override with PI_SANDBOX__KUBECONFIG_PATH), never in-repo
 ```
 
 ### Giving `pi` something to work on (`/workspace`)
@@ -74,8 +70,8 @@ When any extras are given, `start-agent.sh` layers `compose.workspace.yaml`
 volumes) on top of the base stack, bringing up the `workspace-mounter`
 sidecar (`containers/workspace-mounter/`) to build the merged view — see
 that sidecar's `mount.sh` and `scripts/start-agent.sh`'s own header comment
-for the full mechanism. This needs native Linux Docker (not Colima/Docker
-Desktop), `/dev/fuse` available on the host, and the same shared mount
+for the full mechanism. This needs native Linux Docker (not Docker
+Desktop or any other VM-backed Docker), `/dev/fuse` available on the host, and the same shared mount
 propagation `nix-store-mounter` already requires (`sudo mount --make-rshared /`
 if `start-agent.sh` warns about it).
 
@@ -85,12 +81,44 @@ the thin CLI that calls `pkg-broker` from inside the `pi` container; see
 `nix/scripts/scripts/request-domain/` is the analogous CLI for
 `domain-gate` — see "Requesting an extra domain at runtime" below.
 
+## The workflow this is designed around
+
+This stack is one piece of a broader plan/dispatch/validate workflow, not
+just a place to run `pi` interactively:
+
+1. The user works with the sandboxed, read-only planning agent (`pi`,
+   running here) to turn a request into a concrete plan.
+2. Before dispatching any implementation work, the planning agent is
+   responsible for -- and is the only one capable of -- installing any
+   tools the plan's validation will need (`pkg-install`, backed by the
+   `pkg-broker` sidecar; see "Installing extra nixpkgs software on
+   demand" below and [containers/pkg-broker/README.md](containers/pkg-broker/README.md))
+   and requesting any extra network domains (`request-domain`, backed by
+   `domain-gate`; see "Requesting an extra domain at runtime" below) --
+   the implementation subagent dispatched in the next step can do
+   neither itself.
+3. The planning agent assembles a self-contained dispatch prompt with
+   `agent-plan-create` and dispatches an `IMPLEMENT-n` subagent, which
+   works in an isolated git worktree and validates its own work with
+   `agent-validate`.
+4. `agent-stage` (see
+   [nix/scripts/scripts/agent-stage/README.md](../scripts/scripts/agent-stage/README.md))
+   squash-stages the subagent's validated branch onto the current branch
+   for review, WITHOUT committing.
+5. The user reviews the staged diff and commits themselves (`kommit`).
+   Planning/dispatch agents never commit.
+
+See [config/agent/README.md](config/agent/README.md) and
+`config/agent/AGENTS.md` (baked into the `pi` image) for the full
+dispatch/validate/stage mechanics; `agent-plan-create`, `agent-validate`,
+`request-domain` and `kommit` don't have their own READMEs beyond that.
+
 ## Quickstart
 
 ```sh
 nix run .#gen-kubeconfig -- <dev-context>  # never a production context
 nix run .#login                            # if using OAuth; type /login once inside
-nix run .#start-agent                      # builds+loads images, verifies Ollama, brings up pi+proxy
+nix run .#start-agent                      # builds+loads images, brings up pi+proxy
 ```
 
 ### Credentials / secrets
@@ -323,6 +351,5 @@ a habit-forming guardrail, not the boundary. The real boundary is:
   kubeconfig against a dev/staging cluster — never a real one.
 
 None of this defends against a fully malicious actor with local code
-execution already on the host (see spec §2's threat model) — it
-contains "agent did something dumb or was manipulated," which is the
-actual risk this stack is built for.
+execution already on the host — it contains "agent did something dumb
+or was manipulated," which is the actual risk this stack is built for.

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # nix run .#gen-kubeconfig -- <dev-or-staging-context> [service-account-name] [namespace]
 #
-# Generates a dedicated, RBAC-scoped kubeconfig for the `pi` container
-# (spec §6). NEVER points this at a production context — it operates
+# Generates a dedicated, RBAC-scoped kubeconfig for the `pi` container.
+# NEVER points this at a production context — it operates
 # against whatever context you pass in, so double check `kubectl config
 # get-contexts` first and pass a dev/staging one explicitly.
 #
@@ -17,8 +17,8 @@
 #     (default: ~/.config/pi-sandbox/agent-kubeconfig.yaml), same default
 #     path start-agent.sh / compose.kube.yaml look for it at.
 #
-# Deny-by-default at the RBAC layer is the real backstop (spec §6) —
-# the permission-extension `deny` rules on kubectl apply/delete/exec
+# Deny-by-default at the RBAC layer is the real backstop — the
+# permission-extension `deny` rules on kubectl apply/delete/exec
 # (config/agent/permission-system.config.json) are defense in depth on
 # top of this, not a substitute for it.
 set -euo pipefail
@@ -31,7 +31,10 @@ OUT_DIR="$(dirname "$OUT_FILE")"
 
 echo "==> Target context: $CONTEXT   namespace: $NAMESPACE   service account: $SA_NAME"
 read -r -p "This must be a dev/staging context, never production. Continue? [y/N] " confirm
-[ "$confirm" = "y" ] || { echo "aborted"; exit 1; }
+[ "$confirm" = "y" ] || {
+  echo "aborted"
+  exit 1
+}
 
 mkdir -p "$OUT_DIR"
 
@@ -46,8 +49,9 @@ metadata:
   namespace: ${NAMESPACE}
 rules:
   # Start narrow. Add verbs/resources deliberately as the operator work
-  # requires them — this is a starting point (spec §11 acceptance
-  # criteria assume a working stack, not a specific RBAC shape).
+  # requires them — this is a starting point (the acceptance criteria in
+  # scripts/verify-acceptance.sh assume a working stack, not a specific
+  # RBAC shape).
   - apiGroups: [""]
     resources: ["pods", "pods/log", "services", "configmaps", "events"]
     verbs: ["get", "list", "watch"]
@@ -77,7 +81,7 @@ TOKEN="$(kubectl --context "$CONTEXT" -n "$NAMESPACE" create token "$SA_NAME" --
 SERVER="$(kubectl --context "$CONTEXT" config view --raw -o jsonpath="{.clusters[?(@.name=='$(kubectl --context "$CONTEXT" config view -o jsonpath="{.contexts[?(@.name=='$CONTEXT')].context.cluster}")')].cluster.server}")"
 CA_DATA="$(kubectl --context "$CONTEXT" config view --raw -o jsonpath="{.clusters[?(@.name=='$(kubectl --context "$CONTEXT" config view -o jsonpath="{.contexts[?(@.name=='$CONTEXT')].context.cluster}")')].cluster.certificate-authority-data}")"
 
-cat > "$OUT_FILE" <<EOF
+cat >"$OUT_FILE" <<EOF
 apiVersion: v1
 kind: Config
 current-context: ${SA_NAME}
