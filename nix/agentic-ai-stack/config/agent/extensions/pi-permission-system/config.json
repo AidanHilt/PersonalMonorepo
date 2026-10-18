@@ -96,7 +96,7 @@
       "cp *": "deny",
       "rm *": "deny",
       "mkdir *": "deny",
-      "echo ---": "allow"
+      "*echo ---*": "allow"
     },
     "external_directory_read": {
       "/home/pi/.pi/*": "allow",
