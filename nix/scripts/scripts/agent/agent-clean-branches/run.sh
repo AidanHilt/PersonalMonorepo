@@ -12,6 +12,7 @@ set -euo pipefail
 readonly GIT="${EXE_git}"
 
 delete=""
+force=""
 
 read -r -d '' description <<'DESCRIPTION' || true
 Clean up local pi-agent-* branches left behind by IMPLEMENT subagent
@@ -39,23 +40,39 @@ Each pi-agent-* branch is placed into exactly one category:
                 Safe to delete.
   KEEP-UNSTAGED Anything else. Conservative default: never deleted. This
                 includes branches whose staged changes were later edited
-                by hand, which no longer reverse-apply cleanly.
+                by hand, which no longer reverse-apply cleanly -- the
+                reverse-apply check can false-negative whenever later
+                commits touch the same or nearby lines. Pass --force
+                (together with --delete) to delete these anyway.
 
 Without --delete (the default), nothing is changed: every action printed
 is prefixed "would". With --delete, EMPTY and STAGED branches are removed
 via git branch -D, and git worktree prune is run to clear out any stale
 worktree administrative data. No prompts are shown either way.
+
+--force additionally deletes KEEP-UNSTAGED branches when combined with
+--delete; it is an escape hatch for stale branches that the reverse-apply
+check can no longer recognize as staged. --force is ignored (and rejected)
+without --delete. KEEP-IN-USE branches are never deleted, even with
+--force.
 DESCRIPTION
 
 args_description "$description"
 args_example "$(basename "$0")"
 args_example "$(basename "$0") --delete"
+args_example "$(basename "$0") --delete --force"
 args_flag "" "--delete" delete "Actually delete safe-to-delete branches (default: dry-run, prints what would happen and changes nothing)"
+args_flag "" "--force" force "With --delete, also delete KEEP-UNSTAGED branches"
 
 args_parse "$@" || {
   rc=$?
   exit "$(args_rc "$rc")"
 }
+
+if [[ "$force" == "true" && "$delete" != "true" ]]; then
+  print_error "--force requires --delete."
+  exit 1
+fi
 
 cleanup_tmp_dir() {
   if [[ -n "${TMP_DIR:-}" ]]; then
@@ -97,6 +114,7 @@ else
   declare -A count_unstaged=()
   deleted_empty=0
   deleted_staged=0
+  deleted_unstaged=0
   would_delete_empty=0
   would_delete_staged=0
 
@@ -168,7 +186,16 @@ else
       ;;
     KEEP-UNSTAGED)
       count_unstaged["$branch"]=1
-      action="kept: $reason"
+      if [[ "$force" == "true" && "$delete" == "true" ]]; then
+        if "$GIT" branch -D "$branch" >/dev/null 2>&1; then
+          action="deleted (forced)"
+          deleted_unstaged=$((deleted_unstaged + 1))
+        else
+          action="kept: failed to delete"
+        fi
+      else
+        action="kept: $reason"
+      fi
       ;;
     esac
 
@@ -184,7 +211,11 @@ else
     print_status "  EMPTY:         ${#count_empty[@]} ($would_delete_empty would delete)"
     print_status "  STAGED:        ${#count_staged[@]} ($would_delete_staged would delete)"
   fi
-  print_status "  KEEP-UNSTAGED: ${#count_unstaged[@]}"
+  if [[ "$delete" == "true" && "$force" == "true" ]]; then
+    print_status "  KEEP-UNSTAGED: ${#count_unstaged[@]} ($deleted_unstaged deleted)"
+  else
+    print_status "  KEEP-UNSTAGED: ${#count_unstaged[@]}"
+  fi
 fi
 
 if [[ "$delete" == "true" ]]; then

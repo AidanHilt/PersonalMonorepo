@@ -23,8 +23,19 @@ See `agent-clean-branches --help` for the full reference; in short:
     cleanly onto `HEAD` (i.e. already staged/committed there, normally
     via `agent-stage`). Safe to delete.
   - `KEEP-UNSTAGED` -- anything else (e.g. staged changes that were
-    later hand-edited). Never deleted, conservatively.
+    later hand-edited). Never deleted, conservatively. The reverse-apply
+    check used for `STAGED` can false-negative when later commits touch
+    the same or nearby lines as a branch's own changes, so genuinely
+    already-staged branches can still end up here and pile up over
+    time -- `--force` exists to clear those out by hand.
 - With `--delete`, `EMPTY` and `STAGED` branches are removed via
   `git branch -D`, and `git worktree prune` is run afterwards to clear
   stale worktree administrative data.
-- No prompts either way.
+- `--force`, combined with `--delete`, also deletes `KEEP-UNSTAGED`
+  branches. It's an escape hatch, not a detection fix: it's silent on
+  whether a given `KEEP-UNSTAGED` branch's changes genuinely made it
+  onto `HEAD`, so review the printed branch list before using it.
+  `--force` without `--delete` is an error. `KEEP-IN-USE` branches are
+  never deleted, even with `--force`.
+- No prompts either way. Remote branches are never touched, regardless
+  of flags.
