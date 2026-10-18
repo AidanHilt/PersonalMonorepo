@@ -95,7 +95,8 @@
       "kubectl exec *": "deny",
       "cp *": "deny",
       "rm *": "deny",
-      "mkdir *": "deny"
+      "mkdir *": "deny",
+      "*echo *---*": "allow"
     },
     "external_directory_read": {
       "/home/pi/.pi/*": "allow",

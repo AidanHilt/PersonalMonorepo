@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#include printing-and-output
+#include args-and-help
+
+set -euo pipefail
+
+args_description "<What this script does>"
+args_example "$(basename "$0") --example value"
+# args_value "-e" "--example" EXAMPLE "VALUE" "Describe the option"
+# args_flag "" "--force" FORCE "Describe the flag"
+
+args_parse "$@" || {
+  rc=$?
+  exit "$(args_rc "$rc")"
+}

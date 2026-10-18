@@ -95,7 +95,7 @@ than pinning a digest/tag).
   not generated from a single source).
 - After retargeting a running cluster's `master-stack` `Application` to a
   different branch (e.g. for testing a feature branch), use
-  [`argocd-update-master-stack-revision`](../nix/scripts/scripts/argocd-update-master-stack-revision)
+  [`argocd-update-master-stack-revision`](../nix/scripts/scripts/argocd/argocd-update-master-stack-revision)
   rather than hand-patching — it walks every source on the `Application`
   and updates `targetRevision` in one pass.
 

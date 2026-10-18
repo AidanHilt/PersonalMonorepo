@@ -59,12 +59,12 @@ triggers. Before dispatch, in order:
 
 `agent-plan-create` is available as a plain executable on PATH in this
 environment (provided via devShells.default / the agentic-ai-stack dev
-shell, sourced from nix/scripts/scripts/agent-plan-create) -- invoke it
+shell, sourced from nix/scripts/scripts/agent/agent-plan-create) -- invoke it
 directly as `agent-plan-create ...` or `agent-plan-create --help`. Do not go
 looking for and running the underlying script file
-(nix/scripts/scripts/agent-plan-create/run.sh) by hand; that's an
+(nix/scripts/scripts/agent/agent-plan-create/run.sh) by hand; that's an
 implementation detail, not the invocation path. `agent-stage` works the same
-way, sourced from nix/scripts/scripts/agent-stage.
+way, sourced from nix/scripts/scripts/agent/agent-stage.
 
 Primary mode (what you'll use almost always):
 
@@ -146,8 +146,8 @@ what `agent-stage` is for (see above). `agent-stage --slot <n>` removes
 `${agents_dir}/IMPLEMENT-n.md` after a successful stage, freeing the slot
 for a future dispatch.
 
-This is a summary -- if `nix/scripts/scripts/agent-plan-create/run.sh`'s own
-`show_help` (or `nix/scripts/scripts/agent-stage/run.sh`'s) has drifted from
+This is a summary -- if `nix/scripts/scripts/agent/agent-plan-create/run.sh`'s own
+`show_help` (or `nix/scripts/scripts/agent/agent-stage/run.sh`'s) has drifted from
 what's written here, treat the script as authoritative and update this
 section.
 

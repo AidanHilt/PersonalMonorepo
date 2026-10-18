@@ -102,7 +102,7 @@ just a place to run `pi` interactively:
    works in an isolated git worktree and validates its own work with
    `agent-validate`.
 4. `agent-stage` (see
-   [nix/scripts/scripts/agent-stage/README.md](../scripts/scripts/agent-stage/README.md))
+   [nix/scripts/scripts/agent/agent-stage/README.md](../scripts/scripts/agent/agent-stage/README.md))
    squash-stages the subagent's validated branch onto the current branch
    for review, WITHOUT committing.
 5. The user reviews the staged diff and commits themselves (`kommit`).
@@ -277,6 +277,17 @@ does) — it fails `getaddrinfo EAI_AGAIN` too, just from a different code
 path. `config/web-search.json`'s `ssrf.trustEnvProxy: true` (seeded to
 `~/.pi/web-search.json`) tells that extension to skip its own DNS lookup
 and trust `HTTPS_PROXY` instead; both settings are required.
+
+Note: `pi`'s `compose.yaml` environment also sets `CGO_ENABLED: "0"` and
+points `GOCACHE`/`GOPATH`/`GOMODCACHE` at `/tmp/go/{build,path,mod}` — `pi`
+is `read_only` with no C compiler installed, so Go's usual
+`~/.cache/go-build` and `~/go` are unwritable and cgo vet would fail
+anyway. This makes every Go invocation inside the container work out of
+the box, not just checks run through `agent-validate`. Since `/tmp` is a
+tmpfs, these caches are lost on every container restart (and are not
+affected by any of the persistence flags below, which only cover named
+volumes) — Go just recreates the directories on first use, so this only
+costs a cold cache, not a failure.
 
 ## Agent skills (build-time, pinned)
 

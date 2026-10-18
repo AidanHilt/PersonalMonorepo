@@ -161,7 +161,7 @@ secret's `publicKeys` list (e.g. `hosts.age`, `github-config.age`,
 
 - **Adding a new host's key and rekeying** (the common case — installing
   a new machine, or rotating a key): use
-  [`nix/scripts/scripts/nixos-key-retrieval`](../scripts/scripts/nixos-key-retrieval),
+  [`nix/scripts/scripts/nixos/nixos-key-retrieval`](../scripts/scripts/nixos/nixos-key-retrieval),
   which appends the key to `secrets.nix` via
   [`_modify-secrets-nix-let-statement`](../scripts/scripts/_modify-secrets-nix-let-statement)
   and then runs `agenix -r` from the `secrets/` directory to rekey every

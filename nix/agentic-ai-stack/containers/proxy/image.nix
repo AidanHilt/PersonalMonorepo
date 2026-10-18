@@ -1,4 +1,9 @@
-{ pkgs, n2c, imageName, imageTag }:
+{
+  pkgs,
+  n2c,
+  imageName,
+  imageTag,
+}:
 
 let
   user = "proxy";
@@ -39,12 +44,18 @@ let
     vendorHash = null;
   };
 
+  # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
   supervise = pkgs.writeShellApplication {
     name = "proxy-entrypoint";
     # domain-gate must be on PATH too -- supervise.sh execs it by name
     # alongside squid, and domain-gate itself execs `squid -k
     # reconfigure`, so both need pkgs.squid here regardless.
-    runtimeInputs = [ pkgs.squid pkgs.coreutils pkgs.bash domainGate ];
+    runtimeInputs = [
+      pkgs.squid
+      pkgs.coreutils
+      pkgs.bash
+      domainGate
+    ];
     text = builtins.readFile ./supervise.sh;
   };
 
@@ -61,7 +72,10 @@ let
       domainGate
       supervise
     ];
-    pathsToLink = [ "/bin" "/etc" ];
+    pathsToLink = [
+      "/bin"
+      "/etc"
+    ];
   };
 
   writableDirs = pkgs.runCommand "squid-writable-dirs" { } ''

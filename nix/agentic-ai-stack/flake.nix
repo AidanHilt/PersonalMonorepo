@@ -196,6 +196,7 @@
         # inspects a Docker image that never exists and "skip" never fires.
         mkLoadApp =
           appSlug: imageName: imageTag: contentId:
+          # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
           pkgs.writeShellApplication {
             name = "load-${appSlug}";
 
@@ -295,6 +296,7 @@
           # nix run .#load  -> builds + loads both images into the local
           # Docker daemon.
           load = flake-utils.lib.mkApp {
+            # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
             drv = pkgs.writeShellApplication {
               name = "load";
               runtimeInputs = [ pkgs.docker ];
@@ -316,6 +318,7 @@
 
           # nix run .#start-agent -> full "up" flow, see scripts/start-agent.sh
           start-agent = flake-utils.lib.mkApp {
+            # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
             drv = pkgs.writeShellApplication {
               name = "start-agent";
               runtimeInputs = [
@@ -331,6 +334,7 @@
           };
 
           stop-agent = flake-utils.lib.mkApp {
+            # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
             drv = pkgs.writeShellApplication {
               name = "stop-agent";
               # jq: resolves pkg-bin/nix-store/proxy-domains' actual
@@ -352,6 +356,7 @@
           # starting anything itself if `pi` isn't already up (start it
           # first via `nix run .#start-agent`).
           shell-agent = flake-utils.lib.mkApp {
+            # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
             drv = pkgs.writeShellApplication {
               name = "shell-agent";
               runtimeInputs = [
@@ -370,6 +375,7 @@
           # flake's checkout (same assumption `load` already makes, since it
           # resolves the `.#*-image` flake refs relative to cwd).
           login = flake-utils.lib.mkApp {
+            # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
             drv = pkgs.writeShellApplication {
               name = "login";
               runtimeInputs = [
@@ -401,6 +407,7 @@
           };
 
           gen-kubeconfig = flake-utils.lib.mkApp {
+            # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
             drv = pkgs.writeShellApplication {
               name = "gen-kubeconfig";
               runtimeInputs = [
@@ -412,6 +419,7 @@
           };
 
           verify = flake-utils.lib.mkApp {
+            # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
             drv = pkgs.writeShellApplication {
               name = "verify";
               runtimeInputs = [
@@ -428,6 +436,7 @@
           # extensions build pipeline (see extra-extensions.nix,
           # extensions/README.md). Requires network access.
           update-pi-extensions = flake-utils.lib.mkApp {
+            # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
             drv = pkgs.writeShellApplication {
               name = "update-pi-extensions";
               runtimeInputs = [

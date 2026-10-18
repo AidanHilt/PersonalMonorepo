@@ -44,7 +44,12 @@ generated `nix/terraform` package. This is a valid use case
   against `nix/terraform` to regenerate its config (see
   [nix/terraform/README.md](../nix/terraform/README.md)'s "Gotchas" for why
   an `aarch64-linux` builder is required even though the output is
-  architecture-independent).
+  architecture-independent). If `PERSONAL_MONOREPO_LOCATION` is set in your
+  shell and points at an existing local checkout, that `nix build` uses it
+  to override the `personalMonorepo` flake input instead of the locked ref
+  (see [IMPLEMENTERS.md](IMPLEMENTERS.md)); leave it unset (or point it
+  somewhere that doesn't exist) to use the locked ref as before — either
+  way the build still succeeds.
 - `terragrunt` and `terraform` on `PATH`.
 - The environment variables each module's `terragrunt.hcl` reads via
   `get_env(...)` (commonly `VAULT_ADDR`, `VAULT_TOKEN`) actually set in your
@@ -79,9 +84,9 @@ the `nix/scripts` context system rather than set by hand:
    directory name.
 
 See the per-script READMEs:
-[context-create-context](../nix/scripts/scripts/context-create-context/README.md),
-[context-populate-context](../nix/scripts/scripts/context-populate-context/README.md),
-[context-activate-context](../nix/scripts/scripts/context-activate-context/README.md).
+[context-create-context](../nix/scripts/scripts/context/context-create-context/README.md),
+[context-populate-context](../nix/scripts/scripts/context/context-populate-context/README.md),
+[context-activate-context](../nix/scripts/scripts/context/context-activate-context/README.md).
 
 ## Running terragrunt: `tg`
 
@@ -106,12 +111,12 @@ Vault must be initialized, unsealed, and applied before any other module
 (`vault` creates the Kubernetes auth backend every other module reads —
 see [nix/terraform/README.md](../nix/terraform/README.md#apply-order)):
 
-1. `vault-initialize` ([README](../nix/scripts/scripts/vault-initialize/README.md))
+1. `vault-initialize` ([README](../nix/scripts/scripts/vault/vault-initialize/README.md))
    against a fresh Vault — saves the unseal keys and root token into the
    active context's `.env`.
-2. `vault-unseal` ([README](../nix/scripts/scripts/vault-unseal/README.md))
+2. `vault-unseal` ([README](../nix/scripts/scripts/vault/vault-unseal/README.md))
    to unseal it.
-3. `vault-provision` ([README](../nix/scripts/scripts/vault-provision/README.md)),
+3. `vault-provision` ([README](../nix/scripts/scripts/vault/vault-provision/README.md)),
    or equivalently `tg vault apply`, to apply the `vault` module.
 
 ### Apply the other modules

@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-# @lib: printing-and-output
-# @lib: args-and-help
+#include printing-and-output
+#include args-and-help
 IMAGE="aidanhilt/atils-debug:latest"
 NAMESPACE=""
 COMMAND="zsh"

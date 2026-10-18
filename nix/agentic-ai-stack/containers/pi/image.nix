@@ -77,6 +77,7 @@ let
     mkdir -p $out/home/pi/.pi-state/sessions
   '';
 
+  # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
   entrypoint = pkgs.writeShellApplication {
     name = "pi-entrypoint";
     runtimeInputs = [
@@ -94,9 +95,10 @@ let
     name = "pi-image-root";
 
     paths = [
-      scripts.packages.${pkgs.system}.agent-plan-create
-      scripts.packages.${pkgs.system}.agent-stage
-      scripts.packages.${pkgs.system}.agent-validate
+      scripts.packages.${pkgs.system}.agent
+      scripts.packages.${pkgs.system}.app-creator
+      scripts.packages.${pkgs.system}.mono-flake
+      scripts.packages.${pkgs.system}
       # pkg-install (nix/scripts/scripts/pkg-install) is the only client
       # of the pkg-broker sidecar service (see
       # containers/pkg-broker/README.md). It is

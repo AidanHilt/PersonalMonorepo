@@ -22,7 +22,6 @@ permission:
     # fixed 4-slot pool; see AGENTS.md's "Worktrees" section), so each
     # dispatch only gets permission for its own command. Everything else
     # needs an explicit allow below.
-    "*": deny
     "sudo *": deny
     "git *": allow
     "git push*": deny

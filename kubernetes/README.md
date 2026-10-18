@@ -62,14 +62,14 @@ Two supported paths to get ArgoCD and `master-stack` running on a new
 cluster:
 
 - **Manual / any cluster** — run
-  [`argocd-install-argocd`](../nix/scripts/scripts/argocd-install-argocd)
+  [`argocd-install-argocd`](../nix/scripts/scripts/argocd/argocd-install-argocd)
   to `helm upgrade --install` ArgoCD using `argocd/values.yaml` (fetched
   from the `master` branch on GitHub; set `ARGOCD_TARGET_VERSION` to pin
   a chart version), then
-  [`argocd-create-master-stack`](../nix/scripts/scripts/argocd-create-master-stack)
+  [`argocd-create-master-stack`](../nix/scripts/scripts/argocd/argocd-create-master-stack)
   to apply the `master-stack` `Application` itself (uses `CLUSTER_NAME`
   and the current/target branch). Afterwards,
-  [`argocd-update-master-stack-revision`](../nix/scripts/scripts/argocd-update-master-stack-revision)
+  [`argocd-update-master-stack-revision`](../nix/scripts/scripts/argocd/argocd-update-master-stack-revision)
   can repoint a running `master-stack` `Application`'s sources at a
   different branch.
 - **RKE2 node bootstrap** — on hosts provisioned with the `rke` server

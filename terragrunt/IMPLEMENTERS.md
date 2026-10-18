@@ -45,6 +45,17 @@ mechanics and gotchas.
   The `../../../` path is relative to the module directory, so it only
   resolves correctly when that directory sits exactly three levels below
   the repo root (`terragrunt/<cluster>/<module>/`).
+
+  If `PERSONAL_MONOREPO_LOCATION` is set in the shell and points at an
+  existing directory, the `nix build` command above instead adds
+  `--override-input personalMonorepo path:$PERSONAL_MONOREPO_LOCATION`
+  before the flake ref, so the build uses that local checkout of
+  `personalMonorepo` instead of its locked/pinned ref. When the env var is
+  unset, empty, or doesn't point at an existing directory, the command
+  falls back unchanged to the form shown above (non-fatal either way).
+  This is the same `PERSONAL_MONOREPO_LOCATION` override pattern used by
+  `nix/agentic-ai-stack/flake.nix` (overriding the `scripts` input) and
+  `nix/mono-flake/modules/roles/universal/_update.nix`.
 - **`result` symlink**: `nix build` creates a `result` symlink in the
   module directory; the `generate` block `cat`s it into the generated
   config and then removes it (`rm result`) in the same command, so it
@@ -134,12 +145,18 @@ mechanics and gotchas.
   [nix/terraform/IMPLEMENTERS.md](../nix/terraform/IMPLEMENTERS.md)'s
   Gotchas), *every* `terragrunt` command here — including `plan` — requires
   that builder to be reachable, not just `apply`.
-- **Helm values come from a pinned branch, not your working tree.**
-  Changes to `kubernetes/helm-charts/**/values.yaml` or
+- **Helm values come from a pinned branch, not your working tree —
+  unless `PERSONAL_MONOREPO_LOCATION` is set.** Changes to
+  `kubernetes/helm-charts/**/values.yaml` or
   `kubernetes/argocd/configuration-data/**` only take effect here once
   they're pushed to the `personalMonorepo` input's pinned branch and `nix
   flake update personalMonorepo` is run in `nix/terraform` — see
-  [nix/terraform/IMPLEMENTERS.md](../nix/terraform/IMPLEMENTERS.md).
+  [nix/terraform/IMPLEMENTERS.md](../nix/terraform/IMPLEMENTERS.md) —
+  *or* once `PERSONAL_MONOREPO_LOCATION` is exported pointing at a local
+  checkout, in which case `root.hcl`'s `nix build` overrides the
+  `personalMonorepo` input to that checkout directly (see "How it works"
+  above), picking up uncommitted/unpushed local changes without a push or
+  `nix flake update`.
 - **The config is regenerated on every parse, not cached.** Because
   `if_exists = "overwrite"`, every `terragrunt` invocation re-runs `nix
   build` and overwrites `generated-config.tf.json`, even for read-only
