@@ -65,7 +65,7 @@ both colliding paths.
   shellcheck checks, run there) and from the overlay's `all`.
   `nix run` does **not** work on a group (a `symlinkJoin` isn't an
   app) — use `nix shell .#<group>` or `nix develop .#<group>` instead.
-  Libs are addressed globally by directory name via `# @lib:`,
+  Libs are addressed globally by directory name via `#include <name>`,
   regardless of which group (if any) they live in.
 - **Flake outputs recap**: `packages.<name>` per script/lib-less package
   (leaf) plus `packages.<group>` per group with packages, plus `all`
@@ -78,14 +78,35 @@ both colliding paths.
   bundle under `pkgs.ahilt-scripts.<name>` / `pkgs.ahilt-scripts.<group>`
   (deliberately excluding `all`, which stays a packaging convenience
   only, not part of the global package set). `source.sh` functions are
-  also concatenated (verbatim, no `@lib` support) into the top-level
-  `interactiveShellInit` output, regardless of grouping.
-- **`@lib:` inlining**: a `run.sh` may declare `# @lib: <lib-name>` lines
-  (any position, parsed in file order). At build time, each declared
-  lib's `lib.sh` is concatenated in declaration order *before* the
-  `run.sh` text, then handed to `writeShellApplication`. This is **not
-  transitive** — if lib A itself calls functions from lib B, every
-  `run.sh` using A must *also* declare `# @lib: B` itself.
+  also concatenated (verbatim, no `#include` support) into the
+  top-level `interactiveShellInit` output, regardless of grouping.
+- **`#include` inlining**: a `run.sh` (or `lib.sh`) may contain
+  `#include <lib-name>` lines — a whole line starting at column 0
+  (optionally followed by trailing whitespace; no leading whitespace and
+  no `# ` comment prefix, so prose like `# Usage: #include foo` inside
+  an ordinary comment does not match). At build time, `assembleScript`
+  (`flake.nix`) resolves the transitive closure of a script's
+  `#include`s via a post-order depth-first walk: each included lib's own
+  `#include`s are resolved first (dependencies before dependents), then
+  its text is concatenated, in that dependency-first order, before the
+  `run.sh` text, then handed to `writeShellApplication`. Includes are
+  **transitive** — if lib A itself `#include`s lib B, a script that
+  includes only A automatically gets B too; it does not need to declare
+  `#include B` itself. Each lib is emitted at most once per script no
+  matter how many times (directly or transitively) it's included, so
+  redundant includes are harmless. Function definitions are
+  order-independent in bash, but top-level statements in a lib (if any
+  slip in despite the "functions only" rule below) rely on this
+  dependency-first order to run before whatever depends on them.
+  `assembleScript` also throws on: an include cycle (names the full
+  cycle path), a missing lib (names the includer and the missing name),
+  and a duplicate function definition (names the function and both
+  sources, e.g. the script vs. an included lib, or two included libs).
+  The duplicate-function check is a best-effort column-0 text scan
+  (`parseFunctionNames`, matching `name()` or `function name` with no
+  leading whitespace) — indented or conditionally-defined functions
+  aren't reliably detected, and a column-0 line inside a heredoc can
+  even false-positive as a function definition.
 - **`./` rewrite** (`rewriteLocalPaths`): if a script directory contains
   files besides its one classified file (e.g. this one has `run.sh` +
   `run.sh.tmpl`), that dir's script text is rewritten so every `./`
@@ -142,9 +163,9 @@ validated as lowercase-kebab-case, optionally with a single leading
 underscore for internal-only scripts (see "Naming conventions" below).
 
 The canonical `run.sh` skeleton (what `scripts-create-script` scaffolds)
-declares `# @lib: printing-and-output` and `# @lib: args-and-help`, and
+includes `#include printing-and-output` and `#include args-and-help`, and
 starts with `args_description`/`args_example`/`args_parse`; add
-`# @lib: env-checks` and `require_env`/`require_monorepo` calls if the
+`#include env-checks` and `require_env`/`require_monorepo` calls if the
 script needs environment variables. There is currently no scaffolder for
 Go scripts (see "Go scripts" below).
 
@@ -158,7 +179,7 @@ meant to be used by other scripts/libs, not invoked directly by a user.
 The shared prefix is also, by convention, the name of the `scripts/`
 group directory the script lives in (see the placement convention under
 "Directory layout") — but the group is just a directory grouping for
-flake outputs, independent of the `@lib`/naming-prefix convention
+flake outputs, independent of the `#include`/naming-prefix convention
 itself.
 
 ### `source.sh` rules
@@ -168,7 +189,7 @@ itself.
 - No `set -e` / `set -u` / `set -o pipefail` — they'd leak into the
   caller's shell.
 - Declare variables `local`.
-- No `@lib` support: the file is concatenated verbatim into
+- No `#include` support: the file is concatenated verbatim into
   `interactiveShellInit`, so it cannot call lib functions.
 
 ### Lib rules
@@ -177,10 +198,12 @@ itself.
   top level, since the file is inlined into every consumer.
 - Mark every function `#shellcheck disable=SC2329` (shellcheck can't see
   that it's called from the `run.sh` it gets concatenated into).
-- `@lib` is not transitive — if your lib calls another lib's functions,
-  document that callers must declare both.
-- Changing a lib affects every script that declares it; check for
-  callers before changing its behavior or signature.
+- A lib may `#include` other libs — includes are transitive, so a
+  script that includes a lib automatically gets everything that lib
+  (transitively) includes; it does not need to redeclare them itself.
+- Changing a lib affects every script that includes it (directly or
+  transitively); check for callers before changing its behavior or
+  signature.
 
 ### Go scripts
 
@@ -209,9 +232,11 @@ is needed. When deps change, update the hash with `nix-update
   that's still a textual pattern match, not a real path parse, so
   review generated/templated `run.sh` files for a stray `./` right
   after one of those characters that wasn't meant to be a path.
-- `@lib` declarations are concatenated in declaration order with no
-  transitive resolution — a lib that depends on another lib's functions
-  needs every caller to declare both.
+- `#include` directives are resolved transitively (post-order,
+  dependency-first) and each lib is emitted at most once per script, so
+  redundant includes are harmless; see `assembleScript` in `flake.nix`
+  for the exact algorithm and the cycle/missing-lib/duplicate-function
+  errors it can throw.
 - `nix run .#<group>` does not work — group bundles are `symlinkJoin`s,
   not apps; use `nix shell .#<group>` or `nix develop .#<group>`
   instead. `nix run .#<name>` still works for individual scripts.

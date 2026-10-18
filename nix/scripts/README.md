@@ -14,8 +14,10 @@ Each script directory is classified by the files it contains:
 - **Shell script** (`run.sh`) — built as a standalone package with
   `writeShellApplication` (shellcheck-clean at build time).
 - **Shell library** (`lib.sh`) — not packaged on its own; a script opts
-  into it by declaring `# @lib: <name>`, and its contents get inlined
-  into that script at build time.
+  into it with a whole-line `#include <name>` directive, and its
+  contents get inlined into that script at build time. Includes are
+  transitive: a lib may itself `#include` other libs, so a caller only
+  needs to include what it calls directly.
 - **Shell source function** (`source.sh`) — a shell function meant to be
   sourced into interactive shells (e.g. `cd`-like helpers), rather than
   run as a standalone command.
