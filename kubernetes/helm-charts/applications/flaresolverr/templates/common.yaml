@@ -1,9 +1,9 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "flaresolverr.harcodedValues" -}}
+{{- define "flaresolverr.hardcodedValues" -}}
 
 {{- end -}}
 
-{{- $_ := mergeOverwrite .Values (include "flaresolverr.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "flaresolverr.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

@@ -1,7 +1,7 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "lidarr.harcodedValues" -}}
+{{- define "lidarr.hardcodedValues" -}}
 env:
   {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
   - name: LIDARR__AUTH__APIKEY
@@ -109,5 +109,5 @@ serviceMonitor:
 {{ end }}
 
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "lidarr.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "lidarr.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

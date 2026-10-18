@@ -11,9 +11,11 @@
     cocogitto
     kubebuilder
     nss
+    python3
     syncthing
     vault
     watchexec
+    openbao
     weechat
   ];
 

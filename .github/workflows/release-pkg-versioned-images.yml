@@ -1,15 +1,15 @@
 name: release-pkg-versioned-images
 
-# externalPkgVersioned only. No cocogitto-managed version — the tag
+# package-versioned only. No cocogitto-managed version — the tag
 # tracks the version of an underlying nixpkgs package, set correctly
 # by the flake itself (imageName/imageTag), so per-arch pushes need
-# no manually-constructed destination, same as the InternalVersioned
+# no manually-constructed destination, same as the self-versioned
 # companion workflow.
 #
-# Unlike InternalVersioned, there's no cocogitto-produced tag to
+# Unlike self-versioned, there's no cocogitto-produced tag to
 # trigger from or attach a release to — this runs on ordinary pushes
 # to main. So this workflow creates its own git tag per affected
-# package (<name>-v<version>, mirroring InternalVersioned's
+# package (<name>-v<version>, mirroring self-versioned's
 # convention) once a push has succeeded, then cuts a release against
 # it the same way. Tag creation is idempotent: if a run touches a
 # package whose resolved version hasn't changed, the tag already
@@ -53,10 +53,10 @@ jobs:
       - name: Build sync-cog-packages
         run: nix build "${{ env.SYNC_TOOL }}" -o /tmp/sync-cog-packages-out
 
-      - name: List all externalPkgVersioned packages
+      - name: List all package-versioned packages
         run: |
           /tmp/sync-cog-packages-out/bin/sync-cog-packages \
-            -images-dir "$IMAGES_DIR" -list=externalPkgVersioned \
+            -images-dir "$IMAGES_DIR" -list=packageVersioned \
             > /tmp/category-b.json
           cat /tmp/category-b.json
 
@@ -175,6 +175,7 @@ jobs:
             -m "${{ steps.refs.outputs.x86_ref }}" \
             -m "${{ steps.refs.outputs.arm_ref }}" \
             -t "${{ steps.refs.outputs.final_ref }}"
+          crane tag "${{ steps.refs.outputs.final_ref }}" latest
 
       - name: Create git tag (idempotent)
         id: gittag

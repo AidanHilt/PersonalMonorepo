@@ -1,16 +1,16 @@
 // Command sync-cog-packages discovers releasable container packages
 // under a nix images directory.
 //
-// Category A packages (values.nix has a literal `tag` field) have
+// self-versioned packages (values.nix has a literal `tag` field) have
 // their [packages.*] entries synced into the generated section of
 // cog.toml, leaving the hand-maintained fixed section untouched.
 //
-// Category B packages (values.nix has a literal `versionPackage`
+// package-versioned packages (values.nix has a literal `versionPackage`
 // field instead) are never written to cog.toml — they're excluded
 // from cocogitto entirely, since their version tracks a nixpkgs
 // attribute rather than conventional-commit history.
 //
-// -list=internalVersioned / -list=externalPkgVersioned print the discovered packages of
+// -list=selfVersioned / -list=packageVersioned print the discovered packages of
 // that category as JSON, for consumption by a GH Actions build matrix.
 package main
 
@@ -28,8 +28,8 @@ func main() {
 	root := flag.String("root", ".", "repo root")
 	imagesDir := flag.String("images-dir", "nix/custom-images/images", "images directory, relative to root")
 	cogTomlPath := flag.String("cog-toml", "cog.toml", "path to cog.toml, relative to root")
-	check := flag.Bool("check", false, "report whether cog.toml changes are needed without writing; exit 1 if so (Internal Versioned only)")
-	list := flag.String("list", "", `print discovered packages as JSON instead of syncing cog.toml; one of "internalVersioned" or "externalPkgVersioned"`)
+	check := flag.Bool("check", false, "report whether cog.toml changes are needed without writing; exit 1 if so (self-versioned only)")
+	list := flag.String("list", "", `print discovered packages as JSON instead of syncing cog.toml; one of "selfVersioned" or "packageVersioned"`)
 	flag.Parse()
 
 	if err := run(*root, *imagesDir, *cogTomlPath, *check, *list); err != nil {
@@ -48,10 +48,10 @@ func run(root, imagesDir, cogTomlRel string, check bool, list string) error {
 		return printList(pkgs, list)
 	}
 
-	// cog.toml only ever reflects Category A — Category B is
-	// intentionally invisible to cocogitto.
-	internalVersioned := discover.FilterCategory(pkgs, discover.InternalVersioned)
-	return syncCogToml(root, cogTomlRel, internalVersioned, check)
+	// cog.toml only ever reflects self-versioned packages —
+	// package-versioned packages are intentionally invisible to cocogitto.
+	selfVersioned := discover.FilterCategory(pkgs, discover.SelfVersioned)
+	return syncCogToml(root, cogTomlRel, selfVersioned, check)
 }
 
 // listEntry is the JSON shape emitted by -list. Fields irrelevant to
@@ -70,12 +70,12 @@ type listEntry struct {
 func printList(pkgs []discover.Package, list string) error {
 	var cat discover.Category
 	switch list {
-	case "internalVersioned":
-		cat = discover.InternalVersioned
-	case "externalPkgVersioned":
-		cat = discover.ExternalPkgVersioned
+	case "selfVersioned":
+		cat = discover.SelfVersioned
+	case "packageVersioned":
+		cat = discover.PackageVersioned
 	default:
-		return fmt.Errorf(`invalid -list value %q, must be "internalVersioned" or "externalPkgVersioned"`, list)
+		return fmt.Errorf(`invalid -list value %q, must be "selfVersioned" or "packageVersioned"`, list)
 	}
 
 	filtered := discover.FilterCategory(pkgs, cat)
@@ -95,7 +95,7 @@ func printList(pkgs []discover.Package, list string) error {
 	return enc.Encode(entries)
 }
 
-func syncCogToml(root, cogTomlRel string, internalVersioned []discover.Package, check bool) error {
+func syncCogToml(root, cogTomlRel string, selfVersioned []discover.Package, check bool) error {
 	cogTomlAbs := root + string(os.PathSeparator) + cogTomlRel
 	rawBytes, err := os.ReadFile(cogTomlAbs)
 	if err != nil {
@@ -112,7 +112,7 @@ func syncCogToml(root, cogTomlRel string, internalVersioned []discover.Package, 
 		return err
 	}
 
-	newPkgs := cogtoml.Build(internalVersioned, extras)
+	newPkgs := cogtoml.Build(selfVersioned, extras)
 	newSuffix := cogtoml.Render(newPkgs)
 
 	if check {
@@ -146,7 +146,7 @@ func syncCogToml(root, cogTomlRel string, internalVersioned []discover.Package, 
 		return fmt.Errorf("writing %s: %w", cogTomlRel, err)
 	}
 
-	fmt.Printf("sync-cog-packages: wrote %d Category A package(s) to %s\n", len(newPkgs), cogTomlRel)
+	fmt.Printf("sync-cog-packages: wrote %d self-versioned package(s) to %s\n", len(newPkgs), cogTomlRel)
 	for _, p := range newPkgs {
 		fmt.Printf("  - %s (tag_prefix=%s)\n", p.Name, p.TagPrefix)
 	}

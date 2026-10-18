@@ -34,13 +34,13 @@ function Check-Documents {
   if ($documentsPath -notlike "D:*") {
     Write-Host "Documents folder is not on D: drive. Current location: $documentsPath"
     Write-Host "Attempting to move user profile..."
-    
+
     # Check if the script exists
     if (Test-Path ".\move-user-profile.ps1") {
       try {
         # Execute the move-user-profile script
         & ".\move-user-profile.ps1"
-        
+
         # If script completed successfully, log out
         if ($LASTEXITCODE -eq 0) {
           Write-Host "Profile move script completed successfully. Logging out to apply changes..."
@@ -79,7 +79,7 @@ function Execute-ScriptsWithConfirmation {
     Write-Host "=====================================`n" -ForegroundColor Cyan
 
     $confirmation = Read-Host "Do you want to run this script? (Y/N)"
-    
+
     if ($confirmation -eq 'Y' -or $confirmation -eq 'y') {
       Write-Host "Executing $($scriptNames[$i])..." -ForegroundColor Green
       try {

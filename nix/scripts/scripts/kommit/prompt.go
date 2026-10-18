@@ -5,44 +5,18 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 )
 
 var stdinReader = bufio.NewReader(os.Stdin)
 
-func selectPrompt(label string, options []string, defaultIdx int) (string, error) {
-	fmt.Printf("%s\n", label)
-	for i, opt := range options {
-		marker := " "
-		if i == defaultIdx {
-			marker = "*"
-		}
-		fmt.Printf("  %s %d) %s\n", marker, i+1, opt)
-	}
-	if defaultIdx >= 0 {
-		fmt.Printf("Choice [%d]: ", defaultIdx+1)
-	} else {
-		fmt.Print("Choice: ")
-	}
-	line, err := readLine()
-	if err != nil {
-		return "", err
-	}
-	if line == "" {
-		if defaultIdx < 0 {
-			fmt.Println("a selection is required")
-			return selectPrompt(label, options, defaultIdx)
-		}
-		return options[defaultIdx], nil
-	}
-	n, err := strconv.Atoi(line)
-	if err != nil || n < 1 || n > len(options) {
-		fmt.Println("invalid choice, try again")
-		return selectPrompt(label, options, defaultIdx)
-	}
-	return options[n-1], nil
-}
+// Note: the numbered-list selectPrompt that used to live here for commit
+// type selection was replaced by the bubbletea list TUI in tui.go
+// (resolveCommitType/runListSelect), per plan step 1. textPrompt is kept
+// around for the preset scope fallback (main.go/runPresetCommit), which
+// is intentionally left as free text rather than ported to the TUI --
+// the plan's generalized scope-inference TUI fallback (tui.go's
+// resolveScopeTUI) only applies to the main (non-preset) commit path.
 
 func textPrompt(label, defaultVal string) (string, error) {
 	if defaultVal != "" {

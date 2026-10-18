@@ -1,6 +1,6 @@
 name: release-internal-versioned-image
 
-# InternalVersioned only. Triggered by tags cocogitto/prepare-release
+# self-versioned only. Triggered by tags cocogitto/prepare-release
 # produces: <package>-v<semver>. Only the package name is parsed from
 # the ref — the actual pushed tag comes straight from nix2container's
 # own `imageName`/`imageTag` attributes on each built package, since

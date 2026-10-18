@@ -19,6 +19,12 @@ type preset struct {
 
 type presetsConfig struct {
 	Presets []preset `json:"presets"`
+	// Types is the commit-type menu (plan step 6: externalized from a
+	// hardcoded Go slice). Omit/empty means "use whatever was already
+	// loaded" -- callers are expected to only overwrite commitTypes when
+	// this is non-empty, so a presets-file override that only wants to
+	// add presets doesn't accidentally blank out the type list.
+	Types []string `json:"types,omitempty"`
 }
 
 func parsePresets(data []byte) (*presetsConfig, error) {

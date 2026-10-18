@@ -4,6 +4,7 @@
     # Personal Machines
     # =================
     "192.168.86.40" = ["big-boi-desktop.lan"];
+    "192.168.86.41" = ["devbox.lan"];
 
     # ===================
     # 3-node prod cluster
