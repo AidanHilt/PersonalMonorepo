@@ -2,20 +2,20 @@ name: prepare-release
 
 # Two distinct triggers, both landing in the same job:
 #
-#   1. A push touching Category A image directories -> normal
+#   1. A push touching self-versioned image directories -> normal
 #      cocogitto flow: sync-cog-packages, then `cog bump --auto`,
 #      which scopes bumps to whichever packages have qualifying
 #      conventional commits since their last tag.
 #
 #   2. A push touching the container-images flake's flake.lock or
-#      flake.nix -> force-bump EVERY Category A package,
+#      flake.nix -> force-bump EVERY self-versioned package,
 #      unconditionally, bypassing commit-log analysis. A lockfile
 #      bump has no natural per-package scope, so this is treated as
-#      an unconditional patch release across the whole Category A
+#      an unconditional patch release across the whole self-versioned
 #      fleet rather than trying to infer which packages were
 #      actually affected transitively.
 #
-# Category B packages are never touched here — they don't go through
+# package-versioned packages are never touched here — they don't go through
 # cocogitto at all. See build-tracked.yml.
 
 on:
@@ -56,14 +56,14 @@ jobs:
         run: nix profile install nixpkgs#cocogitto
 
       # Built once and reused below, since this job calls the tool
-      # twice (sync, then -list=categoryA for the force-bump path).
+      # twice (sync, then -list=selfVersioned for the force-bump path).
       # A single `nix run` per call is simpler and is what every
       # other workflow does, but isn't worth two flake-ref
       # resolutions in the same job.
       - name: Build sync-cog-packages
         run: nix build "${{ env.SYNC_TOOL }}" -o /tmp/sync-cog-packages-out
 
-      - name: Sync cog.toml (Category A packages)
+      - name: Sync cog.toml (self-versioned packages)
         run: /tmp/sync-cog-packages-out/bin/sync-cog-packages -images-dir "$IMAGES_DIR"
 
       - name: Determine trigger reason
@@ -84,10 +84,10 @@ jobs:
         if: steps.reason.outputs.lockfile_changed == 'false'
         run: cog bump --auto
 
-      - name: Bump — force, every Category A package (flake.lock/flake.nix path)
+      - name: Bump — force, every self-versioned package (flake.lock/flake.nix path)
         if: steps.reason.outputs.lockfile_changed == 'true'
         run: |
-          for name in $(/tmp/sync-cog-packages-out/bin/sync-cog-packages -images-dir "$IMAGES_DIR" -list=categoryA | jq -r '.[].name'); do
+          for name in $(/tmp/sync-cog-packages-out/bin/sync-cog-packages -images-dir "$IMAGES_DIR" -list=selfVersioned | jq -r '.[].name'); do
             echo "force patch-bumping $name"
             cog bump --package "$name" --patch
           done

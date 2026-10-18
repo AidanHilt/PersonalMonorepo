@@ -60,7 +60,8 @@ cleanup() {
 trap cleanup TERM INT
 
 mount_dir_bindfs() {
-  src="$1"; dst="$2"
+  src="$1"
+  dst="$2"
   mkdir -p "$dst"
   bindfs \
     --force-user=10001 --force-group=10001 \
@@ -69,7 +70,7 @@ mount_dir_bindfs() {
   MOUNTED_PATHS+=("$dst")
 }
 
-IFS=',' read -r -a ITEMS <<< "$WORKSPACE_ITEMS"
+IFS=',' read -r -a ITEMS <<<"$WORKSPACE_ITEMS"
 
 if [ "$WORKSPACE_MODE" = "single" ]; then
   if [ "${#ITEMS[@]}" -ne 1 ]; then
@@ -89,20 +90,20 @@ else
     name="${item%%:*}"
     type="${item##*:}"
     case "$type" in
-      dir)
-        mount_dir_bindfs "$SOURCES/$name" "$TARGET/$name"
-        ;;
-      file)
-        parent_mount="$INTERNAL/$name"
-        mount_dir_bindfs "$SOURCES/$name" "$parent_mount"
-        touch "$TARGET/$name"
-        mount --bind "$parent_mount/$name" "$TARGET/$name"
-        MOUNTED_PATHS+=("$TARGET/$name")
-        ;;
-      *)
-        echo "workspace-mounter: unknown item type '$type' for '$name'" >&2
-        exit 1
-        ;;
+    dir)
+      mount_dir_bindfs "$SOURCES/$name" "$TARGET/$name"
+      ;;
+    file)
+      parent_mount="$INTERNAL/$name"
+      mount_dir_bindfs "$SOURCES/$name" "$parent_mount"
+      touch "$TARGET/$name"
+      mount --bind "$parent_mount/$name" "$TARGET/$name"
+      MOUNTED_PATHS+=("$TARGET/$name")
+      ;;
+    *)
+      echo "workspace-mounter: unknown item type '$type' for '$name'" >&2
+      exit 1
+      ;;
     esac
   done
 fi

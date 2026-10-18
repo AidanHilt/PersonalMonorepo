@@ -3,7 +3,10 @@
 let
   standalone = false;
 
-  vaultProvider = import ../../lib/vault-provider.nix {inherit lib; inherit standalone;};
+  vaultProvider = import ../../lib/vault-provider.nix {
+    inherit lib;
+    inherit standalone;
+  };
 
   hostSet = libFunctions.loadMergedValues "istio-ingress-config";
 
@@ -14,4 +17,3 @@ lib.mkMerge [
   vaultProvider
   vaultPki
 ]
-

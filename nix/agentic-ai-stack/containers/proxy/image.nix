@@ -26,7 +26,6 @@ let
     mkdir -p $out/etc/proxy $out/etc/squid
     cp ${./squid.conf} $out/etc/proxy/squid.conf
     cp ${./allowed-domains.txt} $out/etc/squid/allowed-domains.txt
-    #cp ${./ollama-gate.nginx.conf.template} $out/etc/proxy/ollama-gate.nginx.conf.template
   '';
 
   # The session-scoped, runtime domain-allowlist service -- see
@@ -45,7 +44,7 @@ let
     # domain-gate must be on PATH too -- supervise.sh execs it by name
     # alongside squid, and domain-gate itself execs `squid -k
     # reconfigure`, so both need pkgs.squid here regardless.
-    runtimeInputs = [ pkgs.squid pkgs.nginx pkgs.gettext pkgs.coreutils pkgs.bash domainGate ];
+    runtimeInputs = [ pkgs.squid pkgs.coreutils pkgs.bash domainGate ];
     text = builtins.readFile ./supervise.sh;
   };
 
@@ -53,8 +52,6 @@ let
     name = "proxy-image-root";
     paths = [
       pkgs.squid
-      pkgs.nginx
-      pkgs.gettext # envsubst
       pkgs.coreutils
       pkgs.bash
       pkgs.cacert
@@ -68,7 +65,7 @@ let
   };
 
   writableDirs = pkgs.runCommand "squid-writable-dirs" { } ''
-    mkdir -p $out/var/spool/squid $out/var/log/squid $out/tmp $out/var/log/nginx $out/var/lib/proxy-domains
+    mkdir -p $out/var/spool/squid $out/var/log/squid $out/tmp $out/var/lib/proxy-domains
   '';
 
   # See containers/pi/image.nix for why this is safe/non-circular and what
@@ -104,7 +101,7 @@ in
       ];
       # No published ports in the image itself — compose.yaml controls
       # what's actually reachable (internal network only, no host
-      # publish for either the egress proxy port or the Ollama gate).
+      # publish for the egress proxy port).
 
       Labels = {
         "sh.pi-sandbox.content-id" = contentId;

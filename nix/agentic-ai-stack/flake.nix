@@ -1,5 +1,5 @@
 {
-  description = "Pi sandbox stack: containerized Pi coding agent + egress-gated proxy + native Ollama";
+  description = "Pi sandbox stack: containerized Pi coding agent + egress-gated proxy";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
@@ -35,7 +35,7 @@
     # Prebuilt nix-index database, used lazily (via `nix run`, not baked
     # into any image closure) by pkg-broker's /lookup-binary endpoint to
     # answer "which nixpkgs attribute provides binary X" -- see
-    # containers/pkg-broker/README.md and FOLLOWUP.md. Deliberately NOT
+    # containers/pkg-broker/README.md. Deliberately NOT
     # `inputs.nixpkgs.follows`'d: the `nix run <ref>#nix-index-with-db`
     # invocation at request time resolves against THIS flake's own lock
     # (whatever nixpkgs Mic92/nix-index-database itself pins), not against
@@ -178,9 +178,9 @@
         };
 
         # ---- helper: load an image into the local Docker daemon using
-        # nix2container's built-in `copyToDockerDaemon` app. Since everything
-        # runs on a NixOS VM now, we can rely on a standard Docker daemon/socket
-        # instead of the old Colima-specific skopeo push-to-registry dance.
+        # nix2container's built-in `copyToDockerDaemon` app. This stack runs
+        # on native Linux Docker, so we can rely on a standard Docker
+        # daemon/socket directly.
         # `contentId` is a cheap fingerprint (see containers/*/image.nix) of
         # everything that ends up in the image, computed at eval time. It's
         # baked into the image as a Docker label, so we can compare the
@@ -293,7 +293,7 @@
 
         apps = {
           # nix run .#load  -> builds + loads both images into the local
-          # Docker daemon (whatever context is active: Colima or native).
+          # Docker daemon.
           load = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "load";
@@ -364,7 +364,7 @@
 
           # nix run .#login -> builds/loads images if needed (same as
           # `nix run .#load`), then runs the containerized, on-demand OAuth
-          # login flow (spec §3.4) via the `login` compose profile. auth.json
+          # login flow via the `login` compose profile. auth.json
           # ends up on the `pi-auth` named volume, shared with the `pi`
           # service (see compose.yaml). Assumes it's run from within this
           # flake's checkout (same assumption `load` already makes, since it

@@ -16,8 +16,9 @@
 #     rslave propagation. The volume entry below merges with the one in
 #     compose.yaml by target path (/nix/store); it only adds `propagation`.
 #
-# Requirements: native Linux Docker (not Colima/Docker Desktop), host path on
-# a shared mount, `mount` available in the pi image (pkgs.util-linux).
+# Requirements: native Linux Docker (not Docker Desktop or any other
+# VM-backed Docker), host path on a shared mount, `mount` available in
+# the pi image (pkgs.util-linux).
 
 services:
   nix-store-mounter:

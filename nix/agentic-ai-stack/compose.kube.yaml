@@ -1,5 +1,5 @@
-# Opt-in override: mounts a scoped kubeconfig into the `pi` container
-# (spec §6). Layered on top of the base compose.yaml automatically
+# Opt-in override: mounts a scoped kubeconfig into the `pi` container.
+# Layered on top of the base compose.yaml automatically
 # by start-agent.sh whenever it finds a kubeconfig on the host; you can
 # also apply it by hand:
 #

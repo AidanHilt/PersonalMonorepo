@@ -1,7 +1,7 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "tandoor.harcodedValues" -}}
+{{- define "tandoor.hardcodedValues" -}}
 
 env:
 {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
@@ -68,5 +68,5 @@ secrets:
 {{- end }}
 
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "tandoor.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "tandoor.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

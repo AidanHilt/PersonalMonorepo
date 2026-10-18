@@ -47,8 +47,8 @@ let
     mkdir -p $out/home/pi/.pi
 
     # config/ is a direct, 1:1 mirror of the final ~/.pi/ tree:
-    # config/agent/ mirrors ~/.pi/agent/ (settings.json, models.json,
-    # AGENTS.md, agents/*, and each extension's config.json already
+    # config/agent/ mirrors ~/.pi/agent/ (settings.json, AGENTS.md,
+    # agents/*, and each extension's config.json already
     # live at their final relative paths under config/agent/), and
     # config/web-search.json mirrors ~/.pi/web-search.json. So this is
     # a single recursive copy of the whole config/ tree with no
@@ -99,7 +99,7 @@ let
       scripts.packages.${pkgs.system}.agent-validate
       # pkg-install (nix/scripts/scripts/pkg-install) is the only client
       # of the pkg-broker sidecar service (see
-      # containers/pkg-broker/README.md, PROJECT-SPEC.md). It is
+      # containers/pkg-broker/README.md). It is
       # deliberately NOT allow-listed in config/agent/extensions/
       # pi-permission-system/config.json -- bundling the binary here just
       # makes it available on PATH for a human operator to run manually
@@ -109,7 +109,11 @@ let
       pkgs.pi-coding-agent
       pkgs.mount
       pkgs.gitMinimal
-      pkgs.busybox
+      pkgs.coreutils
+      pkgs.findutils
+      pkgs.gnused
+      pkgs.gnugrep
+      pkgs.gawk
       pkgs.bash
       pkgs.cacert
       pkgs.socat

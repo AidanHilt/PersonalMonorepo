@@ -1,33 +1,39 @@
-{ libFunctions, lib, inputs, pkgs, ... }:
+{
+  libFunctions,
+  lib,
+  inputs,
+  pkgs,
+  ...
+}:
 
 let
   standalone = false;
   static = {
     variable = {
       authentik_access_url = {
-        type        = "string";
+        type = "string";
         description = "The URL to connect to Authentik, which may be different from the URL users connect with";
       };
 
       authentik_token = {
-        type        = "string";
+        type = "string";
         description = "The token to authenticate to Authentik";
       };
 
       authentik_insecure = {
-        type        = "bool";
+        type = "bool";
         description = "Whether or not to force an https connection";
-        default     = true;
+        default = true;
       };
       authentik_subdomain = {
-        type        = "string";
+        type = "string";
         description = "The subdomain authentik is served from for the user";
-        default     = "iam";
+        default = "iam";
       };
       secure = {
-        type        = "bool";
+        type = "bool";
         description = "Use https:// for user-accessible URL if true, http:// otherwise";
-        default     = true;
+        default = true;
       };
     };
 
@@ -38,8 +44,8 @@ let
 
     provider = {
       authentik = {
-        url      = "\${var.authentik_access_url}";
-        token    = "\${var.authentik_token}";
+        url = "\${var.authentik_access_url}";
+        token = "\${var.authentik_token}";
         insecure = "\${var.authentik_insecure}";
       };
     };
@@ -54,7 +60,7 @@ let
         };
       };
       authentik_service_connection_kubernetes = {
-        default =  {
+        default = {
           name = "Local Kubernetes Cluster";
         };
       };
@@ -65,30 +71,32 @@ let
 
   isIp = hostname: builtins.match "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+" hostname != null;
 
-  results = builtins.concatLists
-    (lib.mapAttrsToList
-      (environment: value:
-        builtins.concatMap
-          (hostname:
-            builtins.filter (x: x != null)
-              (lib.mapAttrsToList
-                (key: entry:
-                  if hasEnabledAuthProxy entry
-                  then libFunctions.mkProxyApplication key "http://${entry.destinationSvc}" hostname environment {subdomain = entry.subdomain or "";}
-                  else null
-                )
-                value
-              )
-          )
-          (builtins.filter (h: !(isIp h)) value.hostnames)
-      )
-      mergedValues
-    );
+  results = builtins.concatLists (
+    lib.mapAttrsToList (
+      environment: value:
+      builtins.concatMap (
+        hostname:
+        builtins.filter (x: x != null) (
+          lib.mapAttrsToList (
+            key: entry:
+            if hasEnabledAuthProxy entry then
+              libFunctions.mkProxyApplication key "http://${entry.destinationSvc}" hostname environment {
+                subdomain = entry.subdomain or "";
+              }
+            else
+              null
+          ) value
+        )
+      ) (builtins.filter (h: !(isIp h)) value.hostnames)
+    ) mergedValues
+  );
 
-  hasEnabledAuthProxy = entry:
-    (entry.auth or { }).proxy.enabled or false == true;
+  hasEnabledAuthProxy = entry: (entry.auth or { }).proxy.enabled or false == true;
 
-  vaultProvider = import ../../lib/vault-provider.nix {inherit lib; inherit standalone;};
+  vaultProvider = import ../../lib/vault-provider.nix {
+    inherit lib;
+    inherit standalone;
+  };
 in
 
 lib.mkMerge [

@@ -5,7 +5,7 @@
 // squid's egress allowlist for the lifetime of the current proxy
 // container (session-scoped only -- cleared on proxy restart; see
 // nix/agentic-ai-stack/README.md's "Requesting an extra domain at
-// runtime" section and PROJECT-SPEC.md §3.2.1).
+// runtime" section).
 //
 // There is no pending-request queue here: approval is entirely pi's own
 // permission system. request-domain is deliberately NOT allow-listed in

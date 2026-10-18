@@ -26,9 +26,9 @@
 #   - `pi` binds that same host directory read-write with rslave
 #     propagation (receives the mount, cannot push back).
 #
-# Requirements: native Linux Docker (not Colima/Docker Desktop), host path on
-# a shared mount (same requirement nix-store-mounter already has), /dev/fuse
-# available on the host.
+# Requirements: native Linux Docker (not Docker Desktop or any other
+# VM-backed Docker), host path on a shared mount (same requirement
+# nix-store-mounter already has), /dev/fuse available on the host.
 
 services:
   workspace-mounter:

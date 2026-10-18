@@ -3,7 +3,7 @@
 // narrow, session-scoped way to add exactly one exact hostname to the
 // egress allowlist at runtime, without rebuilding/reloading the proxy
 // image. See nix/agentic-ai-stack/README.md's "Requesting an extra
-// domain at runtime" section and PROJECT-SPEC.md §3.2.1.
+// domain at runtime" section.
 //
 // Approval model: there is no queue or separate approval step here --
 // pi's own permission system is the approval gate (the `request-domain`

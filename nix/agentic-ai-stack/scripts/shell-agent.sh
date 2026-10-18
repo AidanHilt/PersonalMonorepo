@@ -33,8 +33,8 @@ PROJECT="${COMPOSE_PROJECT_NAME:-agentic-ai-stack}"
 # has its own service label, so it never matches.
 CONTAINER_ID="$(docker ps -q \
   --filter "label=com.docker.compose.project=${PROJECT}" \
-  --filter "label=com.docker.compose.service=pi" \
-  | head -n1)"
+  --filter "label=com.docker.compose.service=pi" |
+  head -n1)"
 
 if [ -z "$CONTAINER_ID" ]; then
   cat >&2 <<EOF

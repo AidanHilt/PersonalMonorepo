@@ -1,7 +1,7 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "prowlarr.harcodedValues" -}}
+{{- define "prowlarr.hardcodedValues" -}}
 env:
   {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
   - name: PROWLARR__AUTH__APIKEY
@@ -109,5 +109,5 @@ serviceMonitor:
 {{ end }}
 
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "prowlarr.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "prowlarr.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}
