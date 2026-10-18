@@ -180,14 +180,141 @@
       # Libs are addressed globally by directory name, regardless of group.
       libByName = lib.listToAttrs (map (e: lib.nameValuePair e.name e) libEntries);
 
-      # Pulls `# @lib: <name>` declarations out of a run.sh, in order.
-      parseLibDeps =
+      # Pulls `#include <name>` directives out of a script's text, in order.
+      # Must start the line at column 0 -- no leading whitespace and no "# "
+      # prefix -- so prose referencing "#include" inside an ordinary comment
+      # (e.g. "# Usage: declare \"#include foo\"") does not match.
+      parseIncludes =
         text:
         let
           lines = lib.splitString "\n" text;
-          matches = map (l: builtins.match "# @lib: ([A-Za-z0-9_-]+)[[:space:]]*" l) lines;
+          matches = map (l: builtins.match "#include ([A-Za-z0-9_-]+)[[:space:]]*" l) lines;
         in
         map builtins.head (builtins.filter (m: m != null) matches);
+
+      # Extracts function names a script/lib text defines, best-effort, for
+      # the duplicate-definition check below. Matches "name()" and
+      # "function name" starting at column 0 (no leading whitespace -- this
+      # is a textual scan, not a parser, so indented/conditional function
+      # definitions are missed, which is an accepted limitation).
+      parseFunctionNames =
+        text:
+        let
+          lines = lib.splitString "\n" text;
+          tryMatch =
+            l:
+            let
+              m1 = builtins.match "([A-Za-z0-9_:.-]+)[[:space:]]*\\(\\).*" l;
+              m2 = builtins.match "function[[:space:]]+([A-Za-z0-9_:.-]+).*" l;
+            in
+            if m1 != null then m1 else m2;
+          matches = map tryMatch lines;
+        in
+        map builtins.head (builtins.filter (m: m != null) matches);
+
+      # Resolves the transitive closure of `#include` directives for a
+      # script, in dependency-first (post-order) order, each lib emitted at
+      # most once, and checks for cycles and duplicate function definitions
+      # along the way. `name` is the owning script's name (used only for
+      # error messages); `runText` is its already-read run.sh/lib.sh text
+      # (lib texts for included libs are read internally via
+      # readDirScriptOfKind, which keeps the existing `./` rewrite).
+      #
+      # Implemented as a pure depth-first walk via a left fold over each
+      # node's own includes, threading a `state = { done, order, funcs }`
+      # accumulator (done: lib names already emitted; order: closure text in
+      # emission order; funcs: list of { name, desc } already seen, for the
+      # duplicate check) plus a `path` stack (lib names currently being
+      # visited, for cycle detection) through the recursion. `pure`,
+      # independent of `pkgs` -- works on text only.
+      assembleScript =
+        { name, runText }:
+        let
+          # Finds the index of `x` in list `l`, or null if absent.
+          indexOf =
+            l: x:
+            let
+              go =
+                i: rest:
+                if rest == [ ] then
+                  null
+                else if builtins.head rest == x then
+                  i
+                else
+                  go (i + 1) (builtins.tail rest);
+            in
+            go 0 l;
+
+          # Records each function name `text` defines against `state.funcs`,
+          # throwing if any was already defined by a different source.
+          # `sourceId` is null for the top-level script, or a lib name.
+          addFuncs =
+            state: sourceId: text:
+            let
+              sourceDesc = if sourceId == null then "script" else "lib '${sourceId}'";
+              step =
+                st: fname:
+                let
+                  prior = lib.findFirst (f: f.name == fname) null st.funcs;
+                in
+                if prior != null then
+                  throw "scripts/${name}: function '${fname}' defined in both ${prior.desc} and ${sourceDesc}"
+                else
+                  st
+                  // {
+                    funcs = st.funcs ++ [
+                      {
+                        name = fname;
+                        desc = sourceDesc;
+                      }
+                    ];
+                  };
+            in
+            lib.foldl' step state (parseFunctionNames text);
+
+          # Depth-first, post-order visit of one included lib: resolves its
+          # own `#include`s first (dependencies before dependents), then
+          # records its functions and appends its text, unless it's already
+          # in `state.done`. `includerDesc` names whoever declared this
+          # include, for the missing-lib error. `path` is the stack of lib
+          # names currently being visited, for cycle detection.
+          visitLib =
+            state: path: includerDesc: libName:
+            if builtins.elem libName state.done then
+              state
+            else if builtins.elem libName path then
+              let
+                idx = indexOf path libName;
+                cycle = (lib.sublist idx (builtins.length path - idx) path) ++ [ libName ];
+              in
+              throw "scripts/${name}: include cycle: ${lib.concatStringsSep " -> " cycle}"
+            else
+              let
+                libEntry =
+                  libByName.${libName}
+                    or (throw "scripts/${name}: ${includerDesc} includes '${libName}' which does not match any lib.sh directory");
+                libText = readDirScriptOfKind "lib.sh" libEntry.dir;
+                deps = parseIncludes libText;
+                newPath = path ++ [ libName ];
+                state1 = lib.foldl' (st: d: visitLib st newPath "lib '${libName}'" d) state deps;
+                state2 = addFuncs state1 libName libText;
+              in
+              state2
+              // {
+                done = state2.done ++ [ libName ];
+                order = state2.order ++ [ (libText + "\n") ];
+              };
+
+          initState = {
+            done = [ ];
+            order = [ ];
+            funcs = [ ];
+          };
+          topIncludes = parseIncludes runText;
+          stateAfterIncludes = lib.foldl' (st: d: visitLib st [ ] "the script" d) initState topIncludes;
+          finalState = addFuncs stateAfterIncludes null runText;
+        in
+        lib.concatStrings finalState.order + runText;
 
       # Builds { packages, leaves, libChecks, sourceChecks } for a given
       # `pkgs`. Kept independent of `system` so it can be reused both
@@ -224,20 +351,13 @@
             e:
             let
               runText = readDirScriptOfKind "run.sh" e.dir;
-              libDeps = parseLibDeps runText;
-              libText = lib.concatMapStrings (
-                libName:
-                let
-                  libEntry =
-                    libByName.${libName}
-                      or (throw "scripts/${e.name}: '# @lib: ${libName}' does not match any lib.sh directory");
-                in
-                (readDirScriptOfKind "lib.sh" libEntry.dir) + "\n"
-              ) libDeps;
             in
             pkgs.writeShellApplication {
               name = e.name;
-              text = libText + runText;
+              text = assembleScript {
+                name = e.name;
+                inherit runText;
+              };
             };
 
           # Individual scripts, flat: packages.<script>
