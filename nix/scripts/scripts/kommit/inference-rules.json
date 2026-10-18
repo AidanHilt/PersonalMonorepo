@@ -32,7 +32,137 @@
     {
       "field": "scope",
       "scope": "deployment",
-      "path": "kubernetes/**"
+      "path": "kubernetes/argocd/**"
+    },
+    {
+      "field": "scope",
+      "scope": "deployment",
+      "path": "kubernetes/helm-charts/k8s-resources/master-stack/**"
+    },
+    {
+      "field": "scope",
+      "scope": "depl-vault",
+      "path": "kubernetes/helm-charts/k8s-resources/vault-config/**"
+    },
+    {
+      "field": "scope",
+      "scope": "depl-postgres",
+      "path": "kubernetes/helm-charts/k8s-resources/postgres-config/**"
+    },
+    {
+      "field": "scope",
+      "scope": "depl-ingress",
+      "path": "kubernetes/helm-charts/k8s-resources/istio-ingress-config/**"
+    },
+    {
+      "field": "scope",
+      "scope": "depl-prometheus",
+      "path": "kubernetes/helm-charts/k8s-resources/prometheus/**"
+    },
+    {
+      "field": "scope",
+      "scope": "depl-metallb",
+      "path": "kubernetes/helm-charts/k8s-resources/metallb-config/**"
+    },
+    {
+      "field": "scope",
+      "scope": "depl-policy",
+      "path": "kubernetes/helm-charts/k8s-resources/kyverno-policies/**"
+    },
+    {
+      "field": "scope",
+      "scope": "depl-homepage",
+      "path": "kubernetes/helm-charts/k8s-resources/homepage-config/**"
+    },
+    {
+      "field": "scope",
+      "scope": "depl-job-templates",
+      "path": "kubernetes/helm-charts/k8s-resources/job-templates/**"
+    },
+    {
+      "field": "scope",
+      "scope": "depl-video-stack",
+      "path": "kubernetes/helm-charts/k8s-resources/video-stack-configuration/**"
+    },
+    {
+      "field": "scope",
+      "scope": "applications",
+      "path": "kubernetes/helm-charts/applications/**"
+    },
+    {
+      "field": "scope",
+      "scope": "helm-lib",
+      "path": "kubernetes/helm-charts/lib/**"
+    },
+    {
+      "field": "scope",
+      "scope": "helm-templates",
+      "path": "kubernetes/helm-charts/templates/**"
+    },
+    {
+      "field": "scope",
+      "scope": "mono-flake",
+      "path": "nix/mono-flake/**"
+    },
+    {
+      "field": "scope",
+      "scope": "scripts",
+      "path": "nix/scripts/**"
+    },
+    {
+      "field": "scope",
+      "scope": "terraform",
+      "path": "nix/terraform/**"
+    },
+    {
+      "field": "scope",
+      "scope": "terraform",
+      "path": "terraform/**"
+    },
+    {
+      "field": "scope",
+      "scope": "agentic-ai-stack",
+      "path": "nix/agentic-ai-stack/**"
+    },
+    {
+      "field": "scope",
+      "scope": "custom-images",
+      "path": "nix/custom-images/**"
+    },
+    {
+      "field": "scope",
+      "scope": "custom-images",
+      "path": "custom-images/**"
+    },
+    {
+      "field": "scope",
+      "scope": "terragrunt",
+      "path": "terragrunt/**"
+    },
+    {
+      "field": "scope",
+      "scope": "windows-setup",
+      "path": "windows-setup/**"
+    },
+    {
+      "field": "scope",
+      "scope": "deps",
+      "path": "renovate.json"
+    },
+    {
+      "field": "scope",
+      "scope": "tooling",
+      "path": ".pre-commit-config.yaml"
+    },
+    {
+      "field": "scope",
+      "scope": "tooling",
+      "path": ".secrets.baseline"
+    },
+    {
+      "field": "scope",
+      "scope": "tooling",
+      "path": "cog.toml"
     },
     {
       "field": "scope",
