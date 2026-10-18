@@ -37,14 +37,14 @@ for how `master-stack` wires an entry's `gitPath` into an ArgoCD
 ## Adding a new application
 
 The recommended path is
-[`app-creator-create-app`](../../nix/scripts/scripts/app-creator-create-app):
+[`app-creator-create-app`](../../nix/scripts/scripts/app-creator/app-creator-create-app):
 it interactively optionally scaffolds a new chart (via
 `helm-new-application`, below), then adds the `master-stack` ArgoCD app
 entry, ingress, homepage link, and any secrets/Postgres databases the app
 needs.
 
 To scaffold just the chart directly —
-[`helm-new-application`](../../nix/scripts/scripts/helm-new-application)
+[`helm-new-application`](../../nix/scripts/scripts/helm/helm-new-application)
 `--chart-name <name>` copies `templates/application/` to
 `applications/<name>/` and `envsubst`s the chart name into it. This is a
 valid, supported way to work if you don't need the rest of
@@ -56,7 +56,7 @@ pattern.
 
 ## Adding a new k8s-resources chart
 
-[`helm-new-k8s-resource`](../../nix/scripts/scripts/helm-new-k8s-resource)
+[`helm-new-k8s-resource`](../../nix/scripts/scripts/helm/helm-new-k8s-resource)
 `--chart-name <name> --resource-type <type>` copies
 `templates/k8s-resources/` to `k8s-resources/<name>/` and `envsubst`s the
 chart name and resource type into it. Using this directly (without going

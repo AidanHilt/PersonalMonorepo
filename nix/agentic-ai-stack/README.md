@@ -102,7 +102,7 @@ just a place to run `pi` interactively:
    works in an isolated git worktree and validates its own work with
    `agent-validate`.
 4. `agent-stage` (see
-   [nix/scripts/scripts/agent-stage/README.md](../scripts/scripts/agent-stage/README.md))
+   [nix/scripts/scripts/agent/agent-stage/README.md](../scripts/scripts/agent/agent-stage/README.md))
    squash-stages the subagent's validated branch onto the current branch
    for review, WITHOUT committing.
 5. The user reviews the staged diff and commits themselves (`kommit`).

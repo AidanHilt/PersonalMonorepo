@@ -18,7 +18,7 @@ Takes no arguments.
   (fails with an error if Vault is already initialized or the call
   otherwise fails).
 - If `$ATILS_CURRENT_CONTEXT` is set (see
-  [context-activate-context](../context-activate-context/README.md)):
+  [context-activate-context](../../context/context-activate-context/README.md)):
   - Saves each unseal key as `VAULT_UNSEAL_KEY_1`, `VAULT_UNSEAL_KEY_2`,
     `VAULT_UNSEAL_KEY_3`, and the root token as `VAULT_TOKEN`, into
     `$ATILS_CONTEXTS_DIRECTORY/$ATILS_CURRENT_CONTEXT/.env` via

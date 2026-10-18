@@ -1,55 +1,104 @@
 # nix/scripts — Implementers
 
-A flake of roughly 80 bash/go utility scripts used across this repository,
-grouped by prefix (e.g. `app-creator-*`, `argocd-*`, `context-*`,
-`mono-flake-*`, `nixos-*`, `vault-*`, `agent-*`), plus a few standalone
-tools such as `kommit` and `tg`.
+A flake of roughly 90 bash/go utility scripts used across this repository,
+mostly organized into prefix groups (e.g. `app-creator/`, `argocd/`,
+`context/`, `helm/`, `mono-flake/`, `nixos/`, `scripts/`, `system-tasks/`,
+`vault/`, `agent/`), plus shared libs under `libs/` and a handful of
+standalone top-level tools (e.g. `kommit`, `tg`, `pkg-install`).
 
 See the [root IMPLEMENTERS.md](../../IMPLEMENTERS.md) for the repo-wide
 convention and architecture overview.
 
 ## Overview
 
-`flake.nix` auto-discovers every directory under `scripts/` and turns it
-into a package, a shellcheck check, or interactive-shell glue, based on
-which single file it contains. An unrecognized directory (none of
-`go.mod`, `run.sh`, `lib.sh`, `source.sh`) makes flake evaluation `throw`
-and breaks the *entire* flake, not just that one package.
+`flake.nix` auto-discovers every directory under `scripts/` (one level of
+grouping at most) and turns each leaf into a package, a shellcheck check,
+or interactive-shell glue, based on which single file it contains. An
+unrecognized directory (none of `go.mod`, `run.sh`, `lib.sh`,
+`source.sh`, and not itself a group of such directories) makes flake
+evaluation `throw`, naming the offending path, and breaks the *entire*
+flake, not just that one package. Nested groups (a group inside a group)
+are not supported and also throw.
+
+Every name — script, Go package, lib, source function, and group — must
+be globally unique across all of `scripts/`, regardless of nesting; a
+name collision (e.g. a lib named the same as a group) throws, naming
+both colliding paths.
 
 ## Directory layout
 
-- `scripts/<name>/` — one directory per script/lib/function/Go package.
-  Per-script `README.md` files are optional and uncommon; only a couple
+- `scripts/<name>/` — a standalone script/lib/function/Go package at the
+  top level.
+- `scripts/<group>/<name>/` — a script/lib/function/Go package that is a
+  member of `<group>`. A directory counts as a group when it contains no
+  marker file itself, only further script/lib/function/Go-package
+  directories; grouping is one level deep only. Names are always the
+  leaf directory name, never prefixed by the group (e.g. the lib at
+  `scripts/agent/agent-plan-classify/` is addressed as
+  `agent-plan-classify`, not `agent/agent-plan-classify`).
+- **Placement convention**: a script or lib belongs in a group only when
+  its name actually starts with that group's prefix (e.g.
+  `vault-initialize` belongs in `vault/` because it's prefixed
+  `vault-`). Libs that aren't a prefix match for any group — i.e. most
+  shared/general-purpose libs — live in `scripts/libs/` instead (e.g.
+  `args-and-help`, `printing-and-output`, `env-checks`). Never place a
+  lib by who happens to use it; place it by whether its own name shares
+  a group's prefix.
+- Per-script `README.md` files are optional and uncommon; only a couple
   of scripts (e.g. `agent-stage`, `sync-cog-packages`) currently have
   one.
 
 ## How it works
 
-- **Classification** (`flake.nix`'s `classify`): `go.mod` → Go package;
-  else `run.sh` → shell script; else `lib.sh` → lib; else `source.sh` →
-  source function.
+- **Classification** (`flake.nix`'s `classifyDir`): `go.mod` → Go
+  package; else `run.sh` → shell script; else `lib.sh` → lib; else
+  `source.sh` → source function; else (no marker file) → group, whose
+  immediate children are classified the same way (one level only — a
+  group's child that is itself a group throws).
+- **Groups**: a group with at least one runnable script (`run.sh` or
+  `go.mod`) member gets a `packages.<group>` bundle (a `symlinkJoin` of
+  just that group's packages), plus `devShells.<group>` and
+  `overlays.default`'s `ahilt-scripts.<group>`. A group made up only of
+  libs and/or source functions (e.g. `libs/`) emits no bundle/devShell/
+  overlay entry — there's nothing runnable to bundle. Group bundles are
+  excluded from `checks` (only individual packages, and lib/source
+  shellcheck checks, run there) and from the overlay's `all`.
+  `nix run` does **not** work on a group (a `symlinkJoin` isn't an
+  app) — use `nix shell .#<group>` or `nix develop .#<group>` instead.
+  Libs are addressed globally by directory name via `# @lib:`,
+  regardless of which group (if any) they live in.
+- **Flake outputs recap**: `packages.<name>` per script/lib-less package
+  (leaf) plus `packages.<group>` per group with packages, plus `all`
+  (every leaf, no groups) and `default` (= `all`); `checks` (every leaf
+  package, plus shellcheck of every `lib.sh` and `source.sh` — group
+  bundles excluded); `devShells.<name>` and `devShells.<group>` (that
+  one package, or that group's packages) plus `devShells.default`
+  (every leaf package plus `go`, `shellcheck`, `nix-update`); and
+  `overlays.default`, which exposes every leaf package and every group
+  bundle under `pkgs.ahilt-scripts.<name>` / `pkgs.ahilt-scripts.<group>`
+  (deliberately excluding `all`, which stays a packaging convenience
+  only, not part of the global package set). `source.sh` functions are
+  also concatenated (verbatim, no `@lib` support) into the top-level
+  `interactiveShellInit` output, regardless of grouping.
 - **`@lib:` inlining**: a `run.sh` may declare `# @lib: <lib-name>` lines
   (any position, parsed in file order). At build time, each declared
   lib's `lib.sh` is concatenated in declaration order *before* the
   `run.sh` text, then handed to `writeShellApplication`. This is **not
   transitive** — if lib A itself calls functions from lib B, every
   `run.sh` using A must *also* declare `# @lib: B` itself.
-- **`./` rewrite**: if a script directory contains files besides its one
-  classified file (e.g. this one has `run.sh` + `run.sh.tmpl`), every
-  literal `./` substring in that dir's script text — including inside
-  `../`, string literals, and comments — is rewritten to the directory's
-  Nix store path before the package is built. This lets a `run.sh`
+- **`./` rewrite** (`rewriteLocalPaths`): if a script directory contains
+  files besides its one classified file (e.g. this one has `run.sh` +
+  `run.sh.tmpl`), that dir's script text is rewritten so every `./`
+  that starts a path token becomes the directory's Nix store path
+  before the package is built — specifically, every occurrence of
+  `./` immediately preceded by a newline, space, tab, `"`, `'`, `(`, or
+  `=` (i.e. the start of a path-looking token), not a bare
+  string-replace of every `./` substring. This lets a `run.sh`
   reference a sibling file (e.g. a template) at a path that resolves
-  correctly from the built package. It also means scripts in such
-  directories must avoid any unintended `./` substring.
-- **Outputs**: `packages.<name>` per script/lib-less package (plus `all`
-  and `default`, a `symlinkJoin` of everything), `checks` (all packages,
-  plus shellcheck of every `lib.sh` and `source.sh`), `devShells.<name>`
-  (just that package) and `devShells.default` (every package plus `go`,
-  `shellcheck`, `nix-update`), and `overlays.default` which exposes every
-  package under `pkgs.ahilt-scripts.<name>`. `source.sh` functions are
-  also concatenated (verbatim, no `@lib` support) into the top-level
-  `interactiveShellInit` output.
+  correctly from the built package, while leaving `../foo` (which
+  contains `./` but not as a token start) untouched. It also means
+  scripts in such directories must avoid any unintended `./` occurring
+  right after one of those characters.
 - `x86_64-darwin` is excluded from `eachSystem`; scripts are expected to
   work on both Linux and macOS (the other darwin/linux systems).
 
@@ -58,7 +107,9 @@ and breaks the *entire* flake, not just that one package.
 ### Adding a script, lib, or source function
 
 Use the scaffolders (all require `PERSONAL_MONOREPO_LOCATION` to be set,
-and all refuse to overwrite an existing directory):
+and all refuse a name that already exists anywhere under `scripts/` —
+as a top-level entry, as a member of any group, or as a group name
+itself):
 
 ```sh
 nix run .#scripts-create-script -- --script-name my-script
@@ -66,10 +117,26 @@ nix run .#scripts-create-lib -- --lib-name my-lib
 nix run .#scripts-create-source-function -- --source-function-name my-function
 ```
 
+All three also take an optional `--group <name>`, which creates
+`scripts/<group>/<name>` instead of a top-level `scripts/<name>`
+(creating the group directory if it doesn't exist yet) and validates
+`<group>` as lowercase-kebab-case:
+
+```sh
+nix run .#scripts-create-script -- --script-name my-script --group my-group
+```
+
+Only use `--group` when the new name actually starts with that group's
+prefix (see the placement convention in "Directory layout" above) — a
+lib that doesn't match any group's prefix belongs in `scripts/libs/`
+instead, which today means running `scripts-create-lib` *without*
+`--group` and then `git mv`-ing the result into `scripts/libs/`
+yourself (there's no `--libs`-shortcut flag).
+
 Each copies its template — see
-[`scripts/scripts-create-script/run.sh.tmpl`](scripts/scripts-create-script/run.sh.tmpl),
-[`scripts/scripts-create-lib/lib.sh.tmpl`](scripts/scripts-create-lib/lib.sh.tmpl),
-[`scripts/scripts-create-source-function/source.sh.tmpl`](scripts/scripts-create-source-function/source.sh.tmpl)
+[`scripts/scripts/scripts-create-script/run.sh.tmpl`](scripts/scripts/scripts-create-script/run.sh.tmpl),
+[`scripts/scripts/scripts-create-lib/lib.sh.tmpl`](scripts/scripts/scripts-create-lib/lib.sh.tmpl),
+[`scripts/scripts/scripts-create-source-function/source.sh.tmpl`](scripts/scripts/scripts-create-source-function/source.sh.tmpl)
 — into the new directory, substituting the given name. Names are
 validated as lowercase-kebab-case, optionally with a single leading
 underscore for internal-only scripts (see "Naming conventions" below).
@@ -88,6 +155,11 @@ chosen as the first/simplest concept a user would reach for, so
 tab-completion on that prefix reliably recalls the exact script name. A
 leading underscore (`_name`) marks a script as internal-only — a helper
 meant to be used by other scripts/libs, not invoked directly by a user.
+The shared prefix is also, by convention, the name of the `scripts/`
+group directory the script lives in (see the placement convention under
+"Directory layout") — but the group is just a directory grouping for
+flake outputs, independent of the `@lib`/naming-prefix convention
+itself.
 
 ### `source.sh` rules
 
@@ -132,19 +204,28 @@ is needed. When deps change, update the hash with `nix-update
 
 ## Gotchas
 
-- The `./` rewrite (see "How it works") applies to *every* `./`
-  substring in a multi-file script directory's text, including inside
-  `../`, strings, and comments — review generated/templated `run.sh`
-  files for stray occurrences.
+- The `./` rewrite (see "How it works") only rewrites `./` where it
+  starts a path token (after whitespace, a quote, `(`, or `=`) — but
+  that's still a textual pattern match, not a real path parse, so
+  review generated/templated `run.sh` files for a stray `./` right
+  after one of those characters that wasn't meant to be a path.
 - `@lib` declarations are concatenated in declaration order with no
   transitive resolution — a lib that depends on another lib's functions
   needs every caller to declare both.
+- `nix run .#<group>` does not work — group bundles are `symlinkJoin`s,
+  not apps; use `nix shell .#<group>` or `nix develop .#<group>`
+  instead. `nix run .#<name>` still works for individual scripts.
 - `writeShellApplication` only shellchecks at build time; it does not
   declare runtime dependencies (`runtimeInputs`), so scripts currently
   rely on whatever happens to be on `PATH`. This is a known shortcoming
   — an area to improve, not something to copy going forward.
-- A directory that doesn't match one of the four kinds breaks evaluation
-  for the whole flake, not just that directory.
+- A directory that doesn't match one of the four kinds (and isn't a
+  group of such directories) breaks evaluation for the whole flake, not
+  just that directory; the error names the offending path. Nested
+  groups throw the same way — grouping is one level deep only.
+- Every script/lib/source-function/group name must be unique across all
+  of `scripts/`, not just within its own kind or its own group — a
+  clash throws, naming both colliding paths.
 - `vendor-hash.nix` must be updated whenever a Go script's dependencies
   change, or its build will fail with a hash mismatch.
 - The Go `version = "0.1.0"` in `flake.nix` is a placeholder; it has no

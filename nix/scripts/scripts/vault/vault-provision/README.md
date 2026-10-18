@@ -1,7 +1,7 @@
 # vault-provision
 
 Applies the `vault` module (see
-[terragrunt/README.md](../../../../terragrunt/README.md)) under the
+[terragrunt/README.md](../../../../../terragrunt/README.md)) under the
 current `TG_WORKING_DIR`, non-interactively.
 
 ## Usage
@@ -21,12 +21,12 @@ terragrunt run apply --all --working-dir "$TG_WORKING_DIR/vault"
 - `terragrunt` on `PATH`.
 - `TG_WORKING_DIR` set, with a `vault/` subdirectory under it containing a
   valid `terragrunt.hcl` — normally set by
-  [context-activate-context](../context-activate-context/README.md) to
+  [context-activate-context](../../context/context-activate-context/README.md) to
   `terragrunt/<context-name>`, so the active context's name must match a
   `terragrunt/<cluster>` directory that has a `vault/` module.
 - Everything that module's `terragrunt.hcl` itself needs (e.g.
   `VAULT_ADDR`/`VAULT_TOKEN`, KeePass access for `run_cmd`-sourced
-  secrets) — see [terragrunt/README.md](../../../../terragrunt/README.md).
+  secrets) — see [terragrunt/README.md](../../../../../terragrunt/README.md).
 
 ## Caveats
 

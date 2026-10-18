@@ -28,9 +28,9 @@ tell you so.
 ## NixOS setup
 
 1. Build a bootstrap ISO with
-   [`nix/scripts/scripts/nixos-build-x86_64-iso`](../scripts/scripts/nixos-build-x86_64-iso)
+   [`nix/scripts/scripts/nixos/nixos-build-x86_64-iso`](../scripts/scripts/nixos/nixos-build-x86_64-iso)
    or
-   [`nix/scripts/scripts/nixos-build-aarch64-iso`](../scripts/scripts/nixos-build-aarch64-iso)
+   [`nix/scripts/scripts/nixos/nixos-build-aarch64-iso`](../scripts/scripts/nixos/nixos-build-aarch64-iso)
    (these just `nix build` the `iso-image-x86_64` / `iso-image-aarch64`
    hosts, which are built from
    `modules/shared-machine-configs/bootstrap-image.nix` — root SSH
@@ -39,9 +39,9 @@ tell you so.
    the target machine from it.
 2. Once it's booted and reachable over SSH, optionally pull its hardware
    configuration with
-   [`nix/scripts/scripts/nixos-hardware-config-retrieval`](../scripts/scripts/nixos-hardware-config-retrieval).
+   [`nix/scripts/scripts/nixos/nixos-hardware-config-retrieval`](../scripts/scripts/nixos/nixos-hardware-config-retrieval).
 3. Run
-   [`nix/scripts/scripts/nixos-remote-install`](../scripts/scripts/nixos-remote-install)
+   [`nix/scripts/scripts/nixos/nixos-remote-install`](../scripts/scripts/nixos/nixos-remote-install)
    from a machine with your `PersonalMonorepo` checkout. It will prompt
    you to pick one of the machines listed above (or pass
    `--machine-name`), ask for the target IP (`--remote-ip`), and run
@@ -63,7 +63,7 @@ tell you so.
    homelab nodes, decrypts the right `rke-config-<cluster>.age` into
    `etc/rancher/rke2/config.yaml`) via the `generate_homelab_node_files`
    / `generate_desktop_files` library functions in
-   `nix/scripts/scripts/generate-node-files/lib.sh` (the identity used to
+   `nix/scripts/scripts/libs/generate-node-files/lib.sh` (the identity used to
    decrypt the secret is your default OpenSSH ed25519 identity, overridable
    with `NODE_FILES_AGE_IDENTITY`). It then calls `nixos-key-retrieval` to
    add the new host's SSH key to `secrets/secrets.nix` and rekey, runs
@@ -136,32 +136,32 @@ Prefer these scripts (all under `nix/scripts/scripts/`, all require
 `PERSONAL_MONOREPO_LOCATION`) over hand-editing files:
 
 - **New machine**:
-  [`mono-flake-new-machine`](../scripts/scripts/mono-flake-new-machine)
+  [`mono-flake-new-machine`](../scripts/scripts/mono-flake/mono-flake-new-machine)
   — scaffolds `machines/<system>/<name>/` from `templates/blank-machine`
   (`-s`/`--system`, `-m`/`--machine` to skip the interactive prompts).
 - **Copy an existing machine**:
-  [`mono-flake-copy-machine`](../scripts/scripts/mono-flake-copy-machine)
+  [`mono-flake-copy-machine`](../scripts/scripts/mono-flake/mono-flake-copy-machine)
   — `-s`/`--source`, `-d`/`--destination`, `-t`/`--target-system`.
 - **New module**:
-  [`mono-flake-new-module`](../scripts/scripts/mono-flake-new-module)
+  [`mono-flake-new-module`](../scripts/scripts/mono-flake/mono-flake-new-module)
   — scaffolds a new module from `templates/module.nix` (or
   `templates/home-manager-module.nix` with `--home-manager`) at
   `--module-path`, or interactively under `modules/`.
 - **Pull a remote machine's hardware config**:
-  [`nixos-hardware-config-retrieval`](../scripts/scripts/nixos-hardware-config-retrieval).
+  [`nixos-hardware-config-retrieval`](../scripts/scripts/nixos/nixos-hardware-config-retrieval).
 - **Build a bootstrap ISO**:
-  [`nixos-build-x86_64-iso`](../scripts/scripts/nixos-build-x86_64-iso) /
-  [`nixos-build-aarch64-iso`](../scripts/scripts/nixos-build-aarch64-iso).
+  [`nixos-build-x86_64-iso`](../scripts/scripts/nixos/nixos-build-x86_64-iso) /
+  [`nixos-build-aarch64-iso`](../scripts/scripts/nixos/nixos-build-aarch64-iso).
 - **Install NixOS on a new machine**:
-  [`nixos-remote-install`](../scripts/scripts/nixos-remote-install) (see
+  [`nixos-remote-install`](../scripts/scripts/nixos/nixos-remote-install) (see
   "NixOS setup" above).
 - **Add a host's SSH key to `secrets/secrets.nix` and rekey**:
-  [`nixos-key-retrieval`](../scripts/scripts/nixos-key-retrieval).
+  [`nixos-key-retrieval`](../scripts/scripts/nixos/nixos-key-retrieval).
 - **Retrieve a homelab node's kubeconfig**:
-  [`nixos-kubeconfig-retrieval`](../scripts/scripts/nixos-kubeconfig-retrieval).
+  [`nixos-kubeconfig-retrieval`](../scripts/scripts/nixos/nixos-kubeconfig-retrieval).
 - **Generate a hashed password** (for a machine's `values.nix` /
   `modules/shared-values/*.nix`):
-  [`system-tasks-generate-hashed-password`](../scripts/scripts/system-tasks-generate-hashed-password).
+  [`system-tasks-generate-hashed-password`](../scripts/scripts/system-tasks/system-tasks-generate-hashed-password).
 - **Commit your changes**: `kommit` (see the root
   [IMPLEMENTERS.md](../../IMPLEMENTERS.md) for repo-wide tooling).
 

@@ -3,7 +3,7 @@
 A sourced shell function (`source.sh`) that activates a context created by
 [context-create-context](../context-create-context/README.md): exports its
 variables into the current shell and points `tg`/Terragrunt at the
-matching directory. See [../../README.md](../../README.md)'s "Kinds of
+matching directory. See [../../../README.md](../../../README.md)'s "Kinds of
 scripts" — not a standalone command; available via `interactiveShellInit`
 or by sourcing `source.sh` yourself.
 
@@ -23,13 +23,13 @@ context-activate-context            # prompts via _context-context-selector
 - Prepends the context's `scripts/` directory to `PATH`.
 - Exports `TG_WORKING_DIR="$PERSONAL_MONOREPO_LOCATION/terragrunt/<name>"`
   — so the context name should match a
-  [terragrunt/<cluster>](../../../../terragrunt/README.md) directory name
+  [terragrunt/<cluster>](../../../../../terragrunt/README.md) directory name
   for `tg <module> ...` to work as documented there.
 - If the context's `.env` exists and is non-empty, evaluates every
   variable from it (via `dotenvx get`) into the current shell — this is
   how `VAULT_ADDR`/`VAULT_TOKEN`/etc. set by
   [context-populate-context](../context-populate-context/README.md) or
-  [vault-initialize](../vault-initialize/README.md) end up in your
+  [vault-initialize](../../vault/vault-initialize/README.md) end up in your
   environment.
 - If `KUBECONFIG_CONTEXT` ends up set (from the `.env`), runs
   `kubecm switch "$KUBECONFIG_CONTEXT" -s`.

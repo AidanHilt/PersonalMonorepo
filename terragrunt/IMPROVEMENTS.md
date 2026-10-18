@@ -67,7 +67,7 @@ all). Neither cluster currently has any shared inputs wired through
 
 ## `vault-provision` doesn't actually stop cleanly when `TG_WORKING_DIR` is unset
 
-`nix/scripts/scripts/vault-provision/run.sh` checks `[[ -v TG_WORKING_DIR ]]`
+`nix/scripts/scripts/vault/vault-provision/run.sh` checks `[[ -v TG_WORKING_DIR ]]`
 and calls `print_error 'Please set TG_WORKING_DIR'` if it's unset, but
 `print_error` only echoes a message — it doesn't call `exit`. The script
 then unconditionally reaches

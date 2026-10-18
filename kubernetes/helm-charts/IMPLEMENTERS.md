@@ -83,12 +83,12 @@ enablement/override pattern locally.
 trees with `$CHART_NAME` (and, for k8s-resources, `$RESOURCE_TYPE`)
 placeholders, copied and `envsubst`'ed by two scripts:
 
-- [`helm-new-application`](../../nix/scripts/scripts/helm-new-application)
+- [`helm-new-application`](../../nix/scripts/scripts/helm/helm-new-application)
   `--chart-name <name>` → `applications/<name>/`.
-- [`helm-new-k8s-resource`](../../nix/scripts/scripts/helm-new-k8s-resource)
+- [`helm-new-k8s-resource`](../../nix/scripts/scripts/helm/helm-new-k8s-resource)
   `--chart-name <name> --resource-type <type>` → `k8s-resources/<name>/`.
 
-[`app-creator-create-app`](../../nix/scripts/scripts/app-creator-create-app)
+[`app-creator-create-app`](../../nix/scripts/scripts/app-creator/app-creator-create-app)
 is the recommended path for adding a new **application** to a cluster: it
 optionally calls `helm-new-application`, then adds the `master-stack`
 ArgoCD app entry (`app-creator-add-argocd-app`), ingress, homepage link,

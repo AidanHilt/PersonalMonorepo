@@ -30,7 +30,7 @@ context-create-context               # prompts for a name interactively
   variables in the new `.env`, and
   [context-activate-context](../context-activate-context/README.md) to
   activate it.
-- For [terragrunt/](../../../../terragrunt/README.md) usage, name the
+- For [terragrunt/](../../../../../terragrunt/README.md) usage, name the
   context the same as the `terragrunt/<cluster>` directory you intend to
   operate on — `context-activate-context` derives `TG_WORKING_DIR` from
   the context name.

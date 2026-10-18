@@ -29,7 +29,7 @@ Takes no arguments.
 - `VAULT_ADDR` pointed at the sealed Vault instance.
 - `VAULT_UNSEAL_KEY_1` and `VAULT_UNSEAL_KEY_2` set (normally via an
   activated context — see
-  [context-activate-context](../context-activate-context/README.md)).
+  [context-activate-context](../../context/context-activate-context/README.md)).
 
 ## Caveats
 

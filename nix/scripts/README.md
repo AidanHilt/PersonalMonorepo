@@ -1,7 +1,11 @@
 # nix/scripts
 
 A flake of shared bash and Go utility scripts, auto-discovered from
-`scripts/<name>/`.
+`scripts/<name>/` (a standalone script/lib/function) or
+`scripts/<group>/<name>/` (a script/lib/function that's a member of a
+prefix group, e.g. `scripts/vault/vault-initialize/`). Grouping is one
+level deep only; shared libs that aren't a prefix match for any group
+live in `scripts/libs/`.
 
 ## Kinds of scripts
 
@@ -21,7 +25,9 @@ Each script directory is classified by the files it contains:
 ## Using a script
 
 Via the overlay, scripts are exposed under `pkgs.ahilt-scripts.<name>`
-(e.g. `pkgs.ahilt-scripts.my-script`).
+(e.g. `pkgs.ahilt-scripts.my-script`). Groups that contain at least one
+runnable script are also exposed as a bundle, e.g.
+`pkgs.ahilt-scripts.vault` (every `vault-*` script).
 
 You can also work with a script directly from this flake:
 
@@ -32,6 +38,12 @@ nix develop .#<name>    # a devShell with just that script on PATH
 nix develop             # the default devShell, with every script on PATH
                          # plus go, shellcheck and nix-update
 ```
+
+Groups work the same way for `build`/`develop`, e.g. `nix build .#vault`
+or `nix develop .#vault` for a devShell with every `vault-*` script on
+`PATH`. Group bundles are plain `symlinkJoin`s, not apps, so `nix run
+.#<group>` does **not** work — use `nix shell .#<group>` or
+`nix develop .#<group>` to get a group's scripts onto `PATH`.
 
 Source functions are also available via `interactiveShellInit`, for
 shells that want every `source.sh` function sourced automatically.
