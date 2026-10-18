@@ -37,40 +37,7 @@ failed (counts against the failure budget); 20 a required tool is missing;
 21 a network error; 22 a permission error; 23 an expected artifact value
 could not be computed (the artifact is not written in this case); 99 the
 failure budget is exhausted.
-
-Go env defaults: if GOCACHE, GOPATH, and/or GOMODCACHE are unset or empty
-in the environment, agent-validate defaults each to a writable directory
-under /tmp/pi-go-<uid>/ (and creates it) so Go checks work even when HOME
-is read-only; any value already set in the environment is left untouched
-(its directory is still created).
 EOF
-}
-
-# Defaults GOCACHE/GOPATH/GOMODCACHE to writable dirs under /tmp when unset
-# or empty (HOME may be read-only in IMPLEMENT worktrees, so Go cannot use
-# its usual ~/.cache/go-build or ~/go). An explicitly provided value is
-# respected as-is, but its directory is still created so the check can
-# write to it.
-setup_go_env() {
-  local uid base
-  uid="$(id -u)" || {
-    print_error "could not determine current uid for Go cache defaults"
-    exit 22
-  }
-  base="/tmp/pi-go-$uid"
-
-  [[ -n "${GOCACHE:-}" ]] || GOCACHE="$base/build"
-  [[ -n "${GOPATH:-}" ]] || GOPATH="$base/path"
-  [[ -n "${GOMODCACHE:-}" ]] || GOMODCACHE="$base/mod"
-  export GOCACHE GOPATH GOMODCACHE
-
-  local d
-  for d in "$GOCACHE" "$GOPATH" "$GOMODCACHE"; do
-    mkdir -p "$d" || {
-      print_error "could not create Go env directory '$d'"
-      exit 22
-    }
-  done
 }
 
 FAILURE_BUDGET=10
@@ -353,8 +320,6 @@ main() {
   fi
 
   rm -f "$ARTIFACT"
-
-  setup_go_env
 
   # --- FORMAT phase (mutating; reformatting itself is not a failure) --------
 

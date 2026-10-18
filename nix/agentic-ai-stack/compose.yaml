@@ -10,7 +10,7 @@
 # and continues.
 #
 # Before `docker compose up`:
-#   1. nix run .#load                 # builds + loads pi/proxy/pkg-broker images
+#   1. nix run .#load                # builds + loads pi/proxy/pkg-broker images
 #   2. (Optional) generate ~/.config/pi-sandbox/agent-kubeconfig.yaml
 #      (see scripts/gen-kubeconfig.sh) to enable k8s access — see
 #      compose.kube.yaml
@@ -62,12 +62,13 @@
 # explicit `docker volume rm` after `docker compose down`, not tmpfs/
 # in-memory storage or an `external: true` volume declaration.
 
+---
 networks:
   internal:
     driver: bridge
-    internal: true # no default route to the outside world at all
+    internal: true  # no default route to the outside world at all
   external:
-    driver: bridge # proxy's only leg with real internet access
+    driver: bridge  # proxy's only leg with real internet access
 
 services:
   proxy:
@@ -108,7 +109,7 @@ services:
       # PI_SANDBOX__PERSIST_DOMAINS=1 is set, in which case it's left in
       # place and supervise.sh does not truncate it at container start.
       - proxy-domains:/var/lib/proxy-domains
-    cap_drop: [ ALL ]
+    cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
@@ -153,7 +154,7 @@ services:
         tmpfs:
           size: 512m
           mode: 1023
-    cap_drop: [ ALL ]
+    cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
       # Targeted opt-outs (NOT privileged: true, no added capabilities)
@@ -181,7 +182,7 @@ services:
       - proxy
       - pkg-broker
     networks:
-      - internal # no `external` network attachment — no direct internet route
+      - internal  # no `external` network attachment — no direct internet route
     environment:
       GIT_AUTHOR_NAME: Aidan Hilt
       GIT_AUTHOR_EMAIL: aidanhilt2@gmail.com
@@ -197,6 +198,18 @@ services:
       # directly and fails with getaddrinfo EAI_AGAIN since `pi` has no
       # direct internet route.
       NODE_USE_ENV_PROXY: "1"
+      # `pi` is read_only with no C compiler installed, so Go's usual
+      # ~/.cache/go-build and ~/go are unwritable and cgo vet would fail
+      # anyway. Point Go at writable dirs under /tmp instead and disable
+      # cgo outright, so every Go invocation inside the container (not
+      # just agent-validate's checks) works out of the box. /tmp is a
+      # tmpfs (see the `tmpfs:` entry below), so these caches are lost on
+      # every container restart -- Go recreates the directories itself on
+      # first use.
+      CGO_ENABLED: "0"
+      GOCACHE: /tmp/go/build
+      GOPATH: /tmp/go/path
+      GOMODCACHE: /tmp/go/mod
       # Base URL pkg-install (nix/scripts/scripts/pkg-install) calls --
       # reachable because `pi` and `pkg-broker` share the `internal`
       # network. Not proxied through `proxy` -- pkg-broker is a separate,
@@ -293,14 +306,14 @@ services:
         source: "${PI_SANDBOX__NIX_STORE_SOURCE:?set by start-agent.sh}"
         target: /nix/store
         read_only: true
-      # All of ~/.pi is writable-but-ephemeral. mode 1023 == 01777
-      # (leading-zero-safe decimal) so the uid:10001 process can populate
-      # it from .pi-seed at startup.
+    # All of ~/.pi is writable-but-ephemeral. mode 1023 == 01777
+    # (leading-zero-safe decimal) so the uid:10001 process can populate
+    # it from .pi-seed at startup.
     read_only: true
     tmpfs:
       - /tmp
       - /home/pi/.pi:exec,uid=10001,gid=10001,mode=0700
-    cap_drop: [ ALL ]
+    cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
     stdin_open: true
@@ -318,7 +331,7 @@ services:
   # native interactive login instead of the normal workspace run.
   login:
     image: pi-sandbox/pi:dev
-    profiles: [ login ]
+    profiles: [login]
     networks:
       - external
     environment:
@@ -337,7 +350,7 @@ services:
     read_only: true
     tmpfs:
       - /tmp
-    cap_drop: [ ALL ]
+    cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
     stdin_open: true

@@ -557,7 +557,6 @@
         }
       )
     // {
-      inherit interactiveShellInit;
       overlays.default = final: _prev: {
         # Nested under `ahilt-scripts` to avoid shadowing real nixpkgs names.
         # `all` is deliberately left out here; it's a packaging convenience,

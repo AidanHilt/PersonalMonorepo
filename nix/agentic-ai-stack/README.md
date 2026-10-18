@@ -278,6 +278,17 @@ path. `config/web-search.json`'s `ssrf.trustEnvProxy: true` (seeded to
 `~/.pi/web-search.json`) tells that extension to skip its own DNS lookup
 and trust `HTTPS_PROXY` instead; both settings are required.
 
+Note: `pi`'s `compose.yaml` environment also sets `CGO_ENABLED: "0"` and
+points `GOCACHE`/`GOPATH`/`GOMODCACHE` at `/tmp/go/{build,path,mod}` — `pi`
+is `read_only` with no C compiler installed, so Go's usual
+`~/.cache/go-build` and `~/go` are unwritable and cgo vet would fail
+anyway. This makes every Go invocation inside the container work out of
+the box, not just checks run through `agent-validate`. Since `/tmp` is a
+tmpfs, these caches are lost on every container restart (and are not
+affected by any of the persistence flags below, which only cover named
+volumes) — Go just recreates the directories on first use, so this only
+costs a cold cache, not a failure.
+
 ## Agent skills (build-time, pinned)
 
 Like extensions (`extra-extensions.nix`, `extensions/README.md`), skills are

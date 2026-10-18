@@ -172,3 +172,13 @@ with `nix run .#verify`.
   generates a dedicated, RBAC-scoped one pointed at a dev/staging
   cluster; the permission-extension layer additionally denies `kubectl
   apply`/`delete`/`exec` outright.
+- `pi`'s `compose.yaml` environment sets `CGO_ENABLED: "0"` and
+  `GOCACHE`/`GOPATH`/`GOMODCACHE` under `/tmp/go/` so Go works at all
+  inside `pi` (`read_only` root filesystem, no C compiler, HOME's usual
+  `~/.cache/go-build`/`~/go` unwritable). `agent-validate` used to default
+  these itself (`setup_go_env` in `nix/scripts/scripts/agent/agent-validate/
+  run.sh`) but that only covered `agent-validate` runs, not arbitrary Go
+  invocations elsewhere in the container — the fix now lives here instead.
+  `/tmp` is a tmpfs, so these caches don't survive a stack restart; this
+  takes effect the next time the `pi` container (re)starts, not by
+  editing a running one.
