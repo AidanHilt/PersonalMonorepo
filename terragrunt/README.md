@@ -44,7 +44,12 @@ generated `nix/terraform` package. This is a valid use case
   against `nix/terraform` to regenerate its config (see
   [nix/terraform/README.md](../nix/terraform/README.md)'s "Gotchas" for why
   an `aarch64-linux` builder is required even though the output is
-  architecture-independent).
+  architecture-independent). If `PERSONAL_MONOREPO_LOCATION` is set in your
+  shell and points at an existing local checkout, that `nix build` uses it
+  to override the `personalMonorepo` flake input instead of the locked ref
+  (see [IMPLEMENTERS.md](IMPLEMENTERS.md)); leave it unset (or point it
+  somewhere that doesn't exist) to use the locked ref as before — either
+  way the build still succeeds.
 - `terragrunt` and `terraform` on `PATH`.
 - The environment variables each module's `terragrunt.hcl` reads via
   `get_env(...)` (commonly `VAULT_ADDR`, `VAULT_TOKEN`) actually set in your
