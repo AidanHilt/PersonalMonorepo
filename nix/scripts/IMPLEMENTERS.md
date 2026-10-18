@@ -122,6 +122,78 @@ both colliding paths.
   right after one of those characters.
 - `x86_64-darwin` is excluded from `eachSystem`; scripts are expected to
   work on both Linux and macOS (the other darwin/linux systems).
+- **Runtime dependencies** (`${PKG_<name>}` / `${EXE_<name>}`): a `run.sh`
+  or `lib.sh` can declare a package it needs inline, as a placeholder that
+  is itself valid bash (so the raw file still passes `shfmt`/`shellcheck`
+  unchanged, and `PKG_`/`EXE_` read as ordinary uppercase "assumed
+  environment" variable names to shellcheck — no `SC2154`), e.g.:
+
+  ```sh
+  jq -r '.foo' <<<"$input" # or:
+  "${EXE_jq}" -r '.foo' <<<"$input"
+  some-tool --data-dir "${PKG_jq}/share/doc"
+  ```
+
+  - `${PKG_<name>}` expands to the package's root store path (like
+    `"${pkgs.<name>}"` in Nix); `${EXE_<name>}` expands to the package's
+    main executable, via `lib.getExe` — but throwing a clear error
+    instead of `lib.getExe`'s usual silent fallback if the package has no
+    `meta.mainProgram` set.
+  - **Name mapping**: bash identifiers can't contain `-` or `.`, so
+    `<name>` is split on `__` into attribute-path segments (e.g.
+    `PKG_python3Packages__requests` → `pkgs.python3Packages.requests`).
+    Each segment is looked up under the current attrs first literally,
+    then with `_` replaced by `-` (e.g. `PKG_nix_update` →
+    `pkgs.nix-update`); if *both* the literal and dashed form exist it's
+    an ambiguity error, and if *neither* exists flake evaluation throws
+    `scripts/<script>: ${PKG_x} refers to unknown package '<attr
+    path>'`, naming the script (errors are only attributed to the script,
+    not a specific included lib, since substitution runs on the fully
+    assembled text after `#include`s are already inlined).
+  - **`PKG_`/`EXE_` are reserved prefixes**: any `${PKG_...}`/`${EXE_...}`
+    occurring in a script or lib's text is always treated as a package
+    reference, so a real environment variable with one of those prefixes
+    cannot be used in a script/lib that also uses this feature.
+  - Substitution happens **at Nix eval time** on the fully assembled
+    script text (`substitutePackages` in `flake.nix`, run on
+    `assembleScript`'s output — `assembleScript` itself is unchanged and
+    stays pure text), via `builtins.split` + `lib.concatStrings`, which
+    preserves Nix string context — i.e. a `${PKG_jq}`/`${EXE_jq}`
+    reference forces `jq` into the build's runtime closure exactly as
+    `"${pkgs.jq}"` would anywhere else in Nix. This is why it's
+    `builtins.split`/`lib.concatStrings`, never
+    `builtins.unsafeDiscardStringContext`, and never a build-time
+    `sed`/`runCommand` substitution. `substitutePackages` also returns the
+    de-duplicated list of every package referenced, which `mkShell` feeds
+    into `writeShellApplication`'s `runtimeInputs` — so a bare, unquoted
+    call to the tool (e.g. plain `jq` on its own, relying on `PATH`) also
+    works, not just the `${PKG_...}`/`${EXE_...}` form. A script that uses
+    no placeholders is byte-for-byte unaffected: empty `runtimeInputs`,
+    identical text.
+  - Because substitution runs on the already-assembled text, an included
+    `lib.sh`'s placeholders are automatically carried through to every
+    script that (transitively) includes it — there's no separate
+    declaration anywhere.
+  - `substitutePackages` is kept as one small, self-contained function
+    (`{ pkgs, name, text }: { text; packages }`) independent of
+    `assembleScript`, so it can be exported from the flake outputs for
+    reuse by other flakes in a later change.
+  - **Not supported in `source.sh`**: `source.sh` files are concatenated
+    verbatim into `interactiveShellInit` (see the "`source.sh` rules"
+    section above) and never passed through `substitutePackages`, so
+    `${PKG_...}`/`${EXE_...}` placeholders there are left as literal text
+    (and will fail at shell-eval time as unset-variable references, same
+    as any other undeclared variable).
+  - `libChecks`/`sourceChecks` (the `shellcheck` checks run against the
+    raw `lib.sh`/`source.sh` files, before substitution) are unaffected —
+    a `${PKG_x}`/`${EXE_x}` placeholder is valid bash syntax referencing
+    an uppercase variable name, so it shellchecks cleanly on its own, the
+    same as any other uppercase "assumed environment" variable; verify
+    this by running e.g. `shellcheck scripts/libs/<lib>/lib.sh` directly
+    on a lib using the placeholder syntax and confirming no `SC2154`.
+  - Previously documented as a known shortcoming ("`writeShellApplication`
+    does not declare runtime dependencies") — see the gotcha below, which
+    now documents this feature instead.
 
 ## Making changes
 
@@ -191,6 +263,10 @@ itself.
 - Declare variables `local`.
 - No `#include` support: the file is concatenated verbatim into
   `interactiveShellInit`, so it cannot call lib functions.
+- No `${PKG_<name>}`/`${EXE_<name>}` runtime-dependency placeholder
+  support either, for the same reason (see "Runtime dependencies" above)
+  — those placeholders are only substituted in the text that
+  `assembleScript` produces for a `run.sh` package build.
 
 ### Lib rules
 
@@ -201,6 +277,11 @@ itself.
 - A lib may `#include` other libs — includes are transitive, so a
   script that includes a lib automatically gets everything that lib
   (transitively) includes; it does not need to redeclare them itself.
+- A lib may use `${PKG_<name>}`/`${EXE_<name>}` runtime-dependency
+  placeholders the same as a `run.sh` (see "Runtime dependencies"
+  above); they carry through automatically to every script that
+  (transitively) includes the lib, since substitution runs on the fully
+  assembled text.
 - Changing a lib affects every script that includes it (directly or
   transitively); check for callers before changing its behavior or
   signature.
@@ -240,10 +321,14 @@ is needed. When deps change, update the hash with `nix-update
 - `nix run .#<group>` does not work — group bundles are `symlinkJoin`s,
   not apps; use `nix shell .#<group>` or `nix develop .#<group>`
   instead. `nix run .#<name>` still works for individual scripts.
-- `writeShellApplication` only shellchecks at build time; it does not
-  declare runtime dependencies (`runtimeInputs`), so scripts currently
-  rely on whatever happens to be on `PATH`. This is a known shortcoming
-  — an area to improve, not something to copy going forward.
+- `writeShellApplication` only shellchecks at build time and declares no
+  runtime dependencies on its own; a script that needs a package should
+  declare it inline via `${PKG_<name>}`/`${EXE_<name>}` (see "Runtime
+  dependencies" above) so it lands in `runtimeInputs` rather than relying
+  on whatever happens to already be on `PATH`. Existing scripts have not
+  been migrated to this yet, so plenty still rely on ambient `PATH` —
+  bring a script into compliance when you're already touching it, rather
+  than as a drive-by change, same as other pre-existing-convention gaps.
 - A directory that doesn't match one of the four kinds (and isn't a
   group of such directories) breaks evaluation for the whole flake, not
   just that directory; the error names the offending path. Nested

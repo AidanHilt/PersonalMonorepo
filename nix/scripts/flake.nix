@@ -316,6 +316,107 @@
         in
         lib.concatStrings finalState.order + runText;
 
+      # ---- Runtime dependency placeholders -------------------------------
+      # Resolves a `${PKG_<name>}` / `${EXE_<name>}` placeholder's `<name>` to
+      # a package under `pkgs`, by splitting on "__" into attribute path
+      # segments (bash identifiers can't contain "." or "-"). Each segment is
+      # looked up first literally, then with "_" replaced by "-"; if both
+      # exist it's ambiguous, if neither exists it's unknown -- both throw,
+      # naming `scriptName` and the attempted dotted attr path.
+      resolvePlaceholderPackage =
+        pkgs: scriptName: name:
+        let
+          segments = lib.splitString "__" name;
+          step =
+            acc: seg:
+            let
+              attrs = acc.value;
+              hasLiteral = builtins.hasAttr seg attrs;
+              altSeg = builtins.replaceStrings [ "_" ] [ "-" ] seg;
+              hasAlt = altSeg != seg && builtins.hasAttr altSeg attrs;
+              attemptedPath = lib.concatStringsSep "." (acc.path ++ [ seg ]);
+            in
+            if hasLiteral && hasAlt then
+              throw "scripts/${scriptName}: \${PKG_${name}}/\${EXE_${name}} is ambiguous: both pkgs.${
+                lib.concatStringsSep "." (acc.path ++ [ seg ])
+              } and pkgs.${lib.concatStringsSep "." (acc.path ++ [ altSeg ])} exist"
+            else if hasLiteral then
+              {
+                value = attrs.${seg};
+                path = acc.path ++ [ seg ];
+              }
+            else if hasAlt then
+              {
+                value = attrs.${altSeg};
+                path = acc.path ++ [ altSeg ];
+              }
+            else
+              throw "scripts/${scriptName}: \${PKG_${name}} refers to unknown package '${attemptedPath}'";
+          result = lib.foldl' step {
+            value = pkgs;
+            path = [ ];
+          } segments;
+        in
+        result.value;
+
+      # `lib.getExe`, but throwing a clear error instead of silently falling
+      # back to the derivation name when `meta.mainProgram` is unset.
+      getExeChecked =
+        scriptName: name: pkg:
+        if (pkg.meta.mainProgram or null) == null then
+          throw "scripts/${scriptName}: \${EXE_${name}} refers to a package with no meta.mainProgram set, so its main executable can't be determined"
+        else
+          lib.getExe pkg;
+
+      # Scans already-assembled script text for `${PKG_<name>}` /
+      # `${EXE_<name>}` placeholders and substitutes each with the resolved
+      # package's store path (PKG) or main executable (EXE), via
+      # `builtins.split` + `lib.concatStrings` so the result keeps Nix string
+      # context -- i.e. referencing `${pkg}` here forces `pkg` into the
+      # runtime closure exactly like `"${pkgs.foo}"` would in any other Nix
+      # string, with no `unsafeDiscardStringContext` and no build-time sed.
+      # `name` is the owning script, used only for error messages. Returns
+      # `{ text; packages }`, where `packages` is the de-duplicated list of
+      # every package referenced by a placeholder (for `runtimeInputs`).
+      # Pulled out as its own small function (independent of `assembleScript`,
+      # which stays pure text) so it can be exported for other flakes later.
+      substitutePackages =
+        {
+          pkgs,
+          name,
+          text,
+        }:
+        let
+          placeholderRegex = "[$][{](PKG|EXE)_([A-Za-z0-9_]+)[}]";
+          parts = builtins.split placeholderRegex text;
+          step =
+            state: part:
+            if builtins.isList part then
+              let
+                kind = builtins.elemAt part 0;
+                placeholderName = builtins.elemAt part 1;
+                pkg = resolvePlaceholderPackage pkgs name placeholderName;
+                replacement = if kind == "PKG" then "${pkg}" else getExeChecked name placeholderName pkg;
+              in
+              {
+                pieces = state.pieces ++ [ replacement ];
+                packages = state.packages ++ [ pkg ];
+              }
+            else
+              state
+              // {
+                pieces = state.pieces ++ [ part ];
+              };
+          result = lib.foldl' step {
+            pieces = [ ];
+            packages = [ ];
+          } parts;
+        in
+        {
+          text = lib.concatStrings result.pieces;
+          packages = lib.unique result.packages;
+        };
+
       # Builds { packages, leaves, libChecks, sourceChecks } for a given
       # `pkgs`. Kept independent of `system` so it can be reused both
       # per-system (eachDefaultSystem) and inside the overlay (which only has
@@ -351,13 +452,20 @@
             e:
             let
               runText = readDirScriptOfKind "run.sh" e.dir;
-            in
-            pkgs.writeShellApplication {
-              name = e.name;
-              text = assembleScript {
+              assembled = assembleScript {
                 name = e.name;
                 inherit runText;
               };
+              substituted = substitutePackages {
+                inherit pkgs;
+                name = e.name;
+                text = assembled;
+              };
+            in
+            pkgs.writeShellApplication {
+              name = e.name;
+              text = substituted.text;
+              runtimeInputs = substituted.packages;
             };
 
           # Individual scripts, flat: packages.<script>
