@@ -219,6 +219,11 @@
       # error messages); `runText` is its already-read run.sh/lib.sh text
       # (lib texts for included libs are read internally via
       # readDirScriptOfKind, which keeps the existing `./` rewrite).
+      # `allowedLibs` is `null` (the default, meaning unrestricted -- what
+      # every existing caller gets) or an explicit list of lib names that
+      # `#include` is allowed to reach; any `#include` (direct or nested)
+      # naming a lib outside that list throws. Used by `mkScript`'s `libs`
+      # allow-list below.
       #
       # Implemented as a pure depth-first walk via a left fold over each
       # node's own includes, threading a `state = { done, order, funcs }`
@@ -228,7 +233,11 @@
       # visited, for cycle detection) through the recursion. `pure`,
       # independent of `pkgs` -- works on text only.
       assembleScript =
-        { name, runText }:
+        {
+          name,
+          runText,
+          allowedLibs ? null,
+        }:
         let
           # Finds the index of `x` in list `l`, or null if absent.
           indexOf =
@@ -280,7 +289,9 @@
           # names currently being visited, for cycle detection.
           visitLib =
             state: path: includerDesc: libName:
-            if builtins.elem libName state.done then
+            if allowedLibs != null && !(builtins.elem libName allowedLibs) then
+              throw "scripts/${name}: #include ${libName} is not in libs (or a transitive dependency of one)"
+            else if builtins.elem libName state.done then
               state
             else if builtins.elem libName path then
               let
@@ -417,6 +428,87 @@
           packages = lib.unique result.packages;
         };
 
+      # Computes the transitive closure of `#include` dependencies for an
+      # explicit list of lib names (`libs`), used as `mkScript`'s allow-list.
+      # `name` is the calling script, used only for error messages. Throws if
+      # `libs` names something that isn't a lib.sh directory. Reuses the same
+      # parseIncludes/libByName machinery assembleScript's own walk does, but
+      # doesn't need cycle detection or function-duplicate checks here --
+      # assembleScript's own walk (given the resulting allow-list) does that.
+      closeLibs =
+        name: libs:
+        let
+          step =
+            state: libName:
+            if builtins.elem libName state then
+              state
+            else
+              let
+                libEntry =
+                  libByName.${libName}
+                    or (throw "scripts/${name}: libs includes '${libName}' which does not match any lib.sh directory");
+                libText = readDirScriptOfKind "lib.sh" libEntry.dir;
+                deps = parseIncludes libText;
+                state1 = state ++ [ libName ];
+              in
+              lib.foldl' step state1 deps;
+        in
+        lib.foldl' step [ ] libs;
+
+      # Shared by mkScripts.mkShell (scripts/<name>/run.sh, unrestricted
+      # includes) and mkScript (inline callers, below) -- resolves
+      # `#include`s via assembleScript, then substitutes `${PKG_x}`/`${EXE_x}`
+      # placeholders, then wraps the result in pkgs.writeShellApplication.
+      buildShellScript =
+        {
+          pkgs,
+          name,
+          runText,
+          allowedLibs ? null,
+          runtimeInputs ? [ ],
+        }:
+        let
+          assembled = assembleScript { inherit name runText allowedLibs; };
+          substituted = substitutePackages {
+            inherit pkgs name;
+            text = assembled;
+          };
+        in
+        pkgs.writeShellApplication {
+          inherit name;
+          text = substituted.text;
+          runtimeInputs = runtimeInputs ++ substituted.packages;
+        };
+
+      # Reusable building block for other flakes' inline shell scripts (the
+      # writeShellApplication/writeShellScriptBin call sites scattered across
+      # the monorepo), giving them the same `#include`-resolution and
+      # `${PKG_x}`/`${EXE_x}` substitution scripts/<name>/run.sh gets, but
+      # restricted to a caller-chosen allow-list of shared libs instead of
+      # any lib in scripts/: `libs` is an explicit list of global lib
+      # directory names (as in scripts/<lib>/lib.sh). Only those libs and
+      # their own transitive `#include` dependencies may be pulled in by
+      # `#include` directives in `text`; listing a lib in `libs` without
+      # including it does not emit it, and an `#include` naming anything
+      # outside that closure throws. Unlike run.sh (read via
+      # readDirScriptOfKind, which rewrites "./" paths), caller `text` has no
+      # directory of its own, so it gets no "./" rewriting -- included lib
+      # texts keep their existing rewrite. `pkgs` is the caller's own pkgs
+      # (this function doesn't capture one), so it works for any system.
+      mkScript =
+        {
+          pkgs,
+          name,
+          text,
+          libs ? [ ],
+          runtimeInputs ? [ ],
+        }:
+        buildShellScript {
+          inherit pkgs name runtimeInputs;
+          runText = text;
+          allowedLibs = closeLibs name libs;
+        };
+
       # Builds { packages, leaves, libChecks, sourceChecks } for a given
       # `pkgs`. Kept independent of `system` so it can be reused both
       # per-system (eachDefaultSystem) and inside the overlay (which only has
@@ -450,22 +542,10 @@
 
           mkShell =
             e:
-            let
-              runText = readDirScriptOfKind "run.sh" e.dir;
-              assembled = assembleScript {
-                name = e.name;
-                inherit runText;
-              };
-              substituted = substitutePackages {
-                inherit pkgs;
-                name = e.name;
-                text = assembled;
-              };
-            in
-            pkgs.writeShellApplication {
+            buildShellScript {
+              inherit pkgs;
               name = e.name;
-              text = substituted.text;
-              runtimeInputs = substituted.packages;
+              runText = readDirScriptOfKind "run.sh" e.dir;
             };
 
           # Individual scripts, flat: packages.<script>
@@ -563,5 +643,16 @@
         # not something that belongs in the global package set.
         ahilt-scripts = (mkScripts final).packages;
       };
+
+      # `mkScript { pkgs, name, text, libs ? [ ], runtimeInputs ? [ ] }`: lets
+      # other flakes build inline shell scripts (writeShellApplication /
+      # writeShellScriptBin call sites) with the same `#include`-resolution
+      # and `${PKG_x}`/`${EXE_x}` substitution as scripts/<name>/run.sh, via
+      # an explicit `libs` allow-list of global lib names (plus their own
+      # transitive `#include` deps) instead of unrestricted access to every
+      # lib in scripts/. Takes the caller's own `pkgs`, so no `system` is
+      # needed here. See `mkScript`'s own comment above for the full
+      # allow-list semantics.
+      lib.mkScript = mkScript;
     };
 }

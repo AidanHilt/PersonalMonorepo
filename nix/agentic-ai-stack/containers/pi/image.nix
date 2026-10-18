@@ -77,6 +77,7 @@ let
     mkdir -p $out/home/pi/.pi-state/sessions
   '';
 
+  # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
   entrypoint = pkgs.writeShellApplication {
     name = "pi-entrypoint";
     runtimeInputs = [
