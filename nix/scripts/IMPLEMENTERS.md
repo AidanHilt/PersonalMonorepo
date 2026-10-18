@@ -125,12 +125,26 @@ both colliding paths.
 - **Runtime dependencies** (`${PKG_<name>}` / `${EXE_<name>}`): a `run.sh`
   or `lib.sh` can declare a package it needs inline, as a placeholder that
   is itself valid bash (so the raw file still passes `shfmt`/`shellcheck`
-  unchanged, and `PKG_`/`EXE_` read as ordinary uppercase "assumed
-  environment" variable names to shellcheck — no `SC2154`), e.g.:
+  unchanged). Despite `PKG_`/`EXE_` being all-uppercase, shellcheck does
+  **not** treat them as assumed-environment variables and will flag every
+  use with `SC2154` (shellcheck's "assumed environment" exemption only
+  covers names it recognizes as conventionally-external, not just any
+  all-caps identifier) — so every file that uses a placeholder **must**
+  declare it once, before first use, with the `:=` idiom below. The `:=`
+  form is not matched by the substitution regex (which requires the `}`
+  to directly follow the name), so the declaration line itself is left
+  verbatim by `substitutePackages` and, at runtime, harmlessly assigns an
+  empty value to a variable that's never read (the real value, substituted
+  separately, is what `readonly`/subsequent uses see). **Never** use `:?`
+  in its place — unlike `:=`, `:?` aborts the script if the variable is
+  unset, which (before substitution rewrites the line) it always is in the
+  raw source, so the built script would abort on every run. e.g.:
 
   ```sh
   jq -r '.foo' <<<"$input" # or:
+  : "${EXE_jq:=}" # runtime-dependency placeholder, substituted at build time
   "${EXE_jq}" -r '.foo' <<<"$input"
+  : "${PKG_jq:=}" # runtime-dependency placeholder, substituted at build time
   some-tool --data-dir "${PKG_jq}/share/doc"
   ```
 
@@ -171,9 +185,17 @@ both colliding paths.
     no placeholders is byte-for-byte unaffected: empty `runtimeInputs`,
     identical text.
   - Because substitution runs on the already-assembled text, an included
-    `lib.sh`'s placeholders are automatically carried through to every
-    script that (transitively) includes it — there's no separate
-    declaration anywhere.
+    `lib.sh`'s placeholders are automatically carried through (and
+    substituted) in every script that (transitively) includes it — the
+    *value* never needs declaring more than once. But the `:=` shellcheck
+    declaration above is a per-file requirement, not a per-value one: a
+    lib must declare any placeholder it uses itself, even if a script
+    that includes it (or another included lib) already declares the same
+    one, because `libChecks` shellchecks each `lib.sh` on its own, in
+    isolation, before any `#include` assembly happens (see below). If two
+    included files (or a script and an included lib) both declare the
+    same placeholder, the duplicate `:=` lines are harmless — each just
+    re-assigns the same empty default to an already-declared variable.
   - `substitutePackages` is kept as one small, self-contained function
     (`{ pkgs, name, text }: { text; packages }`) independent of
     `assembleScript`, so it can be exported from the flake outputs for
@@ -185,12 +207,12 @@ both colliding paths.
     (and will fail at shell-eval time as unset-variable references, same
     as any other undeclared variable).
   - `libChecks`/`sourceChecks` (the `shellcheck` checks run against the
-    raw `lib.sh`/`source.sh` files, before substitution) are unaffected —
-    a `${PKG_x}`/`${EXE_x}` placeholder is valid bash syntax referencing
-    an uppercase variable name, so it shellchecks cleanly on its own, the
-    same as any other uppercase "assumed environment" variable; verify
-    this by running e.g. `shellcheck scripts/libs/<lib>/lib.sh` directly
-    on a lib using the placeholder syntax and confirming no `SC2154`.
+    raw `lib.sh`/`source.sh` files, before substitution) run shellcheck
+    against each file **on its own**, not the assembled, `#include`d-in
+    text — so a lib using `${PKG_x}`/`${EXE_x}` must carry its own `:=`
+    declaration (see above) for `libChecks` to pass cleanly; verify this
+    by running e.g. `shellcheck scripts/libs/<lib>/lib.sh` directly on a
+    lib using the placeholder syntax and confirming no `SC2154`.
   - Previously documented as a known shortcoming ("`writeShellApplication`
     does not declare runtime dependencies") — see the gotcha below, which
     now documents this feature instead.
@@ -279,9 +301,12 @@ itself.
   (transitively) includes; it does not need to redeclare them itself.
 - A lib may use `${PKG_<name>}`/`${EXE_<name>}` runtime-dependency
   placeholders the same as a `run.sh` (see "Runtime dependencies"
-  above); they carry through automatically to every script that
-  (transitively) includes the lib, since substitution runs on the fully
-  assembled text.
+  above); the substituted *value* carries through automatically to every
+  script that (transitively) includes the lib, since substitution runs
+  on the fully assembled text. The lib itself must still declare each
+  placeholder it uses with the `:=` idiom, even if a script that includes
+  it declares the same one, required for `libChecks`, which
+  shellchecks the lib file on its own (see "Runtime dependencies").
 - Changing a lib affects every script that includes it (directly or
   transitively); check for callers before changing its behavior or
   signature.

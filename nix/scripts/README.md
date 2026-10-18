@@ -63,6 +63,7 @@ A `run.sh`/`lib.sh` can declare a package it needs inline, right where
 it's used, instead of relying on whatever happens to be on `PATH`:
 
 ```sh
+: "${EXE_jq:=}" # runtime-dependency placeholder, substituted at build time
 "${EXE_jq}" -r '.foo' <<<"$input"
 some-tool --data-dir "${PKG_jq}/share/doc"
 ```
@@ -70,9 +71,13 @@ some-tool --data-dir "${PKG_jq}/share/doc"
 `${PKG_<name>}` expands to the package's store path, `${EXE_<name>}` to
 its main executable; Nix resolves and substitutes these at flake-eval
 time (so a missing package fails evaluation, not just at runtime) and
-adds the referenced packages to the script's `runtimeInputs`. See
-[IMPLEMENTERS.md](IMPLEMENTERS.md) for the full name-mapping rules, the
-reserved `PKG_`/`EXE_` prefixes, and which script kinds support it.
+adds the referenced packages to the script's `runtimeInputs`. Every file
+that uses a placeholder must declare it once, before first use, e.g.
+`: "${EXE_jq:=}"` -- see [IMPLEMENTERS.md](IMPLEMENTERS.md)'s "Runtime
+dependencies" section for why (shellcheck does not exempt `PKG_`/`EXE_`
+from `SC2154` just for being uppercase) and for the full name-mapping
+rules, the reserved `PKG_`/`EXE_` prefixes, and which script kinds
+support it.
 
 ## Modifying scripts
 

@@ -6,11 +6,15 @@
 
 set -euo pipefail
 
-# shellcheck disable=SC2154 # EXE_git is substituted by the flake build
+# EXE_git, EXE_jq, EXE_nix are flake runtime-dependency placeholders (see
+# nix/scripts/IMPLEMENTERS.md's "Runtime dependencies" section) substituted at build
+# time. The declarations below keep shellcheck from flagging SC2154 without needing a
+# disable directive.
+: "${EXE_git:=}" # runtime-dependency placeholder, substituted at build time
+: "${EXE_jq:=}"  # runtime-dependency placeholder, substituted at build time
+: "${EXE_nix:=}" # runtime-dependency placeholder, substituted at build time
 readonly GIT="${EXE_git}"
-# shellcheck disable=SC2154 # EXE_jq is substituted by the flake build
 readonly JQ="${EXE_jq}"
-# shellcheck disable=SC2154 # EXE_nix is substituted by the flake build
 readonly NIX="${EXE_nix}"
 
 # --- Category A regexes -----------------------------------------------

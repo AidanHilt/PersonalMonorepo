@@ -6,9 +6,9 @@
 set -euo pipefail
 
 # EXE_git is a flake runtime-dependency placeholder (see nix/scripts/IMPLEMENTERS.md's
-# "Runtime dependencies" section) substituted at build time; shellcheck can't see that,
-# hence the disable.
-# shellcheck disable=SC2154
+# "Runtime dependencies" section) substituted at build time. The declaration below avoids
+# a shellcheck SC2154 warning without needing a disable directive.
+: "${EXE_git:=}" # runtime-dependency placeholder, substituted at build time
 readonly GIT="${EXE_git}"
 
 delete=""
