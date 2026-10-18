@@ -5,7 +5,7 @@
 #  - Use return, never exit.
 #  - No set -e / set -u / set -o pipefail (they leak into the user's shell).
 #  - Declare variables local.
-#  - No @lib support: this file is concatenated verbatim, so don't call lib functions.
+#  - No #include support: this file is concatenated verbatim, so don't call lib functions.
 
 __NAME__() {
   case "${1:-}" in

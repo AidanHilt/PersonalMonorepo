@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-# @lib: printing-and-output
-# @lib: env-checks
+#include printing-and-output
+#include env-checks
 
 if [ $# -ne 1 ]; then
   echo "Usage: $0 <machine-name>"

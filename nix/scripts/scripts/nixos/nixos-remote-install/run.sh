@@ -2,9 +2,9 @@
 
 set -euo pipefail
 
-# @lib: printing-and-output
-# @lib: env-checks
-# @lib: generate-node-files
+#include printing-and-output
+#include env-checks
+#include generate-node-files
 
 # False by default
 NIXOS_ANYWHERE_ARGS_PROVIDED=0

@@ -7,8 +7,8 @@
 # FORMAT/LINT/BUILD_TEST commands as `run_check PHASE "name" cmd...` lines
 # of shell text that a caller defining `run_check` can `eval`.
 #
-# Usage (from a run.sh that also declares "# @lib: agent-plan-classify" and
-# "# @lib: printing-and-output"):
+# Usage (from a run.sh that also declares "#include agent-plan-classify" and
+# "#include printing-and-output"):
 #
 #   classify_paths "$raw_paths" "$repo_root"
 #   relativize_paths "$repo_root"

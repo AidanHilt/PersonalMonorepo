@@ -1,11 +1,13 @@
 #!/bin/bash
 # Environment variable presence checks.
 #
-# Usage (from a run.sh that also declares "# @lib: env-checks" and
-# "# @lib: printing-and-output"):
+# Usage (from a run.sh that also declares "#include env-checks" and
+# "#include printing-and-output"):
 #
 #   require_env PERSONAL_MONOREPO_LOCATION "Path to your personal monorepo"
 #   require_monorepo
+
+#include printing-and-output
 
 #shellcheck disable=SC2329
 require_env() {

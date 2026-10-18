@@ -2,11 +2,11 @@
 
 set -euo pipefail
 
-# @lib: printing-and-output
-# @lib: args-and-help
-# @lib: yaml-edit
-# @lib: _modify-secret-values
-# @lib: env-checks
+#include printing-and-output
+#include args-and-help
+#include yaml-edit
+#include _modify-secret-values
+#include env-checks
 
 secret_name=""
 destination_namespace=""

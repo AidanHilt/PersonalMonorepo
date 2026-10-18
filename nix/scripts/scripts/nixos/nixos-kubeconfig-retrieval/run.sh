@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-# @lib: printing-and-output
-# @lib: args-and-help
+#include printing-and-output
+#include args-and-help
 
 # Check if required tools are available
 for cmd in ssh sed kubecm; do

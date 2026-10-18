@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-# @lib: printing-and-output
-# @lib: args-and-help
+#include printing-and-output
+#include args-and-help
 
 # Check if ATILS_CONTEXTS_DIRECTORY is set
 if [[ -z "${ATILS_CONTEXTS_DIRECTORY}" ]]; then

@@ -1,11 +1,12 @@
 #!/bin/bash
 # <One-line description of what this lib provides.>
 #
-# Usage (from a run.sh that declares "# @lib: __NAME__"):
+# Usage (from a run.sh that declares "#include __NAME__"):
 #   <example call>
 #
-# Transitive deps are NOT resolved: callers must also declare any lib this one uses.
-# Never call exit at top level; define functions only.
+# Transitive deps ARE resolved: if this lib calls another lib's functions,
+# add a "#include <other-lib>" line to this file instead of making callers
+# declare it. Never call exit at top level; define functions only.
 
 #shellcheck disable=SC2329
 my_function() {

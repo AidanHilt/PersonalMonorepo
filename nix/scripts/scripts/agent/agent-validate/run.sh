@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# @lib: printing-and-output
-# @lib: agent-plan-classify
+#include printing-and-output
+#include agent-plan-classify
 
 set -uo pipefail
 

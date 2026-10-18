@@ -1,7 +1,7 @@
 #!/bin/bash
 # Declarative option/positional parsing + generated help text.
 #
-# Usage (from a run.sh that also declares "# @lib: args-and-help"):
+# Usage (from a run.sh that also declares "#include args-and-help"):
 #
 #   args_description "What this script does"
 #   args_example "$(basename "$0") -n production -p my-data-pvc"
@@ -9,13 +9,14 @@
 #   args_flag "" "--force" FORCE "Skip confirmation"
 #   args_repeat "-t" "--tag" TAGS "TAG" "Tag to apply (repeatable)"
 #   args_positional "FILE" TARGET_FILE "File to operate on" required
-#
 #   args_parse "$@" || { rc=$?; exit "$(args_rc "$rc")"; }
 #
 # All declaration state is cleared after every args_parse call (success,
 # failure, or help) so a run.sh may call this more than once per shell.
 # This file never calls "exit" -- only "return" -- so it stays safe to use
 # from scripts with "set -euo pipefail".
+
+#include printing-and-output
 
 declare _ARGS_DESCRIPTION=""
 declare -a _ARGS_EXAMPLES=()

@@ -3,13 +3,16 @@
 # homelab nodes an rke2 config) for consumption by nixos-anywhere
 # --extra-files.
 #
-# Usage (from a run.sh that also declares "# @lib: generate-node-files",
-# "# @lib: printing-and-output" and "# @lib: env-checks" -- @lib is NOT
-# transitive, so callers must declare all three themselves):
+# Usage (from a run.sh that declares "#include generate-node-files" --
+# #include is transitive, so this lib declares its own #include lines for
+# the libs it calls (printing-and-output), and callers only need to
+# declare this one):
 #
 #   FILES_FOR_NEW_MACHINE=$(generate_desktop_files) || { print_error "..."; exit 1; }
 #   FILES_FOR_NEW_MACHINE=$(generate_homelab_node_files "$CLUSTER_NAME") || { print_error "..."; exit 1; }
-#
+
+#include printing-and-output
+
 # Both functions print ONLY the generated temp-dir path to stdout (with
 # no trailing newline) on success -- this is deliberate, since callers
 # capture it via $(...). All diagnostics are written to stderr so they

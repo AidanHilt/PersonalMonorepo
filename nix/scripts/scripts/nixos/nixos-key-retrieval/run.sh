@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# @lib: printing-and-output
-# @lib: env-checks
+#include printing-and-output
+#include env-checks
 
 require_monorepo
 

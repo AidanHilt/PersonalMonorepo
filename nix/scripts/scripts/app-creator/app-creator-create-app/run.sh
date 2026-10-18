@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-# @lib: printing-and-output
+#include printing-and-output
 
 read -rp "Enter app name: " APP_NAME
 read -rp "Enter app namespace: " NAMESPACE

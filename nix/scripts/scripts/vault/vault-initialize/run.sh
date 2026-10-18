@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# @lib: printing-and-output
+#include printing-and-output
 
 set -euo pipefail
 

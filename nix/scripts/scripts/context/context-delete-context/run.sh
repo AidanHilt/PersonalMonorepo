@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-# @lib: printing-and-output
-# @lib: args-and-help
+#include printing-and-output
+#include args-and-help
 
 if [[ -z "${ATILS_CONTEXTS_DIRECTORY}" ]]; then
   echo "Error: ATILS_CONTEXTS_DIRECTORY environment variable is not set"

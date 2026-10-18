@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-# @lib: printing-and-output
-# @lib: yaml-edit
-# @lib: modify-master-stack-values
-# @lib: env-checks
+#include printing-and-output
+#include yaml-edit
+#include modify-master-stack-values
+#include env-checks
 
 show_help() {
   echo "Usage: $0 [OPTIONS]"
