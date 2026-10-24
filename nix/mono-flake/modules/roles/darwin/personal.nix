@@ -44,6 +44,7 @@ in
       "prismlauncher"
       "crystalfetch"
       "dupeguru"
+      "remanager"
       "the-unarchiver"
       "ollama-app"
       "utm"
