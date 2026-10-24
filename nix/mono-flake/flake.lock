@@ -553,16 +553,16 @@
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1788578514,
-        "narHash": "sha256-O+eoCtn8XBJL6Yin+A/7Js9Pl6TgPECL7l4StLMGQRo=",
+        "lastModified": 1792865369,
+        "narHash": "sha256-tf77fjbeHT7AanDPNV/MUQrDExC2GojWFdMsc2GRD+o=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "471d7645929f81d92aadf77a5694cf6430ae5127",
+        "rev": "c94b9392b2d7d5ecf7b0007f0139a58df5662a4d",
         "type": "github"
       },
       "original": {
         "owner": "aidanhilt",
-        "ref": "main",
+        "ref": "project-appocalypse/knative-function-operator",
         "repo": "PersonalMonorepo",
         "type": "github"
       }
@@ -618,17 +618,17 @@
       },
       "locked": {
         "dir": "nix/scripts",
-        "lastModified": 1788317980,
-        "narHash": "sha256-XG2AfqJZKBhcLND5hKJ3fbTGExLL6HKidJY2lMQMRBI=",
+        "lastModified": 1792865369,
+        "narHash": "sha256-tf77fjbeHT7AanDPNV/MUQrDExC2GojWFdMsc2GRD+o=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "1f81c2455e14ace4b2e675ebb37b6a94c8b736ca",
+        "rev": "c94b9392b2d7d5ecf7b0007f0139a58df5662a4d",
         "type": "github"
       },
       "original": {
         "dir": "nix/scripts",
         "owner": "aidanhilt",
-        "ref": "project-lockstep/release-mgmt",
+        "ref": "project-appocalypse/knative-function-operator",
         "repo": "PersonalMonorepo",
         "type": "github"
       }

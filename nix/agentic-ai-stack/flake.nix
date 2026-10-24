@@ -28,7 +28,7 @@
     # `--override-input scripts path:...` gating in
     # nix/mono-flake/modules/roles/universal/_update.nix.
     scripts = {
-      url = "github:aidanhilt/PersonalMonorepo/project-lockstep/release-mgmt?dir=nix/scripts";
+      url = "github:aidanhilt/PersonalMonorepo/project-appocalypse/knative-function-operator?dir=nix/scripts";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

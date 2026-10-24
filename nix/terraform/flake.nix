@@ -10,7 +10,7 @@
     };
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/project-rockhard/pki";
+      url = "github:aidanhilt/PersonalMonorepo/project-appocalypse/knative-function-operator";
       flake = false;
     };
   };
