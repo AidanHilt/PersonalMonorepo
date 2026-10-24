@@ -3,11 +3,11 @@
 // direct subdirectory of the images root containing a values.nix is a
 // package if that file has exactly one of two literal-string fields:
 //
-//   - tag ("Category A"): version comes from cocogitto, via
+//   - tag ("self-versioned"): version comes from cocogitto, via
 //     conventional-commit-driven semver bumps. This tool syncs these
 //     into cog.toml's generated [packages.*] section.
 //
-//   - versionPackage ("Category B"): version instead tracks a
+//   - versionPackage ("package-versioned"): version instead tracks a
 //     nixpkgs attribute path (the resolution mechanism for that is
 //     implemented elsewhere). These packages are rebuilt whenever
 //     changed and are never registered with cocogitto.
@@ -33,20 +33,20 @@ import (
 type Category int
 
 const (
-	// InternalVersioned packages are versioned by cocogitto via the `tag` field.
-	InternalVersioned Category = iota
-	// ExternalPkgVersioned packages track a nixpkgs attribute via `versionPackage`
+	// SelfVersioned packages are versioned by cocogitto via the `tag` field.
+	SelfVersioned Category = iota
+	// PackageVersioned packages track a nixpkgs attribute via `versionPackage`
 	// and are rebuilt whenever their content changes, independent of
 	// cocogitto.
-	ExternalPkgVersioned
+	PackageVersioned
 )
 
 func (c Category) String() string {
 	switch c {
-	case InternalVersioned:
-		return "internalVersioned"
-	case ExternalPkgVersioned:
-		return "externalPkgVersioned"
+	case SelfVersioned:
+		return "selfVersioned"
+	case PackageVersioned:
+		return "packageVersioned"
 	default:
 		return "unknown"
 	}
@@ -55,7 +55,7 @@ func (c Category) String() string {
 // Package represents one discovered releasable image.
 type Package struct {
 	// Name is the directory basename, used as the cog.toml package key
-	// (Category A) or matrix identifier (both categories).
+	// (self-versioned) or matrix identifier (both categories).
 	Name string
 	// Dir is the path to the package directory, relative to repo root.
 	Dir string
@@ -63,15 +63,15 @@ type Package struct {
 	ValuesNixPath string
 	// Category indicates which of Tag / VersionPackage is populated.
 	Category Category
-	// Tag is the current literal tag value (Category A only).
+	// Tag is the current literal tag value (self-versioned only).
 	Tag string
 	// VersionPackage is the nixpkgs attribute path this package tracks
-	// (Category B only).
+	// (package-versioned only).
 	VersionPackage string
 }
 
 // TagPrefix returns the cocogitto tag prefix this package would use
-// (Category A only, but harmless to compute for either).
+// (self-versioned only, but harmless to compute for either).
 func (p Package) TagPrefix() string {
 	return p.Name + "-"
 }
@@ -92,7 +92,7 @@ type FieldConflictError struct {
 func (e *FieldConflictError) Error() string {
 	return fmt.Sprintf(
 		"%s: has both `tag` and `versionPackage` set — a package must be "+
-			"exactly one of Category A (tag) or Category B (versionPackage), not both",
+			"exactly one of self-versioned (tag) or package-versioned (versionPackage), not both",
 		e.ValuesNixPath,
 	)
 }
@@ -196,7 +196,7 @@ func Discover(root, imagesDir string) ([]Package, error) {
 				Name:          name,
 				Dir:           dirRel,
 				ValuesNixPath: valuesRel,
-				Category:      InternalVersioned,
+				Category:      SelfVersioned,
 				Tag:           tagVal,
 			})
 		default: // vpFound
@@ -204,7 +204,7 @@ func Discover(root, imagesDir string) ([]Package, error) {
 				Name:           name,
 				Dir:            dirRel,
 				ValuesNixPath:  valuesRel,
-				Category:       ExternalPkgVersioned,
+				Category:       PackageVersioned,
 				VersionPackage: vpVal,
 			})
 		}

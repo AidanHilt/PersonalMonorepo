@@ -1,0 +1,19 @@
+# Extra domains to allow through the egress proxy, one per line.
+# Loaded by squid.conf's `allowed_dst` ACL (dstdomain match — a leading
+# dot matches the domain and all subdomains, e.g. `.example.com`).
+#
+# Empty by default. Add entries here rather than editing squid.conf
+# directly, and keep this list as short as possible — every line is a
+# hole in the sandbox's network boundary.
+api.anthropic.com
+claude.ai
+claude.com
+platform.claude.com
+# Starter set for pi-web-access (GitHub/Exa search) secrets support —
+# not yet verified against actual exercised calls; may need adjustment
+# once pi-web-access's GitHub/Exa traffic is observed against this proxy.
+github.com
+api.github.com
+raw.githubusercontent.com
+codeload.github.com
+api.exa.ai

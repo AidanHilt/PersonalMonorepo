@@ -5,8 +5,15 @@ import (
 	"regexp"
 )
 
+// inferenceRule is schema-additive over the original type-only rules: a
+// rule with no "field" (or field == "type") behaves exactly as before and
+// is expected to set "type". A rule with field == "scope" is expected to
+// set "scope" instead. Existing inference-rules.json files with no "field"
+// key keep working unchanged.
 type inferenceRule struct {
-	Type    string `json:"type"`
+	Field   string `json:"field,omitempty"`
+	Type    string `json:"type,omitempty"`
+	Scope   string `json:"scope,omitempty"`
 	Path    string `json:"path,omitempty"`
 	Content string `json:"content,omitempty"`
 }
@@ -23,11 +30,32 @@ func parseInferenceRules(data []byte) (*inferenceRulesConfig, error) {
 	return &cfg, nil
 }
 
-// candidateTypesForFile returns the set of types any rule assigns to a
-// single file, given that file's staged added lines (for content matching).
-func candidateTypesForFile(file string, addedLines []string, rules []inferenceRule) map[string]bool {
+// field returns the rule's target field, defaulting to "type" for
+// untouched/legacy rule entries.
+func (r inferenceRule) field() string {
+	if r.Field == "" {
+		return "type"
+	}
+	return r.Field
+}
+
+// value returns the value this rule contributes for its target field.
+func (r inferenceRule) value() string {
+	if r.field() == "scope" {
+		return r.Scope
+	}
+	return r.Type
+}
+
+// candidateValuesForFile returns the set of values any rule targeting
+// field assigns to a single file, given that file's staged added lines
+// (for content matching).
+func candidateValuesForFile(file string, addedLines []string, rules []inferenceRule, field string) map[string]bool {
 	candidates := map[string]bool{}
 	for _, rule := range rules {
+		if rule.field() != field {
+			continue
+		}
 		if rule.Path == "" && rule.Content == "" {
 			continue
 		}
@@ -37,7 +65,7 @@ func candidateTypesForFile(file string, addedLines []string, rules []inferenceRu
 		if rule.Content != "" {
 			re, err := regexp.Compile(rule.Content)
 			if err != nil {
-				warnf("invalid content regex in rule for type %q: %v", rule.Type, err)
+				warnf("invalid content regex in %s rule %q: %v", field, rule.value(), err)
 				continue
 			}
 			matched := false
@@ -51,21 +79,26 @@ func candidateTypesForFile(file string, addedLines []string, rules []inferenceRu
 				continue
 			}
 		}
-		candidates[rule.Type] = true
+		val := rule.value()
+		if val == "" {
+			continue
+		}
+		candidates[val] = true
 	}
 	return candidates
 }
 
-// inferType applies the unanimous-or-abstain policy: every staged file must
-// resolve to the exact same single candidate type for a suggestion to be
-// offered. Any disagreement, or any file matching nothing, means abstain.
-func inferType(files []string, addedLinesByFile map[string][]string, rules []inferenceRule) (string, bool) {
+// inferField applies the unanimous-or-abstain policy for the given field:
+// every staged file must resolve to the exact same single candidate value
+// for a suggestion to be offered. Any disagreement, or any file matching
+// nothing, means abstain.
+func inferField(files []string, addedLinesByFile map[string][]string, rules []inferenceRule, field string) (string, bool) {
 	if len(files) == 0 {
 		return "", false
 	}
 	var intersection map[string]bool
 	for _, file := range files {
-		candidates := candidateTypesForFile(file, addedLinesByFile[file], rules)
+		candidates := candidateValuesForFile(file, addedLinesByFile[file], rules, field)
 		if len(candidates) == 0 {
 			return "", false
 		}
@@ -74,9 +107,9 @@ func inferType(files []string, addedLinesByFile map[string][]string, rules []inf
 			continue
 		}
 		next := map[string]bool{}
-		for t := range intersection {
-			if candidates[t] {
-				next[t] = true
+		for v := range intersection {
+			if candidates[v] {
+				next[v] = true
 			}
 		}
 		intersection = next
@@ -87,8 +120,19 @@ func inferType(files []string, addedLinesByFile map[string][]string, rules []inf
 	if len(intersection) != 1 {
 		return "", false
 	}
-	for t := range intersection {
-		return t, true
+	for v := range intersection {
+		return v, true
 	}
 	return "", false
+}
+
+// inferType is the field == "type" convenience wrapper, kept for callers
+// that only care about commit type inference.
+func inferType(files []string, addedLinesByFile map[string][]string, rules []inferenceRule) (string, bool) {
+	return inferField(files, addedLinesByFile, rules, "type")
+}
+
+// inferScope is the field == "scope" convenience wrapper.
+func inferScope(files []string, addedLinesByFile map[string][]string, rules []inferenceRule) (string, bool) {
+	return inferField(files, addedLinesByFile, rules, "scope")
 }

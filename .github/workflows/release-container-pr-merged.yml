@@ -45,7 +45,7 @@ jobs:
           # bumping again" mode. This keeps the two workflows honest:
           # prepare-release computes and writes versions; this one only
           # tags a commit that's now confirmed to be on main.
-          nix run "path:nix/scripts#sync-cog-packages" -- -images-dir "$IMAGES_DIR" -list=categoryA \
+          nix run "path:nix/scripts#sync-cog-packages" -- -images-dir "$IMAGES_DIR" -list=selfVersioned \
             | jq -r '.[] | "\(.tagPrefix)\(.tag)"' \
             | while read -r tagname; do
                 if git rev-parse "$tagname" >/dev/null 2>&1; then

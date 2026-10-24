@@ -1,4 +1,17 @@
 {
+  "types": [
+    "feat",
+    "fix",
+    "chore",
+    "docs",
+    "style",
+    "refactor",
+    "perf",
+    "test",
+    "build",
+    "ci",
+    "revert"
+  ],
   "presets": [
     {
       "name": "argocd",

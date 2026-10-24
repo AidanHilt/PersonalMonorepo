@@ -1,7 +1,7 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "rxresu.harcodedValues" -}}
+{{- define "rxresu.hardcodedValues" -}}
 env:
   {{- $defaultSecretName := printf "%v-%v" .Release.Name "config-secret" }}
   - name: TZ
@@ -75,5 +75,5 @@ secrets:
 {{- end }}
 
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "rxresu.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "rxresu.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

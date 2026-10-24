@@ -9,8 +9,12 @@
     act
     agenix
     cocogitto
+    dotenvx
+    ghostty.terminfo
     kubebuilder
     nss
+    openbao
+    python3
     syncthing
     vault
     watchexec

@@ -10,7 +10,7 @@ A directory under `<images-dir>/` is a releasable package if it contains a
 `values.nix` with a top-level, literal-string `tag` **or** `versionPackage`
 field — never both.
 
-**Category A** — versioned by cocogitto:
+**self-versioned** — versioned by cocogitto:
 ```nix
 {
   tag = "0.1.4";
@@ -19,7 +19,7 @@ field — never both.
 Syncs into `cog.toml`'s generated `[packages.*]` section. Version comes
 from conventional-commit-driven semver bumps.
 
-**Category B** — tracks a nixpkgs attribute, independent of cocogitto:
+**package-versioned** — tracks a nixpkgs attribute, independent of cocogitto:
 ```nix
 {
   versionPackage = "nodePackages.foo";
@@ -42,12 +42,12 @@ Other cases:
 
 ## Listing packages for CI matrices
 
-`-list=internalVersioned` / `-list=externalPkgVersioned` print the discovered packages of
+`-list=selfVersioned` / `-list=packageVersioned` print the discovered packages of
 that category as JSON (one line, array of objects), for direct
 consumption via `fromJson(...)` in a GitHub Actions matrix:
 
 ```sh
-sync-cog-packages -list=externalPkgVersioned
+sync-cog-packages -list=packageVersioned
 # [{"name":"foo","dir":"...","valuesNixPath":"...","tagPrefix":"foo-","versionPackage":"nodePackages.foo"}]
 ```
 

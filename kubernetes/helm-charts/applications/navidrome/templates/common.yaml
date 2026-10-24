@@ -1,7 +1,7 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "navidrome.harcodedValues" -}}
+{{- define "navidrome.hardcodedValues" -}}
 env:
   - name: ND_BASEURL
     value: {{ .Values.navidrome.baseUrl }}
@@ -9,5 +9,5 @@ env:
     value: {{ .Values.navidrome.musicFolder }}
 
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "navidrome.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "navidrome.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

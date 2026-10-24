@@ -74,5 +74,3 @@ transmission:
 
 video-stack-configuration:
   enabled: true
-  configuration:
-    enabled: true

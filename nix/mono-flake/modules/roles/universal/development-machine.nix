@@ -1,33 +1,25 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 let
   # Platform-specific logic or setup
-  platform-apps = if pkgs.system == "aarch64-darwin" then with pkgs; [] else with pkgs; [inetutils];
+  platform-apps =
+    if pkgs.system == "aarch64-darwin" then with pkgs; [ ] else with pkgs; [ inetutils ];
 
   rebuild-app = if pkgs.system == "aarch64-darwin" then "darwin-rebuild" else "nixos-rebuild";
 
-  # Shortcut scripts
-  argocd-commit = pkgs.writeShellScriptBin "argocd-commit" ''
-  cd $PERSONAL_MONOREPO_LOCATION
-  git add kubernetes/
-  git commit -m "Argocd commit"
-  git push
-'';
-
-  nix-commit = pkgs.writeShellScriptBin "nix-commit" ''
-  cd $PERSONAL_MONOREPO_LOCATION
-  git add nix/*
-  git commit -m "Nix commit"
-  if [[  $1 != "--no-push" ]]; then
-    git push
-  fi
-'';
-
+  # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
   reset-docker = pkgs.writeShellScriptBin "reset-docker" ''
-  docker container prune --force
-  docker image prune -a --force
-  docker builder prune --force
-'';
+    docker container prune --force
+    docker image prune -a --force
+    docker builder prune --force
+  '';
 
   personalMonorepoLocation = "${machine-config.userBase}/${machine-config.username}/PersonalMonorepo";
 
@@ -38,40 +30,39 @@ in
     ./kubernetes-admin.nix
   ];
 
-  environment.variables = {
-    PERSONAL_MONOREPO_LOCATION = "${personalMonorepoLocation}";
-  };
+  environment.variables =
+    (import ./_personal-monorepo-constants.nix { inherit machine-config; }).variables;
 
-  environment.systemPackages = with pkgs; [
-    cargo
-    check-jsonschema
-    detect-secrets
-    eza
-    gettext
-    jq
-    p7zip
-    postgresql
-    pre-commit
-    rustc
-    terraform
-    terragrunt
-    yarn
-    yq-go
+  environment.systemPackages =
+    with pkgs;
+    [
+      cargo
+      check-jsonschema
+      detect-secrets
+      eza
+      gettext
+      jq
+      p7zip
+      postgresql
+      pre-commit
+      rustc
+      opentofu
+      terragrunt
+      yarn
+      yq-go
 
-    argocd-commit
-    nix-commit
-    reset-docker
-  ] ++ platform-apps;
-
+      reset-docker
+    ]
+    ++ platform-apps;
 
   #TODO If this breaks on Linux, you need to figure out what the NixOS equivalent of this is, and then implement platform-specific logic
-  system.activationScripts = {
-    postActivation = {
-      text = ''
-        if [ ! -d "${personalMonorepoLocation}" ]; then
-          su aidan -c "${pkgs.git}/bin/git clone https://github.com/AidanHilt/PersonalMonorepo.git ${personalMonorepoLocation}"
-        fi
-      '';
-    };
-  };
+  # system.activationScripts = {
+  #   postActivation = {
+  #     text = ''
+  #       if [ ! -d "${personalMonorepoLocation}" ]; then
+  #         su aidan -c "${pkgs.git}/bin/git clone https://github.com/AidanHilt/PersonalMonorepo.git ${personalMonorepoLocation}"
+  #       fi
+  #     '';
+  #   };
+  # };
 }

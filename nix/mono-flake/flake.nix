@@ -16,12 +16,12 @@
     nur.url = "github:nix-community/nur";
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/main";
+      url = "github:aidanhilt/PersonalMonorepo/project-appocalypse/knative-function-operator";
       flake = false;
     };
 
     scripts = {
-      url = "github:aidanhilt/PersonalMonorepo/project-lockstep/release-mgmt?dir=nix/scripts";
+      url = "github:aidanhilt/PersonalMonorepo/project-appocalypse/knative-function-operator?dir=nix/scripts";
     };
 
     comin = {
@@ -54,6 +54,15 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nixos-lima = {
+      url = "github:nixos-lima/nixos-lima/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    kernel70Nixpkgs = {
+      url = "github:nixos/nixpkgs/b12141ef619e0a9c1c84dc8c684040326f27cdcc";
+    };
+
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/01ef07c1c8bc8d9db9c0c9c59a8fea701b7f5a34";
 
     # Darwin-specific items
@@ -71,7 +80,7 @@
 
       globals = {
         nixConfig = inputs.personalMonorepo + "/nix";
-        personalMonorepoBranch = "master";
+        personalMonorepoBranch = "main";
         personalMonorepoURL = "https://github.com/AidanHilt/PersonalMonorepo";
       };
 

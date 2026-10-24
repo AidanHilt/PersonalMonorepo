@@ -1,9 +1,9 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "rmfakecloud.harcodedValues" -}}
+{{- define "rmfakecloud.hardcodedValues" -}}
 
 
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "rmfakecloud.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "rmfakecloud.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

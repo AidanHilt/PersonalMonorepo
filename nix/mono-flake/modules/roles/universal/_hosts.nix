@@ -4,6 +4,7 @@
     # Personal Machines
     # =================
     "192.168.86.40" = ["big-boi-desktop.lan"];
+    "192.168.86.41" = ["devbox.lan"];
 
     # ===================
     # 3-node prod cluster
@@ -35,6 +36,6 @@
     "192.168.86.23" = ["*.staging-cluster-lb.lan"];
     "192.168.86.18" = ["*.laptop-cluster-node-lb.lan"];
     "192.168.86.19" = ["*.laptop-cluster-lb.lan"];
-    "172.18.255.200" = ["*.qa-cluster-lb.lan"];
+    "172.20.255.200" = ["*.qa-cluster-lb.lan"];
   };
 }

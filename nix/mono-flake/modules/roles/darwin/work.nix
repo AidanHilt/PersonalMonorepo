@@ -1,13 +1,22 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 let
+  # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
   gen3-helm-install = pkgs.writeShellScriptBin "gen3-helm-install" ''
-  cd ~/Gen3Repos/gen3-helm/helm/gen3 && helm dependency update && helm dependency build
-  helm upgrade --install gen3 ~/Gen3Repos/gen3-helm/helm/gen3 -f ~/.gen3/local-values.yaml
+    cd ~/Gen3Repos/gen3-helm/helm/gen3 && helm dependency update && helm dependency build
+    helm upgrade --install gen3 ~/Gen3Repos/gen3-helm/helm/gen3 -f ~/.gen3/local-values.yaml
   '';
 
+  # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
   gen3-edit-values = pkgs.writeShellScriptBin "gen3-edit-values" ''
-  vi ~/.gen3/local-values.yaml
+    vi ~/.gen3/local-values.yaml
   '';
 in
 

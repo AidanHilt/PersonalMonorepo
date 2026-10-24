@@ -1,9 +1,9 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "flashpaper.harcodedValues" -}}
+{{- define "flashpaper.hardcodedValues" -}}
 
 
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "flashpaper.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "flashpaper.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

@@ -1,7 +1,7 @@
 {{- include "bjw-s.common.loader.init" . }}
 
 {{/* Append the hardcoded settings */}}
-{{- define "radarr.harcodedValues" -}}
+{{- define "radarr.hardcodedValues" -}}
 env:
   - name: RADARR__AUTH__APIKEY
     valueFrom:
@@ -108,5 +108,5 @@ serviceMonitor:
 {{ end }}
 
 {{- end -}}
-{{- $_ := mergeOverwrite .Values (include "radarr.harcodedValues" . | fromYaml) -}}
+{{- $_ := mergeOverwrite .Values (include "radarr.hardcodedValues" . | fromYaml) -}}
 {{ include "bjw-s.common.loader.generate" . }}

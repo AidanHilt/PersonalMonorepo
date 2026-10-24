@@ -10,45 +10,56 @@
     };
 
     personalMonorepo = {
-      url = "github:aidanhilt/PersonalMonorepo/project-rockhard/pki";
+      url = "github:aidanhilt/PersonalMonorepo/project-appocalypse/knative-function-operator";
       flake = false;
     };
   };
 
-  outputs = { self, nixpkgs, terranix, ... }@inputs:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      terranix,
+      ...
+    }@inputs:
     let
       system = "aarch64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
-      lib = nixpkgs.lib;
+      inherit (nixpkgs) lib;
 
       libFiles = builtins.attrNames (
-        lib.filterAttrs (name: type:
-          type == "regular" && lib.hasSuffix ".nix" name
-        ) (builtins.readDir ./lib)
+        lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name) (
+          builtins.readDir ./lib
+        )
       );
 
       loadLib = file: import ./lib/${file} { inherit lib pkgs inputs; };
 
-      libFunctions = builtins.foldl' (acc: file:
-          acc // (loadLib file)
-        ) {} libFiles;
+      libFunctions = builtins.foldl' (acc: file: acc // (loadLib file)) { } libFiles;
 
       moduleNames = builtins.attrNames (
-        pkgs.lib.filterAttrs
-          (name: type:
-            type == "directory" &&
-            builtins.pathExists ./modules/${name}/infra.nix
-          )
-          (builtins.readDir ./modules)
+        pkgs.lib.filterAttrs (
+          name: type: type == "directory" && builtins.pathExists ./modules/${name}/infra.nix
+        ) (builtins.readDir ./modules)
       );
 
-      buildModule = name: terranix.lib.terranixConfiguration {
-        inherit system;
-        modules = [ ./modules/${name}/infra.nix ];
-        extraArgs = {inherit libFunctions lib inputs pkgs;};
-      };
+      buildModule =
+        name:
+        terranix.lib.terranixConfiguration {
+          inherit system;
+          modules = [ ./modules/${name}/infra.nix ];
+          extraArgs = {
+            inherit
+              libFunctions
+              lib
+              inputs
+              pkgs
+              ;
+          };
+        };
 
-    in {
+    in
+    {
       packages.${system} = builtins.listToAttrs (
         map (name: {
           inherit name;
