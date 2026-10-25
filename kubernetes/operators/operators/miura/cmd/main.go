@@ -9,8 +9,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	gitfunctionv1alpha1 "github.com/example/gitfunction-operator/api/v1alpha1"
-	"github.com/example/gitfunction-operator/internal/controller"
+	gitfunctionv1alpha1 "miura/api/v1alpha1"
+	"miura/internal/controller"
 )
 
 var (
