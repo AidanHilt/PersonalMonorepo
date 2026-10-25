@@ -29,6 +29,7 @@ in
 
     pre-commit
     socat
+    sshuttle
   ];
 
   homebrew = {
