@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# nix run .#gen-kubeconfig -- <dev-or-staging-context> [service-account-name] [namespace]
+# nix run .#gen-kubeconfig -- [FLAGS] <dev-or-staging-context> [service-account-name] [namespace]
 #
 # Generates a dedicated, RBAC-scoped kubeconfig for the `pi` container.
 # NEVER points this at a production context — it operates
@@ -21,20 +21,91 @@
 # permission-extension `deny` rules on kubectl apply/delete/exec
 # (config/agent/permission-system.config.json) are defense in depth on
 # top of this, not a substitute for it.
+#
+# Flags (may appear anywhere among the arguments, before/after/between the
+# positional ones):
+#   --yes, -y                 Skip the "must be dev/staging" y/N prompt.
+#   --server <url>            Override the generated kubeconfig's cluster
+#                              `server:` field instead of the target
+#                              context's own API server address (e.g. when
+#                              `pi` reaches the cluster through a network
+#                              intermediary such as a forwarder sidecar
+#                              rather than directly).
+#   --tls-server-name <name>  Emit `tls-server-name: <name>` under the
+#                              generated kubeconfig's cluster entry (e.g.
+#                              a SAN on the target API server's cert, when
+#                              --server doesn't match a name the cert was
+#                              issued for).
+#
+# Positional arguments (in order, after flags are stripped):
+#   <kube-context>             required
+#   [service-account-name]     default: pi-sandbox-agent
+#   [namespace]                default: default
 set -euo pipefail
 
-CONTEXT="${1:?usage: gen-kubeconfig.sh <kube-context> [service-account-name] [namespace]}"
-SA_NAME="${2:-pi-sandbox-agent}"
-NAMESPACE="${3:-default}"
+YES_FLAG=0
+SERVER_OVERRIDE=""
+TLS_SERVER_NAME=""
+POSITIONAL=()
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+  --yes | -y)
+    YES_FLAG=1
+    shift
+    ;;
+  --server)
+    shift
+    SERVER_OVERRIDE="${1:?--server requires a URL argument}"
+    shift
+    ;;
+  --server=*)
+    SERVER_OVERRIDE="${1#--server=}"
+    shift
+    ;;
+  --tls-server-name)
+    shift
+    TLS_SERVER_NAME="${1:?--tls-server-name requires a NAME argument}"
+    shift
+    ;;
+  --tls-server-name=*)
+    TLS_SERVER_NAME="${1#--tls-server-name=}"
+    shift
+    ;;
+  --)
+    shift
+    while [ $# -gt 0 ]; do
+      POSITIONAL+=("$1")
+      shift
+    done
+    ;;
+  -*)
+    echo "error: unrecognized flag: $1" >&2
+    exit 1
+    ;;
+  *)
+    POSITIONAL+=("$1")
+    shift
+    ;;
+  esac
+done
+
+CONTEXT="${POSITIONAL[0]:?usage: gen-kubeconfig.sh [FLAGS] <kube-context> [service-account-name] [namespace]}"
+SA_NAME="${POSITIONAL[1]:-pi-sandbox-agent}"
+NAMESPACE="${POSITIONAL[2]:-default}"
 OUT_FILE="${PI_SANDBOX__KUBECONFIG_PATH:-$HOME/.config/pi-sandbox/agent-kubeconfig.yaml}"
 OUT_DIR="$(dirname "$OUT_FILE")"
 
 echo "==> Target context: $CONTEXT   namespace: $NAMESPACE   service account: $SA_NAME"
-read -r -p "This must be a dev/staging context, never production. Continue? [y/N] " confirm
-[ "$confirm" = "y" ] || {
-  echo "aborted"
-  exit 1
-}
+if [ "$YES_FLAG" = "1" ]; then
+  echo "==> --yes/-y given, skipping the dev/staging confirmation prompt."
+else
+  read -r -p "This must be a dev/staging context, never production. Continue? [y/N] " confirm
+  [ "$confirm" = "y" ] || {
+    echo "aborted"
+    exit 1
+  }
+fi
 
 mkdir -p "$OUT_DIR"
 
@@ -78,8 +149,19 @@ EOF
 
 echo "==> Minting a short-lived token (1h) and building a standalone kubeconfig..."
 TOKEN="$(kubectl --context "$CONTEXT" -n "$NAMESPACE" create token "$SA_NAME" --duration=1h)"
-SERVER="$(kubectl --context "$CONTEXT" config view --raw -o jsonpath="{.clusters[?(@.name=='$(kubectl --context "$CONTEXT" config view -o jsonpath="{.contexts[?(@.name=='$CONTEXT')].context.cluster}")')].cluster.server}")"
+if [ -n "$SERVER_OVERRIDE" ]; then
+  echo "==> --server override given: $SERVER_OVERRIDE (ignoring the context's own API server address)"
+  SERVER="$SERVER_OVERRIDE"
+else
+  SERVER="$(kubectl --context "$CONTEXT" config view --raw -o jsonpath="{.clusters[?(@.name=='$(kubectl --context "$CONTEXT" config view -o jsonpath="{.contexts[?(@.name=='$CONTEXT')].context.cluster}")')].cluster.server}")"
+fi
 CA_DATA="$(kubectl --context "$CONTEXT" config view --raw -o jsonpath="{.clusters[?(@.name=='$(kubectl --context "$CONTEXT" config view -o jsonpath="{.contexts[?(@.name=='$CONTEXT')].context.cluster}")')].cluster.certificate-authority-data}")"
+
+TLS_SERVER_NAME_LINE=""
+if [ -n "$TLS_SERVER_NAME" ]; then
+  echo "==> --tls-server-name override given: $TLS_SERVER_NAME"
+  TLS_SERVER_NAME_LINE="      tls-server-name: ${TLS_SERVER_NAME}"
+fi
 
 cat >"$OUT_FILE" <<EOF
 apiVersion: v1
@@ -90,6 +172,7 @@ clusters:
     cluster:
       server: ${SERVER}
       certificate-authority-data: ${CA_DATA}
+${TLS_SERVER_NAME_LINE}
 contexts:
   - name: ${SA_NAME}
     context:
@@ -103,5 +186,5 @@ users:
 EOF
 chmod 600 "$OUT_FILE"
 
-echo "==> Wrote $OUT_FILE (mounted read-only into the pi container by compose.yaml)."
+echo "==> Wrote $OUT_FILE, overwriting any previous contents (mounted read-only into the pi container by compose.yaml)."
 echo "    Token expires in 1h — re-run this script to refresh it before a session that outlives that."

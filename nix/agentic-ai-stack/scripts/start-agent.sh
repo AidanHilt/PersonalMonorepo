@@ -324,9 +324,26 @@ done < <(compgen -v PI_SANDBOX__SECRET__ || true)
 SECRET_ENV_ARGS=("${SECRET_NAMESPACE_ARGS[@]}" "${SECRET_ENV_ARGS[@]}")
 
 echo "==> Checking for a generated kubeconfig..."
+KIND_GATEWAY_ACTIVE=0
 if [ -f "$KUBECONFIG_PATH" ]; then
   echo "    found: $KUBECONFIG_PATH — enabling k8s access for this run."
   COMPOSE_FILES+=(-f compose.kube.yaml)
+
+  # If a local kind cluster is actually up (its `kind` docker network
+  # exists -- see nix/mono-flake's cluster-setup/cluster-teardown), also
+  # layer compose.kind.yaml so `pi` can reach it through the kind-gateway
+  # forwarder sidecar instead of the unreachable 127.0.0.1:<port> API
+  # address. See compose.kind.yaml's header comment for the full network
+  # model. Otherwise, the base stack still comes up fine against whatever
+  # cluster the kubeconfig actually points at (e.g. a non-kind dev/staging
+  # cluster reachable some other way).
+  if docker network inspect kind >/dev/null 2>&1; then
+    echo "    found the 'kind' docker network — layering compose.kind.yaml (kind-gateway forwarder sidecar)..."
+    COMPOSE_FILES+=(-f compose.kind.yaml)
+    KIND_GATEWAY_ACTIVE=1
+  else
+    echo "    no 'kind' docker network found — skipping compose.kind.yaml (not needed unless the kubeconfig targets a local kind cluster)."
+  fi
 else
   cat >&2 <<EOF
     WARNING: no kubeconfig found at $KUBECONFIG_PATH.
@@ -569,10 +586,14 @@ if [ -n "$WORKSPACE_MERGED_DIR" ]; then
   UP_SERVICES+=(workspace-mounter)
 fi
 
+if [ "$KIND_GATEWAY_ACTIVE" = "1" ]; then
+  UP_SERVICES+=(kind-gateway)
+fi
+
 echo "==> Clearing any leftover non-persisted volumes from a previous/crashed run..."
 remove_nonpersisted_volumes
 
-echo "==> Starting docker compose stack (pi + proxy + pkg-broker${NIX_STORE_MERGED_DIR:+ + nix-store-mounter}${WORKSPACE_MERGED_DIR:+ + workspace-mounter})..."
+echo "==> Starting docker compose stack (pi + proxy + pkg-broker${NIX_STORE_MERGED_DIR:+ + nix-store-mounter}${WORKSPACE_MERGED_DIR:+ + workspace-mounter}$([ "$KIND_GATEWAY_ACTIVE" = "1" ] && echo " + kind-gateway"))..."
 docker compose "${COMPOSE_FILES[@]}" up -d --wait "${UP_SERVICES[@]}"
 
 cleanup() {

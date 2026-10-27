@@ -10,8 +10,10 @@ full design rationale and threat model; this README is the practical
 ## Layout
 
 ```
-flake.nix                      # packages: pi-image, proxy-image, pkg-broker-image, workspace-mounter-image; apps: load, start-agent, stop-agent, shell-agent, login, gen-kubeconfig, verify
+flake.nix                      # packages: pi-image, proxy-image, pkg-broker-image, workspace-mounter-image, kind-gateway-image; apps: load, start-agent, stop-agent, shell-agent, login, gen-kubeconfig, verify
 compose.yaml                   # static compose file; images are just images to it once loaded
+compose.kube.yaml              # opt-in override: mounts a scoped kubeconfig into pi (see below)
+compose.kind.yaml              # opt-in override: kind-gateway forwarder sidecar for a local kind cluster (see below)
 compose.pkgbroker-host-store.yaml  # opt-in override: pkg-broker uses the host's real nix store/daemon
 compose.workspace.yaml         # opt-in: layered when --add/--clone extras are given (see below)
 containers/
@@ -34,6 +36,8 @@ containers/
   workspace-mounter/
     image.nix                  # nix2container build for the workspace-mounter sidecar
     mount.sh                   # CAP_SYS_ADMIN+bindfs sidecar, builds /workspace from --add/--clone extras
+  kind-gateway/
+    image.nix                  # nix2container build for the kind-gateway forwarder sidecar (plain socat)
 config/                        # 1:1 mirror of ~/.pi/ -- config only, never secrets
   agent/                       # mirrors ~/.pi/agent/: baked-in AGENTS.md / settings.json / permission policy
   web-search.json              # mirrors ~/.pi/web-search.json: pi-web-access ssrf.trustEnvProxy config
@@ -121,6 +125,11 @@ nix run .#login                            # if using OAuth; type /login once in
 nix run .#start-agent                      # builds+loads images, brings up pi+proxy
 ```
 
+For a local `kind` dev cluster specifically, use `cluster-setup`/
+`cluster-teardown` (`nix/mono-flake/modules/roles/universal/
+kubernetes-admin.nix`) instead of calling `gen-kubeconfig` by hand --
+see "Kubernetes access against a local `kind` cluster" below.
+
 ### Credentials / secrets
 
 `start-agent.sh` never retrieves or decrypts secrets itself — it only
@@ -147,6 +156,52 @@ no API keys belong there anymore.
 Tear down: `nix run .#stop-agent` (or `docker compose down`). Verify
 the acceptance criteria from the spec against a running stack:
 `nix run .#verify`.
+
+### Kubernetes access against a local `kind` cluster
+
+`cluster-setup`/`cluster-teardown` (`nix/mono-flake/modules/roles/
+universal/kubernetes-admin.nix`, system packages on hosts that include
+that role) create/destroy a local `kind` dev cluster explicitly named
+`qa-cluster` (kubeconfig context `kind-qa-cluster`, not kind's bare
+default `kind`/`kind-kind` — `terragrunt/qa-cluster`'s
+`kubeconfig_context` inputs hardcode `kind-qa-cluster` to match).
+`cluster-setup` also writes a scoped kubeconfig straight to this stack's
+default path (`${PI_SANDBOX__KUBECONFIG_PATH:-~/.config/pi-sandbox/agent-kubeconfig.yaml}`,
+overwriting it silently), by running:
+
+```sh
+nix run "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#gen-kubeconfig" -- \
+  kind-qa-cluster --yes --server https://kind-gateway:6443 --tls-server-name kubernetes
+```
+
+`PERSONAL_MONOREPO_LOCATION` must be set for `cluster-setup` to find this
+flake. `--server`/`--tls-server-name` are `gen-kubeconfig.sh` flags (see
+`scripts/gen-kubeconfig.sh --help`/its header comment) that point the
+generated kubeconfig at the `kind-gateway` service name instead of the
+context's own (host-only-reachable) `127.0.0.1:<port>` API address, with
+`tls-server-name: kubernetes` so TLS verification still succeeds against
+that SAN on kind's apiserver cert. `--yes` skips the interactive
+dev/staging confirmation prompt, since `cluster-setup` always targets the
+local kind cluster it just created.
+
+`pi` cannot reach `127.0.0.1:<port>` directly — it only sits on the
+`internal` compose network (no default route at all), and must NOT join
+kind's own `kind` docker network directly either (that network has a real
+route to the outside world and would bypass the egress proxy). Instead,
+`start-agent.sh` layers `compose.kind.yaml` automatically whenever BOTH a
+scoped kubeconfig is found AND the `kind` docker network exists (i.e. a
+local kind cluster is actually up) — bringing up `kind-gateway`, a narrow
+`socat` forwarder sidecar attached to both `internal` and `kind`, which
+forwards only TCP `:6443` to `qa-cluster-control-plane:6443`. See
+`compose.kind.yaml`'s header comment and `containers/kind-gateway/image.nix`
+for the mechanics; `compose.kind.yaml` also restates `pi`'s `NO_PROXY` to
+include `kind-gateway` (traffic to it is never routed through the egress
+proxy, same as `proxy`/`pkg-broker`).
+
+Token refresh/RBAC widening are explicitly out of scope here — re-run
+`gen-kubeconfig` (directly, or via `cluster-setup`) to refresh the 1h
+token; widen the Role in `scripts/gen-kubeconfig.sh` deliberately if an
+operator workflow needs more than its narrow read-only default.
 
 ### Persistence flags
 
@@ -359,7 +414,12 @@ a habit-forming guardrail, not the boundary. The real boundary is:
   only ever reaches it through one internal-only HTTP endpoint (see
   `containers/pkg-broker/README.md`), never directly.
 - Kubernetes access is a generated, RBAC-scoped, read-only-mounted
-  kubeconfig against a dev/staging cluster — never a real one.
+  kubeconfig against a dev/staging cluster — never a real one. Against a
+  local `kind` cluster, `pi` reaches it only through the `kind-gateway`
+  forwarder sidecar (plain `socat`, one port, `cap_drop: [ALL]`) — never
+  by joining kind's own `kind` docker network directly, which has a real
+  route to the outside world (see "Kubernetes access against a local
+  `kind` cluster" below).
 
 None of this defends against a fully malicious actor with local code
 execution already on the host — it contains "agent did something dumb

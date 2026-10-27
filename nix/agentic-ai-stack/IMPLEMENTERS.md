@@ -46,6 +46,34 @@ network, `cap_drop: [ALL]`, read-only root filesystem,
 | `pkg-broker` | Internal + external (its own unproxied leg — not part of `pi`'s egress path) |
 | `workspace-mounter`, `nix-store-mounter` | No network; CAP_SYS_ADMIN sidecars that build `pi`'s filesystem views |
 | `login` | External only, on-demand compose profile for OAuth |
+| `kind-gateway` | Internal + the external, pre-existing `kind` docker network (opt-in, `compose.kind.yaml`) — the ONLY bridge between `pi` and a local kind cluster; `pi` never joins `kind` directly |
+
+### Local `kind` cluster network model (`compose.kind.yaml`)
+
+`nix/mono-flake`'s `cluster-setup`/`cluster-teardown` (`modules/roles/
+universal/kubernetes-admin.nix`) create/destroy a local `kind` dev cluster
+explicitly named `qa-cluster` (context `kind-qa-cluster`, not kind's bare
+default `kind`/`kind-kind`) and, after creation, write an RBAC-scoped
+kubeconfig straight to this stack's default path
+(`gen-kubeconfig.sh ... --server https://kind-gateway:6443
+--tls-server-name kubernetes`, overwriting silently — see README.md's
+"Kubernetes access against a local `kind` cluster" section for the full
+flag/flow writeup).
+
+`pi` has no route to the host's `127.0.0.1:<port>` kind API address (it
+only sits on `internal`, which has no default route at all) and must NOT
+be attached to kind's own `kind` docker network directly — that network
+has a real route to the outside world and would bypass the egress proxy
+entirely, defeating the whole point of `internal`'s isolation. Instead,
+`kind-gateway` (`containers/kind-gateway/image.nix`, plain `socat`,
+`cap_drop: [ALL]`) sits on BOTH `internal` and `kind`, forwarding only TCP
+`:6443` to `qa-cluster-control-plane:6443` — the narrowest possible
+bridge between the two networks. `compose.kind.yaml` declares the `kind`
+network `external: true` (owned/created by `kind` itself, never by
+Compose) and is layered in by `start-agent.sh` only when BOTH a scoped
+kubeconfig is found AND `docker network inspect kind` succeeds (i.e. a
+local kind cluster is actually up); it also restates `pi`'s `NO_PROXY` to
+include `kind-gateway` (not proxied — same precedent as `pkg-broker`).
 
 `proxy` is the only container in `pi`'s egress path and is deliberately
 minimal (squid + the `domain-gate` sidecar, nothing else). `pkg-broker`'s
@@ -124,6 +152,11 @@ with `nix run .#verify`.
 - **Adding/changing a container image**: edit the relevant
   `containers/<name>/image.nix` (nix2container build) and
   `flake.nix`'s corresponding `packages.<name>-image`/app wiring.
+- **Changing the local `kind` cluster network bridge**: edit
+  `containers/kind-gateway/image.nix` (image) and/or `compose.kind.yaml`
+  (forwarding rule, network attachments) — see "Local `kind` cluster
+  network model" above. Keep the forwarding rule narrow (one port, one
+  destination) deliberately; widen only if a concrete need arises.
 - **Adding a permanent egress domain**: add a line to
   `containers/proxy/allowed-domains.txt` and rebuild/reload the `proxy`
   image. For a runtime, session-scoped exception instead, see
@@ -171,7 +204,14 @@ with `nix run .#verify`.
 - Never mount a real/production kubeconfig — `scripts/gen-kubeconfig.sh`
   generates a dedicated, RBAC-scoped one pointed at a dev/staging
   cluster; the permission-extension layer additionally denies `kubectl
-  apply`/`delete`/`exec` outright.
+  apply`/`delete`/`exec` outright. `--yes`/`--server`/`--tls-server-name`
+  are optional flags (any position among the arguments) layered on top of
+  the original positional `<context> [sa-name] [namespace]` interface —
+  added so `cluster-setup` can call it non-interactively against the
+  `kind-gateway` server address/SAN (see "Local `kind` cluster network
+  model" above) without hardcoding `kind-gateway` into the script itself.
+  Token lifetime (1h, no auto-renew beyond re-running the script) and the
+  Role's RBAC verb/resource allowlist are both unchanged by any of this.
 - `pi`'s `compose.yaml` environment sets `CGO_ENABLED: "0"` and
   `GOCACHE`/`GOPATH`/`GOMODCACHE` under `/tmp/go/` so Go works at all
   inside `pi` (`read_only` root filesystem, no C compiler, HOME's usual

@@ -104,7 +104,13 @@ export PI_SANDBOX__NIX_STORE_SOURCE="${PI_SANDBOX__NIX_STORE_SOURCE:-/nonexisten
 
 echo "==> Stopping compose stack..."
 # --remove-orphans also stops nix-store-mounter (defined only in
-# compose.nixstore-overlay.yaml), which unmounts its overlay on SIGTERM.
+# compose.nixstore-overlay.yaml) and kind-gateway (defined only in
+# compose.kind.yaml, layered in by start-agent.sh only when a local kind
+# cluster was up) -- neither is declared in the implicit compose.yaml-only
+# config used here, so both show up as "orphans" of this project and get
+# stopped/removed. kind-gateway's own `kind` docker network is declared
+# `external: true` and is never created/removed by Compose either way --
+# it's owned by `kind` itself.
 docker compose --profile login down --remove-orphans
 
 # --- Removing non-persisted volumes ---------------------------------------

@@ -20,15 +20,16 @@
 # "package agent skills declaratively" section for the full survey this
 # list was drawn from.
 
-{ pkgs
-, agentSkills # the `agent-skills` flake input (Kyure-A/agent-skills-nix)
-, skillsGolang # samber/cc-skills-golang source (flake = false)
-, skillsKubernetes # LukasNiessen/kubernetes-skill source (flake = false)
-, skillsNixos # michalzubkowicz/nixos-management-skill source (flake = false)
+{
+  pkgs,
+  agentSkills, # the `agent-skills` flake input (Kyure-A/agent-skills-nix)
+  skillsGolang, # samber/cc-skills-golang source (flake = false)
+  skillsKubernetes, # LukasNiessen/kubernetes-skill source (flake = false)
+  skillsNixos, # michalzubkowicz/nixos-management-skill source (flake = false)
 }:
 
 let
-  lib = pkgs.lib;
+  inherit (pkgs) lib;
 
   # The ONLY part of agent-skills-nix consumed here -- see module header.
   # UNVERIFIED: this attribute path (`agentSkills.lib.agent-skills`) is

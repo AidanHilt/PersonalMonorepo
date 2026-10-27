@@ -41,7 +41,7 @@ let
   # agent skills, and the permission-system policy are all baked into
   # their final locations here, so the entrypoint needs no rm/cp dance or
   # dynamic folder lookup.
-  piSeed = pkgs.runCommand "pi-seed" { } (''
+  piSeed = pkgs.runCommand "pi-seed" { } ''
     mkdir -p $out/workspace
     mkdir -p $out/home/pi/.pi-seed/agent
     mkdir -p $out/home/pi/.pi
@@ -64,7 +64,7 @@ let
     cp -r --no-preserve=mode ${extraSkills}/. $out/home/pi/.pi-seed/agent/skills/
 
     cp -r --no-preserve=mode ${../../config}/. $out/home/pi/.pi-seed/
-  '');
+  '';
 
   # Empty placeholder directories for the persistent auth/session state.
   # These paths get named Docker volumes mounted onto them at runtime

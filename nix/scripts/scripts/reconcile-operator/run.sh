@@ -17,7 +17,7 @@ show_help() {
   echo ""
   echo "OPTIONS:"
   echo "  --namespace <namespace>    Install the operator into this namespace instead of <operator>-dev"
-  echo "  --cluster-name <name>      kind cluster name (default: kind)"
+  echo "  --cluster-name <name>      kind cluster name (default: qa-cluster)"
   echo "  --help, -h                 Show this help"
 }
 
@@ -106,7 +106,7 @@ cleanup() {
 }
 
 NAMESPACE_OVERRIDE=""
-CLUSTER_NAME="kind-kind"
+CLUSTER_NAME="qa-cluster"
 SYNC_MODE=false
 STATE_DIR=""
 OPERATOR_NAME=""
