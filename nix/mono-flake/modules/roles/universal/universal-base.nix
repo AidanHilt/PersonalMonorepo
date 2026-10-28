@@ -9,7 +9,7 @@
   ];
 
   nix = {
-    registry.nixpkgs.flake = inputs.nixpkgs;
+    registry.nixpkgs.flake = lib.mkIf (!pkgs.stdenv.hostPlatform.isDarwin) inputs.nixpkgs;
     channel.enable = false;
     nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
     settings = {
