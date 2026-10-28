@@ -35,7 +35,9 @@ is a *habit-forming guardrail*, not the security boundary. The actual
 boundary is container + network isolation — see README.md's "The actual
 security boundary" section for the concrete mechanisms (internal-only
 network, `cap_drop: [ALL]`, read-only root filesystem,
-`no-new-privileges`, RBAC-scoped kubeconfig).
+`no-new-privileges`, RBAC-scoped kubeconfig left world-readable (644) on
+the host so the container's non-owning `pi` user can read it — relies
+on RBAC scope + token lifetime, not file mode, for safety).
 
 ## Components and network access
 
@@ -204,7 +206,13 @@ with `nix run .#verify`.
 - Never mount a real/production kubeconfig — `scripts/gen-kubeconfig.sh`
   generates a dedicated, RBAC-scoped one pointed at a dev/staging
   cluster; the permission-extension layer additionally denies `kubectl
-  apply`/`delete`/`exec` outright. `--yes`/`--server`/`--tls-server-name`
+  apply`/`delete`/`exec` outright. It's written chmod 644
+  (world-readable, not owner-only), since the bind mount keeps the
+  host's owner/mode and the container's `pi` user (UID 10001) isn't that
+  owner; `start-agent.sh` re-applies 644 on every run to cover
+  pre-existing or `cluster-setup`-written files too. That's safe because
+  the token inside is RBAC-scoped, read-only, and short-lived (1h) —
+  file mode isn't what's keeping it safe. `--yes`/`--server`/`--tls-server-name`
   are optional flags (any position among the arguments) layered on top of
   the original positional `<context> [sa-name] [namespace]` interface —
   added so `cluster-setup` can call it non-interactively against the

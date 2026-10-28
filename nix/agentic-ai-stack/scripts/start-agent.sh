@@ -327,6 +327,11 @@ echo "==> Checking for a generated kubeconfig..."
 KIND_GATEWAY_ACTIVE=0
 if [ -f "$KUBECONFIG_PATH" ]; then
   echo "    found: $KUBECONFIG_PATH — enabling k8s access for this run."
+  # World-readable, not owner-only: catches pre-existing files and ones
+  # written by cluster-setup, same reasoning as gen-kubeconfig.sh's own
+  # chmod — tolerate failure (e.g. owned by someone else) with a warning
+  # rather than aborting the run.
+  chmod 644 "$KUBECONFIG_PATH" || echo "    WARNING: couldn't chmod 644 $KUBECONFIG_PATH (owned by someone else?) — the pi container may not be able to read it." >&2
   COMPOSE_FILES+=(-f compose.kube.yaml)
 
   # If a local kind cluster is actually up (its `kind` docker network

@@ -203,6 +203,15 @@ Token refresh/RBAC widening are explicitly out of scope here — re-run
 token; widen the Role in `scripts/gen-kubeconfig.sh` deliberately if an
 operator workflow needs more than its narrow read-only default.
 
+The generated kubeconfig file is left world-readable (644), not
+owner-only: it's bind-mounted read-only into `pi` by `compose.kube.yaml`,
+which keeps the host's owner/mode, and the container's `pi` user
+(UID 10001) is never that owner. `start-agent.sh` also re-applies 644 to
+an existing kubeconfig on every run, to cover ones written by
+`cluster-setup` or left over from before this change. Safety rests on the
+token inside being RBAC-scoped, read-only, and short-lived (1h) — not on
+file-mode secrecy.
+
 ### Persistence flags
 
 Three named Docker volumes other than `pi-auth`/`pi-sessions` (which are
@@ -419,7 +428,11 @@ a habit-forming guardrail, not the boundary. The real boundary is:
   forwarder sidecar (plain `socat`, one port, `cap_drop: [ALL]`) — never
   by joining kind's own `kind` docker network directly, which has a real
   route to the outside world (see "Kubernetes access against a local
-  `kind` cluster" below).
+  `kind` cluster" below). The kubeconfig file itself is world-readable
+  (644) on the host, since the bind mount keeps the host mode and the
+  container's `pi` user isn't its owner; that's fine because the token in
+  it is RBAC-scoped, read-only, and short-lived (1h), not because the
+  file is secret.
 
 None of this defends against a fully malicious actor with local code
 execution already on the host — it contains "agent did something dumb

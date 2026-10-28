@@ -114,17 +114,16 @@ kubectl --context "$CONTEXT" -n "$NAMESPACE" create serviceaccount "$SA_NAME" \
 
 cat <<EOF | kubectl --context "$CONTEXT" apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   name: ${SA_NAME}-role
-  namespace: ${NAMESPACE}
 rules:
   # Start narrow. Add verbs/resources deliberately as the operator work
   # requires them — this is a starting point (the acceptance criteria in
   # scripts/verify-acceptance.sh assume a working stack, not a specific
   # RBAC shape).
   - apiGroups: [""]
-    resources: ["pods", "pods/log", "services", "configmaps", "events"]
+    resources: ["pods", "pods/log", "services", "configmaps", "events", "namespaces", "nodes"]
     verbs: ["get", "list", "watch"]
   - apiGroups: ["apps"]
     resources: ["deployments", "replicasets", "statefulsets"]
@@ -133,22 +132,21 @@ EOF
 
 cat <<EOF | kubectl --context "$CONTEXT" apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: ${SA_NAME}-binding
-  namespace: ${NAMESPACE}
 subjects:
   - kind: ServiceAccount
     name: ${SA_NAME}
     namespace: ${NAMESPACE}
 roleRef:
-  kind: Role
+  kind: ClusterRole
   name: ${SA_NAME}-role
   apiGroup: rbac.authorization.k8s.io
 EOF
 
-echo "==> Minting a short-lived token (1h) and building a standalone kubeconfig..."
-TOKEN="$(kubectl --context "$CONTEXT" -n "$NAMESPACE" create token "$SA_NAME" --duration=1h)"
+echo "==> Minting a short-lived token (12h) and building a standalone kubeconfig..."
+TOKEN="$(kubectl --context "$CONTEXT" -n "$NAMESPACE" create token "$SA_NAME" --duration=12h)"
 if [ -n "$SERVER_OVERRIDE" ]; then
   echo "==> --server override given: $SERVER_OVERRIDE (ignoring the context's own API server address)"
   SERVER="$SERVER_OVERRIDE"
@@ -184,7 +182,11 @@ users:
     user:
       token: ${TOKEN}
 EOF
-chmod 600 "$OUT_FILE"
+# World-readable, not owner-only: the bind mount into the pi container
+# (compose.kube.yaml) keeps this file's host owner/mode, and the
+# container's `pi` user (UID 10001) is never that owner. Safe to widen
+# because the token inside is RBAC-scoped, read-only, and short-lived (1h).
+chmod 644 "$OUT_FILE"
 
 echo "==> Wrote $OUT_FILE, overwriting any previous contents (mounted read-only into the pi container by compose.yaml)."
 echo "    Token expires in 1h — re-run this script to refresh it before a session that outlives that."
