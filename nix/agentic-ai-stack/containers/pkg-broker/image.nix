@@ -5,7 +5,13 @@
 # This is just a string arg -- nix-index-database itself is NOT part of this
 # image's closure/rootEnv/copyToRoot, so it never bloats the image or needs
 # rebuilding when unrelated to fuzzy lookup (see README.md).
-{ pkgs, n2c, imageName, imageTag, nixIndexRef }:
+{
+  pkgs,
+  n2c,
+  imageName,
+  imageTag,
+  nixIndexRef,
+}:
 
 let
   user = "pkg-broker";
@@ -81,7 +87,10 @@ let
       server
       entrypointScript
     ];
-    pathsToLink = [ "/bin" "/etc" ];
+    pathsToLink = [
+      "/bin"
+      "/etc"
+    ];
   };
 
   # Writable directories (compose.yaml):
@@ -115,7 +124,11 @@ in
     # `perms` to paths that are actually in a layer. Without it the dirs
     # aren't baked into the image, Docker creates the volume mount points
     # itself as root:root, and the uid 10003 broker can't write to them.
-    copyToRoot = [ rootEnv nixpkgsConfig writableDirs ];
+    copyToRoot = [
+      rootEnv
+      nixpkgsConfig
+      writableDirs
+    ];
 
     perms = [
       {

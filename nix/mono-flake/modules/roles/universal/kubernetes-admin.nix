@@ -36,8 +36,15 @@ let
     done
   '';
 
+  # Cluster name is deliberately fixed to "qa-cluster" (kubeconfig context
+  # "kind-qa-cluster") rather than kind's bare default ("kind" / context
+  # "kind-kind") -- see nix/agentic-ai-stack/IMPLEMENTERS.md's network
+  # model section and terragrunt/qa-cluster's kubeconfig_context inputs,
+  # which hardcode "kind-qa-cluster" to match.
   cluster-setup = pkgs.writeShellScriptBin "cluster-setup" ''
-    cat <<EOF | kind create cluster --config=-
+    set -euo pipefail
+
+    cat <<EOF | kind create cluster --name qa-cluster --config=-
     kind: Cluster
     apiVersion: kind.x-k8s.io/v1alpha4
     nodes:
@@ -56,10 +63,24 @@ let
         hostPort: 443
         protocol: TCP
     EOF
+
+    # After the cluster is up, write an RBAC-scoped kubeconfig pointed at
+    # the kind-gateway forwarder sidecar (see
+    # nix/agentic-ai-stack/compose.kind.yaml and IMPLEMENTERS.md's network
+    # model section) to the agentic-ai-stack's default kubeconfig path,
+    # overwriting any previous contents silently -- gen-kubeconfig.sh
+    # itself always overwrites $PI_SANDBOX__KUBECONFIG_PATH /
+    # ~/.config/pi-sandbox/agent-kubeconfig.yaml.
+    if [ -z "''${PERSONAL_MONOREPO_LOCATION:-}" ]; then
+      echo "error: PERSONAL_MONOREPO_LOCATION is not set -- cannot locate nix/agentic-ai-stack to generate the pi-sandbox kubeconfig." >&2
+      exit 1
+    fi
+
+    nix run "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#gen-kubeconfig" -- kind-qa-cluster --yes --server https://kind-gateway:6443 --tls-server-name kubernetes
   '';
 
   cluster-teardown = pkgs.writeShellScriptBin "cluster-teardown" ''
-    kind delete cluster
+    kind delete cluster --name qa-cluster
   '';
 
   update-kubeconfig = pkgs.writeShellScriptBin "update-kubeconfig" ''

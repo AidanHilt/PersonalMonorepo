@@ -125,6 +125,7 @@ nix-store --store "$NIX_REMOTE" --dump-db >/dev/null
 # that didn't actually work, rather than surfacing a cryptic build failure
 # on the first real request. The derivation name is salted with the
 # current time so this is a real build every start, not a cached no-op.
+# shellcheck disable=SC2016 # single-quoted deliberately: $out/$salt below are Nix-evaluated (derivation attrs), not bash variables.
 if ! err=$(nix-build --no-out-link --store "$NIX_REMOTE" \
   --argstr salt "pkg-broker-sandbox-check-$(date +%s%N)" \
   -E '{ salt }: derivation { name = salt; system = builtins.currentSystem; builder = "/bin/sh"; args = [ "-c" "echo ok > $out" ]; }' \

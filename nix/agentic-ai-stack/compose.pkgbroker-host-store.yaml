@@ -40,6 +40,8 @@
 # store. If it doesn't (image built elsewhere, or GC'd since), entrypoint.sh
 # fails fast with a clear error instead of starting. See
 # containers/pkg-broker/README.md's host-store section.
+
+---
 services:
   pkg-broker:
     environment:
