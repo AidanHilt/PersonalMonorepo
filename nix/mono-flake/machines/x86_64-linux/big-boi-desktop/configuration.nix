@@ -2,7 +2,15 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, machine-config, inputs, globals, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  machine-config,
+  inputs,
+  globals,
+  ...
+}:
 
 {
   imports = [
@@ -28,11 +36,18 @@
 
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
+  # This host goes black with a visible cursor after being idle: the NVIDIA
+  # open driver fails to restore VRAM on resume/DPMS wake unless runtime
+  # power management is enabled. nvidia.nix (shared with gaming-pc-node)
+  # sets powerManagement.enable = false at normal priority, so override it
+  # here for this host only via lib.mkForce.
+  hardware.nvidia.powerManagement.enable = lib.mkForce true;
+
   #boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest;
 
   users.groups.pi = {
     gid = 10001;
   };
 
-  users.users.aidan.extraGroups = ["pi"];
+  users.users.aidan.extraGroups = [ "pi" ];
 }
