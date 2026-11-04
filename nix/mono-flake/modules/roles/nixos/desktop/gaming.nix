@@ -22,6 +22,7 @@
   hardware.bluetooth.enable = true;
 
   powerManagement.cpuFreqGovernor = "schedutil";
+  services.power-profiles-daemon.enable = false;
 
   boot.kernelModules = [ "xone" ];
 
