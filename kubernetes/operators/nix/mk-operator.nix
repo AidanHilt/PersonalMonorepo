@@ -1,4 +1,11 @@
-{ pkgs, lib, n2c, self, name, src }:
+{
+  pkgs,
+  lib,
+  n2c,
+  self,
+  name,
+  src,
+}:
 
 let
   ##############################################################################
@@ -15,16 +22,17 @@ let
   ##############################################################################
   vendorHashFile = src + "/vendor-hash.nix";
   vendorHash =
-    if builtins.pathExists vendorHashFile
-    then import vendorHashFile
-    else throw ''
-      operators/${name}: missing vendor-hash.nix.
-      Run `nix build .#${name}-image` once with a placeholder
-      (e.g. pkgs.lib.fakeHash), copy the reported expected hash into
-      operators/${name}/vendor-hash.nix as a bare string, e.g.:
+    if builtins.pathExists vendorHashFile then
+      import vendorHashFile
+    else
+      throw ''
+        operators/${name}: missing vendor-hash.nix.
+        Run `nix build .#${name}-image` once with a placeholder
+        (e.g. pkgs.lib.fakeHash), copy the reported expected hash into
+        operators/${name}/vendor-hash.nix as a bare string, e.g.:
 
-        "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-    '';
+          "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      '';
 
   ##############################################################################
   # 2. Go binary
@@ -39,6 +47,15 @@ let
     src = src;
     inherit vendorHash;
     subPackages = [ "cmd" ];
+
+    # deepcopy (zz_generated.deepcopy.go) is generated here at build time,
+    # not committed to the source tree — controller-gen needs it to exist
+    # before the module compiles (api/v1alpha1 types implement
+    # runtime.Object via generated DeepCopyObject methods).
+    nativeBuildInputs = [ pkgs.kubernetes-controller-tools pkgs.go ];
+    preBuild = ''
+      controller-gen object paths=./api/...
+    '';
   };
 
   ##############################################################################
@@ -60,7 +77,7 @@ let
   crds = pkgs.stdenv.mkDerivation {
     name = "${name}-crds";
     src = src;
-    nativeBuildInputs = [ pkgs.controller-gen ];
+    nativeBuildInputs = [ pkgs.kubernetes-controller-tools pkgs.go ];
     buildPhase = ''
       runHook preBuild
       controller-gen crd paths=./api/... output:crd:dir=$out
@@ -72,7 +89,7 @@ let
   rbac = pkgs.stdenv.mkDerivation {
     name = "${name}-rbac";
     src = src;
-    nativeBuildInputs = [ pkgs.controller-gen ];
+    nativeBuildInputs = [ pkgs.kubernetes-controller-tools pkgs.go ];
     buildPhase = ''
       runHook preBuild
       controller-gen rbac:roleName=${name} paths=./internal/controller/... output:rbac:dir=$out
@@ -93,34 +110,42 @@ let
   # 5. Chart assembly
   ##############################################################################
   chartVersion =
-    if builtins.pathExists (src + "/VERSION")
-    then lib.fileContents (src + "/VERSION")
-    else if self ? shortRev then self.shortRev
-    else self.dirtyShortRev; # tree has uncommitted changes
+    if builtins.pathExists (src + "/VERSION") then
+      lib.fileContents (src + "/VERSION")
+    else if self ? shortRev then
+      self.shortRev
+    else
+      self.dirtyShortRev; # tree has uncommitted changes
 
   hasOverrideChart = builtins.pathExists (src + "/chart");
 
   # Keys here are *owned* by the generated side (see the ownership note
   # below) — chart/values.yaml must never declare image.digest or
   # chart.version.
-  generatedValues = pkgs.writeText "${name}-generated-values.json" (builtins.toJSON {
-    image = {
-      digest = image.imageDigest; # NOTE: confirm this attribute name against
-                                   # the pinned nix2container version; its
-                                   # public API for retrieving the digest has
-                                   # shifted across releases.
-    };
-    chart = {
-      version = chartVersion;
-    };
-  });
+  generatedValues = pkgs.writeText "${name}-generated-values.json" (
+    builtins.toJSON {
+      image = {
+        #digest = image.imageDigest; # NOTE: confirm this attribute name against
+        # the pinned nix2container version; its
+        # public API for retrieving the digest has
+        # shifted across releases.
+      };
+      chart = {
+        version = chartVersion;
+      };
+    }
+  );
 
   chart = pkgs.stdenv.mkDerivation {
     name = "${name}-chart";
-    nativeBuildInputs = [ pkgs.kubernetes-helm pkgs.yq-go ];
+    nativeBuildInputs = [
+      pkgs.kubernetes-helm
+      pkgs.yq-go
+      pkgs.go
+    ];
     unpackPhase = "true"; # no source archive to unpack — this derivation
-                           # assembles its output entirely from other
-                           # derivations plus the operator's own chart/ dir.
+    # assembles its output entirely from other
+    # derivations plus the operator's own chart/ dir.
     buildPhase = ''
       runHook preBuild
 
@@ -172,5 +197,11 @@ let
 
 in
 {
-  inherit binary crds rbac image chart;
+  inherit
+    binary
+    crds
+    rbac
+    image
+    chart
+    ;
 }

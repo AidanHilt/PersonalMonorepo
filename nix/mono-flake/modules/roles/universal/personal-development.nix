@@ -11,6 +11,7 @@
     cocogitto
     dotenvx
     ghostty.terminfo
+    go
     kubebuilder
     nss
     openbao

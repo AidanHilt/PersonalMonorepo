@@ -1,7 +1,7 @@
-// Package v1alpha1 contains API Schema definitions for the gitfunction
+// Package v1alpha1 contains API Schema definitions for the miura
 // v1alpha1 API group.
 // +kubebuilder:object:generate=true
-// +groupName=git.example.com
+// +groupName=miura.io
 package v1alpha1
 
 import (
@@ -11,7 +11,7 @@ import (
 
 var (
 	// GroupVersion is group version used to register these objects.
-	GroupVersion = schema.GroupVersion{Group: "git.example.com", Version: "v1alpha1"}
+	GroupVersion = schema.GroupVersion{Group: "miura.io", Version: "v1alpha1"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme.
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}

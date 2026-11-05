@@ -25,9 +25,9 @@ Supported systems are `x86_64-linux` and `aarch64-linux`, via
 `flake-utils`, `nix2container` (`inputs.nixpkgs.follows = "nixpkgs"`).
 
 `operators/miura/` is the one operator present today. Its Go module path
-is still `github.com/example/gitfunction-operator` and its CRD kind is
-`GitFunction` (group `git.example.com`) — the directory was renamed to
-`miura` but the Go module/CRD naming inside it was not. See "Gotchas".
+is `miura`, its CRD kind is `Function` (group `miura.io`, short name
+`fn`), and its reconciler is `FunctionReconciler`. The API types are
+implemented; the reconciler is still a stub. See "Gotchas".
 
 ## Directory layout
 
@@ -69,6 +69,18 @@ hash-mismatch failure already reports the correct value.
 binary is always `bin/cmd` inside the derivation regardless of operator
 name, and `version` is hardcoded `"dev"` (distinct from the chart
 version, which comes from `VERSION`/`shortRev`; see "Chart assembly").
+
+The `binary` derivation also carries `nativeBuildInputs = [
+pkgs.kubernetes-controller-tools ]` and a `preBuild` hook that runs `controller-gen
+object paths=./api/...` before `buildGoModule` compiles the module. This
+generates each operator's `zz_generated.deepcopy.go` (the
+`DeepCopyObject` methods required by `runtime.Object`) at build time
+rather than it being committed to the source tree — so there is no
+generated deepcopy file to keep in sync by hand, but it also means a
+plain `go build`/`go vet` run outside this Nix build will fail to
+compile `api/v1alpha1` until you run `controller-gen object` yourself.
+Operators are expected to `.gitignore` their own
+`zz_generated.*.go` files (see `operators/miura/.gitignore`).
 
 ### CRD + RBAC generation
 
@@ -163,13 +175,13 @@ Nix at build time):
 
 ## Gotchas
 
-- **`miura` vs `gitfunction-operator` naming mismatch.** The operator
-  directory is `operators/miura/`, but its Go module is still
-  `github.com/example/gitfunction-operator`, its CRD kind is
-  `GitFunction`, and its group is `git.example.com`. The directory
-  (and therefore the Nix-level operator name, image name, chart name,
-  `ClusterRole` name, etc.) was renamed to `miura` without renaming the
-  Go module path or CRD naming inside it. Documented as-is, not fixed.
+- **`zz_generated.deepcopy.go` is generated at build time, not
+  committed.** `nix/mk-operator.nix`'s `binary` derivation runs
+  `controller-gen object paths=./api/...` in a `preBuild` hook before
+  `buildGoModule` compiles the module, and `operators/miura/.gitignore`
+  excludes the generated file from the source tree. A plain `go
+  build`/`go vet` run outside that Nix build will fail to compile
+  `api/v1alpha1` until you generate it yourself.
 - **`operators/miura/` does not build without network access.** `go.sum`
   is empty and `vendor-hash.nix` holds a placeholder
   `sha256-AAAA...` string — see "Build readiness" in
@@ -213,18 +225,15 @@ Nix at build time):
 - **No `helm lint`/`helm template` flake `checks`, and no CI
   integration.** Both are absent entirely; validating a chart currently
   means building it and inspecting it by hand.
-- **`miura`/`gitfunction-operator` naming mismatch** (see Gotchas) is
-  unresolved — either the directory or the Go module/CRD naming could
-  be brought in line with the other.
 - **`reconcile-operator` vs. `manager.yaml` image reference interplay**
   (see Gotchas) — if the dev-loop flags are meant to have an effect, the
   chart would need an `image.tag`/`image.pullPolicy`-aware template
   path; if they're not meant to have one, the flags in
   `reconcile-operator` are dead weight.
-- **Reconciler business logic is a stub.** `GitFunctionReconciler.Reconcile`
-  in `operators/miura/internal/controller/gitfunction_controller.go`
-  always returns `ctrl.Result{}, nil` — there is no actual
-  reconciliation behavior yet, by design (out of scope for the
-  build-tooling this scaffold exercises), but worth knowing before
-  relying on `miura` as a functioning operator rather than a
-  build-pipeline exercise.
+- **Reconciler business logic is a stub.** `FunctionReconciler.Reconcile`
+  in `operators/miura/internal/controller/function_controller.go`
+  always returns `ctrl.Result{}, nil` — the `Function` API types are
+  implemented, but there is no actual reconciliation behavior yet; that
+  is a separate, later change. Worth knowing before relying on `miura`
+  as a functioning operator rather than an API-schema/build-pipeline
+  exercise.

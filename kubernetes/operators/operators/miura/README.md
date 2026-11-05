@@ -1,10 +1,11 @@
 # miura
 
 > **Status:** this README describes miura's *target* API
-> (`miura.io/v1alpha1`, `FunctionSpecification` / `FunctionRepository`).
-> It is not all implemented yet — today the operator is a skeleton
-> (kind `GitFunction`, group `git.example.com`, a stub reconciler). See
-> [IMPLEMENTERS.md](IMPLEMENTERS.md) for the design and current status.
+> (`miura.io/v1alpha1`, `Function` / `FunctionRepository`). The `Function`
+> Go types and CRD are implemented; `FunctionRepository` is not. The
+> reconciler is still a stub — no reconciliation behavior exists yet for
+> either kind. See [IMPLEMENTERS.md](IMPLEMENTERS.md) for the design and
+> current status.
 
 Miura turns a small spec into a running Knative function, fronted by
 Istio with optional JWT authentication.
@@ -15,9 +16,10 @@ Istio with optional JWT authentication.
 - Knative Eventing — only needed if a function uses `triggers.events` or
   `triggers.schedules`
 - Istio, with a `Gateway` miura can route through
-- Authentik as the identity provider (for `triggers.http.auth.mode: jwt`)
-- A container registry — the bundled Zot chart works, or any other
-  registry reachable from the cluster
+- Authentik as the identity provider (for `triggers.http.auth.mode: Jwt`)
+- A container registry reachable from the cluster, configured operator-
+  wide (`build.registry`'s default). Miura ships no in-chart registry;
+  images are assumed public.
 
 ## Function contract
 
@@ -56,13 +58,13 @@ func main() {
 }
 ```
 
-## Example FunctionSpecification manifests
+## Example Function manifests
 
 ### Public HTTP function
 
 ```yaml
 apiVersion: miura.io/v1alpha1
-kind: FunctionSpecification
+kind: Function
 metadata:
   name: hello
 spec:
@@ -73,14 +75,14 @@ spec:
   triggers:
     http:
       auth:
-        mode: none
+        mode: None
 ```
 
 ### JWT-protected HTTP function
 
 ```yaml
 apiVersion: miura.io/v1alpha1
-kind: FunctionSpecification
+kind: Function
 metadata:
   name: billing-api
 spec:
@@ -92,7 +94,7 @@ spec:
     http:
       hostname: billing.example.internal
       auth:
-        mode: jwt
+        mode: Jwt
         jwt:
           audiences:
             - billing-api
@@ -104,7 +106,7 @@ spec:
 
 ```yaml
 apiVersion: miura.io/v1alpha1
-kind: FunctionSpecification
+kind: Function
 metadata:
   name: nightly-report
 spec:
@@ -128,7 +130,7 @@ configuration.
 ## Authentik objects required for JWT mode
 
 Miura does not create or manage any object in Authentik. For a function
-using `triggers.http.auth.mode: jwt`, Terraform must provision, ahead of
+using `triggers.http.auth.mode: Jwt`, Terraform must provision, ahead of
 time:
 
 - An OAuth2/OIDC provider in Authentik whose issuer matches either the
@@ -161,13 +163,12 @@ issuer, JWKS URI) — check the spec for that.
 
 ## FunctionRepository
 
-`FunctionRepository` (generating `FunctionSpecification` objects from a
-repo's directory layout) is planned but not yet available. See
+`FunctionRepository` (generating `Function` objects from a repo's
+directory layout) is planned but not yet available. See
 [docs/funcrepo.md](docs/funcrepo.md).
 
 ## Further reading
 
-- [docs/funcspec.md](docs/funcspec.md) — full `FunctionSpecification`
-  field reference
+- [docs/function.md](docs/function.md) — full `Function` field reference
 - [docs/funcrepo.md](docs/funcrepo.md) — `FunctionRepository` basics
 - [IMPLEMENTERS.md](IMPLEMENTERS.md) — design rationale and conventions

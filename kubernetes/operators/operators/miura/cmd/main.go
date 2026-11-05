@@ -9,7 +9,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	gitfunctionv1alpha1 "miura/api/v1alpha1"
+	miurav1alpha1 "miura/api/v1alpha1"
 	"miura/internal/controller"
 )
 
@@ -20,7 +20,7 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(gitfunctionv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(miurav1alpha1.AddToScheme(scheme))
 }
 
 func main() {
@@ -34,11 +34,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controller.GitFunctionReconciler{
+	if err = (&controller.FunctionReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "GitFunction")
+		setupLog.Error(err, "unable to create controller", "controller", "Function")
 		os.Exit(1)
 	}
 
