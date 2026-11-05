@@ -86,7 +86,8 @@ Operators are expected to `.gitignore` their own
 
 Both run `controller-gen` over hardcoded paths:
 
-- CRDs: `controller-gen crd paths=./api/... output:crd:dir=$out`.
+- CRDs: `controller-gen object paths=./api/...` (deepcopy, see below) then
+  `controller-gen crd paths=./api/... output:crd:dir=$out`.
 - RBAC: `controller-gen rbac:roleName=<name> paths=./internal/controller/... output:rbac:dir=$out`,
   producing `role.yaml` with `ClusterRole` name `<name>`.
 
@@ -98,6 +99,34 @@ a reconciler starts touching a new resource type without a corresponding
 marker, the generated role is silently incomplete — this is the one
 place generation depends on someone remembering to annotate, not
 something Nix catches.
+
+Unlike the `binary` derivation, `crds` and `rbac` are plain
+`stdenv.mkDerivation`s, not `buildGoModule` — but controller-gen still
+needs to load (`go list`) the operator's packages to inspect types, which
+requires a `go` binary *and* resolvable module dependencies, not just the
+controller-gen binary itself. So both derivations carry `pkgs.go` in
+`nativeBuildInputs` alongside `pkgs.kubernetes-controller-tools`, and their
+`buildPhase` copies `binary.goModules` (the vendor directory `buildGoModule`
+produces for the `binary` derivation, built from the same `go.sum`/
+`vendor-hash.nix`) into `./vendor`, makes it writable (`chmod -R u+w`), and
+sets `GOFLAGS=-mod=vendor`, `GOPROXY=off`, and `HOME`/`GOCACHE` under
+`$TMPDIR` so `go` resolves dependencies from that vendor copy instead of
+trying — and failing, sandboxed — to reach the network or write outside the
+build sandbox. This means `crds`/`rbac` depend on `binary` evaluating
+successfully (same `go.sum`/`vendor-hash.nix` correctness requirement as
+the `binary` derivation itself — see "`vendor-hash.nix` handling" above);
+if those are stale or placeholders, `binary.goModules` fails before
+`crds`/`rbac` ever reach controller-gen.
+
+The `crds` derivation additionally runs `controller-gen object` (the same
+deepcopy generation the `binary` derivation's `preBuild` performs) *before*
+`controller-gen crd`: controller-gen loads the full package graph to
+resolve CRD schemas, and API types like `Function` only satisfy
+`runtime.Object` (and so type-check during package loading) once their
+generated `DeepCopyObject` method exists. Without generating that first,
+package loading fails before CRD generation gets a chance to run. `rbac`
+doesn't need this, since RBAC generation only reads marker comments on
+reconciler methods, not the API types' method sets.
 
 ### Image
 

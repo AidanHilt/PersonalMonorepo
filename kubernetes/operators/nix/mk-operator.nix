@@ -44,7 +44,7 @@ let
   binary = pkgs.buildGoModule {
     pname = name;
     version = "dev";
-    src = src;
+    inherit src;
     inherit vendorHash;
     subPackages = [ "cmd" ];
 
@@ -52,7 +52,10 @@ let
     # not committed to the source tree — controller-gen needs it to exist
     # before the module compiles (api/v1alpha1 types implement
     # runtime.Object via generated DeepCopyObject methods).
-    nativeBuildInputs = [ pkgs.kubernetes-controller-tools pkgs.go ];
+    nativeBuildInputs = [
+      pkgs.kubernetes-controller-tools
+      pkgs.go
+    ];
     preBuild = ''
       controller-gen object paths=./api/...
     '';
@@ -73,13 +76,52 @@ let
   # The paths (./api/..., ./internal/controller/...) are a convention this
   # function hard-codes: every operator under operators/ must follow this
   # layout for generation to find anything.
+  #
+  # Unlike the `binary` derivation, these are plain stdenv.mkDerivations, not
+  # buildGoModule — but controller-gen still needs to `go list`/load the
+  # operator's packages to inspect types (e.g. to confirm the Function API
+  # type satisfies runtime.Object once its generated DeepCopyObject method is
+  # accounted for), which means a `go` binary *and* resolvable module
+  # dependencies on GOPATH, not just the controller-gen binary. So each of
+  # these derivations also:
+  #   - carries `pkgs.go` in nativeBuildInputs (alongside controller-gen);
+  #   - copies `binary.goModules` (the same vendor directory buildGoModule
+  #     produces for the `binary` derivation above, keyed off the same
+  #     go.sum/vendor-hash.nix) into ./vendor and makes it writable;
+  #   - sets GOFLAGS=-mod=vendor and GOPROXY=off so `go` resolves
+  #     dependencies from that vendor directory instead of trying (and
+  #     failing, sandboxed) to hit the network;
+  #   - sets HOME/GOCACHE under $TMPDIR, since the build sandbox has no
+  #     writable $HOME for `go` to use otherwise.
+  # This all depends on operators/${name}/vendor-hash.nix and go.sum being
+  # correct and in sync with go.mod — if they're stale or placeholders, the
+  # `binary` derivation (and so `binary.goModules`, and so these) fail
+  # before getting anywhere near controller-gen.
+  #
+  # The `crds` derivation additionally runs `controller-gen object` (the
+  # same deepcopy generation the `binary` derivation's preBuild does) before
+  # `controller-gen crd`: controller-gen loads the whole package graph to
+  # resolve CRD schemas, and the Function API type only satisfies
+  # runtime.Object (and so type-checks) once its generated
+  # DeepCopyObject method exists — without it, package loading itself fails
+  # before `crd` generation ever runs.
   ##############################################################################
   crds = pkgs.stdenv.mkDerivation {
     name = "${name}-crds";
-    src = src;
-    nativeBuildInputs = [ pkgs.kubernetes-controller-tools pkgs.go ];
+    inherit src;
+    nativeBuildInputs = [
+      pkgs.kubernetes-controller-tools
+      pkgs.go
+    ];
     buildPhase = ''
       runHook preBuild
+      cp -r ${binary.goModules} vendor
+      chmod -R u+w vendor
+      export GOFLAGS=-mod=vendor
+      export GOPROXY=off
+      export HOME=$TMPDIR
+      export GOCACHE=$TMPDIR/go-cache
+      controller-gen object paths=./api/...
       controller-gen crd paths=./api/... output:crd:dir=$out
       runHook postBuild
     '';
@@ -88,10 +130,19 @@ let
 
   rbac = pkgs.stdenv.mkDerivation {
     name = "${name}-rbac";
-    src = src;
-    nativeBuildInputs = [ pkgs.kubernetes-controller-tools pkgs.go ];
+    inherit src;
+    nativeBuildInputs = [
+      pkgs.kubernetes-controller-tools
+      pkgs.go
+    ];
     buildPhase = ''
       runHook preBuild
+      cp -r ${binary.goModules} vendor
+      chmod -R u+w vendor
+      export GOFLAGS=-mod=vendor
+      export GOPROXY=off
+      export HOME=$TMPDIR
+      export GOCACHE=$TMPDIR/go-cache
       controller-gen rbac:roleName=${name} paths=./internal/controller/... output:rbac:dir=$out
       runHook postBuild
     '';
@@ -102,7 +153,7 @@ let
   # 4. Image
   ##############################################################################
   image = n2c.buildImage {
-    name = name;
+    inherit name;
     config.entrypoint = [ "${binary}/bin/cmd" ];
   };
 
@@ -112,10 +163,8 @@ let
   chartVersion =
     if builtins.pathExists (src + "/VERSION") then
       lib.fileContents (src + "/VERSION")
-    else if self ? shortRev then
-      self.shortRev
     else
-      self.dirtyShortRev; # tree has uncommitted changes
+      self.shortRev or self.dirtyShortRev; # tree has uncommitted changes
 
   hasOverrideChart = builtins.pathExists (src + "/chart");
 
@@ -174,7 +223,7 @@ let
       cat > $out/Chart.yaml <<EOF
       apiVersion: v2
       name: ${name}
-      version: ${chartVersion}
+      version: 0.0.1
       appVersion: "${chartVersion}"
       EOF
 
