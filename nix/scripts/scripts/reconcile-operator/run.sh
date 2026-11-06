@@ -72,8 +72,14 @@ sync_operator() {
   printf '%s' "$CHART_PATH" >"$CHART_STATE_FILE"
 
   print_debug "Loading ${OPERATOR_NAME} image into the local Docker daemon"
-  nix run ".#${OPERATOR_NAME}-image.copyToDockerDaemon"
-  docker tag "${OPERATOR_NAME}:latest" "${OPERATOR_NAME}:${DEV_TAG}"
+  nix run "${MONOREPO_ROOT}#${OPERATOR_NAME}-image.copyToDockerDaemon"
+
+  local BUILT_IMAGE_TAG
+  if ! BUILT_IMAGE_TAG=$(nix eval --raw "${MONOREPO_ROOT}#packages.${SYSTEM}.${OPERATOR_NAME}-image.imageTag"); then
+    print_error "Could not determine built image tag for ${OPERATOR_NAME}"
+    return 1
+  fi
+  docker tag "${OPERATOR_NAME}:${BUILT_IMAGE_TAG}" "${OPERATOR_NAME}:${DEV_TAG}"
 
   print_debug "Loading ${OPERATOR_NAME} image into kind cluster ${CLUSTER_NAME}"
   kind load docker-image "${OPERATOR_NAME}:${DEV_TAG}" --name "$CLUSTER_NAME"
@@ -82,9 +88,15 @@ sync_operator() {
   NAMESPACE=$(resolve_namespace "$OPERATOR_NAME")
 
   print_debug "Installing ${OPERATOR_NAME} into namespace ${NAMESPACE}"
+  # kind load stores loaded images under the docker.io/library/ prefix
+  # regardless of how they were tagged locally, so the chart's default
+  # image.repository (the bare chart name) won't resolve once the image is
+  # inside the kind node. This is a dev-only workaround specific to this
+  # loop; it has no bearing on how the chart is otherwise published/used.
   helm upgrade --install "$OPERATOR_NAME" "$CHART_PATH" \
     --namespace "$NAMESPACE" \
     --create-namespace \
+    --set-string image.repository="docker.io/library/${OPERATOR_NAME}" \
     --set-string image.tag="$DEV_TAG" \
     --set-string image.pullPolicy=Never
 

@@ -1,6 +1,6 @@
 # Shared across every operator chart — copied verbatim by mk-operator.nix
 # into templates/generated/manager.yaml. Unlike crds/, this DOES go through
-# Helm's template engine, so the Helm template expressions below are resolved at
+# Helm's template engine, so the {{ }} expressions below are resolved at
 # `helm install`/`helm template` time, not at Nix build time.
 apiVersion: v1
 kind: ServiceAccount
@@ -52,12 +52,15 @@ spec:
       serviceAccountName: {{ .Chart.Name }}
       containers:
         - name: manager
-          # image.repository is not one of the Nix-generated values keys
-          # (only image.digest and chart.version are) — set it via
-          # chart/values.yaml if the operator's image isn't published under
-          # a repository matching the chart name.
-          image: "{{ .Values.image.repository | default (printf "docker.io/library/%s" .Chart.Name) }}@{{ .Values.image.digest }}"
-          imagePullPolicy: Never
+          # image.repository is optional and not one of the Nix-generated
+          # values keys — set it via chart/values.yaml or --set/--set-string
+          # if the operator's image isn't published under a repository
+          # matching the chart name; it defaults to the chart name.
+          # image.tag is a Nix-generated default (see mk-operator.nix) that
+          # may be overridden the same way. chart.version (used in
+          # Chart.yaml) is always Nix-generated.
+          image: "{{ .Values.image.repository | default .Chart.Name }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
           resources:
             requests:
               cpu: 10m

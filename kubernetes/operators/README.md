@@ -46,8 +46,9 @@ Optionally:
   `appVersion`. If absent, the flake's own `shortRev` (or `dirtyShortRev`
   for an uncommitted tree) is used instead.
 - `chart/values.yaml` — extra, hand-authored Helm values merged with the
-  Nix-generated ones. Must not declare `image.digest` or `chart.version`
-  — those keys are owned by the Nix side.
+  Nix-generated ones. Must not declare `image.tag` or `chart.version`
+  — those keys are owned by the Nix side (`image.tag` only as a default,
+  overridable via `--set`/`--set-string`; `chart.version` unconditionally).
 - `chart/templates/*` — extra Helm templates (e.g. a sidecar Deployment)
   copied alongside the generated manager/RBAC templates.
 
@@ -99,8 +100,16 @@ succeed with no further changes.
 loads the image into Docker and a local `kind` cluster, and
 `helm upgrade --install`s it into a `<name>-dev` namespace (or
 `--namespace <ns>`), restarting the manager Deployment so it picks up the
-freshly loaded image. It uninstalls the release when you stop it. See
-that script's `--help` for the full flag list, and
-[IMPLEMENTERS.md](IMPLEMENTERS.md#gotchas) for a caveat about how it
-tags/pulls the image relative to what the chart's manager template
-actually references.
+freshly loaded image. It uninstalls the release when you stop it.
+
+The chart's manager Deployment references the image by tag
+(`image.repository:image.tag`), with `image.repository` defaulting to
+the chart name and `image.tag` defaulting to a Nix-generated placeholder
+(see "Image" in [IMPLEMENTERS.md](IMPLEMENTERS.md)). `reconcile-operator`
+overrides both for its own dev-loop purposes: it tags the freshly built
+image as `<name>:dev` and `--set-string`s `image.repository` to
+`docker.io/library/<name>` (the prefix `kind load docker-image` stores
+images under), `image.tag` to `dev`, and `image.pullPolicy` to `Never`,
+so the kubelet only ever uses the image it just loaded into the kind
+node. See that script's `--help` for the full flag list, and
+[IMPLEMENTERS.md](IMPLEMENTERS.md#gotchas) for more on that workaround.

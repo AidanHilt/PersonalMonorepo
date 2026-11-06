@@ -130,11 +130,13 @@ reconciler methods, not the API types' method sets.
 
 ### Image
 
-`n2c.buildImage { name = name; config.entrypoint = [ "${binary}/bin/cmd" ]; }`
-— no other config (no labels, no user, no env). The chart's generated
-values reference `image.imageDigest` from the built image; see
-"Areas for improvement" for the unconfirmed-API caveat on that attribute
-name.
+`n2c.buildImage { name = name; tag = imageTag; config.entrypoint = [ "${binary}/bin/cmd" ]; }`
+— no other config (no labels, no user, no env). `imageTag` is an interim
+placeholder equal to `chartVersion` (see "Chart assembly" below) — every
+build's image gets a tag equal to its own chart version for now. This is
+meant to be replaced by an auto-incrementing semver scheme once charts are
+actually published; it is not meant to be relied on as a stable identity
+beyond that.
 
 ### Chart assembly
 
@@ -158,11 +160,14 @@ operator's own `chart/`):
   of `operators/<name>/VERSION` if that file exists; else
   `self.shortRev`; else `self.dirtyShortRev` (uncommitted tree).
 - `values.yaml` is a `yq eval-all` merge of two sources: the
-  Nix-generated values (`{ image.digest, chart.version }`) and, if
+  Nix-generated values (`{ image.tag, chart.version }`) and, if
   present, `operators/<name>/chart/values.yaml`. This is structured
-  around key **ownership**, not merge precedence — `chart/values.yaml`
-  is expected to simply never declare `image.digest` or `chart.version`
-  in the first place, so correctness doesn't depend on which side of
+  around key **ownership**, not merge precedence. `chart.version` is
+  always Nix-owned; `image.tag` is only a Nix-*supplied default* (so the
+  chart is installable out of the box) that `--set`/`--set-string` or an
+  operator's own `chart/values.yaml` is free to override. Either way,
+  `chart/values.yaml` is expected to simply never declare `image.tag` or
+  `chart.version` itself, so correctness doesn't depend on which side of
   the `yq` expression wins.
 - The assembled chart directory is also `helm package`d into
   `$out/packaged`.
@@ -179,9 +184,14 @@ Nix at build time):
   though the role manifest itself lives in a different generated file.
 - `Deployment` named `{{ .Chart.Name }}-controller-manager`, `replicas:
   1`, container image
-  `"{{ .Values.image.repository | default .Chart.Name }}@{{ .Values.image.digest }}"`,
+  `"{{ .Values.image.repository | default .Chart.Name }}:{{ .Values.image.tag }}"`,
+  `imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}`,
   resources `requests: {cpu: 10m, memory: 64Mi}` /
-  `limits: {memory: 256Mi}`.
+  `limits: {memory: 256Mi}`. `image.repository` is optional and defaults
+  to the chart name; `image.tag` is the Nix-generated default described
+  above (overridable); `chart.version` (used in `Chart.yaml`) is always
+  Nix-generated. See "Local dev loop" for how `reconcile-operator`
+  overrides these for its own use.
 - All names are static (not release-name-prefixed) — an accepted
   trade-off since each operator chart is expected to be installed once
   per cluster. Installing the same chart twice under different release
@@ -246,19 +256,16 @@ Nix at build time):
 
 ## Areas for improvement
 
-- **`image.imageDigest` attribute name is unconfirmed** against the
-  pinned `nix2container` version's actual API — `nix2container`'s
-  digest-retrieval surface has changed across releases, so this should
-  be checked against `nix2container.packages.<system>.nix2container`'s
-  current return shape before relying on it in CI.
 - **No `helm lint`/`helm template` flake `checks`, and no CI
   integration.** Both are absent entirely; validating a chart currently
   means building it and inspecting it by hand.
-- **`reconcile-operator` vs. `manager.yaml` image reference interplay**
-  (see Gotchas) — if the dev-loop flags are meant to have an effect, the
-  chart would need an `image.tag`/`image.pullPolicy`-aware template
-  path; if they're not meant to have one, the flags in
-  `reconcile-operator` are dead weight.
+- **`imageTag`/`chartVersion` are an interim placeholder, not a real
+  release scheme.** Every build's image and chart currently share one
+  tag/version (`VERSION` file contents, or `shortRev`/`dirtyShortRev` for
+  an uncommitted tree) — fine for local builds and the dev loop, but not
+  a stable identity to publish against. An auto-incrementing semver
+  scheme, plus actual image/chart publishing, is a separate, later piece
+  of work; this flake does not push or publish anything today.
 - **Reconciler business logic is a stub.** `FunctionReconciler.Reconcile`
   in `operators/miura/internal/controller/function_controller.go`
   always returns `ctrl.Result{}, nil` — the `Function` API types are

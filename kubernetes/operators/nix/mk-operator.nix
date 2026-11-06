@@ -151,15 +151,12 @@ let
 
   ##############################################################################
   # 4. Image
-  ##############################################################################
-  image = n2c.buildImage {
-    inherit name;
-    tag = "latest";
-    config.entrypoint = [ "${binary}/bin/cmd" ];
-  };
-
-  ##############################################################################
-  # 5. Chart assembly
+  #
+  # imageTag is an interim placeholder equal to chartVersion (see "Chart
+  # assembly" below): every build gets a tag equal to its own chart
+  # version for now. This is meant to be replaced by an auto-incrementing
+  # semver scheme once charts are actually published; for now it just
+  # needs to be a stable, resolvable tag.
   ##############################################################################
   chartVersion =
     if builtins.pathExists (src + "/VERSION") then
@@ -167,25 +164,32 @@ let
     else
       self.shortRev or self.dirtyShortRev; # tree has uncommitted changes
 
+  imageTag = chartVersion;
+
+  image = n2c.buildImage {
+    inherit name;
+    tag = imageTag;
+    config.entrypoint = [ "${binary}/bin/cmd" ];
+  };
+
+  ##############################################################################
+  # 5. Chart assembly
+  ##############################################################################
   hasOverrideChart = builtins.pathExists (src + "/chart");
 
-   imageDigest = pkgs.runCommand "${image.imageName}-digest"                                                                                                                   
-     { nativeBuildInputs = [ pkgs.jq ]; } ''                                                                                                                                   
-     export HOME=$TMPDIR                                                                                                                                                       
-     ${image.copyTo}/bin/copy-to dir:$TMPDIR/img                                                                                                                               
-     jq -j .config.digest $TMPDIR/img/manifest.json > $out                                                                                                                     
-   ''; 
-
   # Keys here are *owned* by the generated side (see the ownership note
-  # below) — chart/values.yaml must never declare image.digest or
+  # below) — chart/values.yaml must never declare image.tag or
   # chart.version.
-   generatedValues = pkgs.runCommand "${name}-generated-values.json"
-     { nativeBuildInputs = [ pkgs.jq ]; } ''
-     jq -n \
-       --arg digest "$(cat ${imageDigest})" \
-       --arg version ${lib.escapeShellArg chartVersion} \
-       '{image: {digest: $digest}, chart: {version: $version}}' > $out
-   '';  
+  generatedValues = pkgs.writeText "${name}-generated-values.json" (
+    builtins.toJSON {
+      image = {
+        tag = imageTag;
+      };
+      chart = {
+        version = chartVersion;
+      };
+    }
+  );
 
   chart = pkgs.stdenv.mkDerivation {
     name = "${name}-chart";
@@ -230,10 +234,13 @@ let
       EOF
 
       # values.yaml merge is structured around key *ownership*, not
-      # merge-precedence: chart/values.yaml should never declare a
-      # Nix-computed key (image.digest, chart.version) in the first place,
-      # so this never has to depend on yq's left/right precedence semantics
-      # to get correct behavior.
+      # merge-precedence. chart.version is always Nix-owned; image.tag is
+      # a Nix-supplied default only (set here so the chart is installable
+      # out of the box), which --set/--set-string or an operator's own
+      # chart/values.yaml is free to override. Either way, operator
+      # chart/values.yaml must never itself declare image.tag or
+      # chart.version — this never has to depend on yq's left/right
+      # precedence semantics to get correct behavior.
       yq eval-all 'select(fileIndex==0) * select(fileIndex==1)' \
         ${generatedValues} \
         ${if hasOverrideChart then "${src}/chart/values.yaml" else generatedValues} \
