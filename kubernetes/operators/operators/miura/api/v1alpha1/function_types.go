@@ -72,6 +72,7 @@ const (
 type SourceSpec struct {
 	// URL is the git repository containing the function source. It must
 	// use the https:// or ssh:// scheme and is immutable after creation.
+	// +kubebuilder:validation:MaxLength=512
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="source.url is immutable"
 	// +kubebuilder:validation:XValidation:rule="self.matches('^(https|ssh)://')",message="source.url must be an https:// or ssh:// URL"
 	URL string `json:"url"`
@@ -89,6 +90,7 @@ type SourceSpec struct {
 	// relative path and must not contain ".." segments.
 	// +optional
 	// +kubebuilder:default="."
+	// +kubebuilder:validation:MaxLength=256
 	// +kubebuilder:validation:XValidation:rule="!self.startsWith('/') && !self.split('/').exists(s, s == '..')",message="source.path must be a relative path with no '..' segments"
 	Path string `json:"path,omitempty"`
 
@@ -104,7 +106,10 @@ type SourceSpec struct {
 	// source, ref, path, or build.* triggers an immediate rebuild
 	// independent of polling.
 	// +optional
-	// +kubebuilder:validation:XValidation:rule="self == duration('0s') || self >= duration('30s')",message="source.pollInterval must be 0 or at least 30s"
+	// +kubebuilder:validation:Type=string
+	// +kubebuilder:validation:MaxLength=32
+	// +kubebuilder:validation:Pattern=`^([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$`
+	// +kubebuilder:validation:XValidation:rule="duration(self) == duration('0s') || duration(self) >= duration('30s')",message="source.pollInterval must be 0 or at least 30s"
 	PollInterval *metav1.Duration `json:"pollInterval,omitempty"`
 }
 
@@ -126,6 +131,7 @@ type BuildSpec struct {
 	// (e.g. CGO_ENABLED, GOFLAGS) — not to be confused with
 	// runtime.env, which configures the running function.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=32
 	Env map[string]string `json:"env,omitempty"`
 
 	// Registry is the container registry images are pushed to. When
@@ -243,28 +249,33 @@ type JWTAuthSpec struct {
 	// Audiences is the list of acceptable token audiences; at least one
 	// must match.
 	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=32
 	Audiences []string `json:"audiences"`
 
 	// RequiredGroups lists groups read from the token's "groups" claim.
 	// The token is accepted if it carries at least one of the listed
 	// groups (any-of).
 	// +optional
+	// +kubebuilder:validation:MaxItems=32
 	RequiredGroups []string `json:"requiredGroups,omitempty"`
 
 	// RequiredScopes lists scopes read from the token's "scope" claim.
 	// The token is accepted only if it carries every listed scope
 	// (all-of).
 	// +optional
+	// +kubebuilder:validation:MaxItems=32
 	RequiredScopes []string `json:"requiredScopes,omitempty"`
 
 	// Issuer overrides the operator-wide default JWT issuer. Must be set
 	// together with JWKSURI, or not at all.
 	// +optional
+	// +kubebuilder:validation:MaxLength=512
 	Issuer string `json:"issuer,omitempty"`
 
 	// JWKSURI overrides the operator-wide default JWKS URI. Must be set
 	// together with Issuer, or not at all.
 	// +optional
+	// +kubebuilder:validation:MaxLength=512
 	JWKSURI string `json:"jwksUri,omitempty"`
 }
 
@@ -287,6 +298,7 @@ type HTTPTrigger struct {
 	// Hostname is the DNS name routed to this function. When unset, it
 	// defaults to "<name>.<operator-default-domain>".
 	// +optional
+	// +kubebuilder:validation:MaxLength=253
 	Hostname string `json:"hostname,omitempty"`
 
 	// PathPrefix is the URL path prefix routed to this function; it is
@@ -294,6 +306,7 @@ type HTTPTrigger struct {
 	// rewriting).
 	// +optional
 	// +kubebuilder:default="/"
+	// +kubebuilder:validation:MaxLength=256
 	// +kubebuilder:validation:Pattern=`^/`
 	PathPrefix string `json:"pathPrefix,omitempty"`
 
@@ -313,11 +326,13 @@ type HTTPTrigger struct {
 type EventTrigger struct {
 	// Broker is the name of a Knative Broker in the same namespace as
 	// the Function.
+	// +kubebuilder:validation:MaxLength=253
 	Broker string `json:"broker"`
 
 	// Filter is a CloudEvents attribute filter: every entry must match
 	// exactly (no wildcards/patterns) for an event to be delivered.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=32
 	Filter map[string]string `json:"filter,omitempty"`
 }
 
@@ -327,20 +342,24 @@ type EventTrigger struct {
 // derived from cron+data since entries have no name field.
 type ScheduleTrigger struct {
 	// Cron is the schedule, in standard cron syntax.
+	// +kubebuilder:validation:MaxLength=100
 	Cron string `json:"cron"`
 
 	// Data is the CloudEvent payload delivered on each tick.
 	// +optional
+	// +kubebuilder:validation:MaxLength=4096
 	Data string `json:"data,omitempty"`
 
 	// ContentType is the CloudEvent data content type.
 	// +optional
 	// +kubebuilder:default="application/json"
+	// +kubebuilder:validation:MaxLength=128
 	ContentType string `json:"contentType,omitempty"`
 
 	// Timezone is the IANA timezone the cron schedule is evaluated in.
 	// When unset, the PingSource's own default applies.
 	// +optional
+	// +kubebuilder:validation:MaxLength=64
 	Timezone string `json:"timezone,omitempty"`
 }
 
@@ -355,12 +374,14 @@ type TriggersSpec struct {
 
 	// Events configures Knative Triggers consuming from Brokers.
 	// +optional
+	// +kubebuilder:validation:MaxItems=32
 	Events []EventTrigger `json:"events,omitempty"`
 
 	// Schedules configures Knative PingSources delivering events on a
 	// cron schedule.
 	// +optional
 	// +listType=atomic
+	// +kubebuilder:validation:MaxItems=32
 	Schedules []ScheduleTrigger `json:"schedules,omitempty"`
 }
 

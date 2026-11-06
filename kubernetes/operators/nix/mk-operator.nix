@@ -154,6 +154,7 @@ let
   ##############################################################################
   image = n2c.buildImage {
     inherit name;
+    tag = "latest";
     config.entrypoint = [ "${binary}/bin/cmd" ];
   };
 
@@ -168,22 +169,23 @@ let
 
   hasOverrideChart = builtins.pathExists (src + "/chart");
 
+   imageDigest = pkgs.runCommand "${image.imageName}-digest"                                                                                                                   
+     { nativeBuildInputs = [ pkgs.jq ]; } ''                                                                                                                                   
+     export HOME=$TMPDIR                                                                                                                                                       
+     ${image.copyTo}/bin/copy-to dir:$TMPDIR/img                                                                                                                               
+     jq -j .config.digest $TMPDIR/img/manifest.json > $out                                                                                                                     
+   ''; 
+
   # Keys here are *owned* by the generated side (see the ownership note
   # below) — chart/values.yaml must never declare image.digest or
   # chart.version.
-  generatedValues = pkgs.writeText "${name}-generated-values.json" (
-    builtins.toJSON {
-      image = {
-        #digest = image.imageDigest; # NOTE: confirm this attribute name against
-        # the pinned nix2container version; its
-        # public API for retrieving the digest has
-        # shifted across releases.
-      };
-      chart = {
-        version = chartVersion;
-      };
-    }
-  );
+   generatedValues = pkgs.runCommand "${name}-generated-values.json"
+     { nativeBuildInputs = [ pkgs.jq ]; } ''
+     jq -n \
+       --arg digest "$(cat ${imageDigest})" \
+       --arg version ${lib.escapeShellArg chartVersion} \
+       '{image: {digest: $digest}, chart: {version: $version}}' > $out
+   '';  
 
   chart = pkgs.stdenv.mkDerivation {
     name = "${name}-chart";

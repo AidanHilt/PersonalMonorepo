@@ -1,6 +1,6 @@
 # Shared across every operator chart — copied verbatim by mk-operator.nix
 # into templates/generated/manager.yaml. Unlike crds/, this DOES go through
-# Helm's template engine, so the {{ }} expressions below are resolved at
+# Helm's template engine, so the Helm template expressions below are resolved at
 # `helm install`/`helm template` time, not at Nix build time.
 apiVersion: v1
 kind: ServiceAccount
@@ -56,7 +56,8 @@ spec:
           # (only image.digest and chart.version are) — set it via
           # chart/values.yaml if the operator's image isn't published under
           # a repository matching the chart name.
-          image: "{{ .Values.image.repository | default .Chart.Name }}@{{ .Values.image.digest }}"
+          image: "{{ .Values.image.repository | default (printf "docker.io/library/%s" .Chart.Name) }}@{{ .Values.image.digest }}"
+          imagePullPolicy: Never
           resources:
             requests:
               cpu: 10m

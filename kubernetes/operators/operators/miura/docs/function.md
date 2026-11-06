@@ -24,14 +24,14 @@ configuration supplies the value when the field is unset.
 | Field | Type | Required | Default | Validation | Immutable |
 | --- | --- | --- | --- | --- | --- |
 | `paused` | bool | no | `false` | — | no |
-| `source.url` | string | yes | — | git `https://` or `ssh://` URL | yes |
+| `source.url` | string | yes | — | git `https://` or `ssh://` URL; max length 512 | yes |
 | `source.ref` | string | no | `main` | — | no |
-| `source.path` | string | no | `.` | relative path, no `..` segments | no |
+| `source.path` | string | no | `.` | relative path, no `..` segments; max length 256 | no |
 | `source.secretRef.name` | string | no | — | — | no |
-| `source.pollInterval` | duration | no | op default | `0` disables polling; otherwise minimum `30s` | no |
+| `source.pollInterval` | duration | no | op default | `0` disables polling; otherwise minimum `30s`; must match the Go duration syntax (e.g. `1h30m`); max length 32 | no |
 | `build.mainPackage` | string | no | `.` | relative to `source.path`, e.g. `./cmd/hello` | no |
 | `build.baseImage` | string | no | op default (distroless static) | — | no |
-| `build.env` | map[string]string | no | `{}` | e.g. `CGO_ENABLED`, `GOFLAGS` | no |
+| `build.env` | map[string]string | no | `{}` | e.g. `CGO_ENABLED`, `GOFLAGS`; max 32 entries | no |
 | `build.registry` | string | no | op default (operator-configured external registry) | — | no |
 | `build.imageRepository` | string | no | `<namespace>/<name>` | — | no |
 | `build.pushSecretRef.name` | string | no | op default | — | no |
@@ -47,24 +47,24 @@ configuration supplies the value when the field is unset.
 | `runtime.probes.liveness` | corev1.Probe | no | Knative default | standard `corev1.Probe` | no |
 | `runtime.probes.readiness` | corev1.Probe | no | Knative default | standard `corev1.Probe` | no |
 | `triggers.http` | object | no | — | see below | no |
-| `triggers.http.hostname` | string | no | `<name>.<op-domain>` | valid DNS name | no |
-| `triggers.http.pathPrefix` | string | no | `/` | must start with `/`; passed through unchanged to the generated `VirtualService` (no rewriting) | no |
+| `triggers.http.hostname` | string | no | `<name>.<op-domain>` | valid DNS name; max length 253 | no |
+| `triggers.http.pathPrefix` | string | no | `/` | must start with `/`; passed through unchanged to the generated `VirtualService` (no rewriting); max length 256 | no |
 | `triggers.http.gateway.name` | string | no | op default | — | no |
 | `triggers.http.gateway.namespace` | string | no | op default | — | no |
 | `triggers.http.auth.mode` | enum (`None`, `Jwt`) | yes, whenever `triggers.http` is set | — | required with no default when `http` is set | no |
-| `triggers.http.auth.jwt.audiences` | []string | required when `mode: Jwt` | — | min 1 item | no |
-| `triggers.http.auth.jwt.requiredGroups` | []string | no | `[]` | token accepted if it carries at least one listed group (any-of), read from the `groups` claim | no |
-| `triggers.http.auth.jwt.requiredScopes` | []string | no | `[]` | token accepted only if it carries every listed scope (all-of), read from the `scope` claim | no |
-| `triggers.http.auth.jwt.issuer` | string | no | op default | CEL: both `issuer` and `jwksUri` set, or neither | no |
-| `triggers.http.auth.jwt.jwksUri` | string | no | op default | CEL: both `issuer` and `jwksUri` set, or neither | no |
-| `triggers.events` | []object | no | `[]` | — | no |
-| `triggers.events[].broker` | string | yes (per entry) | — | name of a Knative Broker in the same namespace | no |
-| `triggers.events[].filter` | map[string]string | no | `{}` | CloudEvents attribute filter; every entry must match exactly (no wildcards) | no |
-| `triggers.schedules` | []object (list-type: atomic) | no | `[]` | — | no |
-| `triggers.schedules[].cron` | string | yes (per entry) | — | valid cron pattern | no |
-| `triggers.schedules[].data` | string | no | — | CloudEvent payload | no |
-| `triggers.schedules[].contentType` | string | no | `application/json` | CloudEvent data content type | no |
-| `triggers.schedules[].timezone` | string | no | PingSource default | IANA timezone the cron schedule is evaluated in | no |
+| `triggers.http.auth.jwt.audiences` | []string | required when `mode: Jwt` | — | min 1 item; max 32 items; each max length 253 | no |
+| `triggers.http.auth.jwt.requiredGroups` | []string | no | `[]` | token accepted if it carries at least one listed group (any-of), read from the `groups` claim; max 32 items; each max length 253 | no |
+| `triggers.http.auth.jwt.requiredScopes` | []string | no | `[]` | token accepted only if it carries every listed scope (all-of), read from the `scope` claim; max 32 items; each max length 253 | no |
+| `triggers.http.auth.jwt.issuer` | string | no | op default | CEL: both `issuer` and `jwksUri` set, or neither; max length 512 | no |
+| `triggers.http.auth.jwt.jwksUri` | string | no | op default | CEL: both `issuer` and `jwksUri` set, or neither; max length 512 | no |
+| `triggers.events` | []object | no | `[]` | max 32 items | no |
+| `triggers.events[].broker` | string | yes (per entry) | — | name of a Knative Broker in the same namespace; max length 253 | no |
+| `triggers.events[].filter` | map[string]string | no | `{}` | CloudEvents attribute filter; every entry must match exactly (no wildcards); max 32 entries | no |
+| `triggers.schedules` | []object (list-type: atomic) | no | `[]` | max 32 items | no |
+| `triggers.schedules[].cron` | string | yes (per entry) | — | valid cron pattern; max length 100 | no |
+| `triggers.schedules[].data` | string | no | — | CloudEvent payload; max length 4096 | no |
+| `triggers.schedules[].contentType` | string | no | `application/json` | CloudEvent data content type; max length 128 | no |
+| `triggers.schedules[].timezone` | string | no | PingSource default | IANA timezone the cron schedule is evaluated in; max length 64 | no |
 
 CEL validation at the root level: `metadata.name` must be at most 40
 characters.
@@ -74,6 +74,38 @@ CEL validation at the `triggers` level: at least one of `triggers.http`,
 
 CEL validation at the `triggers.http.auth` level: `jwt` must be set if
 and only if `mode == Jwt`.
+
+## Field length and size limits
+
+To keep CEL validation-rule evaluation cost within the API server's
+per-request budget, every string or collection field that participates
+in an `x-kubernetes-validations` rule (directly, or because a rule at an
+enclosing level iterates over it) is bounded:
+
+- `source.url`: max length 512
+- `source.path`: max length 256
+- `source.pollInterval`: max length 32, and must match Go duration
+  syntax (e.g. `^([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$`)
+- `build.env`: max 32 entries
+- `triggers.http.hostname`: max length 253
+- `triggers.http.pathPrefix`: max length 256
+- `triggers.http.auth.jwt.audiences`: max 32 items, each max length 253
+- `triggers.http.auth.jwt.requiredGroups`: max 32 items, each max
+  length 253
+- `triggers.http.auth.jwt.requiredScopes`: max 32 items, each max
+  length 253
+- `triggers.http.auth.jwt.issuer`: max length 512
+- `triggers.http.auth.jwt.jwksUri`: max length 512
+- `triggers.events`: max 32 items
+- `triggers.events[].broker`: max length 253
+- `triggers.events[].filter`: max 32 entries
+- `triggers.schedules`: max 32 items
+- `triggers.schedules[].cron`: max length 100
+- `triggers.schedules[].data`: max length 4096
+- `triggers.schedules[].contentType`: max length 128
+- `triggers.schedules[].timezone`: max length 64
+- `metadata.name`: max length 40 (enforced by the root-level CEL rule
+  below, not a `MaxLength` marker)
 
 Notes:
 
