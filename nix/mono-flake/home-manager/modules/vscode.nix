@@ -1,11 +1,25 @@
-{ inputs, globals, pkgs, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  ...
+}:
 
 let
   vscode-settings = ../config-files/vscode-settings.json;
 
   # Unfortunately, some VSCode extensions(!) do not work on aarch64-linux, so let's read what platform we're on,
   # and only apply those if its safe
-  platformSpecificExtensions = if pkgs.system != "aarch64-linux" then with pkgs.vscode-marketplace;[ms-python.vscode-pylance ms-python.python ms-python.debugpy] else [];
+  platformSpecificExtensions =
+    if pkgs.system != "aarch64-linux" then
+      with pkgs.vscode-marketplace;
+      [
+        ms-python.vscode-pylance
+        ms-python.python
+        ms-python.debugpy
+      ]
+    else
+      [ ];
 in
 
 {

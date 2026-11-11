@@ -1,4 +1,12 @@
-{ inputs, globals, pkgs, lib, system, machine-config, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  lib,
+  system,
+  machine-config,
+  ...
+}:
 
 {
   imports = [
@@ -20,9 +28,9 @@
 
   # The home.packages option allows you to install Nix packages into your
   # environment.
-  home.packages = [];
+  home.packages = [ ];
 
-  home.sessionVariables = {};
+  home.sessionVariables = { };
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;

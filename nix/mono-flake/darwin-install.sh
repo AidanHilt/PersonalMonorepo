@@ -1,3 +1,4 @@
+#!/usr/bin/env zsh
 set -e
 
 # Install Nix
@@ -11,32 +12,31 @@ fi
 
 repo_owner="AidanHilt"
 repo_name="PersonalMonorepo"
-path="nix/mono-flake/machines/aarch64-darwin"  # Optional path within the repository
-branch="${1:-master}"  # Default branch is main
+path="nix/mono-flake/machines/aarch64-darwin" # Optional path within the repository
+branch="${1:-master}"                         # Default branch is main
 
 hostnames_raw=$(/usr/bin/curl -s "https://api.github.com/repos/$repo_owner/$repo_name/contents/$path?ref=$branch" |
-                /usr/bin/jq -r '.[] | select(.type=="dir") | .name')
+  /usr/bin/jq -r '.[] | select(.type=="dir") | .name')
 
 hostnames=("${(f)$(echo "$hostnames_raw")}")
 
 if [ ${#hostnames[@]} -eq 0 ] && [ $? -ne 0 ]; then
-    echo "Error fetching repository contents" >&2
-    return 1
+  echo "Error fetching repository contents" >&2
+  return 1
 fi
 
 echo "Available hostnames:"
 i=1
 for hostname in "$hostnames[@]"; do
   echo "${i}) ${hostname}"
-  i=$((i+1))
+  i=$((i + 1))
 done
-
 
 # Get user selection with input validation
 while true; do
   echo -n "\nSelect hostname (1-${#hostnames[@]}): "
   read selection
-  index=$((selection-1))
+  index=$((selection - 1))
 
   # Check if input is a number and within valid range
   if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le ${#hostnames[@]} ]; then

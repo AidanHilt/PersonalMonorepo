@@ -1,4 +1,11 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 {
   imports = [
@@ -20,7 +27,7 @@
 
   system.primaryUser = "${machine-config.username}";
 
-  users.knownUsers = ["${machine-config.username}"];
+  users.knownUsers = [ "${machine-config.username}" ];
 
   users.users."${machine-config.username}".uid = 501;
 

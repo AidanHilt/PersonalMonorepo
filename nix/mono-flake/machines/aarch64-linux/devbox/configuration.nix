@@ -2,7 +2,15 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, machine-config, inputs, globals, lib, ... }:
+{
+  config,
+  pkgs,
+  machine-config,
+  inputs,
+  globals,
+  lib,
+  ...
+}:
 
 let
   macHome = "/mnt/shared/aidan";
@@ -23,7 +31,6 @@ in
     ../../../modules/roles/nixos/fixed-ip-machine.nix
     ../../../modules/roles/nixos/desktop/docker.nix
 
-
     ../../../modules/roles/universal/development-machine.nix
     ../../../modules/roles/universal/personal-development.nix
   ];
@@ -31,7 +38,6 @@ in
   environment.systemPackages = with pkgs; [
     ghostty.terminfo
   ];
-
 
   security.sudo.wheelNeedsPassword = false;
 
@@ -51,11 +57,9 @@ in
     efiInstallAsRemovable = true;
   };
 
-  users.groups.pi = {
-    gid = 10001;
-  };
-
-  users.users.aidan.extraGroups = ["pi"];
+  # `pi` group/user and `aidan`'s membership in it are now provisioned by
+  # modules/roles/universal/_pi-user.nix (imported via universal-base.nix),
+  # not per-host.
 
   systemd.services.mac-home-binds = {
     description = "Bind-mount Mac home subdirectories into ${homeDir}";
@@ -63,7 +67,10 @@ in
     requires = [ "mnt-shared.mount" ];
     wantedBy = [ "multi-user.target" ];
 
-    path = [ pkgs.util-linux pkgs.coreutils ];
+    path = [
+      pkgs.util-linux
+      pkgs.coreutils
+    ];
 
     serviceConfig = {
       Type = "oneshot";
@@ -109,4 +116,3 @@ in
     '';
   };
 }
-

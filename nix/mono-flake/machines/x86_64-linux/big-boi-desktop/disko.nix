@@ -1,4 +1,11 @@
-{ inputs, globals, pkgs, system, machine-config, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  system,
+  machine-config,
+  ...
+}:
 
 {
   disko.devices = {

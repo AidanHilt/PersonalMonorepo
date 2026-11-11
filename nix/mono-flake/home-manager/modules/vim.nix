@@ -1,4 +1,9 @@
-{ inputs, globals, pkgs, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  ...
+}:
 
 {
   programs.vim = {

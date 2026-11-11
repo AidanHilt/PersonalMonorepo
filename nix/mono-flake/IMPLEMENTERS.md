@@ -127,11 +127,36 @@ Set by `modules/roles/universal/_personal-monorepo-constants.nix`
 this doc require it (via the `nix/scripts` `env-checks` lib's
 `require_monorepo`).
 
+### The `pi` user
+
+`modules/roles/universal/_pi-user.nix` (imported by `universal-base.nix`,
+so every NixOS and nix-darwin host gets it) defines a dedicated,
+**untrusted** `pi` user/group (uid/gid 10001, home `/var/lib/pi`) that the
+`nix/agentic-ai-stack-nono` agent sandbox runs as — see that project's
+`PLAN.md`, section 2 ("Isolation user"), for why. `pi` is deliberately
+kept out of `nix.settings.trusted-users`, has no password/SSH keys/wheel
+membership, and is reached only via `sudo -u pi` from
+`machine-config.username` (a `NOPASSWD`+`SETENV` sudo rule — NixOS via
+`security.sudo.extraRules`, darwin via `security.sudo.extraConfig` — the
+`SETENV` tag is what lets `PI_SANDBOX__SECRET__*` env vars survive the
+`sudo` call). `/var/lib/pi` is provisioned by `systemd.tmpfiles` on NixOS
+and an activation script on darwin. `machine-config.username` is made a
+member of the `pi` group via `users.groups.pi.members` (not per-user
+`extraGroups`), so adding a new host doesn't require repeating the
+membership by hand — this replaced a hand-rolled `users.groups.pi` +
+`extraGroups` pair that used to live directly in
+`machines/x86_64-linux/big-boi-desktop/configuration.nix` and
+`machines/aarch64-linux/devbox/configuration.nix`. The darwin branch of
+`_pi-user.nix` (knownUsers/knownGroups, numeric `gid` on the user, the
+activation script, `security.sudo.extraConfig`) is **unverified** — it has
+not been built or run on an actual Darwin host.
+
 ### Overlays and pinned inputs
 
 `lib-internal/packages.nix`'s `genPkgsFor` applies, per system:
-`baseOverlays` (nur, agenix, nix-vscode-extensions, nix-cachyos-kernel),
-any `platformOverlays.<system>` from `flake.nix` (currently just a
+`baseOverlays` (nur, agenix, nix-vscode-extensions, nix-cachyos-kernel,
+`overlays/nono.nix`), any `platformOverlays.<system>` from `flake.nix`
+(currently just a
 `nodejs_22` override on `aarch64-darwin`), and a fixed `patches` overlay
 that re-hashes two `grub2` patches and disables `aiohttp`'s test suite
 (`doCheck = false`, with a block of commented-out `disabledTests` left in
@@ -147,6 +172,18 @@ package-version strings.
 resulting inconsistency with `globals.personalMonorepoBranch`.
 `kernel70Nixpkgs` and `nix-cachyos-kernel` are pinned to bare commit
 SHAs rather than branches/tags.
+
+`overlays/nono.nix` builds `pkgs.nono` (the Landlock/Seatbelt sandbox used
+by `nix/agentic-ai-stack-nono`) from source via `rustPlatform.buildRustPackage`,
+pinned to a `nolabs-ai/nono` git tag, because nixpkgs lags far behind
+upstream's releases and upstream's own flake `#prebuilt` output was found
+to ship a stale hash for x86_64-linux. Its `src.hash`/`cargoHash` are
+hand-computed and **must be re-verified on every version bump** — see the
+comment at the top of that file for the fake-hash-then-rebuild procedure.
+Its first version bump (to 0.81.0, done alongside the `pi` user work above)
+could not be completed in a sandboxed environment with no general network
+or build access; both hashes are still placeholders there and must be
+filled in by whoever next has the access to actually build it.
 
 ## Secrets
 

@@ -1,4 +1,12 @@
-{ inputs, globals, pkgs, machine-config, lib, config, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  config,
+  ...
+}:
 
 {
   environment.interactiveShellInit = inputs.scripts.interactiveShellInit;

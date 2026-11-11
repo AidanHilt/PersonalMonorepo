@@ -1,4 +1,10 @@
-{ inputs, globals, pkgs, config, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  config,
+  ...
+}:
 
 {
   programs.zsh = {

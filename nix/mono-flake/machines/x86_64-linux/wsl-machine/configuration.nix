@@ -1,5 +1,11 @@
-{ config, pkgs, machine-config, inputs, globals, ... }:
-
+{
+  config,
+  pkgs,
+  machine-config,
+  inputs,
+  globals,
+  ...
+}:
 
 {
   imports = [
@@ -11,8 +17,24 @@
     useGlobalPkgs = true;
     useUserPackages = true;
     backupFileExtension = "bak";
-    extraSpecialArgs = { inherit inputs globals pkgs machine-config; };
-    users.${machine-config.username} = import ./home.nix {inherit inputs globals pkgs machine-config; system = pkgs.system; lib = inputs.home-manager.lib; };
+    extraSpecialArgs = {
+      inherit
+        inputs
+        globals
+        pkgs
+        machine-config
+        ;
+    };
+    users.${machine-config.username} = import ./home.nix {
+      inherit
+        inputs
+        globals
+        pkgs
+        machine-config
+        ;
+      system = pkgs.system;
+      lib = inputs.home-manager.lib;
+    };
   };
 
   networking.hostName = "wsl-machine";

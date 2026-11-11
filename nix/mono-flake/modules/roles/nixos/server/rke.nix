@@ -1,17 +1,29 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 let
-  clusterEndpoint = if machine-config ? k8s.clusterEndpoint then machine-config.k8s.clusterEndpoint else machine-config.networking.loadBalancerIp;
+  clusterEndpoint =
+    if machine-config ? k8s.clusterEndpoint then
+      machine-config.k8s.clusterEndpoint
+    else
+      machine-config.networking.loadBalancerIp;
 
   #TODO Make it optional to set as primaryNode (default is false)
-  rkeConfig = if machine-config.k8s.primaryNode then
-    {
-      role = "server";
-    }
-  else
-    {
-      serverAddr = "https://${clusterEndpoint}:9345";
-    };
+  rkeConfig =
+    if machine-config.k8s.primaryNode then
+      {
+        role = "server";
+      }
+    else
+      {
+        serverAddr = "https://${clusterEndpoint}:9345";
+      };
 in
 
 {
@@ -33,7 +45,17 @@ in
 
   networking.firewall = {
     # See https://docs.rke2.io/install/requirements#inbound-network-rules for details
-    allowedTCPPorts = [ 6443 6444 9345 10250 2379 2380 2381 9099 5473 ];
+    allowedTCPPorts = [
+      6443
+      6444
+      9345
+      10250
+      2379
+      2380
+      2381
+      9099
+      5473
+    ];
     allowedTCPPortRanges = [
       {
         from = 30000;
@@ -52,7 +74,8 @@ in
       "--tls-san=${clusterEndpoint}"
       "--ingress-controller=none"
     ];
-  } // rkeConfig;
+  }
+  // rkeConfig;
 
   systemd.services.fix-kubeconfig-permissions = pkgs.lib.mkIf (machine-config.k8s.primaryNode) {
     description = "Fix kubeconfig permissions";

@@ -1,15 +1,25 @@
-{ config, pkgs, machine-config, inputs, globals, ... }:
+{
+  config,
+  pkgs,
+  machine-config,
+  inputs,
+  globals,
+  ...
+}:
 
 {
   nix = {
     settings = {
-      experimental-features = [ "nix-command" "flakes" ];
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
     };
   };
 
   networking.hostName = "nixos-bootstrap";
 
-  environment.systemPackages = with pkgs;[
+  environment.systemPackages = with pkgs; [
     git
     vim
     zfs

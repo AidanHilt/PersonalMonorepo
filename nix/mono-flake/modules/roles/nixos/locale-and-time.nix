@@ -1,7 +1,14 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 {
-    # Set your time zone.
+  # Set your time zone.
   time.timeZone = "America/New_York";
 
   # Select internationalisation properties.

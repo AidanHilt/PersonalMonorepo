@@ -1,4 +1,11 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 let
   email = if machine-config ? git.email then machine-config.git.email else "aidanhilt2@gmail.com";
@@ -18,9 +25,8 @@ in
       };
 
       safe = {
-        directory = ["/home/aidan/PersonalMonorepo"];
+        directory = [ "/home/aidan/PersonalMonorepo" ];
       };
-
 
       push = {
         autoSetupRemote = true;

@@ -1,7 +1,14 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 {
-  imports = [];
+  imports = [ ];
 
   environment.systemPackages = with pkgs; [
 

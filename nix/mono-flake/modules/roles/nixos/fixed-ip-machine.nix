@@ -1,4 +1,11 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 # TODO Let's add a with statement here
 {
@@ -13,5 +20,3 @@
     ];
   };
 }
-
-

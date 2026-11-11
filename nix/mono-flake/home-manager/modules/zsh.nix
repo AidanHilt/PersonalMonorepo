@@ -1,4 +1,9 @@
-{ inputs, globals, pkgs, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  ...
+}:
 
 {
   programs.zsh = {
@@ -23,7 +28,7 @@
     shellAliases = {
       ls = "eza";
       ll = "eza -lrga";
-      pbcopy = pkgs.lib.mkIf (! pkgs.lib.hasSuffix "darwin" pkgs.system) "wl-copy";
+      pbcopy = pkgs.lib.mkIf (!pkgs.lib.hasSuffix "darwin" pkgs.system) "wl-copy";
     };
 
     history = {
@@ -32,7 +37,16 @@
 
     oh-my-zsh = {
       enable = true;
-      plugins = [ "git" "sudo" "copyfile" "copybuffer" "git-auto-fetch" "history" "per-directory-history" "systemadmin" ];
+      plugins = [
+        "git"
+        "sudo"
+        "copyfile"
+        "copybuffer"
+        "git-auto-fetch"
+        "history"
+        "per-directory-history"
+        "systemadmin"
+      ];
     };
 
     # initExtra = ''

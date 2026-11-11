@@ -74,7 +74,13 @@
     };
   };
 
-  outputs = { self, nixpkgs, darwin, ... }@inputs:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      darwin,
+      ...
+    }@inputs:
     let
       internalLib = import ./lib-internal/default.nix { inherit nixpkgs darwin inputs; };
 
@@ -92,6 +98,7 @@
         inputs.agenix.overlays.default
         inputs.nix-vscode-extensions.overlays.default
         inputs.nix-cachyos-kernel.overlays.default
+        (import ./overlays/nono.nix)
       ];
 
       platformOverlays = {
@@ -100,20 +107,23 @@
         ];
       };
 
-      pkgsFor = internalLib.packages.genPkgsFor
-        inputs.systems
-        baseOverlays
-        platformOverlays;
+      pkgsFor = internalLib.packages.genPkgsFor inputs.systems baseOverlays platformOverlays;
 
       allConfigs = internalLib.configs.buildAllConfigs {
-        inherit systems pkgsFor inputs globals;
+        inherit
+          systems
+          pkgsFor
+          inputs
+          globals
+          ;
         machinesDir = ./machines;
         overlays = baseOverlays;
         inherit platformOverlays;
       };
 
-    in {
+    in
+    {
       darwinConfigurations = allConfigs.darwinConfigurations;
       nixosConfigurations = allConfigs.nixosConfigurations;
-  };
+    };
 }

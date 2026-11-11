@@ -1,6 +1,13 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 let
-  constants = import ../universal/_rclone-constants.nix {inherit pkgs machine-config lib;};
+  constants = import ../universal/_rclone-constants.nix { inherit pkgs machine-config lib; };
 in
 
 {
@@ -54,7 +61,6 @@ in
         StandardOutPath = /tmp/rclone-keepass.log.out;
       };
     };
-
 
     rcloneWallpapers = {
       serviceConfig = {

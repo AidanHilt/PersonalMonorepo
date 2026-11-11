@@ -2,7 +2,15 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, machine-config, inputs, globals, lib, ... }:
+{
+  config,
+  pkgs,
+  machine-config,
+  inputs,
+  globals,
+  lib,
+  ...
+}:
 
 {
   imports = [
@@ -26,7 +34,11 @@
   fileSystems."/externalStorage" = {
     device = "/dev/disk/by-uuid/4C0A704D0A703654";
     fsType = "ntfs-3g";
-    options = [ "rw" "uid=1000" "gid=1000" ];
+    options = [
+      "rw"
+      "uid=1000"
+      "gid=1000"
+    ];
   };
 
   networking.networkmanager.enable = true;

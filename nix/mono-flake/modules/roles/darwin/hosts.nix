@@ -1,22 +1,33 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 let
   dnsConstants = import ../universal/_hosts.nix;
 
   dnsmasqAddresses = lib.listToAttrs (
     lib.flatten (
-      lib.mapAttrsToList (ip: hostnames:
-        map (hostname: { name = hostname; value = ip; }) hostnames
+      lib.mapAttrsToList (
+        ip: hostnames:
+        map (hostname: {
+          name = hostname;
+          value = ip;
+        }) hostnames
       ) dnsConstants.dnsHosts
     )
   );
 
   mapA = f: attrs: with builtins; attrValues (mapAttrs f attrs);
 
-addressArgs = lib.concatStringsSep " " (
+  addressArgs = lib.concatStringsSep " " (
     lib.concatLists (
-      lib.mapAttrsToList (ip: domains:
-        map (domain: "--address=/${lib.strings.removePrefix "*." domain}/${ip}") domains
+      lib.mapAttrsToList (
+        ip: domains: map (domain: "--address=/${lib.strings.removePrefix "*." domain}/${ip}") domains
       ) dnsConstants.dnsHosts
     )
   );
@@ -26,7 +37,7 @@ in
     dnsmasq
   ];
 
-  networking = {};
+  networking = { };
 
   launchd.daemons.dnsmasq = {
     serviceConfig = {
@@ -48,14 +59,16 @@ in
     };
   };
 
-  environment.etc = builtins.listToAttrs (builtins.map (domain: {
-    name = "resolver/${lib.strings.removePrefix "*." domain}";
-    value = {
-      enable = true;
-      text = ''
-        port 53
-        nameserver 127.0.0.1
+  environment.etc = builtins.listToAttrs (
+    builtins.map (domain: {
+      name = "resolver/${lib.strings.removePrefix "*." domain}";
+      value = {
+        enable = true;
+        text = ''
+          port 53
+          nameserver 127.0.0.1
         '';
-    };
-  }) (builtins.attrNames dnsmasqAddresses));
+      };
+    }) (builtins.attrNames dnsmasqAddresses)
+  );
 }

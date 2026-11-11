@@ -1,4 +1,11 @@
-{ config, pkgs, machine-config, inputs, globals, ... }:
+{
+  config,
+  pkgs,
+  machine-config,
+  inputs,
+  globals,
+  ...
+}:
 
 {
   imports = [
@@ -9,14 +16,30 @@
   isoImage = {
     makeEfiBootable = true;
     makeUsbBootable = true;
-    squashfsCompression = "zstd -Xcompression-level 6"; #way faster build time
+    squashfsCompression = "zstd -Xcompression-level 6"; # way faster build time
   };
 
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
     backupFileExtension = "bak";
-    extraSpecialArgs = { inherit inputs globals pkgs machine-config; };
-    users.root = import ./home.nix {inherit inputs globals pkgs machine-config; system = pkgs.system; lib = inputs.home-manager.lib; };
+    extraSpecialArgs = {
+      inherit
+        inputs
+        globals
+        pkgs
+        machine-config
+        ;
+    };
+    users.root = import ./home.nix {
+      inherit
+        inputs
+        globals
+        pkgs
+        machine-config
+        ;
+      system = pkgs.system;
+      lib = inputs.home-manager.lib;
+    };
   };
 }

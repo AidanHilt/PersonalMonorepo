@@ -1,4 +1,11 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 {
   imports = [
@@ -8,11 +15,15 @@
     ../universal/universal-base.nix
   ];
 
-  users.groups."${machine-config.username}" = {};
+  users.groups."${machine-config.username}" = { };
 
   users.users."${machine-config.username}" = {
     group = "${machine-config.username}";
-    extraGroups = [ "networkmanager" "wheel" "docker" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "docker"
+    ];
     isNormalUser = true;
 
     hashedPassword = pkgs.lib.mkIf (machine-config ? hashedPassword) machine-config.hashedPassword;

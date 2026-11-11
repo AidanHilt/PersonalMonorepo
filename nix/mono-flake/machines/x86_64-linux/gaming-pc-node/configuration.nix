@@ -2,7 +2,15 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, machine-config, inputs, globals, lib, ... }:
+{
+  config,
+  pkgs,
+  machine-config,
+  inputs,
+  globals,
+  lib,
+  ...
+}:
 
 {
   imports = [
@@ -22,7 +30,10 @@
     efiInstallAsRemovable = true;
   };
 
-  environment.systemPackages = [ pkgs.nvidia-container-toolkit pkgs.libnvidia-container ];
+  environment.systemPackages = [
+    pkgs.nvidia-container-toolkit
+    pkgs.libnvidia-container
+  ];
 
   networking.hostId = "8425e349";
 

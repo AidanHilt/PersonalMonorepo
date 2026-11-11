@@ -1,4 +1,8 @@
-{ nixpkgs, darwin, inputs }:
+{
+  nixpkgs,
+  darwin,
+  inputs,
+}:
 
 let
   lib = nixpkgs.lib;
@@ -10,20 +14,24 @@ in
 
 {
   # Generate packages for all systems with overlays
-  genPkgsFor = systems: overlays: platformOverlays:
-    lib.genAttrs (import systems) (system:
+  genPkgsFor =
+    systems: overlays: platformOverlays:
+    lib.genAttrs (import systems) (
+      system:
       let
         nixpkgs-version = if system == "aarch64-darwin" then inputs.nixpkgs-darwin else inputs.nixpkgs;
-        systemOverlays = platformOverlays.${system} or [];
+        systemOverlays = platformOverlays.${system} or [ ];
         patches = [
           (final: prev: {
             grub2 = prev.grub2.overrideAttrs (oldAttrs: {
-              patches = map (patch:
-                if patch.name or "" == "23_prerequisite_1_key_protector_add_key_protectors_framework.patch"
-                  then patch // { hash = "sha256-5aFHzc5qXBNLEc6yzI17AH6J7EYogcXdLxk//1QgumY="; }
-                else if patch.name or "" == "23_CVE-2024-49504.patch"
-                  then patch // { hash = "sha256-GejDL9IKbmbSUmp8F1NuvBcFAp2/W04jxmOatI5dKn8="; }
-                else patch
+              patches = map (
+                patch:
+                if patch.name or "" == "23_prerequisite_1_key_protector_add_key_protectors_framework.patch" then
+                  patch // { hash = "sha256-5aFHzc5qXBNLEc6yzI17AH6J7EYogcXdLxk//1QgumY="; }
+                else if patch.name or "" == "23_CVE-2024-49504.patch" then
+                  patch // { hash = "sha256-GejDL9IKbmbSUmp8F1NuvBcFAp2/W04jxmOatI5dKn8="; }
+                else
+                  patch
               ) oldAttrs.patches;
             });
           })
@@ -43,10 +51,10 @@ in
                   #   "test_parse"
                   #   "test_http_request_parser_bad_version"
                   # ];
-            });
+                });
+              })
+            ];
           })
-        ];
-})
         ];
       in
       import nixpkgs-version {
