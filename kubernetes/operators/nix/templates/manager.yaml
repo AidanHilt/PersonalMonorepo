@@ -1,6 +1,6 @@
 # Shared across every operator chart — copied verbatim by mk-operator.nix
 # into templates/generated/manager.yaml. Unlike crds/, this DOES go through
-# Helm's template engine, so the {{ }} expressions below are resolved at
+# Helm's template engine, so the template expressions below are resolved at
 # `helm install`/`helm template` time, not at Nix build time.
 apiVersion: v1
 kind: ServiceAccount
