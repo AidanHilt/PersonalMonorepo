@@ -21,7 +21,7 @@
     "approval_backends": {
       "dialog": {
         "type": "webhook",
-        "url": "unix://__SOCKET__",
+        "url": "http://127.0.0.1:__PORT__/__TOKEN__",
         "timeout_secs": 10
       }
     },

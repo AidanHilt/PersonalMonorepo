@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
-# socat EXEC: handler for S1's network-approval spike. Invoked per
+# socat EXEC: handler for S1's network-approval spike. Invoked per TCP
 # connection with stdin/stdout wired to the socket; reads one unsigned
-# webhook request, logs it, and answers per a small per-host policy.
+# webhook request, checks the path carries the expected token, logs it,
+# and answers per a small per-host policy.
 set -u
 
-# shellcheck disable=SC2034
 IFS= read -r request_line
+request_line="${request_line%$'\r'}"
+req_method=""
+req_path=""
+read -r req_method req_path _ <<<"$request_line"
+: "$req_method"
 
 content_length=0
 while IFS= read -r header_line; do
@@ -20,6 +25,14 @@ while IFS= read -r header_line; do
     ;;
   esac
 done
+
+if [[ "$req_path" != "/${SPIKE_TOKEN:?SPIKE_TOKEN not set}" ]]; then
+  printf 'HTTP/1.1 404 Not Found\r\n'
+  printf 'Content-Length: 0\r\n'
+  printf 'Connection: close\r\n'
+  printf '\r\n'
+  exit 0
+fi
 
 body=""
 if [[ "$content_length" -gt 0 ]]; then
