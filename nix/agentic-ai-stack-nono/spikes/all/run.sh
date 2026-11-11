@@ -359,19 +359,22 @@ base_closure_file="$WORKDIR/closure_base.txt"
 : >"$base_closure_file"
 
 add_closure() {
-  local target="$1" bin="$2" real
-  if [[ -n "$bin" ]]; then
-    real="$(readlink -f "$bin" 2>/dev/null)"
-    if [[ -n "$real" && -e "$real" ]]; then
-      timeout 60 nix-store -qR "$real" >>"$target" 2>>"$LOGDIR/closure.err"
-    fi
+  local target="$1" real="$2"
+  if [[ -n "$real" && -e "$real" ]]; then
+    timeout 60 nix-store -qR "$real" >>"$target" 2>>"$LOGDIR/closure.err"
   fi
 }
 
-add_closure "$base_closure_file" "$(command -v true)"
-add_closure "$base_closure_file" "$(command -v echo)"
-add_closure "$base_closure_file" "$(command -v bash)"
-add_closure "$base_closure_file" "$(command -v curl)"
+# 'type -P' (not 'command -v') to locate binaries: jq and bash are
+# non-multicall, so their readlink -f resolved real paths can be exec'd
+# directly (unlike coreutils true/echo/sleep, which are multicall symlinks
+# to bin/coreutils and fail with the wrong argv0 if the resolved path is
+# exec'd instead of the original symlink).
+real_jq="$(readlink -f "$(type -P jq 2>/dev/null)" 2>/dev/null)"
+real_bash="$(readlink -f "$(type -P bash 2>/dev/null)" 2>/dev/null)"
+
+add_closure "$base_closure_file" "$real_jq"
+add_closure "$base_closure_file" "$real_bash"
 sort -u "$base_closure_file" -o "$base_closure_file"
 base_size="$(wc -l <"$base_closure_file")"
 
@@ -379,8 +382,9 @@ closure_file="$WORKDIR/closure_full.txt"
 cp "$base_closure_file" "$closure_file"
 
 pad_sources=()
-if command -v nix >/dev/null 2>&1; then
-  nix_real="$(readlink -f "$(command -v nix)" 2>/dev/null)"
+nix_bin="$(type -P nix 2>/dev/null)"
+if [[ -n "$nix_bin" ]]; then
+  nix_real="$(readlink -f "$nix_bin" 2>/dev/null)"
   if [[ -n "$nix_real" ]]; then
     pad_sources+=("$nix_real")
   fi
@@ -402,7 +406,7 @@ for src in "${pad_sources[@]}"; do
 done
 
 total_closure="$(wc -l <"$closure_file")"
-true_bin="$(command -v true)"
+report S3.6 INFO "available closure paths" "$total_closure"
 
 reads_json="$(jq -R -s -c 'split("\n") | map(select(length > 0))' "$base_closure_file")"
 profile_ctrl="$PROFDIR/s3-closure-ctrl.json"
@@ -414,8 +418,13 @@ jq -n --argjson reads "$reads_json" '{
   "filesystem": {"allow": [], "read": $reads, "deny": [], "unix_socket": []}
 }' >"$profile_ctrl"
 
-nono_run 60 --profile "$profile_ctrl" -- "$true_bin" >"$LOGDIR/s3.2.ctrl.log" 2>&1
-ctrl_rc=$?
+ctrl_rc=1
+if [[ -x "$real_jq" ]]; then
+  nono_run 60 --profile "$profile_ctrl" -- "$real_jq" --version >"$LOGDIR/s3.2.ctrl.log" 2>&1
+  ctrl_rc=$?
+else
+  printf 'real jq not executable: %s\n' "$real_jq" >"$LOGDIR/s3.2.ctrl.log"
+fi
 if [[ $ctrl_rc -eq 0 ]]; then
   report S3.2 INFO "control N=$base_size" "ok"
 else
@@ -440,7 +449,7 @@ if [[ $ctrl_rc -eq 0 ]]; then
     }' >"$profile_n"
 
     start_ts="$(date +%s)"
-    nono_run 60 --profile "$profile_n" -- "$true_bin" >"$LOGDIR/s3.2.$n.log" 2>&1
+    nono_run 60 --profile "$profile_n" -- "$real_jq" --version >"$LOGDIR/s3.2.$n.log" 2>&1
     rc=$?
     end_ts="$(date +%s)"
     elapsed=$((end_ts - start_ts))
@@ -462,29 +471,40 @@ if [[ $build_rc -ne 0 || -z "$hello_path" || ! -x "$hello_path/bin/hello" ]]; th
 else
   hello_bin="$hello_path/bin/hello"
 
-  nono_run 60 --profile "$profile_ctrl" -- "$hello_bin" >"$LOGDIR/s3.3.hello.log" 2>&1
-  hello_rc=$?
-  stderr_hit="no"
-  if grep -Eqi 'permission denied|not permitted' "$LOGDIR/s3.3.hello.log" 2>/dev/null; then
-    stderr_hit="yes"
-  fi
-  if [[ $hello_rc -eq 126 || "$stderr_hit" == "yes" ]]; then
-    report S3.3 PASS "hello outside closure denied" "rc=$hello_rc"
-  elif [[ $hello_rc -eq 127 ]]; then
-    report S3.3 ERR "hello outside closure denied" "rc=127 not found $(last3 "$LOGDIR/s3.3.hello.log")" 200
-  elif [[ $hello_rc -eq 0 ]]; then
-    report S3.3 FAIL "hello outside closure denied" "ran successfully, rc=0"
+  if [[ -x "$hello_bin" ]]; then
+    nono_run 60 --profile "$profile_ctrl" -- "$hello_bin" >"$LOGDIR/s3.3.hello.log" 2>&1
+    hello_rc=$?
+    stderr_hit="no"
+    if grep -Eqi 'permission denied|not permitted' "$LOGDIR/s3.3.hello.log" 2>/dev/null; then
+      stderr_hit="yes"
+    fi
+    # nono reports any failed exec as rc 127 with a message noting the
+    # failure may be unrelated to sandbox restrictions; since test -x
+    # already proved hello_bin exists, 127 here is ambiguous (denied or
+    # not found inside the sandbox view), not an error.
+    if [[ $hello_rc -eq 126 || "$stderr_hit" == "yes" ]]; then
+      report S3.3 PASS "hello outside closure denied" "rc=$hello_rc"
+    elif [[ $hello_rc -eq 127 ]]; then
+      report S3.3 INFO "denied-or-notfound (127)" "rc=127 $(last3 "$LOGDIR/s3.3.hello.log")" 200
+    elif [[ $hello_rc -eq 0 ]]; then
+      report S3.3 FAIL "hello outside closure denied" "ran successfully, rc=0"
+    else
+      report S3.3 FAIL "hello outside closure denied" "rc=$hello_rc $(last3 "$LOGDIR/s3.3.hello.log")" 200
+    fi
   else
-    report S3.3 FAIL "hello outside closure denied" "rc=$hello_rc $(last3 "$LOGDIR/s3.3.hello.log")" 200
+    report S3.3 SKIP "hello outside closure denied" "test -x failed on $hello_bin"
   fi
 
-  echo_bin="$(command -v echo)"
-  nono_run 60 --profile "$profile_ctrl" -- "$echo_bin" hi >"$LOGDIR/s3.4.echo.log" 2>&1
-  echo_rc=$?
-  if [[ $echo_rc -eq 0 ]]; then
-    report S3.4 PASS "coreutils echo inside closure" "rc=0"
+  if [[ -x "$real_bash" ]]; then
+    bash_out="$(nono_run 60 --profile "$profile_ctrl" -- "$real_bash" -c 'echo ok' 2>"$LOGDIR/s3.4.bash.log")"
+    bash_rc=$?
+    if [[ $bash_rc -eq 0 && "$bash_out" == *ok* ]]; then
+      report S3.4 PASS "bash inside closure" "rc=0"
+    else
+      report S3.4 FAIL "bash inside closure" "rc=$bash_rc out=$bash_out $(last3 "$LOGDIR/s3.4.bash.log")" 200
+    fi
   else
-    report S3.4 FAIL "coreutils echo inside closure" "rc=$echo_rc $(last3 "$LOGDIR/s3.4.echo.log")" 200
+    report S3.4 SKIP "bash inside closure" "test -x failed on $real_bash"
   fi
 
   hello_closure_file="$WORKDIR/hello_closure.txt"
@@ -528,12 +548,17 @@ else
     "filesystem": {"read": ["/nix/store"], "allow": [$home], "deny": [], "unix_socket": [$sock]}
   }' >"$profile4"
 
-  SPIKE_BASH="$(command -v bash)"
+  SPIKE_BASH="$(readlink -f "$(command -v bash)")"
   export SPIKE_BASH
+  SPIKE_BASH_OUT="$(printf '%s\n' "$SPIKE_BASH" | cut -d/ -f1-4)"
+  export SPIKE_BASH_OUT
   # $out must stay literal; it is expanded by the derivation's builder
-  # shell at build time, not by this script.
+  # shell at build time, not by this script. builder must carry store-path
+  # context (builtins.storePath), else nix rejects the plain string.
   # shellcheck disable=SC2016
-  drv_expr='derivation { name = "spike"; system = builtins.currentSystem; builder = builtins.getEnv "SPIKE_BASH"; args = [ "-c" "echo ok > $out" ]; }'
+  drv_expr='derivation { name = "spike"; system = builtins.currentSystem; builder = builtins.storePath (builtins.getEnv "SPIKE_BASH"); args = [ "-c" "echo ok > $out" ]; }'
+  # shellcheck disable=SC2016
+  drv_expr_b='let b = builtins.storePath (builtins.getEnv "SPIKE_BASH_OUT"); in derivation { name = "spike"; system = builtins.currentSystem; builder = "${b}/bin/bash"; args = [ "-c" "echo ok > $out" ]; }'
 
   nono_run 60 --profile "$profile4" -- env HOME="$HOMEDIR" XDG_CACHE_HOME="$HOMEDIR/.cache" NIX_REMOTE=daemon SPIKE_BASH="$SPIKE_BASH" nix --extra-experimental-features 'nix-command flakes' store info --store daemon >"$LOGDIR/s4.1.log" 2>&1
   rc=$?
@@ -574,6 +599,13 @@ else
     report S4.5 INFO "trivial derivation build" "ok"
   else
     report S4.5 INFO "trivial derivation build" "failed $(last_line "$LOGDIR/s4.5.log")"
+    nono_run 60 --profile "$profile4" -- env HOME="$HOMEDIR" XDG_CACHE_HOME="$HOMEDIR/.cache" NIX_REMOTE=daemon SPIKE_BASH_OUT="$SPIKE_BASH_OUT" nix --extra-experimental-features 'nix-command flakes' build --impure --no-link --expr "$drv_expr_b" >"$LOGDIR/s4.5b.log" 2>&1
+    rc_b=$?
+    if [[ $rc_b -eq 0 ]]; then
+      report S4.5b INFO "trivial derivation build variant b" "ok"
+    else
+      report S4.5b INFO "trivial derivation build variant b" "failed $(last_line "$LOGDIR/s4.5b.log")"
+    fi
   fi
 
   if [[ "$WITH_PI_USER" -eq 1 ]] && id pi >/dev/null 2>&1; then
@@ -594,20 +626,47 @@ fi
 
 # --- S5: sessions -------------------------------------------------------------
 
+# <coreutils-out> = first four path components of the real (readlink -f,
+# type -P resolved) sleep path, i.e. /nix/store/<hash>-coreutils-<ver>; a
+# minimal profile granting read of just that closure (groups.include []
+# keeps the nix_runtime group, which would grant the whole store, out).
+sleep_real="$(readlink -f "$(type -P sleep 2>/dev/null)" 2>/dev/null)"
+coreutils_out="$(printf '%s\n' "$sleep_real" | cut -d/ -f1-4)"
+sleep_bin="$coreutils_out/bin/sleep"
+
+coreutils_closure_file="$WORKDIR/coreutils_closure.txt"
+: >"$coreutils_closure_file"
+if [[ -n "$coreutils_out" && -e "$coreutils_out" ]]; then
+  timeout 60 nix-store -qR "$coreutils_out" >"$coreutils_closure_file" 2>>"$LOGDIR/closure.err"
+fi
+coreutils_reads_json="$(jq -R -s -c 'split("\n") | map(select(length > 0))' "$coreutils_closure_file")"
+profile5="$PROFDIR/s5-sleep.json"
+jq -n --argjson reads "$coreutils_reads_json" '{
+  "extends": "default",
+  "meta": {"name": "spike-s5-sleep"},
+  "groups": {"include": []},
+  "workdir": {"access": "none"},
+  "filesystem": {"allow": [], "read": $reads, "deny": [], "unix_socket": []}
+}' >"$profile5"
+
 pid_tag="$$"
 sess_name="spike-$pid_tag"
 
-out="$(nono_run 20 --detached --name "$sess_name" -- sleep 120 2>"$LOGDIR/s5.1.log")"
-rc=$?
-sess_id="$(printf '%s' "$out" | grep -oE '[0-9a-f-]{8,}' | head -n1)"
-if [[ -z "$sess_id" ]]; then
-  sess_id="$sess_name"
-fi
-if [[ $rc -eq 0 ]]; then
-  DETACHED_NAMES+=("$sess_name")
-  report S5.1 PASS "detached session starts" "id=$sess_id"
+if [[ -x "$sleep_bin" ]]; then
+  out="$(nono_run 20 --profile "$profile5" --detached --name "$sess_name" -- "$sleep_bin" 120 2>"$LOGDIR/s5.1.log")"
+  rc=$?
+  sess_id="$(printf '%s' "$out" | grep -oE '[0-9a-f-]{8,}' | head -n1)"
+  if [[ -z "$sess_id" ]]; then
+    sess_id="$sess_name"
+  fi
+  if [[ $rc -eq 0 ]]; then
+    DETACHED_NAMES+=("$sess_name")
+    report S5.1 PASS "detached session starts" "id=$sess_id"
+  else
+    report S5.1 FAIL "detached session starts" "rc=$rc $(first3 "$LOGDIR/s5.1.log")" 200
+  fi
 else
-  report S5.1 FAIL "detached session starts" "rc=$rc $(first3 "$LOGDIR/s5.1.log")" 200
+  report S5.1 SKIP "detached session starts" "test -x failed on $sleep_bin"
 fi
 
 ps_out="$(timeout 20 nono ps 2>"$LOGDIR/s5.2.log")"
@@ -630,8 +689,13 @@ fi
 
 if [[ "$WITH_PI_USER" -eq 1 ]] && id pi >/dev/null 2>&1; then
   pi_sess_name="spike-pi-$pid_tag"
-  nono_run_pi 20 --detached --name "$pi_sess_name" -- sleep 120 >"$LOGDIR/s5.4.log" 2>&1
-  pi_start_rc=$?
+  if [[ -x "$sleep_bin" ]]; then
+    nono_run_pi 20 --profile "$profile5" --detached --name "$pi_sess_name" -- "$sleep_bin" 120 >"$LOGDIR/s5.4.log" 2>&1
+    pi_start_rc=$?
+  else
+    pi_start_rc=126
+    printf 'test -x failed on %s\n' "$sleep_bin" >"$LOGDIR/s5.4.log"
+  fi
   if [[ $pi_start_rc -eq 0 ]]; then
     ps_as_self="$(timeout 20 nono ps 2>>"$LOGDIR/s5.4.log")"
     shown="not shown"
