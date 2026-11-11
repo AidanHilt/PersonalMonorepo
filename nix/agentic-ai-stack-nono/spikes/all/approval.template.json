@@ -1,0 +1,33 @@
+{
+  "extends": "default",
+  "meta": {
+    "name": "spike-s1-network-approval"
+  },
+  "groups": {
+    "include": ["nix_runtime", "git_config"]
+  },
+  "workdir": {
+    "access": "none"
+  },
+  "filesystem": {
+    "allow": [],
+    "read": [],
+    "deny": [],
+    "unix_socket": []
+  },
+  "network": {
+    "block": false,
+    "allow_domain": [],
+    "approval_backends": {
+      "dialog": {
+        "type": "webhook",
+        "url": "unix://__SOCKET__",
+        "timeout_secs": 10
+      }
+    },
+    "approval_defaults": {
+      "backend": "dialog"
+    }
+  },
+  "security": {}
+}
