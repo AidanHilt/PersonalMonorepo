@@ -13,7 +13,7 @@
   imports = [
     ./_update.nix
     ./_home-manager.nix
-    ./_pi-user.nix
+    #./_pi-user.nix
   ];
 
   nix = {
