@@ -30,13 +30,16 @@ resources (see
 [nix/terraform/IMPLEMENTERS.md](../nix/terraform/IMPLEMENTERS.md)'s
 Gotchas) — an empty token will fail at apply time.
 
-## `kind-kind` kubeconfig context hardcoded in `qa-cluster`
+## `kind-qa-cluster` kubeconfig context hardcoded in `qa-cluster`
 
 `qa-cluster/env.hcl` and `qa-cluster/authentik/terragrunt.hcl` /
 `qa-cluster/vault-pki/terragrunt.hcl` / `qa-cluster/vault/terragrunt.hcl`
-all hardcode `kubeconfig_context = "kind-kind"`, suggesting `qa-cluster` is
-currently wired to a local `kind` cluster rather than a dedicated QA
-environment.
+all hardcode `kubeconfig_context = "kind-qa-cluster"` (the kind cluster
+`cluster-setup` creates is explicitly named `qa-cluster`, context
+`kind-qa-cluster` — see `nix/mono-flake/modules/roles/universal/
+kubernetes-admin.nix` and `nix/agentic-ai-stack/IMPLEMENTERS.md`'s network
+model section), suggesting `qa-cluster` is currently wired to a local
+`kind` cluster rather than a dedicated QA environment.
 
 ## `qa-cluster` modules repeat inputs instead of merging `env.hcl`
 

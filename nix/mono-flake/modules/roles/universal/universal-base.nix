@@ -9,7 +9,11 @@
   ];
 
   nix = {
+    registry.nixpkgs.flake = lib.mkIf (!pkgs.stdenv.hostPlatform.isDarwin) inputs.nixpkgs;
+    channel.enable = false;
+    nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
     settings = {
+      
       experimental-features = [ "nix-command" "flakes" ];
       substituters = [
         "https://nix-community.cachix.org"

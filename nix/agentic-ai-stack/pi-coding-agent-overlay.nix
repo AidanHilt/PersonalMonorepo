@@ -9,7 +9,18 @@ let
   koffiKeep = if isArm then "linux_arm64" else "linux_x64";
 
   # Directory names of the *foreign* arch in sandbox-runtime's seccomp vendor dir.
-  seccompForeign = if isArm then [ "x64" "x86_64" "amd64" ] else [ "arm64" "aarch64" ];
+  seccompForeign =
+    if isArm then
+      [
+        "x64"
+        "x86_64"
+        "amd64"
+      ]
+    else
+      [
+        "arm64"
+        "aarch64"
+      ];
 in
 {
   pi-coding-agent = prev.pi-coding-agent.overrideAttrs (old: {

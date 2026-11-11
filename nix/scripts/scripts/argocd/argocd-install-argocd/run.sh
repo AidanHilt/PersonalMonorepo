@@ -56,7 +56,7 @@ install_argocd() {
   kubectl create namespace "${namespace}" --dry-run=client -o yaml | kubectl apply -f -
 
   # Prepare helm install command
-  local helm_cmd="helm upgrade --install ${release_name} argo/argo-cd --namespace ${namespace} -f 'https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/refs/heads/master/kubernetes/argocd/values.yaml'"
+  local helm_cmd="helm upgrade --install ${release_name} argo/argo-cd --namespace ${namespace} -f 'https://raw.githubusercontent.com/AidanHilt/PersonalMonorepo/refs/heads/main/kubernetes/argocd/values.yaml'"
 
   # Add version if ARGOCD_TARGET_VERSION is set
   if [[ -n "${ARGOCD_TARGET_VERSION:-}" ]]; then
@@ -108,7 +108,8 @@ get_admin_password() {
     if [[ -v ATILS_CURRENT_CONTEXT ]]; then
       context-populate-context --argocd-auth-token "$admin_password"
     else
-      _copy-text-to-clipboard "$admin_password"
+      echo "Skipping argocd password update"
+      #_copy-text-to-clipboard "$admin_password"
     fi
   else
     print_warn "ArgoCD admin secret not found. It might take a few moments to be created."

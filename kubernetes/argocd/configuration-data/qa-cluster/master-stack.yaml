@@ -2,9 +2,9 @@ env: qa-cluster
 
 hostnames:
   - qa-cluster-lb.lan
-  - "172.18.255.200"
+  - "172.20.255.200"
 
-gitRevision: project-rockhard/pki
+gitRevision: project-appocalypse/knative-function-operator
 
 authentik:
   enabled: true

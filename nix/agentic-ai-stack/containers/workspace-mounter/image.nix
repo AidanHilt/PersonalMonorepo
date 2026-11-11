@@ -1,4 +1,9 @@
-{ pkgs, n2c, imageName, imageTag }:
+{
+  pkgs,
+  n2c,
+  imageName,
+  imageTag,
+}:
 
 # Sidecar image for the `workspace-mounter` service (compose.workspace.yaml),
 # layered by start-agent.sh only when --add/--clone extras are given. Modeled
@@ -40,7 +45,10 @@ let
       passwdFile
       groupFile
     ];
-    pathsToLink = [ "/bin" "/etc" ];
+    pathsToLink = [
+      "/bin"
+      "/etc"
+    ];
   };
 
   contentId = builtins.hashString "sha256" "${rootEnv}";
@@ -56,7 +64,10 @@ in
       # Needs root -- CAP_SYS_ADMIN + bindfs/mount(2) aren't usable otherwise.
       # compose.workspace.yaml also sets this explicitly for clarity.
       User = "0:0";
-      Entrypoint = [ "/bin/bash" "/mount.sh" ];
+      Entrypoint = [
+        "/bin/bash"
+        "/mount.sh"
+      ];
 
       Labels = {
         "sh.pi-sandbox.content-id" = contentId;

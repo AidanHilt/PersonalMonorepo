@@ -16,7 +16,7 @@ converted to `WORDS_SEPARATED_BY_DASHES=value` and written to
 ## Example
 
 ```sh
-context-populate-context --name qa-cluster --vault-addr https://vault.qa.lan --kubeconfig-context kind-kind
+context-populate-context --name qa-cluster --vault-addr https://vault.qa.lan --kubeconfig-context kind-qa-cluster
 # -> sets VAULT_ADDR and KUBECONFIG_CONTEXT in qa-cluster's .env
 ```
 

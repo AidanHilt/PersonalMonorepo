@@ -9,6 +9,7 @@
 # Never mount a real/production kubeconfig — generate a scoped one with
 # `nix run .#gen-kubeconfig` (see scripts/gen-kubeconfig.sh).
 
+---
 services:
   pi:
     volumes:

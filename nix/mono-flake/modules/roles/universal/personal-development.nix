@@ -5,13 +5,20 @@
 
   environment.systemPackages = with pkgs; [
     inputs.scripts.packages.${pkgs.system}.all
+
     act
     agenix
     cocogitto
+    dotenvx
+    ghostty.terminfo
+    go
+    kubebuilder
     nss
+    openbao
     python3
     syncthing
-    openbao
+    vault
+    watchexec
     weechat
   ];
 

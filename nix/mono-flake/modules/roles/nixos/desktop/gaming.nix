@@ -8,7 +8,7 @@
     discord
     sunshine
     # TODO This was causing build failures, due to issues with tests in openLDAP. Not sure if we even need this, but that might need to be resolved
-    #lutris
+    lutris
     gogdl
     heroic
     usbutils
@@ -22,6 +22,7 @@
   hardware.bluetooth.enable = true;
 
   powerManagement.cpuFreqGovernor = "schedutil";
+  services.power-profiles-daemon.enable = false;
 
   boot.kernelModules = [ "xone" ];
 

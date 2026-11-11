@@ -28,7 +28,7 @@
     # `--override-input scripts path:...` gating in
     # nix/mono-flake/modules/roles/universal/_update.nix.
     scripts = {
-      url = "github:aidanhilt/PersonalMonorepo/project-lockstep/release-mgmt?dir=nix/scripts";
+      url = "github:aidanhilt/PersonalMonorepo/project-appocalypse/knative-function-operator?dir=nix/scripts";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -140,10 +140,12 @@
         proxyTag = "dev";
         pkgBrokerTag = "dev";
         workspaceMounterTag = "dev";
+        kindGatewayTag = "dev";
         piImageName = "pi-sandbox/pi";
         proxyImageName = "pi-sandbox/proxy";
         pkgBrokerImageName = "pi-sandbox/pkg-broker";
         workspaceMounterImageName = "pi-sandbox/workspace-mounter";
+        kindGatewayImageName = "pi-sandbox/kind-gateway";
 
         pi = import ./containers/pi/image.nix {
           pkgs = pkgsUnstable;
@@ -175,6 +177,15 @@
           inherit pkgs n2c;
           imageName = workspaceMounterImageName;
           imageTag = workspaceMounterTag;
+        };
+
+        # kind-gateway: narrow socat TCP forwarder sidecar bridging `pi`'s
+        # isolated `internal` network and kind's own `kind` docker network
+        # -- see compose.kind.yaml and containers/kind-gateway/image.nix.
+        kindGateway = import ./containers/kind-gateway/image.nix {
+          inherit pkgs n2c;
+          imageName = kindGatewayImageName;
+          imageTag = kindGatewayTag;
         };
 
         # ---- helper: load an image into the local Docker daemon using
@@ -246,6 +257,7 @@
           proxy-image = proxy.image;
           pkg-broker-image = pkgBroker.image;
           workspace-mounter-image = workspaceMounter.image;
+          kind-gateway-image = kindGateway.image;
           default = pi.image;
 
           # Standalone, opt-in convenience path for pre-built npm/git
@@ -312,6 +324,9 @@
                     workspaceMounter.contentId
                   )
                 }/bin/load-workspace-mounter"
+                "${
+                  (mkLoadApp "kind-gateway" kindGatewayImageName kindGatewayTag kindGateway.contentId)
+                }/bin/load-kind-gateway"
               '';
             };
           };

@@ -30,18 +30,19 @@
 # VM-backed Docker), host path on a shared mount (same requirement
 # nix-store-mounter already has), /dev/fuse available on the host.
 
+---
 services:
   workspace-mounter:
     image: pi-sandbox/workspace-mounter:dev
     user: "0:0"
     stop_grace_period: 30s
     init: true
-    entrypoint: [ "/bin/bash", "/mount.sh" ]
+    entrypoint: ["/bin/bash", "/mount.sh"]
     command: []
     network_mode: none
     read_only: true
-    cap_drop: [ ALL ]
-    cap_add: [ SYS_ADMIN, DAC_OVERRIDE, CHOWN, FOWNER ]
+    cap_drop: [ALL]
+    cap_add: [SYS_ADMIN, DAC_OVERRIDE, CHOWN, FOWNER]
     devices:
       - /dev/fuse
     security_opt:
@@ -56,7 +57,7 @@ services:
       WORKSPACE_HOST_UID: "${WORKSPACE_HOST_UID:?set by start-agent.sh}"
       WORKSPACE_HOST_GID: "${WORKSPACE_HOST_GID:?set by start-agent.sh}"
     healthcheck:
-      test: [ "CMD", "/bin/bash", "-c", "test -e /tmp/ready" ]
+      test: ["CMD", "/bin/bash", "-c", "test -e /tmp/ready"]
       interval: 2s
       timeout: 2s
       retries: 30
@@ -77,9 +78,9 @@ services:
       # exposed to the host/pi, only used internally by mount.sh.
       - type: tmpfs
         target: /srv/internal
-      # Per-extra source volumes are added here by start-agent.sh's
-      # generated compose.workspace-extras.generated.yaml layer (one bind
-      # per --add/--clone extra, at /srv/sources/<name>).
+    # Per-extra source volumes are added here by start-agent.sh's
+    # generated compose.workspace-extras.generated.yaml layer (one bind
+    # per --add/--clone extra, at /srv/sources/<name>).
     restart: unless-stopped
 
   pi:

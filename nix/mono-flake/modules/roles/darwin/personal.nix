@@ -29,6 +29,7 @@ in
 
     pre-commit
     socat
+    sshuttle
   ];
 
   homebrew = {
@@ -44,6 +45,7 @@ in
       "prismlauncher"
       "crystalfetch"
       "dupeguru"
+      "remanager"
       "the-unarchiver"
       "ollama-app"
       "utm"

@@ -94,7 +94,7 @@ let
 
     else
       echo "Invalid option. Defaulting to remote source."
-      UPDATE__FLAKE_LOCATION="github:AidanHilt/PersonalMonorepo/master?dir=nix/mono-flake"
+      UPDATE__FLAKE_LOCATION="github:AidanHilt/PersonalMonorepo/project-appocalypse/knative-function-operator?dir=nix/mono-flake"
     fi
     fi
 

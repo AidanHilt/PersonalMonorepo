@@ -65,13 +65,13 @@ var internalSuffixes = []string{
 // single-label check below, but this also catches them if ever
 // referenced with a trailing dot or similar.
 var internalServiceNames = map[string]bool{
-	"proxy":              true,
-	"pkg-broker":         true,
-	"pi":                 true,
-	"login":              true,
-	"workspace-mounter":  true,
-	"nix-store-mounter":  true,
-	"localhost":          true,
+	"proxy":             true,
+	"pkg-broker":        true,
+	"pi":                true,
+	"login":             true,
+	"workspace-mounter": true,
+	"nix-store-mounter": true,
+	"localhost":         true,
 }
 
 type allowRequest struct {

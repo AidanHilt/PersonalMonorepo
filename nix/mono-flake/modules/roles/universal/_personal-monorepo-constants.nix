@@ -18,6 +18,7 @@ in
     ATILS_HELM_DIR = atilsHelmDir;
     ATILS_JOB_DIR = "${atilsHelmDir}/jobs";
     ATILS_CONFIG_DIRECTORY = "${atilsConfigDirectory}";
+    ATILS_CONTEXTS_DIRECTORY = "${atilsConfigDirectory}/contexts";
 
     KEEPASS_KEY_FILE_PATH = "${keepassKeyFilePath}";
     KEEPASS_DB_PATH = "${keepassDBPath}";
