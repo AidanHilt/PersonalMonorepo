@@ -1,0 +1,16 @@
+# Secrets and local overrides — never commit these.
+.env
+# gen-kubeconfig.sh writes outside the repo by default
+# (~/.config/pi-sandbox/agent-kubeconfig.yaml, or
+# $PI_SANDBOX__KUBECONFIG_PATH); there is no in-repo kubeconfig path
+# anymore.
+
+# Local auth store, if ever pointed inside the repo by mistake.
+.config/
+auth-store/
+
+# Nix
+result
+result-*
+
+node_modules/

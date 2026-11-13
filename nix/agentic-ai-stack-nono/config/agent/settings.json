@@ -1,0 +1,19 @@
+{
+  "shellPath": "/bin/bash",
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-sonnet-5-5",
+  "thinking": {
+    "default": "medium"
+  },
+  "notifications": {
+    "cacheMisses": true,
+    "compaction": true,
+    "providerRecovery": true
+  },
+  "npmCommand": [
+    "npm"
+  ],
+  "compaction": {
+    "auto": true
+  }
+}
