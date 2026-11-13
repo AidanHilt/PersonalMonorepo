@@ -1,23 +1,24 @@
 # nix/agentic-ai-stack-nono — Implementers
 
-> **Mid-migration note (Phase 2 of `PLAN.md`):** this directory is a
+> **Mid-migration note (Phase 4a of `PLAN.md`):** this directory is a
 > structural copy of `nix/agentic-ai-stack`, with the container-era code
 > (compose files, `containers/`, container-only scripts/flake wiring)
-> deleted. New nono-based behaviour (work profile, launcher flags,
-> approval helper, per-run `PI_CODING_AGENT_DIR` seeding, etc.) has **not**
-> been built yet — see `PLAN.md` section 4 for the phase breakdown.
-> Everything below this note still describes the old container
-> architecture almost entirely verbatim and is known-stale pending the
-> Phase 5 documentation rewrite; do not trust it as a description of this
-> copy's current or future behaviour. In particular, known-stale areas:
+> deleted. The nono work profile (Phase 3), launcher, and approval helper
+> (Phase 4a) are now built -- see "Work profile (Phase 3)" and "Launcher
+> and approval helper (Phase 4a)" below. Still not built: the
+> `attach`/`ps`/`stop`/`login` wrappers, the `nono-sandbox` extension/
+> skill, and the `nix/scripts` changes (Phase 4b/4c) -- see `PLAN.md`
+> section 4 for the full phase breakdown. Everything ELSE below this note
+> still describes the old container architecture almost entirely verbatim
+> and is known-stale pending the Phase 5 documentation rewrite; do not
+> trust it as a description of this copy's current or future behaviour. In
+> particular, known-stale areas:
 > - "Threat model", "Components and network access", "Build and run
 >   flow", "Credentials", "Acceptance criteria", and "Gotchas" all
 >   describe the removed Docker Compose / container boundary.
-> - `scripts/start-agent.sh` is kept as-is from the container stack and is
->   currently **non-functional** here (rewritten in Phase 4).
->   `scripts/shell-agent.sh`, `scripts/stop-agent.sh`, and
+> - `scripts/shell-agent.sh`, `scripts/stop-agent.sh`, and
 >   `scripts/verify-acceptance.sh` were deleted outright (purely
->   container-based; rewritten/replaced in Phase 4/5 per `PLAN.md`'s
+>   container-based; rewritten/replaced in Phase 4b/5 per `PLAN.md`'s
 >   launcher/UI table).
 > - `flake.nix` no longer builds any container image or exposes
 >   `load`/`shell-agent`/`stop-agent`/`verify`/`login` apps; see its
@@ -356,4 +357,187 @@ with `nix run .#verify`.
   over from `PLAN.md` section 6's own open item -- kept per the
   plan's "keep from the pack" row, but its interaction with git
   worktree teardown has not been verified.
+
+## Launcher and approval helper (Phase 4a)
+
+> This section, like "Work profile (Phase 3)" above, is new and NOT
+> stale -- it covers `PLAN.md` Phase 4a only (the approval helper and
+> `scripts/start-agent.sh`). The `attach`/`ps`/`stop`/`login` wrappers and
+> the `nono-sandbox` extension/skill are Phase 4b; the `nix/scripts`
+> changes (removing `pkg-install`, rewriting/removing `request-domain`,
+> updating `agent-plan-create`'s messages) and `config/agent/` doc/
+> permission updates are Phase 4c. Neither is built yet.
+
+### Approval helper (`approval-helper/`)
+
+A stdlib-only Go module (`go.mod` has no `require` block -- see
+`flake.nix`'s `packages.approval-helper`, built via `pkgs.buildGoModule`
+with `vendorHash = null` since there's nothing to vendor). Runs OUTSIDE
+the sandbox, on loopback only, and implements nono's unsigned webhook v1
+approval protocol (see `PLAN.md`'s "Approval transport"/"Approval helper
+(host side)" decision rows, spike-verified by S1.1-S1.9 against
+`spikes/all/handler.sh`/`spikes/all/approval.template.json`):
+
+- Listens on `127.0.0.1:<os-assigned port>`; the bearer token lives in the
+  URL path (`/<token>`). A request to any other path gets a bare 404 with
+  **no log line at all** -- logging even an access line would risk
+  leaking the token into a log file. Startup prints one JSON line
+  `{port, token, url}` to stdout once listening (and optionally to
+  `--info-file`, written mode `0600`) -- that's how `start-agent.sh` reads
+  the webhook URL back.
+- Request/response shapes (`types.go`) mirror the spike-verified protocol
+  exactly: `{backend, request{capability_type, request_id, session_id,
+  host, port, protocol, resolved_ips, reason, child_pid}}` in, `{decision:
+  granted|denied(+reason)|granted_session}` out.
+- `server.go`'s `decide()` applies, in order: a per-HOST `granted_session`
+  cache (kept for the helper's whole process lifetime), a per-`host:port`
+  deny cache (`--deny-cache-secs`, default 30s), then in-flight prompt
+  dedupe (concurrent requests for the same `host:port` share one prompt
+  instead of popping two dialogs) -- only then does it fall back to
+  `prompt.go`'s `prompter` interface. A UI error or `--timeout` (default
+  120s) expiry is always mapped to `denied` -- fail closed, never a grant.
+- UI selection (`--ui auto|osascript|kdialog|tmux|deny-all`, `prompt.go`'s
+  `selectPrompter`): `auto` tries `osascript` on Darwin, then `kdialog` on
+  Linux if `DISPLAY`/`WAYLAND_DISPLAY` is set, then `tmux`, then falls
+  back to `deny-all` (fail closed) if nothing is found. Every concrete
+  prompter implementation (`osascriptPrompter`, `kdialogPrompter`,
+  `tmuxPrompter`) is **UNVERIFIED** -- no nono binary and no live
+  macOS/KDE/tmux session was available in this environment to exercise
+  any of them; only `denyAllPrompter` and the dedupe/cache/decision-mapping
+  logic in `server.go` are exercised by `main_test.go`'s table tests (via
+  a fake `prompter`).
+- `--parent-pid PID`: polls (every 1s, via `kill(PID, 0)` -- a pure
+  existence/permission check, no signal is actually delivered) and shuts
+  down once that PID is gone, so a foreground launcher's helper exits
+  when the launcher does, without needing its own signal plumbing beyond
+  the standard SIGINT/SIGTERM handling already in `main.go`.
+
+### Launcher (`scripts/start-agent.sh`)
+
+Completely rewritten (container/compose/kind logic deleted outright, per
+`PLAN.md`'s "Delete as obsolete" list). Flags map to the old->new table in
+`PLAN.md` section 2: `--profile work` (only value), `--audit` (->
+`nono --audit-integrity`), `--detached` (-> `nono run --detached`),
+`--add`/`--clone` (real host paths now, no more `/workspace/<basename>`),
+`--secret`/`PI_SANDBOX__SECRET__<NAME>` (unchanged convention, different
+plumbing -- see "Secrets handoff" below), `--name` (nono's own session
+name), `--resume` (pi's own flag, forwarded after `--`), `--dry-run`
+(prints the resolved command, secrets redacted by name only, performs NO
+directory creation/sudo/nono calls). `--host-store`, `--persist-pkgs`,
+`--no-persist-store`, and `--persist-domains` are gone entirely (no
+replacement -- there is no pkg-broker/proxy/kind layering left to
+configure).
+
+**Read-as-invoking-user / write-as-`pi` split**: every write under
+`/var/lib/pi` goes through a narrow `sudo -u pi <cmd>` invocation
+(`mkdir`, `tee`, `tar -xf`, `cp` from a world-readable Nix store path);
+every read of the invoking user's own files (the workdir, `--add`/
+`--clone` sources, `config/agent/`) runs as the invoking user. The
+`tar_copy_to_pi`/`write_as_pi` helpers stream bytes through a pipe rather
+than ever granting either user direct filesystem access into the other's
+trust domain -- this is what lets the launcher work without the invoking
+user needing traversal rights into pi-owned directories, or `pi` needing
+read access into the invoking user's home.
+
+**Per-run state layout** (`/var/lib/pi/runs/<name>/`, `<name>` defaulting
+to `"pi"` -- deliberately NOT timestamp-suffixed like the old
+container-era default, since a fresh name every run would defeat the
+idempotent-seeding/`--resume` model below):
+```
+pi/agent/            <- PI_CODING_AGENT_DIR
+  extensions/         <- pi-extra-extensions build output (copied first)
+  skills/             <- pi-extra-skills build output (copied first)
+  settings.json, AGENTS.md, agents/*, extensions/pi-permission-system/
+                      <- config/agent/ layered on top (same order container
+                         image.nix's piSeed used: extensions/skills first,
+                         config/ on top, never destructively)
+pi/web-search.json    <- config/web-search.json
+state/{auth,sessions}/  <- XDG_STATE_HOME for this run
+workdir/              <- pi-owned copy of the invoking user's cwd (this
+                         becomes nono's own "workdir": `nono run` is
+                         invoked with this as its cwd, combined with
+                         `--allow-cwd` and the profile's
+                         `workdir.access: readwrite`)
+add-N/, clone-N/      <- one dir per --add/--clone extra, each its own
+                         gen-profile.sh --add/--clone grant
+profile.json          <- the gen-profile.sh output actually passed to
+                         `nono run --profile`
+supervisor.sh, supervisor.log, approval-helper-info.json
+                      <- --detached mode only, see below
+```
+**Idempotent seeding / `--resume`**: every launch re-syncs
+`pi/agent/{extensions,skills}/` and layers `config/agent/`+
+`config/web-search.json` on top again, but NEVER deletes the run
+directory first -- it only adds/overwrites those specific paths. Judgement
+call: this means re-running with the SAME `--name` reuses the same
+pi-owned workdir copy and PI_CODING_AGENT_DIR tree, so anything `pi`
+itself writes there (its own session history, included, wherever `pi`
+internally keeps that under `PI_CODING_AGENT_DIR`) survives across
+launches -- that's what makes `--resume` meaningful at all here. This is a
+judgement call, not a spike-verified fact: no spike exercised `pi --resume`
+against a per-run `PI_CODING_AGENT_DIR` tree.
+
+**Tool path resolution**: `nono`, `pi`, `jq`, and `approval-helper` are all
+resolved to absolute, symlink-free paths via `command -v` + `readlink -f`
+on the INVOKING user's `PATH`, once, up front -- and referenced by that
+absolute path everywhere below, including inside the final `sudo -u pi`
+invocation. Judgement call: this sidesteps two things that were not
+verified in this environment (no live host to test against): (1) whether
+sudo's `secure_path` (if set) would even put `nono`/`pi` on `pi`'s PATH at
+all, and (2) `nix-store -qR` (inside `gen-profile.sh`) needs a real,
+symlink-resolved store path, not an arbitrary `PATH` entry. **UNVERIFIED
+gap, flagged for the user**: unlike `nono` (provided system-wide by
+mono-flake's overlay -- see `modules/roles/universal/_pi-user.nix`'s
+`pkgs-unstable.nono` systemPackage), there is currently **no**
+`pi-coding-agent` overlay/systemPackage anywhere in `nix/mono-flake` --
+the old `nix/agentic-ai-stack/pi-coding-agent-overlay.nix` was never
+carried over. This launcher assumes `pi` is already resolvable via
+`command -v pi` on the invoking user's `PATH` (fails fast with a clear
+error if not, before touching nono/sudo at all) -- getting it there is a
+prerequisite the user needs to provision in `mono-flake` (same mechanism
+as the existing `nono` systemPackage), not something this launcher can
+fix from inside `nix/agentic-ai-stack-nono`.
+
+**`nix build` dependency**: resolving `pi-extra-extensions`/
+`pi-extra-skills`'s store paths at launch time uses `nix build
+"$STACK_DIR#pi-extra-extensions" --no-link --print-out-paths` (and
+similarly for skills) -- `nix` itself is assumed to already be on the
+invoking user's `PATH` (true on any NixOS/nix-darwin host that can run
+`nix run .#start-agent` in the first place) rather than declared as a
+`runtimeInput`, matching `gen-profile.sh`'s own pre-existing assumption
+that `nix-store` is already ambient.
+
+**Secrets handoff**: `--secret NAME=VALUE` / `PI_SANDBOX__SECRET__<NAME>`
+are `export`ed as real environment variables on the launcher process
+itself (never appended to any command's argv), then threaded through
+`sudo --preserve-env=<comma-separated names>` -- the `sudo` invocation's
+own argv only ever lists variable NAMES, never values, so a `ps` of the
+launcher process cannot recover a secret value (`PLAN.md`'s "Secrets" row:
+"never via argv, since that is visible via ps"). This relies on the
+NOPASSWD+SETENV sudo rule in `nix/mono-flake`'s `_pi-user-linux.nix`/
+`_pi-user-darwin.nix`.
+
+**Detached mode**: `--detached` hands the rest of the lifecycle to a
+generated `supervisor.sh`, run via `setsid sudo -u pi -- bash -c 'exec
+bash "$1" >"$2" 2>&1 </dev/null' ...` (the log redirect has to happen
+INSIDE the sudo'd process, since the invoking user has no write access
+into the pi-owned run directory to open that file itself first). The
+supervisor starts its own approval helper, generates the profile, runs
+`nono run --detached`, then polls plain `nono ps | grep <name>` every 5s
+until the session is gone, at which point it kills its approval helper and
+exits. **UNVERIFIED judgement call**: this polling loop is modelled
+directly on `spikes/all/run.sh`'s S5.1-S5.3 (`nono ps`'s output format was
+only ever grepped for a session name substring there, never parsed
+structurally), but no nono binary was available in this environment to
+confirm that behaviour beyond what those PASS-reported spikes already
+exercised. There is deliberately no cross-user (`aidan` watching `pi`'s
+sessions) story here yet -- that's `PLAN.md`'s S5.4/"cross-user session
+registry" open item, left to the Phase 4b `ps`/`attach`/`stop` wrappers.
+
+**Getting results back out**: this launcher does not automate syncing
+`workdir/` changes back to the invoking user's own checkout (unlike the
+unrelated `agent-stage`/worktree flow IMPLEMENT subagents use) -- per
+`PLAN.md`'s "Sharing files between aidan and pi" decision row, that's a
+deliberate UX choice, not a gap: the user inspects/diffs/copies the
+per-run `workdir/` copy manually.
 

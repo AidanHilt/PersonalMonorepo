@@ -1,5 +1,5 @@
 {
-  description = "Pi sandbox stack: nono (Landlock/Seatbelt)-based sandboxed Pi coding agent (structural copy of nix/agentic-ai-stack, Phase 2 of PLAN.md -- the nono work profile, launcher, and approval helper are not built yet)";
+  description = "Pi sandbox stack: nono (Landlock/Seatbelt)-based sandboxed Pi coding agent (PLAN.md Phase 4a: work profile, launcher, and approval helper built; attach/ps/stop wrappers and the nono-sandbox extension/skill are Phase 4b)";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
@@ -93,25 +93,40 @@
             skillsKubernetes = skills-kubernetes;
             skillsNixos = skills-nixos;
           };
+
+          # nix build .#approval-helper -> the host-side process
+          # scripts/start-agent.sh starts before each `nono run` (PLAN.md
+          # Phase 4a, "Approval helper (host side)"). Stdlib-only Go (no
+          # go.sum), so vendorHash is null -- there is nothing to vendor.
+          approval-helper = pkgs.buildGoModule {
+            pname = "approval-helper";
+            version = "0.1.0";
+            src = ./approval-helper;
+            vendorHash = null;
+          };
         };
 
         apps = {
-          # nix run .#start-agent -> scripts/start-agent.sh, kept as-is from
-          # the container-era stack (STALE/non-functional: it still drives
-          # `docker compose`, which no longer has anything to compose
-          # against -- compose*.yaml and containers/ were deleted in this
-          # copy). Rewritten for nono in Phase 4 of PLAN.md.
+          # nix run .#start-agent -> scripts/start-agent.sh (PLAN.md Phase
+          # 4a): starts one nono-sandboxed `pi` session as the untrusted
+          # `pi` user. `nono` itself is NOT a runtimeInput here -- it's
+          # expected on the invoking user's PATH already, provided
+          # system-wide by mono-flake's nono overlay (see PLAN.md's "nono
+          # source" decision row and nix/mono-flake's
+          # modules/roles/universal/_pi-user.nix, which adds
+          # `pkgs-unstable.nono` as a systemPackage) -- same precedent this
+          # script also relies on for the `pi` binary itself (no
+          # `pi-coding-agent` overlay/systemPackage exists yet in
+          # mono-flake; see IMPLEMENTERS.md's UNVERIFIED list).
           start-agent = flake-utils.lib.mkApp {
             # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
             drv = pkgs.writeShellApplication {
               name = "start-agent";
               runtimeInputs = [
-                pkgs.docker
-                pkgs.docker-compose
                 pkgs.jq
-                pkgs.gnugrep
-                pkgs.curl
-                pkgs.nix
+                pkgs.git
+                self.packages.${system}.approval-helper
+                pkgs.coreutils
               ];
               text = builtins.readFile ./scripts/start-agent.sh;
             };
