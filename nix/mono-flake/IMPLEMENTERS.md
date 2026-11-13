@@ -65,8 +65,20 @@ discovers and builds every host.
   `aarch64-darwin`) additionally get the `wsl`, `disko` and `nixos-lima`
   modules, whether or not the host actually uses them.
 - `specialArgs` passed to every host module: `machine-config` (see
-  below), `inputs`, `globals`, and `machineDir = "<system>/<name>"` (used
-  only by `_home-manager.nix`, to resolve `machines/<machineDir>/home.nix`).
+  below), `inputs`, `globals`, `machineDir = "<system>/<name>"` (used
+  only by `_home-manager.nix`, to resolve `machines/<machineDir>/home.nix`),
+  and one `pkgs-<name>` entry per `flake.nix` `extraPkgsInputs` entry (see
+  "Overlays and pinned inputs" below) — e.g. `pkgs-unstable`, so any
+  NixOS/darwin module can take it as an argument without re-declaring the
+  input itself. `mkSystem` also sets `home-manager.extraSpecialArgs` to the
+  same `pkgs-<name>` attrs inline, since home-manager modules read their
+  special args from `home-manager.extraSpecialArgs`, not from the host's own
+  `specialArgs` above — this is a third place `extraSpecialArgs` gets
+  assembled, alongside `_home-manager.nix` and the duplicated inline
+  home-manager blocks in the `staging-cluster-*` machine configs (see
+  "Duplicated config" in [IMPROVEMENTS.md](IMPROVEMENTS.md)); all three merge
+  harmlessly as plain attrsets, which is why it's kept inline in
+  `builders.nix` rather than threaded through the other two.
 
 ### Values / `machine-config` merge
 
@@ -176,16 +188,29 @@ membership, and is reached only via `sudo -u pi` from
 
 `lib-internal/packages.nix`'s `genPkgsFor` applies, per system:
 `baseOverlays` (nur, agenix, nix-vscode-extensions, nix-cachyos-kernel,
-`overlays/nono.nix`), any `platformOverlays.<system>` from `flake.nix`
-(currently just a
-`nodejs_22` override on `aarch64-darwin`), and a fixed `patches` overlay
-that re-hashes two `grub2` patches and disables `aiohttp`'s test suite
-(`doCheck = false`, with a block of commented-out `disabledTests` left in
-place). These look like temporary pins against specific nixpkgs
-revisions rather than permanent policy — see
-[IMPROVEMENTS.md](IMPROVEMENTS.md) before assuming they're still needed.
-`config.permittedInsecurePackages` also hardcodes two exact `lima`
+`overlays/nono.nix`) and any `platformOverlays.<system>` from `flake.nix`
+(currently just a `nodejs_22` override on `aarch64-darwin`). Both
+`genPkgsFor` and `genExtraPkgsFor` (below) share config (allowUnfree, nvidia
+licensing, `permittedInsecurePackages`) via a common `mkPkgs` helper;
+`config.permittedInsecurePackages` hardcodes two exact `lima`
 package-version strings.
+
+`flake.nix`'s `extraPkgsInputs` is the single place new, unoverlaid package
+sets get declared — currently just `unstable = inputs.nixpkgs-unstable`.
+`genExtraPkgsFor` builds each entry for every system (no overlays applied),
+returning `{ <system>.<name> = pkgs; }`; `builders.nix`'s `mkSystem` then
+threads each one into `specialArgs` (and `home-manager.extraSpecialArgs`) as
+`pkgs-<name>` — see "Discovery and `mkSystem`" above. Adding another extra
+package set (e.g. a second nixpkgs checkout, or a different flake entirely)
+is just another `extraPkgsInputs` entry; no other file needs to change.
+
+`lib-internal/packages.nix` previously also applied a fixed `patches`
+overlay that re-hashed two `grub2` patches and disabled `aiohttp`'s test
+suite (`doCheck = false`). Both were temporary pins against a specific
+nixpkgs revision; they were removed once `nixpkgs` moved to a revision that
+already carries the grub2 patches' exact hashes (and the aiohttp override
+was confirmed unneeded by a trial build) — see
+[IMPROVEMENTS.md](IMPROVEMENTS.md).
 
 `flake.nix`'s `inputs.scripts` is pinned to the
 `project-lockstep/release-mgmt` branch of this repo (not `main`), and

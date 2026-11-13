@@ -5,7 +5,7 @@
 }:
 
 let
-  lib = nixpkgs.lib;
+  inherit (nixpkgs) lib;
 
   builders = import ./builders.nix { inherit nixpkgs darwin inputs; };
   discovery = import ./discovery.nix { inherit nixpkgs darwin inputs; };
@@ -18,6 +18,7 @@ in
       systems,
       machinesDir,
       pkgsFor,
+      extraPkgsFor ? { },
       inputs,
       globals ? { },
       overlays ? [ ],
@@ -41,6 +42,7 @@ in
             system
             hosts
             pkgsFor
+            extraPkgsFor
             machinesDir
             inputs
             globals

@@ -23,6 +23,7 @@
 {
   pkgs,
   machine-config,
+  pkgs-unstable,
   ...
 }:
 
@@ -54,6 +55,6 @@
   };
 
   environment.systemPackages = [
-    pkgs.nono
+    pkgs-unstable.nono
   ];
 }

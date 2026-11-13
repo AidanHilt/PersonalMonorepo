@@ -5,15 +5,36 @@
 }:
 
 let
-  lib = nixpkgs.lib;
+  inherit (nixpkgs) lib;
 
   discovery = import ./discovery.nix { inherit nixpkgs darwin inputs; };
 
-  pkgs = import inputs.nixpkgs;
+  # Shared pkgs-building logic: every package set in this flake (the main
+  # per-system pkgs, and any extra flake input built via genExtraPkgsFor) goes
+  # through here, so the config knobs (allowUnfree, nvidia licensing, the lima
+  # insecure-package allowances) stay in one place instead of drifting between
+  # package sets.
+  mkPkgs =
+    {
+      input,
+      system,
+      overlays ? [ ],
+    }:
+    import input {
+      inherit system overlays;
+      config = {
+        allowUnfree = true;
+        nvidia.acceptLicense = true;
+        permittedInsecurePackages = [
+          "lima-full-1.2.2"
+          "lima-additional-guestagents-1.2.2"
+        ];
+      };
+    };
 in
 
 {
-  # Generate packages for all systems with overlays
+  # Generate the main pkgs for all systems, with overlays
   genPkgsFor =
     systems: overlays: platformOverlays:
     lib.genAttrs (import systems) (
@@ -21,51 +42,29 @@ in
       let
         nixpkgs-version = if system == "aarch64-darwin" then inputs.nixpkgs-darwin else inputs.nixpkgs;
         systemOverlays = platformOverlays.${system} or [ ];
-        patches = [
-          (final: prev: {
-            grub2 = prev.grub2.overrideAttrs (oldAttrs: {
-              patches = map (
-                patch:
-                if patch.name or "" == "23_prerequisite_1_key_protector_add_key_protectors_framework.patch" then
-                  patch // { hash = "sha256-5aFHzc5qXBNLEc6yzI17AH6J7EYogcXdLxk//1QgumY="; }
-                else if patch.name or "" == "23_CVE-2024-49504.patch" then
-                  patch // { hash = "sha256-GejDL9IKbmbSUmp8F1NuvBcFAp2/W04jxmOatI5dKn8="; }
-                else
-                  patch
-              ) oldAttrs.patches;
-            });
-          })
-          (final: prev: {
-            pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
-              (pyFinal: pyPrev: {
-                aiohttp = pyPrev.aiohttp.overridePythonAttrs (old: {
-                  doCheck = false;
-                  # disabledTests = (old.disabledTests or []) ++ [
-                  #   "test_tcp_connector_socket_factory"
-                  #   "test_available_connections_with_limit_per_host"
-                  #   "test_heartbeat_no_pong"
-                  #   "test_available_connections_without_limit_per_host"
-                  #   "test_available_connections_no_limits"
-                  #   "test_connect_tunnel_connection_release"
-                  #   "test_invalid_header_spacing"
-                  #   "test_parse"
-                  #   "test_http_request_parser_bad_version"
-                  # ];
-                });
-              })
-            ];
-          })
-        ];
       in
-      import nixpkgs-version {
+      mkPkgs {
+        input = nixpkgs-version;
         inherit system;
-        config.allowUnfree = true;
-        config.nvidia.acceptLicense = true;
-        config.permittedInsecurePackages = [
-          "lima-full-1.2.2"
-          "lima-additional-guestagents-1.2.2"
-        ];
-        overlays = overlays ++ systemOverlays ++ patches;
+        overlays = overlays ++ systemOverlays;
       }
+    );
+
+  # Generate extra, unoverlaid package sets for all systems, one per entry in
+  # extraPkgsInputs (flake.nix's single place for declaring new package sets,
+  # e.g. `{ unstable = inputs.nixpkgs-unstable; }`). Returns
+  # `{ <system>.<name> = pkgs; }`, which builders.nix threads into specialArgs
+  # as `pkgs-<name>` so any NixOS/darwin/home-manager module can use it.
+  genExtraPkgsFor =
+    systems: extraPkgsInputs:
+    lib.genAttrs (import systems) (
+      system:
+      lib.mapAttrs (
+        _name: input:
+        mkPkgs {
+          inherit input system;
+          overlays = [ ];
+        }
+      ) extraPkgsInputs
     );
 }

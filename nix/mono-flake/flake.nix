@@ -61,6 +61,8 @@
 
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/01ef07c1c8bc8d9db9c0c9c59a8fea701b7f5a34";
 
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+
     # Darwin-specific items
     nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-26.05-darwin";
 
@@ -89,6 +91,14 @@
       allSystems = import inputs.systems;
       systems = nixpkgs.lib.filter (sys: builtins.pathExists (./machines + "/${sys}")) allSystems;
 
+      # The single place new, extra (unoverlaid) package sets are declared.
+      # Each entry gets built for every system and threaded into specialArgs
+      # (and home-manager's extraSpecialArgs) as `pkgs-<name>` -- see
+      # lib-internal/packages.nix's genExtraPkgsFor and lib-internal/builders.nix.
+      extraPkgsInputs = {
+        unstable = inputs.nixpkgs-unstable;
+      };
+
       baseOverlays = [
         inputs.nur.overlays.default
         inputs.agenix.overlays.default
@@ -103,11 +113,13 @@
       };
 
       pkgsFor = internalLib.packages.genPkgsFor inputs.systems baseOverlays platformOverlays;
+      extraPkgsFor = internalLib.packages.genExtraPkgsFor inputs.systems extraPkgsInputs;
 
       allConfigs = internalLib.configs.buildAllConfigs {
         inherit
           systems
           pkgsFor
+          extraPkgsFor
           inputs
           globals
           ;
@@ -118,7 +130,6 @@
 
     in
     {
-      darwinConfigurations = allConfigs.darwinConfigurations;
-      nixosConfigurations = allConfigs.nixosConfigurations;
+      inherit (allConfigs) darwinConfigurations nixosConfigurations;
     };
 }

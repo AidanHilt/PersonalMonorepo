@@ -53,12 +53,6 @@ why it matters. Nothing here is fixed by this document — it's a backlog.
   `lima-additional-guestagents-1.2.2`); these will silently stop working
   the moment `nixos-lima` bumps its lima version, with no indication of
   why until the build fails.
-- `lib-internal/packages.nix`'s `patches` overlay re-hashes two specific
-  `grub2` patches by name and sets `aiohttp`'s `doCheck = false`, with a
-  large block of commented-out `disabledTests` left in the file. Both
-  look like temporary pins against a specific nixpkgs revision rather
-  than permanent policy; worth revisiting (and cleaning up the dead
-  comment) next time nixpkgs is bumped.
 
 ## Branch naming inconsistency
 
