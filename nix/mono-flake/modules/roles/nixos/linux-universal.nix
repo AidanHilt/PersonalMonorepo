@@ -11,6 +11,7 @@
   imports = [
     ./hosts.nix
     ./locale-and-time.nix
+    ./_pi-user-linux.nix
 
     ../universal/universal-base.nix
   ];

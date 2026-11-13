@@ -11,6 +11,7 @@
   imports = [
     #./_docker.nix
     ./_guided-setup.nix
+    ./_pi-user-darwin.nix
 
     ../universal/universal-base.nix
   ];

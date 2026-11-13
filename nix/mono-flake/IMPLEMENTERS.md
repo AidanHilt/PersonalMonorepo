@@ -129,27 +129,48 @@ this doc require it (via the `nix/scripts` `env-checks` lib's
 
 ### The `pi` user
 
-`modules/roles/universal/_pi-user.nix` (imported by `universal-base.nix`,
-so every NixOS and nix-darwin host gets it) defines a dedicated,
-**untrusted** `pi` user/group (uid/gid 10001, home `/var/lib/pi`) that the
-`nix/agentic-ai-stack-nono` agent sandbox runs as — see that project's
-`PLAN.md`, section 2 ("Isolation user"), for why. `pi` is deliberately
+The `pi` user/group (uid/gid 10001, home `/var/lib/pi`) is a dedicated,
+**untrusted** user that the `nix/agentic-ai-stack-nono` agent sandbox runs
+as — see that project's `PLAN.md`, section 2 ("Isolation user"), for why.
+It's defined across three files rather than one, because NixOS modules
+cannot select *option names* based on `pkgs` (`pkgs` itself derives from
+`config`, so branching an option's existence on
+`pkgs.stdenv.hostPlatform.isLinux`/`isDarwin` inside a single shared
+module is a recursion bug, not just a style choice — an earlier version
+of this module did exactly that and triggered infinite recursion on
+evaluation):
+
+- `modules/roles/universal/_pi-user.nix` (imported by `universal-base.nix`,
+  so every NixOS and nix-darwin host gets it) declares only the options
+  that exist identically on both platforms: `users.groups.pi`,
+  `users.users.pi`'s common attrs (`uid`, `home`, `description`, `shell`),
+  and `environment.systemPackages = [ pkgs.nono ]`.
+- `modules/roles/nixos/_pi-user-linux.nix` (imported only by
+  `linux-universal.nix`) adds the NixOS-only options:
+  `users.users.pi.group`/`isSystemUser`, `systemd.tmpfiles.rules`
+  (provisions `/var/lib/pi`), and `security.sudo.extraRules` (the
+  `NOPASSWD`+`SETENV` rule letting `machine-config.username` run
+  `sudo -u pi` without a password, with `PI_SANDBOX__SECRET__*` env vars
+  surviving the call).
+- `modules/roles/darwin/_pi-user-darwin.nix` (imported only by
+  `darwin-universal.nix`) adds the nix-darwin-only options:
+  `users.users.pi.gid`/`isHidden`, `users.knownUsers`/`knownGroups`,
+  `security.sudo.extraConfig` (the raw sudoers-fragment equivalent of the
+  NixOS rule above, since nix-darwin's `security.sudo` module has no
+  structured `extraRules`), and `system.activationScripts.piHome` (the
+  nix-darwin equivalent of `systemd.tmpfiles`, since darwin has no
+  tmpfiles). This whole file is **unverified** — it has not been built or
+  run on an actual Darwin host.
+
+`machine-config.username` is made a member of the `pi` group via
+`users.groups.pi.members` (not per-user `extraGroups`), so adding a new
+host doesn't require repeating the membership by hand — this replaced a
+hand-rolled `users.groups.pi` + `extraGroups` pair that used to live
+directly in `machines/x86_64-linux/big-boi-desktop/configuration.nix` and
+`machines/aarch64-linux/devbox/configuration.nix`. `pi` is deliberately
 kept out of `nix.settings.trusted-users`, has no password/SSH keys/wheel
 membership, and is reached only via `sudo -u pi` from
-`machine-config.username` (a `NOPASSWD`+`SETENV` sudo rule — NixOS via
-`security.sudo.extraRules`, darwin via `security.sudo.extraConfig` — the
-`SETENV` tag is what lets `PI_SANDBOX__SECRET__*` env vars survive the
-`sudo` call). `/var/lib/pi` is provisioned by `systemd.tmpfiles` on NixOS
-and an activation script on darwin. `machine-config.username` is made a
-member of the `pi` group via `users.groups.pi.members` (not per-user
-`extraGroups`), so adding a new host doesn't require repeating the
-membership by hand — this replaced a hand-rolled `users.groups.pi` +
-`extraGroups` pair that used to live directly in
-`machines/x86_64-linux/big-boi-desktop/configuration.nix` and
-`machines/aarch64-linux/devbox/configuration.nix`. The darwin branch of
-`_pi-user.nix` (knownUsers/knownGroups, numeric `gid` on the user, the
-activation script, `security.sudo.extraConfig`) is **unverified** — it has
-not been built or run on an actual Darwin host.
+`machine-config.username`.
 
 ### Overlays and pinned inputs
 
