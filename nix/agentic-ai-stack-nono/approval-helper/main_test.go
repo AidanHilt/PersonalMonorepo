@@ -192,6 +192,9 @@ func TestDecide_InFlightDedupe(t *testing.T) {
 	fp := &fakePrompter{choice: choiceAllowOnce, started: started, block: block}
 	s := newApprovalServer("tok", fp, nil)
 
+	joined := make(chan struct{}, 1)
+	s.onJoinInFlight = func() { joined <- struct{}{} }
+
 	info := capabilityInfo{Host: "example.com", Port: 443}
 
 	result1 := make(chan decision, 1)
@@ -201,14 +204,19 @@ func TestDecide_InFlightDedupe(t *testing.T) {
 	<-started // the first call is now inside Prompt(), blocked on `block`.
 
 	go func() { result2 <- s.decide(context.Background(), info) }()
-	// decide() registers the in-flight entry (under s.mu) strictly before
-	// calling Prompt(), and the second goroutine's own s.mu.Lock() call
-	// happens-after that registration once `started` has fired -- so by
-	// the time it runs, the in-flight entry is guaranteed to already be
-	// there, and it will wait on it rather than invoke Prompt a second
-	// time. No sleep/poll is needed for that guarantee; the only thing
-	// actually racy is *when* goroutine 2 reaches that check, which is
-	// irrelevant since it's correct whenever it gets there.
+	// Unlike relying on happens-before reasoning about when goroutine 2
+	// reaches its s.mu.Lock() (which is NOT guaranteed to happen before
+	// goroutine 1 finishes and deletes the in-flight entry), we wait for
+	// an explicit signal -- onJoinInFlight -- fired only once goroutine 2
+	// has actually observed and is about to wait on the shared in-flight
+	// entry. Only once that's confirmed do we unblock the prompt, so
+	// goroutine 1 cannot finish (and clear the entry) before goroutine 2
+	// has joined it.
+	select {
+	case <-joined:
+	case <-time.After(5 * time.Second):
+		t.Fatal("timed out waiting for the second call to join the in-flight prompt")
+	}
 	close(block)
 
 	d1 := <-result1
@@ -218,6 +226,50 @@ func TestDecide_InFlightDedupe(t *testing.T) {
 	}
 	if fp.callCount() != 1 {
 		t.Fatalf("expected exactly 1 prompt call (deduped), got %d", fp.callCount())
+	}
+}
+
+func TestDecide_InFlightDedupe_ManyJoiners(t *testing.T) {
+	const joiners = 5
+
+	started := make(chan struct{})
+	block := make(chan struct{})
+	fp := &fakePrompter{choice: choiceAllowOnce, started: started, block: block}
+	s := newApprovalServer("tok", fp, nil)
+
+	joined := make(chan struct{}, joiners)
+	s.onJoinInFlight = func() { joined <- struct{}{} }
+
+	info := capabilityInfo{Host: "example.com", Port: 443}
+
+	results := make(chan decision, joiners+1)
+
+	go func() { results <- s.decide(context.Background(), info) }()
+	<-started // the first call is now inside Prompt(), blocked on `block`.
+
+	for i := 0; i < joiners; i++ {
+		go func() { results <- s.decide(context.Background(), info) }()
+	}
+	// Wait for all `joiners` goroutines to have joined the single
+	// in-flight prompt before releasing it, so none of them can race
+	// ahead and start a second prompt of their own.
+	for i := 0; i < joiners; i++ {
+		select {
+		case <-joined:
+		case <-time.After(5 * time.Second):
+			t.Fatalf("timed out waiting for joiner %d to join the in-flight prompt", i)
+		}
+	}
+	close(block)
+
+	for i := 0; i < joiners+1; i++ {
+		d := <-results
+		if d.Type != "granted" {
+			t.Fatalf("expected result %d granted, got %q", i, d.Type)
+		}
+	}
+	if fp.callCount() != 1 {
+		t.Fatalf("expected exactly 1 prompt call (deduped across %d joiners), got %d", joiners, fp.callCount())
 	}
 }
 

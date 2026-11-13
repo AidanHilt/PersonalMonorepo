@@ -179,7 +179,6 @@ build_profile() {
 
   local tmp_profile
   tmp_profile="$(mktemp)"
-  trap 'rm -f "$tmp_profile"' RETURN
 
   # Step 1: substitute the webhook URL placeholder, everywhere it occurs.
   jq --arg url "$webhook_url" \
@@ -189,7 +188,7 @@ build_profile() {
   # Step 2/3: closure-derived read-only grants (Linux only).
   local reads_file
   reads_file="$(mktemp)"
-  trap 'rm -f "$tmp_profile" "$reads_file"' RETURN
+  trap 'rm -f "${tmp_profile:-}" "${reads_file:-}" "${reads_file:-}.merged"; trap - RETURN' RETURN 
   if [[ "$os" == "linux" ]]; then
     {
       closure_of "/run/current-system/sw" || true
@@ -199,9 +198,6 @@ build_profile() {
       done
     } | order_preserving_dedupe >"$reads_file"
   fi
-
-  local reads_json
-  reads_json="$(jq -R -s -c 'split("\n") | map(select(length > 0))' "$reads_file")"
 
   # Step 4: read-write grants -- workdir, state dir, --add, --clone.
   local rw_paths=("$workdir")
@@ -218,10 +214,10 @@ build_profile() {
   local rw_json
   rw_json="$(printf '%s\n' "${rw_paths[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')"
 
-  jq --argjson reads "$reads_json" --argjson rw "$rw_json" '
-    .filesystem.read = ((.filesystem.read // []) + $reads) |
-    .filesystem.allow = ((.filesystem.allow // []) + $rw)
-  ' "$tmp_profile" >"$reads_file.merged"
+  jq --rawfile reads "$reads_file" --argjson rw "$rw_json" '                                                                                                              
+    .filesystem.read = ((.filesystem.read // []) + ($reads | split("\n") | map(select(length > 0)))) |                                                                    
+    .filesystem.allow = ((.filesystem.allow // []) + $rw)                                                                                                                 
+  ' "$tmp_profile" >"$reads_file.merged" 
 
   # Step 5: validate and write atomically.
   if ! jq empty "$reads_file.merged" 2>/dev/null; then
@@ -241,7 +237,7 @@ build_profile() {
 self_test() {
   local tmp_dir
   tmp_dir="$(mktemp -d)"
-  trap 'rm -rf "$tmp_dir"' RETURN
+  trap 'rm -rf "${tmp_dir:-}"; trap - RETURN' RETURN
 
   local base="$tmp_dir/base.json"
   cat >"$base" <<'EOF'

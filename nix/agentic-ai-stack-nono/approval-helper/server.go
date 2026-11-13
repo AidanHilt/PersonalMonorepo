@@ -45,6 +45,12 @@ type approvalServer struct {
 	denyCache     map[string]decision
 	denyExpiry    map[string]time.Time
 	sessionGrants map[string]bool
+
+	// onJoinInFlight, if non-nil, is invoked (test-only hook) immediately
+	// after releasing s.mu and right before blocking on <-existing.done,
+	// i.e. once a caller has observed it is joining an already in-flight
+	// prompt rather than starting its own. No effect on behaviour when nil.
+	onJoinInFlight func()
 }
 
 func newApprovalServer(token string, p prompter, logger *log.Logger) *approvalServer {
@@ -131,6 +137,9 @@ func (s *approvalServer) decide(ctx context.Context, info capabilityInfo) decisi
 	}
 	if existing, ok := s.inFlight[key]; ok {
 		s.mu.Unlock()
+		if s.onJoinInFlight != nil {
+			s.onJoinInFlight()
+		}
 		<-existing.done
 		return existing.result
 	}
