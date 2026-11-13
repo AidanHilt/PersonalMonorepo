@@ -1,0 +1,103 @@
+{
+  "extends": "default",
+  "meta": {
+    "name": "pi-sandbox-nono-work",
+    "version": "1.0.0",
+    "description": "Flake-owned static base for the nono 'work' profile (PLAN.md Phase 3). NOT launch-ready on its own: __APPROVAL_WEBHOOK_URL__ must be substituted, and scripts/gen-profile.sh must merge in the per-launch closure/workdir/add/clone filesystem grants before this is passed to `nono run --profile`.",
+    "min_nono_version": "0.81.0"
+  },
+  "groups": {
+    "include": [
+      "node_runtime",
+      { "name": "user_caches_macos", "when": "macos" },
+      { "name": "user_caches_linux", "when": "linux" },
+      { "name": "linux_sysfs_read", "when": "linux" },
+      "git_config",
+      "unlink_protection"
+    ]
+  },
+  "security": {
+    "signal_mode": "isolated",
+    "capability_elevation": false
+  },
+  "workdir": {
+    "access": "readwrite"
+  },
+  "filesystem": {
+    "allow": [],
+    "read": [],
+    "unix_socket": ["/nix/var/nix/daemon-socket/socket"]
+  },
+  "network": {
+    "block": false,
+    "allow_domain": [
+      "api.anthropic.com",
+      "claude.ai",
+      "claude.com",
+      "platform.claude.com",
+      "auth.openai.com",
+      "github.com",
+      "api.github.com",
+      "raw.githubusercontent.com",
+      "codeload.github.com",
+      "api.exa.ai"
+    ],
+    "approval_backends": {
+      "dialog": {
+        "type": "webhook",
+        "url": "__APPROVAL_WEBHOOK_URL__",
+        "timeout_secs": 10
+      }
+    },
+    "approval_defaults": {
+      "backend": "dialog"
+    }
+  },
+  "open_urls": {
+    "allow_origins": ["https://auth.openai.com", "https://claude.ai", "https://github.com"],
+    "allow_localhost": true
+  },
+  "allow_launch_services": true,
+  "rollback": {
+    "exclude_patterns": ["node_modules", ".next", "__pycache__", "target", ".pi"],
+    "exclude_globs": ["*.tmp.[0-9]*.[0-9]*"]
+  },
+  "environment": {
+    "_UNVERIFIED_NOTE": "nono's environment-filtering schema has not been exercised by any spike (see IMPLEMENTERS.md, 'Work profile (Phase 3)' -> UNVERIFIED). This 'allow' shape is a best-effort guess, modelled on the allow_domain/allow_origins list shape used elsewhere in this same file; it may not be the field nono actually expects.",
+    "allow": [
+      "PATH",
+      "HOME",
+      "TERM",
+      "LANG",
+      "LC_*",
+      "TZ",
+      "PI_*",
+      "PI_SANDBOX__SECRET__*"
+    ]
+  },
+  "command_policies": {
+    "_UNVERIFIED_NOTE": "No spike exercised command_policies/invocation_policy/deny_direct_exec_bypass; this shape is a best-effort guess from PLAN.md's prose description, not a verified nono schema (see IMPLEMENTERS.md, 'Work profile (Phase 3)' -> UNVERIFIED).",
+    "nix": {
+      "invocation_policy": {
+        "allow": ["build", "eval", "develop", "flake check", "flake show"],
+        "deny": [
+          "profile",
+          "copy",
+          "--option",
+          "--extra-substituters",
+          "--accept-flake-config",
+          "update",
+          "nixos-rebuild",
+          "darwin-rebuild",
+          "home-manager",
+          "nix-env"
+        ]
+      },
+      "deny_direct_exec_bypass": true
+    },
+    "agent-validate": {
+      "mediate": true,
+      "deny_direct_exec_bypass": true
+    }
+  }
+}

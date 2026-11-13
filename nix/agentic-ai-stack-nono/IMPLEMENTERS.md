@@ -257,3 +257,103 @@ with `nix run .#verify`.
   `/tmp` is a tmpfs, so these caches don't survive a stack restart; this
   takes effect the next time the `pi` container (re)starts, not by
   editing a running one.
+
+## Work profile (Phase 3)
+
+> This section describes new, nono-specific work and is NOT stale like
+> the rest of this file (see the note at the top) -- it covers
+> `PLAN.md`'s Phase 3 only (the flake-owned nono "work" profile). The
+> launcher/approval-helper wiring that actually invokes this is Phase 4,
+> not built yet.
+
+### File layout
+
+- `profiles/work.base.json` -- the flake-owned, static base profile.
+  Extends nono's built-in `default`. Vendored from the nolabs-ai `pi`
+  pack's `spikes/pi-pack/profiles/pi.json` per `PLAN.md` section 2's
+  keep/drop rows: keeps groups `node_runtime`,
+  `user_caches_{macos,linux}`, `linux_sysfs_read`, `git_config`,
+  `unlink_protection`; `security.signal_mode = isolated`,
+  `capability_elevation = false`; `open_urls`; `allow_launch_services`;
+  the rollback exclusions. Drops `rust_runtime`, `python_runtime`,
+  `nix_runtime`, the pack's `custom_credentials` block, and the
+  `$HOME/.pi`/`$HOME/.nvm`/`$HOME/.agents/skills`/`$NONO_PACKAGES`/
+  `$NONO_CONFIG/profiles`/`$NONO_CONFIG/profile-drafts` reads. Linux is
+  allow-list only: `filesystem.deny` is never used here, since Landlock
+  refuses to start with deny-inside-allow (`PLAN.md` section 3, spike
+  S3.1). The Nix daemon socket
+  (`/nix/var/nix/daemon-socket/socket`) is granted via
+  `filesystem.unix_socket`. `network.allow_domain` is seeded with the
+  static host whitelist from `PLAN.md`'s "Network mode" row (Anthropic/
+  Claude, GitHub, and exa.ai hosts, plus `auth.openai.com` for the OAuth
+  flow) and `network.approval_backends`/`approval_defaults` carry a
+  `webhook` backend shaped exactly like `spikes/all/approval.template.json`
+  (spike-verified), except the URL is the literal placeholder token
+  `__APPROVAL_WEBHOOK_URL__` instead of a `__PORT__`/`__TOKEN__` pair --
+  `scripts/gen-profile.sh` fills that in at launch time once the Phase 4
+  approval helper exists to generate it.
+- `scripts/gen-profile.sh` -- composes a launch-ready profile from
+  `work.base.json` plus per-launch filesystem grants. Never calls
+  `nono` itself (this environment has no `nono` to test against -- see
+  "UNVERIFIED" below). `--self-test` exercises its dedupe/substitution
+  logic against fixture data with no dependency on `nix` or `nono` (set
+  `GEN_PROFILE_CLOSURE_CMD` to override the closure lookup).
+
+### How `gen-profile.sh` composes the final profile
+
+1. Substitutes `__APPROVAL_WEBHOOK_URL__` everywhere it appears in the
+   base profile with the actual per-launch webhook URL (passed in by
+   the, not-yet-built, Phase 4 approval helper).
+2. On Linux, computes the Nix closure (`nix-store -qR`) of
+   `/run/current-system/sw` (the host's system profile, so grants track
+   `update`) plus every `--extra-closure-root` (the stack's own tool
+   store paths -- `pi`, `node`, `nix/scripts` tools), in order, and
+   merges the **order-preserving deduped** (`awk '!seen[$0]++'`, never
+   `sort -u` -- see `PLAN.md` section 3's S3.2 harness-bug note) result
+   into `filesystem.read` (read-only, never `filesystem.allow`, and
+   never nono's `nix_runtime` group, per the "Exec ceiling (Linux)"
+   decision row).
+3. On macOS, skips the closure merge entirely rather than guessing at a
+   workable substitute -- see the UNVERIFIED list below.
+4. Adds read-write grants (`filesystem.allow`) for `--workdir`,
+   `--state-dir` (the per-run `PI_CODING_AGENT_DIR`, Phase 4), every
+   `--add`, and every `--clone`. Judgement call: `--add` paths default
+   to read-write (matching `--clone`), since the plan only specified
+   this for workdir/state-dir explicitly and `start-agent.sh`'s
+   existing `--add` semantics (container era) were already read-write.
+5. Validates the result with `jq empty` and writes it atomically (a
+   temp file in `--out`'s own directory, then `mv -f` over the final
+   path).
+
+### UNVERIFIED (no nono binary in this environment to validate against)
+
+- **`command_policies`/`invocation_policy`/`deny_direct_exec_bypass`**
+  (`work.base.json`'s `command_policies` block): no spike exercised
+  this; the shape here is a best-effort guess from `PLAN.md`'s prose
+  description (mediate `nix` and `agent-validate`; allow `nix build`/
+  `eval`/`develop`/`flake check`/`flake show`; deny `profile`, `copy`,
+  `--option`, `--extra-substituters`, `--accept-flake-config`,
+  `update`, `nixos-rebuild`, `darwin-rebuild`, `home-manager`,
+  `nix-env`), not a verified nono schema. Re-verify against real `nono`
+  before relying on it.
+- **Environment variable filtering** (`work.base.json`'s `environment`
+  block): no spike exercised nono's env-filtering schema at all. The
+  `allow` list here (`PATH`, `HOME`, `TERM`, `LANG`, `LC_*`, `TZ`,
+  `PI_*`, `PI_SANDBOX__SECRET__*`) is a best-effort guess at letting
+  the `--secret`/`PI_SANDBOX__SECRET__<NAME>` convention (`PLAN.md`'s
+  "Secrets" row) through; the field name/shape is unverified.
+- **macOS native grants**: `gen-profile.sh` currently adds no
+  closure-equivalent grant on macOS at all (see its `TODO(macOS native
+  grants)` comment) -- Seatbelt rule-count limits for a closure-sized
+  grant list are untested (`PLAN.md` section 6, open item), and macOS
+  hasn't been exercised by any spike in this effort at all.
+- **`filesystem.allow` vs `filesystem.read` write semantics**: inferred
+  from `spikes/all/run.sh`'s S4 profile (`allow` used for a writable
+  `$HOME`-like dir alongside a read-only `/nix/store`) and the pi pack's
+  `pi.json` (`allow` used for `$HOME/.pi`, a writable agent-state dir);
+  not directly asserted by any PASS-reported spike.
+- **`unlink_protection` vs worktree cleanup/`agent-stage`**: carried
+  over from `PLAN.md` section 6's own open item -- kept per the
+  plan's "keep from the pack" row, but its interaction with git
+  worktree teardown has not been verified.
+
