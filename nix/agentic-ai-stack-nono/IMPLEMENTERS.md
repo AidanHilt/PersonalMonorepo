@@ -477,26 +477,41 @@ launches -- that's what makes `--resume` meaningful at all here. This is a
 judgement call, not a spike-verified fact: no spike exercised `pi --resume`
 against a per-run `PI_CODING_AGENT_DIR` tree.
 
-**Tool path resolution**: `nono`, `pi`, `jq`, and `approval-helper` are all
-resolved to absolute, symlink-free paths via `command -v` + `readlink -f`
-on the INVOKING user's `PATH`, once, up front -- and referenced by that
-absolute path everywhere below, including inside the final `sudo -u pi`
-invocation. Judgement call: this sidesteps two things that were not
-verified in this environment (no live host to test against): (1) whether
-sudo's `secure_path` (if set) would even put `nono`/`pi` on `pi`'s PATH at
-all, and (2) `nix-store -qR` (inside `gen-profile.sh`) needs a real,
-symlink-resolved store path, not an arbitrary `PATH` entry. **UNVERIFIED
-gap, flagged for the user**: unlike `nono` (provided system-wide by
-mono-flake's overlay -- see `modules/roles/universal/_pi-user.nix`'s
-`pkgs-unstable.nono` systemPackage), there is currently **no**
-`pi-coding-agent` overlay/systemPackage anywhere in `nix/mono-flake` --
-the old `nix/agentic-ai-stack/pi-coding-agent-overlay.nix` was never
-carried over. This launcher assumes `pi` is already resolvable via
-`command -v pi` on the invoking user's `PATH` (fails fast with a clear
-error if not, before touching nono/sudo at all) -- getting it there is a
-prerequisite the user needs to provision in `mono-flake` (same mechanism
-as the existing `nono` systemPackage), not something this launcher can
-fix from inside `nix/agentic-ai-stack-nono`.
+**Tool path resolution**: this stack flake -- not `nix/mono-flake` --
+owns provisioning both `pi` and `nono` (follow-up decision, superseding
+what this section originally said). `flake.nix` re-adds a
+`nixpkgs-unstable` input (`github:NixOS/nixpkgs/nixos-unstable`, same ref
+the old container-era `nix/agentic-ai-stack/flake.nix` used) and a
+per-system `pkgsUnstable` built from it with **no overlay** (the old
+`pi-coding-agent-overlay.nix` trim overlay stays deleted; plain unstable
+`pi-coding-agent` is used as-is, and unstable's `nono` is confirmed >=
+0.81.0, same as what `nix/mono-flake` already uses). Both are exposed as
+top-level packages (`nix build .#nono`, `nix build .#pi-coding-agent`,
+aliasing `pkgsUnstable.nono`/`pkgsUnstable.pi-coding-agent`).
+`apps.start-agent`'s `writeShellApplication` wrapper exports their
+absolute store paths -- plus `jq` and this flake's own `approval-helper`
+package -- as `PI_STACK_NONO_BIN`, `PI_STACK_PI_BIN`, `PI_STACK_JQ_BIN`,
+`PI_STACK_APPROVAL_HELPER_BIN` env vars before `scripts/start-agent.sh`
+runs. The script's `resolve_stack_bin` helper reads those first (via
+`readlink -f`, so they're still real, symlink-resolved store paths --
+needed both for `sudo -u pi` to not depend on whatever `secure_path` gives
+`pi`, and for `nix-store -qR` inside `gen-profile.sh`), and only falls
+back to `command -v $name` on the invoking user's PATH (with a loud
+warning pointing at `nix run .#start-agent`) if the script is somehow run
+directly, outside the flake wrapper. `nono`'s mono-flake systemPackage
+(`modules/roles/universal/_pi-user.nix`'s `pkgs-unstable.nono`) is now
+redundant for this launcher specifically -- it remains in `nix/mono-flake`
+only for host-side commands (the `attach`/`ps`/`stop` wrappers planned for
+Phase 4b, which run as the invoking user rather than through this flake's
+apps).
+
+**`flake.lock` follow-up required**: adding the `nixpkgs-unstable` input
+adds `flake.lock` entries that could not be re-locked from inside the
+sandbox this change was authored in (no network, `nix` itself blocked
+outside the one allowed `agent-validate` invocation) -- `flake.lock` was
+deliberately left UNEDITED. **The user must run `nix flake lock` in
+`nix/agentic-ai-stack-nono` on a host with network access before this
+flake will evaluate.**
 
 **`nix build` dependency**: resolving `pi-extra-extensions`/
 `pi-extra-skills`'s store paths at launch time uses `nix build

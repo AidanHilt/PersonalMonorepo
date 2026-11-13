@@ -5,6 +5,22 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     flake-utils.url = "github:numtide/flake-utils";
 
+    # This stack flake -- not nix/mono-flake -- owns provisioning `pi` and
+    # `nono` (decision: both come from nixpkgs-unstable, plain upstream,
+    # NO overlay -- the old `nix/agentic-ai-stack/pi-coding-agent-overlay.nix`
+    # trim overlay stays deleted; unstable's `nono` is confirmed >= 0.81.0,
+    # same as what nix/mono-flake already uses). Same remote ref as the
+    # `nixpkgs-unstable` input the old `nix/agentic-ai-stack/flake.nix`
+    # used, minus its overlay wiring.
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+    # NOTE: this adds flake.lock entries for nixpkgs-unstable (and its
+    # transitive inputs) that cannot be re-locked from inside this sandbox
+    # (no network, `nix` itself blocked outside the one allowed
+    # agent-validate invocation) -- `flake.lock` was deliberately left
+    # UNEDITED by this change. The user must run `nix flake lock` on the
+    # host before this flake will evaluate.
+
     # Same remote ref as nix/mono-flake's `scripts` input (see
     # nix/mono-flake/flake.nix). Only wired into devShells here, so the
     # `agent-plan-create`/`agent-validate` launchers (and anything else
@@ -59,6 +75,7 @@
     {
       self,
       nixpkgs,
+      nixpkgs-unstable,
       flake-utils,
       scripts,
       agent-skills,
@@ -72,9 +89,26 @@
         pkgs = import nixpkgs {
           inherit system;
         };
+
+        # Plain, un-overlaid nixpkgs-unstable -- see the nixpkgs-unstable
+        # input comment above. Only `nono` and `pi-coding-agent` are drawn
+        # from here; everything else in this flake stays on the pinned
+        # `nixpkgs` (nixos-26.05) input.
+        pkgsUnstable = import nixpkgs-unstable {
+          inherit system;
+        };
       in
       {
         packages = {
+          # This stack flake's own provisioning of `pi` and `nono` (see the
+          # nixpkgs-unstable input comment above): plain nixpkgs-unstable,
+          # NO overlay. Exposed as top-level packages (aliases) both so
+          # they're independently inspectable/buildable (`nix build
+          # .#nono`, `nix build .#pi-coding-agent`) and so apps.start-agent
+          # below can reference concrete store paths at eval time instead
+          # of relying on `command -v` against the invoking user's PATH.
+          inherit (pkgsUnstable) nono pi-coding-agent;
+
           # Standalone, opt-in convenience path for pre-built npm/git
           # extensions (see extra-extensions.nix, extensions/README.md).
           # Not wired into any image/profile build here -- exposed only so
@@ -109,15 +143,12 @@
         apps = {
           # nix run .#start-agent -> scripts/start-agent.sh (PLAN.md Phase
           # 4a): starts one nono-sandboxed `pi` session as the untrusted
-          # `pi` user. `nono` itself is NOT a runtimeInput here -- it's
-          # expected on the invoking user's PATH already, provided
-          # system-wide by mono-flake's nono overlay (see PLAN.md's "nono
-          # source" decision row and nix/mono-flake's
-          # modules/roles/universal/_pi-user.nix, which adds
-          # `pkgs-unstable.nono` as a systemPackage) -- same precedent this
-          # script also relies on for the `pi` binary itself (no
-          # `pi-coding-agent` overlay/systemPackage exists yet in
-          # mono-flake; see IMPLEMENTERS.md's UNVERIFIED list).
+          # `pi` user. This stack flake provisions `nono` and `pi` itself
+          # (see the nixpkgs-unstable input and the `nono`/`pi-coding-agent`
+          # packages above) -- their absolute store paths are exported as
+          # PI_STACK_*_BIN env vars below so start-agent.sh never has to
+          # fall back to `command -v` against the invoking user's PATH when
+          # run via `nix run .#start-agent` (the supported entrypoint).
           start-agent = flake-utils.lib.mkApp {
             # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
             drv = pkgs.writeShellApplication {
@@ -128,7 +159,13 @@
                 self.packages.${system}.approval-helper
                 pkgs.coreutils
               ];
-              text = builtins.readFile ./scripts/start-agent.sh;
+              text = ''
+                export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
+                export PI_STACK_PI_BIN=${pkgsUnstable.pi-coding-agent}/bin/pi
+                export PI_STACK_JQ_BIN=${pkgs.jq}/bin/jq
+                export PI_STACK_APPROVAL_HELPER_BIN=${self.packages.${system}.approval-helper}/bin/approval-helper
+              ''
+              + builtins.readFile ./scripts/start-agent.sh;
             };
           };
 

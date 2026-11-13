@@ -116,6 +116,16 @@ Environment variables:
   PI_SANDBOX__SECRET__<NAME>  Same as --secret NAME=VALUE (scanned first;
                                a --secret flag with the same NAME wins).
   PERSONAL_MONOREPO_LOCATION   Path to the monorepo checkout (required).
+  PI_STACK_NONO_BIN, PI_STACK_PI_BIN, PI_STACK_JQ_BIN,
+  PI_STACK_APPROVAL_HELPER_BIN
+                               Absolute store paths for nono/pi/jq/the
+                               approval helper, set automatically by
+                               flake.nix's apps.start-agent wrapper (this
+                               flake provisions nono+pi itself, from
+                               nixpkgs-unstable). Only needed manually if
+                               running this script directly instead of via
+                               'nix run .#start-agent' -- otherwise falls
+                               back to 'command -v' with a warning.
 
 Idempotent per-run seeding / --resume:
   Every launch re-syncs /var/lib/pi/runs/<name>/pi/agent/ from
@@ -147,6 +157,22 @@ resolve_or_die() {
     exit 1
   fi
   readlink -f "$path"
+}
+
+# resolve_stack_bin: prefers the absolute store path the flake wrapper
+# exported (PI_STACK_*_BIN -- see flake.nix's apps.start-agent, which sets
+# these from this stack's own `nono`/`pi-coding-agent` packages, drawn from
+# nixpkgs-unstable). Falls back to `command -v $name` on the invoking
+# user's PATH ONLY when run directly outside the flake (not via `nix run
+# .#start-agent`), with a clear pointer back at the supported entrypoint.
+resolve_stack_bin() {
+  local env_var="$1" name="$2" value="${!1:-}"
+  if [ -n "$value" ]; then
+    readlink -f "$value"
+    return 0
+  fi
+  echo "warning: $env_var not set -- falling back to 'command -v $name' on this shell's PATH. Run via 'nix run .#start-agent' (or 'nix run \$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono#start-agent') for this to be set automatically." >&2
+  resolve_or_die "$name"
 }
 
 add_extra() {
@@ -304,17 +330,24 @@ for secret_name in "${SECRET_NAMES[@]:-}"; do
   PRESERVE_LIST="$PRESERVE_LIST,$secret_name"
 done
 
-# --- Resolve tool paths from THIS (invoking) user's PATH, once -------------
-# Resolved to absolute, symlink-free paths and referenced that way
-# everywhere below -- both so `nix-store -qR` (inside gen-profile.sh) gets
-# real store paths, and so the final `sudo -u pi` invocation never depends
-# on whatever (possibly minimal) PATH sudo's `secure_path` gives `pi` --
-# see IMPLEMENTERS.md's UNVERIFIED list for why this is a judgement call,
-# not a spike-verified fact.
-NONO_BIN="$(resolve_or_die nono)"
-PI_BIN="$(resolve_or_die pi)"
-JQ_BIN="$(resolve_or_die jq)"
-APPROVAL_HELPER_BIN="$(resolve_or_die approval-helper)"
+# --- Resolve tool paths, once -----------------------------------------
+# This stack's own flake wrapper (flake.nix's apps.start-agent) provisions
+# `nono` and `pi` itself (from nixpkgs-unstable, no overlay -- see
+# flake.nix's `nono`/`pi-coding-agent` packages) and exports their
+# absolute store paths as PI_STACK_*_BIN env vars before this script runs,
+# so the normal `nix run .#start-agent` path never touches `command -v`
+# for these at all. `resolve_stack_bin` falls back to `command -v` (with a
+# warning) only if this script is somehow invoked directly, outside the
+# flake wrapper. Resolved to absolute, symlink-free paths and referenced
+# that way everywhere below -- both so `nix-store -qR` (inside
+# gen-profile.sh) gets real store paths, and so the final `sudo -u pi`
+# invocation never depends on whatever (possibly minimal) PATH sudo's
+# `secure_path` gives `pi` -- see IMPLEMENTERS.md's UNVERIFIED list for why
+# that part is a judgement call, not a spike-verified fact.
+NONO_BIN="$(resolve_stack_bin PI_STACK_NONO_BIN nono)"
+PI_BIN="$(resolve_stack_bin PI_STACK_PI_BIN pi)"
+JQ_BIN="$(resolve_stack_bin PI_STACK_JQ_BIN jq)"
+APPROVAL_HELPER_BIN="$(resolve_stack_bin PI_STACK_APPROVAL_HELPER_BIN approval-helper)"
 
 # --extra-closure-root candidates for gen-profile.sh's Linux exec-ceiling
 # closure (PLAN.md: "plus the stack's own tools (pi, node, the nix/scripts
