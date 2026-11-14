@@ -469,22 +469,71 @@ approval protocol (see `PLAN.md`'s "Approval transport"/"Approval helper
   dedupe (concurrent requests for the same `host:port` share one prompt
   instead of popping two dialogs) -- only then does it fall back to
   `prompt.go`'s `prompter` interface. A UI error or `--timeout` (default
-  120s) expiry is always mapped to `denied` -- fail closed, never a grant.
+  **55s**, down from an earlier 120s -- see "Timeout alignment" below)
+  expiry is always mapped to `denied` -- fail closed, never a grant.
+  `promptAndResolve` now also LOGS every such failure via `server.go`'s
+  logger (`host:port`, the underlying error, and whether it was a plain
+  UI error vs a timeout specifically, via `errors.Is(ctx.Err(),
+  context.DeadlineExceeded)`) -- it never logs the bearer token (the
+  token only ever appears in the URL path, which never reaches this
+  method). Previously these errors were swallowed silently, which was one
+  of the two root causes (together with the `auto`-mode selection bug
+  below) behind approvals silently behaving as deny-all with no visible
+  reason.
 - UI selection (`--ui auto|osascript|kdialog|tmux|deny-all`, `prompt.go`'s
-  `selectPrompter`): `auto` tries `osascript` on Darwin, then `kdialog` on
-  Linux if `DISPLAY`/`WAYLAND_DISPLAY` is set, then `tmux`, then falls
-  back to `deny-all` (fail closed) if nothing is found. Every concrete
-  prompter implementation (`osascriptPrompter`, `kdialogPrompter`,
-  `tmuxPrompter`) is **UNVERIFIED** -- no nono binary and no live
-  macOS/KDE/tmux session was available in this environment to exercise
-  any of them; only `denyAllPrompter` and the dedupe/cache/decision-mapping
-  logic in `server.go` are exercised by `main_test.go`'s table tests (via
-  a fake `prompter`).
+  `selectPrompter`) -- **rewritten to never silently fall back to
+  deny-all**: `auto` tries `osascript` on Darwin; then, on Linux, tries
+  `kdialog` ONLY if `DISPLAY`/`WAYLAND_DISPLAY` is set AND neither
+  `SSH_CONNECTION` nor `SSH_TTY` is set (an SSH client's `DISPLAY` can't
+  pop a dialog anyone can see); then tries `tmux` ONLY if `$TMUX` is
+  already non-empty (both as the Linux fallback and as Darwin's own
+  fallback when `osascript` isn't found -- unchanged in spirit from
+  before, just now gated on `$TMUX` rather than merely `tmux` being on
+  `PATH`). If nothing matches, `selectPrompter` now returns an ERROR (not
+  `denyAllPrompter`) with an actionable message ("start tmux first and
+  launch from inside it; or pass --ui deny-all explicitly"); `deny-all`
+  remains available, but only via an explicit `--ui deny-all`.
+  `selectPrompter` also returns a short, human-readable description of
+  the prompter chosen (and why); `main.go` creates its logger BEFORE
+  calling `selectPrompter` so both a selection failure and (on success)
+  the chosen prompter get logged to stderr, and exits non-zero on a
+  selection failure before binding the loopback listener or writing
+  `--info-file` at all -- a misconfigured host (most commonly SSH with no
+  tmux) now fails loudly at helper startup instead of quietly denying
+  every approval it's asked about later. This was the other root cause of
+  the "approvals silently denied" bug: over SSH with a `DISPLAY` set but
+  no reachable X server, `auto` used to try (and fail) `kdialog`, match
+  nothing else, and fall back to `denyAllPrompter` with no log line at
+  all. Every concrete prompter implementation (`osascriptPrompter`,
+  `kdialogPrompter`, `tmuxPrompter`) remains **UNVERIFIED** -- no nono
+  binary and no live macOS/KDE/tmux session was available in this
+  environment to exercise any of them; `denyAllPrompter`, the
+  dedupe/cache/decision-mapping logic in `server.go`, AND
+  `selectPrompter`'s full branch matrix (including the SSH-aware/`$TMUX`-
+  gated rules above and the no-usable-UI error path) are exercised by
+  `main_test.go`'s table tests (via a fake `prompter`/fake
+  `lookPath`/`getenv`).
 - `--parent-pid PID`: polls (every 1s, via `kill(PID, 0)` -- a pure
   existence/permission check, no signal is actually delivered) and shuts
   down once that PID is gone, so a foreground launcher's helper exits
   when the launcher does, without needing its own signal plumbing beyond
-  the standard SIGINT/SIGTERM handling already in `main.go`.
+  the standard SIGINT/SIGTERM handling already in `main.go`. In
+  `--detached` mode specifically, this now points at the invoking-user-
+  owned `wrapper.sh` process (see "Detached mode" below), not at any
+  `pi`-owned process -- a `kill(pid, 0)` from the helper (also running as
+  the invoking user) only works at all when both processes share the same
+  user.
+- **Timeout alignment**: `defaultPromptTimeout` (`server.go`) is now
+  **55s**, deliberately kept below the `network.approval_backends.
+  dialog.timeout_secs` the nono profiles set for the webhook backend
+  (`profiles/work.base.json`, `profiles/login.base.json`, both now
+  **60s**, up from an earlier 10s). Before this fix the helper's own 120s
+  default was actually LONGER than the profiles' 10s webhook timeout, so
+  nono itself would give up and treat the request as denied well before
+  the helper ever got a chance to resolve (and log) its own outcome -- the
+  5s of headroom here (55s helper vs 60s nono) is intentional so the
+  helper's own timeout always fires first and gets logged with a reason,
+  rather than nono's own silent timeout winning the race.
 
 ### Launcher (`scripts/start-agent.sh`)
 
@@ -644,22 +693,85 @@ every launch instead. On NixOS, the resolved bundle is itself a
 `/nix/store` handling as any other `--read` path (a trivial closure, in
 practice).
 
-**Detached mode**: `--detached` hands the rest of the lifecycle to a
-generated `supervisor.sh`, run via `setsid sudo -u pi -- bash -c 'exec
-bash "$1" >"$2" 2>&1 </dev/null' ...` (the log redirect has to happen
-INSIDE the sudo'd process, since the invoking user has no write access
-into the pi-owned run directory to open that file itself first). The
-supervisor starts its own approval helper, generates the profile, runs
-`nono run --detached`, then polls plain `nono ps | grep <name>` every 5s
-until the session is gone, at which point it kills its approval helper and
-exits. **UNVERIFIED judgement call**: this polling loop is modelled
-directly on `spikes/all/run.sh`'s S5.1-S5.3 (`nono ps`'s output format was
-only ever grepped for a session name substring there, never parsed
-structurally), but no nono binary was available in this environment to
-confirm that behaviour beyond what those PASS-reported spikes already
-exercised. There is deliberately no cross-user (`aidan` watching `pi`'s
-sessions) story here yet -- that's `PLAN.md`'s S5.4/"cross-user session
-registry" open item, left to the Phase 4b `ps`/`attach`/`stop` wrappers.
+**Detached mode (option A: the approval helper runs as the invoking
+user, not `pi`)**: an earlier version of this had `--detached` hand the
+ENTIRE rest of the lifecycle -- including the approval helper -- to a
+single `supervisor.sh` run wholly as `pi` (`setsid sudo -u pi -- bash -c
+'exec bash "$1" >"$2" 2>&1 </dev/null' ...`). That was broken: a helper
+started as `pi` can never reach the invoking user's tmux server (the
+`--ui auto` fallback for any headless/SSH host), so detached-mode
+approvals silently had no usable prompter and fell straight through to
+the old silent-deny-all bug described above. `--detached` now splits the
+lifecycle across three pieces instead:
+
+1. **`supervisor.sh`** (pi-owned, runs as `pi`, logging to
+   `$RUN_DIR/supervisor.log` same as before) -- unchanged in spirit,
+   EXCEPT it no longer starts or stops the approval helper itself. It now
+   takes the already-running helper's webhook URL as its one positional
+   argument (`${1:?...}`), generates the profile, runs `nono run
+   --detached`, then polls plain `nono ps | grep <name>` every 5s until
+   the session is gone, and exits (no helper to kill any more -- that's
+   the wrapper's job, see below). **UNVERIFIED judgement call**
+   (carried over unchanged): this polling loop is modelled directly on
+   `spikes/all/run.sh`'s S5.1-S5.3 (`nono ps`'s output format was only
+   ever grepped for a session name substring there, never parsed
+   structurally), but no nono binary was available in this environment to
+   confirm that behaviour beyond what those PASS-reported spikes already
+   exercised.
+2. **`wrapper.sh`** (owned AND RUN by the invoking user, written to a
+   fresh `mktemp -d`-created scratch directory under `$XDG_RUNTIME_DIR`/
+   `$TMPDIR`/`/tmp` -- deliberately NOT under the pi-owned `$RUN_DIR`,
+   since the invoking user has no write access there): started via
+   `setsid bash "$WRAPPER_SCRIPT" >>"$WRAPPER_LOG" 2>&1 </dev/null &
+   disown` (persistent log OUTSIDE that scratch dir, under `$TMPDIR`/
+   `/tmp`, so it survives the scratch dir's own cleanup). As the invoking
+   user, it:
+   - starts the approval helper (`--ui auto --info-file ... --parent-pid
+     "$$"` -- `$$` here is the WRAPPER's own PID, not the launcher's or
+     `pi`'s; the wrapper runs as the invoking user for its whole life, so
+     the helper's `kill(pid, 0)` liveness poll actually works against it,
+     unlike pointing it at a `pi`-owned process),
+   - polls for the helper's `--info-file` to appear (same `kill -0`-aware
+     loop as the foreground/`login.sh` fix above -- if the helper exits
+     early, e.g. no tmux, a failure marker file is written and the
+     wrapper exits non-zero instead of hanging),
+   - reads the webhook URL back out of that info file,
+   - runs `sudo -u pi --preserve-env="$PRESERVE_LIST" -- bash -c 'exec
+     bash "$1" "$2" >"$3" 2>&1 </dev/null' bash "$SUPERVISOR_SCRIPT"
+     "$WEBHOOK_URL" "$RUN_DIR/supervisor.log"` IN THE FOREGROUND (the log
+     redirect still has to happen INSIDE the sudo'd process, since the
+     invoking user still has no write access into the pi-owned run
+     directory to open `supervisor.log` itself first -- that part is
+     unchanged from before, just now parameterized with the webhook URL
+     as an extra positional arg),
+   - and once that returns, kills the helper and `rm -rf`s its own
+     scratch directory (removing the `--info-file`, which holds the
+     bearer token -- cleaned up, not left lying around).
+3. **The launcher itself** (`start-agent.sh`, still attached to the
+   terminal) starts the wrapper (`setsid ... & disown`) and then BLOCKS,
+   briefly (the same 50x0.1s poll shape used elsewhere in this script),
+   watching for the helper's `--info-file` to appear (success) or the
+   wrapper's failure marker / the wrapper process itself exiting
+   (failure) -- i.e. it confirms the approval helper actually came up
+   BEFORE returning control to the user, printing both the wrapper's log
+   location and the supervisor's log location either way. On failure it
+   exits non-zero with a message pointing at the wrapper's log (which
+   holds the helper's own stderr) and the tmux requirement, rather than
+   silently leaving a broken detached session behind.
+
+**Sudo non-interactivity**: the wrapper's `sudo -u pi` call happens AFTER
+this launcher has already detached -- if that `sudo` needed an
+interactive password prompt at that point, with no controlling terminal,
+it would simply fail. This still relies on the same NOPASSWD+SETENV sudo
+rule every other `sudo -u pi` call in this script already depends on (see
+`nix/mono-flake`'s `_pi-user-linux.nix`/`_pi-user-darwin.nix`); the
+launcher also runs a bare `sudo -v` right before building the wrapper, as
+a defensive/documentary measure (priming the credential cache while still
+attached), not because the NOPASSWD rule is expected to need it.
+
+There is deliberately no cross-user (`aidan` watching `pi`'s sessions)
+story here yet -- that's `PLAN.md`'s S5.4/"cross-user session registry"
+open item, left to the Phase 4b `ps`/`attach`/`stop` wrappers.
 
 **Getting results back out**: this launcher does not automate syncing
 `workdir/` changes back to the invoking user's own checkout (unlike the

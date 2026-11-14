@@ -45,10 +45,19 @@ func run(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 
-	promptUI, err := selectPrompter(*uiMode, runtime.GOOS, exec.LookPath, os.Getenv)
+	// Create the logger before prompter selection so BOTH a selection
+	// failure and (on success) the chosen prompter get logged to stderr --
+	// a misconfigured host (e.g. over SSH with no tmux) must fail loudly
+	// here, before binding the listener or writing --info-file, rather
+	// than silently falling back to denying every approval later.
+	logger := log.New(stderr, "approval-helper: ", log.LstdFlags)
+
+	promptUI, uiDesc, err := selectPrompter(*uiMode, runtime.GOOS, exec.LookPath, os.Getenv)
 	if err != nil {
+		logger.Println("failed to select an approval UI:", err)
 		return err
 	}
+	logger.Println("using", uiDesc)
 
 	token, err := newToken()
 	if err != nil {
@@ -59,8 +68,6 @@ func run(args []string, stdout, stderr io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("binding loopback listener: %w", err)
 	}
-
-	logger := log.New(stderr, "approval-helper: ", log.LstdFlags)
 
 	srv := newApprovalServer(token, promptUI, logger)
 	srv.promptTimeout = time.Duration(*timeoutSecs) * time.Second

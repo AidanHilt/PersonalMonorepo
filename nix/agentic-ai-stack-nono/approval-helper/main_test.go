@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -124,6 +125,53 @@ func TestServeHTTP_DecisionMapping(t *testing.T) {
 				t.Fatalf("reason = %q, want %q", resp.Reason, tc.wantReason)
 			}
 		})
+	}
+}
+
+func TestPromptAndResolve_LogsErrorButNeverTheToken(t *testing.T) {
+	var logBuf bytes.Buffer
+	s := newApprovalServer("super-secret-token", &fakePrompter{err: errors.New("boom")}, log.New(&logBuf, "", 0))
+
+	d := s.promptAndResolve(context.Background(), capabilityInfo{Host: "example.com", Port: 443})
+	if d.Type != "denied" {
+		t.Fatalf("decision = %q, want denied", d.Type)
+	}
+	logged := logBuf.String()
+	if logged == "" {
+		t.Fatal("expected the prompter error to be logged")
+	}
+	if !strings.Contains(logged, "example.com:443") {
+		t.Fatalf("expected log to mention host:port, got: %q", logged)
+	}
+	if strings.Contains(logged, "super-secret-token") {
+		t.Fatalf("log line must never contain the bearer token, got: %q", logged)
+	}
+}
+
+func TestPromptAndResolve_LogsTimeoutDistinctly(t *testing.T) {
+	var logBuf bytes.Buffer
+	block := make(chan struct{}) // never closed: forces the prompter to hang until ctx expires
+	fp := &fakePrompter{block: block}
+	s := newApprovalServer("tok", fp, log.New(&logBuf, "", 0))
+	s.promptTimeout = 10 * time.Millisecond
+
+	d := s.promptAndResolve(context.Background(), capabilityInfo{Host: "example.com", Port: 443})
+	if d.Type != "denied" {
+		t.Fatalf("decision = %q, want denied", d.Type)
+	}
+	if !strings.Contains(logBuf.String(), "timed out") {
+		t.Fatalf("expected the timeout to be logged distinctly, got: %q", logBuf.String())
+	}
+}
+
+func TestDefaultPromptTimeout_BelowWebhookTimeouts(t *testing.T) {
+	// profiles/work.base.json and profiles/login.base.json set
+	// network.approval_backends.dialog.timeout_secs to 60 -- the helper's
+	// own default prompt timeout must stay comfortably below that so it
+	// always resolves (even to a deny) and logs a reason before nono's own
+	// webhook call gives up waiting on it.
+	if defaultPromptTimeout >= 60*time.Second {
+		t.Fatalf("defaultPromptTimeout = %s, want it below the 60s webhook timeout_secs used by the nono profiles", defaultPromptTimeout)
 	}
 }
 
@@ -285,12 +333,20 @@ func TestSelectPrompter(t *testing.T) {
 		}
 	}
 	noEnv := func(string) string { return "" }
-	withDisplay := func(k string) string {
-		if k == "DISPLAY" {
-			return ":0"
-		}
-		return ""
+	envWith := func(vars map[string]string) func(string) string {
+		return func(k string) string { return vars[k] }
 	}
+	withDisplay := envWith(map[string]string{"DISPLAY": ":0"})
+	withTmux := envWith(map[string]string{"TMUX": "/tmp/tmux-1000/default,1234,0"})
+	withDisplaySSHTmux := envWith(map[string]string{
+		"DISPLAY":        ":0",
+		"SSH_CONNECTION": "10.0.0.1 22 10.0.0.2 22",
+		"TMUX":           "/tmp/tmux-1000/default,1234,0",
+	})
+	withDisplaySSHTTYOnly := envWith(map[string]string{
+		"DISPLAY": ":0",
+		"SSH_TTY": "/dev/pts/0",
+	})
 
 	cases := []struct {
 		name     string
@@ -298,24 +354,37 @@ func TestSelectPrompter(t *testing.T) {
 		goos     string
 		lookPath func(string) (string, error)
 		getenv   func(string) string
-		want     any // the concrete type we expect back, via a type switch below
+		want     any // the concrete type we expect back, via a type switch below (nil means we expect an error)
 	}{
 		{"explicit deny-all", "deny-all", "linux", notFound, noEnv, denyAllPrompter{}},
 		{"explicit osascript", "osascript", "linux", found, noEnv, &osascriptPrompter{}},
 		{"explicit kdialog", "kdialog", "linux", found, noEnv, &kdialogPrompter{}},
 		{"explicit tmux", "tmux", "linux", found, noEnv, &tmuxPrompter{}},
 		{"auto on darwin picks osascript", "auto", "darwin", found, noEnv, &osascriptPrompter{}},
-		{"auto on darwin falls back without osascript", "auto", "darwin", only("tmux"), noEnv, &tmuxPrompter{}},
-		{"auto on linux with DISPLAY picks kdialog", "auto", "linux", found, withDisplay, &kdialogPrompter{}},
-		{"auto on linux without a desktop picks tmux", "auto", "linux", only("tmux"), noEnv, &tmuxPrompter{}},
-		{"auto with nothing available denies", "auto", "linux", notFound, noEnv, denyAllPrompter{}},
+		{"auto on darwin falls back to tmux without osascript, TMUX set", "auto", "darwin", only("tmux"), withTmux, &tmuxPrompter{}},
+		{"auto on darwin with no osascript and no TMUX errors", "auto", "darwin", only("tmux"), noEnv, nil},
+		{"auto on linux with DISPLAY (no SSH) picks kdialog", "auto", "linux", found, withDisplay, &kdialogPrompter{}},
+		{"auto on linux over SSH (SSH_CONNECTION) with DISPLAY set skips kdialog, falls to tmux", "auto", "linux", found, withDisplaySSHTmux, &tmuxPrompter{}},
+		{"auto on linux over SSH (SSH_TTY) with DISPLAY set skips kdialog, no TMUX errors", "auto", "linux", found, withDisplaySSHTTYOnly, nil},
+		{"auto on linux without a desktop but TMUX set picks tmux", "auto", "linux", only("tmux"), withTmux, &tmuxPrompter{}},
+		{"auto on linux with TMUX set but tmux not on PATH errors", "auto", "linux", notFound, withTmux, nil},
+		{"auto with nothing available errors (not deny-all)", "auto", "linux", notFound, noEnv, nil},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			p, err := selectPrompter(tc.mode, tc.goos, tc.lookPath, tc.getenv)
+			p, desc, err := selectPrompter(tc.mode, tc.goos, tc.lookPath, tc.getenv)
+			if tc.want == nil {
+				if err == nil {
+					t.Fatalf("expected an error, got prompter %T with description %q", p, desc)
+				}
+				return
+			}
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
+			}
+			if desc == "" {
+				t.Fatal("expected a non-empty description for a successfully selected prompter")
 			}
 			switch tc.want.(type) {
 			case denyAllPrompter:
@@ -340,9 +409,24 @@ func TestSelectPrompter(t *testing.T) {
 }
 
 func TestSelectPrompter_UnknownModeErrors(t *testing.T) {
-	_, err := selectPrompter("not-a-real-mode", "linux", func(string) (string, error) { return "", errors.New("n/a") }, func(string) string { return "" })
+	_, _, err := selectPrompter("not-a-real-mode", "linux", func(string) (string, error) { return "", errors.New("n/a") }, func(string) string { return "" })
 	if err == nil {
 		t.Fatal("expected an error for an unknown --ui mode")
+	}
+}
+
+func TestSelectPrompter_ExplicitDenyAllNeverErrors(t *testing.T) {
+	// deny-all stays available, but only via this explicit opt-in -- never
+	// as auto's silent fallback any more.
+	p, desc, err := selectPrompter("deny-all", "linux", func(string) (string, error) { return "", errors.New("not found") }, func(string) string { return "" })
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, ok := p.(denyAllPrompter); !ok {
+		t.Fatalf("got %T, want denyAllPrompter", p)
+	}
+	if desc == "" {
+		t.Fatal("expected a non-empty description")
 	}
 }
 

@@ -55,7 +55,7 @@
       "dialog": {
         "type": "webhook",
         "url": "__APPROVAL_WEBHOOK_URL__",
-        "timeout_secs": 10
+        "timeout_secs": 60
       }
     },
     "approval_defaults": {

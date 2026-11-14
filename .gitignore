@@ -669,3 +669,5 @@ result
 
 # End of https://www.toptal.com/developers/gitignore/api/vagrant
 .AGENT-PLAN.md
+
+nix/agentic-ai-stack-nono/approval-helper/approval-helper

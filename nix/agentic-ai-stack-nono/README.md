@@ -130,6 +130,57 @@ For a local `kind` dev cluster specifically, use `cluster-setup`/
 kubernetes-admin.nix`) instead of calling `gen-kubeconfig` by hand --
 see "Kubernetes access against a local `kind` cluster" below.
 
+### Approvals over SSH / headless hosts (READ THIS if approvals seem to never show up)
+
+`start-agent.sh`/`login.sh` start a host-side `approval-helper` process
+outside the sandbox that pops a dialog (or a tmux prompt) every time `pi`
+needs to reach a network host not already on the profile's static
+allowlist. **If you are connected over SSH, you MUST start a `tmux`
+session first and run `nix run .#start-agent`/`nix run .#login` from
+inside it:**
+
+```sh
+ssh your-host
+tmux new -s pi      # start tmux BEFORE launching -- this sets $TMUX
+nix run .#start-agent
+```
+
+The helper's `--ui auto` selection no longer silently falls back to
+denying every approval when it can't find a usable UI (the old,
+confusing failure mode this replaces). Concretely, on Linux:
+
+- A desktop dialog (`kdialog`) is only tried when `DISPLAY`/
+  `WAYLAND_DISPLAY` is set AND you are **not** in an SSH session
+  (`SSH_CONNECTION`/`SSH_TTY` unset) -- an SSH session's `DISPLAY` can't
+  pop a dialog anyone can see.
+- A `tmux` command-prompt (`y`=allow once / `n`=deny / `s`=allow for the
+  rest of the session) is only tried when `$TMUX` is already set, i.e.
+  you launched from inside an existing tmux session on the same tmux
+  server the helper itself ends up running on.
+- If neither applies, the helper refuses to start at all -- a loud,
+  non-zero failure with an actionable message, both from the helper
+  itself (stderr) and from `start-agent.sh`/`login.sh` (which detect the
+  helper exiting early and stop immediately rather than silently waiting
+  out a timeout). `--ui deny-all` remains available as an explicit,
+  intentional opt-in to fail-closed-always, but is never the automatic
+  fallback any more.
+
+In `--detached` mode specifically, the approval helper runs as **you**
+(the invoking user), not as `pi` -- this is what lets it inherit your
+`$TMUX` at all; a helper started as `pi` can never reach a tmux server it
+doesn't own. `start-agent.sh --detached` prints the approval helper's own
+log location (a `pi-sandbox-wrapper-<name>.*.log` file under `$TMPDIR`/
+`/tmp`) alongside the supervisor's `/var/lib/pi/runs/<name>/
+supervisor.log` -- check both if a detached session's approvals don't
+seem to be happening.
+
+Timeouts: the helper waits up to 55s for you to answer a prompt before
+failing that one request closed (logged, never silently); the nono
+profiles (`profiles/work.base.json`, `profiles/login.base.json`) give the
+webhook backend itself 60s before giving up on the helper entirely -- the
+5s of headroom is intentional, so the helper's own timeout always wins
+and gets logged with a reason.
+
 ### TLS / CA trust store (`nix run .#login` / `.#start-agent`)
 
 The nono sandbox has no default CA trust store reachable inside it, which

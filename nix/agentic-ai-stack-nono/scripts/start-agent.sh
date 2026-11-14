@@ -146,13 +146,36 @@ Idempotent per-run seeding / --resume:
   A fresh --name starts from a clean copy of the current workdir.
 
 Detached sessions:
-  --detached starts a small supervisor (its own session, via `setsid`,
-  logging to /var/lib/pi/runs/<name>/supervisor.log) that outlives this
-  launcher process: it starts the approval helper, runs
-  `nono run --detached`, then polls `nono ps` until the session is gone,
-  at which point it stops the approval helper and exits. This launcher
-  process itself returns immediately once the detached session has
-  started.
+  --detached starts TWO things that outlive this launcher process, both
+  via `setsid`:
+    - the approval helper, run as YOU (the invoking user), not `pi` --
+      this is required so it inherits your $TMUX for its `--ui auto`
+      tmux-prompter fallback (a helper run as `pi` could never reach your
+      tmux server). It fails loudly and non-zero if no usable prompter
+      can be found -- see "Approvals over SSH / headless hosts" below.
+    - a supervisor (runs as `pi`, logging to
+      /var/lib/pi/runs/<name>/supervisor.log) that generates the profile,
+      runs `nono run --detached`, then polls `nono ps` until the session
+      is gone.
+  This launcher process waits briefly to confirm the approval helper
+  actually came up (and prints its log location) before returning --
+  i.e. before "detaching" in the user-visible sense -- and exits non-zero
+  with a clear error if it didn't.
+
+Approvals over SSH / headless hosts:
+  The approval helper's `--ui auto` selection NEVER silently falls back to
+  denying every approval any more. On Linux, it only uses a desktop
+  dialog (kdialog) when DISPLAY/WAYLAND_DISPLAY is set AND you are not in
+  an SSH session; otherwise it only uses tmux, and only if $TMUX is
+  already set (i.e. you are running this command from inside a tmux
+  session). If neither is available, the helper refuses to start at all
+  and prints an actionable error -- start tmux first (e.g.
+  `tmux new -s pi`), then run `start-agent.sh`/`login.sh` from inside
+  that tmux session, so approvals show up as a tmux command-prompt
+  (y/n/s) you can answer. The helper's own prompt timeout (55s) is kept
+  below the 60s `timeout_secs` the nono profiles set for the webhook
+  backend, so a slow answer still resolves (even to a deny, with a logged
+  reason) before nono itself gives up waiting.
 
 See README.md and IMPLEMENTERS.md for the full writeup.
 EOF
@@ -570,6 +593,14 @@ if [ "$DETACHED_FLAG" != "1" ]; then
   HELPER_PID=$!
   for _ in $(seq 1 50); do
     [ -s "$INFO_FILE" ] && break
+    # The helper now fails loudly (non-zero exit, no silent deny-all
+    # fallback) when `--ui auto` can't find a usable prompter -- most
+    # commonly over SSH with no tmux session to talk to. Detect that exit
+    # immediately instead of waiting out the whole poll loop first.
+    if ! kill -0 "$HELPER_PID" 2>/dev/null; then
+      echo "error: approval helper (pid $HELPER_PID) exited before writing its startup info file -- see its stderr output above for why. Over SSH/headless, it requires tmux: start tmux first (e.g. 'tmux new -s pi'), then run this command from inside that tmux session (so \$TMUX is set)." >&2
+      exit 1
+    fi
     sleep 0.1
   done
   if [ ! -s "$INFO_FILE" ]; then
@@ -605,21 +636,66 @@ if [ "$DETACHED_FLAG" != "1" ]; then
   exit $?
 fi
 
-# --- Detached mode: a supervisor outlives this launcher --------------------
-# A small, self-contained script (not this process) owns the rest of the
-# lifecycle: starting the approval helper, generating the profile, running
-# `nono run --detached`, and -- once that returns -- polling `nono ps`
-# until the session itself is gone, at which point it stops the approval
-# helper and exits. It runs AS `pi` the whole time (via `sudo -u pi`
-# wrapping the one `setsid`/background invocation below), detached from
-# this launcher's own session so it survives this process exiting.
+# --- Detached mode: option A -- the approval helper runs as the INVOKING
+# user, not as `pi` ----------------------------------------------------
+# Why: the helper needs to inherit the invoking user's $TMUX (and run as
+# the user who actually owns that tmux server) for its `--ui auto`
+# tmux-prompter fallback to reach a real terminal at all -- a helper
+# started as `pi` (e.g. a supervisor run entirely via `sudo -u pi`, how
+# this used to work) can never see or reach the invoking user's tmux
+# server, which is exactly why approvals were silently impossible in
+# detached mode before this fix.
 #
+# Lifecycle, three pieces:
+#   1. supervisor.sh (pi-owned, runs as `pi`): unchanged in spirit from
+#      before, EXCEPT it no longer starts or stops the approval helper
+#      itself -- it now takes the already-running helper's webhook URL as
+#      its one argument, generates the profile, runs `nono run
+#      --detached`, and polls `nono ps` until the session is gone. Its own
+#      log still lands at $RUN_DIR/supervisor.log, written as `pi` (the
+#      invoking user still has no write access into the pi-owned run
+#      directory, so that redirect still has to happen INSIDE the sudo'd
+#      process, same as before).
+#   2. wrapper.sh (owned and run by the INVOKING user, detached from this
+#      launcher's terminal via `setsid`): starts the approval helper
+#      itself (inheriting this launcher's environment, including $TMUX),
+#      verifies it came up, then runs `sudo -u pi -- supervisor.sh
+#      <webhook-url>` IN THE FOREGROUND, and once that returns, kills the
+#      helper. The helper's `--parent-pid` points at the wrapper's own
+#      $$ (the wrapper runs as the invoking user throughout its life, so
+#      the helper's liveness poll -- a plain signal-0 check -- actually
+#      works here, unlike pointing it at a `pi`-owned process).
+#   3. This launcher (synchronous, still attached to the terminal):
+#      starts the wrapper (setsid, backgrounded, disowned) and BLOCKS
+#      briefly to confirm the helper actually came up (its info file was
+#      written, and the wrapper/helper processes are still alive) before
+#      returning control to the user -- i.e. before "detaching" in the
+#      user-visible sense. On failure, it prints a clear error (pointing
+#      at the wrapper's own log) and exits non-zero, rather than silently
+#      leaving a broken detached session behind.
+#
+# The helper's --info-file (it contains the bearer token) is written
+# under a small invoking-user-owned, invoking-user-writable scratch
+# directory -- NOT under $RUN_DIR, which is pi-owned and not writable by
+# the invoking user -- and removed by the wrapper once the supervisor
+# returns and the helper has been stopped.
+#
+# Sudo note: the wrapper calls `sudo -u pi` AFTER this launcher has
+# already detached -- if sudo needed an interactive password prompt at
+# that point, it would simply fail (no terminal to prompt on). This
+# relies on the same NOPASSWD+SETENV sudo rule IMPLEMENTERS.md already
+# documents for every other `sudo -u pi` call in this script; the `sudo
+# -v` below is a defensive extra (primes/validates the credential cache
+# while we're still attached) documenting that assumption, not something
+# this flow depends on to function.
+sudo -v
+
 # UNVERIFIED judgement call: no nono binary was available in this
 # environment to confirm `nono ps`'s exact output shape beyond what
 # spikes/all/run.sh's S5.1-S5.3 already exercised (plain `nono ps`, grepped
 # for the session name) -- see IMPLEMENTERS.md.
-echo "==> --detached: starting a supervisor (logs: $RUN_DIR/supervisor.log)..." >&2
 
+# --- 1. supervisor.sh (pi-owned, runs as `pi`) -------------------------
 SUPERVISOR_SCRIPT="$RUN_DIR/supervisor.sh"
 TMP_SUPERVISOR="$(mktemp)"
 GEN_ARGS_QUOTED="$(printf '%q ' "${EXTRA_GEN_ARGS[@]}" "${READ_ROOT_ARGS[@]}")"
@@ -634,11 +710,7 @@ PI_RESUME_SUFFIX=""
 cat >"$TMP_SUPERVISOR" <<SUPERVISOR
 #!/usr/bin/env bash
 set -uo pipefail
-INFO_FILE="$RUN_DIR/approval-helper-info.json"
-"$APPROVAL_HELPER_BIN" --ui auto --info-file "\$INFO_FILE" &
-HELPER_PID=\$!
-for _ in \$(seq 1 50); do [ -s "\$INFO_FILE" ] && break; sleep 0.1; done
-WEBHOOK_URL="\$("$JQ_BIN" -r .url "\$INFO_FILE")"
+WEBHOOK_URL="\${1:?supervisor.sh requires the approval webhook URL as its one argument -- started by wrapper.sh, see start-agent.sh}"
 
 TMP_PROFILE="\$(mktemp)"
 "$GEN_PROFILE_SH" --base "$BASE_PROFILE" --out "\$TMP_PROFILE" \\
@@ -658,22 +730,77 @@ cd "$WORKDIR_DEST"
 while "$NONO_BIN" ps 2>/dev/null | grep -q "$SESSION_NAME"; do
   sleep 5
 done
-kill "\$HELPER_PID" 2>/dev/null || true
-rm -f "\$INFO_FILE"
 SUPERVISOR
 write_as_pi "$SUPERVISOR_SCRIPT" "$TMP_SUPERVISOR"
 sudo -u pi chmod +x "$SUPERVISOR_SCRIPT"
 rm -f "$TMP_SUPERVISOR"
 
-# The log redirect must happen INSIDE the sudo'd process (as `pi`): the
-# invoking user has no write access into $RUN_DIR to open that file
-# itself before exec'ing sudo.
-# shellcheck disable=SC2016 # intentional: $1/$2 are this `bash -c`
-# script's OWN positional params, deferred until it runs -- not meant to
-# expand in the launcher's shell.
-setsid sudo -u pi --preserve-env="$PRESERVE_LIST" -- \
-  bash -c 'exec bash "$1" >"$2" 2>&1 </dev/null' bash \
-  "$SUPERVISOR_SCRIPT" "$RUN_DIR/supervisor.log" &
+# --- 2. wrapper.sh (invoking-user-owned, runs as the invoking user) ----
+# HELPER_STATE_DIR: a fresh, invoking-user-owned, invoking-user-writable
+# scratch dir for the helper's --info-file (contains the bearer token --
+# removed again once the helper is stopped). Deliberately NOT under
+# $RUN_DIR (pi-owned, not writable by the invoking user).
+HELPER_STATE_DIR="$(mktemp -d "${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/pi-sandbox-helper.XXXXXX")"
+HELPER_INFO_FILE="$HELPER_STATE_DIR/approval-helper-info.json"
+WRAPPER_FAIL_MARKER="$HELPER_STATE_DIR/wrapper.failed"
+# WRAPPER_LOG lives OUTSIDE HELPER_STATE_DIR (which gets rm -rf'd by the
+# wrapper once the helper is stopped) so it survives for the user to
+# inspect after the detached session ends.
+WRAPPER_LOG="$(mktemp --suffix=.log "${TMPDIR:-/tmp}/pi-sandbox-wrapper-$SESSION_NAME.XXXXXX")"
+WRAPPER_SCRIPT="$HELPER_STATE_DIR/wrapper.sh"
+
+cat >"$WRAPPER_SCRIPT" <<WRAPPER
+#!/usr/bin/env bash
+set -uo pipefail
+"$APPROVAL_HELPER_BIN" --ui auto --info-file "$HELPER_INFO_FILE" --parent-pid "\$\$" &
+HELPER_PID=\$!
+for _ in \$(seq 1 50); do
+  [ -s "$HELPER_INFO_FILE" ] && break
+  if ! kill -0 "\$HELPER_PID" 2>/dev/null; then
+    echo "approval helper exited before writing its startup info file -- see the lines above for why (over SSH/headless, it requires tmux: start tmux first, then run start-agent.sh from inside that session so \\\$TMUX is set)." >&2
+    touch "$WRAPPER_FAIL_MARKER"
+    exit 1
+  fi
+  sleep 0.1
+done
+if [ ! -s "$HELPER_INFO_FILE" ]; then
+  echo "approval helper never wrote its startup info file within the timeout." >&2
+  kill "\$HELPER_PID" 2>/dev/null || true
+  touch "$WRAPPER_FAIL_MARKER"
+  exit 1
+fi
+WEBHOOK_URL="\$("$JQ_BIN" -r .url "$HELPER_INFO_FILE")"
+
+# The supervisor.log redirect must happen INSIDE the sudo'd process (as
+# \`pi\`): the invoking user (this wrapper) has no write access into
+# \$RUN_DIR to open that file itself before exec'ing sudo.
+sudo -u pi --preserve-env="$PRESERVE_LIST" -- \\
+  bash -c 'exec bash "\$1" "\$2" >"\$3" 2>&1 </dev/null' bash \\
+  "$SUPERVISOR_SCRIPT" "\$WEBHOOK_URL" "$RUN_DIR/supervisor.log"
+
+kill "\$HELPER_PID" 2>/dev/null || true
+rm -rf "$HELPER_STATE_DIR"
+WRAPPER
+chmod +x "$WRAPPER_SCRIPT"
+
+# --- 3. Launch the wrapper, detached, and verify the helper came up
+# before this launcher itself returns -----------------------------------
+echo "==> --detached: starting the approval helper as you (logs: $WRAPPER_LOG) and a supervisor as 'pi' (logs: $RUN_DIR/supervisor.log)..." >&2
+setsid bash "$WRAPPER_SCRIPT" >>"$WRAPPER_LOG" 2>&1 </dev/null &
+WRAPPER_PID=$!
 disown
 
-echo "==> Detached session '$SESSION_NAME' starting (see $RUN_DIR/supervisor.log). Use the (Phase 4b) ps/attach/stop wrappers once built." >&2
+for _ in $(seq 1 50); do
+  [ -s "$HELPER_INFO_FILE" ] && break
+  if [ -e "$WRAPPER_FAIL_MARKER" ] || ! kill -0 "$WRAPPER_PID" 2>/dev/null; then
+    echo "error: approval helper failed to start for the detached session -- see $WRAPPER_LOG for its stderr output. Over SSH/headless, it requires tmux: start tmux first (e.g. 'tmux new -s pi'), then run start-agent.sh from inside that tmux session (so \$TMUX is set)." >&2
+    exit 1
+  fi
+  sleep 0.1
+done
+if [ ! -s "$HELPER_INFO_FILE" ]; then
+  echo "error: approval helper never wrote its startup info file within the timeout -- see $WRAPPER_LOG." >&2
+  exit 1
+fi
+
+echo "==> Detached session '$SESSION_NAME' starting (supervisor: $RUN_DIR/supervisor.log, approval helper: $WRAPPER_LOG). Use the (Phase 4b) ps/attach/stop wrappers once built." >&2

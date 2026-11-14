@@ -188,34 +188,61 @@ func (p *tmuxPrompter) Prompt(ctx context.Context, info capabilityInfo) (promptC
 // parameters (rather than runtime.GOOS/exec.LookPath/os.Getenv read
 // directly) so tests can exercise every branch without being tied to the
 // actual OS/environment the test happens to run under.
-func selectPrompter(mode, goos string, lookPath func(string) (string, error), getenv func(string) string) (prompter, error) {
+//
+// On success, the second return value is a short, human-readable
+// description of the prompter chosen (and why) -- the caller (main.go) is
+// expected to log it at startup. `auto` NEVER silently falls back to
+// denyAllPrompter any more: if no usable UI can be found, this returns an
+// error with an actionable message instead, so a misconfigured host fails
+// loudly at helper startup rather than silently denying every approval
+// later. `deny-all` remains available, but only via an explicit `--ui
+// deny-all`.
+func selectPrompter(mode, goos string, lookPath func(string) (string, error), getenv func(string) string) (prompter, string, error) {
 	switch mode {
 	case "deny-all":
-		return denyAllPrompter{}, nil
+		return denyAllPrompter{}, "explicit --ui deny-all (never prompts, always denies)", nil
 	case "osascript":
-		return &osascriptPrompter{lookPath: lookPath}, nil
+		return &osascriptPrompter{lookPath: lookPath}, "explicit --ui osascript", nil
 	case "kdialog":
-		return &kdialogPrompter{lookPath: lookPath}, nil
+		return &kdialogPrompter{lookPath: lookPath}, "explicit --ui kdialog", nil
 	case "tmux":
-		return &tmuxPrompter{lookPath: lookPath}, nil
+		return &tmuxPrompter{lookPath: lookPath}, "explicit --ui tmux (requires $TMUX to be set once a prompt is actually shown)", nil
 	case "", "auto":
+		// overSSH: kdialog/osascript dialogs can't reach an SSH client's
+		// local display even when DISPLAY/WAYLAND_DISPLAY happen to be set
+		// in the remote shell (X11 forwarding quirks, stale env, etc.) --
+		// over SSH we only ever trust tmux.
+		overSSH := getenv("SSH_CONNECTION") != "" || getenv("SSH_TTY") != ""
+		hasDisplay := getenv("DISPLAY") != "" || getenv("WAYLAND_DISPLAY") != ""
+		inTmux := getenv("TMUX") != ""
+
 		if goos == "darwin" {
 			if _, err := lookPath("osascript"); err == nil {
-				return &osascriptPrompter{lookPath: lookPath}, nil
+				return &osascriptPrompter{lookPath: lookPath}, "auto: osascript prompter (darwin)", nil
 			}
 		}
-		if goos == "linux" && (getenv("DISPLAY") != "" || getenv("WAYLAND_DISPLAY") != "") {
+		if goos == "linux" && hasDisplay && !overSSH {
 			if _, err := lookPath("kdialog"); err == nil {
-				return &kdialogPrompter{lookPath: lookPath}, nil
+				return &kdialogPrompter{lookPath: lookPath}, "auto: kdialog prompter (DISPLAY/WAYLAND_DISPLAY set, not an SSH session)", nil
 			}
 		}
-		if _, err := lookPath("tmux"); err == nil {
-			return &tmuxPrompter{lookPath: lookPath}, nil
+		// tmux fallback: both the darwin-no-osascript and the linux-no-
+		// desktop-or-over-SSH cases land here. Only trusted when $TMUX is
+		// actually set (i.e. this process itself is running inside a tmux
+		// session/server it can reach) -- a bare `tmux` on PATH with no
+		// $TMUX means there's no server to send a command-prompt to.
+		if inTmux {
+			if _, err := lookPath("tmux"); err == nil {
+				return &tmuxPrompter{lookPath: lookPath}, "auto: tmux prompter ($TMUX set)", nil
+			}
 		}
-		// No desktop session and no tmux: fail closed rather than guess
-		// at another UI.
-		return denyAllPrompter{}, nil
+		// Nothing usable: fail loudly rather than silently falling back to
+		// deny-all -- a silent deny-all here is exactly what made approvals
+		// look "broken" for no visible reason over SSH.
+		return nil, "", fmt.Errorf(
+			"no approval UI available (auto): over SSH/headless, start tmux first and launch from inside it (so $TMUX is set); or pass --ui deny-all explicitly to fail closed on purpose",
+		)
 	default:
-		return nil, fmt.Errorf("unknown --ui mode %q (want auto|osascript|kdialog|tmux|deny-all)", mode)
+		return nil, "", fmt.Errorf("unknown --ui mode %q (want auto|osascript|kdialog|tmux|deny-all)", mode)
 	}
 }

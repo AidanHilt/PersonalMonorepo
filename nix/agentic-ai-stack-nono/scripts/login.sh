@@ -70,6 +70,17 @@ checkout). Exit the `pi` session normally (e.g. Ctrl-D / its own quit
 command) once login has completed, and this script will pick up and copy
 the resulting auth.json.
 
+Approvals over SSH / headless hosts:
+  The approval helper's `--ui auto` selection never silently falls back
+  to denying every approval. On Linux, it only uses a desktop dialog
+  (kdialog) when DISPLAY/WAYLAND_DISPLAY is set AND you are not in an SSH
+  session; otherwise it only uses tmux, and only if $TMUX is already set
+  (i.e. you are running this command from inside a tmux session). If
+  neither is available, the helper refuses to start at all and prints an
+  actionable error -- start tmux first (e.g. `tmux new -s pi`), then run
+  login.sh from inside that tmux session, so approvals show up as a tmux
+  command-prompt (y/n/s) you can answer.
+
 Flags:
   --dry-run    Print the resolved command and exit. No directories are
                created, no approval helper is started, no sudo/nono
@@ -174,6 +185,14 @@ trap stop_helper EXIT
 HELPER_PID=$!
 for _ in $(seq 1 50); do
   [ -s "$INFO_FILE" ] && break
+  # The helper now fails loudly (non-zero exit, no silent deny-all
+  # fallback) when `--ui auto` can't find a usable prompter -- most
+  # commonly over SSH with no tmux session to talk to. Detect that exit
+  # immediately instead of waiting out the whole poll loop first.
+  if ! kill -0 "$HELPER_PID" 2>/dev/null; then
+    echo "error: approval helper (pid $HELPER_PID) exited before writing its startup info file -- see its stderr output above for why. Over SSH/headless, it requires tmux: start tmux first (e.g. 'tmux new -s pi'), then run this command from inside that tmux session (so \$TMUX is set)." >&2
+    exit 1
+  fi
   sleep 0.1
 done
 if [ ! -s "$INFO_FILE" ]; then

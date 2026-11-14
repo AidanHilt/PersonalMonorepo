@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,7 +12,13 @@ import (
 )
 
 const (
-	defaultPromptTimeout = 120 * time.Second
+	// defaultPromptTimeout must stay comfortably BELOW the
+	// `network.approval_backends.dialog.timeout_secs` value nono profiles
+	// set for the webhook backend (see profiles/work.base.json,
+	// profiles/login.base.json) -- 55s here, 60s there -- so the helper
+	// always resolves (even to a deny) and logs a reason before nono's own
+	// webhook call times out and gives up waiting on it.
+	defaultPromptTimeout = 55 * time.Second
 	defaultDenyCacheTTL  = 30 * time.Second
 )
 
@@ -174,6 +181,14 @@ func (s *approvalServer) promptAndResolve(parentCtx context.Context, info capabi
 
 	choice, err := s.prompter.Prompt(ctx, info)
 	if err != nil {
+		// Never log the token -- hostPortKey/info/err here never include it
+		// (the token only ever appears in the URL path, which ServeHTTP
+		// never passes into this method).
+		reason := "approval UI error"
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			reason = "approval UI timed out"
+		}
+		s.logf("prompt failed for %s: %v (%s)", hostPortKey(info.Host, info.Port), err, reason)
 		return decision{Type: "denied", Reason: "approval UI error or timeout"}
 	}
 	switch choice {
