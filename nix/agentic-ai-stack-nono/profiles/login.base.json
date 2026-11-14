@@ -1,0 +1,84 @@
+{
+  "extends": "default",
+  "meta": {
+    "name": "pi-sandbox-nono-login",
+    "version": "1.0.0",
+    "description": "Flake-owned static base for the nono 'login' profile (PLAN.md Phase 4b: scripts/login.sh). A minimal variant of profiles/work.base.json for pi's native OAuth login flow only -- no workdir copy, no nix daemon socket, no command_policies. NOT launch-ready on its own: __APPROVAL_WEBHOOK_URL__ must be substituted, and scripts/gen-profile.sh must merge in the per-launch read closure plus the fresh /var/lib/pi/login/ filesystem grants before this is passed to `nono run --profile`."
+  },
+  "groups": {
+    "include": [
+      "node_runtime",
+      {
+        "name": "user_caches_macos",
+        "when": "macos"
+      },
+      {
+        "name": "user_caches_linux",
+        "when": "linux"
+      },
+      {
+        "name": "linux_sysfs_read",
+        "when": "linux"
+      },
+      "git_config",
+      "unlink_protection"
+    ]
+  },
+  "security": {
+    "signal_mode": "isolated",
+    "capability_elevation": false
+  },
+  "workdir": {
+    "access": "readwrite"
+  },
+  "filesystem": {
+    "allow": [],
+    "read": []
+  },
+  "network": {
+    "block": false,
+    "allow_domain": [
+      "api.anthropic.com",
+      "claude.ai",
+      "claude.com",
+      "platform.claude.com",
+      "auth.openai.com",
+      "github.com",
+      "api.github.com",
+      "raw.githubusercontent.com",
+      "codeload.github.com",
+      "api.exa.ai"
+    ],
+    "approval_backends": {
+      "dialog": {
+        "type": "webhook",
+        "url": "__APPROVAL_WEBHOOK_URL__",
+        "timeout_secs": 10
+      }
+    },
+    "approval_defaults": {
+      "backend": "dialog"
+    }
+  },
+  "open_urls": {
+    "allow_origins": [
+      "https://auth.openai.com",
+      "https://claude.ai",
+      "https://github.com"
+    ],
+    "allow_localhost": true
+  },
+  "allow_launch_services": true,
+  "environment": {
+    "allow_vars": [
+      "PATH",
+      "HOME",
+      "USER",
+      "TERM",
+      "LANG",
+      "LC_*",
+      "TZ",
+      "PI_*"
+    ]
+  }
+}

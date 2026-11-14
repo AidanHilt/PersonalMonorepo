@@ -1,5 +1,5 @@
 {
-  description = "Pi sandbox stack: nono (Landlock/Seatbelt)-based sandboxed Pi coding agent (PLAN.md Phase 4a: work profile, launcher, and approval helper built; attach/ps/stop wrappers and the nono-sandbox extension/skill are Phase 4b)";
+  description = "Pi sandbox stack: nono (Landlock/Seatbelt)-based sandboxed Pi coding agent (PLAN.md Phase 4a/4b built: work profile, launcher, approval helper, ps/attach/stop/login wrappers, and the nono-sandbox extension/skill; the nix/scripts changes and config/agent/ permission-rule edits are Phase 4c)";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
@@ -166,6 +166,78 @@
                 export PI_STACK_APPROVAL_HELPER_BIN=${self.packages.${system}.approval-helper}/bin/approval-helper
               ''
               + builtins.readFile ./scripts/start-agent.sh;
+            };
+          };
+
+          # nix run .#ps -> scripts/ps.sh (PLAN.md Phase 4b): lists nono
+          # sessions across every /var/lib/pi/runs/<name>/ run (there is no
+          # single cross-run `nono ps` -- see ps.sh's header comment).
+          ps = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellApplication {
+              name = "pi-sandbox-ps";
+              runtimeInputs = [
+                pkgs.jq
+                pkgs.coreutils
+              ];
+              text = ''
+                export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
+              ''
+              + builtins.readFile ./scripts/ps.sh;
+            };
+          };
+
+          # nix run .#attach -- <name> -> scripts/attach.sh (PLAN.md Phase
+          # 4b): replaces the old container-era `shell-agent`.
+          attach = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellApplication {
+              name = "pi-sandbox-attach";
+              runtimeInputs = [
+                pkgs.jq
+                pkgs.coreutils
+              ];
+              text = ''
+                export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
+              ''
+              + builtins.readFile ./scripts/attach.sh;
+            };
+          };
+
+          # nix run .#stop -- <name> -> scripts/stop.sh (PLAN.md Phase 4b):
+          # replaces the old container-era `stop-agent`.
+          stop = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellApplication {
+              name = "pi-sandbox-stop";
+              runtimeInputs = [
+                pkgs.jq
+                pkgs.coreutils
+                pkgs.psmisc # fuser, for the approval-helper best-effort stop
+              ];
+              text = ''
+                export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
+              ''
+              + builtins.readFile ./scripts/stop.sh;
+            };
+          };
+
+          # nix run .#login -> scripts/login.sh (PLAN.md Phase 4b): replaces
+          # the old container-era `login` compose profile. Runs pi's native
+          # OAuth login flow inside a minimal nono session.
+          login = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellApplication {
+              name = "pi-sandbox-login";
+              runtimeInputs = [
+                pkgs.jq
+                pkgs.git
+                self.packages.${system}.approval-helper
+                pkgs.coreutils
+              ];
+              text = ''
+                export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
+                export PI_STACK_PI_BIN=${pkgsUnstable.pi-coding-agent}/bin/pi
+                export PI_STACK_JQ_BIN=${pkgs.jq}/bin/jq
+                export PI_STACK_APPROVAL_HELPER_BIN=${self.packages.${system}.approval-helper}/bin/approval-helper
+              ''
+              + builtins.readFile ./scripts/login.sh;
             };
           };
 

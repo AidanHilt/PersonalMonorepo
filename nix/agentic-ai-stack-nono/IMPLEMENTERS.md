@@ -1,28 +1,33 @@
 # nix/agentic-ai-stack-nono — Implementers
 
-> **Mid-migration note (Phase 4a of `PLAN.md`):** this directory is a
+> **Mid-migration note (Phase 4b of `PLAN.md`):** this directory is a
 > structural copy of `nix/agentic-ai-stack`, with the container-era code
 > (compose files, `containers/`, container-only scripts/flake wiring)
-> deleted. The nono work profile (Phase 3), launcher, and approval helper
-> (Phase 4a) are now built -- see "Work profile (Phase 3)" and "Launcher
-> and approval helper (Phase 4a)" below. Still not built: the
-> `attach`/`ps`/`stop`/`login` wrappers, the `nono-sandbox` extension/
-> skill, and the `nix/scripts` changes (Phase 4b/4c) -- see `PLAN.md`
-> section 4 for the full phase breakdown. Everything ELSE below this note
-> still describes the old container architecture almost entirely verbatim
-> and is known-stale pending the Phase 5 documentation rewrite; do not
-> trust it as a description of this copy's current or future behaviour. In
-> particular, known-stale areas:
+> deleted. The nono work profile (Phase 3), launcher, approval helper
+> (Phase 4a), and the `ps`/`attach`/`stop`/`login` wrappers plus the
+> `nono-sandbox` extension/skill (Phase 4b) are now built -- see "Work
+> profile (Phase 3)", "Launcher and approval helper (Phase 4a)", and
+> "Session wrappers, login, and nono-sandbox extension (Phase 4b)" below.
+> Still not built: the `nix/scripts` changes (removing `pkg-install`,
+> rewriting/removing `request-domain`, updating `agent-plan-create`'s
+> messages) and `config/agent/`/`AGENTS.md` permission-rule edits
+> (Phase 4c) -- see `PLAN.md` section 4 for the full phase breakdown.
+> Everything ELSE below this note still describes the old container
+> architecture almost entirely verbatim and is known-stale pending the
+> Phase 5 documentation rewrite; do not trust it as a description of this
+> copy's current or future behaviour. In particular, known-stale areas:
 > - "Threat model", "Components and network access", "Build and run
 >   flow", "Credentials", "Acceptance criteria", and "Gotchas" all
 >   describe the removed Docker Compose / container boundary.
-> - `scripts/shell-agent.sh`, `scripts/stop-agent.sh`, and
->   `scripts/verify-acceptance.sh` were deleted outright (purely
->   container-based; rewritten/replaced in Phase 4b/5 per `PLAN.md`'s
->   launcher/UI table).
+> - `scripts/shell-agent.sh` and `scripts/stop-agent.sh` were deleted
+>   outright (purely container-based) and replaced by `scripts/attach.sh`/
+>   `scripts/stop.sh` (Phase 4b, see the new section below).
+>   `scripts/verify-acceptance.sh` is still rewritten in Phase 5, not yet
+>   built.
 > - `flake.nix` no longer builds any container image or exposes
->   `load`/`shell-agent`/`stop-agent`/`verify`/`login` apps; see its
->   top-of-file comment for what remains.
+>   `load`/`verify` apps; see its top-of-file comment for what remains
+>   (`ps`/`attach`/`stop`/`login` now exist as of Phase 4b, replacing the
+>   old `shell-agent`/`stop-agent`/`login` container-era apps).
 > - `.env.example` and `.gitignore` have been trimmed of compose-only
 >   content; the secrets interface they describe (`--secret`,
 >   `PI_SANDBOX__SECRET__<NAME>`) is carried forward unchanged per
@@ -604,4 +609,213 @@ unrelated `agent-stage`/worktree flow IMPLEMENT subagents use) -- per
 `PLAN.md`'s "Sharing files between aidan and pi" decision row, that's a
 deliberate UX choice, not a gap: the user inspects/diffs/copies the
 per-run `workdir/` copy manually.
+
+**Shared OAuth auth seeding**: `/var/lib/pi/auth/auth.json` (written by
+`scripts/login.sh`, see below) is the one cross-run, cross-session shared
+state this stack has. It is **never granted to any nono session** -- it
+sits entirely outside every run's own filesystem grants. Every
+`start-agent.sh` launch instead seeds a per-run COPY from it into
+`$STATE_DIR/auth/auth.json` (`$RUN_DIR/state/auth/auth.json`), as `pi`,
+mode `0600`, right after that run's directories are first created --
+before building `pi-extra-extensions`/`pi-extra-skills`. The copy is
+skipped if the run-local file already exists and is not older than the
+shared source (`[ "$src" -nt "$dst" ]`), so a run that has itself
+refreshed its own auth (e.g. via a `pi` login performed inside that very
+session) is never clobbered by an older shared copy on a later restart.
+**UNVERIFIED** (per this section's own dispatch instructions, not
+independently confirmed against a real `pi` binary): that
+`$STATE_DIR/auth/auth.json` is actually the path `pi` itself reads/writes
+its OAuth credentials from -- `spikes/pi-pack/skills/nono-sandbox/
+SKILL.md` documents `~/.pi/agent/auth.json` (i.e. inside
+`PI_CODING_AGENT_DIR`, not the separate per-run `state/` tree) for the
+upstream nolabs-ai pack, which may or may not match this stack's actual
+runtime behaviour; this was followed as an explicit, literal instruction
+in this phase's dispatch rather than re-derived, and should be
+re-verified against a real `pi`/`nono` binary before being relied on.
+
+## Session wrappers, login, and nono-sandbox extension (Phase 4b)
+
+> This section, like "Work profile (Phase 3)" and "Launcher and approval
+> helper (Phase 4a)" above, is new and NOT stale -- it covers `PLAN.md`
+> Phase 4b: the `ps`/`attach`/`stop`/`login` wrappers and the
+> `nono-sandbox` extension/skill. The `nix/scripts` changes and
+> `config/agent/`/`AGENTS.md` permission-rule edits are Phase 4c, not
+> built yet.
+
+### `scripts/lib-common.sh`
+
+A small, `source`d-only helper shared by `ps.sh`/`attach.sh`/`stop.sh`/
+`login.sh` (NOT by `start-agent.sh`, which predates it and keeps its own
+copies of the same two tool-resolution helpers rather than being touched
+in this phase): `resolve_or_die`/`resolve_stack_bin` (identical in shape
+to `start-agent.sh`'s own), `RUNS_ROOT=/var/lib/pi/runs`,
+`validate_run_name` (anchors a run name to `^[A-Za-z0-9._-]+$`, rejecting
+anything that could path-traverse out of `$RUNS_ROOT`), and
+`require_run_dir` (validates a name and fails clearly if that run's
+directory doesn't exist). Requires `PERSONAL_MONOREPO_LOCATION` (same
+convention as `start-agent.sh`) and computes `STACK_DIR` from it.
+
+### `scripts/ps.sh` (`nix run .#ps`)
+
+There is no single, cross-run `nono ps` -- every run has its own
+`nono-xdg-state/` (see "Per-run state layout" above), and nono has no
+cross-run session registry (`PLAN.md`'s S5.4 open item, left unresolved
+upstream). `ps.sh` loops over every `/var/lib/pi/runs/<name>/nono-xdg-
+state/` directory it finds, running `sudo -u pi env XDG_STATE_HOME=<dir>
+nono ps` once per run, and prints a combined, `== run: <name> ==`-labelled
+table, skipping any run with no active sessions (empty `nono ps` output,
+or a non-zero exit, both treated as "nothing to show" rather than a hard
+failure -- a single stale/broken run directory should not break the
+whole listing).
+
+### `scripts/attach.sh <name>` / `scripts/stop.sh <name>` (`nix run .#attach
+-- <name>` / `nix run .#stop -- <name>`)
+
+Replace the old container-era `shell-agent`/`stop-agent`. Both validate
+`<name>` via `lib-common.sh`'s `require_run_dir` (rejecting path
+traversal and a nonexistent run directory up front), then run `nono
+attach <name>` / `nono stop <name>` as `pi`, against that run's own
+`nono-xdg-state/` as `XDG_STATE_HOME` -- the same per-run split `ps.sh`
+uses.
+
+**`stop.sh`'s approval-helper teardown is best-effort, not guaranteed**:
+there is no PID file for a detached run's approval helper --
+`start-agent.sh`'s generated `supervisor.sh` keeps that PID only as a
+local shell variable, and already kills it itself (and removes
+`approval-helper-info.json`) within ~5s of `nono ps` no longer reporting
+the session (see "Detached mode" above). Rather than add new PID-file
+plumbing to `approval-helper`'s Go code (out of scope for this phase),
+`stop.sh` instead reads the `port` field out of
+`$RUN_DIR/approval-helper-info.json` (present only for `--detached` runs)
+and tries `fuser -k -n tcp <port>`, falling back to `lsof -ti tcp:<port> |
+xargs kill` if `fuser` isn't present. If neither tool is found, or the run
+wasn't detached in the first place (no info file -- a foreground run's
+helper already dies with its own launcher process), `stop.sh` just logs a
+warning: `nono stop` has already started the supervisor's own ~5s
+teardown regardless, so the helper gets stopped either way, just not
+necessarily instantly. `nix run .#stop` pulls in `pkgs.psmisc` (`fuser`)
+as a `runtimeInput` for this.
+
+### `scripts/login.sh` (`nix run .#login`)
+
+Replaces the old container-era `login` compose profile. Runs `pi`'s
+native OAuth login flow INSIDE a minimal nono session, as `pi`, using
+`profiles/login.base.json` (see below) rather than `profiles/
+work.base.json`.
+
+**Directory layout**, all directly under `/var/lib/pi/login/` (none
+nested inside one another beyond that single level -- `PI_ROOT`
+(`/var/lib/pi/login`) itself is never granted to the sandbox, only its
+subdirectories are, so nothing here is ever a *parent* of the
+`nono-xdg-state/` dir, honouring the "never grant a parent of a
+nono-xdg-state dir" rule):
+```
+agent/              <- PI_CODING_AGENT_DIR; wiped (rm -rf) and recreated
+                       FRESH every run, then layered with config/agent/
+                       the same way start-agent.sh does -- login is a
+                       one-off flow, not a --resume'able work session, so
+                       there is no idempotent-seeding story to preserve
+                       here. Judgement call: layering config/agent/ here
+                       at all (settings.json defaults, extensions/skills)
+                       was not explicitly required by this phase's
+                       dispatch, but seemed necessary for `pi` to have
+                       any provider/model defaults to log in against;
+                       noted here as a deviation worth re-confirming.
+auth/               <- the gen-profile.sh --state-dir grant; pi's
+                       resulting auth.json is expected at auth/auth.json
+                       (see the UNVERIFIED note in this file's "Shared
+                       OAuth auth seeding" section above -- the same
+                       caveat applies here, doubly so since this is the
+                       WRITE side of that same unverified path)
+nono-xdg-state/     <- XDG_STATE_HOME for the nono process itself (same
+                       overlap-avoidance pattern as start-agent.sh)
+profile.json
+```
+
+**Approval helper**: started exactly like `start-agent.sh`'s foreground
+mode (`--ui auto`, `--info-file`, `--parent-pid "$$"`, torn down via a
+`trap ... EXIT`) -- this is duplicated, not factored into
+`lib-common.sh`, per this phase's own dispatch note that the duplication
+should stay minimal and local rather than be shared.
+
+**Triggering the login flow itself is UNVERIFIED and NOT automated**: no
+non-interactive `pi` login subcommand is documented anywhere in this
+checkout (`config/agent/`, `extensions/README.md`) that this script could
+drive on the user's behalf. `login.sh` starts `pi` inside the sandbox
+interactively (`nono run --profile ... --allow-cwd --name pi-login --
+<pi>`) and expects the USER to trigger login themselves from inside that
+session (e.g. a `/login` command, if one exists) and then exit the
+session normally. Once `pi` exits, `login.sh` copies whatever landed at
+`auth/auth.json` to the shared `/var/lib/pi/auth/auth.json` (`install -m
+0600`, as `pi`) -- or, if nothing is there, logs a warning that login may
+not have completed, rather than silently treating a missing file as
+success.
+
+**`profiles/login.base.json`**: a minimal sibling of `work.base.json`,
+same `groups.include` list (`node_runtime`, `user_caches_{macos,linux}`,
+`linux_sysfs_read`, `git_config`, `unlink_protection`) and the same
+`network`/`open_urls` blocks (including the webhook approval backend and
+`allow_localhost: true`, needed for the OAuth callback) -- but with NO
+`unix_socket` grant (no nix daemon access for a login session) and NO
+`command_policies` block at all. Judgement call: `allow_launch_services:
+true` was added (not explicitly listed in this phase's dispatch) because
+the reused `open_urls` block is meaningless without it -- `pi` needs to be
+able to actually launch the OAuth URL in a browser for the flow to work
+at all. `scripts/gen-profile.sh` itself needed NO changes to support this
+profile -- its `// []` jq fallbacks already tolerate the missing
+`unix_socket` key, and `--workdir`/`--state-dir` already cover the
+read-write grants `login.sh` needs (`agent/` as `--workdir`, `auth/` as
+`--state-dir`).
+
+### `nono-sandbox` extension and skill
+
+`config/agent/extensions/nono-sandbox/index.ts` is a rewritten
+`spikes/pi-pack/extensions/nono-sandbox.ts`, vendored directly as source
+(NOT pulled through the npm/git extensions pipeline in
+`extra-extensions.nix` -- it's hand-authored, copied as-is by the same
+`tar_copy_to_pi "$CONFIG_AGENT_DIR" ...` step that copies every other
+file under `config/agent/`). Kept unchanged in spirit: the
+`NONO_CAP_FILE`-based detection mechanism, the `before_agent_start`
+system-prompt note, and the `/nono-status` command. **Replaced**: the
+pack's remediation text, which told the agent to run `nono run --allow`
+itself or draft a profile under `~/.config/nono/profile-drafts/` -- both
+conflict with this stack's model (the untrusted `pi` user has no business
+drafting or applying its own sandbox policy; the flake alone owns
+`profiles/work.base.json`). The new remediation text instead tells the
+agent to report the blocked path/host to the user and ask them to
+relaunch with `start-agent.sh --add <path> --name <same-session-name>`,
+then `pi --resume` -- and explicitly never to edit profiles,
+profile-drafts, or any nono state itself.
+
+`config/agent/skills/nono-sandbox/SKILL.md` is a from-scratch rewrite (not
+a line-edit of the pack's skill) matching that same single remediation
+path -- it deliberately does not offer the pack's "Option B" (profile
+draft) at all. Placed under `config/agent/skills/nono-sandbox/` because
+`config/agent/` is tar-copied wholesale onto `$AGENT_DIR` by
+`start-agent.sh`/`login.sh`, landing on top of (not instead of) the
+`pi-extra-skills` Nix-built bundle already copied into `$AGENT_DIR/
+skills/` earlier in the same seeding sequence -- i.e. this directory did
+not exist before this phase, but the pipeline that picks it up (plain
+recursive copy, last-write-wins) already did.
+
+**Not registered in `config/agent/settings.json`**: no existing extension
+in this checkout (including `pi-permission-system`, npm-sourced) is
+registered via a `packages` array entry there -- `settings.json` has no
+`packages` key at all today, and `extra-extensions.nix`'s own
+`packagesListFragment` output is explicitly documented as "still needs to
+be merged into settings.json's packages array by hand where relevant"
+(i.e. an acknowledged, pre-existing gap, not something this phase
+introduced or was asked to close). Since the existing pattern does not
+require registration, `nono-sandbox` was not registered either, per this
+phase's own instruction to only do so "if the existing pattern requires
+it".
+
+### `flake.nix`: new apps
+
+`apps.ps`, `apps.attach`, `apps.stop`, and `apps.login` are added
+following `apps.start-agent`'s exact wrapper shape (`writeShellApplication`
+exporting `PI_STACK_*_BIN` store paths, then `builtins.readFile` of the
+corresponding `scripts/*.sh`). `apps.stop` additionally pulls in
+`pkgs.psmisc` for `fuser` (see `stop.sh`'s approval-helper teardown
+above). None of these touch `flake.lock`.
 
