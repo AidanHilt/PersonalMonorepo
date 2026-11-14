@@ -13,11 +13,11 @@
 #     expects the USER to trigger the login flow themselves from inside
 #     the resulting TUI session (e.g. a `/login` command, if `pi` has
 #     one) -- this script cannot drive that interaction for you.
-#   - The exact on-disk path pi writes its resulting auth.json to. This
-#     mirrors start-agent.sh's own per-run "state/auth/auth.json" layout
-#     (STATE_DIR/auth/auth.json below) per this dispatch's explicit
-#     instruction, but that path was not independently confirmed against
-#     a real `pi` binary either -- see IMPLEMENTERS.md.
+#
+# Confirmed by a real login run: pi writes its resulting auth.json
+# straight into PI_CODING_AGENT_DIR (agent/auth.json below, i.e.
+# $AGENT_DIR/auth.json), not into any separate state/auth-style
+# directory -- there is no such split for pi's own on-disk layout.
 #
 # Directory layout, all under /var/lib/pi/login/ (deliberately NOT nested
 # under one single parent directory that's itself granted to the sandbox
@@ -27,10 +27,9 @@
 #   agent/             <- PI_CODING_AGENT_DIR (wiped and recreated FRESH
 #                         every run -- login is a one-off flow, not a
 #                         --resume'able work session, so there's no
-#                         idempotent-seeding story to preserve here)
-#   auth/               <- STATE_DIR equivalent (gen-profile.sh --state-dir);
-#                         pi's resulting auth.json is expected at
-#                         auth/auth.json (see UNVERIFIED above)
+#                         idempotent-seeding story to preserve here).
+#                         pi writes its resulting auth.json directly here,
+#                         at agent/auth.json (see "Confirmed" above).
 #   nono-xdg-state/     <- XDG_STATE_HOME for the nono process itself (same
 #                         overlap-avoidance pattern as start-agent.sh)
 #   profile.json
@@ -47,7 +46,6 @@ CONFIG_AGENT_DIR="$STACK_DIR/config/agent"
 
 PI_ROOT="/var/lib/pi/login"
 AGENT_DIR="$PI_ROOT/agent"
-AUTH_DIR="$PI_ROOT/auth"
 NONO_STATE_DIR="$PI_ROOT/nono-xdg-state"
 SHARED_AUTH_DIR="/var/lib/pi/auth"
 SHARED_AUTH_FILE="$SHARED_AUTH_DIR/auth.json"
@@ -130,8 +128,7 @@ if [ "$DRY_RUN" = "1" ]; then
   echo "Resolved (illustrative -- the real webhook URL/profile path are only known once this actually runs):" >&2
   echo "  nono:       $NONO_BIN" >&2
   echo "  pi:         $PI_BIN" >&2
-  echo "  agent:      $AGENT_DIR" >&2
-  echo "  auth:       $AUTH_DIR (-> copied to $SHARED_AUTH_FILE on exit)" >&2
+  echo "  agent:      $AGENT_DIR (its auth.json, once pi writes one, -> copied to $SHARED_AUTH_FILE on exit)" >&2
   echo "  CA bundle:  $CA_BUNDLE (parent dir $CA_BUNDLE_DIR read-granted; see PI_STACK_CA_BUNDLE below)" >&2
   echo >&2
   echo "Resolved command (would run as the 'pi' user):" >&2
@@ -141,10 +138,10 @@ if [ "$DRY_RUN" = "1" ]; then
   exit 0
 fi
 
-echo "==> Preparing a fresh /var/lib/pi/login/ (agent/ and auth/ are wiped and recreated -- login is not a --resume'able session)..." >&2
+echo "==> Preparing a fresh /var/lib/pi/login/ (agent/ is wiped and recreated -- login is not a --resume'able session)..." >&2
 sudo -u pi mkdir -p "$PI_ROOT"
-sudo -u pi rm -rf "$AGENT_DIR" "$AUTH_DIR"
-sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$AUTH_DIR" "$NONO_STATE_DIR"
+sudo -u pi rm -rf "$AGENT_DIR"
+sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$NONO_STATE_DIR"
 
 # write_as_pi: pipes $2's contents into a pi-owned file at $1 -- mirrors
 # start-agent.sh's own helper of the same name/shape (duplicated minimally
@@ -188,7 +185,7 @@ WEBHOOK_URL="$("$JQ_BIN" -r .url "$INFO_FILE")"
 echo "==> Generating the nono login profile..." >&2
 TMP_PROFILE="$(mktemp)"
 "$GEN_PROFILE_SH" --base "$LOGIN_BASE_PROFILE" --out "$TMP_PROFILE" \
-  --webhook-url "$WEBHOOK_URL" --workdir "$AGENT_DIR" --state-dir "$AUTH_DIR" \
+  --webhook-url "$WEBHOOK_URL" --workdir "$AGENT_DIR" \
   --read "$PI_BIN" --read "$CA_BUNDLE_DIR"
 write_as_pi "$PI_ROOT/profile.json" "$TMP_PROFILE"
 rm -f "$TMP_PROFILE"
@@ -206,7 +203,7 @@ sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_S
   sh -c 'cd "$1"; shift; exec "$@"' sh "$AGENT_DIR" \
   "$NONO_BIN" run --profile "$PI_ROOT/profile.json" --allow-cwd --name pi-login -- "$PI_BIN"
 
-LOGIN_AUTH_FILE="$AUTH_DIR/auth.json"
+LOGIN_AUTH_FILE="$AGENT_DIR/auth.json"
 if sudo -u pi test -f "$LOGIN_AUTH_FILE"; then
   sudo -u pi mkdir -p "$SHARED_AUTH_DIR"
   sudo -u pi sh -c 'install -m 0600 "$1" "$2"' sh "$LOGIN_AUTH_FILE" "$SHARED_AUTH_FILE"

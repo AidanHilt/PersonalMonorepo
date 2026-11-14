@@ -526,7 +526,10 @@ pi/agent/            <- PI_CODING_AGENT_DIR
                          image.nix's piSeed used: extensions/skills first,
                          config/ on top, never destructively)
 pi/web-search.json    <- config/web-search.json
-state/{auth,sessions}/  <- XDG_STATE_HOME for this run
+state/sessions/       <- part of the gen-profile.sh --state-dir grant
+                         (XDG_STATE_HOME-ish scratch space for this run;
+                         NOT where pi's auth.json lives -- see "Shared
+                         OAuth auth seeding" below)
 workdir/              <- pi-owned copy of the invoking user's cwd (this
                          becomes nono's own "workdir": `nono run` is
                          invoked with this as its cwd, combined with
@@ -670,23 +673,22 @@ per-run `workdir/` copy manually.
 state this stack has. It is **never granted to any nono session** -- it
 sits entirely outside every run's own filesystem grants. Every
 `start-agent.sh` launch instead seeds a per-run COPY from it into
-`$STATE_DIR/auth/auth.json` (`$RUN_DIR/state/auth/auth.json`), as `pi`,
-mode `0600`, right after that run's directories are first created --
-before building `pi-extra-extensions`/`pi-extra-skills`. The copy is
-skipped if the run-local file already exists and is not older than the
-shared source (`[ "$src" -nt "$dst" ]`), so a run that has itself
-refreshed its own auth (e.g. via a `pi` login performed inside that very
-session) is never clobbered by an older shared copy on a later restart.
-**UNVERIFIED** (per this section's own dispatch instructions, not
-independently confirmed against a real `pi` binary): that
-`$STATE_DIR/auth/auth.json` is actually the path `pi` itself reads/writes
-its OAuth credentials from -- `spikes/pi-pack/skills/nono-sandbox/
-SKILL.md` documents `~/.pi/agent/auth.json` (i.e. inside
-`PI_CODING_AGENT_DIR`, not the separate per-run `state/` tree) for the
-upstream nolabs-ai pack, which may or may not match this stack's actual
-runtime behaviour; this was followed as an explicit, literal instruction
-in this phase's dispatch rather than re-derived, and should be
-re-verified against a real `pi`/`nono` binary before being relied on.
+`$AGENT_DIR/auth.json` (`$RUN_DIR/pi/agent/auth.json`, i.e. inside
+`PI_CODING_AGENT_DIR` itself, NOT the separate per-run `state/` tree), as
+`pi`, mode `0600`, right after that run's `config/agent/` layering (so a
+seeded token can never be clobbered by it, even though `config/agent/`
+contains no `auth.json` today). The copy is skipped if the run-local file
+already exists and is not older than the shared source (`[ "$src" -nt
+"$dst" ]`), so a run that has itself refreshed its own auth (e.g. via a
+`pi` login performed inside that very session) is never clobbered by an
+older shared copy on a later restart. Confirmed by a real `nix run
+.#login` run: `pi` writes `auth.json` straight into
+`PI_CODING_AGENT_DIR`, not into any separate `state/`-style directory --
+an earlier draft of this script guessed `$STATE_DIR/auth/auth.json`
+(matching `spikes/pi-pack/skills/nono-sandbox/SKILL.md`'s doc of
+`~/.pi/agent/auth.json`'s *parent* layout but not pi's actual write
+target), which `pi` never reads, silently requiring re-login on every
+run; that guess has been corrected.
 
 ## Session wrappers, login, and nono-sandbox extension (Phase 4b)
 
@@ -780,12 +782,11 @@ agent/              <- PI_CODING_AGENT_DIR; wiped (rm -rf) and recreated
                        dispatch, but seemed necessary for `pi` to have
                        any provider/model defaults to log in against;
                        noted here as a deviation worth re-confirming.
-auth/               <- the gen-profile.sh --state-dir grant; pi's
-                       resulting auth.json is expected at auth/auth.json
-                       (see the UNVERIFIED note in this file's "Shared
-                       OAuth auth seeding" section above -- the same
-                       caveat applies here, doubly so since this is the
-                       WRITE side of that same unverified path)
+                       `pi` writes its resulting auth.json directly here,
+                       at agent/auth.json -- confirmed by a real login
+                       run (see "Shared OAuth auth seeding" above); no
+                       separate --state-dir grant is needed or passed for
+                       this profile.
 nono-xdg-state/     <- XDG_STATE_HOME for the nono process itself (same
                        overlap-avoidance pattern as start-agent.sh)
 profile.json
@@ -805,7 +806,7 @@ interactively (`nono run --profile ... --allow-cwd --name pi-login --
 <pi>`) and expects the USER to trigger login themselves from inside that
 session (e.g. a `/login` command, if one exists) and then exit the
 session normally. Once `pi` exits, `login.sh` copies whatever landed at
-`auth/auth.json` to the shared `/var/lib/pi/auth/auth.json` (`install -m
+`agent/auth.json` to the shared `/var/lib/pi/auth/auth.json` (`install -m
 0600`, as `pi`) -- or, if nothing is there, logs a warning that login may
 not have completed, rather than silently treating a missing file as
 success.
@@ -822,9 +823,9 @@ the reused `open_urls` block is meaningless without it -- `pi` needs to be
 able to actually launch the OAuth URL in a browser for the flow to work
 at all. `scripts/gen-profile.sh` itself needed NO changes to support this
 profile -- its `// []` jq fallbacks already tolerate the missing
-`unix_socket` key, and `--workdir`/`--state-dir` already cover the
-read-write grants `login.sh` needs (`agent/` as `--workdir`, `auth/` as
-`--state-dir`).
+`unix_socket` key, and `--workdir` already covers the one read-write
+grant `login.sh` needs (`agent/`, which is also where `pi` writes its
+resulting `auth.json` -- no separate `--state-dir` grant is used here).
 
 ### `nono-sandbox` extension and skill
 

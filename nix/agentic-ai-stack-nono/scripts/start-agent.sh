@@ -461,7 +461,7 @@ WORKDIR_DEST="$RUN_DIR/workdir"
 NONO_STATE_DIR="$RUN_DIR/nono-xdg-state"
 
 # tar_copy_to_pi: streams the CONTENTS of a host directory (or a lone
-# file) owned by the invoking user into a fresh pi-owI ned destination
+# file) owned by the invoking user into a fresh pi-owned destination
 # directory, without ever requiring `pi` to have read access to the
 # source in place, and without requiring the invoking user to have any
 # access into /var/lib/pi beyond running `sudo -u pi`. The source-side tar
@@ -473,7 +473,7 @@ tar_copy_to_pi() {
   if [ -d "$src" ]; then
     tar -cf - -C "$src" . | sudo -u pi tar -xf - -C "$dest"
   else
-    tar -cf - -C "$(dirname "$src")" "$(basename "$src")" | You sudo -u pi tar -xf - -C "$dest"
+    tar -cf - -C "$(dirname "$src")" "$(basename "$src")" | sudo -u pi tar -xf - -C "$dest"
   fi
 }
 
@@ -488,27 +488,7 @@ write_as_pi() {
 }
 
 echo "==> Seeding per-run state under $RUN_DIR (idempotent -- existing pi/session state is kept)..." >&2
-sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$STATE_DIR/auth" "$STATE_DIR/sessions" "$NONO_STATE_DIR"
-
-# Seed this run's auth from the shared, cross-run OAuth store (written by
-# scripts/login.sh) -- /var/lib/pi/auth itself is NEVER granted to any
-# nono session (it sits outside every run's own grants entirely); this is
-# the only path any per-run auth.json ever comes from it, as a per-run
-# COPY, never a shared mount/symlink. Never overwrites an existing,
-# already-newer run-local auth.json (e.g. one this run itself refreshed
-# via a more recent `pi` login inside the session) -- `-nt` only copies
-# when the shared source is newer than what's already here, or nothing is
-# here yet.
-SHARED_AUTH_FILE="/var/lib/pi/auth/auth.json"
-if sudo -u pi test -f "$SHARED_AUTH_FILE"; then
-  echo "    seeding shared OAuth auth from $SHARED_AUTH_FILE (if newer)..." >&2
-  sudo -u pi sh -c '
-    src="$1"; dst="$2"
-    if [ ! -f "$dst" ] || [ "$src" -nt "$dst" ]; then
-      install -m 0600 "$src" "$dst"
-    fi
-  ' sh "$SHARED_AUTH_FILE" "$STATE_DIR/auth/auth.json"
-fi
+sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$STATE_DIR/sessions" "$NONO_STATE_DIR"
 
 echo "    building pi-extra-extensions/pi-extra-skills..." >&2
 EXTRA_EXT_PATH="$(nix build "$STACK_DIR#pi-extra-extensions" --no-link --print-out-paths)"
@@ -522,6 +502,31 @@ echo "    layering config/agent/ (fresh settings.json/AGENTS.md/agents/*)..." >&
 tar_copy_to_pi "$CONFIG_AGENT_DIR" "$AGENT_DIR"
 if [ -f "$CONFIG_WEB_SEARCH" ]; then
   write_as_pi "$PI_ROOT/web-search.json" "$CONFIG_WEB_SEARCH"
+fi
+
+# Seed this run's auth from the shared, cross-run OAuth store (written by
+# scripts/login.sh) -- /var/lib/pi/auth itself is NEVER granted to any
+# nono session (it sits outside every run's own grants entirely); this is
+# the only path any per-run auth.json ever comes from it, as a per-run
+# COPY, never a shared mount/symlink. pi itself reads/writes auth.json
+# straight out of PI_CODING_AGENT_DIR (AGENT_DIR here), so that's where
+# this seeds to -- NOT STATE_DIR, which pi never looks at for auth.
+# Deliberately runs AFTER the config/agent/ layering above (which never
+# contains an auth.json today, but could in principle) so a seeded token
+# can never be clobbered by it. Never overwrites an existing, already-
+# newer run-local auth.json (e.g. one this run itself refreshed via a
+# more recent `pi` login inside the session) -- `-nt` only copies when
+# the shared source is newer than what's already here, or nothing is
+# here yet.
+SHARED_AUTH_FILE="/var/lib/pi/auth/auth.json"
+if sudo -u pi test -f "$SHARED_AUTH_FILE"; then
+  echo "    seeding shared OAuth auth from $SHARED_AUTH_FILE (if newer)..." >&2
+  sudo -u pi sh -c '
+    src="$1"; dst="$2"
+    if [ ! -f "$dst" ] || [ "$src" -nt "$dst" ]; then
+      install -m 0600 "$src" "$dst"
+    fi
+  ' sh "$SHARED_AUTH_FILE" "$AGENT_DIR/auth.json"
 fi
 
 echo "    copying workdir ($(pwd))..." >&2
