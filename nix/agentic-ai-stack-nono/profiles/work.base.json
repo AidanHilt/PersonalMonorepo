@@ -43,6 +43,7 @@
   "network": {
     "block": false,
     "allow_domain": [
+      "pi.dev",
       "api.anthropic.com",
       "claude.ai",
       "claude.com",
