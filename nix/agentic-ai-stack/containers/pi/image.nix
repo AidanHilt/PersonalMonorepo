@@ -99,13 +99,6 @@ let
       scripts.packages.${pkgs.system}.app-creator
       scripts.packages.${pkgs.system}.mono-flake
       scripts.packages.${pkgs.system}
-      # pkg-install (nix/scripts/scripts/pkg-install) is the only client
-      # of the pkg-broker sidecar service (see
-      # containers/pkg-broker/README.md). It is
-      # deliberately NOT allow-listed in config/agent/extensions/
-      # pi-permission-system/config.json -- bundling the binary here just
-      # makes it available on PATH for a human operator to run manually
-      # (e.g. via `nix run .#shell-agent`).
       scripts.packages.${pkgs.system}.pkg-install
       scripts.packages.${pkgs.system}.request-domain
       pkgs.pi-coding-agent
