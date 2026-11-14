@@ -4,7 +4,7 @@ A flake of roughly 90 bash/go utility scripts used across this repository,
 mostly organized into prefix groups (e.g. `app-creator/`, `argocd/`,
 `context/`, `helm/`, `mono-flake/`, `nixos/`, `scripts/`, `system-tasks/`,
 `vault/`, `agent/`), plus shared libs under `libs/` and a handful of
-standalone top-level tools (e.g. `kommit`, `tg`, `pkg-install`).
+standalone top-level tools (e.g. `kommit`, `tg`).
 
 See the [root IMPLEMENTERS.md](../../IMPLEMENTERS.md) for the repo-wide
 convention and architecture overview.

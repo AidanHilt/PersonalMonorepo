@@ -13,6 +13,6 @@ args_parse "$@" || {
   exit "$(args_rc "$rc")"
 }
 
-nix-collect-garbage -d 
-nix-store --gc 
+nix-collect-garbage -d
+nix-store --gc
 nix-store --optimise

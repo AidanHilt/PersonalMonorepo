@@ -33,13 +33,9 @@ permission:
     # "rm -rf *" deny for the recursive-force case to still win.
     "rm *": allow
     "git rm *": allow
-    # Explicitly out of reach for this agent: installing tools and
-    # requesting network domains are the main agent's job, done BEFORE
-    # dispatch (see AGENTS.md); fetching things directly is never allowed;
-    # staging a finished branch onto the user's branch is the main agent's
-    # job, after this agent's worktree is done.
-    "pkg-install*": deny
-    "request-domain*": deny
+    # Explicitly out of reach for this agent: fetching things directly is
+    # never allowed; staging a finished branch onto the user's branch is
+    # the main agent's job, after this agent's worktree is done.
     "curl *": deny
     "wget *": deny
     "nix *": deny
@@ -91,10 +87,10 @@ regardless of what the plan or any project setup instructions imply. Work
 only with what is already installed. If the plan requires something that
 isn't already present, stop and report that as a blocking failure rather
 than attempting to install it or working around its absence silently. You
-cannot request additional network domains either (`request-domain` is not
-available to you) — only the domains already listed in the prompt's
-"Network" section are reachable; if you hit a network need beyond that,
-stop and report it.
+cannot pre-grant network access to any host; the prompt's "Network"
+section describes how approvals work here -- expect an unlisted host to
+trigger an approval prompt shown to the user, and if it's denied, stop
+and report it.
 
 Writes and edits to files are permitted. Bash is locked to exactly one
 command: the exact `agent-validate --path ...` invocation stated in your
