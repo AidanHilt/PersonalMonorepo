@@ -86,6 +86,15 @@ Environment variables:
                                 flake.nix's apps.login wrapper. Only
                                 needed manually if running this script
                                 directly instead of via 'nix run .#login'.
+  PI_STACK_CA_BUNDLE            Explicit override for the host CA bundle
+                                granted (read-only, parent directory) into
+                                the login session and exported as
+                                SSL_CERT_FILE/NIX_SSL_CERT_FILE/
+                                NODE_EXTRA_CA_CERTS -- see
+                                lib-common.sh's resolve_ca_bundle for the
+                                full resolution order (falls back through
+                                NIX_SSL_CERT_FILE, SSL_CERT_FILE, then the
+                                usual system bundle paths).
 EOF
 }
 
@@ -111,16 +120,22 @@ PI_BIN="$(resolve_stack_bin PI_STACK_PI_BIN pi)"
 JQ_BIN="$(resolve_stack_bin PI_STACK_JQ_BIN jq)"
 APPROVAL_HELPER_BIN="$(resolve_stack_bin PI_STACK_APPROVAL_HELPER_BIN approval-helper)"
 
+CA_MODE=""
+[ "$DRY_RUN" = "1" ] && CA_MODE="dry-run"
+CA_BUNDLE="$(resolve_ca_bundle "$CA_MODE")"
+CA_BUNDLE_DIR="$(dirname "$CA_BUNDLE")"
+
 if [ "$DRY_RUN" = "1" ]; then
   echo "==> --dry-run: no directories created, no helper started, no sudo/nono commands run." >&2
   echo "Resolved (illustrative -- the real webhook URL/profile path are only known once this actually runs):" >&2
-  echo "  nono:   $NONO_BIN" >&2
-  echo "  pi:     $PI_BIN" >&2
-  echo "  agent:  $AGENT_DIR" >&2
-  echo "  auth:   $AUTH_DIR (-> copied to $SHARED_AUTH_FILE on exit)" >&2
+  echo "  nono:       $NONO_BIN" >&2
+  echo "  pi:         $PI_BIN" >&2
+  echo "  agent:      $AGENT_DIR" >&2
+  echo "  auth:       $AUTH_DIR (-> copied to $SHARED_AUTH_FILE on exit)" >&2
+  echo "  CA bundle:  $CA_BUNDLE (parent dir $CA_BUNDLE_DIR read-granted; see PI_STACK_CA_BUNDLE below)" >&2
   echo >&2
   echo "Resolved command (would run as the 'pi' user):" >&2
-  echo "  sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME -- \\" >&2
+  echo "  sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS -- \\" >&2
   echo "    sh -c 'cd \"\$1\"; shift; exec \"\$@\"' sh $AGENT_DIR \\" >&2
   echo "    $NONO_BIN run --profile $PI_ROOT/profile.json --allow-cwd --name pi-login -- $PI_BIN" >&2
   exit 0
@@ -174,17 +189,20 @@ echo "==> Generating the nono login profile..." >&2
 TMP_PROFILE="$(mktemp)"
 "$GEN_PROFILE_SH" --base "$LOGIN_BASE_PROFILE" --out "$TMP_PROFILE" \
   --webhook-url "$WEBHOOK_URL" --workdir "$AGENT_DIR" --state-dir "$AUTH_DIR" \
-  --extra-closure-root "$PI_BIN"
+  --read "$PI_BIN" --read "$CA_BUNDLE_DIR"
 write_as_pi "$PI_ROOT/profile.json" "$TMP_PROFILE"
 rm -f "$TMP_PROFILE"
 
 export PI_CODING_AGENT_DIR="$AGENT_DIR"
 export XDG_STATE_HOME="$NONO_STATE_DIR"
+export SSL_CERT_FILE="$CA_BUNDLE"
+export NIX_SSL_CERT_FILE="$CA_BUNDLE"
+export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
 
 echo "==> Starting pi inside nono for login. Trigger pi's own login flow from" >&2
 echo "    inside the session (e.g. a '/login' command, if pi has one -- UNVERIFIED," >&2
 echo "    see this script's --help); exit the session normally once done." >&2
-sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME -- \
+sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS -- \
   sh -c 'cd "$1"; shift; exec "$@"' sh "$AGENT_DIR" \
   "$NONO_BIN" run --profile "$PI_ROOT/profile.json" --allow-cwd --name pi-login -- "$PI_BIN"
 

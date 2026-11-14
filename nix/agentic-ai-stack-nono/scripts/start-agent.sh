@@ -126,6 +126,14 @@ Environment variables:
                                running this script directly instead of via
                                'nix run .#start-agent' -- otherwise falls
                                back to 'command -v' with a warning.
+  PI_STACK_CA_BUNDLE           Explicit override for the host CA bundle
+                               granted (read-only, parent directory) into
+                               the session and exported as SSL_CERT_FILE/
+                               NIX_SSL_CERT_FILE/NODE_EXTRA_CA_CERTS --
+                               see resolve_ca_bundle's own comment above
+                               for the full resolution order (falls back
+                               through NIX_SSL_CERT_FILE, SSL_CERT_FILE,
+                               then the usual system bundle paths).
 
 Idempotent per-run seeding / --resume:
   Every launch re-syncs /var/lib/pi/runs/<name>/pi/agent/ from
@@ -157,6 +165,43 @@ resolve_or_die() {
     exit 1
   fi
   readlink -f "$path"
+}
+
+# resolve_ca_bundle: duplicated (not sourced from lib-common.sh) --
+# matches this script's own pre-existing convention of keeping its own
+# copies of resolve_or_die/resolve_stack_bin rather than sourcing
+# lib-common.sh (see lib-common.sh's own header comment: this script
+# predates it and was deliberately left untouched by that phase). Prints
+# the fully resolved (realpath) path of the host's CA bundle -- the
+# sandbox has no default CA trust store reachable inside it. Tries, in
+# order: $PI_STACK_CA_BUNDLE, the caller's $NIX_SSL_CERT_FILE then
+# $SSL_CERT_FILE, /etc/ssl/certs/ca-certificates.crt (NixOS/Debian-likes),
+# /etc/pki/tls/certs/ca-bundle.crt, /etc/ssl/cert.pem (macOS). Fails
+# loudly if none exist, or (unless $1 is the literal string "dry-run") if
+# the resolved file isn't readable by the `pi` user.
+resolve_ca_bundle() {
+  local mode="${1:-}" candidate resolved
+  for candidate in \
+    "${PI_STACK_CA_BUNDLE:-}" \
+    "${NIX_SSL_CERT_FILE:-}" \
+    "${SSL_CERT_FILE:-}" \
+    "/etc/ssl/certs/ca-certificates.crt" \
+    "/etc/pki/tls/certs/ca-bundle.crt" \
+    "/etc/ssl/cert.pem"; do
+    [ -n "$candidate" ] || continue
+    [ -f "$candidate" ] || continue
+    resolved="$(realpath "$candidate")"
+    if [ "$mode" != "dry-run" ]; then
+      if ! sudo -u pi test -r "$resolved"; then
+        echo "error: resolved CA bundle $resolved is not readable by the 'pi' user" >&2
+        exit 1
+      fi
+    fi
+    printf '%s\n' "$resolved"
+    return 0
+  done
+  echo "error: no CA bundle found (checked \$PI_STACK_CA_BUNDLE, \$NIX_SSL_CERT_FILE, \$SSL_CERT_FILE, /etc/ssl/certs/ca-certificates.crt, /etc/pki/tls/certs/ca-bundle.crt, /etc/ssl/cert.pem) -- set PI_STACK_CA_BUNDLE explicitly to the bundle you want granted." >&2
+  exit 1
 }
 
 # resolve_stack_bin: prefers the absolute store path the flake wrapper
@@ -349,23 +394,36 @@ PI_BIN="$(resolve_stack_bin PI_STACK_PI_BIN pi)"
 JQ_BIN="$(resolve_stack_bin PI_STACK_JQ_BIN jq)"
 APPROVAL_HELPER_BIN="$(resolve_stack_bin PI_STACK_APPROVAL_HELPER_BIN approval-helper)"
 
-# --extra-closure-root candidates for gen-profile.sh's Linux exec-ceiling
-# closure (PLAN.md: "plus the stack's own tools (pi, node, the nix/scripts
+# --read candidates for gen-profile.sh's Linux exec-ceiling closure
+# (PLAN.md: "plus the stack's own tools (pi, node, the nix/scripts
 # tools)"). node's own files come from the `node_runtime` nono group
 # instead (see profiles/work.base.json), not from here. agent-validate/
 # agent-plan-create are optional -- only added if found, since a plain
 # interactive `pi` session (this script's only job) doesn't strictly need
 # them the way an IMPLEMENT subagent does.
-EXTRA_CLOSURE_ROOTS=("$PI_BIN")
+READ_ROOTS=("$PI_BIN")
 for optional_tool in agent-validate agent-plan-create; do
   if tool_path="$(command -v "$optional_tool" 2>/dev/null)"; then
-    EXTRA_CLOSURE_ROOTS+=("$(readlink -f "$tool_path")")
+    READ_ROOTS+=("$(readlink -f "$tool_path")")
   fi
 done
-CLOSURE_ROOT_ARGS=()
-for root in "${EXTRA_CLOSURE_ROOTS[@]}"; do
-  CLOSURE_ROOT_ARGS+=(--extra-closure-root "$root")
+
+# CA bundle: the sandbox has no default CA trust store reachable inside
+# it -- see resolve_ca_bundle above. Its PARENT directory (not the bundle
+# file itself) is granted via --read, since it's unverified whether nono
+# profiles accept single-file grants (see IMPLEMENTERS.md).
+CA_MODE=""
+[ "$DRY_RUN" = "1" ] && CA_MODE="dry-run"
+CA_BUNDLE="$(resolve_ca_bundle "$CA_MODE")"
+CA_BUNDLE_DIR="$(dirname "$CA_BUNDLE")"
+READ_ROOTS+=("$CA_BUNDLE_DIR")
+
+READ_ROOT_ARGS=()
+for root in "${READ_ROOTS[@]}"; do
+  READ_ROOT_ARGS+=(--read "$root")
 done
+
+PRESERVE_LIST="$PRESERVE_LIST,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS"
 
 if [ "$DRY_RUN" = "1" ]; then
   echo "==> --dry-run: no directories created, no helper started, no sudo/nono commands run." >&2
@@ -374,7 +432,8 @@ if [ "$DRY_RUN" = "1" ]; then
   echo "  pi:                  $PI_BIN" >&2
   echo "  session name:        $SESSION_NAME" >&2
   echo "  workdir source:      $(pwd)" >&2
-  echo "  extra-closure-roots: ${EXTRA_CLOSURE_ROOTS[*]}" >&2
+  echo "  read roots:          ${READ_ROOTS[*]}" >&2
+  echo "  CA bundle:           $CA_BUNDLE (parent dir $CA_BUNDLE_DIR read-granted)" >&2
   echo "  --add:               ${ADD_PATHS[*]:-<none>}" >&2
   echo "  --clone:             ${CLONE_PATHS[*]:-<none>}" >&2
   echo "  secrets (names only, values redacted): ${SECRET_NAMES[*]:-<none>}" >&2
@@ -519,12 +578,15 @@ if [ "$DETACHED_FLAG" != "1" ]; then
   # Lazily hardcode in the agent directory that pi needs access to
   "$GEN_PROFILE_SH" --base "$BASE_PROFILE" --out "$TMP_PROFILE" \
     --webhook-url "$WEBHOOK_URL" --workdir "$WORKDIR_DEST" --state-dir "$STATE_DIR" \
-    "${EXTRA_GEN_ARGS[@]}" "${CLOSURE_ROOT_ARGS[@]}" --add "/var/lib/pi/runs/pi/pi/agent" --add "/tmp"
+    "${EXTRA_GEN_ARGS[@]}" "${READ_ROOT_ARGS[@]}" --add "/var/lib/pi/runs/pi/pi/agent" --add "/tmp"
   write_as_pi "$RUN_DIR/profile.json" "$TMP_PROFILE"
   rm -f "$TMP_PROFILE"
 
   export PI_CODING_AGENT_DIR="$AGENT_DIR"
   export XDG_STATE_HOME="$NONO_STATE_DIR"
+  export SSL_CERT_FILE="$CA_BUNDLE"
+  export NIX_SSL_CERT_FILE="$CA_BUNDLE"
+  export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
 
   NONO_ARGS=(run --profile "$RUN_DIR/profile.json" --allow-cwd)
   [ "$AUDIT_FLAG" = "1" ] && NONO_ARGS+=(--audit-integrity)
@@ -555,7 +617,7 @@ echo "==> --detached: starting a supervisor (logs: $RUN_DIR/supervisor.log)..." 
 
 SUPERVISOR_SCRIPT="$RUN_DIR/supervisor.sh"
 TMP_SUPERVISOR="$(mktemp)"
-GEN_ARGS_QUOTED="$(printf '%q ' "${EXTRA_GEN_ARGS[@]}" "${CLOSURE_ROOT_ARGS[@]}")"
+GEN_ARGS_QUOTED="$(printf '%q ' "${EXTRA_GEN_ARGS[@]}" "${READ_ROOT_ARGS[@]}")"
 # Precomputed as plain strings (rather than inline conditionals inside the
 # heredoc below) so the generated script never needs a conditional
 # line-continuation -- much easier to get right than juggling printf/
@@ -582,6 +644,9 @@ rm -f "\$TMP_PROFILE"
 
 export PI_CODING_AGENT_DIR="$AGENT_DIR"
 export XDG_STATE_HOME="$NONO_STATE_DIR"
+export SSL_CERT_FILE="$CA_BUNDLE"
+export NIX_SSL_CERT_FILE="$CA_BUNDLE"
+export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
 cd "$WORKDIR_DEST"
 "$NONO_BIN" run --profile "$RUN_DIR/profile.json" --allow-cwd$NONO_RUN_EXTRA_FLAGS --detached --name "$SESSION_NAME" -- "$PI_BIN"$PI_RESUME_SUFFIX
 

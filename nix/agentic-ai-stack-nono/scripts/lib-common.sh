@@ -72,3 +72,47 @@ require_run_dir() {
   fi
   printf '%s\n' "$run_dir"
 }
+
+# resolve_ca_bundle: prints the fully resolved (realpath, all symlinks
+# followed) path of the host's CA bundle -- the sandbox has no default CA
+# trust store reachable inside it (no SSL_CERT_FILE/NIX_SSL_CERT_FILE/
+# NODE_EXTRA_CA_CERTS survive the profile's environment.allow_vars
+# stripping, and the usual system bundle path lives behind a symlink chain
+# into /nix/store that isn't covered by the sandbox's read grants on its
+# own -- see IMPLEMENTERS.md's "CA trust-store handling" note). Tries, in
+# order:
+#   1. $PI_STACK_CA_BUNDLE (explicit override)
+#   2. the caller's $NIX_SSL_CERT_FILE, then $SSL_CERT_FILE (preserves any
+#      custom-CA setup already in effect, e.g. from
+#      system-tasks-add-trust-certs)
+#   3. /etc/ssl/certs/ca-certificates.crt (NixOS / Debian-likes)
+#   4. /etc/pki/tls/certs/ca-bundle.crt
+#   5. /etc/ssl/cert.pem (macOS)
+# Fails loudly if none of these exist, or (unless $1 is the literal string
+# "dry-run") if the resolved file isn't readable by the `pi` user --
+# checked via `sudo -u pi test -r <path>`, skipped entirely in dry-run
+# mode since --dry-run callers must not shell out to sudo.
+resolve_ca_bundle() {
+  local mode="${1:-}" candidate resolved
+  for candidate in \
+    "${PI_STACK_CA_BUNDLE:-}" \
+    "${NIX_SSL_CERT_FILE:-}" \
+    "${SSL_CERT_FILE:-}" \
+    "/etc/ssl/certs/ca-certificates.crt" \
+    "/etc/pki/tls/certs/ca-bundle.crt" \
+    "/etc/ssl/cert.pem"; do
+    [ -n "$candidate" ] || continue
+    [ -f "$candidate" ] || continue
+    resolved="$(realpath "$candidate")"
+    if [ "$mode" != "dry-run" ]; then
+      if ! sudo -u pi test -r "$resolved"; then
+        echo "error: resolved CA bundle $resolved is not readable by the 'pi' user" >&2
+        exit 1
+      fi
+    fi
+    printf '%s\n' "$resolved"
+    return 0
+  done
+  echo "error: no CA bundle found (checked \$PI_STACK_CA_BUNDLE, \$NIX_SSL_CERT_FILE, \$SSL_CERT_FILE, /etc/ssl/certs/ca-certificates.crt, /etc/pki/tls/certs/ca-bundle.crt, /etc/ssl/cert.pem) -- set PI_STACK_CA_BUNDLE explicitly to the bundle you want granted." >&2
+  exit 1
+}

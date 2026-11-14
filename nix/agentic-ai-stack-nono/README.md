@@ -130,6 +130,29 @@ For a local `kind` dev cluster specifically, use `cluster-setup`/
 kubernetes-admin.nix`) instead of calling `gen-kubeconfig` by hand --
 see "Kubernetes access against a local `kind` cluster" below.
 
+### TLS / CA trust store (`nix run .#login` / `.#start-agent`)
+
+The nono sandbox has no default CA trust store reachable inside it, which
+breaks TLS verification for anything `pi` talks to over HTTPS (OAuth token
+exchange included) unless a CA bundle is explicitly resolved and granted.
+`scripts/login.sh` and `scripts/start-agent.sh` both do this automatically
+on every launch -- see `IMPLEMENTERS.md`'s "CA trust-store handling"
+section for the full mechanism. If it can't find a usable bundle on its
+own, or you need to point it at a non-default one (e.g. a custom
+corporate CA), set:
+
+```sh
+export PI_STACK_CA_BUNDLE=/path/to/your/ca-bundle.crt
+nix run .#login
+```
+
+Resolution order (first existing, readable-by-`pi` file wins):
+`$PI_STACK_CA_BUNDLE`, then the invoking shell's own `$NIX_SSL_CERT_FILE`/
+`$SSL_CERT_FILE` (so an existing custom-CA setup is preserved), then the
+usual system bundle paths (`/etc/ssl/certs/ca-certificates.crt`,
+`/etc/pki/tls/certs/ca-bundle.crt`, `/etc/ssl/cert.pem`). Both scripts
+print the resolved bundle path in their `--dry-run` output.
+
 ### Credentials / secrets
 
 `start-agent.sh` never retrieves or decrypts secrets itself — it only

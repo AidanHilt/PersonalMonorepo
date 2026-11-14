@@ -312,24 +312,44 @@ with `nix run .#verify`.
    the, not-yet-built, Phase 4 approval helper).
 2. On Linux, computes the Nix closure (`nix-store -qR`) of
    `/run/current-system/sw` (the host's system profile, so grants track
-   `update`) plus every `--extra-closure-root` (the stack's own tool
-   store paths -- `pi`, `node`, `nix/scripts` tools), in order, and
-   merges the **order-preserving deduped** (`awk '!seen[$0]++'`, never
-   `sort -u` -- see `PLAN.md` section 3's S3.2 harness-bug note) result
-   into `filesystem.read` (read-only, never `filesystem.allow`, and
-   never nono's `nix_runtime` group, per the "Exec ceiling (Linux)"
+   `update`; always implicit) plus, for every `--read` path that is
+   itself under `/nix/store`, that path's own closure -- falling back to
+   granting just that path if the closure lookup fails (today's
+   behaviour silently swallowed closure failures and granted nothing at
+   all for that root; the fallback is narrower but no longer silently
+   drops the grant). `--read` paths OUTSIDE `/nix/store` are never
+   closure-expanded at all, just granted as-is. Everything is merged, in
+   order, with an **order-preserving deduped** (`awk '!seen[$0]++'`,
+   never `sort -u` -- see `PLAN.md` section 3's S3.2 harness-bug note)
+   result into `filesystem.read` (read-only, never `filesystem.allow`,
+   and never nono's `nix_runtime` group, per the "Exec ceiling (Linux)"
    decision row).
 3. On macOS, skips the closure merge entirely rather than guessing at a
-   workable substitute -- see the UNVERIFIED list below.
+   workable substitute -- see the UNVERIFIED list below -- and instead
+   grants every `--read` path exactly as given.
 4. Adds read-write grants (`filesystem.allow`) for `--workdir`,
    `--state-dir` (the per-run `PI_CODING_AGENT_DIR`, Phase 4), every
    `--add`, and every `--clone`. Judgement call: `--add` paths default
    to read-write (matching `--clone`), since the plan only specified
    this for workdir/state-dir explicitly and `start-agent.sh`'s
    existing `--add` semantics (container era) were already read-write.
-5. Validates the result with `jq empty` and writes it atomically (a
+5. Every `--read` path that is NOT under `/nix/store` is also appended
+   to the `fs_read` array of every `command_policies.commands[].from.
+   session.sandbox` that already has one (store paths need not be --
+   those sandboxes already grant `/nix/store` itself, e.g.
+   `work.base.json`'s `nix` command policy). Never creates an `fs_read`
+   array, or a `command_policies` block, where one doesn't already
+   exist.
+6. Validates the result with `jq empty` and writes it atomically (a
    temp file in `--out`'s own directory, then `mv -f` over the final
    path).
+
+`--extra-closure-root` (the original flag name) was removed outright, no
+alias -- `--read` (repeatable) replaces it and subsumes what used to be
+two separate concerns (closure-expand a store path; grant a path's read
+access at all) into one flag, since both ultimately produce the same
+`filesystem.read` entries. See "CA trust-store handling" below for the
+main new consumer of non-`/nix/store` `--read` paths.
 
 ### UNVERIFIED (no nono binary in this environment to validate against)
 
@@ -586,6 +606,41 @@ launcher process cannot recover a secret value (`PLAN.md`'s "Secrets" row:
 NOPASSWD+SETENV sudo rule in `nix/mono-flake`'s `_pi-user-linux.nix`/
 `_pi-user-darwin.nix`.
 
+**CA trust-store handling**: the sandbox has no default CA trust store
+reachable inside it -- the profile's `environment.allow_vars` strips any
+CA env vars by default, and the usual system CA bundle path
+(`/etc/ssl/certs/ca-certificates.crt`, a symlink chain through `/etc/
+static` into `/nix/store` on NixOS) isn't covered by the sandbox's read
+grants on its own, which breaks TLS verification for anything `pi` talks
+to over HTTPS (e.g. `nix run .#login`'s OAuth token exchange). Both
+`start-agent.sh` and `login.sh` call `lib-common.sh`'s `resolve_ca_bundle`
+(duplicated into `start-agent.sh` itself rather than sourced, matching
+that script's existing `resolve_or_die`/`resolve_stack_bin` convention --
+see `lib-common.sh`'s own header comment) to find a host CA bundle
+(`$PI_STACK_CA_BUNDLE` override, then the caller's own
+`$NIX_SSL_CERT_FILE`/`$SSL_CERT_FILE`, then the usual system paths), then:
+  - grant its PARENT DIRECTORY (not the bundle file itself) via
+    `gen-profile.sh --read` -- **UNVERIFIED**: whether nono profiles
+    accept single-file grants was not confirmed against a real `nono`
+    binary, so the parent directory is granted instead, out of caution;
+  - export `SSL_CERT_FILE`, `NIX_SSL_CERT_FILE`, and
+    `NODE_EXTRA_CA_CERTS` (covering OpenSSL/Node's and Nix's own CA
+    lookup conventions) set to the resolved bundle path, and add all
+    three to the `sudo -u pi --preserve-env=...` list that launches nono.
+`profiles/work.base.json` and `profiles/login.base.json` both allow-list
+those same three vars in their top-level `environment.allow_vars` (and
+`work.base.json`'s `nix` command policy additionally allow-lists them in
+its own nested `sandbox.environment.allow_vars`) -- without that, the
+exported env vars would be stripped from the sandboxed process regardless
+of being set outside it. The old container-era stack never hit this: it
+baked `SSL_CERT_FILE` into the `pi` image at build time (see
+`nix/agentic-ai-stack/containers/pi/image.nix`), which has no `nono`
+equivalent here -- the CA bundle must be resolved and granted fresh on
+every launch instead. On NixOS, the resolved bundle is itself a
+`/nix/store` path, so its parent directory closure-expands via the same
+`/nix/store` handling as any other `--read` path (a trivial closure, in
+practice).
+
 **Detached mode**: `--detached` hands the rest of the lifecycle to a
 generated `supervisor.sh`, run via `setsid sudo -u pi -- bash -c 'exec
 bash "$1" >"$2" 2>&1 </dev/null' ...` (the log redirect has to happen
@@ -646,14 +701,18 @@ re-verified against a real `pi`/`nono` binary before being relied on.
 
 A small, `source`d-only helper shared by `ps.sh`/`attach.sh`/`stop.sh`/
 `login.sh` (NOT by `start-agent.sh`, which predates it and keeps its own
-copies of the same two tool-resolution helpers rather than being touched
-in this phase): `resolve_or_die`/`resolve_stack_bin` (identical in shape
-to `start-agent.sh`'s own), `RUNS_ROOT=/var/lib/pi/runs`,
-`validate_run_name` (anchors a run name to `^[A-Za-z0-9._-]+$`, rejecting
-anything that could path-traverse out of `$RUNS_ROOT`), and
-`require_run_dir` (validates a name and fails clearly if that run's
-directory doesn't exist). Requires `PERSONAL_MONOREPO_LOCATION` (same
-convention as `start-agent.sh`) and computes `STACK_DIR` from it.
+copies of the same tool-resolution/CA-bundle helpers rather than being
+sourced itself -- see `resolve_ca_bundle` below): `resolve_or_die`/
+`resolve_stack_bin` (identical in shape to `start-agent.sh`'s own),
+`RUNS_ROOT=/var/lib/pi/runs`, `validate_run_name` (anchors a run name to
+`^[A-Za-z0-9._-]+$`, rejecting anything that could path-traverse out of
+`$RUNS_ROOT`), `require_run_dir` (validates a name and fails clearly if
+that run's directory doesn't exist), and `resolve_ca_bundle` (resolves
+the host's CA bundle for `login.sh`'s own TLS trust needs -- see "CA
+trust-store handling" below; duplicated, not called, by `start-agent.sh`,
+following that script's own pre-existing non-sourcing convention).
+Requires `PERSONAL_MONOREPO_LOCATION` (same convention as
+`start-agent.sh`) and computes `STACK_DIR` from it.
 
 ### `scripts/ps.sh` (`nix run .#ps`)
 

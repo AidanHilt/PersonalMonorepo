@@ -78,7 +78,10 @@
       "LANG",
       "LC_*",
       "TZ",
-      "PI_*"
+      "PI_*",
+      "SSL_CERT_FILE",
+      "NIX_SSL_CERT_FILE",
+      "NODE_EXTRA_CA_CERTS"
     ]
   }
 }

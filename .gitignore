@@ -274,8 +274,6 @@ monkeytype.sqlite3
 
 .vscode
 
-# Ignore dynaconf secret files
-.secrets.*
 
 
 **/charts/*.tgz
