@@ -32,7 +32,9 @@
     "access": "readwrite"
   },
   "filesystem": {
-    "allow": [],
+    "allow": [
+      "/tmp"
+    ],
     "read": []
   },
   "network": {

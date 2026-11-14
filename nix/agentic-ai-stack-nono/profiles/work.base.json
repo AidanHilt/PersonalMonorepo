@@ -32,7 +32,9 @@
     "access": "readwrite"
   },
   "filesystem": {
-    "allow": [],
+    "allow": [
+      "/tmp"
+    ],
     "read": [],
     "unix_socket": [
       "/nix/var/nix/daemon-socket/socket"
@@ -181,31 +183,43 @@
               "allow": [
                 {
                   "argv": {
-                    "prefix": ["build"]
+                    "prefix": [
+                      "build"
+                    ]
                   },
                   "reason": "nix build is read/build-only against the flake closure"
                 },
                 {
                   "argv": {
-                    "prefix": ["eval"]
+                    "prefix": [
+                      "eval"
+                    ]
                   },
                   "reason": "nix eval is read-only"
                 },
                 {
                   "argv": {
-                    "prefix": ["develop"]
+                    "prefix": [
+                      "develop"
+                    ]
                   },
                   "reason": "nix develop is needed for dev shells"
                 },
                 {
                   "argv": {
-                    "prefix": ["flake", "check"]
+                    "prefix": [
+                      "flake",
+                      "check"
+                    ]
                   },
                   "reason": "nix flake check is read-only validation"
                 },
                 {
                   "argv": {
-                    "prefix": ["flake", "show"]
+                    "prefix": [
+                      "flake",
+                      "show"
+                    ]
                   },
                   "reason": "nix flake show is read-only introspection"
                 }
@@ -213,31 +227,41 @@
               "deny": [
                 {
                   "argv": {
-                    "contains": ["--option"]
+                    "contains": [
+                      "--option"
+                    ]
                   },
                   "reason": "arbitrary nix.conf overrides could widen the sandbox or substituters"
                 },
                 {
                   "argv": {
-                    "contains": ["--extra-substituters"]
+                    "contains": [
+                      "--extra-substituters"
+                    ]
                   },
                   "reason": "untrusted substituters could supply unverified store content"
                 },
                 {
                   "argv": {
-                    "contains": ["--accept-flake-config"]
+                    "contains": [
+                      "--accept-flake-config"
+                    ]
                   },
                   "reason": "auto-accepting flake-supplied nix.conf settings is a sandbox escape vector"
                 },
                 {
                   "argv": {
-                    "prefix": ["profile"]
+                    "prefix": [
+                      "profile"
+                    ]
                   },
                   "reason": "nix profile mutates the user environment outside the sandboxed workdir"
                 },
                 {
                   "argv": {
-                    "prefix": ["copy"]
+                    "prefix": [
+                      "copy"
+                    ]
                   },
                   "reason": "nix copy can exfiltrate/import store paths via arbitrary stores"
                 }
