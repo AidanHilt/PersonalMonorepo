@@ -60,5 +60,6 @@
 
     pkgs.fd
     pkgs.ripgrep
+    pkgs.tmux
   ];
 }
