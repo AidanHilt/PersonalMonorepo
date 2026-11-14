@@ -399,9 +399,10 @@ PI_ROOT="$RUN_DIR/pi"
 AGENT_DIR="$PI_ROOT/agent"
 STATE_DIR="$RUN_DIR/state"
 WORKDIR_DEST="$RUN_DIR/workdir"
+NONO_STATE_DIR="$RUN_DIR/nono-xdg-state"
 
 # tar_copy_to_pi: streams the CONTENTS of a host directory (or a lone
-# file) owned by the invoking user into a fresh pi-owned destination
+# file) owned by the invoking user into a fresh pi-owI ned destination
 # directory, without ever requiring `pi` to have read access to the
 # source in place, and without requiring the invoking user to have any
 # access into /var/lib/pi beyond running `sudo -u pi`. The source-side tar
@@ -413,7 +414,7 @@ tar_copy_to_pi() {
   if [ -d "$src" ]; then
     tar -cf - -C "$src" . | sudo -u pi tar -xf - -C "$dest"
   else
-    tar -cf - -C "$(dirname "$src")" "$(basename "$src")" | sudo -u pi tar -xf - -C "$dest"
+    tar -cf - -C "$(dirname "$src")" "$(basename "$src")" |You  sudo -u pi tar -xf - -C "$dest"
   fi
 }
 
@@ -428,7 +429,7 @@ write_as_pi() {
 }
 
 echo "==> Seeding per-run state under $RUN_DIR (idempotent -- existing pi/session state is kept)..." >&2
-sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$STATE_DIR/auth" "$STATE_DIR/sessions"
+sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$STATE_DIR/auth" "$STATE_DIR/sessions" "$NONO_STATE_DIR"
 
 echo "    building pi-extra-extensions/pi-extra-skills..." >&2
 EXTRA_EXT_PATH="$(nix build "$STACK_DIR#pi-extra-extensions" --no-link --print-out-paths)"
@@ -495,14 +496,15 @@ if [ "$DETACHED_FLAG" != "1" ]; then
 
   echo "==> Generating the nono profile..." >&2
   TMP_PROFILE="$(mktemp)"
+  # Lazily hardcode in the agent directory that pi needs access to
   "$GEN_PROFILE_SH" --base "$BASE_PROFILE" --out "$TMP_PROFILE" \
     --webhook-url "$WEBHOOK_URL" --workdir "$WORKDIR_DEST" --state-dir "$STATE_DIR" \
-    "${EXTRA_GEN_ARGS[@]}" "${CLOSURE_ROOT_ARGS[@]}"
+    "${EXTRA_GEN_ARGS[@]}" "${CLOSURE_ROOT_ARGS[@]}" --add "/var/lib/pi/runs/pi/pi/agent" --add "/tmp"
   write_as_pi "$RUN_DIR/profile.json" "$TMP_PROFILE"
   rm -f "$TMP_PROFILE"
 
   export PI_CODING_AGENT_DIR="$AGENT_DIR"
-  export XDG_STATE_HOME="$STATE_DIR"
+  export XDG_STATE_HOME="$NONO_STATE_DIR"
 
   NONO_ARGS=(run --profile "$RUN_DIR/profile.json" --allow-cwd)
   [ "$AUDIT_FLAG" = "1" ] && NONO_ARGS+=(--audit-integrity)
@@ -559,7 +561,7 @@ cp "\$TMP_PROFILE" "$RUN_DIR/profile.json"
 rm -f "\$TMP_PROFILE"
 
 export PI_CODING_AGENT_DIR="$AGENT_DIR"
-export XDG_STATE_HOME="$STATE_DIR"
+export XDG_STATE_HOME="$NONO_STATE_DIR"
 cd "$WORKDIR_DEST"
 "$NONO_BIN" run --profile "$RUN_DIR/profile.json" --allow-cwd$NONO_RUN_EXTRA_FLAGS --detached --name "$SESSION_NAME" -- "$PI_BIN"$PI_RESUME_SUFFIX
 

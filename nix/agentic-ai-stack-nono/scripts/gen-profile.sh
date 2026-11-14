@@ -188,7 +188,7 @@ build_profile() {
   # Step 2/3: closure-derived read-only grants (Linux only).
   local reads_file
   reads_file="$(mktemp)"
-  trap 'rm -f "${tmp_profile:-}" "${reads_file:-}" "${reads_file:-}.merged"; trap - RETURN' RETURN 
+  trap 'rm -f "${tmp_profile:-}" "${reads_file:-}" "${reads_file:-}.merged"; trap - RETURN' RETURN
   if [[ "$os" == "linux" ]]; then
     {
       closure_of "/run/current-system/sw" || true
@@ -217,7 +217,7 @@ build_profile() {
   jq --rawfile reads "$reads_file" --argjson rw "$rw_json" '                                                                                                              
     .filesystem.read = ((.filesystem.read // []) + ($reads | split("\n") | map(select(length > 0)))) |                                                                    
     .filesystem.allow = ((.filesystem.allow // []) + $rw)                                                                                                                 
-  ' "$tmp_profile" >"$reads_file.merged" 
+  ' "$tmp_profile" >"$reads_file.merged"
 
   # Step 5: validate and write atomically.
   if ! jq empty "$reads_file.merged" 2>/dev/null; then

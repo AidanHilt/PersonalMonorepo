@@ -88,6 +88,7 @@
     "allow_vars": [
       "PATH",
       "HOME",
+      "USER",
       "TERM",
       "LANG",
       "LC_*",
@@ -97,33 +98,148 @@
     ]
   },
   "command_policies": {
-    "nix": {
-      "invocation_policy": {
-        "allow": [
-          "build",
-          "eval",
-          "develop",
-          "flake check",
-          "flake show"
-        ],
-        "deny": [
-          "profile",
-          "copy",
-          "--option",
-          "--extra-substituters",
-          "--accept-flake-config",
-          "update",
-          "nixos-rebuild",
-          "darwin-rebuild",
-          "home-manager",
-          "nix-env"
-        ]
+    "commands": {
+      "update": {
+        "from": {
+          "session": "deny"
+        }
       },
-      "deny_direct_exec_bypass": true
-    },
-    "agent-validate": {
-      "mediate": true,
-      "deny_direct_exec_bypass": true
+      "nixos-rebuild": {
+        "from": {
+          "session": "deny"
+        }
+      },
+      "darwin-rebuild": {
+        "from": {
+          "session": "deny"
+        }
+      },
+      "home-manager": {
+        "from": {
+          "session": "deny"
+        }
+      },
+      "nix-env": {
+        "from": {
+          "session": "deny"
+        }
+      },
+      "nix-channel": {
+        "from": {
+          "session": "deny"
+        }
+      },
+      "nix": {
+        "from": {
+          "session": {
+            "sandbox": {
+              "unix_socket_bind": [
+                "/nix/var/nix/daemon-socket/socket"
+              ],
+              "fs_read": [
+                "/nix/store",
+                "/nix/var/nix"
+              ],
+              "fs_write": [
+                "$WORKDIR",
+                "$HOME/.cache"
+              ],
+              "network": {
+                "allow_domain": [
+                  "github.com",
+                  "api.github.com",
+                  "codeload.github.com",
+                  "raw.githubusercontent.com",
+                  "cache.nixos.org",
+                  "channels.nixos.org"
+                ]
+              },
+              "environment": {
+                "allow_vars": [
+                  "PATH",
+                  "HOME",
+                  "USER",
+                  "TERM",
+                  "LANG",
+                  "LC_*",
+                  "TZ"
+                ],
+                "set_vars": {
+                  "NIX_REMOTE": "daemon",
+                  "NIX_CONFIG": "experimental-features = nix-command flakes"
+                }
+              }
+            },
+            "invocation_policy": {
+              "default": "deny",
+              "allow": [
+                {
+                  "argv": {
+                    "prefix": ["build"]
+                  },
+                  "reason": "nix build is read/build-only against the flake closure"
+                },
+                {
+                  "argv": {
+                    "prefix": ["eval"]
+                  },
+                  "reason": "nix eval is read-only"
+                },
+                {
+                  "argv": {
+                    "prefix": ["develop"]
+                  },
+                  "reason": "nix develop is needed for dev shells"
+                },
+                {
+                  "argv": {
+                    "prefix": ["flake", "check"]
+                  },
+                  "reason": "nix flake check is read-only validation"
+                },
+                {
+                  "argv": {
+                    "prefix": ["flake", "show"]
+                  },
+                  "reason": "nix flake show is read-only introspection"
+                }
+              ],
+              "deny": [
+                {
+                  "argv": {
+                    "contains": ["--option"]
+                  },
+                  "reason": "arbitrary nix.conf overrides could widen the sandbox or substituters"
+                },
+                {
+                  "argv": {
+                    "contains": ["--extra-substituters"]
+                  },
+                  "reason": "untrusted substituters could supply unverified store content"
+                },
+                {
+                  "argv": {
+                    "contains": ["--accept-flake-config"]
+                  },
+                  "reason": "auto-accepting flake-supplied nix.conf settings is a sandbox escape vector"
+                },
+                {
+                  "argv": {
+                    "prefix": ["profile"]
+                  },
+                  "reason": "nix profile mutates the user environment outside the sandboxed workdir"
+                },
+                {
+                  "argv": {
+                    "prefix": ["copy"]
+                  },
+                  "reason": "nix copy can exfiltrate/import store paths via arbitrary stores"
+                }
+              ]
+            }
+          }
+        }
+      }
     }
   }
 }

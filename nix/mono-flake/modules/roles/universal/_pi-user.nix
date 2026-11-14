@@ -56,5 +56,9 @@
 
   environment.systemPackages = [
     pkgs-unstable.nono
+    pkgs-unstable.pi-coding-agent
+
+    pkgs.fd
+    pkgs.ripgrep
   ];
 }

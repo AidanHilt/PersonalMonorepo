@@ -328,21 +328,70 @@ with `nix run .#verify`.
 
 ### UNVERIFIED (no nono binary in this environment to validate against)
 
-- **`command_policies`/`invocation_policy`/`deny_direct_exec_bypass`**
-  (`work.base.json`'s `command_policies` block): no spike exercised
-  this; the shape here is a best-effort guess from `PLAN.md`'s prose
-  description (mediate `nix` and `agent-validate`; allow `nix build`/
-  `eval`/`develop`/`flake check`/`flake show`; deny `profile`, `copy`,
-  `--option`, `--extra-substituters`, `--accept-flake-config`,
-  `update`, `nixos-rebuild`, `darwin-rebuild`, `home-manager`,
-  `nix-env`), not a verified nono schema. Re-verify against real `nono`
-  before relying on it.
-- **Environment variable filtering** (`work.base.json`'s `environment`
-  block): no spike exercised nono's env-filtering schema at all. The
-  `allow` list here (`PATH`, `HOME`, `TERM`, `LANG`, `LC_*`, `TZ`,
-  `PI_*`, `PI_SANDBOX__SECRET__*`) is a best-effort guess at letting
-  the `--secret`/`PI_SANDBOX__SECRET__<NAME>` convention (`PLAN.md`'s
-  "Secrets" row) through; the field name/shape is unverified.
+- **`command_policies`** (`work.base.json`'s `command_policies` block):
+  the KEYS are now schema-sourced, not guessed -- read from nono's own
+  `nono-profile.schema.json`
+  (`crates/nono-cli/data/nono-profile.schema.json` in the `nolabs-ai/
+  nono` repo) and `nono.sh/docs/cli/features/tool-sandbox.md`/
+  `dangerous-command-blocking.md`. Top-level shape is
+  `{"commands": {<name>: {"from": {"session": ...}}}}`: a bare
+  `"deny"` string for the deny-only commands (`update`,
+  `nixos-rebuild`, `darwin-rebuild`, `home-manager`, `nix-env`,
+  `nix-channel`), and the full edge-policy form
+  `{"sandbox": {...}, "invocation_policy": {...}}` for `nix` (mediated,
+  not deny-only). `deny_direct_exec_bypass` was removed outright -- it
+  takes absolute paths, which a static flake-owned file cannot know in
+  advance, and nono already denies direct canonical-path bypass of any
+  controlled/deny-only command on its own. `agent-validate` is
+  deliberately NOT given a command policy in this pass -- it runs
+  through the unmodified session sandbox; **UNVERIFIED**: whether its
+  own nested `nix` invocations get attributed through the `nix` command
+  policy above (the "nix shim" attribution path) or bypass it entirely
+  has not been confirmed against a real `nono` binary. Still
+  **UNVERIFIED** beyond the schema shape itself:
+  - `invocation_policy` rule evaluation order (whether `deny` is
+    checked before `allow`, how overlapping `argv.prefix`/`argv.contains`
+    rules interact, whether `default` only applies when no rule
+    matches at all) -- the block above relies only on `default: deny`
+    plus explicit `allow`/`deny` rules and does not depend on a
+    specific evaluation order, but that order itself was not verified.
+  - Whether the `nix` command sandbox's `fs_read` of `/nix/store` and
+    `/nix/var/nix` (broader than the session sandbox's closure-limited
+    read ceiling built by `gen-profile.sh`) is actually sufficient/
+    necessary for `nix build`/`eval`/`develop`/`flake check`/`flake
+    show` to work in practice -- this is a deliberate trade-off
+    (command sandboxes do NOT inherit session grants, per the schema),
+    not a spike-verified minimal set.
+  - When mediation via `command_policies` is active, the session
+    sandbox's own execute grant is reportedly built from every trusted
+    `PATH` directory -- how that interacts with `gen-profile.sh`'s
+    closure-based read grants (whether it widens exec beyond the
+    closure) has not been exercised against a real `nono` binary.
+  - Matchers are plain argv predicates with no flag normalisation, so
+    `argv.prefix`/`argv.contains` only ever see literal argv tokens in
+    the order `nono` received them; a global flag placed before the
+    subcommand (e.g. `nix --extra-experimental-features ... build`)
+    would shift the subcommand out of `argv.prefix`'s first-token slot
+    and could fall through to `default: deny` rather than matching
+    `allow`. `NIX_CONFIG` is set via the command sandbox's
+    `environment.set_vars` specifically so flake/nix-command
+    experimental features don't need an argv flag at all.
+- **Environment variable filtering** (`work.base.json`'s top-level
+  `environment` block, and the `nix` command policy's nested
+  `sandbox.environment`): the field names (`allow_vars`, `deny_vars`,
+  `case_insensitive_vars`, `set_vars`) are now schema-sourced, not
+  guessed. Confirmed from the schema/docs: exact names and `*` globs
+  anywhere in the pattern are both supported, matching is
+  case-sensitive by default, and built-in dangerous vars (e.g.
+  `LD_PRELOAD`) are always blocked regardless of `allow_vars`. The
+  session-level `allow_vars` list (`PATH`, `HOME`, `USER`, `TERM`,
+  `LANG`, `LC_*`, `TZ`, `PI_*`, `PI_SANDBOX__SECRET__*`) lets the
+  `--secret`/`PI_SANDBOX__SECRET__<NAME>` convention (`PLAN.md`'s
+  "Secrets" row) through; still **UNVERIFIED**: actual runtime
+  filtering behaviour (e.g. whether a bare `PI_SANDBOX__SECRET__*`
+  glob leaks adjacent `PI_SANDBOX__`-prefixed non-secret vars, or
+  whether `set_vars` entries are exempt from `allow_vars` filtering)
+  against a real `nono` binary.
 - **macOS native grants**: `gen-profile.sh` currently adds no
   closure-equivalent grant on macOS at all (see its `TODO(macOS native
   grants)` comment) -- Seatbelt rule-count limits for a closure-sized
