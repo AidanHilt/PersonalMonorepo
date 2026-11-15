@@ -136,3 +136,29 @@ resolve_ca_bundle() {
   echo "error: no CA bundle found (checked \$PI_STACK_CA_BUNDLE, \$NIX_SSL_CERT_FILE, \$SSL_CERT_FILE, /etc/ssl/certs/ca-certificates.crt, /etc/pki/tls/certs/ca-bundle.crt, /etc/ssl/cert.pem) -- set PI_STACK_CA_BUNDLE explicitly to the bundle you want granted." >&2
   exit 1
 }
+
+# nono_session_running: returns success (0) if a nono session named $3
+# appears to be running against the XDG_STATE_HOME at $2 (queried via
+# `nono ps`, run as the `pi` user), failure (1) otherwise. Shared by
+# shell.sh's "one shell per run" refusal and stop.sh's refusal to tear
+# down a run's state while its shell session is still open -- see both
+# scripts and IMPLEMENTERS.md's "scripts/shell.sh" section.
+#
+# If the state directory doesn't exist at all, there is nothing to query
+# -- treated as "not running" without ever invoking nono (same shortcut
+# ps.sh already takes for a run with no nono state dir yet).
+#
+# UNVERIFIED: nono ps's exact output format was not confirmed against a
+# real nono binary in this environment. Like start-agent.sh's own
+# supervisor.sh detached-mode poll loop (`nono ps | grep -q
+# "$SESSION_NAME"`, see IMPLEMENTERS.md), this does a plain substring
+# grep for the session name against the whole `nono ps` output, which
+# could in principle false-positive against an unrelated session name
+# that happens to contain this one as a substring (e.g. "<name>-shell"
+# vs. "<name>-shell-2") -- no narrower matching was available without a
+# real nono binary to check its actual table/column shape against.
+nono_session_running() {
+  local nono_bin="$1" state_dir="$2" session_name="$3"
+  [ -d "$state_dir" ] || return 1
+  sudo -u pi env XDG_STATE_HOME="$state_dir" "$nono_bin" ps 2>/dev/null | grep -q "$session_name"
+}

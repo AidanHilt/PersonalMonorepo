@@ -1,5 +1,5 @@
 {
-  description = "Pi sandbox stack: nono (Landlock/Seatbelt)-based sandboxed Pi coding agent (PLAN.md Phase 4a/4b built: work profile, launcher, approval helper, ps/attach/stop/login wrappers, and the nono-sandbox extension/skill; the nix/scripts changes and config/agent/ permission-rule edits are Phase 4c)";
+  description = "Pi sandbox stack: nono (Landlock/Seatbelt)-based sandboxed Pi coding agent (PLAN.md Phase 4a/4b built: work profile, launcher, approval helper, ps/attach/stop/login/shell wrappers, and the nono-sandbox extension/skill; the nix/scripts changes and config/agent/ permission-rule edits are Phase 4c)";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
@@ -203,19 +203,52 @@
           };
 
           # nix run .#stop -- <name> -> scripts/stop.sh (PLAN.md Phase 4b):
-          # replaces the old container-era `stop-agent`.
+          # replaces the old container-era `stop-agent`. pkgs.psmisc (fuser)
+          # was removed from here: it was only ever needed for the
+          # approval-helper best-effort teardown stop.sh used to do, which
+          # has since been removed outright (see stop.sh's own header
+          # comment) -- it was stale/unused leftover before this cleanup.
           stop = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "pi-sandbox-stop";
               runtimeInputs = [
                 pkgs.jq
                 pkgs.coreutils
-                pkgs.psmisc # fuser, for the approval-helper best-effort stop
               ];
               text = ''
                 export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
               ''
               + builtins.readFile ./scripts/stop.sh;
+            };
+          };
+
+          # nix run .#shell -- <name> -> scripts/shell.sh: opens a separate,
+          # interactive bash shell inside a nono sandbox for an existing (or
+          # not-yet-started) run, with its own approval helper -- the
+          # replacement for the old container-era `shell-agent` (`nix run
+          # .#attach` attaches to pi's own TUI PTY instead, which doesn't
+          # serve this purpose -- see shell.sh's header comment). Modelled
+          # on apps.start-agent's wrapper shape, minus pi itself (this app
+          # never runs `pi`, only a plain bash). PI_STACK_BASH_BIN comes
+          # from this flake's own nixpkgs (pkgs.bashInteractive, NOT
+          # nixpkgs-unstable's pi-coding-agent closure) -- see shell.sh's
+          # "bash path fallback" note for the UNVERIFIED fallback this can
+          # require.
+          shell = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellApplication {
+              name = "pi-sandbox-shell";
+              runtimeInputs = [
+                pkgs.jq
+                pkgs.coreutils
+                self.packages.${system}.approval-helper
+              ];
+              text = ''
+                export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
+                export PI_STACK_JQ_BIN=${pkgs.jq}/bin/jq
+                export PI_STACK_APPROVAL_HELPER_BIN=${self.packages.${system}.approval-helper}/bin/approval-helper
+                export PI_STACK_BASH_BIN=${pkgs.bashInteractive}/bin/bash
+              ''
+              + builtins.readFile ./scripts/shell.sh;
             };
           };
 

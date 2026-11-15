@@ -899,10 +899,21 @@ detached run, by the invoking-user wrapper `start-agent.sh` starts (see
 "Detached mode" above), which stops the helper itself once the pi-owned
 supervisor it's waiting on returns -- and `nono stop` is exactly what
 makes that supervisor's `nono ps` poll loop notice the session is gone
-and return. `nix run .#stop` pulling in `pkgs.psmisc` (`fuser`) as a
-`runtimeInput` is now stale leftover from the removed teardown (tracked
-as a `flake.nix` follow-up, out of scope for this change -- see
-"`flake.nix`: new apps" below).
+and return. `pkgs.psmisc` (`fuser`) has since been removed from
+`apps.stop`'s `runtimeInputs` in `flake.nix` -- it was stale leftover
+from this removed teardown, no longer referenced by `stop.sh` at all --
+see "`flake.nix`: new apps" below.
+
+**`stop.sh` also refuses outright (before stopping or deleting anything)
+if a `"<name>-shell"` nono session is still running** -- i.e. `scripts/
+shell.sh` (see below) has an open shell against this same run. Since
+`shell.sh` reuses the run's own nono `XDG_STATE_HOME`, tearing that state
+dir down (or even just calling `nono stop <name>`) while a shell session
+is still attached to it would be surprising; the user is told to exit
+the shell first. This check (`lib-common.sh`'s `nono_session_running`,
+shared with `shell.sh`'s own "one shell per run" refusal -- see below)
+runs before the existing `nono stop <name>` call, so a run with an open
+shell is left completely untouched, not partially torn down.
 
 ### `scripts/login.sh` (`nix run .#login`)
 
@@ -974,6 +985,90 @@ profile -- its `// []` jq fallbacks already tolerate the missing
 grant `login.sh` needs (`agent/`, which is also where `pi` writes its
 resulting `auth.json` -- no separate `--state-dir` grant is used here).
 
+### `scripts/shell.sh <name>` (`nix run .#shell -- <name>`)
+
+> Unlike every other section in "Session wrappers, login, and
+> nono-sandbox extension (Phase 4b)", this one was added AFTER that
+> phase, not as part of it -- see this script's own header comment. It
+> replaces the old container-era `shell-agent` (`scripts/shell-agent.sh`,
+> deleted outright per the top-of-file migration note), which
+> `attach.sh` does NOT serve the same purpose as: `nono attach <name>`
+> attaches to `pi`'s own TUI PTY, and fails outright for a foreground run
+> ("Session <name> already has an active attached client" -- there is no
+> free PTY to attach a second client to).
+
+Opens a separate, interactive `bash -i` inside its OWN nono session
+(`"<name>-shell"`), reusing the target run's nono `XDG_STATE_HOME`
+(`lib-common.sh`'s `nono_state_dir_for`, same as `attach.sh`/`stop.sh`)
+so it's labelled under that run in `nono ps`/`ps.sh`, and a per-invocation
+COPY of that run's own `profile.json` -- not a call into
+`gen-profile.sh` -- with only its webhook approval URL rewritten via
+`jq`. The run's own `profile.json` is never modified; the copy
+(`$RUN_DIR/shell-profile.json`) is regenerated (overwritten) on every
+invocation. **Judgement call (decision 1A in this feature's own plan):**
+no `gen-profile.sh` re-composition here at all -- this deliberately
+doesn't re-implement its base/closure logic, so the shell's filesystem
+grants are exactly whatever the run's own `profile.json` already has
+(from whenever `start-agent.sh` last generated it), not independently
+recomputed.
+
+**Own approval helper, not the run's.** Exactly like `start-agent.sh`'s
+foreground mode / `login.sh` (duplicated, not factored into
+`lib-common.sh`, matching their own precedent): started as the invoking
+user, `--ui auto --info-file ... --parent-pid "$$"`, torn down via
+`trap ... EXIT`. This means `shell.sh` works whether or not the run's
+own `pi` session (and its helper) is still alive -- it never depends on
+either.
+
+**One shell per run.** Before starting its own helper, `shell.sh` checks
+(`lib-common.sh`'s `nono_session_running`, shared with `stop.sh`'s own
+refusal -- see above) whether a `"<name>-shell"` session is already
+running against the run's state dir, and refuses outright if so -- there
+is no support for multiple concurrent shells against one run. This is
+the same `nono ps`-substring-grep approach `start-agent.sh`'s detached-
+mode supervisor already uses, carrying the same **UNVERIFIED** caveat
+(no real `nono` binary in this environment to confirm its output shape,
+or to rule out a false-positive substring match against a longer session
+name that happens to contain this one, e.g. `"<name>-shell"` vs.
+`"<name>-shell-2"`).
+
+**`profile.json` must already exist.** `shell.sh` requires the target
+run to already have a `profile.json` (i.e. to have been started at least
+once via `start-agent.sh`) -- read via `sudo -u pi cat`, since it's
+`pi`-owned -- and errors with "run `<name>` has no profile.json -- start
+it with start-agent first" otherwise. It does not create or seed any
+other part of the run's state (no `pi/agent/` reseeding, no workdir
+copy) -- that's entirely `start-agent.sh`'s job.
+
+**Environment**: identical to `start-agent.sh`'s foreground mode --
+`PI_CODING_AGENT_DIR` (the run's `pi/agent/`), `XDG_STATE_HOME` (the
+run's nono state dir), and the three CA vars (`SSL_CERT_FILE`/
+`NIX_SSL_CERT_FILE`/`NODE_EXTRA_CA_CERTS`, via `lib-common.sh`'s
+`resolve_ca_bundle`) -- all threaded through the same `sudo -u pi
+--preserve-env=...` / `sh -c 'cd "$1"; shift; exec "$@"'` launch idiom
+`start-agent.sh`/`login.sh` already use, with the run's own `workdir/` as
+`pi`'s cwd (same as `start-agent.sh`).
+
+**`bash` path, UNVERIFIED fallback.** `flake.nix`'s `apps.shell` resolves
+`PI_STACK_BASH_BIN` from THIS flake's own nixpkgs
+(`pkgs.bashInteractive`), which is a different closure than the
+`nixpkgs-unstable` one `gen-profile.sh` closure-expanded into the run's
+`profile.json` `filesystem.read` grants when `start-agent.sh` generated
+it -- there is no guarantee the resolved bash path is covered by those
+grants. `shell.sh` checks the copied profile's `filesystem.read` array
+for a prefix match of the resolved bash path and, if none is found,
+falls back to `/run/current-system/sw/bin/bash` (covered by every
+profile's own implicit system-closure grant, see `gen-profile.sh`),
+printing a note to stderr. Not exercised against a real `nono` binary --
+marked **UNVERIFIED** in `shell.sh --help` itself.
+
+**`--dry-run`**: prints the resolved binaries/paths and the illustrative
+`nono run` command, performing NO sudo/nono calls at all -- this means
+the "already running" check, the `profile.json` existence check, and the
+bash-path-fallback check (all three require a `sudo -u pi` call) are all
+SKIPPED in `--dry-run` mode, same convention `start-agent.sh`/`login.sh`
+already follow for their own `--dry-run`.
+
 ### `nono-sandbox` extension and skill
 
 `config/agent/extensions/nono-sandbox/index.ts` is a rewritten
@@ -1019,13 +1114,20 @@ it".
 
 ### `flake.nix`: new apps
 
-`apps.ps`, `apps.attach`, `apps.stop`, and `apps.login` are added
-following `apps.start-agent`'s exact wrapper shape (`writeShellApplication`
+`apps.ps`, `apps.attach`, `apps.stop`, `apps.login`, and (added later,
+see "`scripts/shell.sh <name>`" above) `apps.shell` are added following
+`apps.start-agent`'s exact wrapper shape (`writeShellApplication`
 exporting `PI_STACK_*_BIN` store paths, then `builtins.readFile` of the
-corresponding `scripts/*.sh`). `apps.stop` additionally pulls in
-`pkgs.psmisc` for `fuser` -- **now unused**: `stop.sh` no longer does any
-approval-helper teardown (see "`scripts/attach.sh <name>` / `scripts/
-stop.sh <name>`" above for why and when that was removed); removing this
-`runtimeInput` from `flake.nix` itself is an open follow-up, out of scope
-for the change that made it unused. None of these touch `flake.lock`.
+corresponding `scripts/*.sh`). `apps.shell` is the one exception to
+"minus `pi`": it never runs `pi` at all (just a plain `bash`), so it
+exports `PI_STACK_NONO_BIN`/`PI_STACK_JQ_BIN`/
+`PI_STACK_APPROVAL_HELPER_BIN` (same as `apps.start-agent`) plus
+`PI_STACK_BASH_BIN=${pkgs.bashInteractive}/bin/bash` instead of
+`PI_STACK_PI_BIN` -- see `shell.sh`'s own "bash path, UNVERIFIED
+fallback" note above for why that's a different nixpkgs closure than the
+one `pi`/`nono` are drawn from. `apps.stop`'s now-unused `pkgs.psmisc`
+(`fuser`) `runtimeInput` -- stale leftover from the approval-helper
+teardown `stop.sh` no longer does, see "`scripts/attach.sh <name>` /
+`scripts/stop.sh <name>`" above -- has been removed. None of these touch
+`flake.lock`.
 

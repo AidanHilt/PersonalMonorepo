@@ -352,6 +352,39 @@ hard error. Neither has any effect if `PI_SESSIONS=0` is set on the `pi`
 container (sessions disabled outright; `--resume` combined with it only
 logs a warning).
 
+### Opening a separate shell in a run (`nix run .#shell -- <name>`)
+
+> This section describes the current, nono-based launcher (see
+> IMPLEMENTERS.md's "Mid-migration note" at the top for this README's
+> overall container-era staleness) -- it is accurate even though most of
+> the rest of this file still isn't.
+
+`nix run .#attach -- <name>` attaches to `pi`'s own TUI session, not a
+plain shell -- and it fails outright for a foreground (non-`--detached`)
+run, since there's no free PTY to attach a second client to ("Session
+<name> already has an active attached client"). For a plain interactive
+shell alongside (or instead of) that TUI session, use `shell` instead:
+
+```sh
+nix run .#shell -- <name>   # <name> must already exist: nix run .#start-agent --name <name>
+```
+
+This opens its own nono session (`<name>-shell`), sharing the run's own
+nono session-state directory (so it's labelled under the same run in
+`nix run .#ps`) and the same filesystem grants as the run's own
+`profile.json` (copied per invocation, only the webhook approval URL
+rewritten -- the run's own `profile.json` is never modified). It starts
+its **own** approval helper, so it works whether or not the run's own
+`pi` session (and its helper) is still running — the same tmux
+requirement described in "Approvals over SSH / headless hosts" above
+applies here too.
+
+Only one shell session per run is allowed at a time: running `shell`
+again against a run that already has an open `<name>-shell` session
+refuses to start a second one. `nix run .#stop -- <name>` also refuses
+to stop (or delete the state of) a run while its shell session is still
+open — exit the shell first.
+
 ### Installing extra nixpkgs software on demand (`pkg-broker`)
 
 An always-on `pkg-broker` sidecar (see `containers/pkg-broker/README.md`)
@@ -366,6 +399,9 @@ nix run .#shell-agent    # requires `pi` already running (nix run .#start-agent)
 # inside the container:
 pkg-install ripgrep
 ```
+
+(On the current nono-based stack, use `nix run .#shell -- <name>` to get
+a raw shell instead — see "Opening a separate shell in a run" above.)
 
 ### Requesting an extra domain at runtime (`domain-gate`)
 

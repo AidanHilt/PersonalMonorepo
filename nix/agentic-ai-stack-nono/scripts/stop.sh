@@ -22,6 +22,12 @@
 # nono state directory's contents -- EXCEPT its nono/audit subtree, which
 # is preserved (nono stores audit records at
 # <XDG_STATE_HOME>/nono/audit). If `nono stop` fails, nothing is deleted.
+#
+# Refuses outright (before stopping or deleting anything) if a
+# "<name>-shell" session (scripts/shell.sh, `nix run .#shell -- <name>`)
+# is still open for this run -- shell.sh reuses this run's own
+# XDG_STATE_HOME, so tearing it down here out from under an open shell
+# would be surprising. See lib-common.sh's nono_session_running.
 set -euo pipefail
 
 print_help() {
@@ -34,6 +40,10 @@ Stops an existing nono session under /var/lib/pi/runs/<name>/ (`nono stop
 directory's contents, preserving its nono/audit subtree. The approval
 helper's own lifecycle is NOT managed by this script -- see the header
 comment in this file for who owns it.
+
+Refuses outright (stopping/deleting nothing) if a "<name>-shell" session
+(`nix run .#shell -- <name>`) is still open for this run -- exit that
+shell first, then re-run stop.sh.
 
 Positional arguments:
   <name>   The run/session name (as passed to start-agent.sh --name, or
@@ -70,6 +80,16 @@ require_run_dir "$NAME" >/dev/null
 STATE_DIR="$(nono_state_dir_for "$NAME")"
 
 NONO_BIN="$(resolve_stack_bin PI_STACK_NONO_BIN nono)"
+
+# Refuse before touching anything if this run's shell session
+# (scripts/shell.sh, `nix run .#shell -- <name>`) is still open -- it
+# shares this run's own XDG_STATE_HOME, so stopping/deleting state here
+# out from under it would be surprising.
+SHELL_SESSION_NAME="${NAME}-shell"
+if nono_session_running "$NONO_BIN" "$STATE_DIR" "$SHELL_SESSION_NAME"; then
+  echo "error: a shell session ($SHELL_SESSION_NAME) is still open for run $NAME; exit it first" >&2
+  exit 1
+fi
 
 echo "==> Stopping nono session '$NAME'..." >&2
 if ! sudo -u pi env XDG_STATE_HOME="$STATE_DIR" "$NONO_BIN" stop "$NAME"; then
