@@ -54,7 +54,9 @@ BASE_PROFILE="$STACK_DIR/profiles/work.base.json"
 CONFIG_AGENT_DIR="$STACK_DIR/config/agent"
 CONFIG_WEB_SEARCH="$STACK_DIR/config/web-search.json"
 
-RUNS_ROOT="/var/lib/pi/runs"
+HOME_DIR="/var/lib/pi"
+
+RUNS_ROOT="${HOME_DIR}/runs"
 
 PROFILE_FLAG="work"
 AUDIT_FLAG=0
@@ -368,7 +370,9 @@ if [ "$RESUME_FLAG" = "1" ] && [ -n "$NAME_FLAG" ]; then
   exit 1
 fi
 
-SESSION_NAME="${NAME_FLAG:-pi}"
+SESSION_NAME_ROOT="${NAME_FLAG:-pi}"
+DATE="$(date +%s)"
+SESSION_NAME="${SESSION_NAME_ROOT}-${DATE}"
 echo "==> Session name: $SESSION_NAME" >&2
 
 # --- Secrets: namespace scan first, then --secret flags (flags win) -------
@@ -481,7 +485,7 @@ PI_ROOT="$RUN_DIR/pi"
 AGENT_DIR="$PI_ROOT/agent"
 STATE_DIR="$RUN_DIR/state"
 WORKDIR_DEST="$RUN_DIR/workdir"
-NONO_STATE_DIR="$RUN_DIR/nono-xdg-state"
+NONO_STATE_DIR="$HOME_DIR/${SESSION_NAME}-nono-xdg-state"
 
 # tar_copy_to_pi: streams the CONTENTS of a host directory (or a lone
 # file) owned by the invoking user into a fresh pi-owned destination
@@ -614,7 +618,7 @@ if [ "$DETACHED_FLAG" != "1" ]; then
   # Lazily hardcode in the agent directory that pi needs access to
   "$GEN_PROFILE_SH" --base "$BASE_PROFILE" --out "$TMP_PROFILE" \
     --webhook-url "$WEBHOOK_URL" --workdir "$WORKDIR_DEST" --state-dir "$STATE_DIR" \
-    "${EXTRA_GEN_ARGS[@]}" "${READ_ROOT_ARGS[@]}" --add "/var/lib/pi/runs/pi/pi/agent" --add "/tmp"
+    "${EXTRA_GEN_ARGS[@]}" "${READ_ROOT_ARGS[@]}" --add "/var/lib/pi/runs" --add "/tmp"
   write_as_pi "$RUN_DIR/profile.json" "$TMP_PROFILE"
   rm -f "$TMP_PROFILE"
 
