@@ -27,6 +27,10 @@
   ...
 }:
 
+let
+  platformPackages = if ! pkgs.stdenv.hostPlatform.isDarwin then [pkgs.acl] else [];
+in
+
 {
   users.groups.pi = {
     gid = 10001;
@@ -61,5 +65,5 @@
     pkgs.fd
     pkgs.ripgrep
     pkgs.tmux
-  ];
+  ] ++ platformPackages;
 }
