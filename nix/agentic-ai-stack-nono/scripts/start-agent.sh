@@ -192,6 +192,31 @@ resolve_or_die() {
   readlink -f "$path"
 }
 
+# validate_run_name / nono_state_dir_for: duplicated (not sourced from
+# lib-common.sh) -- same pre-existing convention as resolve_ca_bundle
+# above. nono_state_dir_for is the SINGLE canonical path for a run's nono
+# XDG_STATE_HOME (/var/lib/pi/<name>-nono-xdg-state, a sibling of
+# $RUNS_ROOT, not nested under it) -- ps.sh/attach.sh/stop.sh all compute
+# this same path via lib-common.sh's own copy of this function. Keep both
+# copies in sync.
+validate_run_name() {
+  local name="$1"
+  if ! [[ "$name" =~ ^[A-Za-z0-9._-]+$ ]]; then
+    echo "error: invalid run name: '$name' (must match ^[A-Za-z0-9._-]+\$)" >&2
+    exit 1
+  fi
+  if [ "$name" = "." ] || [ "$name" = ".." ]; then
+    echo "error: invalid run name: '$name'" >&2
+    exit 1
+  fi
+}
+
+nono_state_dir_for() {
+  local name="$1"
+  validate_run_name "$name"
+  printf '%s\n' "/var/lib/pi/${name}-nono-xdg-state"
+}
+
 # resolve_ca_bundle: duplicated (not sourced from lib-common.sh) --
 # matches this script's own pre-existing convention of keeping its own
 # copies of resolve_or_die/resolve_stack_bin rather than sourcing
@@ -373,6 +398,7 @@ fi
 SESSION_NAME_ROOT="${NAME_FLAG:-pi}"
 DATE="$(date +%s)"
 SESSION_NAME="${SESSION_NAME_ROOT}-${DATE}"
+validate_run_name "$SESSION_NAME"
 echo "==> Session name: $SESSION_NAME" >&2
 
 # --- Secrets: namespace scan first, then --secret flags (flags win) -------
@@ -485,7 +511,7 @@ PI_ROOT="$RUN_DIR/pi"
 AGENT_DIR="$PI_ROOT/agent"
 STATE_DIR="$RUN_DIR/state"
 WORKDIR_DEST="$RUN_DIR/workdir"
-NONO_STATE_DIR="$HOME_DIR/${SESSION_NAME}-nono-xdg-state"
+NONO_STATE_DIR="$(nono_state_dir_for "$SESSION_NAME")"
 
 # tar_copy_to_pi: streams the CONTENTS of a host directory (or a lone
 # file) owned by the invoking user into a fresh pi-owned destination

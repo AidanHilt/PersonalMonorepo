@@ -73,6 +73,26 @@ require_run_dir() {
   printf '%s\n' "$run_dir"
 }
 
+# nono_state_dir_for: validates $1 as a run name and prints the single,
+# canonical path for that run's nono XDG_STATE_HOME --
+# /var/lib/pi/<name>-nono-xdg-state. This is a SIBLING of $RUNS_ROOT (not
+# nested under $RUNS_ROOT/<name>/), per the launcher's own layout --
+# start-agent.sh is the one authority for where this lives (its
+# NONO_STATE_DIR variable), and ps.sh/attach.sh/stop.sh must all agree
+# with it exactly, or `nix run .#ps`/`.#attach`/`.#stop` end up pointed at
+# an empty/wrong XDG_STATE_HOME while the real nono session state sits
+# elsewhere (the bug this function exists to prevent).
+#
+# Must be kept in sync with start-agent.sh's own duplicate of this
+# function/path -- that script predates this file and keeps its own
+# copies of helpers rather than sourcing it (see this file's header
+# comment above).
+nono_state_dir_for() {
+  local name="$1"
+  validate_run_name "$name"
+  printf '%s\n' "/var/lib/pi/${name}-nono-xdg-state"
+}
+
 # resolve_ca_bundle: prints the fully resolved (realpath, all symlinks
 # followed) path of the host's CA bundle -- the sandbox has no default CA
 # trust store reachable inside it (no SSL_CERT_FILE/NIX_SSL_CERT_FILE/

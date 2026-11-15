@@ -821,25 +821,47 @@ sourced itself -- see `resolve_ca_bundle` below): `resolve_or_die`/
 `RUNS_ROOT=/var/lib/pi/runs`, `validate_run_name` (anchors a run name to
 `^[A-Za-z0-9._-]+$`, rejecting anything that could path-traverse out of
 `$RUNS_ROOT`), `require_run_dir` (validates a name and fails clearly if
-that run's directory doesn't exist), and `resolve_ca_bundle` (resolves
-the host's CA bundle for `login.sh`'s own TLS trust needs -- see "CA
-trust-store handling" below; duplicated, not called, by `start-agent.sh`,
-following that script's own pre-existing non-sourcing convention).
-Requires `PERSONAL_MONOREPO_LOCATION` (same convention as
-`start-agent.sh`) and computes `STACK_DIR` from it.
+that run's directory doesn't exist), `nono_state_dir_for` (validates a
+run name and prints the SINGLE canonical path for that run's nono
+`XDG_STATE_HOME`, `/var/lib/pi/<name>-nono-xdg-state` -- a sibling of
+`$RUNS_ROOT`, not nested under it; see "Per-run state layout" above and
+its own call-out below), and `resolve_ca_bundle` (resolves the host's CA
+bundle for `login.sh`'s own TLS trust needs -- see "CA trust-store
+handling" below; duplicated, not called, by `start-agent.sh`, following
+that script's own pre-existing non-sourcing convention). Requires
+`PERSONAL_MONOREPO_LOCATION` (same convention as `start-agent.sh`) and
+computes `STACK_DIR` from it.
+
+**`nono_state_dir_for` and `start-agent.sh`'s own copy of it must agree
+exactly**: `start-agent.sh` doesn't source `lib-common.sh` (see above), so
+it carries its own duplicate `validate_run_name`/`nono_state_dir_for`
+pair, header-commented as needing to stay in sync with this file's copy.
+A past bug here (now fixed) was exactly this kind of drift:
+`start-agent.sh` wrote nono's `XDG_STATE_HOME` to
+`/var/lib/pi/<name>-nono-xdg-state` while `ps.sh`/`attach.sh`/`stop.sh`
+looked for it at `$RUNS_ROOT/<name>/nono-xdg-state` -- a run's real
+session state lived at the former path, so `nix run .#ps`/`.#attach`
+found nothing (the latter path, when it existed at all, held nothing but
+stray files from an unrelated manual `nono ps` run against it).
+`nono_state_dir_for` now gives both scripts one place to agree.
 
 ### `scripts/ps.sh` (`nix run .#ps`)
 
-There is no single, cross-run `nono ps` -- every run has its own
-`nono-xdg-state/` (see "Per-run state layout" above), and nono has no
-cross-run session registry (`PLAN.md`'s S5.4 open item, left unresolved
-upstream). `ps.sh` loops over every `/var/lib/pi/runs/<name>/nono-xdg-
-state/` directory it finds, running `sudo -u pi env XDG_STATE_HOME=<dir>
-nono ps` once per run, and prints a combined, `== run: <name> ==`-labelled
-table, skipping any run with no active sessions (empty `nono ps` output,
-or a non-zero exit, both treated as "nothing to show" rather than a hard
-failure -- a single stale/broken run directory should not break the
-whole listing).
+There is no single, cross-run `nono ps` -- every run has its own nono
+`XDG_STATE_HOME` at `/var/lib/pi/<name>-nono-xdg-state` (a sibling of
+`$RUNS_ROOT`, see "Per-run state layout" above and `lib-common.sh`'s
+`nono_state_dir_for`), and nono has no cross-run session registry
+(`PLAN.md`'s S5.4 open item, left unresolved upstream). `ps.sh` loops over
+every `/var/lib/pi/runs/<name>/` run directory it finds, computes that
+run's nono state dir via `nono_state_dir_for`, skips it if that state dir
+doesn't exist, and otherwise runs `sudo -u pi env XDG_STATE_HOME=<dir>
+nono ps` once per run. It prints a combined, `== run: <name> ==`-labelled
+table, treating empty `nono ps` output (a successful call, zero sessions)
+as "nothing to show" for that run -- but a non-zero exit from `nono ps`
+itself is surfaced, not silently skipped: it's printed to stderr as a
+labelled `== run: <name> == (nono ps failed: ...)` line and the script
+moves on to the next run, so a single broken run doesn't hide its own
+failure OR break the rest of the listing.
 
 ### `scripts/attach.sh <name>` / `scripts/stop.sh <name>` (`nix run .#attach
 -- <name>` / `nix run .#stop -- <name>`)
@@ -847,27 +869,40 @@ whole listing).
 Replace the old container-era `shell-agent`/`stop-agent`. Both validate
 `<name>` via `lib-common.sh`'s `require_run_dir` (rejecting path
 traversal and a nonexistent run directory up front), then run `nono
-attach <name>` / `nono stop <name>` as `pi`, against that run's own
-`nono-xdg-state/` as `XDG_STATE_HOME` -- the same per-run split `ps.sh`
-uses.
+attach <name>` / `nono stop <name>` as `pi`, against that run's own nono
+`XDG_STATE_HOME` (`lib-common.sh`'s `nono_state_dir_for`,
+`/var/lib/pi/<name>-nono-xdg-state`) -- the same per-run split `ps.sh`
+uses. `attach.sh` only uses `require_run_dir`'s existence check, not its
+returned run-dir path, since that path has nothing to do with the state
+dir it actually runs against.
 
-**`stop.sh`'s approval-helper teardown is best-effort, not guaranteed**:
-there is no PID file for a detached run's approval helper --
-`start-agent.sh`'s generated `supervisor.sh` keeps that PID only as a
-local shell variable, and already kills it itself (and removes
-`approval-helper-info.json`) within ~5s of `nono ps` no longer reporting
-the session (see "Detached mode" above). Rather than add new PID-file
-plumbing to `approval-helper`'s Go code (out of scope for this phase),
-`stop.sh` instead reads the `port` field out of
-`$RUN_DIR/approval-helper-info.json` (present only for `--detached` runs)
-and tries `fuser -k -n tcp <port>`, falling back to `lsof -ti tcp:<port> |
-xargs kill` if `fuser` isn't present. If neither tool is found, or the run
-wasn't detached in the first place (no info file -- a foreground run's
-helper already dies with its own launcher process), `stop.sh` just logs a
-warning: `nono stop` has already started the supervisor's own ~5s
-teardown regardless, so the helper gets stopped either way, just not
-necessarily instantly. `nix run .#stop` pulls in `pkgs.psmisc` (`fuser`)
-as a `runtimeInput` for this.
+**`stop.sh` deletes the per-run nono state dir after a successful stop,
+preserving `nono/audit`**: nono records audit history under
+`<XDG_STATE_HOME>/nono/audit`, which is worth keeping around after a
+session ends; everything else under the state dir is disposable
+per-session scratch state. On a successful `nono stop`, `stop.sh` deletes
+everything directly under the state dir except the `nono/` directory
+itself, then everything under `nono/` except `audit/` -- net effect, only
+`nono/audit` survives. If the state dir has no `nono/audit` subtree at
+all, it's removed outright instead of being left as an empty shell. If
+`nono stop` itself fails, nothing is deleted, and `stop.sh` exits
+non-zero.
+
+**The approval helper's lifecycle is NOT `stop.sh`'s job.** An earlier
+version of this script tried a best-effort, PID-less teardown of the
+approval helper here (reading a port out of
+`$RUN_DIR/approval-helper-info.json` and killing whatever was listening
+on it via `fuser`/`lsof`) -- that's been removed. The helper is already
+fully owned elsewhere: for a foreground run, by `start-agent.sh`'s own
+launcher process (dies with the launcher, via its `trap ... EXIT`); for a
+detached run, by the invoking-user wrapper `start-agent.sh` starts (see
+"Detached mode" above), which stops the helper itself once the pi-owned
+supervisor it's waiting on returns -- and `nono stop` is exactly what
+makes that supervisor's `nono ps` poll loop notice the session is gone
+and return. `nix run .#stop` pulling in `pkgs.psmisc` (`fuser`) as a
+`runtimeInput` is now stale leftover from the removed teardown (tracked
+as a `flake.nix` follow-up, out of scope for this change -- see
+"`flake.nix`: new apps" below).
 
 ### `scripts/login.sh` (`nix run .#login`)
 
@@ -988,6 +1023,9 @@ it".
 following `apps.start-agent`'s exact wrapper shape (`writeShellApplication`
 exporting `PI_STACK_*_BIN` store paths, then `builtins.readFile` of the
 corresponding `scripts/*.sh`). `apps.stop` additionally pulls in
-`pkgs.psmisc` for `fuser` (see `stop.sh`'s approval-helper teardown
-above). None of these touch `flake.lock`.
+`pkgs.psmisc` for `fuser` -- **now unused**: `stop.sh` no longer does any
+approval-helper teardown (see "`scripts/attach.sh <name>` / `scripts/
+stop.sh <name>`" above for why and when that was removed); removing this
+`runtimeInput` from `flake.nix` itself is an open follow-up, out of scope
+for the change that made it unused. None of these touch `flake.lock`.
 

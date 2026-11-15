@@ -3,8 +3,9 @@
 #
 # Phase 4b of PLAN.md: replaces the old container-era `shell-agent`.
 # Attaches to an existing nono session as the `pi` user, using that run's
-# own per-run XDG_STATE_HOME (see IMPLEMENTERS.md's "Per-run state layout"
-# -- there is no cross-run session registry, see scripts/ps.sh).
+# own per-run XDG_STATE_HOME at /var/lib/pi/<name>-nono-xdg-state (see
+# lib-common.sh's nono_state_dir_for and IMPLEMENTERS.md's "Per-run state
+# layout" -- there is no cross-run session registry, see scripts/ps.sh).
 set -euo pipefail
 
 print_help() {
@@ -13,7 +14,7 @@ Usage: attach.sh [--help] <name>
 
 Attaches to an existing nono session under /var/lib/pi/runs/<name>/
 (`nono attach <name>`, run as the `pi` user against that run's own
-XDG_STATE_HOME).
+XDG_STATE_HOME at /var/lib/pi/<name>-nono-xdg-state).
 
 Positional arguments:
   <name>   The run/session name (as passed to start-agent.sh --name, or
@@ -43,8 +44,11 @@ NAME="${1:?usage: attach.sh <name> (run attach.sh --help for details)}"
 # shellcheck disable=SC1091
 source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono/scripts/lib-common.sh"
 
-RUN_DIR="$(require_run_dir "$NAME")"
-STATE_DIR="$RUN_DIR/nono-xdg-state"
+# require_run_dir validates $NAME and that its run directory exists --
+# its own output (the run dir path) isn't needed here: the nono state dir
+# lives OUTSIDE it, as a sibling of $RUNS_ROOT (see nono_state_dir_for).
+require_run_dir "$NAME" >/dev/null
+STATE_DIR="$(nono_state_dir_for "$NAME")"
 
 NONO_BIN="$(resolve_stack_bin PI_STACK_NONO_BIN nono)"
 

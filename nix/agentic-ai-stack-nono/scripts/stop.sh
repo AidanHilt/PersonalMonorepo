@@ -3,19 +3,25 @@
 #
 # Phase 4b of PLAN.md: replaces the old container-era `stop-agent`. Stops
 # an existing nono session as the `pi` user, using that run's own per-run
-# XDG_STATE_HOME (see scripts/ps.sh / attach.sh for the same pattern).
+# XDG_STATE_HOME at /var/lib/pi/<name>-nono-xdg-state (see
+# lib-common.sh's nono_state_dir_for; scripts/ps.sh / attach.sh use the
+# same path).
 #
-# Also stops that run's approval helper, best-effort. There is no PID
-# file for it (see start-agent.sh's "Detached mode": the supervisor keeps
-# the helper's PID only as a local shell variable and already kills it
-# itself, ~5s after `nono ps` stops reporting the session) -- this script
-# does NOT invent new PID-file plumbing (out of scope: approval-helper's
-# Go code is not touched here). Instead it uses the port recorded in
-# approval-helper-info.json (written by start-agent.sh's supervisor for
-# --detached runs only) to stop the helper immediately via `fuser`/`lsof`
-# if either is available; if neither is, or the run wasn't detached (no
-# info file), the helper is left for the supervisor's own ~5s teardown --
-# `nono stop` below has already caused that teardown to start either way.
+# The approval helper's own lifecycle is NOT this script's job: for a
+# foreground run, start-agent.sh's own launcher process owns it (it dies
+# with the launcher). For a detached run, the invoking-user wrapper
+# started by start-agent.sh owns it, and stops it itself once the
+# pi-owned supervisor it's waiting on (which polls `nono ps` every 5s)
+# returns -- `nono stop` below causes that supervisor to notice and return
+# on its own, so the helper gets stopped either way, just not necessarily
+# instantly. There is deliberately no PID-file plumbing added here to
+# make that teardown immediate (out of scope: approval-helper's Go code
+# is not touched here).
+#
+# After a successful `nono stop`, this script also deletes the per-run
+# nono state directory's contents -- EXCEPT its nono/audit subtree, which
+# is preserved (nono stores audit records at
+# <XDG_STATE_HOME>/nono/audit). If `nono stop` fails, nothing is deleted.
 set -euo pipefail
 
 print_help() {
@@ -23,10 +29,11 @@ print_help() {
 Usage: stop.sh [--help] <name>
 
 Stops an existing nono session under /var/lib/pi/runs/<name>/ (`nono stop
-<name>`, run as the `pi` user against that run's own XDG_STATE_HOME), and
-makes a best-effort attempt to also stop that run's approval helper
-immediately (see the header comment in this file for why it's
-best-effort, not guaranteed).
+<name>`, run as the `pi` user against that run's own XDG_STATE_HOME at
+/var/lib/pi/<name>-nono-xdg-state). On success, deletes that state
+directory's contents, preserving its nono/audit subtree. The approval
+helper's own lifecycle is NOT managed by this script -- see the header
+comment in this file for who owns it.
 
 Positional arguments:
   <name>   The run/session name (as passed to start-agent.sh --name, or
@@ -56,39 +63,39 @@ NAME="${1:?usage: stop.sh <name> (run stop.sh --help for details)}"
 # shellcheck disable=SC1091
 source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono/scripts/lib-common.sh"
 
-RUN_DIR="$(require_run_dir "$NAME")"
-STATE_DIR="$RUN_DIR/nono-xdg-state"
+# require_run_dir validates $NAME and that its run directory exists --
+# its own output (the run dir path) isn't needed here: the nono state dir
+# lives OUTSIDE it, as a sibling of $RUNS_ROOT (see nono_state_dir_for).
+require_run_dir "$NAME" >/dev/null
+STATE_DIR="$(nono_state_dir_for "$NAME")"
 
 NONO_BIN="$(resolve_stack_bin PI_STACK_NONO_BIN nono)"
 
 echo "==> Stopping nono session '$NAME'..." >&2
-sudo -u pi env XDG_STATE_HOME="$STATE_DIR" "$NONO_BIN" stop "$NAME"
+if ! sudo -u pi env XDG_STATE_HOME="$STATE_DIR" "$NONO_BIN" stop "$NAME"; then
+  echo "error: 'nono stop $NAME' failed -- leaving $STATE_DIR untouched (not deleting anything)." >&2
+  exit 1
+fi
 
-# Best-effort immediate teardown of the approval helper -- see header
-# comment. Only present for --detached runs; a missing info file (e.g. a
-# foreground run, whose helper already dies with the launcher process) is
-# not an error.
-INFO_FILE="$RUN_DIR/approval-helper-info.json"
-if sudo -u pi test -f "$INFO_FILE"; then
-  PORT=""
-  if command -v jq >/dev/null 2>&1; then
-    PORT="$(sudo -u pi jq -r '.port // empty' "$INFO_FILE" 2>/dev/null || true)"
-  fi
-  if [ -n "$PORT" ]; then
-    if command -v fuser >/dev/null 2>&1; then
-      sudo -u pi fuser -k -n tcp "$PORT" >/dev/null 2>&1 || true
-    elif command -v lsof >/dev/null 2>&1; then
-      HELPER_PID="$(sudo -u pi lsof -ti "tcp:$PORT" 2>/dev/null || true)"
-      if [ -n "$HELPER_PID" ]; then
-        sudo -u pi kill "$HELPER_PID" 2>/dev/null || true
-      fi
-    else
-      echo "warning: neither fuser nor lsof found -- cannot stop the approval helper on port $PORT immediately. It will exit on its own once the run's supervisor notices the session has stopped (within ~5s)." >&2
-    fi
+# Clean up the per-run nono state dir now that the session is confirmed
+# stopped, preserving nono/audit (and the audit record subtree) --
+# everything else under $STATE_DIR is disposable per-session scratch
+# state. If the state dir has no audit subtree at all, it's removed
+# outright instead of leaving an empty shell behind.
+if sudo -u pi test -d "$STATE_DIR"; then
+  if sudo -u pi test -d "$STATE_DIR/nono/audit"; then
+    echo "==> Removing $STATE_DIR contents (preserving nono/audit)..." >&2
+    # Delete everything directly under $STATE_DIR except the `nono`
+    # directory itself (which holds audit/), then, within `nono/`,
+    # delete everything except `audit` -- the net effect is: keep only
+    # $STATE_DIR/nono/audit, delete everything else.
+    sudo -u pi find "$STATE_DIR" -mindepth 1 -maxdepth 1 ! -name nono -exec rm -rf -- {} +
+    sudo -u pi find "$STATE_DIR/nono" -mindepth 1 -maxdepth 1 ! -name audit -exec rm -rf -- {} +
+    echo "    kept: $STATE_DIR/nono/audit" >&2
   else
-    echo "warning: could not read a port from $INFO_FILE (jq missing, or the file is malformed) -- leaving the approval helper's own supervisor-driven teardown (~5s) to stop it." >&2
+    echo "==> Removing $STATE_DIR (no nono/audit subtree to preserve)..." >&2
+    sudo -u pi rm -rf -- "$STATE_DIR"
   fi
-  sudo -u pi rm -f "$INFO_FILE"
 fi
 
 echo "==> Stopped '$NAME'." >&2
