@@ -153,12 +153,19 @@
             # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
             drv = pkgs.writeShellApplication {
               name = "start-agent";
+              # lib-common.sh's share_grant/share_release use `setfacl` on
+              # Linux (POSIX ACLs) and `find` (ownership-normalization
+              # sweep on release) -- macOS's `chmod +a` equivalent is
+              # plain coreutils/system `chmod`, no extra package needed
+              # there (and UNVERIFIED either way, see lib-common.sh).
               runtimeInputs = [
                 pkgs.jq
                 pkgs.git
                 self.packages.${system}.approval-helper
                 pkgs.coreutils
-              ];
+                pkgs.findutils
+              ]
+              ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.acl ];
               text = ''
                 export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
                 export PI_STACK_PI_BIN=${pkgsUnstable.pi-coding-agent}/bin/pi
@@ -211,10 +218,16 @@
           stop = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "pi-sandbox-stop";
+              # lib-common.sh's share_release (undoes start-agent.sh's
+              # live file sharing) needs `setfacl` on Linux plus `find`
+              # for its ownership-normalization sweep -- see
+              # apps.start-agent's own comment above.
               runtimeInputs = [
                 pkgs.jq
                 pkgs.coreutils
-              ];
+                pkgs.findutils
+              ]
+              ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.acl ];
               text = ''
                 export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
               ''
@@ -237,11 +250,18 @@
           shell = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "pi-sandbox-shell";
+              # lib-common.sh's share_grant/share_release (re-shares the
+              # run's workdir/--add/--clone paths for this shell's
+              # lifetime, then releases them) need `setfacl` on Linux
+              # plus `find` for the ownership-normalization sweep -- see
+              # apps.start-agent's own comment above.
               runtimeInputs = [
                 pkgs.jq
                 pkgs.coreutils
+                pkgs.findutils
                 self.packages.${system}.approval-helper
-              ];
+              ]
+              ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.acl ];
               text = ''
                 export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
                 export PI_STACK_JQ_BIN=${pkgs.jq}/bin/jq

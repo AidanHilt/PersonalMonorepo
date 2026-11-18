@@ -552,15 +552,16 @@ replacement -- there is no pkg-broker/proxy/kind layering left to
 configure).
 
 **Read-as-invoking-user / write-as-`pi` split**: every write under
-`/var/lib/pi` goes through a narrow `sudo -u pi <cmd>` invocation
+`/var/lib/pi` (this launcher's own per-run state tree, as opposed to the
+live-shared workdir/`--add`/`--clone` paths covered in "Live file
+sharing" below) goes through a narrow `sudo -u pi <cmd>` invocation
 (`mkdir`, `tee`, `tar -xf`, `cp` from a world-readable Nix store path);
-every read of the invoking user's own files (the workdir, `--add`/
-`--clone` sources, `config/agent/`) runs as the invoking user. The
-`tar_copy_to_pi`/`write_as_pi` helpers stream bytes through a pipe rather
-than ever granting either user direct filesystem access into the other's
-trust domain -- this is what lets the launcher work without the invoking
-user needing traversal rights into pi-owned directories, or `pi` needing
-read access into the invoking user's home.
+every read of the invoking user's own files (`config/agent/` in
+particular) runs as the invoking user. The `tar_copy_to_pi`/
+`write_as_pi` helpers stream bytes through a pipe rather than ever
+granting either user direct filesystem access into the other's trust
+domain -- this is what lets the launcher work without the invoking user
+needing traversal rights into pi-owned directories.
 
 **Per-run state layout** (`/var/lib/pi/runs/<name>/`, `<name>` defaulting
 to `"pi"` -- deliberately NOT timestamp-suffixed like the old
@@ -579,29 +580,114 @@ state/sessions/       <- part of the gen-profile.sh --state-dir grant
                          (XDG_STATE_HOME-ish scratch space for this run;
                          NOT where pi's auth.json lives -- see "Shared
                          OAuth auth seeding" below)
-workdir/              <- pi-owned copy of the invoking user's cwd (this
-                         becomes nono's own "workdir": `nono run` is
-                         invoked with this as its cwd, combined with
-                         `--allow-cwd` and the profile's
-                         `workdir.access: readwrite`)
-add-N/, clone-N/      <- one dir per --add/--clone extra, each its own
-                         gen-profile.sh --add/--clone grant
+shared-paths          <- one realpath per line (workdir first, then
+                         every --add/--clone extra), written by
+                         lib-common.sh's share_record_paths -- the set
+                         of paths this run has live-shared with `pi`
+                         (see "Live file sharing" below). Read back by
+                         shell.sh (to re-share for its own lifetime) and
+                         stop.sh (to release on teardown).
+workdir-path          <- the single realpath of this run's live-shared
+                         workdir, written by
+                         lib-common.sh's share_write_workdir_path. Read
+                         back by shell.sh to `cd` into the same real
+                         path `nono run` itself used, rather than any
+                         pi-owned copy (there isn't one any more).
 profile.json          <- the gen-profile.sh output actually passed to
-                         `nono run --profile`
+                         `nono run --profile` (its `--workdir`/`--add`
+                         arguments are now the SAME real host paths
+                         recorded in shared-paths/workdir-path, not a
+                         per-run copy destination)
 supervisor.sh, supervisor.log, approval-helper-info.json
                       <- --detached mode only, see below
 ```
+There is no more `workdir/`, `add-N/`, or `clone-N/` directory under
+`$RUN_DIR` -- those were the pre-live-sharing copy destinations; see
+"Live file sharing" below for what replaced them.
+
 **Idempotent seeding / `--resume`**: every launch re-syncs
 `pi/agent/{extensions,skills}/` and layers `config/agent/`+
 `config/web-search.json` on top again, but NEVER deletes the run
 directory first -- it only adds/overwrites those specific paths. Judgement
-call: this means re-running with the SAME `--name` reuses the same
-pi-owned workdir copy and PI_CODING_AGENT_DIR tree, so anything `pi`
-itself writes there (its own session history, included, wherever `pi`
-internally keeps that under `PI_CODING_AGENT_DIR`) survives across
-launches -- that's what makes `--resume` meaningful at all here. This is a
-judgement call, not a spike-verified fact: no spike exercised `pi --resume`
-against a per-run `PI_CODING_AGENT_DIR` tree.
+call: this means re-running with the SAME `--name` re-shares the same
+workdir/`--add`/`--clone` paths (merged, deduped, with whatever was
+already recorded in `shared-paths` for that name) and reuses the same
+PI_CODING_AGENT_DIR tree, so anything `pi` itself writes there (its own
+session history, included, wherever `pi` internally keeps that under
+PI_CODING_AGENT_DIR) survives across launches -- that's what makes
+`--resume` meaningful at all here. This is a judgement call, not a
+spike-verified fact: no spike exercised `pi --resume` against a per-run
+`PI_CODING_AGENT_DIR` tree. **Caveat carried over unchanged from before
+this effort**: `SESSION_NAME` (and so `$RUN_DIR`) is actually computed as
+`${SESSION_NAME_ROOT}-$(date +%s)` -- i.e. a FRESH, timestamp-suffixed
+directory every single launch, even when the same `--name` is given
+twice in a row -- so in practice there is currently no run directory for
+a same-name relaunch to find already-recorded `shared-paths` under; the
+merge-on-relaunch behaviour above is implemented and will apply
+correctly whenever that is no longer true, but was not exercised by this
+change (fixing `SESSION_NAME`'s own timestamp-suffixing was out of
+scope for it).
+
+**Live file sharing (supersedes the old copy-only model)**: the workdir
+and every `--add`/`--clone` extra are shared LIVE and read-write at
+their REAL host path -- via `scripts/lib-common.sh`'s `share_grant`
+(POSIX ACLs/`setfacl` on Linux; NFSv4-style ACLs/`chmod +a` on macOS,
+**UNVERIFIED**, no macOS available to test that branch against), plus a
+traverse-only (`x`/`search`) grant on every parent directory of each
+shared path, up to (excluding) `/`, so `pi` can actually reach it. Every
+path is checked (`share_path_check`: refuses `/`, the invoking user's
+own `$HOME`, or a path not owned by the invoking user) BEFORE any
+grant happens for ANY of them; if a grant partway through a batch fails,
+everything granted so far in that same launch is released again before
+exiting non-zero, so a failed launch never leaves a half-shared
+workdir/extra behind. `--clone` is treated as `--add` once the host-side
+clone/fetch is done (both get the identical read-write grant in
+`gen-profile.sh`'s own "Step 4", so there's no need for a separate
+treatment). Every granted path is recorded into `$RUN_DIR/shared-paths`
+(and the workdir additionally into `$RUN_DIR/workdir-path`) via
+`lib-common.sh`'s `share_record_paths`/`share_write_workdir_path` --
+both pi-owned files, read/written via `sudo -u pi`, same as every other
+file under `$RUN_DIR`.
+
+**Teardown and the liveness/refcount rule** (`lib-common.sh`'s
+`share_release`): reverses `share_grant` -- normalizes ownership of
+anything `pi` left behind under the path back to the invoking user
+(`sudo find <path> -user pi -exec chown <user>:<group> {} +`, interactive
+by default; `--noninteractive` uses `sudo -n` and returns non-zero
+rather than ever prompting), then removes the ACL entries `share_grant`
+added -- on the path itself, and on each parent directory UNLESS some
+other still-live run's own share still needs that parent (i.e. that
+other run's recorded path lies under it). "Still live" means: `nono
+session_running` against either that other run's main (`"<run>"`) or
+shell (`"<run>-shell"`) session. A path is skipped entirely (as a no-op
+success, logged) if it's blocked this way. `--self-run NAME` excludes
+the caller's own run from that check entirely (its own session is the
+one ending right now); `--treat-self-main-live` (used only by
+`shell.sh`) adds back a check of NAME's own MAIN session specifically,
+so closing a shell never pulls access out from under a still-running
+agent session. Three call sites: `start-agent.sh`'s own foreground
+`EXIT` trap (interactive sudo, since the launcher still owns a
+terminal), its detached-mode wrapper once the supervisor it's waiting on
+returns (`--noninteractive`, since the wrapper has no controlling
+terminal by then -- a failure there is logged to the wrapper's own log,
+pointing at `nix run .#stop`), and `stop.sh` (interactive, meant to be
+run attended, also the recovery path for a crashed/interrupted launch
+whose own teardown never ran).
+
+**`git` `safe.directory`**: `pi` and the invoking user are different
+uids sharing the same live path, which trips git's "detected dubious
+ownership" ownership-mismatch guard on the `pi` side. `lib-common.sh`'s
+`git_safe_dir_env` exports `GIT_CONFIG_COUNT`/`GIT_CONFIG_KEY_i`/
+`GIT_CONFIG_VALUE_i` (`safe.directory`, one pair per shared path,
+starting after any `GIT_CONFIG_COUNT` already exported on the process)
+for every shared path, threaded through the same `sudo --preserve-env`
+list as everything else. **Known gap, left open by this change**:
+whether those vars actually reach the SANDBOXED `pi` process (as
+opposed to merely the `sudo -u pi`-started process outside nono) depends
+on nono's own session environment filtering (`profiles/work.base.json`'s
+`environment.allow_vars`, which does not currently list `GIT_CONFIG_*`)
+-- editing `profiles/*.json` was out of scope for this change, so this
+is flagged rather than silently assumed to work.
 
 **Tool path resolution**: this stack flake -- not `nix/mono-flake` --
 owns provisioning both `pi` and `nono` (follow-up decision, superseding
@@ -773,12 +859,20 @@ There is deliberately no cross-user (`aidan` watching `pi`'s sessions)
 story here yet -- that's `PLAN.md`'s S5.4/"cross-user session registry"
 open item, left to the Phase 4b `ps`/`attach`/`stop` wrappers.
 
-**Getting results back out**: this launcher does not automate syncing
-`workdir/` changes back to the invoking user's own checkout (unlike the
-unrelated `agent-stage`/worktree flow IMPLEMENT subagents use) -- per
-`PLAN.md`'s "Sharing files between aidan and pi" decision row, that's a
-deliberate UX choice, not a gap: the user inspects/diffs/copies the
-per-run `workdir/` copy manually.
+**Getting results back out**: superseded by the live file sharing model
+above -- there is no `workdir/` copy to sync back any more. The
+invoking user's cwd (and every `--add`/`--clone` extra) IS the real
+host path `pi` writes into, live, for the lifetime of the grant;
+changes land directly on the user's own checkout with no separate
+sync/copy step, and no `agent-stage`-style mechanism is involved (that
+remains unrelated machinery for the IMPLEMENT-subagent worktree flow,
+not this launcher).
+
+**macOS `.DS_Store`/Spotlight indexing note**: not investigated by this
+change -- sharing a user's home-adjacent directories live, read-write,
+with a second local user is new territory this effort didn't have a
+macOS host to exercise against at all (see the **UNVERIFIED** macOS ACL
+branches throughout "Live file sharing" above).
 
 **Shared OAuth auth seeding**: `/var/lib/pi/auth/auth.json` (written by
 `scripts/login.sh`, see below) is the one cross-run, cross-session shared
@@ -813,36 +907,42 @@ run; that guess has been corrected.
 
 ### `scripts/lib-common.sh`
 
-A small, `source`d-only helper shared by `ps.sh`/`attach.sh`/`stop.sh`/
-`login.sh` (NOT by `start-agent.sh`, which predates it and keeps its own
-copies of the same tool-resolution/CA-bundle helpers rather than being
-sourced itself -- see `resolve_ca_bundle` below): `resolve_or_die`/
-`resolve_stack_bin` (identical in shape to `start-agent.sh`'s own),
-`RUNS_ROOT=/var/lib/pi/runs`, `validate_run_name` (anchors a run name to
-`^[A-Za-z0-9._-]+$`, rejecting anything that could path-traverse out of
-`$RUNS_ROOT`), `require_run_dir` (validates a name and fails clearly if
-that run's directory doesn't exist), `nono_state_dir_for` (validates a
-run name and prints the SINGLE canonical path for that run's nono
-`XDG_STATE_HOME`, `/var/lib/pi/<name>-nono-xdg-state` -- a sibling of
-`$RUNS_ROOT`, not nested under it; see "Per-run state layout" above and
-its own call-out below), and `resolve_ca_bundle` (resolves the host's CA
-bundle for `login.sh`'s own TLS trust needs -- see "CA trust-store
-handling" below; duplicated, not called, by `start-agent.sh`, following
-that script's own pre-existing non-sourcing convention). Requires
-`PERSONAL_MONOREPO_LOCATION` (same convention as `start-agent.sh`) and
-computes `STACK_DIR` from it.
+A small, `source`d-only helper. **As of the live-file-sharing change
+documented in "Live file sharing" above, `start-agent.sh` now sources it
+too**, alongside `ps.sh`/`attach.sh`/`stop.sh`/`login.sh`/`shell.sh` --
+it no longer keeps its own duplicate copies of `resolve_or_die`/
+`resolve_stack_bin`/`validate_run_name`/`nono_state_dir_for`/
+`resolve_ca_bundle`, which predated this file and were kept local to
+`start-agent.sh` purely by historical convention (see the git history
+of this section for that now-superseded convention). Provides:
+`resolve_or_die`/`resolve_stack_bin`, `RUNS_ROOT=/var/lib/pi/runs`,
+`validate_run_name` (anchors a run name to `^[A-Za-z0-9._-]+$`,
+rejecting anything that could path-traverse out of `$RUNS_ROOT`),
+`require_run_dir` (validates a name and fails clearly if that run's
+directory doesn't exist), `nono_state_dir_for` (validates a run name and
+prints the SINGLE canonical path for that run's nono `XDG_STATE_HOME`,
+`/var/lib/pi/<name>-nono-xdg-state` -- a sibling of `$RUNS_ROOT`, not
+nested under it; see "Per-run state layout" above and its own call-out
+below), `resolve_ca_bundle` (resolves the host's CA bundle -- see "CA
+trust-store handling" below), and the live-file-sharing primitives
+`share_path_check`/`share_grant`/`share_release`/`git_safe_dir_env`/
+`share_record_paths`/`share_read_paths`/`share_write_workdir_path`/
+`share_read_workdir_path` (see "Live file sharing" above for all of
+these). Requires `PERSONAL_MONOREPO_LOCATION` (same convention
+across every script that sources it) and computes `STACK_DIR` from it.
 
-**`nono_state_dir_for` and `start-agent.sh`'s own copy of it must agree
-exactly**: `start-agent.sh` doesn't source `lib-common.sh` (see above), so
-it carries its own duplicate `validate_run_name`/`nono_state_dir_for`
-pair, header-commented as needing to stay in sync with this file's copy.
-A past bug here (now fixed) was exactly this kind of drift:
-`start-agent.sh` wrote nono's `XDG_STATE_HOME` to
-`/var/lib/pi/<name>-nono-xdg-state` while `ps.sh`/`attach.sh`/`stop.sh`
-looked for it at `$RUNS_ROOT/<name>/nono-xdg-state` -- a run's real
-session state lived at the former path, so `nix run .#ps`/`.#attach`
-found nothing (the latter path, when it existed at all, held nothing but
-stray files from an unrelated manual `nono ps` run against it).
+**`nono_state_dir_for` is now the SINGLE copy every script (including
+`start-agent.sh`) computes against.** A past bug here (now fixed, back
+when `start-agent.sh` still kept its own duplicate of this function) was
+exactly the kind of drift a second copy invites: `start-agent.sh` wrote
+nono's `XDG_STATE_HOME` to `/var/lib/pi/<name>-nono-xdg-state` while
+`ps.sh`/`attach.sh`/`stop.sh` looked for it at
+`$RUNS_ROOT/<name>/nono-xdg-state` -- a run's real session state lived
+at the former path, so `nix run .#ps`/`.#attach` found nothing (the
+latter path, when it existed at all, held nothing but stray files from
+an unrelated manual `nono ps` run against it). Sourcing this file from
+every script, rather than keeping a second copy anywhere, is what rules
+that class of bug out going forward.
 `nono_state_dir_for` now gives both scripts one place to agree.
 
 ### `scripts/ps.sh` (`nix run .#ps`)
@@ -876,8 +976,15 @@ uses. `attach.sh` only uses `require_run_dir`'s existence check, not its
 returned run-dir path, since that path has nothing to do with the state
 dir it actually runs against.
 
-**`stop.sh` deletes the per-run nono state dir after a successful stop,
-preserving `nono/audit`**: nono records audit history under
+**`stop.sh` releases every live-shared path, then deletes the per-run
+nono state dir, preserving `nono/audit`**: on a successful `nono stop`,
+`stop.sh` now first calls `lib-common.sh`'s `share_release` (interactive
+sudo, `--self-run NAME`) against every path recorded in this run's own
+`shared-paths` file -- see "Live file sharing"/"Teardown and the
+liveness/refcount rule" above for the full mechanism this reverses
+(`start-agent.sh`'s `share_grant`). This is also the documented recovery
+path for a crashed/interrupted `start-agent.sh` launch whose own
+teardown never ran. THEN, nono records audit history under
 `<XDG_STATE_HOME>/nono/audit`, which is worth keeping around after a
 session ends; everything else under the state dir is disposable
 per-session scratch state. On a successful `nono stop`, `stop.sh` deletes
@@ -885,8 +992,8 @@ everything directly under the state dir except the `nono/` directory
 itself, then everything under `nono/` except `audit/` -- net effect, only
 `nono/audit` survives. If the state dir has no `nono/audit` subtree at
 all, it's removed outright instead of being left as an empty shell. If
-`nono stop` itself fails, nothing is deleted, and `stop.sh` exits
-non-zero.
+`nono stop` itself fails, nothing is deleted OR released, and `stop.sh`
+exits non-zero.
 
 **The approval helper's lifecycle is NOT `stop.sh`'s job.** An earlier
 version of this script tried a best-effort, PID-less teardown of the
@@ -1037,17 +1144,34 @@ run to already have a `profile.json` (i.e. to have been started at least
 once via `start-agent.sh`) -- read via `sudo -u pi cat`, since it's
 `pi`-owned -- and errors with "run `<name>` has no profile.json -- start
 it with start-agent first" otherwise. It does not create or seed any
-other part of the run's state (no `pi/agent/` reseeding, no workdir
-copy) -- that's entirely `start-agent.sh`'s job.
+other part of the run's state (no `pi/agent/` reseeding) -- that's
+entirely `start-agent.sh`'s job.
+
+**Live file re-sharing.** `shell.sh` reads the run's recorded
+`workdir-path` (erroring if missing, same "start it with start-agent
+first" message) and `shared-paths` (`lib-common.sh`'s
+`share_read_workdir_path`/`share_read_paths`), re-checks each
+(`share_path_check`) and re-grants each (`share_grant`) for the
+lifetime of this shell session -- idempotent alongside the run's own
+main session already having the same grants. `git_safe_dir_env` is
+also called on the same set, folded into this invocation's own
+`sudo --preserve-env` list. On exit, every re-shared path goes through
+`share_release --self-run "$NAME" --treat-self-main-live`: the
+`--treat-self-main-live` flag is what makes closing this shell never
+release a path while the run's own MAIN (`"<name>"`, not
+`"<name>-shell"`) session is still live and also shares it -- see
+"Teardown and the liveness/refcount rule" above for the general
+mechanism.
 
 **Environment**: identical to `start-agent.sh`'s foreground mode --
 `PI_CODING_AGENT_DIR` (the run's `pi/agent/`), `XDG_STATE_HOME` (the
-run's nono state dir), and the three CA vars (`SSL_CERT_FILE`/
+run's nono state dir), the three CA vars (`SSL_CERT_FILE`/
 `NIX_SSL_CERT_FILE`/`NODE_EXTRA_CA_CERTS`, via `lib-common.sh`'s
-`resolve_ca_bundle`) -- all threaded through the same `sudo -u pi
---preserve-env=...` / `sh -c 'cd "$1"; shift; exec "$@"'` launch idiom
-`start-agent.sh`/`login.sh` already use, with the run's own `workdir/` as
-`pi`'s cwd (same as `start-agent.sh`).
+`resolve_ca_bundle`), and now also the `git_safe_dir_env` vars above --
+all threaded through the same `sudo -u pi --preserve-env=...` /
+`sh -c 'cd "$1"; shift; exec "$@"'` launch idiom `start-agent.sh`/
+`login.sh` already use, with the run's recorded, live-shared workdir
+(not a copy) as `pi`'s cwd (same real path `start-agent.sh` itself used).
 
 **`bash` path, UNVERIFIED fallback.** `flake.nix`'s `apps.shell` resolves
 `PI_STACK_BASH_BIN` from THIS flake's own nixpkgs

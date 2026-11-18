@@ -85,3 +85,7 @@ profile, not the agent or the sandboxed `pi` user):
 - `PI_CODING_AGENT_DIR` and the per-run OAuth state live under
   `/var/lib/pi/runs/<name>/` (see `IMPLEMENTERS.md`'s "Per-run state
   layout"), not `~/.pi`.
+- The current workdir and every `--add`'d path are the user's REAL host
+  files, shared live (not a copy) -- edits made inside this session
+  land directly on the user's own checkout. There is nothing to
+  "sync back" after the session ends.

@@ -85,6 +85,57 @@ the thin CLI that calls `pkg-broker` from inside the `pi` container; see
 `nix/scripts/scripts/request-domain/` is the analogous CLI for
 `domain-gate` — see "Requesting an extra domain at runtime" below.
 
+### Giving `pi` something to work on (current, nono-based)
+
+> This section describes the current, nono-based launcher (see
+> IMPLEMENTERS.md's "Mid-migration note" at the top for this README's
+> overall container-era staleness) -- unlike the `/workspace` section
+> above, which describes the removed container/`workspace-mounter`
+> model, this one is accurate.
+
+Your current working directory and every `--add`/`--clone` extra are
+shared **live and read-write at their real host path** with `pi` --
+never copied anywhere:
+
+```sh
+# Your cwd, shared live as nono's own "workdir":
+cd ~/code/my-project && nix run .#start-agent
+
+# One or more existing paths, each shared live (repeatable):
+nix run .#start-agent -- --add ~/code/my-project --add ~/notes/todo.md
+
+# A fresh/cached clone (on the HOST, using your own git credentials),
+# then shared live exactly like --add:
+nix run .#start-agent -- --clone git@github.com:me/my-project.git
+```
+
+A path is **refused outright** -- before anything is shared, for any of
+the paths involved -- if it's `/`, your entire `$HOME`, or not owned by
+you. Sharing is implemented with ACLs (POSIX ACLs/`setfacl` on Linux;
+NFSv4-style ACLs/`chmod +a` on macOS, **UNVERIFIED** -- no macOS was
+available to test that branch against), plus a bare traverse (`x`/
+`search`) grant on every parent directory up to (excluding) `/` so `pi`
+can actually reach the shared path.
+
+At shutdown -- `start-agent.sh`'s own exit in foreground mode, its
+detached-mode wrapper once the session ends, or `nix run .#stop --
+<name>` -- every shared path has any file ownership `pi` left behind
+normalized back to you and its ACL entries removed. This needs an
+**interactive `sudo` prompt** (except it's skipped, with a logged note,
+for any path another still-running run or shell session also shares).
+If a launch is interrupted before that teardown runs (a crash, a killed
+terminal), run `nix run .#stop -- <name>` afterwards to finish restoring
+ownership/ACLs -- this is safe to run even if nothing needs restoring.
+`nix run .#shell -- <name>` re-shares the same paths for its own
+lifetime and releases them again on its own exit, except it never
+releases a path while the run's own main session is still live.
+
+A git repository shared this way is also registered as a
+`safe.directory` for both you and `pi` (via `GIT_CONFIG_*` environment
+variables passed through `sudo --preserve-env`, never a written
+`.gitconfig`), since git refuses to operate inside a directory it
+doesn't own by default.
+
 ## The workflow this is designed around
 
 This stack is one piece of a broader plan/dispatch/validate workflow, not

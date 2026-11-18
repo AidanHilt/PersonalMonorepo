@@ -26,6 +26,17 @@
 # already running (lib-common.sh's nono_session_running). `nix run .#stop
 # -- <name>` also refuses to stop/delete this run's state while its
 # shell session is still open -- see stop.sh.
+#
+# Live file sharing: re-shares (lib-common.sh's share_grant, NOT a
+# re-copy) the run's own recorded workdir (RUN_DIR/workdir-path) and
+# every recorded --add/--clone extra (RUN_DIR/shared-paths), both
+# written by start-agent.sh, for the lifetime of this shell session --
+# idempotent alongside whatever the run's own main session already has
+# granted. On exit, releases each of them again (share_release
+# --self-run NAME --treat-self-main-live), but NEVER while the run's own
+# main ("<name>") session is still live and also shares that path --
+# closing this shell must never pull access out from under a
+# still-running agent session.
 set -euo pipefail
 
 print_help() {
@@ -41,6 +52,14 @@ only its webhook approval URL is rewritten; the run's own profile.json is
 never modified). Starts its own approval helper (as you, the invoking
 user, --ui auto), independent of whether the run's own pi session/helper
 is still alive.
+
+Re-shares (not re-copies) the run's own recorded workdir and every
+--add/--clone extra with `pi` for the lifetime of this shell session
+(idempotent alongside the run's own main session), and releases them
+again on exit -- except a path still shared by the run's own MAIN
+session, which is left alone (closing this shell never pulls access out
+from under a still-running agent session). See IMPLEMENTERS.md's "Live
+file sharing" section for the full model.
 
 Only one shell session per run is allowed at a time: if "<name>-shell" is
 already running, this refuses to start a second one. `nix run .#stop --
@@ -144,8 +163,15 @@ STATE_DIR="$(nono_state_dir_for "$NAME")"
 SESSION_NAME="${NAME}-shell"
 RUN_PROFILE="$RUN_DIR/profile.json"
 SHELL_PROFILE="$RUN_DIR/shell-profile.json"
-WORKDIR="$RUN_DIR/workdir"
 AGENT_DIR="$RUN_DIR/pi/agent"
+# WORKDIR/SHARED_PATHS: the run's own live-shared workdir and
+# --add/--clone extras, as recorded by start-agent.sh (lib-common.sh's
+# share_write_workdir_path/share_record_paths) -- both require a
+# `sudo -u pi cat`, so they're read below, AFTER the --dry-run early
+# exit (same convention as the "already running"/profile.json existence
+# checks this script already skips under --dry-run).
+WORKDIR=""
+SHARED_PATHS=()
 
 NONO_BIN="$(resolve_stack_bin PI_STACK_NONO_BIN nono)"
 JQ_BIN="$(resolve_stack_bin PI_STACK_JQ_BIN jq)"
@@ -158,7 +184,7 @@ CA_BUNDLE="$(resolve_ca_bundle "$CA_MODE")"
 CA_BUNDLE_DIR="$(dirname "$CA_BUNDLE")"
 
 if [ "$DRY_RUN" = "1" ]; then
-  echo "==> --dry-run: no directories created, no helper started, no sudo/nono commands run (including the 'already running' and profile.json existence checks below)." >&2
+  echo "==> --dry-run: no directories created, no helper started, no sudo/nono/setfacl/chmod commands run (including the 'already running' and profile.json existence checks below, and the workdir/shared-paths lookups, which also require sudo -u pi)." >&2
   echo "Resolved (illustrative -- the real webhook URL is only known once this actually runs, and the bash path fallback below is not evaluated in --dry-run):" >&2
   echo "  nono:          $NONO_BIN" >&2
   echo "  bash:          $BASH_BIN" >&2
@@ -167,11 +193,13 @@ if [ "$DRY_RUN" = "1" ]; then
   echo "  session name:  $SESSION_NAME" >&2
   echo "  run profile:   $RUN_PROFILE (must already exist -- start the run with 'nix run .#start-agent' first)" >&2
   echo "  shell profile: $SHELL_PROFILE (a copy of the run profile with only its webhook URL rewritten)" >&2
+  echo "  workdir:       <recorded in $RUN_DIR/workdir-path by start-agent.sh -- re-shared (not re-copied) with 'pi' on start, released on exit>" >&2
+  echo "  shared paths:  <recorded in $RUN_DIR/shared-paths -- all re-shared with 'pi' on start, released on exit>" >&2
   echo "  CA bundle:     $CA_BUNDLE (parent dir $CA_BUNDLE_DIR read-granted; see PI_STACK_CA_BUNDLE below)" >&2
   echo >&2
   echo "Resolved command (would run as the 'pi' user):" >&2
-  echo "  sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS -- \\" >&2
-  echo "    sh -c 'cd \"\$1\"; shift; exec \"\$@\"' sh $WORKDIR \\" >&2
+  echo "  sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS,<git safe.directory vars> -- \\" >&2
+  echo "    sh -c 'cd \"\$1\"; shift; exec \"\$@\"' sh <recorded workdir> \\" >&2
   echo "    $NONO_BIN run --profile $SHELL_PROFILE --allow-cwd --name $SESSION_NAME -- $BASH_BIN -i" >&2
   exit 0
 fi
@@ -186,6 +214,36 @@ if nono_session_running "$NONO_BIN" "$STATE_DIR" "$SESSION_NAME"; then
   exit 1
 fi
 
+# --- Live file sharing: re-share this run's recorded workdir/--add/
+# --clone paths for the lifetime of this shell session too -- share_grant
+# is idempotent, so this is harmless even while the run's own main
+# session already has the same paths granted. --------------------------
+WORKDIR="$(share_read_workdir_path "$RUN_DIR")"
+if [ -z "$WORKDIR" ]; then
+  echo "error: run '$NAME' has no recorded workdir (missing $RUN_DIR/workdir-path) -- start it with start-agent first" >&2
+  exit 1
+fi
+while IFS= read -r shared_path; do
+  [ -n "$shared_path" ] || continue
+  SHARED_PATHS+=("$shared_path")
+done < <(share_read_paths "$RUN_DIR")
+if [ "${#SHARED_PATHS[@]}" -eq 0 ]; then
+  SHARED_PATHS=("$WORKDIR")
+fi
+
+for shared_path in "${SHARED_PATHS[@]}"; do
+  share_path_check "$shared_path" >/dev/null
+done
+for shared_path in "${SHARED_PATHS[@]}"; do
+  share_grant "$shared_path"
+done
+git_safe_dir_env "${SHARED_PATHS[@]}"
+PRESERVE_LIST="PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS"
+for git_safe_dir_var in "${GIT_SAFE_DIR_ENV_VARS[@]:-}"; do
+  [ -n "$git_safe_dir_var" ] || continue
+  PRESERVE_LIST="$PRESERVE_LIST,$git_safe_dir_var"
+done
+
 # --- Approval helper: this shell gets its OWN helper, independent of the
 # run's own pi session/helper -- started exactly like start-agent.sh's
 # foreground mode / login.sh, as you (the invoking user), so --ui auto's
@@ -198,6 +256,17 @@ stop_helper() {
     kill "$HELPER_PID" 2>/dev/null || true
   fi
   rm -f "$INFO_FILE"
+  # Release every path re-shared above for this shell session.
+  # --self-run "$NAME" --treat-self-main-live: never release a path
+  # while the run's own MAIN session ("$NAME", not this shell) is still
+  # live and also shares it -- closing this shell must never pull
+  # access out from under a still-running agent session. Interactive
+  # sudo is fine here, this script still owns a controlling terminal.
+  local shared_path
+  for shared_path in "${SHARED_PATHS[@]:-}"; do
+    [ -n "$shared_path" ] || continue
+    share_release "$shared_path" --self-run "$NAME" --treat-self-main-live || echo "warning: failed to release live share of $shared_path -- run 'nix run .#stop -- $NAME' to finish restoring ownership/ACLs." >&2
+  done
 }
 trap stop_helper EXIT
 
@@ -276,6 +345,6 @@ export NIX_SSL_CERT_FILE="$CA_BUNDLE"
 export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
 
 echo "==> Starting a bash shell inside nono as 'pi' (session: $SESSION_NAME)..." >&2
-sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS -- \
+sudo -u pi --preserve-env="$PRESERVE_LIST" -- \
   sh -c 'cd "$1"; shift; exec "$@"' sh "$WORKDIR" \
   "$NONO_BIN" run --profile "$SHELL_PROFILE" --allow-cwd --name "$SESSION_NAME" -- "$BASH_BIN" -i

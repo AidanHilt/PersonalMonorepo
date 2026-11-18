@@ -18,14 +18,19 @@
 # make that teardown immediate (out of scope: approval-helper's Go code
 # is not touched here).
 #
-# After a successful `nono stop`, this script also deletes the per-run
-# nono state directory's contents -- EXCEPT its nono/audit subtree, which
-# is preserved (nono stores audit records at
-# <XDG_STATE_HOME>/nono/audit). If `nono stop` fails, nothing is deleted.
+# After a successful `nono stop`, this script also releases every
+# live-shared path recorded for this run (lib-common.sh's
+# share_release, the counterpart of start-agent.sh's share_grant --
+# ownership of anything `pi` left behind is normalized back to the
+# invoking user, then the ACL entries share_grant added are removed),
+# then deletes the per-run nono state directory's contents -- EXCEPT its
+# nono/audit subtree, which is preserved (nono stores audit records at
+# <XDG_STATE_HOME>/nono/audit). If `nono stop` fails, nothing is deleted
+# or released.
 #
-# Refuses outright (before stopping or deleting anything) if a
-# "<name>-shell" session (scripts/shell.sh, `nix run .#shell -- <name>`)
-# is still open for this run -- shell.sh reuses this run's own
+# Refuses outright (before stopping, releasing, or deleting anything) if
+# a "<name>-shell" session (scripts/shell.sh, `nix run .#shell --
+# <name>`) is still open for this run -- shell.sh reuses this run's own
 # XDG_STATE_HOME, so tearing it down here out from under an open shell
 # would be surprising. See lib-common.sh's nono_session_running.
 set -euo pipefail
@@ -36,14 +41,23 @@ Usage: stop.sh [--help] <name>
 
 Stops an existing nono session under /var/lib/pi/runs/<name>/ (`nono stop
 <name>`, run as the `pi` user against that run's own XDG_STATE_HOME at
-/var/lib/pi/<name>-nono-xdg-state). On success, deletes that state
-directory's contents, preserving its nono/audit subtree. The approval
-helper's own lifecycle is NOT managed by this script -- see the header
-comment in this file for who owns it.
+/var/lib/pi/<name>-nono-xdg-state). On success, releases every
+live-shared path recorded for this run (its workdir and every
+--add/--clone extra -- ownership of anything `pi` left behind is
+normalized back to you, via an interactive `sudo` prompt, and the ACL
+entries removed, unless another still-live run also shares that same
+path), then deletes that state directory's contents, preserving its
+nono/audit subtree. The approval helper's own lifecycle is NOT managed
+by this script -- see the header comment in this file for who owns it.
 
-Refuses outright (stopping/deleting nothing) if a "<name>-shell" session
-(`nix run .#shell -- <name>`) is still open for this run -- exit that
-shell first, then re-run stop.sh.
+Run this after a crashed/interrupted start-agent.sh launch too -- it's
+the way to finish restoring ownership/ACLs on whatever was live-shared
+if the launcher's own teardown (its EXIT trap, or the detached wrapper)
+never got to run.
+
+Refuses outright (stopping/releasing/deleting nothing) if a
+"<name>-shell" session (`nix run .#shell -- <name>`) is still open for
+this run -- exit that shell first, then re-run stop.sh.
 
 Positional arguments:
   <name>   The run/session name (as passed to start-agent.sh --name, or
@@ -73,10 +87,12 @@ NAME="${1:?usage: stop.sh <name> (run stop.sh --help for details)}"
 # shellcheck disable=SC1091
 source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono/scripts/lib-common.sh"
 
-# require_run_dir validates $NAME and that its run directory exists --
-# its own output (the run dir path) isn't needed here: the nono state dir
-# lives OUTSIDE it, as a sibling of $RUNS_ROOT (see nono_state_dir_for).
-require_run_dir "$NAME" >/dev/null
+# require_run_dir validates $NAME and that its run directory exists;
+# its own output (the run dir path) is needed below for the live
+# file-sharing release step (RUN_DIR/shared-paths) -- the nono state dir
+# itself still lives OUTSIDE it, as a sibling of $RUNS_ROOT (see
+# nono_state_dir_for).
+RUN_DIR="$(require_run_dir "$NAME")"
 STATE_DIR="$(nono_state_dir_for "$NAME")"
 
 NONO_BIN="$(resolve_stack_bin PI_STACK_NONO_BIN nono)"
@@ -96,6 +112,19 @@ if ! sudo -u pi env XDG_STATE_HOME="$STATE_DIR" "$NONO_BIN" stop "$NAME"; then
   echo "error: 'nono stop $NAME' failed -- leaving $STATE_DIR untouched (not deleting anything)." >&2
   exit 1
 fi
+
+# Release every live-shared path recorded for this run (its workdir and
+# every --add/--clone extra, lib-common.sh's share_grant counterpart) --
+# ownership of anything `pi` left behind is normalized back to the
+# invoking user and the ACL entries share_grant added are removed,
+# unless some OTHER still-live run also shares that same path.
+# Interactive sudo is fine here (this script is meant to be run
+# attended). Idempotent: running `stop` again after a path has already
+# been released is a no-op for that path.
+while IFS= read -r shared_path; do
+  [ -n "$shared_path" ] || continue
+  share_release "$shared_path" --self-run "$NAME" || echo "warning: failed to release live share of $shared_path -- restoring ownership/ACLs for it may need to be finished by hand." >&2
+done < <(share_read_paths "$RUN_DIR")
 
 # Clean up the per-run nono state dir now that the session is confirmed
 # stopped, preserving nono/audit (and the audit record subtree) --

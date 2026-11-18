@@ -9,35 +9,38 @@
 # High-level flow (see IMPLEMENTERS.md's "Launcher and approval helper
 # (Phase 4a)" section for the full writeup and the judgement calls below):
 #   1. Seed/refresh a per-run, `pi`-owned state tree under
-#      /var/lib/pi/runs/<name>/ (fresh PI_CODING_AGENT_DIR, a pi-owned copy
-#      of the workdir + any --add/--clone extras). This is "idempotent":
-#      re-running with the SAME --name merges fresh config/extensions/
-#      skills on top WITHOUT deleting anything `pi` itself wrote there
-#      (session history, scratch files) -- that's what lets `--resume`
-#      mean anything across repeated launches.
+#      /var/lib/pi/runs/<name>/ (fresh PI_CODING_AGENT_DIR), and live-share
+#      the workdir + any --add/--clone extras with `pi` at their real host
+#      paths (via ACLs, not a copy -- see "Live file sharing" below). This
+#      is "idempotent": re-running with the SAME --name merges fresh
+#      config/extensions/skills on top WITHOUT deleting anything `pi`
+#      itself wrote there (session history, scratch files) -- that's what
+#      lets `--resume` mean anything across repeated launches.
 #   2. Start the host-side approval helper (outside the sandbox), and read
 #      back its webhook URL.
 #   3. Generate the launch-ready nono profile (scripts/gen-profile.sh).
 #   4. Run `nono run` as `pi` via sudo, with the per-run dir as `pi`'s cwd
 #      (nono's "workdir").
 #
-# `pi` never gets a bind-mounted view of the invoking user's own files --
-# per PLAN.md's "Sharing files between aidan and pi" decision row, it works
-# inside a `pi`-owned COPY, and getting results back out is on the user
-# (inspect/diff/rsync the per-run workdir copy manually -- this launcher
-# does not automate that, unlike the `agent-stage` flow IMPLEMENT
-# subagents use, which is unrelated machinery for a different workflow).
+# `pi` gets a LIVE, read-write share of the invoking user's workdir and
+# every --add/--clone extra, at their real host paths -- not a copy.
+# This reverses PLAN.md's original "Sharing files between aidan and pi"
+# decision row (see PLAN.md's current text and IMPLEMENTERS.md's
+# "Live file sharing" section for the full writeup): access is granted
+# live via ACLs (scripts/lib-common.sh's share_grant) and revoked again
+# -- with ownership of anything `pi` left behind normalized back to the
+# invoking user -- at shutdown (this script's own EXIT trap in
+# foreground mode, the detached wrapper, or `nix run .#stop`).
 #
-# Every write under /var/lib/pi goes through a `sudo -u pi` invocation
-# (mkdir/tee/tar -x/cp); every READ of the invoking user's own files (the
-# workdir, --add/--clone sources, config/agent/) runs as the invoking
-# user. That split is what lets this work without the invoking user ever
-# needing traversal rights into pi-owned directories, and without `pi`
-# ever needing read access into the invoking user's home directory.
+# Every write under /var/lib/pi (this script's own per-run state tree,
+# as opposed to the live-shared workdir/--add/--clone paths above) still
+# goes through a `sudo -u pi` invocation (mkdir/tee/cp); every READ of
+# the invoking user's own files (config/agent/ in particular) runs as
+# the invoking user. That split is what lets this work without the
+# invoking user ever needing traversal rights into pi-owned directories.
 set -euo pipefail
 
-# --- PERSONAL_MONOREPO_LOCATION: same precedent as the container-era script
-# ---------------------------------------------------------------------------
+# --- PERSONAL_MONOREPO_LOCATION / lib-common.sh ----------------------------
 # gen-profile.sh, profiles/work.base.json, and config/agent/ are all read
 # directly from the checkout (not re-packaged into the Nix store the way
 # this script itself is, via flake.nix's writeShellApplication) -- same
@@ -47,16 +50,25 @@ set -euo pipefail
 # `pi`-readability is needed for those two. config/agent/ is instead
 # streamed in via a tar pipe (see tar_copy_to_pi below), so it doesn't need
 # to be `pi`-readable in place either.
+#
+# Now sources lib-common.sh (STACK_DIR/RUNS_ROOT and the
+# resolve_or_die/resolve_stack_bin/validate_run_name/nono_state_dir_for/
+# resolve_ca_bundle/share_*/git_safe_dir_env helpers below all come from
+# there) instead of keeping its own duplicate copies -- this script used
+# to predate lib-common.sh and carried its own copies by convention (see
+# lib-common.sh's own header comment, now updated); that convention ends
+# here.
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
-STACK_DIR="$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono"
+# shellcheck source=lib-common.sh
+# shellcheck disable=SC1091
+source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono/scripts/lib-common.sh"
+# shellcheck disable=SC2153 # STACK_DIR is set by the lib-common.sh
+# source above, not a misspelling of STATE_DIR (defined much further
+# down in this script).
 GEN_PROFILE_SH="$STACK_DIR/scripts/gen-profile.sh"
 BASE_PROFILE="$STACK_DIR/profiles/work.base.json"
 CONFIG_AGENT_DIR="$STACK_DIR/config/agent"
 CONFIG_WEB_SEARCH="$STACK_DIR/config/web-search.json"
-
-HOME_DIR="/var/lib/pi"
-
-RUNS_ROOT="${HOME_DIR}/runs"
 
 PROFILE_FLAG="work"
 AUDIT_FLAG=0
@@ -87,9 +99,11 @@ Flags:
                              launcher process -- see "Detached sessions"
                              below. Use the (future, Phase 4b) `attach`/
                              `ps`/`stop` wrappers to interact with it.
-  --add PATH                 An existing host file or directory, copied
-                             (not bind-mounted) into a pi-owned location
-                             and granted read-write (repeatable).
+  --add PATH                 An existing host file or directory, shared
+                             LIVE (not copied) read-write at its real
+                             host path -- see "Live file sharing" below
+                             for what gets refused and how it's torn
+                             down (repeatable).
   --clone URL                A URL cloned on the HOST (so host git
                              credentials/ssh-agent are used, not anything
                              inside the sandbox) and then handled exactly
@@ -109,9 +123,12 @@ Flags:
                              --name (matches the old container-era
                              semantics).
   --dry-run                  Print the resolved `nono run` command (secret
-                             VALUES redacted, names shown) and exit. No
-                             directories are created, no approval helper is
-                             started, no sudo/nono/tar commands run.
+                             VALUES redacted, names shown) and the paths
+                             that would be live-shared, and the ACL
+                             actions that would be run for them, then
+                             exit. No directories are created, no
+                             approval helper is started, no sudo/nono/
+                             setfacl/chmod commands run.
   --help, -h                 Show this help and exit.
 
 Environment variables:
@@ -137,15 +154,35 @@ Environment variables:
                                through NIX_SSL_CERT_FILE, SSL_CERT_FILE,
                                then the usual system bundle paths).
 
+Live file sharing (workdir, --add, --clone):
+  Your current working directory (nono's own "workdir") and every
+  --add/--clone extra are shared LIVE and read-write at their REAL host
+  path -- not copied anywhere -- via ACLs (POSIX ACLs/setfacl on Linux,
+  NFSv4-style ACLs/chmod +a on macOS, UNVERIFIED there). A path is
+  refused outright (before anything is granted, for ANY of the paths
+  involved) if it's "/", your entire $HOME, or not owned by you. At
+  shutdown -- this launcher's own exit (foreground), the detached
+  wrapper once the session ends (detached), or `nix run .#stop -- <name>`
+  -- every granted path has `pi`-left-behind file ownership normalized
+  back to you and its ACL entries removed, which requires an interactive
+  `sudo` prompt (unless another still-running session also needs that
+  same path, in which case it's left alone). If a launch is interrupted
+  before that teardown runs (e.g. a crash), run `nix run .#stop --
+  <name>` afterwards to finish restoring ownership/ACLs. A git repo
+  shared this way is also registered as a `safe.directory` for both you
+  and `pi` (via GIT_CONFIG_* env vars, never a written .gitconfig), since
+  git refuses to operate in a directory it doesn't own by default.
+
 Idempotent per-run seeding / --resume:
   Every launch re-syncs /var/lib/pi/runs/<name>/pi/agent/ from
   config/agent/ plus the pi-extra-extensions/pi-extra-skills build
   outputs -- but it only ever ADDS/overwrites those specific files, never
-  deletes the run directory first. Re-running with the SAME --name reuses
-  the same pi-owned workdir copy and the same PI_CODING_AGENT_DIR tree, so
-  anything `pi` itself persists there (its own session history, included)
-  survives across launches -- that's what makes --resume meaningful here.
-  A fresh --name starts from a clean copy of the current workdir.
+  deletes the run directory first. Re-running with the SAME --name
+  re-shares the same workdir/--add/--clone paths (merged with whatever
+  was already recorded for that name) and reuses the same
+  PI_CODING_AGENT_DIR tree, so anything `pi` itself persists there (its
+  own session history, included) survives across launches -- that's what
+  makes --resume meaningful here.
 
 Detached sessions:
   --detached starts TWO things that outlive this launcher process, both
@@ -181,93 +218,6 @@ Approvals over SSH / headless hosts:
 
 See README.md and IMPLEMENTERS.md for the full writeup.
 EOF
-}
-
-resolve_or_die() {
-  local name="$1" path
-  if ! path="$(command -v "$name" 2>/dev/null)"; then
-    echo "error: required tool not found on PATH: $name" >&2
-    exit 1
-  fi
-  readlink -f "$path"
-}
-
-# validate_run_name / nono_state_dir_for: duplicated (not sourced from
-# lib-common.sh) -- same pre-existing convention as resolve_ca_bundle
-# above. nono_state_dir_for is the SINGLE canonical path for a run's nono
-# XDG_STATE_HOME (/var/lib/pi/<name>-nono-xdg-state, a sibling of
-# $RUNS_ROOT, not nested under it) -- ps.sh/attach.sh/stop.sh all compute
-# this same path via lib-common.sh's own copy of this function. Keep both
-# copies in sync.
-validate_run_name() {
-  local name="$1"
-  if ! [[ "$name" =~ ^[A-Za-z0-9._-]+$ ]]; then
-    echo "error: invalid run name: '$name' (must match ^[A-Za-z0-9._-]+\$)" >&2
-    exit 1
-  fi
-  if [ "$name" = "." ] || [ "$name" = ".." ]; then
-    echo "error: invalid run name: '$name'" >&2
-    exit 1
-  fi
-}
-
-nono_state_dir_for() {
-  local name="$1"
-  validate_run_name "$name"
-  printf '%s\n' "/var/lib/pi/${name}-nono-xdg-state"
-}
-
-# resolve_ca_bundle: duplicated (not sourced from lib-common.sh) --
-# matches this script's own pre-existing convention of keeping its own
-# copies of resolve_or_die/resolve_stack_bin rather than sourcing
-# lib-common.sh (see lib-common.sh's own header comment: this script
-# predates it and was deliberately left untouched by that phase). Prints
-# the fully resolved (realpath) path of the host's CA bundle -- the
-# sandbox has no default CA trust store reachable inside it. Tries, in
-# order: $PI_STACK_CA_BUNDLE, the caller's $NIX_SSL_CERT_FILE then
-# $SSL_CERT_FILE, /etc/ssl/certs/ca-certificates.crt (NixOS/Debian-likes),
-# /etc/pki/tls/certs/ca-bundle.crt, /etc/ssl/cert.pem (macOS). Fails
-# loudly if none exist, or (unless $1 is the literal string "dry-run") if
-# the resolved file isn't readable by the `pi` user.
-resolve_ca_bundle() {
-  local mode="${1:-}" candidate resolved
-  for candidate in \
-    "${PI_STACK_CA_BUNDLE:-}" \
-    "${NIX_SSL_CERT_FILE:-}" \
-    "${SSL_CERT_FILE:-}" \
-    "/etc/ssl/certs/ca-certificates.crt" \
-    "/etc/pki/tls/certs/ca-bundle.crt" \
-    "/etc/ssl/cert.pem"; do
-    [ -n "$candidate" ] || continue
-    [ -f "$candidate" ] || continue
-    resolved="$(realpath "$candidate")"
-    if [ "$mode" != "dry-run" ]; then
-      if ! sudo -u pi test -r "$resolved"; then
-        echo "error: resolved CA bundle $resolved is not readable by the 'pi' user" >&2
-        exit 1
-      fi
-    fi
-    printf '%s\n' "$resolved"
-    return 0
-  done
-  echo "error: no CA bundle found (checked \$PI_STACK_CA_BUNDLE, \$NIX_SSL_CERT_FILE, \$SSL_CERT_FILE, /etc/ssl/certs/ca-certificates.crt, /etc/pki/tls/certs/ca-bundle.crt, /etc/ssl/cert.pem) -- set PI_STACK_CA_BUNDLE explicitly to the bundle you want granted." >&2
-  exit 1
-}
-
-# resolve_stack_bin: prefers the absolute store path the flake wrapper
-# exported (PI_STACK_*_BIN -- see flake.nix's apps.start-agent, which sets
-# these from this stack's own `nono`/`pi-coding-agent` packages, drawn from
-# nixpkgs-unstable). Falls back to `command -v $name` on the invoking
-# user's PATH ONLY when run directly outside the flake (not via `nix run
-# .#start-agent`), with a clear pointer back at the supported entrypoint.
-resolve_stack_bin() {
-  local env_var="$1" name="$2" value="${!1:-}"
-  if [ -n "$value" ]; then
-    readlink -f "$value"
-    return 0
-  fi
-  echo "warning: $env_var not set -- falling back to 'command -v $name' on this shell's PATH. Run via 'nix run .#start-agent' (or 'nix run \$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono#start-agent') for this to be set automatically." >&2
-  resolve_or_die "$name"
 }
 
 add_extra() {
@@ -401,6 +351,47 @@ SESSION_NAME="${SESSION_NAME_ROOT}-${DATE}"
 validate_run_name "$SESSION_NAME"
 echo "==> Session name: $SESSION_NAME" >&2
 
+# --- Live file sharing: check every path BEFORE granting anything --------
+# share_path_check runs no sudo/ACL commands (plain realpath/stat), so
+# it's safe to always run (even under --dry-run) -- a refusal here is
+# reported immediately, before any of the slower per-run seeding below
+# even starts. Order matters: the workdir goes first, so it's always the
+# first entry recorded in $RUN_DIR/shared-paths.
+WORKDIR="$(share_path_check "$(pwd)")"
+CHECKED_ADD_PATHS=()
+for add_path in "${ADD_PATHS[@]:-}"; do
+  [ -n "$add_path" ] || continue
+  CHECKED_ADD_PATHS+=("$(share_path_check "$add_path")")
+done
+ADD_PATHS=("${CHECKED_ADD_PATHS[@]:-}")
+CHECKED_CLONE_PATHS=()
+for clone_path in "${CLONE_PATHS[@]:-}"; do
+  [ -n "$clone_path" ] || continue
+  CHECKED_CLONE_PATHS+=("$(share_path_check "$clone_path")")
+done
+CLONE_PATHS=("${CHECKED_CLONE_PATHS[@]:-}")
+SHARE_PATHS=("$WORKDIR")
+for add_path in "${ADD_PATHS[@]:-}"; do
+  [ -n "$add_path" ] || continue
+  SHARE_PATHS+=("$add_path")
+done
+for clone_path in "${CLONE_PATHS[@]:-}"; do
+  [ -n "$clone_path" ] || continue
+  SHARE_PATHS+=("$clone_path")
+done
+
+# git_safe_dir_env: registers every shared path as a git safe.directory
+# for both the invoking user and `pi` (harmless for paths that aren't
+# git repos at all -- git simply never consults an irrelevant
+# safe.directory entry). KNOWN GAP: the resulting GIT_CONFIG_* vars are
+# threaded through `sudo --preserve-env` below so they reach the `pi`
+# process sudo starts, but whether nono's OWN session environment
+# filtering (profiles/work.base.json's environment.allow_vars) lets them
+# through into the sandboxed `pi` process itself is a separate question
+# this script cannot answer -- editing profiles/*.json is out of scope
+# for this change.
+git_safe_dir_env "${SHARE_PATHS[@]}"
+
 # --- Secrets: namespace scan first, then --secret flags (flags win) -------
 # Collected as real exported env vars on THIS process (never as `-e`/argv
 # tokens anywhere), then threaded through `sudo --preserve-env=<names>`
@@ -426,6 +417,10 @@ PRESERVE_LIST="PI_CODING_AGENT_DIR,XDG_STATE_HOME"
 for secret_name in "${SECRET_NAMES[@]:-}"; do
   [ -n "$secret_name" ] || continue
   PRESERVE_LIST="$PRESERVE_LIST,$secret_name"
+done
+for git_safe_dir_var in "${GIT_SAFE_DIR_ENV_VARS[@]:-}"; do
+  [ -n "$git_safe_dir_var" ] || continue
+  PRESERVE_LIST="$PRESERVE_LIST,$git_safe_dir_var"
 done
 
 # --- Resolve tool paths, once -----------------------------------------
@@ -479,17 +474,29 @@ done
 PRESERVE_LIST="$PRESERVE_LIST,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS"
 
 if [ "$DRY_RUN" = "1" ]; then
-  echo "==> --dry-run: no directories created, no helper started, no sudo/nono commands run." >&2
+  echo "==> --dry-run: no directories created, no helper started, no sudo/nono/setfacl/chmod commands run." >&2
   echo "Resolved (illustrative -- the real webhook URL/profile path are only known once this actually runs):" >&2
   echo "  nono:                $NONO_BIN" >&2
   echo "  pi:                  $PI_BIN" >&2
   echo "  session name:        $SESSION_NAME" >&2
-  echo "  workdir source:      $(pwd)" >&2
+  echo "  workdir (live-shared): $WORKDIR" >&2
   echo "  read roots:          ${READ_ROOTS[*]}" >&2
   echo "  CA bundle:           $CA_BUNDLE (parent dir $CA_BUNDLE_DIR read-granted)" >&2
-  echo "  --add:               ${ADD_PATHS[*]:-<none>}" >&2
-  echo "  --clone:             ${CLONE_PATHS[*]:-<none>}" >&2
+  echo "  --add (live-shared): ${ADD_PATHS[*]:-<none>}" >&2
+  echo "  --clone (live-shared, as --add): ${CLONE_PATHS[*]:-<none>}" >&2
   echo "  secrets (names only, values redacted): ${SECRET_NAMES[*]:-<none>}" >&2
+  echo >&2
+  echo "Live-sharing actions that would be run for each of: ${SHARE_PATHS[*]}" >&2
+  case "$(uname -s)" in
+  Linux)
+    echo "  setfacl -R -m u:pi:rwX <path>; on directories also: find <path> -type d -exec setfacl -m d:u:pi:rwX {} +; find <path> -type d -exec setfacl -m d:u:$(id -un):rwX {} +" >&2
+    echo "  setfacl -m u:pi:x <each parent dir of <path>, up to (excluding) '/'>" >&2
+    ;;
+  Darwin)
+    echo "  chmod -R +a 'user:pi allow ...' <path>; chmod -R +a 'user:$(id -un) allow ...' <path> (UNVERIFIED)" >&2
+    echo "  chmod +a 'user:pi allow search' <each parent dir of <path>, up to (excluding) '/'> (UNVERIFIED)" >&2
+    ;;
+  esac
   echo >&2
   echo "Resolved command (would run as the 'pi' user):" >&2
   nono_run_line="  $NONO_BIN run --profile /var/lib/pi/runs/$SESSION_NAME/profile.json --allow-cwd"
@@ -499,7 +506,7 @@ if [ "$DRY_RUN" = "1" ]; then
   [ "$RESUME_FLAG" = "1" ] && nono_run_line="$nono_run_line --resume"
   {
     echo "  sudo -u pi --preserve-env=$PRESERVE_LIST -- \\"
-    echo "    sh -c 'cd \"\$1\"; shift; exec \"\$@\"' sh /var/lib/pi/runs/$SESSION_NAME/workdir \\"
+    echo "    sh -c 'cd \"\$1\"; shift; exec \"\$@\"' sh $WORKDIR \\"
     echo "$nono_run_line"
   } >&2
   exit 0
@@ -510,7 +517,6 @@ RUN_DIR="$RUNS_ROOT/$SESSION_NAME"
 PI_ROOT="$RUN_DIR/pi"
 AGENT_DIR="$PI_ROOT/agent"
 STATE_DIR="$RUN_DIR/state"
-WORKDIR_DEST="$RUN_DIR/workdir"
 NONO_STATE_DIR="$(nono_state_dir_for "$SESSION_NAME")"
 
 # tar_copy_to_pi: streams the CONTENTS of a host directory (or a lone
@@ -542,6 +548,35 @@ write_as_pi() {
 
 echo "==> Seeding per-run state under $RUN_DIR (idempotent -- existing pi/session state is kept)..." >&2
 sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$STATE_DIR/sessions" "$NONO_STATE_DIR"
+
+# --- Live file sharing: grant, then record what was granted ---------------
+# Every path in $SHARE_PATHS was already checked (share_path_check, see
+# above) before any per-run state was even created. Granted in order
+# (workdir first); if any grant fails partway through, everything
+# granted so far this launch is released again (best-effort,
+# interactive sudo allowed -- this launcher still has a controlling
+# terminal at this point in both foreground and detached mode) before
+# exiting non-zero, so a failed launch never leaves a half-shared
+# workdir/extra behind.
+echo "==> Live-sharing ${#SHARE_PATHS[@]} path(s) with 'pi': ${SHARE_PATHS[*]}" >&2
+GRANTED_PATHS=()
+for share_path in "${SHARE_PATHS[@]}"; do
+  if ! share_grant "$share_path"; then
+    echo "error: failed to live-share $share_path with 'pi' -- rolling back ${#GRANTED_PATHS[@]} already-granted path(s)." >&2
+    for granted_path in "${GRANTED_PATHS[@]:-}"; do
+      [ -n "$granted_path" ] || continue
+      share_release "$granted_path" || true
+    done
+    exit 1
+  fi
+  GRANTED_PATHS+=("$share_path")
+done
+# Recorded AFTER every grant succeeds (merging -- deduping -- with
+# whatever was already recorded for this run name, e.g. across a
+# `--resume` relaunch), so a run's shared-paths file never lists a path
+# that didn't actually get granted.
+share_record_paths "$RUN_DIR" "${SHARE_PATHS[@]}"
+share_write_workdir_path "$RUN_DIR" "$WORKDIR"
 
 echo "    building pi-extra-extensions/pi-extra-skills..." >&2
 EXTRA_EXT_PATH="$(nix build "$STACK_DIR#pi-extra-extensions" --no-link --print-out-paths)"
@@ -582,27 +617,19 @@ if sudo -u pi test -f "$SHARED_AUTH_FILE"; then
   ' sh "$SHARED_AUTH_FILE" "$AGENT_DIR/auth.json"
 fi
 
-echo "    copying workdir ($(pwd))..." >&2
-tar_copy_to_pi "$(pwd)" "$WORKDIR_DEST"
-
+# --workdir is passed separately (below, per mode); --add/--clone extras
+# are both passed to gen-profile.sh as --add (identical read-write grant
+# treatment there -- see gen-profile.sh's own "Step 4" comment), since
+# both are now live-shared at their real host path rather than copied
+# into a per-run add-N/clone-N destination.
 EXTRA_GEN_ARGS=()
-add_counter=0
 for add_path in "${ADD_PATHS[@]:-}"; do
   [ -n "$add_path" ] || continue
-  add_counter=$((add_counter + 1))
-  dest="$RUN_DIR/add-$add_counter"
-  echo "    copying --add $add_path -> $dest..." >&2
-  tar_copy_to_pi "$add_path" "$dest"
-  EXTRA_GEN_ARGS+=(--add "$dest")
+  EXTRA_GEN_ARGS+=(--add "$add_path")
 done
-clone_counter=0
 for clone_path in "${CLONE_PATHS[@]:-}"; do
   [ -n "$clone_path" ] || continue
-  clone_counter=$((clone_counter + 1))
-  dest="$RUN_DIR/clone-$clone_counter"
-  echo "    copying --clone $clone_path -> $dest..." >&2
-  tar_copy_to_pi "$clone_path" "$dest"
-  EXTRA_GEN_ARGS+=(--clone "$dest")
+  EXTRA_GEN_ARGS+=(--add "$clone_path")
 done
 
 if [ "$DETACHED_FLAG" != "1" ]; then
@@ -616,6 +643,19 @@ if [ "$DETACHED_FLAG" != "1" ]; then
       kill "$HELPER_PID" 2>/dev/null || true
     fi
     rm -f "$INFO_FILE"
+    # Release every live-shared path recorded for this run (workdir +
+    # every --add/--clone extra) -- interactive sudo is fine here, this
+    # launcher still owns a controlling terminal. --self-run excludes
+    # THIS run from its own "still live elsewhere" check (its own
+    # session is ending right now); a release failure is logged but
+    # doesn't abort the rest of the trap (every remaining path still
+    # gets a release attempt, and the overall EXIT code is unaffected --
+    # `nix run .#stop -- <name>` can always finish the job later).
+    local shared_path
+    while IFS= read -r shared_path; do
+      [ -n "$shared_path" ] || continue
+      share_release "$shared_path" --self-run "$SESSION_NAME" || echo "warning: failed to release live share of $shared_path -- run 'nix run .#stop -- $SESSION_NAME' to finish restoring ownership/ACLs." >&2
+    done < <(share_read_paths "$RUN_DIR")
   }
   trap stop_helper EXIT
 
@@ -643,7 +683,7 @@ if [ "$DETACHED_FLAG" != "1" ]; then
   TMP_PROFILE="$(mktemp)"
   # Lazily hardcode in the agent directory that pi needs access to
   "$GEN_PROFILE_SH" --base "$BASE_PROFILE" --out "$TMP_PROFILE" \
-    --webhook-url "$WEBHOOK_URL" --workdir "$WORKDIR_DEST" --state-dir "$STATE_DIR" \
+    --webhook-url "$WEBHOOK_URL" --workdir "$WORKDIR" --state-dir "$STATE_DIR" \
     "${EXTRA_GEN_ARGS[@]}" "${READ_ROOT_ARGS[@]}" --add "/var/lib/pi/runs" --add "/tmp"
   write_as_pi "$RUN_DIR/profile.json" "$TMP_PROFILE"
   rm -f "$TMP_PROFILE"
@@ -661,7 +701,7 @@ if [ "$DETACHED_FLAG" != "1" ]; then
 
   echo "==> Starting nono as 'pi' (session: $SESSION_NAME)..." >&2
   sudo -u pi --preserve-env="$PRESERVE_LIST" -- \
-    sh -c 'cd "$1"; shift; exec "$@"' sh "$WORKDIR_DEST" \
+    sh -c 'cd "$1"; shift; exec "$@"' sh "$WORKDIR" \
     "$NONO_BIN" "${NONO_ARGS[@]}"
   exit $?
 fi
@@ -744,7 +784,7 @@ WEBHOOK_URL="\${1:?supervisor.sh requires the approval webhook URL as its one ar
 
 TMP_PROFILE="\$(mktemp)"
 "$GEN_PROFILE_SH" --base "$BASE_PROFILE" --out "\$TMP_PROFILE" \\
-  --webhook-url "\$WEBHOOK_URL" --workdir "$WORKDIR_DEST" --state-dir "$STATE_DIR" \\
+  --webhook-url "\$WEBHOOK_URL" --workdir "$WORKDIR" --state-dir "$STATE_DIR" \\
   $GEN_ARGS_QUOTED
 cp "\$TMP_PROFILE" "$RUN_DIR/profile.json"
 rm -f "\$TMP_PROFILE"
@@ -754,7 +794,7 @@ export XDG_STATE_HOME="$NONO_STATE_DIR"
 export SSL_CERT_FILE="$CA_BUNDLE"
 export NIX_SSL_CERT_FILE="$CA_BUNDLE"
 export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
-cd "$WORKDIR_DEST"
+cd "$WORKDIR"
 "$NONO_BIN" run --profile "$RUN_DIR/profile.json" --allow-cwd$NONO_RUN_EXTRA_FLAGS --detached --name "$SESSION_NAME" -- "$PI_BIN"$PI_RESUME_SUFFIX
 
 while "$NONO_BIN" ps 2>/dev/null | grep -q "$SESSION_NAME"; do
@@ -807,6 +847,22 @@ WEBHOOK_URL="\$("$JQ_BIN" -r .url "$HELPER_INFO_FILE")"
 sudo -u pi --preserve-env="$PRESERVE_LIST" -- \\
   bash -c 'exec bash "\$1" "\$2" >"\$3" 2>&1 </dev/null' bash \\
   "$SUPERVISOR_SCRIPT" "\$WEBHOOK_URL" "$RUN_DIR/supervisor.log"
+
+# Release every live-shared path recorded for this run, now that the
+# supervisor (and so the nono session it started) has exited --
+# --noninteractive, since this wrapper has no controlling terminal to
+# prompt on at this point (it was started via setsid, detached from the
+# launcher). A failure here is logged to this wrapper's own log (not
+# fatal to the wrapper itself) and points at \`nix run .#stop\` to finish
+# the job.
+export PERSONAL_MONOREPO_LOCATION="$PERSONAL_MONOREPO_LOCATION"
+# shellcheck source=lib-common.sh
+# shellcheck disable=SC1091
+source "$STACK_DIR/scripts/lib-common.sh"
+while IFS= read -r shared_path; do
+  [ -n "\$shared_path" ] || continue
+  share_release "\$shared_path" --self-run "$SESSION_NAME" --noninteractive || echo "warning: failed to release live share of \$shared_path -- run 'nix run .#stop -- $SESSION_NAME' to finish restoring ownership/ACLs." >&2
+done < <(share_read_paths "$RUN_DIR")
 
 kill "\$HELPER_PID" 2>/dev/null || true
 rm -rf "$HELPER_STATE_DIR"
