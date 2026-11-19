@@ -632,12 +632,23 @@ scope for it).
 and every `--add`/`--clone` extra are shared LIVE and read-write at
 their REAL host path -- via `scripts/lib-common.sh`'s `share_grant`
 (POSIX ACLs/`setfacl` on Linux; NFSv4-style ACLs/`chmod +a` on macOS,
-**UNVERIFIED**, no macOS available to test that branch against), plus a
-traverse-only (`x`/`search`) grant on every parent directory of each
-shared path, up to (excluding) `/`, so `pi` can actually reach it. Every
-path is checked (`share_path_check`: refuses `/`, the invoking user's
-own `$HOME`, or a path not owned by the invoking user) BEFORE any
-grant happens for ANY of them; if a grant partway through a batch fails,
+**UNVERIFIED**, no macOS available to test that branch against), plus,
+via `share_ensure_parent_traverse`, a traverse-only (`x`/`search`)
+grant on every parent directory of each shared path, up to (excluding)
+`/`, so `pi` can actually reach it -- but ONLY where that's actually
+needed and actually ours to grant: a parent `pi` can already traverse
+(e.g. a world-traversable `/home` at 755) is left untouched entirely;
+a parent `pi` cannot already traverse AND that the invoking user does
+NOT own (e.g. a root-owned `/home` at 750) makes the whole grant fail
+loudly with a clear error instead of ever escalating with `sudo` --
+the invoking user cannot grant access to a directory they don't own,
+and sharing a path must never depend on being able to widen a
+root-owned system directory. The full set of parents needing a new
+entry is computed before any of them is touched, so a failure on a
+high parent never leaves a lower one half-modified. Every path is
+checked (`share_path_check`: refuses `/`, the invoking user's own
+`$HOME`, or a path not owned by the invoking user) BEFORE any grant
+happens for ANY of them; if a grant partway through a batch fails,
 everything granted so far in that same launch is released again before
 exiting non-zero, so a failed launch never leaves a half-shared
 workdir/extra behind. `--clone` is treated as `--add` once the host-side
@@ -657,7 +668,10 @@ by default; `--noninteractive` uses `sudo -n` and returns non-zero
 rather than ever prompting), then removes the ACL entries `share_grant`
 added -- on the path itself, and on each parent directory UNLESS some
 other still-live run's own share still needs that parent (i.e. that
-other run's recorded path lies under it). "Still live" means: `nono
+other run's recorded path lies under it) OR that parent isn't owned by
+the invoking user (in which case `share_grant` never added an entry
+there in the first place, so there's nothing of ours to remove --
+skipped silently, never a `sudo` escalation). "Still live" means: `nono
 session_running` against either that other run's main (`"<run>"`) or
 shell (`"<run>-shell"`) session. A path is skipped entirely (as a no-op
 success, logged) if it's blocked this way. `--self-run NAME` excludes

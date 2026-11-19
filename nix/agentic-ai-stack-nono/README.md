@@ -115,7 +115,14 @@ you. Sharing is implemented with ACLs (POSIX ACLs/`setfacl` on Linux;
 NFSv4-style ACLs/`chmod +a` on macOS, **UNVERIFIED** -- no macOS was
 available to test that branch against), plus a bare traverse (`x`/
 `search`) grant on every parent directory up to (excluding) `/` so `pi`
-can actually reach the shared path.
+can actually reach the shared path -- but ONLY where that's actually
+needed and actually yours to grant: a parent `pi` can already traverse
+(e.g. a world-traversable `/home` at 755) is left alone, and a parent
+`pi` can't already traverse that you also don't own (e.g. a root-owned
+`/home` at 750) makes the whole share **fail outright** with a clear
+error instead of ever trying to escalate with `sudo` on your behalf --
+fix that directory's permissions as its actual owner (e.g. `chmod
+o+x`), or share a path elsewhere.
 
 At shutdown -- `start-agent.sh`'s own exit in foreground mode, its
 detached-mode wrapper once the session ends, or `nix run .#stop --

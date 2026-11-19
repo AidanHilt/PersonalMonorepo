@@ -184,9 +184,12 @@ nono_session_running() {
 # every --add/--clone extra are shared LIVE, read-write, at their real
 # host path, via POSIX ACLs on Linux (`setfacl`) or NFSv4-style ACLs on
 # macOS (`chmod +a` -- UNVERIFIED, no macOS available in this effort to
-# test any of the macOS branches below against). Shared by
-# start-agent.sh and shell.sh; stop.sh and both scripts' teardown paths
-# call share_release to reverse it.
+# test any of the macOS branches below against), plus a traverse-only
+# grant on parent directories where `pi` would otherwise be unable to
+# reach the shared path at all -- see share_ensure_parent_traverse for
+# the exact, ownership-gated rule (never sudo, never a parent not owned
+# by the invoking user). Shared by start-agent.sh and shell.sh; stop.sh
+# and both scripts' teardown paths call share_release to reverse it.
 
 # share_stat_uid PATH: prints PATH's owning uid, Linux (`stat -c`) or
 # macOS (`stat -f`) flavoured, whichever works.
@@ -231,16 +234,87 @@ share_path_check() {
   printf '%s\n' "$resolved"
 }
 
+# share_ensure_parent_traverse PATH: grants `pi` bare traverse (x/
+# search) access on every parent directory of PATH up to (excluding)
+# "/", but ONLY where it's actually needed and actually ours to grant:
+#   - if `pi` can already traverse a parent (e.g. a world-traversable
+#     /home at 755), it's left completely untouched -- no entry added.
+#   - else, if the parent is owned by the invoking user, a traverse
+#     entry is added (Linux: `setfacl -m u:pi:x`; macOS: `chmod +a
+#     "user:pi allow search"`, UNVERIFIED as above).
+#   - else (pi can't traverse it AND the invoking user doesn't own it,
+#     e.g. a root-owned /home at 750), this fails loudly with a clear
+#     error instead of ever escalating with sudo -- the invoking user
+#     cannot grant access to a directory they don't own, and `pi`
+#     running as a shared system user must not depend on root-owned
+#     system directories being made writable/ACL-able by whoever
+#     happens to be sharing a path. The fix in that case is for the
+#     directory's actual owner to widen it (e.g. chmod o+x) or for the
+#     caller to share a path that doesn't sit under it.
+# Computes the FULL list of parents that need a NEW entry before
+# touching anything, and returns non-zero before any modification at
+# all if any of them isn't owned by the invoking user -- so a failure
+# on a high parent never leaves a lower parent (which would have been
+# fine on its own) half-modified. Idempotent: a parent that already has
+# the entry from a previous call (or already lets `pi` traverse it some
+# other way) is simply skipped again.
+share_ensure_parent_traverse() {
+  local path="${1:?share_ensure_parent_traverse requires a PATH}"
+  local my_uid parent owner_uid
+  my_uid="$(id -u)"
+  local -a needs_grant=()
+  parent="$path"
+  while true; do
+    parent="$(dirname "$parent")"
+    [ "$parent" = "/" ] && break
+    if sudo -u pi test -x "$parent" 2>/dev/null; then
+      continue
+    fi
+    owner_uid="$(share_stat_uid "$parent")"
+    if [ -z "$owner_uid" ]; then
+      echo "error: share_ensure_parent_traverse: could not stat $parent to check its owner" >&2
+      return 1
+    fi
+    if [ "$owner_uid" != "$my_uid" ]; then
+      echo "error: user pi cannot traverse $parent and you do not own it, so it cannot be granted; fix its permissions (e.g. chmod o+x or an ACL as its owner) or share a path elsewhere" >&2
+      return 1
+    fi
+    needs_grant+=("$parent")
+  done
+
+  for parent in "${needs_grant[@]:-}"; do
+    [ -n "$parent" ] || continue
+    case "$(uname -s)" in
+    Linux)
+      setfacl -m "u:pi:x" "$parent"
+      ;;
+    Darwin)
+      # UNVERIFIED, see share_grant's own note.
+      chmod -a "user:pi allow search" "$parent" 2>/dev/null || true
+      chmod +a "user:pi allow search" "$parent"
+      ;;
+    *)
+      echo "error: share_ensure_parent_traverse: unsupported OS: $(uname -s)" >&2
+      return 1
+      ;;
+    esac
+  done
+}
+
 # share_grant PATH: grants the `pi` user (and, on directories, a
 # default/inherited entry for both `pi` and the invoking user) live
 # read-write-execute access to PATH at its real host location, plus
-# bare traverse (x/search) access on every parent directory of PATH up
-# to (excluding) "/" so `pi` can actually reach it. Idempotent: safe to
-# call again on an already-granted PATH. Assumes PATH has already been
-# through share_path_check -- this function does not re-check it.
+# (via share_ensure_parent_traverse) bare traverse (x/search) access on
+# every parent directory of PATH up to (excluding) "/" so `pi` can
+# actually reach it -- but ONLY on parents that actually need it and
+# are owned by the invoking user; see share_ensure_parent_traverse's
+# own comment for the exact rule and why this never escalates with
+# sudo. Idempotent: safe to call again on an already-granted PATH.
+# Assumes PATH has already been through share_path_check -- this
+# function does not re-check it.
 share_grant() {
   local path="${1:?share_grant requires a PATH}"
-  local invoking_user parent
+  local invoking_user
   invoking_user="$(id -un)"
   case "$(uname -s)" in
   Linux)
@@ -252,12 +326,6 @@ share_grant() {
       find "$path" -type d -exec setfacl -m "d:u:pi:rwX" {} +
       find "$path" -type d -exec setfacl -m "d:u:${invoking_user}:rwX" {} +
     fi
-    parent="$path"
-    while true; do
-      parent="$(dirname "$parent")"
-      [ "$parent" = "/" ] && break
-      setfacl -m "u:pi:x" "$parent"
-    done
     ;;
   Darwin)
     # UNVERIFIED: no macOS host was available to test any of this
@@ -270,19 +338,13 @@ share_grant() {
       chmod -R -a "user:$acl_user allow $perms" "$path" 2>/dev/null || true
       chmod -R +a "user:$acl_user allow $perms" "$path"
     done
-    parent="$path"
-    while true; do
-      parent="$(dirname "$parent")"
-      [ "$parent" = "/" ] && break
-      chmod -a "user:pi allow search" "$parent" 2>/dev/null || true
-      chmod +a "user:pi allow search" "$parent"
-    done
     ;;
   *)
     echo "error: share_grant: unsupported OS: $(uname -s)" >&2
     exit 1
     ;;
   esac
+  share_ensure_parent_traverse "$path"
 }
 
 # share_file_lists_path FILE PATH: true (0) if FILE (one realpath per
@@ -381,11 +443,15 @@ share_parent_still_needed() {
 # clear message instead of ever prompting), then removes the ACL
 # entries share_grant added -- on PATH itself, and on each parent
 # directory where no other live run's own share still needs it (see
-# share_parent_still_needed). Skips PATH entirely (logging why, as a
-# no-op success) if share_release_blocked says some other live run (or,
-# with --treat-self-main-live, NAME's own main session) still needs it.
-# Idempotent and tolerant of already-removed entries -- every ACL
-# removal here is best-effort.
+# share_parent_still_needed) AND that parent is owned by the invoking
+# user -- share_grant (via share_ensure_parent_traverse) never added an
+# entry on a parent it didn't own, so a not-owned parent is skipped
+# silently here too; there is nothing of ours to remove on it, and this
+# never escalates with sudo to attempt one anyway. Skips PATH entirely
+# (logging why, as a no-op success) if share_release_blocked says some
+# other live run (or, with --treat-self-main-live, NAME's own main
+# session) still needs it. Idempotent and tolerant of already-removed
+# entries -- every ACL removal here is best-effort.
 share_release() {
   local path="${1:?share_release requires a PATH}"
   shift
@@ -450,7 +516,8 @@ share_release() {
     ;;
   esac
 
-  local parent
+  local parent parent_owner_uid my_uid
+  my_uid="$(id -u)"
   parent="$path"
   while true; do
     parent="$(dirname "$parent")"
@@ -458,6 +525,14 @@ share_release() {
     if share_parent_still_needed "$parent" "$self_run" "$treat_self_main_live"; then
       continue
     fi
+    # share_grant only ever added an entry on a parent owned by the
+    # invoking user (see share_ensure_parent_traverse) -- a parent not
+    # owned by them either never got an entry at all, or `pi` could
+    # already traverse it some other way, so there's nothing of ours to
+    # remove. Skip silently rather than attempting (and best-effort
+    # swallowing a failure on) a removal that was never ours to make.
+    parent_owner_uid="$(share_stat_uid "$parent")"
+    [ "$parent_owner_uid" = "$my_uid" ] || continue
     case "$(uname -s)" in
     Linux) setfacl -x u:pi "$parent" 2>/dev/null || true ;;
     Darwin) chmod -a "user:pi allow search" "$parent" 2>/dev/null || true ;;
