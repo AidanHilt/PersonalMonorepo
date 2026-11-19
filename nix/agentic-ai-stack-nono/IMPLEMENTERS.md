@@ -695,13 +695,11 @@ ownership" ownership-mismatch guard on the `pi` side. `lib-common.sh`'s
 `GIT_CONFIG_VALUE_i` (`safe.directory`, one pair per shared path,
 starting after any `GIT_CONFIG_COUNT` already exported on the process)
 for every shared path, threaded through the same `sudo --preserve-env`
-list as everything else. **Known gap, left open by this change**:
-whether those vars actually reach the SANDBOXED `pi` process (as
-opposed to merely the `sudo -u pi`-started process outside nono) depends
-on nono's own session environment filtering (`profiles/work.base.json`'s
-`environment.allow_vars`, which does not currently list `GIT_CONFIG_*`)
--- editing `profiles/*.json` was out of scope for this change, so this
-is flagged rather than silently assumed to work.
+list as everything else. These vars reach the SANDBOXED `pi` process
+too: `profiles/work.base.json` lists `GIT_CONFIG_COUNT`,
+`GIT_CONFIG_KEY_*`, and `GIT_CONFIG_VALUE_*` in both its top-level
+`environment.allow_vars` and the nested `environment.allow_vars` under
+the `nix` command's sandboxed `invocation_policy`.
 
 **Tool path resolution**: this stack flake -- not `nix/mono-flake` --
 owns provisioning both `pi` and `nono` (follow-up decision, superseding
@@ -1167,7 +1165,13 @@ first" message) and `shared-paths` (`lib-common.sh`'s
 `share_read_workdir_path`/`share_read_paths`), re-checks each
 (`share_path_check`) and re-grants each (`share_grant`) for the
 lifetime of this shell session -- idempotent alongside the run's own
-main session already having the same grants. `git_safe_dir_env` is
+main session already having the same grants. Granted in order, with the
+same grant-rollback-on-failure loop as `start-agent.sh`'s own (if a
+grant fails partway through, every path already granted this call is
+released again, via `share_release --self-run "$NAME"
+--treat-self-main-live`, before exiting non-zero -- installed before the
+`stop_helper` `EXIT` trap below, so no double-release occurs on that
+path). `git_safe_dir_env` is
 also called on the same set, folded into this invocation's own
 `sudo --preserve-env` list. On exit, every re-shared path goes through
 `share_release --self-run "$NAME" --treat-self-main-live`: the

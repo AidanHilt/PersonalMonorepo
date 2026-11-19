@@ -181,7 +181,7 @@ stop_helper() {
 }
 trap stop_helper EXIT
 
-"$APPROVAL_HELPER_BIN" --ui auto --info-file "$INFO_FILE" --parent-pid "$$" &
+"$APPROVAL_HELPER_BIN" --ui deny-all --info-file "$INFO_FILE" --parent-pid "$$" &
 HELPER_PID=$!
 for _ in $(seq 1 50); do
   [ -s "$INFO_FILE" ] && break

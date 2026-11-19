@@ -383,13 +383,12 @@ done
 # git_safe_dir_env: registers every shared path as a git safe.directory
 # for both the invoking user and `pi` (harmless for paths that aren't
 # git repos at all -- git simply never consults an irrelevant
-# safe.directory entry). KNOWN GAP: the resulting GIT_CONFIG_* vars are
-# threaded through `sudo --preserve-env` below so they reach the `pi`
-# process sudo starts, but whether nono's OWN session environment
-# filtering (profiles/work.base.json's environment.allow_vars) lets them
-# through into the sandboxed `pi` process itself is a separate question
-# this script cannot answer -- editing profiles/*.json is out of scope
-# for this change.
+# safe.directory entry). The resulting GIT_CONFIG_* vars are threaded
+# through `sudo --preserve-env` below so they reach the `pi` process
+# sudo starts, and profiles/work.base.json allow-lists GIT_CONFIG_COUNT/
+# GIT_CONFIG_KEY_*/GIT_CONFIG_VALUE_* (top-level environment.allow_vars
+# and the nix command's sandboxed environment.allow_vars) so they also
+# reach the sandboxed `pi` process itself.
 git_safe_dir_env "${SHARE_PATHS[@]}"
 
 # --- Secrets: namespace scan first, then --secret flags (flags win) -------

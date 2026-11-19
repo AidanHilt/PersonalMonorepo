@@ -17,10 +17,12 @@
     act
     agenix
     cocogitto
+    coreutils
     dotenvx
     ghostty.terminfo
     go
     kubebuilder
+    nodejs_24
     nss
     openbao
     python3

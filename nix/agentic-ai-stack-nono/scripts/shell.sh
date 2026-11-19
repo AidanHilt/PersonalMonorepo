@@ -32,9 +32,12 @@
 # every recorded --add/--clone extra (RUN_DIR/shared-paths), both
 # written by start-agent.sh, for the lifetime of this shell session --
 # idempotent alongside whatever the run's own main session already has
-# granted. On exit, releases each of them again (share_release
-# --self-run NAME --treat-self-main-live), but NEVER while the run's own
-# main ("<name>") session is still live and also shares that path --
+# granted. Granted in order; if a grant fails partway through, every
+# path already granted this call is rolled back (share_release
+# --self-run NAME --treat-self-main-live) before exiting non-zero,
+# mirroring start-agent.sh's own grant-rollback loop. On a normal exit,
+# releases each of them again the same way, but NEVER while the run's
+# own main ("<name>") session is still live and also shares that path --
 # closing this shell must never pull access out from under a
 # still-running agent session.
 set -euo pipefail
@@ -234,8 +237,23 @@ fi
 for shared_path in "${SHARED_PATHS[@]}"; do
   share_path_check "$shared_path" >/dev/null
 done
+# Granted in order; if any grant fails partway through, everything
+# granted so far for this shell session is released again
+# (best-effort, interactive sudo allowed -- this script still owns a
+# controlling terminal at this point) before exiting non-zero, mirroring
+# start-agent.sh's own grant-rollback loop. The stop_helper EXIT trap is
+# installed below, after this loop, so it never double-releases these.
+GRANTED_PATHS=()
 for shared_path in "${SHARED_PATHS[@]}"; do
-  share_grant "$shared_path"
+  if ! share_grant "$shared_path"; then
+    echo "error: failed to live-share $shared_path with 'pi' -- rolling back ${#GRANTED_PATHS[@]} already-granted path(s)." >&2
+    for granted_path in "${GRANTED_PATHS[@]:-}"; do
+      [ -n "$granted_path" ] || continue
+      share_release "$granted_path" --self-run "$NAME" --treat-self-main-live || true
+    done
+    exit 1
+  fi
+  GRANTED_PATHS+=("$shared_path")
 done
 git_safe_dir_env "${SHARED_PATHS[@]}"
 PRESERVE_LIST="PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS"

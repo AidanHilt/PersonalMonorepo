@@ -100,7 +100,10 @@
       "PI_SANDBOX__SECRET__*",
       "SSL_CERT_FILE",
       "NIX_SSL_CERT_FILE",
-      "NODE_EXTRA_CA_CERTS"
+      "NODE_EXTRA_CA_CERTS",
+      "GIT_CONFIG_COUNT",
+      "GIT_CONFIG_KEY_*",
+      "GIT_CONFIG_VALUE_*"
     ]
   },
   "command_policies": {
@@ -171,7 +174,10 @@
                   "TZ",
                   "SSL_CERT_FILE",
                   "NIX_SSL_CERT_FILE",
-                  "NODE_EXTRA_CA_CERTS"
+                  "NODE_EXTRA_CA_CERTS",
+                  "GIT_CONFIG_COUNT",
+                  "GIT_CONFIG_KEY_*",
+                  "GIT_CONFIG_VALUE_*"
                 ],
                 "set_vars": {
                   "NIX_REMOTE": "daemon",
