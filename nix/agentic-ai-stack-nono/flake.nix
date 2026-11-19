@@ -97,6 +97,16 @@
         pkgsUnstable = import nixpkgs-unstable {
           inherit system;
         };
+
+        # Ad-hoc packages granted read+exec access inside the nono sandbox
+        # and put on PATH there, shared by apps.start-agent and apps.shell
+        # (see scripts/start-agent.sh's/scripts/shell.sh's own PI_STACK_EXTRA_PKGS/
+        # PI_STACK_EXTRA_PATH handling, and IMPLEMENTERS.md). gen-profile.sh
+        # already closure-expands any --read path under /nix/store into
+        # filesystem.read, so it needs no change for this. Currently just
+        # coreutils -- the nono-sandboxed `pi` user otherwise has no
+        # coreutils, since it isn't in the host system closure.
+        extraPackages = [ pkgs.coreutils pkgs.bash-completion ];
       in
       {
         packages = {
@@ -171,6 +181,8 @@
                 export PI_STACK_PI_BIN=${pkgsUnstable.pi-coding-agent}/bin/pi
                 export PI_STACK_JQ_BIN=${pkgs.jq}/bin/jq
                 export PI_STACK_APPROVAL_HELPER_BIN=${self.packages.${system}.approval-helper}/bin/approval-helper
+                export PI_STACK_EXTRA_PKGS="${pkgs.lib.concatMapStringsSep " " (p: "${p}") extraPackages}"
+                export PI_STACK_EXTRA_PATH="${pkgs.lib.makeBinPath extraPackages}"
               ''
               + builtins.readFile ./scripts/start-agent.sh;
             };
@@ -267,6 +279,8 @@
                 export PI_STACK_JQ_BIN=${pkgs.jq}/bin/jq
                 export PI_STACK_APPROVAL_HELPER_BIN=${self.packages.${system}.approval-helper}/bin/approval-helper
                 export PI_STACK_BASH_BIN=${pkgs.bashInteractive}/bin/bash
+                export PI_STACK_EXTRA_PKGS="${pkgs.lib.concatMapStringsSep " " (p: "${p}") extraPackages}"
+                export PI_STACK_EXTRA_PATH="${pkgs.lib.makeBinPath extraPackages}"
               ''
               + builtins.readFile ./scripts/shell.sh;
             };

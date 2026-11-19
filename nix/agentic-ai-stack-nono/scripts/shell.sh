@@ -109,6 +109,14 @@ Environment variables:
                                 NODE_EXTRA_CA_CERTS -- see
                                 lib-common.sh's resolve_ca_bundle for the
                                 full resolution order.
+  PI_STACK_EXTRA_PATH            bin/ PATH for flake.nix's ad-hoc
+                                `extraPackages` list (currently just
+                                coreutils), set automatically by
+                                flake.nix's apps.shell wrapper. Prepended
+                                onto the sandboxed shell's PATH -- no
+                                read-grant change here (this shell reuses
+                                the run's own existing profile.json
+                                unmodified). Tolerated unset.
 
 bash path fallback (UNVERIFIED):
   flake.nix's apps.shell resolves PI_STACK_BASH_BIN from this flake's own
@@ -162,6 +170,7 @@ fi
 source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono/scripts/lib-common.sh"
 
 RUN_DIR="$(require_run_dir "$NAME")"
+echo "RUN DIR: ${RUN_DIR}"
 STATE_DIR="$(nono_state_dir_for "$NAME")"
 SESSION_NAME="${NAME}-shell"
 RUN_PROFILE="$RUN_DIR/profile.json"
@@ -181,6 +190,14 @@ JQ_BIN="$(resolve_stack_bin PI_STACK_JQ_BIN jq)"
 APPROVAL_HELPER_BIN="$(resolve_stack_bin PI_STACK_APPROVAL_HELPER_BIN approval-helper)"
 BASH_BIN="$(resolve_stack_bin PI_STACK_BASH_BIN bash)"
 
+# PI_STACK_EXTRA_PATH: bin/ PATH for flake.nix's ad-hoc `extraPackages`
+# list (currently just coreutils, see flake.nix/start-agent.sh/
+# IMPLEMENTERS.md), set automatically by flake.nix's apps.shell wrapper.
+# No read-grant change here -- this shell reuses the run's own existing
+# profile.json, unmodified; only the sandboxed process's own PATH is
+# prepended, below. Tolerated unset/empty.
+EXTRA_PATH="${PI_STACK_EXTRA_PATH:-}"
+
 CA_MODE=""
 [ "$DRY_RUN" = "1" ] && CA_MODE="dry-run"
 CA_BUNDLE="$(resolve_ca_bundle "$CA_MODE")"
@@ -199,10 +216,11 @@ if [ "$DRY_RUN" = "1" ]; then
   echo "  workdir:       <recorded in $RUN_DIR/workdir-path by start-agent.sh -- re-shared (not re-copied) with 'pi' on start, released on exit>" >&2
   echo "  shared paths:  <recorded in $RUN_DIR/shared-paths -- all re-shared with 'pi' on start, released on exit>" >&2
   echo "  CA bundle:     $CA_BUNDLE (parent dir $CA_BUNDLE_DIR read-granted; see PI_STACK_CA_BUNDLE below)" >&2
+  echo "  extra PATH prefix: ${EXTRA_PATH:-<none>}" >&2
   echo >&2
   echo "Resolved command (would run as the 'pi' user):" >&2
   echo "  sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS,<git safe.directory vars> -- \\" >&2
-  echo "    sh -c 'cd \"\$1\"; shift; exec \"\$@\"' sh <recorded workdir> \\" >&2
+  echo "    sh -c \"cd \\\"\$1\\\"; shift; export PATH=\\\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\\\"; exec \\\"\$@\\\"\" sh <recorded workdir> \\" >&2
   echo "    $NONO_BIN run --profile $SHELL_PROFILE --allow-cwd --name $SESSION_NAME -- $BASH_BIN -i" >&2
   exit 0
 fi
@@ -364,5 +382,5 @@ export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
 
 echo "==> Starting a bash shell inside nono as 'pi' (session: $SESSION_NAME)..." >&2
 sudo -u pi --preserve-env="$PRESERVE_LIST" -- \
-  sh -c 'cd "$1"; shift; exec "$@"' sh "$WORKDIR" \
+  sh -c "cd \"\$1\"; shift; export PATH=\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\"; exec \"\$@\"" sh "$WORKDIR" \
   "$NONO_BIN" run --profile "$SHELL_PROFILE" --allow-cwd --name "$SESSION_NAME" -- "$BASH_BIN" -i

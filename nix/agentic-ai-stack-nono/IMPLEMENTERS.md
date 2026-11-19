@@ -1273,3 +1273,57 @@ teardown `stop.sh` no longer does, see "`scripts/attach.sh <name>` /
 `scripts/stop.sh <name>`" above -- has been removed. None of these touch
 `flake.lock`.
 
+### Ad-hoc extra packages on the sandboxed `pi` PATH (`extraPackages`)
+
+The nono-sandboxed `pi` user has no `coreutils` of its own -- it isn't in
+the host system closure `pi` otherwise inherits exec access to. Rather
+than a per-launch `--pkg` flag (explicitly out of scope for this change),
+`flake.nix`'s per-system `let` block defines a single flake-level list,
+`extraPackages = [ pkgs.coreutils ];`, shared by `apps.start-agent` and
+`apps.shell`. Each of those two apps' `writeShellApplication` text
+preamble exports two env vars alongside the existing `PI_STACK_*_BIN`
+ones:
+
+- `PI_STACK_EXTRA_PKGS` -- `extraPackages`'s store paths,
+  space-separated (`pkgs.lib.concatMapStringsSep " " (p: "${p}")
+  extraPackages`).
+- `PI_STACK_EXTRA_PATH` -- the corresponding `bin/` PATH
+  (`pkgs.lib.makeBinPath extraPackages`).
+
+`scripts/gen-profile.sh` needed no change to support this: it already
+closure-expands any `--read` path under `/nix/store` into
+`filesystem.read`, so `start-agent.sh` simply folds each
+`PI_STACK_EXTRA_PKGS` entry into its existing `READ_ROOTS` array (granted
+read access the same way `$PI_BIN` already is) -- `shell.sh` makes no
+read-grant change at all, since it reuses the run's own existing
+`profile.json` unmodified. Both scripts tolerate `PI_STACK_EXTRA_PKGS`/
+`PI_STACK_EXTRA_PATH` being unset or empty (no extra packages granted, no
+PATH change) -- e.g. if either script is somehow run directly, outside
+the flake wrapper.
+
+To actually put `PI_STACK_EXTRA_PATH` on the sandboxed process's PATH,
+both scripts' `sudo -u pi ... sh -c 'cd "$1"; shift; exec "$@"' ...`
+launch idiom gained an `export PATH="<extra>:$PATH"` statement, inserted
+inside that `sh -c` script, right before the `exec`: the extra PATH
+prefix is substituted at generation time (same as `$WORKDIR` already is
+in that same line), while the trailing `$PATH` is left for the `sh -c`
+script itself to expand at runtime, against whatever PATH `pi` would
+otherwise have gotten from `sudo`. `start-agent.sh`'s `--detached`-mode
+`supervisor.sh` heredoc gets the same `export PATH="<extra>:$PATH"` line
+(`$PATH` escaped to stay literal in the generated script, the extra
+prefix baked in at generation time) immediately before its own `cd`/
+`nono run`, since that's a second, independent code path that also execs
+`nono run` as `pi`. Both scripts' `--dry-run` output lists the resolved
+extra packages/PATH prefix as its own line and mirrors the same `export
+PATH=...` insertion in its illustrative printed command.
+
+**UNVERIFIED**: whether `exec`ing a read-granted `/nix/store` path (here,
+`coreutils`'s binaries) actually works under nono's Landlock/Seatbelt
+enforcement was not confirmed against a real `nono` binary in this
+environment -- `--read` grants read access, but whether that's sufficient
+for nono to also permit *executing* binaries under that path (as opposed
+to e.g. requiring a separate exec-specific grant) is untested. If it
+turns out `--read` alone isn't enough, the fix belongs in
+`gen-profile.sh`'s own closure/grant logic, not in `extraPackages` or the
+PATH-prepending plumbing documented here.
+

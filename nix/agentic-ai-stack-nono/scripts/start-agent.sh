@@ -153,6 +153,17 @@ Environment variables:
                                for the full resolution order (falls back
                                through NIX_SSL_CERT_FILE, SSL_CERT_FILE,
                                then the usual system bundle paths).
+  PI_STACK_EXTRA_PKGS,
+  PI_STACK_EXTRA_PATH          Space-separated store paths of flake.nix's
+                               ad-hoc `extraPackages` list (currently just
+                               coreutils) and the corresponding bin/ PATH
+                               (pkgs.lib.makeBinPath), set automatically by
+                               flake.nix's apps.start-agent wrapper. The
+                               packages are read-granted the same way
+                               PI_STACK_PI_BIN is, and the PATH is
+                               prepended onto the sandboxed `pi` process's
+                               PATH -- see IMPLEMENTERS.md for the
+                               UNVERIFIED caveat on this. Tolerated unset.
 
 Live file sharing (workdir, --add, --clone):
   Your current working directory (nono's own "workdir") and every
@@ -455,6 +466,19 @@ for optional_tool in agent-validate agent-plan-create; do
   fi
 done
 
+# --- Ad-hoc extra packages (flake.nix's `extraPackages`, currently just
+# coreutils) -- granted read+exec access the same way $PI_BIN is, and
+# joined onto PATH inside the sandboxed `pi` process below. Set by
+# flake.nix's apps.start-agent wrapper; tolerated unset/empty if this
+# script is somehow run directly, outside the flake wrapper (no extra
+# packages granted or added to PATH in that case). See IMPLEMENTERS.md.
+EXTRA_PKGS="${PI_STACK_EXTRA_PKGS:-}"
+for extra_pkg in $EXTRA_PKGS; do
+  [ -n "$extra_pkg" ] || continue
+  READ_ROOTS+=("$extra_pkg")
+done
+EXTRA_PATH="${PI_STACK_EXTRA_PATH:-}"
+
 # CA bundle: the sandbox has no default CA trust store reachable inside
 # it -- see resolve_ca_bundle above. Its PARENT directory (not the bundle
 # file itself) is granted via --read, since it's unverified whether nono
@@ -481,6 +505,8 @@ if [ "$DRY_RUN" = "1" ]; then
   echo "  workdir (live-shared): $WORKDIR" >&2
   echo "  read roots:          ${READ_ROOTS[*]}" >&2
   echo "  CA bundle:           $CA_BUNDLE (parent dir $CA_BUNDLE_DIR read-granted)" >&2
+  echo "  extra packages:      ${EXTRA_PKGS:-<none>}" >&2
+  echo "  extra PATH prefix:   ${EXTRA_PATH:-<none>}" >&2
   echo "  --add (live-shared): ${ADD_PATHS[*]:-<none>}" >&2
   echo "  --clone (live-shared, as --add): ${CLONE_PATHS[*]:-<none>}" >&2
   echo "  secrets (names only, values redacted): ${SECRET_NAMES[*]:-<none>}" >&2
@@ -505,7 +531,7 @@ if [ "$DRY_RUN" = "1" ]; then
   [ "$RESUME_FLAG" = "1" ] && nono_run_line="$nono_run_line --resume"
   {
     echo "  sudo -u pi --preserve-env=$PRESERVE_LIST -- \\"
-    echo "    sh -c 'cd \"\$1\"; shift; exec \"\$@\"' sh $WORKDIR \\"
+    echo "    sh -c \"cd \\\"\$1\\\"; shift; export PATH=\\\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\\\"; exec \\\"\$@\\\"\" sh $WORKDIR \\"
     echo "$nono_run_line"
   } >&2
   exit 0
@@ -683,7 +709,8 @@ if [ "$DETACHED_FLAG" != "1" ]; then
   # Lazily hardcode in the agent directory that pi needs access to
   "$GEN_PROFILE_SH" --base "$BASE_PROFILE" --out "$TMP_PROFILE" \
     --webhook-url "$WEBHOOK_URL" --workdir "$WORKDIR" --state-dir "$STATE_DIR" \
-    "${EXTRA_GEN_ARGS[@]}" "${READ_ROOT_ARGS[@]}" --add "/var/lib/pi/runs" --add "/tmp"
+    "${EXTRA_GEN_ARGS[@]}" "${READ_ROOT_ARGS[@]}" --add "/var/lib/pi/runs" --add "/tmp" --add "/etc/bashrc" --add "/nix/store/02sjb8kr1hday5s15sk4xh40cpj7p449-etc-profile" --add "/etc/profile" \
+    --add "/nix/store/7j90xhkzr7b6vqyhygx0ky9x130xxp6v-set-environment"
   write_as_pi "$RUN_DIR/profile.json" "$TMP_PROFILE"
   rm -f "$TMP_PROFILE"
 
@@ -700,7 +727,7 @@ if [ "$DETACHED_FLAG" != "1" ]; then
 
   echo "==> Starting nono as 'pi' (session: $SESSION_NAME)..." >&2
   sudo -u pi --preserve-env="$PRESERVE_LIST" -- \
-    sh -c 'cd "$1"; shift; exec "$@"' sh "$WORKDIR" \
+    sh -c "cd \"\$1\"; shift; export PATH=\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\"; exec \"\$@\"" sh "$WORKDIR" \
     "$NONO_BIN" "${NONO_ARGS[@]}"
   exit $?
 fi
@@ -793,6 +820,7 @@ export XDG_STATE_HOME="$NONO_STATE_DIR"
 export SSL_CERT_FILE="$CA_BUNDLE"
 export NIX_SSL_CERT_FILE="$CA_BUNDLE"
 export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
+export PATH="${EXTRA_PATH:+$EXTRA_PATH:}\$PATH"
 cd "$WORKDIR"
 "$NONO_BIN" run --profile "$RUN_DIR/profile.json" --allow-cwd$NONO_RUN_EXTRA_FLAGS --detached --name "$SESSION_NAME" -- "$PI_BIN"$PI_RESUME_SUFFIX
 
