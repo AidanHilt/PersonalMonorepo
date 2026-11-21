@@ -45,9 +45,7 @@
 
   #boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest;
 
-  users.groups.pi = {
-    gid = 10001;
-  };
-
-  users.users.aidan.extraGroups = [ "pi" ];
+  # `pi` group/user and `aidan`'s membership in it are now provisioned by
+  # modules/roles/universal/_pi-user.nix (imported via universal-base.nix),
+  # not per-host.
 }

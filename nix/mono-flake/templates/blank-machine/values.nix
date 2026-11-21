@@ -47,7 +47,6 @@
   #   clusterName = "";
   # };
 
-
   # See modules/universal/rclone.nix for the real default values. You probably don't need to change this
   # rclone = {
   #   wallpaperDir = "/home/user/Wallpapers";

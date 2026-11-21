@@ -1,7 +1,18 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 let
-  imports = if machine-config.networking.loadBalancerIp or false == false then [] else [ ../roles/nixos/server/keepalived.nix ];
+  imports =
+    if machine-config.networking.loadBalancerIp or false == false then
+      [ ]
+    else
+      [ ../roles/nixos/server/keepalived.nix ];
 in
 
 {
@@ -11,7 +22,8 @@ in
     ../roles/nixos/server/gitops-updater.nix
 
     ../roles/nixos/fixed-ip-machine.nix
-  ] ++ imports;
+  ]
+  ++ imports;
 
   services.openssh = {
     hostKeys = [
@@ -27,7 +39,7 @@ in
   ];
 
   users.groups.sensitive-file-readers = {
-    members = ["${machine-config.username}"];
+    members = [ "${machine-config.username}" ];
   };
 
 }

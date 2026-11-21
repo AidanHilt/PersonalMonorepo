@@ -1,4 +1,16 @@
-{ inputs, globals, pkgs, machine-config, lib, config, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  config,
+  ...
+}:
+
+let
+  platformPackages = if pkgs.stdenv.isDarwin then [] else [ pkgs.ghostty.terminfo ];
+in
 
 {
   environment.interactiveShellInit = inputs.scripts.interactiveShellInit;
@@ -9,10 +21,11 @@
     act
     agenix
     cocogitto
+    coreutils
     dotenvx
-    ghostty.terminfo
     go
     kubebuilder
+    nodejs_24
     nss
     openbao
     python3
@@ -20,7 +33,7 @@
     vault
     watchexec
     weechat
-  ];
+  ] ++ platformPackages;
 
   age.secrets.github-token = {
     file = ../../../secrets/github-config.age;

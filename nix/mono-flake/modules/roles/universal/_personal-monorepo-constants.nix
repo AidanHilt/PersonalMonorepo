@@ -1,4 +1,4 @@
-{ machine-config, ...}:
+{ machine-config, ... }:
 
 let
   personalMonorepoLocation = "${machine-config.userBase}/${machine-config.username}/PersonalMonorepo";

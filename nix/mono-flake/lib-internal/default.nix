@@ -1,4 +1,8 @@
-{ nixpkgs, darwin, inputs }:
+{
+  nixpkgs,
+  darwin,
+  inputs,
+}:
 
 let
   buildersLib = import ./builders.nix { inherit nixpkgs darwin inputs; };

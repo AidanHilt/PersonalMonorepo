@@ -10,7 +10,7 @@ show_help() {
 Usage:
   agent-plan-create --paths <list> --context <text> --steps <text> --out-of-scope <text> \
                      [--style-guide <text>] [--notes <text>] [--research <text>] \
-                     [--domains <comma-list>] [--tools <comma-list>]
+                     [--tools <comma-list>]
   agent-plan-create frontmatter <agent-file.md> key=value [key=value ...] [--allow-bash <cmd>]
 
 Primary mode: assembles a self-contained IMPLEMENT-subagent dispatch prompt
@@ -37,10 +37,6 @@ number is also printed to stderr on its own line.
   --style-guide <text>     Optional. Adds a "Style guide" section.
   --notes <text>           Optional. Adds a "Notes" section.
   --research <text>        Optional. Adds a "Research" section.
-  --domains <comma-list>   Optional. Network domains already granted (via
-                            request-domain) by the main agent before
-                            dispatch. Recorded in the prompt; the subagent
-                            must not request additional domains itself.
   --tools <comma-list>     Optional. Extra tool names (besides the ones
                             inferred from --paths) required on PATH.
 
@@ -49,7 +45,8 @@ profiles detected in --paths, plus --tools. Every tool is checked with
 `command -v` in THIS environment (the one the subagent worktree will
 share). If any are missing, they are printed to stderr as a list and the
 command exits non-zero WITHOUT printing a prompt or allocating a slot --
-install them with pkg-install and retry.
+ask the user to add them to nix/mono-flake (host system packages) and run
+update, then retry.
 
 Unlike the old generated-validate.sh flow, `agent-validate` discovers its
 checks AT RUN TIME when the subagent runs it (re-classifying --paths,
@@ -104,7 +101,7 @@ require_within_repo() {
 
 run_create() {
   local paths="" context="" steps="" out_of_scope="" style_guide="" notes=""
-  local research="" domains="" extra_tools=""
+  local research="" extra_tools=""
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -134,10 +131,6 @@ run_create() {
       ;;
     --research)
       research="$2"
-      shift 2
-      ;;
-    --domains)
-      domains="$2"
       shift 2
       ;;
     --tools)
@@ -202,7 +195,7 @@ run_create() {
 
   if [[ ${#missing[@]} -gt 0 ]]; then
     print_error "Missing required tools on PATH: ${missing[*]}"
-    print_error "Install them with pkg-install before dispatching, then retry."
+    print_error "Ask the user to add ${missing[*]} to nix/mono-flake (host system packages) and run update, then retry."
     exit 1
   fi
 
@@ -290,12 +283,10 @@ run_create() {
     fi
 
     printf '\n## Network\n\n'
-    if [[ -n "$domains" ]]; then
-      printf 'The following domains have already been granted via request-domain by the main agent: %s.\n' "$domains"
-    else
-      printf 'No additional network domains have been granted for this task.\n'
-    fi
-    printf 'You may not request additional domains yourself (request-domain is not available to you); if you hit a network need beyond this, stop and report it instead.\n'
+    printf 'Network access from the sandbox is mediated by the user'"'"'s interactive\n'
+    printf 'approval prompts (nono approval). You cannot pre-grant domains yourself; if\n'
+    printf 'you hit a network need, expect an approval prompt, or stop and report it if\n'
+    printf 'denied.\n'
 
     printf '\n## Definition of Done\n\n'
     printf -- '- The plan above is implemented.\n'
