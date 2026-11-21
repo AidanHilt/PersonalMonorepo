@@ -65,5 +65,9 @@ in
     pkgs.fd
     pkgs.ripgrep
     pkgs.tmux
+    pkgs.shfmt
+    pkgs.shellcheck
+    pkgs.nixfmt
+    pkgs.statix
   ] ++ platformPackages;
 }
