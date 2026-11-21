@@ -1,51 +1,25 @@
 {
-  description = "Pi sandbox stack: containerized Pi coding agent + egress-gated proxy";
+  description = "Pi sandbox stack: nono (Landlock/Seatbelt)-based sandboxed Pi coding agent -- work profile, launcher, approval helper, ps/attach/stop/login/shell wrappers, and the nono-sandbox extension/skill";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
-    # Only the pi container image tracks unstable HEAD directly (via its
-    # own, independently-locked input) so pkg.pi-coding-agent and the rest
-    # of the pi image keep getting frequent updates, while proxy and
-    # pkg-broker build against the stable, cache-hit-reliable nixos-26.05
-    # pin above (matching nix/mono-flake's pin).
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    # nlewo/nix2container gives us buildImage + copyToDockerDaemon without
-    # needing a full OCI toolchain, and produces reproducible layers.
-    nix2container = {
-      url = "github:nlewo/nix2container";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+
+    # This stack flake -- not nix/mono-flake -- owns provisioning `pi` and
+    # `nono`: plain nixpkgs-unstable, no overlay, >= 0.81.0.
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     # Same remote ref as nix/mono-flake's `scripts` input (see
-    # nix/mono-flake/flake.nix). Not wired into the built pi/proxy container
-    # images -- only into devShells/apps here, so the `agent-plan-create`
-    # launcher script (and anything else under nix/scripts) is resolvable
-    # via `nix build`/`nix develop` from this flake. Anyone developing from
-    # within this monorepo checkout can point this at their local
-    # nix/scripts checkout instead by running `nix run .#scripts-shell`
-    # (see the `scripts-shell` app below), which mirrors the
-    # `--override-input scripts path:...` gating in
+    # nix/mono-flake/flake.nix). Only wired into devShells here, so the
+    # `agent-plan-create`/`agent-validate` launchers (and anything else
+    # under nix/scripts) are resolvable via `nix develop` from this flake.
+    # Anyone developing from within this monorepo checkout can point this
+    # at their local nix/scripts checkout instead by running
+    # `nix run .#scripts-shell` (see the `scripts-shell` app below), which
+    # mirrors the `--override-input scripts path:...` gating in
     # nix/mono-flake/modules/roles/universal/_update.nix.
     scripts = {
       url = "github:aidanhilt/PersonalMonorepo/project-appocalypse/knative-function-operator?dir=nix/scripts";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    # Prebuilt nix-index database, used lazily (via `nix run`, not baked
-    # into any image closure) by pkg-broker's /lookup-binary endpoint to
-    # answer "which nixpkgs attribute provides binary X" -- see
-    # containers/pkg-broker/README.md. Deliberately NOT
-    # `inputs.nixpkgs.follows`'d: the `nix run <ref>#nix-index-with-db`
-    # invocation at request time resolves against THIS flake's own lock
-    # (whatever nixpkgs Mic92/nix-index-database itself pins), not against
-    # this repo's pinned nixpkgs -- the index DB and the nixpkgs revision it
-    # was built from need to stay together. Only its `rev` is consumed here
-    # (to build a pinned `github:Mic92/nix-index-database/<rev>` ref string
-    # baked into the pkg-broker image as an env var); the input itself is
-    # never added to any image's closure/rootEnv/copyToRoot.
-    nix-index-database = {
-      url = "github:Mic92/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -54,8 +28,7 @@
     # discoverCatalog / allowlistFor / selectSkills / mkBundle), consumed by
     # ./extra-skills.nix to build a skills bundle the exact same way
     # extra-extensions.nix builds the extensions bundle. Its home-manager
-    # module and install apps are deliberately NOT used -- skills are copied
-    # into the image seed at build time instead (see containers/pi/image.nix).
+    # module and install apps are deliberately NOT used.
     agent-skills = {
       url = "github:Kyure-A/agent-skills-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -92,9 +65,7 @@
       nixpkgs,
       nixpkgs-unstable,
       flake-utils,
-      nix2container,
       scripts,
-      nix-index-database,
       agent-skills,
       skills-golang,
       skills-kubernetes,
@@ -107,317 +78,210 @@
           inherit system;
         };
 
+        # Plain, un-overlaid nixpkgs-unstable -- see the nixpkgs-unstable
+        # input comment above. Only `nono` and `pi-coding-agent` are drawn
+        # from here; everything else in this flake stays on the pinned
+        # `nixpkgs` (nixos-26.05) input.
         pkgsUnstable = import nixpkgs-unstable {
           inherit system;
-          overlays = [ (import ./pi-coding-agent-overlay.nix) ];
         };
 
-        n2c = nix2container.packages.${system}.nix2container;
-
-        # Pinned `github:Mic92/nix-index-database/<rev>` flake ref string,
-        # derived from the nix-index-database input's own locked rev (so
-        # flake.lock owns the pin, see the input's comment above) rather than
-        # hand-maintained here. Baked into the pkg-broker image as
-        # PKG_BROKER_NIX_INDEX_REF (see containers/pkg-broker/image.nix) and
-        # invoked lazily via `nix run` at request time, never added to any
-        # image's closure. Falls back to an unpinned ref (with a loud trace
-        # warning, not a hard eval failure) if the input somehow has no
-        # locked rev -- e.g. a dirty/path-overridden input during local dev.
-        nixIndexRef =
-          let
-            rev = nix-index-database.rev or null;
-          in
-          if rev != null then
-            "github:Mic92/nix-index-database/${rev}"
-          else
-            builtins.trace "WARNING: nix-index-database input has no locked rev (dirty/overridden input?) -- pkg-broker's /lookup-binary will use an UNPINNED github:Mic92/nix-index-database ref. Run `nix flake lock` to pin it." "github:Mic92/nix-index-database";
-
-        # ---- Fixed, non-content-hash tags -----------------------------
-        # A static compose.yaml needs tags that don't change on every
-        # rebuild (nix2container's default tag *is* a content hash of the
-        # image, which would force editing compose.yaml on every build).
-        piTag = "dev";
-        proxyTag = "dev";
-        pkgBrokerTag = "dev";
-        workspaceMounterTag = "dev";
-        kindGatewayTag = "dev";
-        piImageName = "pi-sandbox/pi";
-        proxyImageName = "pi-sandbox/proxy";
-        pkgBrokerImageName = "pi-sandbox/pkg-broker";
-        workspaceMounterImageName = "pi-sandbox/workspace-mounter";
-        kindGatewayImageName = "pi-sandbox/kind-gateway";
-
-        pi = import ./containers/pi/image.nix {
-          pkgs = pkgsUnstable;
-          inherit
-            n2c
-            scripts
-            agent-skills
-            skills-golang
-            skills-kubernetes
-            skills-nixos
-            ;
-          imageName = piImageName;
-          imageTag = piTag;
-        };
-
-        proxy = import ./containers/proxy/image.nix {
-          inherit pkgs n2c;
-          imageName = proxyImageName;
-          imageTag = proxyTag;
-        };
-
-        pkgBroker = import ./containers/pkg-broker/image.nix {
-          inherit pkgs n2c nixIndexRef;
-          imageName = pkgBrokerImageName;
-          imageTag = pkgBrokerTag;
-        };
-
-        workspaceMounter = import ./containers/workspace-mounter/image.nix {
-          inherit pkgs n2c;
-          imageName = workspaceMounterImageName;
-          imageTag = workspaceMounterTag;
-        };
-
-        # kind-gateway: narrow socat TCP forwarder sidecar bridging `pi`'s
-        # isolated `internal` network and kind's own `kind` docker network
-        # -- see compose.kind.yaml and containers/kind-gateway/image.nix.
-        kindGateway = import ./containers/kind-gateway/image.nix {
-          inherit pkgs n2c;
-          imageName = kindGatewayImageName;
-          imageTag = kindGatewayTag;
-        };
-
-        # ---- helper: load an image into the local Docker daemon using
-        # nix2container's built-in `copyToDockerDaemon` app. This stack runs
-        # on native Linux Docker, so we can rely on a standard Docker
-        # daemon/socket directly.
-        # `contentId` is a cheap fingerprint (see containers/*/image.nix) of
-        # everything that ends up in the image, computed at eval time. It's
-        # baked into the image as a Docker label, so we can compare the
-        # content-id we're about to build against whatever is already
-        # loaded under imageName:imageTag and skip the (surprisingly not
-        # free) copyToDockerDaemon step entirely when nothing changed.
-        # `appSlug` selects the flake app/package to build+load (must match
-        # `packages.<appSlug>-image`). `imageName` is the *actual* Docker
-        # image reference (repo:tag) that ends up in the daemon, i.e. what
-        # image.nix's `imageName`/`imageTag` produced -- these are NOT the
-        # same string (e.g. appSlug "pi" vs image "pi-sandbox/pi"), so they
-        # must be threaded through separately or the up-to-date check below
-        # inspects a Docker image that never exists and "skip" never fires.
-        mkLoadApp =
-          appSlug: imageName: imageTag: contentId:
-          # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
-          pkgs.writeShellApplication {
-            name = "load-${appSlug}";
-
-            runtimeInputs = [
-              pkgs.nix
-              pkgs.docker
-            ];
-
-            text = ''
-              set -euo pipefail
-
-              if ! docker info >/dev/null 2>&1; then
-                echo "Docker daemon is not reachable" >&2
-                exit 1
-              fi
-
-              IMAGE_NAME=${pkgs.lib.escapeShellArg imageName}
-              IMAGE_TAG=${pkgs.lib.escapeShellArg imageTag}
-              NEW_CONTENT_ID=${pkgs.lib.escapeShellArg contentId}
-
-              CURRENT_CONTENT_ID="$(docker image inspect \
-                --format '{{ index .Config.Labels "sh.pi-sandbox.content-id" }}' \
-                "$IMAGE_NAME:$IMAGE_TAG" 2>/dev/null || true)"
-
-              if [ -n "$CURRENT_CONTENT_ID" ] && [ "$CURRENT_CONTENT_ID" = "$NEW_CONTENT_ID" ]; then
-                echo "$IMAGE_NAME:$IMAGE_TAG is already up to date (content-id $NEW_CONTENT_ID); skipping load"
-                exit 0
-              fi
-
-              override_flag=()
-              # if [ -n "''${PERSONAL_MONOREPO_LOCATION:-}" ] && [ -d "$PERSONAL_MONOREPO_LOCATION/nix/scripts" ]; then
-              #   override_flag=(--override-input scripts "path:$PERSONAL_MONOREPO_LOCATION/nix/scripts")
-              #   echo "==> Using local nix/scripts checkout at $PERSONAL_MONOREPO_LOCATION/nix/scripts"
-              # fi
-
-              echo "''${override_flag[@]}"
-
-              nix run "''${override_flag[@]}" ${pkgs.lib.escapeShellArg ".#${appSlug}-image.copyToDockerDaemon"}
-
-              echo "Loaded $IMAGE_NAME:$IMAGE_TAG into the local Docker daemon"
-            '';
-          };
+        # Ad-hoc packages granted read+exec access inside the nono sandbox
+        # and put on PATH there, shared by apps.start-agent and apps.shell
+        # (see scripts/start-agent.sh's/scripts/shell.sh's own PI_STACK_EXTRA_PKGS/
+        # PI_STACK_EXTRA_PATH handling, and IMPLEMENTERS.md). gen-profile.sh
+        # already closure-expands any --read path under /nix/store into
+        # filesystem.read, so it needs no change for this. Currently just
+        # coreutils -- the nono-sandboxed `pi` user otherwise has no
+        # coreutils, since it isn't in the host system closure.
+        extraPackages = [ pkgs.coreutils pkgs.bash-completion ];
       in
       {
         packages = {
-          pi-image = pi.image;
-          proxy-image = proxy.image;
-          pkg-broker-image = pkgBroker.image;
-          workspace-mounter-image = workspaceMounter.image;
-          kind-gateway-image = kindGateway.image;
-          default = pi.image;
+          # This stack flake's own provisioning of `pi` and `nono` (see the
+          # nixpkgs-unstable input comment above): plain nixpkgs-unstable,
+          # NO overlay. Exposed as top-level packages (aliases) both so
+          # they're independently inspectable/buildable (`nix build
+          # .#nono`, `nix build .#pi-coding-agent`) and so apps.start-agent
+          # below can reference concrete store paths at eval time instead
+          # of relying on `command -v` against the invoking user's PATH.
+          inherit (pkgsUnstable) nono pi-coding-agent;
 
           # Standalone, opt-in convenience path for pre-built npm/git
           # extensions (see extra-extensions.nix, extensions/README.md).
-          # Deliberately NOT wired into pi-image/pi.contentId or anything
-          # else image-related -- exposed here only so it's inspectable
-          # via `nix build .#pi-extra-extensions` / `nix eval`.
+          # Not wired into any image/profile build here -- exposed only so
+          # it's inspectable via `nix build .#pi-extra-extensions` /
+          # `nix eval`. Consumed by the launcher at run time.
           pi-extra-extensions = import ./extra-extensions.nix { inherit pkgs; };
 
           # Standalone, opt-in convenience path for the build-time pinned
-          # agent skills bundle (see extra-skills.nix). Deliberately NOT
-          # wired into pi-image/pi.contentId or anything else image-related
-          # beyond what containers/pi/image.nix itself does -- exposed here
-          # only so it's inspectable via `nix build .#pi-extra-skills` /
-          # `nix eval`.
+          # agent skills bundle (see extra-skills.nix). Same status as
+          # pi-extra-extensions above.
           pi-extra-skills = import ./extra-skills.nix {
-            pkgs = pkgsUnstable;
+            inherit pkgs;
             agentSkills = agent-skills;
             skillsGolang = skills-golang;
             skillsKubernetes = skills-kubernetes;
             skillsNixos = skills-nixos;
           };
 
-          rootEnv = pkgs.buildEnv {
-            name = "pi-image-root";
-
-            paths = [
-              scripts.packages.${pkgs.system}.agent-plan-create
-              scripts.packages.${pkgs.system}.pkg-install
-              scripts.packages.${pkgs.system}.request-domain
-              pkgsUnstable.pi-coding-agent
-              pkgs.gitMinimal
-              pkgs.coreutils
-              pkgs.bash
-              pkgs.cacert
-              pkgs.socat
-            ];
-
-            pathsToLink = [
-              "/bin"
-              "/etc"
-              "/lib"
-            ];
+          # nix build .#approval-helper -> the host-side process
+          # scripts/start-agent.sh starts before each `nono run`. Stdlib-only
+          # Go (no go.sum), so vendorHash is null -- there is nothing to vendor.
+          approval-helper = pkgs.buildGoModule {
+            pname = "approval-helper";
+            version = "0.1.0";
+            src = ./approval-helper;
+            vendorHash = null;
           };
         };
 
         apps = {
-          # nix run .#load  -> builds + loads both images into the local
-          # Docker daemon.
-          load = flake-utils.lib.mkApp {
-            # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
-            drv = pkgs.writeShellApplication {
-              name = "load";
-              runtimeInputs = [ pkgs.docker ];
-              text = ''
-                set -euo pipefail
-                "${(mkLoadApp "pi" piImageName piTag pi.contentId)}/bin/load-pi"
-                "${(mkLoadApp "proxy" proxyImageName proxyTag proxy.contentId)}/bin/load-proxy"
-                "${
-                  (mkLoadApp "pkg-broker" pkgBrokerImageName pkgBrokerTag pkgBroker.contentId)
-                }/bin/load-pkg-broker"
-                "${
-                  (mkLoadApp "workspace-mounter" workspaceMounterImageName workspaceMounterTag
-                    workspaceMounter.contentId
-                  )
-                }/bin/load-workspace-mounter"
-                "${
-                  (mkLoadApp "kind-gateway" kindGatewayImageName kindGatewayTag kindGateway.contentId)
-                }/bin/load-kind-gateway"
-              '';
-            };
-          };
-
-          # nix run .#start-agent -> full "up" flow, see scripts/start-agent.sh
+          # nix run .#start-agent -> scripts/start-agent.sh: starts one
+          # nono-sandboxed `pi` session as the untrusted `pi` user. This
+          # stack flake provisions `nono` and `pi` itself
+          # (see the nixpkgs-unstable input and the `nono`/`pi-coding-agent`
+          # packages above) -- their absolute store paths are exported as
+          # PI_STACK_*_BIN env vars below so start-agent.sh never has to
+          # fall back to `command -v` against the invoking user's PATH when
+          # run via `nix run .#start-agent` (the supported entrypoint).
           start-agent = flake-utils.lib.mkApp {
             # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
             drv = pkgs.writeShellApplication {
               name = "start-agent";
+              # lib-common.sh's share_grant/share_release use `setfacl` on
+              # Linux (POSIX ACLs) and `find` (ownership-normalization
+              # sweep on release); macOS's `chmod +a` equivalent is plain
+              # coreutils/system `chmod`, no extra package needed there.
               runtimeInputs = [
-                pkgs.docker
-                pkgs.docker-compose
                 pkgs.jq
-                pkgs.gnugrep
-                pkgs.curl
-                pkgs.nix
-              ];
-              text = builtins.readFile ./scripts/start-agent.sh;
+                pkgs.git
+                self.packages.${system}.approval-helper
+                pkgs.coreutils
+                pkgs.findutils
+              ]
+              ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.acl ];
+              text = ''
+                export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
+                export PI_STACK_PI_BIN=${pkgsUnstable.pi-coding-agent}/bin/pi
+                export PI_STACK_JQ_BIN=${pkgs.jq}/bin/jq
+                export PI_STACK_APPROVAL_HELPER_BIN=${self.packages.${system}.approval-helper}/bin/approval-helper
+                export PI_STACK_EXTRA_PKGS="${pkgs.lib.concatMapStringsSep " " (p: "${p}") extraPackages}"
+                export PI_STACK_EXTRA_PATH="${pkgs.lib.makeBinPath extraPackages}"
+              ''
+              + builtins.readFile ./scripts/start-agent.sh;
             };
           };
 
-          stop-agent = flake-utils.lib.mkApp {
-            # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
+          # nix run .#ps -> scripts/ps.sh: lists nono sessions across
+          # every /var/lib/pi/runs/<name>/ run (there is no
+          # single cross-run `nono ps` -- see ps.sh's header comment).
+          ps = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
-              name = "stop-agent";
-              # jq: resolves pkg-bin/nix-store/proxy-domains' actual
-              # project-prefixed volume names via `docker compose config
-              # --format json` before the non-persisted-volume cleanup (see
-              # scripts/stop-agent.sh).
+              name = "pi-sandbox-ps";
               runtimeInputs = [
-                pkgs.docker
-                pkgs.docker-compose
                 pkgs.jq
-              ];
-              text = builtins.readFile ./scripts/stop-agent.sh;
-            };
-          };
-
-          # nix run .#shell-agent -> execs an interactive shell into the
-          # already-running default-profile `pi` service container (see
-          # scripts/shell-agent.sh). Fails with a clear message instead of
-          # starting anything itself if `pi` isn't already up (start it
-          # first via `nix run .#start-agent`).
-          shell-agent = flake-utils.lib.mkApp {
-            # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
-            drv = pkgs.writeShellApplication {
-              name = "shell-agent";
-              runtimeInputs = [
-                pkgs.docker
-                pkgs.docker-compose
-              ];
-              text = builtins.readFile ./scripts/shell-agent.sh;
-            };
-          };
-
-          # nix run .#login -> builds/loads images if needed (same as
-          # `nix run .#load`), then runs the containerized, on-demand OAuth
-          # login flow via the `login` compose profile. auth.json
-          # ends up on the `pi-auth` named volume, shared with the `pi`
-          # service (see compose.yaml). Assumes it's run from within this
-          # flake's checkout (same assumption `load` already makes, since it
-          # resolves the `.#*-image` flake refs relative to cwd).
-          login = flake-utils.lib.mkApp {
-            # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
-            drv = pkgs.writeShellApplication {
-              name = "login";
-              runtimeInputs = [
-                pkgs.docker
-                pkgs.docker-compose
-                pkgs.nix
+                pkgs.coreutils
               ];
               text = ''
-                set -euo pipefail
+                export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
+              ''
+              + builtins.readFile ./scripts/ps.sh;
+            };
+          };
 
-                if ! docker info >/dev/null 2>&1; then
-                  echo "Docker daemon is not reachable" >&2
-                  exit 1
-                fi
+          # nix run .#attach -- <name> -> scripts/attach.sh: attaches to
+          # pi's own TUI session for an existing run.
+          attach = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellApplication {
+              name = "pi-sandbox-attach";
+              runtimeInputs = [
+                pkgs.jq
+                pkgs.coreutils
+              ];
+              text = ''
+                export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
+              ''
+              + builtins.readFile ./scripts/attach.sh;
+            };
+          };
 
-                override_flag=()
-                if [ -n "''${PERSONAL_MONOREPO_LOCATION:-}" ] && [ -d "$PERSONAL_MONOREPO_LOCATION/nix/scripts" ]; then
-                  override_flag=(--override-input scripts "path:$PERSONAL_MONOREPO_LOCATION/nix/scripts")
-                  echo "==> Using local nix/scripts checkout at $PERSONAL_MONOREPO_LOCATION/nix/scripts"
-                fi
+          # nix run .#stop -- <name> -> scripts/stop.sh: stops a run and
+          # releases its live-shared paths.
+          stop = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellApplication {
+              name = "pi-sandbox-stop";
+              # lib-common.sh's share_release (undoes start-agent.sh's
+              # live file sharing) needs `setfacl` on Linux plus `find`
+              # for its ownership-normalization sweep -- see
+              # apps.start-agent's own comment above.
+              runtimeInputs = [
+                pkgs.jq
+                pkgs.coreutils
+                pkgs.findutils
+              ]
+              ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.acl ];
+              text = ''
+                export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
+              ''
+              + builtins.readFile ./scripts/stop.sh;
+            };
+          };
 
-                echo "==> Building and loading pi image into the active Docker context..."
-                nix run .#load "''${override_flag[@]}"
+          # nix run .#shell -- <name> -> scripts/shell.sh: opens a separate,
+          # interactive bash shell inside a nono sandbox for an existing (or
+          # not-yet-started) run, with its own approval helper (`nix run
+          # .#attach` attaches to pi's own TUI PTY instead, which can't serve
+          # this purpose -- see shell.sh's header comment). Modelled on
+          # apps.start-agent's wrapper shape, minus pi itself (this app never
+          # runs `pi`, only a plain bash). PI_STACK_BASH_BIN comes from this
+          # flake's own nixpkgs (pkgs.bashInteractive, NOT nixpkgs-unstable's
+          # pi-coding-agent closure) -- see shell.sh's "bash path fallback" note.
+          shell = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellApplication {
+              name = "pi-sandbox-shell";
+              # lib-common.sh's share_grant/share_release (re-shares the
+              # run's workdir/--add/--clone paths for this shell's
+              # lifetime, then releases them) need `setfacl` on Linux
+              # plus `find` for the ownership-normalization sweep -- see
+              # apps.start-agent's own comment above.
+              runtimeInputs = [
+                pkgs.jq
+                pkgs.coreutils
+                pkgs.findutils
+                self.packages.${system}.approval-helper
+              ]
+              ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.acl ];
+              text = ''
+                export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
+                export PI_STACK_JQ_BIN=${pkgs.jq}/bin/jq
+                export PI_STACK_APPROVAL_HELPER_BIN=${self.packages.${system}.approval-helper}/bin/approval-helper
+                export PI_STACK_BASH_BIN=${pkgs.bashInteractive}/bin/bash
+                export PI_STACK_EXTRA_PKGS="${pkgs.lib.concatMapStringsSep " " (p: "${p}") extraPackages}"
+                export PI_STACK_EXTRA_PATH="${pkgs.lib.makeBinPath extraPackages}"
+              ''
+              + builtins.readFile ./scripts/shell.sh;
+            };
+          };
 
-                echo "==> Starting the containerized login flow..."
-                docker compose --profile login run --rm --service-ports login
-              '';
+          # nix run .#login -> scripts/login.sh: runs pi's native OAuth
+          # login flow inside a minimal nono session.
+          login = flake-utils.lib.mkApp {
+            drv = pkgs.writeShellApplication {
+              name = "pi-sandbox-login";
+              runtimeInputs = [
+                pkgs.jq
+                pkgs.git
+                self.packages.${system}.approval-helper
+                pkgs.coreutils
+              ];
+              text = ''
+                export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
+                export PI_STACK_PI_BIN=${pkgsUnstable.pi-coding-agent}/bin/pi
+                export PI_STACK_JQ_BIN=${pkgs.jq}/bin/jq
+                export PI_STACK_APPROVAL_HELPER_BIN=${self.packages.${system}.approval-helper}/bin/approval-helper
+              ''
+              + builtins.readFile ./scripts/login.sh;
             };
           };
 
@@ -430,19 +294,6 @@
                 pkgs.jq
               ];
               text = builtins.readFile ./scripts/gen-kubeconfig.sh;
-            };
-          };
-
-          verify = flake-utils.lib.mkApp {
-            # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
-            drv = pkgs.writeShellApplication {
-              name = "verify";
-              runtimeInputs = [
-                pkgs.docker
-                pkgs.docker-compose
-                pkgs.curl
-              ];
-              text = builtins.readFile ./scripts/verify-acceptance.sh;
             };
           };
 
@@ -470,10 +321,8 @@
         devShells.default = pkgs.mkShell {
           # yq-go (mikefarah/yq) sits alongside jq -- chosen over the
           # Python-based kislyuk/yq to avoid pulling Python into the
-          # environment (see RESEARCH-NOTES.md).
+          # environment.
           packages = [
-            pkgs.docker
-            pkgs.docker-compose
             pkgs.nodejs-slim_24
             pkgs.jq
             pkgs.yq-go

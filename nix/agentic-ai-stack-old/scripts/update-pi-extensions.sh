@@ -50,7 +50,7 @@
 # extra-extensions.nix. It does not touch anything else.
 set -euo pipefail
 
-AGENTIC_AI_STACK="$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono"
+AGENTIC_AI_STACK="$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"
 EXTENSIONS_DIR="$AGENTIC_AI_STACK/extensions"
 GIT_EXTENSIONS_FILE="$EXTENSIONS_DIR/git-extensions.nix"
 EXTRA_EXTENSIONS_FILE="$AGENTIC_AI_STACK/extra-extensions.nix"

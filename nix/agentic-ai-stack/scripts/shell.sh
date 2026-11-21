@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono#shell -- <name>
+# nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#shell -- <name>
 #
 # Opens a separate, interactive bash shell inside a nono sandbox for the
 # run at /var/lib/pi/runs/<name>/, using that run's own nono
@@ -150,7 +150,7 @@ fi
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
 # shellcheck source=lib-common.sh
 # shellcheck disable=SC1091
-source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono/scripts/lib-common.sh"
+source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack/scripts/lib-common.sh"
 
 RUN_DIR="$(require_run_dir "$NAME")"
 echo "RUN DIR: ${RUN_DIR}"

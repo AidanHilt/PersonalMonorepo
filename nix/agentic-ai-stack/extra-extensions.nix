@@ -1,37 +1,22 @@
 # extra-extensions.nix
 #
-# Build pipeline for pre-built pi extensions sourced directly from npm
-# and/or git. This is wired into the image build: containers/pi/image.nix
-# copies this derivation's output straight into
-# $out/home/pi/.pi-seed/agent/extensions/.
+# Builds the `pi-extra-extensions` package: pre-built pi extensions sourced
+# directly from npm (extensions/package.json + package-lock.json, via
+# pkgs.buildNpmPackage's fixed-output npm cache) and/or git
+# (extensions/git-extensions.nix, pinned-by-rev fetchFromGitHub). The
+# launcher copies the result into each run's PI_CODING_AGENT_DIR/extensions/
+# at launch (see extensions/README.md for the add-an-extension workflow).
 #
-# npm-sourced extensions resolve through package.json/package-lock.json like
-# any other npm project (via pkgs.buildNpmPackage's fixed-output npm cache),
-# and git-sourced ones are pinned-by-rev fetchFromGitHub fetches.
+# Native binaries: npm packages may ship prebuilt ELF binaries that fail to
+# load under Nix (missing libgcc_s/libstdc++ or ELF interpreter). Patching
+# is OPT-IN per extension via `autoPatchExtensions`, which runs autoPatchelf
+# over that extension's directory and its transitive node_modules closure;
+# see `nativeRuntimeLibs` to supply extra libraries it needs.
 #
-# Native binaries: npm packages may ship prebuilt ELF binaries (.so / .node /
-# executables) built against a conventional glibc layout. On a Nix-built image
-# those fail to load ("cannot open shared object file" for libgcc_s/libstdc++,
-# or a missing ELF interpreter). Patching is OPT-IN per extension: pass the
-# extension names in `autoPatchExtensions` (npm package names as they appear in
-# extensions/package.json, or git repo dir names). For each one, the final step
-# of `extraExtensions` strips and then runs autoPatchelf over that extension's
-# directory AND its transitive dependency closure inside the shared
-# node_modules (native addons are usually hoisted optionalDependencies, not
-# inside the extension's own dir). Nothing else in the output is touched. See
-# `nativeRuntimeLibs` below for how to supply extra libraries.
-#
-# Closure size: the runtime output must never reference the full `nodejs`
-# wrapper (which drags in npm + corepack). npm needs full node at BUILD time,
-# so npmExtensions repoints the patchShebangs'd node_modules scripts at
-# nodejs-slim afterwards, and disallowedReferences makes any regression a build
-# failure. Everything size-related here is pattern-based or driven by
-# package.json, so arbitrary extensions can still be added.
-#
-# See ./extensions/README.md for the day-to-day "how do I add one" workflow,
-# and ./extensions/git-extensions.nix for the git-hash pinning convention
-# (a hand-editable map of "git:github.com/owner/repo@rev" specs to
-# fetchFromGitHub output hashes).
+# Closure size: the output must never reference the full `nodejs` wrapper
+# (which drags in npm + corepack) -- npmExtensions repoints node_modules
+# scripts at nodejs-slim after the npm-requiring build step, and
+# disallowedReferences makes any regression a build failure.
 
 {
   pkgs,
@@ -43,6 +28,13 @@
 let
   inherit (pkgs) lib;
 
+  # autoPatchelf rewrites ELF interpreters/RPATHs, so it only makes sense
+  # (and only works: on Darwin its "dynamic linker" is /usr/lib/dyld, a
+  # Mach-O file, which fails with "ELFError: Magic number does not match")
+  # when building for Linux. On Darwin the npm install already selects
+  # darwin prebuilds, so the whole patching step is skipped.
+  isLinux = pkgs.stdenv.hostPlatform.isLinux;
+
   # ---- npm dependency FOD hash -------------------------------------------
   # Fixed-output hash of the offline npm cache that fetchNpmDeps builds from
   # ./extensions/package-lock.json (consumed by buildNpmPackage below).
@@ -53,7 +45,7 @@ let
   # this must be regenerated). If it ever goes stale the build fails with a
   # fixed-output hash mismatch that prints the correct `got:` value to paste
   # in (or just re-run update-pi-extensions).
-  npmDepsHash = "sha256-2mghuuWIkzuZh8VSufruaxY4VV2QMmOXVrh0UAEPrPQ=";
+  npmDepsHash = "sha256-Hv7wShOOiPUjNj4N5yi6qGsLian4X3qh2y9+sqjRGX4=";
 
   # ---- shared libraries for prebuilt native binaries ----------------------
   # Libraries autoPatchelf may point prebuilt binaries at. glibc itself is
@@ -142,10 +134,10 @@ let
     #   solely to satisfy peerDependencies ranges declared by
     #   @gotgenes/pi-permission-system, pi-lens, etc.) and its entire duplicate
     #   AWS/Google/OpenAI SDK transitive tree -- the real `pi` binary that
-    #   extensions run inside of is supplied natively via pkgs.pi-coding-agent
-    #   in image.nix, not via this npm copy, so no extension should ever
-    #   require() this package at runtime. Verified by inspecting a running
-    #   image's ~/.pi/agent/extensions/node_modules/ tree: @earendil-works,
+    #   extensions run inside of is supplied natively (flake.nix's `pi` package),
+    #   not via this npm copy, so no extension should ever require() this
+    #   package at runtime. Verified by inspecting a running agent's
+    #   ~/.pi/agent/extensions/node_modules/ tree: @earendil-works,
     #   @anthropic-ai, @aws, @aws-sdk, and @google all exist there as empty
     #   directories, confirming @earendil-works/pi-coding-agent and
     #   @earendil-works/pi-ai (and their SDK trees) are correctly omitted.
@@ -302,8 +294,8 @@ let
   # $out/node_modules/.pi-package-installed/<name> marker-file scheme. The
   # marker files are dropped here on purpose: it's unverified whether pi's
   # actual extension loader needs/expects that marker convention, and the flat
-  # <name>/ layout matches how containers/pi/image.nix copies this
-  # derivation's output into ~/.pi/agent/extensions/<name>/ directly.
+  # <name>/ layout matches how the launcher copies this derivation's output
+  # into PI_CODING_AGENT_DIR/extensions/<name>/ directly.
   extraExtensions =
     pkgs.runCommand "pi-extra-extensions"
       {
@@ -317,12 +309,12 @@ let
         # node_modules contents.)
         # jq is used to walk each target's dependency closure.
         nativeBuildInputs = [
-          pkgs.autoPatchelfHook
           pkgs.jq
-        ];
+        ]
+        ++ lib.optionals isLinux [ pkgs.autoPatchelfHook ];
 
         # Where autoPatchelf looks for the sonames the binaries ask for.
-        buildInputs = nativeRuntimeLibs;
+        buildInputs = lib.optionals isLinux nativeRuntimeLibs;
 
         # See ignoreMissingNativeDeps above. Passed through to the hook's
         # environment; a list of sonames/patterns on current nixpkgs.
@@ -423,6 +415,7 @@ let
         # (other-arch/OS optional deps) are skipped. `cp -RL` leaves the store
         # copies read-only, so chmod just the selected dirs before patchelf runs.
         # An unsatisfied library fails the build loudly; see nativeRuntimeLibs.
+        ${lib.optionalString isLinux ''
         patchDirs=()
         seenPkgs=" "
         walkDeps() {
@@ -462,6 +455,7 @@ let
 
           autoPatchelf "''${patchDirs[@]}"
         fi
+        ''}
       '';
 
   # The full list of spec strings a user needs to merge by hand into their

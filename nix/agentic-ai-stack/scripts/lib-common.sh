@@ -19,7 +19,7 @@
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
 # shellcheck disable=SC2034 # STACK_DIR is used by scripts that `source`
 # this file (login.sh, in particular), not by this file itself.
-STACK_DIR="$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono"
+STACK_DIR="$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"
 RUNS_ROOT="/var/lib/pi/runs"
 
 # resolve_or_die: resolves $1 to an absolute, symlink-free path via

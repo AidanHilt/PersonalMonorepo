@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono#stop -- <name>
+# nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#stop -- <name>
 #
 # Stops an existing nono session as the `pi` user, using that run's own per-run
 # XDG_STATE_HOME at /var/lib/pi/<name>-nono-xdg-state (see
@@ -84,7 +84,7 @@ NAME="${1:?usage: stop.sh <name> (run stop.sh --help for details)}"
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
 # shellcheck source=lib-common.sh
 # shellcheck disable=SC1091
-source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono/scripts/lib-common.sh"
+source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack/scripts/lib-common.sh"
 
 # require_run_dir validates $NAME and that its run directory exists;
 # its own output (the run dir path) is needed below for the live

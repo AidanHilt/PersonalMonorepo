@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono#login
+# nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#login
 #
 # Runs pi's native OAuth login flow INSIDE nono, as the `pi` user, using
 # the minimal profiles/login.base.json profile (no workdir copy, no nix
@@ -25,7 +25,7 @@ set -euo pipefail
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
 # shellcheck source=lib-common.sh
 # shellcheck disable=SC1091
-source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono/scripts/lib-common.sh"
+source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack/scripts/lib-common.sh"
 
 GEN_PROFILE_SH="$STACK_DIR/scripts/gen-profile.sh"
 LOGIN_BASE_PROFILE="$STACK_DIR/profiles/login.base.json"

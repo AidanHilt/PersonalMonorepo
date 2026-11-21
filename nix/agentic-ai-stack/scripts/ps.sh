@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono#ps
+# nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#ps
 #
 # A `ps`-equivalent wrapper over nono's own session listing. Per-run nono
 # state means there is no single `nono ps` that sees every run at once
@@ -45,7 +45,7 @@ fi
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
 # shellcheck source=lib-common.sh
 # shellcheck disable=SC1091
-source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono/scripts/lib-common.sh"
+source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack/scripts/lib-common.sh"
 
 NONO_BIN="$(resolve_stack_bin PI_STACK_NONO_BIN nono)"
 
