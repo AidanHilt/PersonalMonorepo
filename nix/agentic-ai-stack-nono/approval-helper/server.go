@@ -23,18 +23,14 @@ const (
 )
 
 // inflightPrompt lets concurrent requests for the same host:port share one
-// in-progress prompt instead of each popping their own dialog (PLAN.md:
-// "The helper should dedupe/rate-limit repeated prompts for the same
-// host").
+// in-progress prompt instead of each popping their own dialog.
 type inflightPrompt struct {
 	done   chan struct{}
 	result decision
 }
 
 // approvalServer implements nono's unsigned webhook v1 approval protocol
-// over loopback HTTP. See PLAN.md's "Approval transport"/"Approval helper
-// (host side)" decision rows and spikes/all/{handler.sh,
-// approval.template.json} for the spike-verified request/response shape.
+// over loopback HTTP.
 //
 // Never logs the token: expectedPath() embeds it, but logf is only ever
 // called after a request has already matched expectedPath(), and its
@@ -81,9 +77,7 @@ func (s *approvalServer) expectedPath() string {
 
 func (s *approvalServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Wrong path: 404 and log nothing at all -- this path segment IS the
-	// bearer token, so even an access-log line would risk leaking it
-	// (PLAN.md: "the helper returns 404 and logs nothing for a wrong
-	// path").
+	// bearer token, so even an access-log line would risk leaking it.
 	if r.URL.Path != s.expectedPath() {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -125,7 +119,7 @@ func hostPortKey(host string, port int) string {
 // order): the per-host granted_session cache (kept for the helper's whole
 // lifetime), the per-host:port deny cache (expires after denyCacheTTL),
 // and in-flight prompt dedupe, before falling back to showing a new
-// prompt. See PLAN.md's "Approval helper (host side)" decision row.
+// prompt.
 func (s *approvalServer) decide(ctx context.Context, info capabilityInfo) decision {
 	key := hostPortKey(info.Host, info.Port)
 

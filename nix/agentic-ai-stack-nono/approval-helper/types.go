@@ -1,9 +1,7 @@
 package main
 
 // capabilityInfo mirrors the "request" object inside nono's unsigned
-// webhook v1 approval request body. See PLAN.md's "Approval helper (host
-// side)"/"Approval transport" decision rows, verified by spike S1.9
-// against spikes/all/handler.sh and spikes/all/approval.template.json.
+// webhook v1 approval request body.
 type capabilityInfo struct {
 	CapabilityType string   `json:"capability_type"`
 	RequestID      string   `json:"request_id"`

@@ -3,7 +3,7 @@
   "meta": {
     "name": "pi-sandbox-nono-login",
     "version": "1.0.0",
-    "description": "Flake-owned static base for the nono 'login' profile (PLAN.md Phase 4b: scripts/login.sh). A minimal variant of profiles/work.base.json for pi's native OAuth login flow only -- no workdir copy, no nix daemon socket, no command_policies. NOT launch-ready on its own: __APPROVAL_WEBHOOK_URL__ must be substituted, and scripts/gen-profile.sh must merge in the per-launch read closure plus the fresh /var/lib/pi/login/ filesystem grants before this is passed to `nono run --profile`."
+    "description": "Flake-owned static base for the nono 'login' profile (scripts/login.sh). A minimal variant of profiles/work.base.json for pi's native OAuth login flow only -- no workdir copy, no nix daemon socket, no command_policies. NOT launch-ready on its own: __APPROVAL_WEBHOOK_URL__ must be substituted, and scripts/gen-profile.sh must merge in the per-launch read closure plus the fresh /var/lib/pi/login/ filesystem grants before this is passed to `nono run --profile`."
   },
   "groups": {
     "include": [

@@ -1,25 +1,13 @@
 {
-  description = "Pi sandbox stack: nono (Landlock/Seatbelt)-based sandboxed Pi coding agent (PLAN.md Phase 4a/4b built: work profile, launcher, approval helper, ps/attach/stop/login/shell wrappers, and the nono-sandbox extension/skill; the nix/scripts changes and config/agent/ permission-rule edits are Phase 4c)";
+  description = "Pi sandbox stack: nono (Landlock/Seatbelt)-based sandboxed Pi coding agent -- work profile, launcher, approval helper, ps/attach/stop/login/shell wrappers, and the nono-sandbox extension/skill";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     flake-utils.url = "github:numtide/flake-utils";
 
     # This stack flake -- not nix/mono-flake -- owns provisioning `pi` and
-    # `nono` (decision: both come from nixpkgs-unstable, plain upstream,
-    # NO overlay -- the old `nix/agentic-ai-stack/pi-coding-agent-overlay.nix`
-    # trim overlay stays deleted; unstable's `nono` is confirmed >= 0.81.0,
-    # same as what nix/mono-flake already uses). Same remote ref as the
-    # `nixpkgs-unstable` input the old `nix/agentic-ai-stack/flake.nix`
-    # used, minus its overlay wiring.
+    # `nono`: plain nixpkgs-unstable, no overlay, >= 0.81.0.
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
-
-    # NOTE: this adds flake.lock entries for nixpkgs-unstable (and its
-    # transitive inputs) that cannot be re-locked from inside this sandbox
-    # (no network, `nix` itself blocked outside the one allowed
-    # agent-validate invocation) -- `flake.lock` was deliberately left
-    # UNEDITED by this change. The user must run `nix flake lock` on the
-    # host before this flake will evaluate.
 
     # Same remote ref as nix/mono-flake's `scripts` input (see
     # nix/mono-flake/flake.nix). Only wired into devShells here, so the
@@ -123,8 +111,7 @@
           # extensions (see extra-extensions.nix, extensions/README.md).
           # Not wired into any image/profile build here -- exposed only so
           # it's inspectable via `nix build .#pi-extra-extensions` /
-          # `nix eval`. Consumed by the nono work profile once that's
-          # built (Phase 3/4 of PLAN.md).
+          # `nix eval`. Consumed by the launcher at run time.
           pi-extra-extensions = import ./extra-extensions.nix { inherit pkgs; };
 
           # Standalone, opt-in convenience path for the build-time pinned
@@ -139,9 +126,8 @@
           };
 
           # nix build .#approval-helper -> the host-side process
-          # scripts/start-agent.sh starts before each `nono run` (PLAN.md
-          # Phase 4a, "Approval helper (host side)"). Stdlib-only Go (no
-          # go.sum), so vendorHash is null -- there is nothing to vendor.
+          # scripts/start-agent.sh starts before each `nono run`. Stdlib-only
+          # Go (no go.sum), so vendorHash is null -- there is nothing to vendor.
           approval-helper = pkgs.buildGoModule {
             pname = "approval-helper";
             version = "0.1.0";
@@ -151,9 +137,9 @@
         };
 
         apps = {
-          # nix run .#start-agent -> scripts/start-agent.sh (PLAN.md Phase
-          # 4a): starts one nono-sandboxed `pi` session as the untrusted
-          # `pi` user. This stack flake provisions `nono` and `pi` itself
+          # nix run .#start-agent -> scripts/start-agent.sh: starts one
+          # nono-sandboxed `pi` session as the untrusted `pi` user. This
+          # stack flake provisions `nono` and `pi` itself
           # (see the nixpkgs-unstable input and the `nono`/`pi-coding-agent`
           # packages above) -- their absolute store paths are exported as
           # PI_STACK_*_BIN env vars below so start-agent.sh never has to
@@ -165,9 +151,8 @@
               name = "start-agent";
               # lib-common.sh's share_grant/share_release use `setfacl` on
               # Linux (POSIX ACLs) and `find` (ownership-normalization
-              # sweep on release) -- macOS's `chmod +a` equivalent is
-              # plain coreutils/system `chmod`, no extra package needed
-              # there (and UNVERIFIED either way, see lib-common.sh).
+              # sweep on release); macOS's `chmod +a` equivalent is plain
+              # coreutils/system `chmod`, no extra package needed there.
               runtimeInputs = [
                 pkgs.jq
                 pkgs.git
@@ -188,8 +173,8 @@
             };
           };
 
-          # nix run .#ps -> scripts/ps.sh (PLAN.md Phase 4b): lists nono
-          # sessions across every /var/lib/pi/runs/<name>/ run (there is no
+          # nix run .#ps -> scripts/ps.sh: lists nono sessions across
+          # every /var/lib/pi/runs/<name>/ run (there is no
           # single cross-run `nono ps` -- see ps.sh's header comment).
           ps = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
@@ -205,8 +190,8 @@
             };
           };
 
-          # nix run .#attach -- <name> -> scripts/attach.sh (PLAN.md Phase
-          # 4b): replaces the old container-era `shell-agent`.
+          # nix run .#attach -- <name> -> scripts/attach.sh: attaches to
+          # pi's own TUI session for an existing run.
           attach = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "pi-sandbox-attach";
@@ -221,12 +206,8 @@
             };
           };
 
-          # nix run .#stop -- <name> -> scripts/stop.sh (PLAN.md Phase 4b):
-          # replaces the old container-era `stop-agent`. pkgs.psmisc (fuser)
-          # was removed from here: it was only ever needed for the
-          # approval-helper best-effort teardown stop.sh used to do, which
-          # has since been removed outright (see stop.sh's own header
-          # comment) -- it was stale/unused leftover before this cleanup.
+          # nix run .#stop -- <name> -> scripts/stop.sh: stops a run and
+          # releases its live-shared paths.
           stop = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "pi-sandbox-stop";
@@ -249,16 +230,13 @@
 
           # nix run .#shell -- <name> -> scripts/shell.sh: opens a separate,
           # interactive bash shell inside a nono sandbox for an existing (or
-          # not-yet-started) run, with its own approval helper -- the
-          # replacement for the old container-era `shell-agent` (`nix run
-          # .#attach` attaches to pi's own TUI PTY instead, which doesn't
-          # serve this purpose -- see shell.sh's header comment). Modelled
-          # on apps.start-agent's wrapper shape, minus pi itself (this app
-          # never runs `pi`, only a plain bash). PI_STACK_BASH_BIN comes
-          # from this flake's own nixpkgs (pkgs.bashInteractive, NOT
-          # nixpkgs-unstable's pi-coding-agent closure) -- see shell.sh's
-          # "bash path fallback" note for the UNVERIFIED fallback this can
-          # require.
+          # not-yet-started) run, with its own approval helper (`nix run
+          # .#attach` attaches to pi's own TUI PTY instead, which can't serve
+          # this purpose -- see shell.sh's header comment). Modelled on
+          # apps.start-agent's wrapper shape, minus pi itself (this app never
+          # runs `pi`, only a plain bash). PI_STACK_BASH_BIN comes from this
+          # flake's own nixpkgs (pkgs.bashInteractive, NOT nixpkgs-unstable's
+          # pi-coding-agent closure) -- see shell.sh's "bash path fallback" note.
           shell = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "pi-sandbox-shell";
@@ -286,9 +264,8 @@
             };
           };
 
-          # nix run .#login -> scripts/login.sh (PLAN.md Phase 4b): replaces
-          # the old container-era `login` compose profile. Runs pi's native
-          # OAuth login flow inside a minimal nono session.
+          # nix run .#login -> scripts/login.sh: runs pi's native OAuth
+          # login flow inside a minimal nono session.
           login = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "pi-sandbox-login";
@@ -344,10 +321,7 @@
         devShells.default = pkgs.mkShell {
           # yq-go (mikefarah/yq) sits alongside jq -- chosen over the
           # Python-based kislyuk/yq to avoid pulling Python into the
-          # environment (see RESEARCH-NOTES.md in nix/agentic-ai-stack).
-          # pkg-install/request-domain are deliberately NOT included here
-          # (PLAN.md: "pkg-broker / pkg-install" decision -- removed
-          # entirely from this stack).
+          # environment.
           packages = [
             pkgs.nodejs-slim_24
             pkgs.jq

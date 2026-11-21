@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 # nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono#ps
 #
-# Phase 4b of PLAN.md: a `ps`-equivalent wrapper over nono's own session
-# listing. Per-run nono state means there is no single `nono ps` that sees
-# every run at once (each run gets its own nono XDG_STATE_HOME, a sibling
-# of $RUNS_ROOT at /var/lib/pi/<name>-nono-xdg-state -- see
-# lib-common.sh's nono_state_dir_for and IMPLEMENTERS.md's "Launcher and
-# approval helper (Phase 4a)" section) -- this script loops over every run
-# directory under /var/lib/pi/runs and runs `nono ps` against each run's
-# own XDG_STATE_HOME, as the `pi` user (relying on the same
-# NOPASSWD+SETENV sudo rule start-agent.sh uses), printing a combined,
-# per-run-labelled table.
+# A `ps`-equivalent wrapper over nono's own session listing. Per-run nono
+# state means there is no single `nono ps` that sees every run at once
+# (each run gets its own nono XDG_STATE_HOME, a sibling of $RUNS_ROOT at
+# /var/lib/pi/<name>-nono-xdg-state -- see lib-common.sh's
+# nono_state_dir_for) -- this script loops over every run directory under
+# /var/lib/pi/runs and runs `nono ps` against each run's own
+# XDG_STATE_HOME, as the `pi` user (relying on the same NOPASSWD+SETENV
+# sudo rule start-agent.sh uses), printing a combined, per-run-labelled
+# table.
 set -euo pipefail
 
 print_help() {

@@ -1,45 +1,28 @@
 #!/usr/bin/env bash
 # nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono#shell -- <name>
 #
-# Added after Phase 4b of PLAN.md -- not part of its original phase
-# breakdown, see IMPLEMENTERS.md's "scripts/shell.sh" section for the
-# design writeup. Opens a separate, interactive bash shell inside a nono
-# sandbox for the run at /var/lib/pi/runs/<name>/, using that run's own
-# nono XDG_STATE_HOME (/var/lib/pi/<name>-nono-xdg-state,
-# lib-common.sh's nono_state_dir_for) and a COPY of that run's own
-# profile.json (only the webhook approval URL rewritten).
+# Opens a separate, interactive bash shell inside a nono sandbox for the
+# run at /var/lib/pi/runs/<name>/, using that run's own nono
+# XDG_STATE_HOME (lib-common.sh's nono_state_dir_for) and a COPY of that
+# run's own profile.json (only the webhook approval URL rewritten --
+# never regenerated from scratch via gen-profile.sh).
 #
 # Why this exists: `nix run .#attach -- <name>` attaches to pi's own TUI
-# PTY, not a plain shell, and fails outright for a foreground
-# (non-detached) run ("Session <name> already has an active attached
-# client" -- there is no PTY free to attach a second client to). This
-# script instead starts its OWN nono session ("<name>-shell"), with its
-# OWN approval helper (started as the invoking user, exactly like
-# start-agent.sh's foreground mode / login.sh) -- so it works whether or
-# not the run's own pi session/helper is still alive -- while reusing
-# that run's nono state dir (so it shows up labelled under the same run
-# in `nono ps`/`ps.sh`) and filesystem grants (copied from the run's own
-# profile.json, never regenerated from scratch via gen-profile.sh -- no
-# re-implementation of its base/closure composition here).
+# PTY, not a plain shell, and fails outright for a foreground run
+# ("Session <name> already has an active attached client"). This script
+# instead starts its OWN nono session ("<name>-shell") with its OWN
+# approval helper (started as the invoking user), so it works whether or
+# not the run's own pi session/helper is still alive.
 #
 # One shell per run: refuses to start if a "<name>-shell" session is
-# already running (lib-common.sh's nono_session_running). `nix run .#stop
-# -- <name>` also refuses to stop/delete this run's state while its
-# shell session is still open -- see stop.sh.
+# already running. `nix run .#stop -- <name>` also refuses to stop/delete
+# this run's state while its shell session is still open -- see stop.sh.
 #
-# Live file sharing: re-shares (lib-common.sh's share_grant, NOT a
-# re-copy) the run's own recorded workdir (RUN_DIR/workdir-path) and
-# every recorded --add/--clone extra (RUN_DIR/shared-paths), both
-# written by start-agent.sh, for the lifetime of this shell session --
-# idempotent alongside whatever the run's own main session already has
-# granted. Granted in order; if a grant fails partway through, every
-# path already granted this call is rolled back (share_release
-# --self-run NAME --treat-self-main-live) before exiting non-zero,
-# mirroring start-agent.sh's own grant-rollback loop. On a normal exit,
-# releases each of them again the same way, but NEVER while the run's
-# own main ("<name>") session is still live and also shares that path --
-# closing this shell must never pull access out from under a
-# still-running agent session.
+# Live file sharing: re-shares (lib-common.sh's share_grant, not a
+# re-copy) the run's own recorded workdir and --add/--clone extras for
+# the lifetime of this shell session, releasing them again on exit --
+# but never while the run's own main ("<name>") session is still live
+# and also shares that path.
 set -euo pipefail
 
 print_help() {
@@ -118,7 +101,7 @@ Environment variables:
                                 the run's own existing profile.json
                                 unmodified). Tolerated unset.
 
-bash path fallback (UNVERIFIED):
+bash path fallback:
   flake.nix's apps.shell resolves PI_STACK_BASH_BIN from this flake's own
   nixpkgs (via pkgs.bashInteractive), which may NOT be covered by the
   run's own profile.json filesystem.read grants (those were computed by
@@ -128,7 +111,7 @@ bash path fallback (UNVERIFIED):
   filesystem.read list, this script falls back to
   /run/current-system/sw/bin/bash (covered by every profile's implicit
   system-closure grant -- see gen-profile.sh) and prints a note to
-  stderr. Not exercised against a real nono binary.
+  stderr.
 EOF
 }
 
@@ -343,7 +326,7 @@ RUN_PROFILE_JSON="$(mktemp)"
 # read of the pi-owned $RUN_PROFILE needs to run as `pi`.
 sudo -u pi cat "$RUN_PROFILE" >"$RUN_PROFILE_JSON"
 
-# bash path fallback (UNVERIFIED -- see this script's --help): if the
+# bash path fallback (see this script's --help): if the
 # resolved bash path isn't covered by any of the run's own profile.json
 # filesystem.read grants, fall back to the system bash instead of
 # launching a session that would immediately hit a sandbox exec denial.
@@ -358,7 +341,7 @@ while IFS= read -r read_root; do
   esac
 done < <("$JQ_BIN" -r '.filesystem.read // [] | .[]' "$RUN_PROFILE_JSON")
 if [ "$BASH_COVERED" != "1" ]; then
-  echo "==> note: $BASH_BIN is not covered by run '$NAME''s profile.json filesystem.read grants -- falling back to /run/current-system/sw/bin/bash (UNVERIFIED, see shell.sh --help's 'bash path fallback' note)." >&2
+  echo "==> note: $BASH_BIN is not covered by run '$NAME''s profile.json filesystem.read grants -- falling back to /run/current-system/sw/bin/bash (see shell.sh --help's 'bash path fallback' note)." >&2
   BASH_BIN="/run/current-system/sw/bin/bash"
 fi
 

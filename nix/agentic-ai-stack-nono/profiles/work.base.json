@@ -3,7 +3,7 @@
   "meta": {
     "name": "pi-sandbox-nono-work",
     "version": "1.0.0",
-    "description": "Flake-owned static base for the nono 'work' profile (PLAN.md Phase 3). NOT launch-ready on its own: __APPROVAL_WEBHOOK_URL__ must be substituted, and scripts/gen-profile.sh must merge in the per-launch closure/workdir/add/clone filesystem grants before this is passed to `nono run --profile`."
+    "description": "Flake-owned static base for the nono 'work' profile. NOT launch-ready on its own: __APPROVAL_WEBHOOK_URL__ must be substituted, and scripts/gen-profile.sh must merge in the per-launch closure/workdir/add/clone filesystem grants before this is passed to `nono run --profile`."
   },
   "groups": {
     "include": [

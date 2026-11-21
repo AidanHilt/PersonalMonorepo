@@ -1,37 +1,24 @@
 #!/usr/bin/env bash
 # nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono#login
 #
-# Phase 4b of PLAN.md: replaces the old container-era `login` compose
-# profile. Runs pi's native OAuth login flow INSIDE nono, as the `pi`
-# user, using the minimal profiles/login.base.json profile (no workdir
-# copy, no nix daemon, no command_policies -- see IMPLEMENTERS.md).
+# Runs pi's native OAuth login flow INSIDE nono, as the `pi` user, using
+# the minimal profiles/login.base.json profile (no workdir copy, no nix
+# daemon, no command_policies -- see IMPLEMENTERS.md).
 #
-# UNVERIFIED (no nono/pi binary in this environment to confirm against):
-#   - Whether `pi` has a non-interactive login subcommand. Nothing under
-#     config/agent/ or extensions/README.md in this checkout documents
-#     one, so this script simply starts `pi` inside the sandbox and
-#     expects the USER to trigger the login flow themselves from inside
-#     the resulting TUI session (e.g. a `/login` command, if `pi` has
-#     one) -- this script cannot drive that interaction for you.
+# No `pi` login subcommand is documented anywhere in this checkout, so
+# this script starts `pi` inside the sandbox and expects the USER to
+# trigger login themselves from inside the resulting TUI session (e.g. a
+# `/login` command, if `pi` has one); it writes its resulting auth.json
+# straight into PI_CODING_AGENT_DIR ($AGENT_DIR/auth.json below).
 #
-# Confirmed by a real login run: pi writes its resulting auth.json
-# straight into PI_CODING_AGENT_DIR (agent/auth.json below, i.e.
-# $AGENT_DIR/auth.json), not into any separate state/auth-style
-# directory -- there is no such split for pi's own on-disk layout.
-#
-# Directory layout, all under /var/lib/pi/login/ (deliberately NOT nested
-# under one single parent directory that's itself granted to the sandbox
-# -- PI_ROOT itself is never granted, only its subdirectories, so nothing
-# here is a *parent* of nono-xdg-state/, matching the "never grant a
-# parent of a nono-xdg-state dir" rule noted in IMPLEMENTERS.md):
-#   agent/             <- PI_CODING_AGENT_DIR (wiped and recreated FRESH
-#                         every run -- login is a one-off flow, not a
-#                         --resume'able work session, so there's no
-#                         idempotent-seeding story to preserve here).
-#                         pi writes its resulting auth.json directly here,
-#                         at agent/auth.json (see "Confirmed" above).
-#   nono-xdg-state/     <- XDG_STATE_HOME for the nono process itself (same
-#                         overlap-avoidance pattern as start-agent.sh)
+# Directory layout, all under /var/lib/pi/login/ (PI_ROOT itself is never
+# granted to the sandbox, only its subdirectories, so nothing here is a
+# *parent* of nono-xdg-state/):
+#   agent/             <- PI_CODING_AGENT_DIR (wiped and recreated fresh
+#                         every run; login is a one-off flow, not a
+#                         --resume'able work session). pi writes its
+#                         resulting auth.json directly here.
+#   nono-xdg-state/     <- XDG_STATE_HOME for the nono process itself
 #   profile.json
 set -euo pipefail
 
@@ -73,11 +60,10 @@ into every run's own per-run state (see "Also make start-agent seed
 
 IMPORTANT: this script does not itself drive the login flow -- it starts
 `pi` inside the sandbox and expects you to trigger login from inside the
-resulting session yourself (see this file's header comment's UNVERIFIED
-section: no non-interactive `pi` login subcommand is documented in this
-checkout). Exit the `pi` session normally (e.g. Ctrl-D / its own quit
-command) once login has completed, and this script will pick up and copy
-the resulting auth.json.
+resulting session yourself (no non-interactive `pi` login subcommand is
+documented in this checkout). Exit the `pi` session normally (e.g. Ctrl-D
+/ its own quit command) once login has completed, and this script will
+pick up and copy the resulting auth.json.
 
 Approvals over SSH / headless hosts:
   The approval helper's `--ui auto` selection never silently falls back
@@ -226,7 +212,7 @@ export NIX_SSL_CERT_FILE="$CA_BUNDLE"
 export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
 
 echo "==> Starting pi inside nono for login. Trigger pi's own login flow from" >&2
-echo "    inside the session (e.g. a '/login' command, if pi has one -- UNVERIFIED," >&2
+echo "    inside the session (e.g. a '/login' command, if pi has one)" >&2
 echo "    see this script's --help); exit the session normally once done." >&2
 sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS -- \
   sh -c 'cd "$1"; shift; exec "$@"' sh "$AGENT_DIR" \

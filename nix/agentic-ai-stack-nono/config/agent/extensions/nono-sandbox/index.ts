@@ -1,27 +1,9 @@
 // config/agent/extensions/nono-sandbox/index.ts
 //
-// Phase 4b of PLAN.md: a rewritten version of
-// spikes/pi-pack/extensions/nono-sandbox.ts, vendored directly into this
-// flake's own config/agent/extensions/ (NOT pulled via the npm/git
-// extensions pipeline in extra-extensions.nix -- this is hand-authored
-// source, copied as-is by start-agent.sh's/login.sh's `tar_copy_to_pi
-// "$CONFIG_AGENT_DIR" ...` step, same as every other file under
-// config/agent/).
-//
-// Kept from the pack, unchanged in spirit:
-//   - the detection mechanism (process.env.NONO_CAP_FILE)
-//   - the system-prompt note injected into before_agent_start
-//   - the /nono-status command
-//
-// REPLACED (PLAN.md's "nono-sandbox.ts and skill" decision row): the
-// pack's remediation text told the agent to run `nono run --allow` itself
-// or draft its own profile under ~/.config/nono/profile-drafts/ -- both
-// conflict with this stack's model, where the agent runs as the
-// untrusted `pi` user and has no business drafting or applying its own
-// sandbox policy. The remediation here instead tells the agent to ask
-// the USER to relaunch (via start-agent.sh --add <path>) and then
-// `pi --resume` -- never to edit profiles, profile-drafts, or nono state
-// itself.
+// Detects a nono sandbox denial (process.env.NONO_CAP_FILE, tool-result
+// error patterns) and tells the agent to ask the user to relaunch with
+// `start-agent.sh --add <path>` then `pi --resume` -- never to edit
+// profiles, profile-drafts, or any nono state itself.
 import { existsSync, readFileSync } from "node:fs";
 import type { ExtensionAPI, ToolResultEvent } from "@earendil-works/pi-coding-agent";
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono#attach -- <name>
 #
-# Phase 4b of PLAN.md: replaces the old container-era `shell-agent`.
 # Attaches to an existing nono session as the `pi` user, using that run's
 # own per-run XDG_STATE_HOME at /var/lib/pi/<name>-nono-xdg-state (see
 # lib-common.sh's nono_state_dir_for and IMPLEMENTERS.md's "Per-run state

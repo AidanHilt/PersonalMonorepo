@@ -21,7 +21,7 @@ const (
 // prompter shows one approval dialog and blocks until the user answers or
 // ctx is cancelled (prompt timeout, or helper shutdown). An error return
 // means "fail closed": the caller must treat it as a denial, never as a
-// grant -- see PLAN.md's "Approval helper (host side)" decision row.
+// grant.
 type prompter interface {
 	Prompt(ctx context.Context, info capabilityInfo) (promptChoice, error)
 }
@@ -47,9 +47,7 @@ func promptMessage(info capabilityInfo) string {
 }
 
 // osascriptPrompter shows a native macOS dialog with three buttons via
-// osascript. UNVERIFIED: no macOS spike has exercised this (PLAN.md
-// section 3/6 -- "the entire harness on macOS... is UNTESTED"); this is a
-// best-effort implementation only.
+// osascript.
 type osascriptPrompter struct {
 	lookPath func(string) (string, error)
 }
@@ -90,10 +88,8 @@ func parseButtonOutput(out string) promptChoice {
 }
 
 // kdialogPrompter shows a three-option menu via kdialog, for KDE Plasma
-// desktops (mono-flake's `linux-desktop` role). UNVERIFIED: no spike
-// exercised kdialog's exact CLI/output shape; this is a best-effort
-// implementation based on kdialog's documented --menu behaviour (prints
-// the chosen option's tag to stdout, exits non-zero on Cancel).
+// desktops. Based on kdialog's documented --menu behaviour (prints the
+// chosen option's tag to stdout, exits non-zero on Cancel).
 type kdialogPrompter struct {
 	lookPath func(string) (string, error)
 }
@@ -125,9 +121,7 @@ func (p *kdialogPrompter) Prompt(ctx context.Context, info capabilityInfo) (prom
 }
 
 // tmuxPrompter asks a y/n/s question via a tmux command-prompt, for
-// headless hosts with no desktop session (e.g. mono-flake's aarch64
-// `devbox`, per PLAN.md). UNVERIFIED: no spike exercised tmux
-// integration; this is a best-effort implementation.
+// headless hosts with no desktop session.
 type tmuxPrompter struct {
 	lookPath func(string) (string, error)
 }

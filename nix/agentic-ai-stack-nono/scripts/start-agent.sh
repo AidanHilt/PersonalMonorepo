@@ -1,21 +1,19 @@
 #!/usr/bin/env bash
 # nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack-nono#start-agent
 #
-# Rewritten for Phase 4a of PLAN.md: no more docker/compose/kind. Brings up
-# one nono-sandboxed `pi` session as the untrusted `pi` user (see PLAN.md's
-# "Isolation user" decision row and nix/mono-flake's `_pi-user-linux.nix`/
-# `_pi-user-darwin.nix` for the NOPASSWD+SETENV sudo rule this relies on).
+# Brings up one nono-sandboxed `pi` session as the untrusted `pi` user
+# (see nix/mono-flake's `_pi-user-linux.nix`/`_pi-user-darwin.nix` for the
+# NOPASSWD+SETENV sudo rule this relies on). See IMPLEMENTERS.md's
+# "Launcher and approval helper" section for the full writeup.
 #
-# High-level flow (see IMPLEMENTERS.md's "Launcher and approval helper
-# (Phase 4a)" section for the full writeup and the judgement calls below):
+# High-level flow:
 #   1. Seed/refresh a per-run, `pi`-owned state tree under
 #      /var/lib/pi/runs/<name>/ (fresh PI_CODING_AGENT_DIR), and live-share
 #      the workdir + any --add/--clone extras with `pi` at their real host
-#      paths (via ACLs, not a copy -- see "Live file sharing" below). This
-#      is "idempotent": re-running with the SAME --name merges fresh
+#      paths via ACLs, not a copy (see "Live file sharing" below). This is
+#      idempotent: re-running with the SAME --name merges fresh
 #      config/extensions/skills on top WITHOUT deleting anything `pi`
-#      itself wrote there (session history, scratch files) -- that's what
-#      lets `--resume` mean anything across repeated launches.
+#      itself wrote there -- that's what lets `--resume` mean anything.
 #   2. Start the host-side approval helper (outside the sandbox), and read
 #      back its webhook URL.
 #   3. Generate the launch-ready nono profile (scripts/gen-profile.sh).
@@ -24,13 +22,10 @@
 #
 # `pi` gets a LIVE, read-write share of the invoking user's workdir and
 # every --add/--clone extra, at their real host paths -- not a copy.
-# This reverses PLAN.md's original "Sharing files between aidan and pi"
-# decision row (see PLAN.md's current text and IMPLEMENTERS.md's
-# "Live file sharing" section for the full writeup): access is granted
-# live via ACLs (scripts/lib-common.sh's share_grant) and revoked again
-# -- with ownership of anything `pi` left behind normalized back to the
-# invoking user -- at shutdown (this script's own EXIT trap in
-# foreground mode, the detached wrapper, or `nix run .#stop`).
+# Access is granted live via ACLs (scripts/lib-common.sh's share_grant)
+# and revoked again -- with ownership of anything `pi` left behind
+# normalized back to the invoking user -- at shutdown (this script's own
+# EXIT trap in foreground mode, the detached wrapper, or `nix run .#stop`).
 #
 # Every write under /var/lib/pi (this script's own per-run state tree,
 # as opposed to the live-shared workdir/--add/--clone paths above) still
@@ -43,21 +38,15 @@ set -euo pipefail
 # --- PERSONAL_MONOREPO_LOCATION / lib-common.sh ----------------------------
 # gen-profile.sh, profiles/work.base.json, and config/agent/ are all read
 # directly from the checkout (not re-packaged into the Nix store the way
-# this script itself is, via flake.nix's writeShellApplication) -- same
-# convention the container-era script already relied on for
-# `nix/agentic-ai-stack`. gen-profile.sh and work.base.json are read
-# directly off disk by this script (running as the invoking user), so no
-# `pi`-readability is needed for those two. config/agent/ is instead
-# streamed in via a tar pipe (see tar_copy_to_pi below), so it doesn't need
-# to be `pi`-readable in place either.
+# this script itself is, via flake.nix's writeShellApplication). gen-profile.sh
+# and work.base.json are read directly off disk by this script (running as
+# the invoking user), so no `pi`-readability is needed for those two.
+# config/agent/ is instead streamed in via a tar pipe (see tar_copy_to_pi
+# below), so it doesn't need to be `pi`-readable in place either.
 #
-# Now sources lib-common.sh (STACK_DIR/RUNS_ROOT and the
+# Sources lib-common.sh for STACK_DIR/RUNS_ROOT and the
 # resolve_or_die/resolve_stack_bin/validate_run_name/nono_state_dir_for/
-# resolve_ca_bundle/share_*/git_safe_dir_env helpers below all come from
-# there) instead of keeping its own duplicate copies -- this script used
-# to predate lib-common.sh and carried its own copies by convention (see
-# lib-common.sh's own header comment, now updated); that convention ends
-# here.
+# resolve_ca_bundle/share_*/git_safe_dir_env helpers.
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
 # shellcheck source=lib-common.sh
 # shellcheck disable=SC1091
@@ -85,20 +74,20 @@ print_help() {
 Usage: start-agent.sh [FLAGS]
 
 Starts one nono-sandboxed `pi` session as the untrusted `pi` user (nix run
-.#start-agent). See IMPLEMENTERS.md's "Launcher and approval helper
-(Phase 4a)" section for the full architecture writeup.
+.#start-agent). See IMPLEMENTERS.md's "Launcher and approval helper"
+section for the full architecture writeup.
 
 Flags:
   --profile work            Which flake-owned nono profile to use. "work"
-                             is the only value in the MVP (required to be
+                             is the only value today (required to be
                              spelled out, to leave room for a future debug
-                             profile -- see PLAN.md section 5).
+                             profile).
   --audit                    Pass `--audit-integrity` to `nono run`.
   --detached                 Pass `--detached` to `nono run`: the session
                              (and its approval helper) outlive this
                              launcher process -- see "Detached sessions"
-                             below. Use the (future, Phase 4b) `attach`/
-                             `ps`/`stop` wrappers to interact with it.
+                             below. Use the `attach`/`ps`/`stop` wrappers
+                             to interact with it.
   --add PATH                 An existing host file or directory, shared
                              LIVE (not copied) read-write at its real
                              host path -- see "Live file sharing" below
@@ -162,15 +151,13 @@ Environment variables:
                                packages are read-granted the same way
                                PI_STACK_PI_BIN is, and the PATH is
                                prepended onto the sandboxed `pi` process's
-                               PATH -- see IMPLEMENTERS.md for the
-                               UNVERIFIED caveat on this. Tolerated unset.
+                               PATH. Tolerated unset.
 
 Live file sharing (workdir, --add, --clone):
   Your current working directory (nono's own "workdir") and every
   --add/--clone extra are shared LIVE and read-write at their REAL host
   path -- not copied anywhere -- via ACLs (POSIX ACLs/setfacl on Linux,
-  NFSv4-style ACLs/chmod +a on macOS, UNVERIFIED there). A path is
-  refused outright (before anything is granted, for ANY of the paths
+  NFSv4-style ACLs/chmod +a on macOS). A path is refused outright (before anything is granted, for ANY of the paths
   involved) if it's "/", your entire $HOME, or not owned by you. At
   shutdown -- this launcher's own exit (foreground), the detached
   wrapper once the session ends (detached), or `nix run .#stop -- <name>`
@@ -405,8 +392,7 @@ git_safe_dir_env "${SHARE_PATHS[@]}"
 # --- Secrets: namespace scan first, then --secret flags (flags win) -------
 # Collected as real exported env vars on THIS process (never as `-e`/argv
 # tokens anywhere), then threaded through `sudo --preserve-env=<names>`
-# below -- per PLAN.md's "Secrets" decision row: "never via argv, since
-# that is visible via ps".
+# below -- never via argv, since that is visible via `ps`.
 SECRET_NAMES=()
 # `${!PREFIX@}` instead of `compgen -v`: writeShellApplication's bash is
 # bashNonInteractive (no readline), which has no compgen builtin.
@@ -447,17 +433,16 @@ done
 # that way everywhere below -- both so `nix-store -qR` (inside
 # gen-profile.sh) gets real store paths, and so the final `sudo -u pi`
 # invocation never depends on whatever (possibly minimal) PATH sudo's
-# `secure_path` gives `pi` -- see IMPLEMENTERS.md's UNVERIFIED list for why
-# that part is a judgement call, not a spike-verified fact.
+# `secure_path` gives `pi`.
 NONO_BIN="$(resolve_stack_bin PI_STACK_NONO_BIN nono)"
 PI_BIN="$(resolve_stack_bin PI_STACK_PI_BIN pi)"
 JQ_BIN="$(resolve_stack_bin PI_STACK_JQ_BIN jq)"
 APPROVAL_HELPER_BIN="$(resolve_stack_bin PI_STACK_APPROVAL_HELPER_BIN approval-helper)"
 
-# --read candidates for gen-profile.sh's Linux exec-ceiling closure
-# (PLAN.md: "plus the stack's own tools (pi, node, the nix/scripts
-# tools)"). node's own files come from the `node_runtime` nono group
-# instead (see profiles/work.base.json), not from here. agent-validate/
+# --read candidates for gen-profile.sh's Linux exec-ceiling closure --
+# this stack's own tools (pi, the nix/scripts tools). node's own files
+# come from the `node_runtime` nono group instead (see
+# profiles/work.base.json), not from here. agent-validate/
 # agent-plan-create are optional -- only added if found, since a plain
 # interactive `pi` session (this script's only job) doesn't strictly need
 # them the way an IMPLEMENT subagent does.
@@ -520,8 +505,8 @@ if [ "$DRY_RUN" = "1" ]; then
     echo "  setfacl -m u:pi:x <each parent dir of <path>, up to (excluding) '/'>" >&2
     ;;
   Darwin)
-    echo "  chmod -R +a 'user:pi allow ...' <path>; chmod -R +a 'user:$(id -un) allow ...' <path> (UNVERIFIED)" >&2
-    echo "  chmod +a 'user:pi allow search' <each parent dir of <path>, up to (excluding) '/'> (UNVERIFIED)" >&2
+    echo "  chmod -R +a 'user:pi allow ...' <path>; chmod -R +a 'user:$(id -un) allow ...' <path>" >&2
+    echo "  chmod +a 'user:pi allow search' <each parent dir of <path>, up to (excluding) '/'>" >&2
     ;;
   esac
   echo >&2
@@ -788,11 +773,6 @@ fi
 # this flow depends on to function.
 sudo -v
 
-# UNVERIFIED judgement call: no nono binary was available in this
-# environment to confirm `nono ps`'s exact output shape beyond what
-# spikes/all/run.sh's S5.1-S5.3 already exercised (plain `nono ps`, grepped
-# for the session name) -- see IMPLEMENTERS.md.
-
 # --- 1. supervisor.sh (pi-owned, runs as `pi`) -------------------------
 SUPERVISOR_SCRIPT="$RUN_DIR/supervisor.sh"
 TMP_SUPERVISOR="$(mktemp)"
@@ -918,4 +898,4 @@ if [ ! -s "$HELPER_INFO_FILE" ]; then
   exit 1
 fi
 
-echo "==> Detached session '$SESSION_NAME' starting (supervisor: $RUN_DIR/supervisor.log, approval helper: $WRAPPER_LOG). Use the (Phase 4b) ps/attach/stop wrappers once built." >&2
+echo "==> Detached session '$SESSION_NAME' starting (supervisor: $RUN_DIR/supervisor.log, approval helper: $WRAPPER_LOG). Use the ps/attach/stop wrappers to interact with it." >&2

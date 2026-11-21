@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # gen-profile.sh -- composes a launch-ready nono work profile from the
 # flake-owned static base (profiles/work.base.json) plus per-launch
-# filesystem grants. Never calls `nono` itself (PLAN.md Phase 3: this
-# script only produces the JSON `nono run --profile <out>` is later given).
+# filesystem grants. Never calls `nono` itself -- it only produces the
+# JSON `nono run --profile <out>` is later given.
 #
 # Usage:
 #   gen-profile.sh --base <work.base.json> --out <file> \
@@ -22,9 +22,8 @@
 #      /nix/store are never closure-expanded at all, just granted as-is.
 #      Everything is merged, in order, with an order-preserving
 #      `awk '!seen[$0]++'` dedupe (never `sort -u`, which would destroy
-#      closure ordering -- see PLAN.md section 3, spike S3.2's harness-bug
-#      note) into filesystem.read (never filesystem.allow, and never the
-#      nono `nix_runtime` group).
+#      closure ordering) into filesystem.read (never filesystem.allow,
+#      and never the nono `nix_runtime` group).
 #   3. On macOS (--os darwin), skips the closure merge entirely and grants
 #      every --read path exactly as given -- see the TODO note below and
 #      in IMPLEMENTERS.md.
@@ -121,7 +120,7 @@ done
 
 # order_preserving_dedupe: reads store paths on stdin, prints each distinct
 # path once, in first-seen order. Deliberately not `sort -u` -- closure
-# ordering must survive (PLAN.md section 3, S3.2).
+# ordering must survive.
 order_preserving_dedupe() {
   awk '!seen[$0]++'
 }
@@ -469,13 +468,9 @@ main() {
   os="$(detect_os)"
 
   if [[ "$os" == "darwin" ]]; then
-    # TODO(macOS native grants): PLAN.md section 6 flags macOS Seatbelt
-    # rule-count limits for a closure-sized grant list as UNTESTED. Rather
-    # than guess at a workable closure substitute, this script currently
-    # adds no closure-derived grants at all on darwin -- every --read path
-    # is granted exactly as given instead -- see IMPLEMENTERS.md's "Work
-    # profile (Phase 3)" UNVERIFIED list. Native macOS grants beyond
-    # read-write for workdir/add/clone/state-dir are not yet implemented.
+    # No closure-derived grants on darwin: every --read path is granted
+    # exactly as given instead, rather than guessing at a workable
+    # closure substitute for Seatbelt.
     :
   fi
 

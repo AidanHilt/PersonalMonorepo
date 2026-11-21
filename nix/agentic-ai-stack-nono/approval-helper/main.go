@@ -1,8 +1,8 @@
 // Command approval-helper is the host-side process the nono launcher
 // starts before each `nono run`, implementing nono's unsigned webhook v1
 // approval protocol over a loopback-only HTTP listener (never the
-// `unix://` transport -- see PLAN.md's "Approval transport" decision
-// row). It never runs inside the sandbox itself.
+// `unix://` transport, which fails client-side in nono 0.81.0). It never
+// runs inside the sandbox itself.
 package main
 
 import (

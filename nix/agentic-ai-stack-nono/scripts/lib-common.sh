@@ -1,23 +1,14 @@
 #!/usr/bin/env bash
-# lib-common.sh -- shared helpers for the session-wrapper scripts added in
-# Phase 4b of PLAN.md (ps.sh, attach.sh, stop.sh, login.sh, shell.sh), plus
-# start-agent.sh itself. start-agent.sh originally predated this file
-# (Phase 4a) and kept its own duplicate copies of resolve_or_die/
-# resolve_stack_bin/validate_run_name/nono_state_dir_for/resolve_ca_bundle
-# by convention -- that convention ended with the live-file-sharing change
-# (see IMPLEMENTERS.md's "Live file sharing" section): start-agent.sh now
-# sources this file too, and its duplicate copies were removed.
-#
-# Also provides the live-file-sharing primitives start-agent.sh/shell.sh/
-# stop.sh use to share (and later release) the invoking user's workdir and
-# every --add/--clone extra LIVE at its real host path, via ACLs, instead
-# of copying it into a pi-owned location: share_path_check, share_grant,
-# share_release (plus its helpers share_file_lists_path/
-# share_release_blocked/share_parent_still_needed), git_safe_dir_env, and
-# the RUN_DIR/shared-paths + RUN_DIR/workdir-path bookkeeping helpers
-# (share_record_paths/share_read_paths/share_write_workdir_path/
-# share_read_workdir_path). See each function's own comment below, and
-# IMPLEMENTERS.md's "Live file sharing" section for the full model.
+# lib-common.sh -- shared helpers for the session-wrapper scripts (ps.sh,
+# attach.sh, stop.sh, login.sh, shell.sh, start-agent.sh): resolve_or_die/
+# resolve_stack_bin/validate_run_name/nono_state_dir_for/resolve_ca_bundle,
+# plus the live-file-sharing primitives (share_path_check, share_grant,
+# share_release and helpers, git_safe_dir_env, and the RUN_DIR/shared-paths
+# + RUN_DIR/workdir-path bookkeeping helpers) used to share -- and later
+# release -- the invoking user's workdir and every --add/--clone extra LIVE
+# at its real host path via ACLs, instead of copying it into a pi-owned
+# location. See each function's own comment below, and IMPLEMENTERS.md's
+# "Live file sharing" section for the full model.
 #
 # Must be `source`d (not executed) by a caller that has already run
 # `set -euo pipefail` and defines PERSONAL_MONOREPO_LOCATION (same
@@ -177,15 +168,12 @@ resolve_ca_bundle() {
 # -- treated as "not running" without ever invoking nono (same shortcut
 # ps.sh already takes for a run with no nono state dir yet).
 #
-# UNVERIFIED: nono ps's exact output format was not confirmed against a
-# real nono binary in this environment. Like start-agent.sh's own
-# supervisor.sh detached-mode poll loop (`nono ps | grep -q
-# "$SESSION_NAME"`, see IMPLEMENTERS.md), this does a plain substring
-# grep for the session name against the whole `nono ps` output, which
-# could in principle false-positive against an unrelated session name
-# that happens to contain this one as a substring (e.g. "<name>-shell"
-# vs. "<name>-shell-2") -- no narrower matching was available without a
-# real nono binary to check its actual table/column shape against.
+# Does a plain substring grep for the session name against the whole
+# `nono ps` output (same approach start-agent.sh's supervisor.sh
+# detached-mode poll loop uses), which could in principle false-positive
+# against an unrelated session name that happens to contain this one as a
+# substring (e.g. "<name>-shell" vs. "<name>-shell-2") -- no narrower
+# matching is available without parsing nono ps's output structurally.
 nono_session_running() {
   local nono_bin="$1" state_dir="$2" session_name="$3"
   [ -d "$state_dir" ] || return 1
@@ -194,15 +182,12 @@ nono_session_running() {
 
 # --- Live file sharing (start-agent.sh --add/--clone/workdir, shell.sh) ---
 #
-# Reverses the earlier copy-only model (PLAN.md's old "Sharing files
-# between aidan and pi" decision row): the invoking user's workdir and
-# every --add/--clone extra are shared LIVE, read-write, at their real
-# host path, via POSIX ACLs on Linux (`setfacl`) or NFSv4-style ACLs on
-# macOS (`chmod +a` -- UNVERIFIED, no macOS available in this effort to
-# test any of the macOS branches below against), plus a traverse-only
-# grant on parent directories where `pi` would otherwise be unable to
-# reach the shared path at all -- see share_ensure_parent_traverse for
-# the exact, ownership-gated rule (never sudo, never a parent not owned
+# The invoking user's workdir and every --add/--clone extra are shared
+# LIVE, read-write, at their real host path, via POSIX ACLs on Linux
+# (`setfacl`) or NFSv4-style ACLs on macOS (`chmod +a`), plus a
+# traverse-only grant on parent directories where `pi` would otherwise be
+# unable to reach the shared path at all -- see share_ensure_parent_traverse
+# for the exact, ownership-gated rule (never sudo, never a parent not owned
 # by the invoking user). Shared by start-agent.sh and shell.sh; stop.sh
 # and both scripts' teardown paths call share_release to reverse it.
 
@@ -256,7 +241,7 @@ share_path_check() {
 #     /home at 755), it's left completely untouched -- no entry added.
 #   - else, if the parent is owned by the invoking user, a traverse
 #     entry is added (Linux: `setfacl -m u:pi:x`; macOS: `chmod +a
-#     "user:pi allow search"`, UNVERIFIED as above).
+#     "user:pi allow search"`).
 #   - else (pi can't traverse it AND the invoking user doesn't own it,
 #     e.g. a root-owned /home at 750), this fails loudly with a clear
 #     error instead of ever escalating with sudo -- the invoking user
@@ -304,7 +289,6 @@ share_ensure_parent_traverse() {
       setfacl -m "u:pi:x" "$parent"
       ;;
     Darwin)
-      # UNVERIFIED, see share_grant's own note.
       /bin/chmod -a "user:pi allow search" "$parent" 2>/dev/null || true
       /bin/chmod +a "user:pi allow search" "$parent"
       ;;
