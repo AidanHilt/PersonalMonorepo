@@ -33,7 +33,7 @@
 
   # nix-darwin has no tmpfiles equivalent; provision /var/lib/pi on
   # activation instead.
-  system.activationScripts.piHome.text = ''
+  system.activationScripts.postActivation.text = ''
     mkdir -p /var/lib/pi
     chown pi:pi /var/lib/pi
     chmod 0750 /var/lib/pi

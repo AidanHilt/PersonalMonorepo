@@ -46,7 +46,16 @@ CONFIG_AGENT_DIR="$STACK_DIR/config/agent"
 
 PI_ROOT="/var/lib/pi/login"
 AGENT_DIR="$PI_ROOT/agent"
-NONO_STATE_DIR="$PI_ROOT/nono-xdg-state"
+# macOS: nono's state root (and so XDG_STATE_HOME) must NOT live under /var
+# (== /private/var) -- the system_read_macos group grants read on
+# /private/var as a whole, and nono refuses to start when a grant overlaps
+# its own protected state root. lib-common.sh's nono_state_dir_for picks a
+# safe location on Darwin (/Users/Shared/pi-nono-state/ by default, or
+# $PI_STACK_NONO_STATE_ROOT). Linux keeps the original layout below.
+case "$(uname -s)" in
+Darwin) NONO_STATE_DIR="$(nono_state_dir_for login)" ;;
+*) NONO_STATE_DIR="$PI_ROOT/nono-xdg-state" ;;
+esac
 SHARED_AUTH_DIR="/var/lib/pi/auth"
 SHARED_AUTH_FILE="$SHARED_AUTH_DIR/auth.json"
 
@@ -140,6 +149,7 @@ if [ "$DRY_RUN" = "1" ]; then
   echo "  nono:       $NONO_BIN" >&2
   echo "  pi:         $PI_BIN" >&2
   echo "  agent:      $AGENT_DIR (its auth.json, once pi writes one, -> copied to $SHARED_AUTH_FILE on exit)" >&2
+  echo "  nono state: $NONO_STATE_DIR" >&2
   echo "  CA bundle:  $CA_BUNDLE (parent dir $CA_BUNDLE_DIR read-granted; see PI_STACK_CA_BUNDLE below)" >&2
   echo >&2
   echo "Resolved command (would run as the 'pi' user):" >&2

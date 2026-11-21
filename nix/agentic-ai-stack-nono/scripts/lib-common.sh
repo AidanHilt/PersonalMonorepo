@@ -101,10 +101,25 @@ require_run_dir() {
 # script in this stack to agree on -- no more need for a "keep two
 # copies in sync" note; see IMPLEMENTERS.md's "scripts/lib-common.sh"
 # section for the drift bug this used to invite before that.
+#
+# macOS: the state root must NOT live under /var (== /private/var).
+# nono refuses to start when one of the profile's grants overlaps its own
+# protected state root ($XDG_STATE_HOME/nono), and the system_read_macos
+# group grants read on /private/var as a whole ("Refusing to grant
+# '/private/var' ... overlaps protected nono state root"). So on Darwin
+# the per-run state lives under /Users/Shared by default instead.
+# Override the root on either OS with PI_STACK_NONO_STATE_ROOT. `sudo -u
+# pi mkdir -p` creates the root on first use (/Users/Shared is 1777), and
+# it must stay traversable by the invoking user (nono_session_running
+# tests -d on it), so don't chmod it to 700.
 nono_state_dir_for() {
-  local name="$1"
+  local name="$1" root
   validate_run_name "$name"
-  printf '%s\n' "/var/lib/pi/${name}-nono-xdg-state"
+  case "$(uname -s)" in
+  Darwin) root="${PI_STACK_NONO_STATE_ROOT:-/Users/Shared/pi-nono-state}" ;;
+  *) root="${PI_STACK_NONO_STATE_ROOT:-/var/lib/pi}" ;;
+  esac
+  printf '%s\n' "$root/${name}-nono-xdg-state"
 }
 
 # resolve_ca_bundle: prints the fully resolved (realpath, all symlinks
@@ -290,8 +305,8 @@ share_ensure_parent_traverse() {
       ;;
     Darwin)
       # UNVERIFIED, see share_grant's own note.
-      chmod -a "user:pi allow search" "$parent" 2>/dev/null || true
-      chmod +a "user:pi allow search" "$parent"
+      /bin/chmod -a "user:pi allow search" "$parent" 2>/dev/null || true
+      /bin/chmod +a "user:pi allow search" "$parent"
       ;;
     *)
       echo "error: share_ensure_parent_traverse: unsupported OS: $(uname -s)" >&2
@@ -299,6 +314,43 @@ share_ensure_parent_traverse() {
       ;;
     esac
   done
+}
+
+# share_darwin_acl OP PATH USER: macOS-only. OP is "+a" (add) or "-a"
+# (remove). Applies ACL entries for USER to PATH, split by type because
+# macOS rejects inheritance flags (file_inherit/directory_inherit) on
+# regular files with "Invalid argument", and directory-only permission
+# names don't belong on files.
+#   - regular files: one plain entry.
+#   - directories: one entry for the directory itself + subdirectories
+#     (directory_inherit), and a SEPARATE only_inherit entry that new
+#     files pick up (file_inherit). Two entries because a file inherits
+#     the whole entry it matches: with a single combined entry, `search`
+#     (== `execute`) would land on every new file.
+# The INVOKING user's file entries deliberately omit `execute`: ACLs are
+# honoured by access(2), so an `allow execute` on every file makes tools
+# that test os.access(path, X_OK) -- e.g. pre-commit's identify /
+# check-executables-have-shebangs -- see every file as executable even
+# though `ls -l` shows no x bits. Only `pi` gets execute on files.
+# `find -type d/-type f` skips symlinks, so chmod never follows a link out
+# of the shared tree; `{} +` batches the calls so large trees (.git,
+# node_modules) stay fast. Uses /bin/chmod explicitly: under `nix run`
+# GNU coreutils' chmod is first on PATH, and it has no ACL support
+# ("invalid mode: '+a'").
+share_darwin_acl() {
+  local op="$1" path="$2" acl_user="$3"
+  local base="delete,readattr,writeattr,readextattr,writeextattr,readsecurity"
+  local file_exec=""
+  [ "$acl_user" = "pi" ] && file_exec=",execute"
+  local file_perms="read,write,append${file_exec},$base"
+  local dir_perms="list,search,add_file,add_subdirectory,delete_child,$base"
+  if [ -d "$path" ]; then
+    find "$path" -type d -exec /bin/chmod "$op" "user:$acl_user allow $dir_perms,directory_inherit" {} +
+    find "$path" -type d -exec /bin/chmod "$op" "user:$acl_user allow $file_perms,file_inherit,only_inherit" {} +
+    find "$path" -type f -exec /bin/chmod "$op" "user:$acl_user allow $file_perms" {} +
+  else
+    /bin/chmod "$op" "user:$acl_user allow $file_perms" "$path"
+  fi
 }
 
 # share_grant PATH: grants the `pi` user (and, on directories, a
@@ -328,15 +380,14 @@ share_grant() {
     fi
     ;;
   Darwin)
-    # UNVERIFIED: no macOS host was available to test any of this
-    # against a real Seatbelt/APFS ACL. `chmod -a` before `+a` on each
-    # entry keeps this idempotent (best effort) rather than
-    # accumulating duplicate ACEs on repeated launches.
-    local perms="read,write,execute,delete,append,readattr,writeattr,readextattr,writeextattr,readsecurity,list,search,add_file,add_subdirectory,delete_child,file_inherit,directory_inherit"
+    # `-a` before `+a` on each entry keeps this idempotent (best effort)
+    # rather than accumulating duplicate ACEs on repeated launches.
+    # See share_darwin_acl for why directories and files get different
+    # entries.
     local acl_user
     for acl_user in pi "$invoking_user"; do
-      chmod -R -a "user:$acl_user allow $perms" "$path" 2>/dev/null || true
-      chmod -R +a "user:$acl_user allow $perms" "$path"
+      share_darwin_acl -a "$path" "$acl_user" 2>/dev/null || true
+      share_darwin_acl +a "$path" "$acl_user"
     done
     ;;
   *)
@@ -507,11 +558,9 @@ share_release() {
     fi
     ;;
   Darwin)
-    # UNVERIFIED, see share_grant's own note.
-    local perms="read,write,execute,delete,append,readattr,writeattr,readextattr,writeextattr,readsecurity,list,search,add_file,add_subdirectory,delete_child,file_inherit,directory_inherit"
     local acl_user
     for acl_user in pi "$invoking_user"; do
-      chmod -R -a "user:$acl_user allow $perms" "$path" 2>/dev/null || true
+      share_darwin_acl -a "$path" "$acl_user" 2>/dev/null || true
     done
     ;;
   esac
@@ -535,7 +584,7 @@ share_release() {
     [ "$parent_owner_uid" = "$my_uid" ] || continue
     case "$(uname -s)" in
     Linux) setfacl -x u:pi "$parent" 2>/dev/null || true ;;
-    Darwin) chmod -a "user:pi allow search" "$parent" 2>/dev/null || true ;;
+    Darwin) /bin/chmod -a "user:pi allow search" "$parent" 2>/dev/null || true ;;
     esac
   done
 }

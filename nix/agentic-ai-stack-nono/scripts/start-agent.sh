@@ -408,12 +408,14 @@ git_safe_dir_env "${SHARE_PATHS[@]}"
 # below -- per PLAN.md's "Secrets" decision row: "never via argv, since
 # that is visible via ps".
 SECRET_NAMES=()
-while IFS= read -r var_name; do
+# `${!PREFIX@}` instead of `compgen -v`: writeShellApplication's bash is
+# bashNonInteractive (no readline), which has no compgen builtin.
+for var_name in "${!PI_SANDBOX__SECRET__@}"; do
   [ -n "$var_name" ] || continue
   secret_name="${var_name#PI_SANDBOX__SECRET__}"
   export "$secret_name=${!var_name}"
   SECRET_NAMES+=("$secret_name")
-done < <(compgen -v PI_SANDBOX__SECRET__ || true)
+done
 
 for secret_arg in "${SECRET_ARGS[@]:-}"; do
   [ -n "$secret_arg" ] || continue

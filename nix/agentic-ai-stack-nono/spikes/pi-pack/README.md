@@ -21,7 +21,7 @@ nono pull nolabs-ai/pi
 nono profile init pi --extends nolabs-ai/pi --full
 ```
 
-A custom profile is also where you add credential routes, API keys, tokens, extra filesystem grants, and any other customizations — see the sections below. Its worth running this step, even if you don't think you'll need any custom grants or credentials, just to avoid the grants prompt later. 
+A custom profile is also where you add credential routes, API keys, tokens, extra filesystem grants, and any other customizations — see the sections below. Its worth running this step, even if you don't think you'll need any custom grants or credentials, just to avoid the grants prompt later.
 
 ```bash
 nono run --profile nolabs-ai/pi --allow-cwd -- pi
@@ -47,7 +47,7 @@ Save suggestions to a user profile? [g] grant / [s] suppress / [Enter] skip:
 
 The cleanest approach is to skip (`Enter`) and add any extra paths manually to your child profile's `filesystem.read` or `filesystem.allow` block.
 
-## Custom profiles 
+## Custom profiles
 
 To create your own custom profile that extends the base `nolabs-ai/pi` profile, use the `nono profile init` command with the `--extends` flag. This allows you to inherit from the base profile while customizing specific aspects such as credential routes and network filtering.
 

@@ -8,6 +8,10 @@
   ...
 }:
 
+let
+  platformPackages = if pkgs.stdenv.isDarwin then [] else [ pkgs.ghostty.terminfo ];
+in
+
 {
   environment.interactiveShellInit = inputs.scripts.interactiveShellInit;
 
@@ -19,7 +23,6 @@
     cocogitto
     coreutils
     dotenvx
-    ghostty.terminfo
     go
     kubebuilder
     nodejs_24
@@ -30,7 +33,7 @@
     vault
     watchexec
     weechat
-  ];
+  ] ++ platformPackages;
 
   age.secrets.github-token = {
     file = ../../../secrets/github-config.age;

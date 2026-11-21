@@ -43,6 +43,13 @@
 let
   inherit (pkgs) lib;
 
+  # autoPatchelf rewrites ELF interpreters/RPATHs, so it only makes sense
+  # (and only works: on Darwin its "dynamic linker" is /usr/lib/dyld, a
+  # Mach-O file, which fails with "ELFError: Magic number does not match")
+  # when building for Linux. On Darwin the npm install already selects
+  # darwin prebuilds, so the whole patching step is skipped.
+  isLinux = pkgs.stdenv.hostPlatform.isLinux;
+
   # ---- npm dependency FOD hash -------------------------------------------
   # Fixed-output hash of the offline npm cache that fetchNpmDeps builds from
   # ./extensions/package-lock.json (consumed by buildNpmPackage below).
@@ -317,12 +324,12 @@ let
         # node_modules contents.)
         # jq is used to walk each target's dependency closure.
         nativeBuildInputs = [
-          pkgs.autoPatchelfHook
           pkgs.jq
-        ];
+        ]
+        ++ lib.optionals isLinux [ pkgs.autoPatchelfHook ];
 
         # Where autoPatchelf looks for the sonames the binaries ask for.
-        buildInputs = nativeRuntimeLibs;
+        buildInputs = lib.optionals isLinux nativeRuntimeLibs;
 
         # See ignoreMissingNativeDeps above. Passed through to the hook's
         # environment; a list of sonames/patterns on current nixpkgs.
@@ -423,6 +430,7 @@ let
         # (other-arch/OS optional deps) are skipped. `cp -RL` leaves the store
         # copies read-only, so chmod just the selected dirs before patchelf runs.
         # An unsatisfied library fails the build loudly; see nativeRuntimeLibs.
+        ${lib.optionalString isLinux ''
         patchDirs=()
         seenPkgs=" "
         walkDeps() {
@@ -462,6 +470,7 @@ let
 
           autoPatchelf "''${patchDirs[@]}"
         fi
+        ''}
       '';
 
   # The full list of spec strings a user needs to merge by hand into their
