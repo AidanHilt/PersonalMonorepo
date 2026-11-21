@@ -74,7 +74,18 @@ EOF
 # --- shared repo-root guardrail (frontmatter mode only still writes) -----
 
 resolve_agents_dir() {
-  printf '%s/agents\n' "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
+  local dir="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents"
+  local resolved
+
+  # cd -P / pwd -P follow symlinks (e.g. /var -> /private/var) physically.
+  if resolved=$(cd -P -- "$dir" 2>/dev/null && pwd -P); then
+    printf '%s\n' "$resolved"
+  elif resolved=$(cd -P -- "${dir%/agents}" 2>/dev/null && pwd -P); then
+    # agents/ doesn't exist yet: resolve the parent and append.
+    printf '%s/agents\n' "$resolved"
+  else
+    printf '%s\n' "$dir"
+  fi
 }
 
 require_within_repo() {
@@ -334,12 +345,14 @@ run_frontmatter() {
   local agents_dir
   agents_dir="$(resolve_agents_dir)"
 
+  echo "$agents_dir"
+
   case "$agent_file" in
   "$agents_dir"/*) ;; # Inside the per-dispatch agents dir: not part of any
   # repo (it's the tmpfs ~/.pi/agent/agents tree), so the
   # within-repo guard doesn't apply here.
   *)
-    require_within_repo "$(dirname "$agent_file")" >/dev/null
+    require_within_repo "$(dirname "$agent_file")"
     ;;
   esac
 
@@ -393,6 +406,7 @@ run_frontmatter() {
       # single-line double-quoted key via awk, with the real command value
       # passed through the environment (never interpolated into the awk
       # program text).
+      echo "YQ COMMAND: yq eval -i .permission.bash[\"${placeholder_key}\"] = \"allow\" \"$frontmatter_file\"" >/tmp/command-out.txt
       yq eval -i ".permission.bash[\"${placeholder_key}\"] = \"allow\"" "$frontmatter_file"
 
       if ! grep -q -F -- "$placeholder_key" "$frontmatter_file"; then
