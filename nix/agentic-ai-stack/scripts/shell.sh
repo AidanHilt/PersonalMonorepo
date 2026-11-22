@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#shell -- <name>
+# nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#shell [-- <name>]
 #
 # Opens a separate, interactive bash shell inside a nono sandbox for the
-# run at /var/lib/pi/runs/<name>/, using that run's own nono
-# XDG_STATE_HOME (lib-common.sh's nono_state_dir_for) and a COPY of that
-# run's own profile.json (only the webhook approval URL rewritten --
-# never regenerated from scratch via gen-profile.sh).
+# run at $SESSIONS_ROOT/<name>/ (transient bookkeeping -- see
+# lib-common.sh), using the single SHARED nono XDG_STATE_HOME
+# (lib-common.sh's nono_state_dir) and a COPY of that run's own
+# profile.json (only the webhook approval URL rewritten -- never
+# regenerated from scratch via gen-profile.sh).
 #
 # Why this exists: `nix run .#attach -- <name>` attaches to pi's own TUI
 # PTY, not a plain shell, and fails outright for a foreground run
@@ -13,6 +14,12 @@
 # instead starts its OWN nono session ("<name>-shell") with its OWN
 # approval helper (started as the invoking user), so it works whether or
 # not the run's own pi session/helper is still alive.
+#
+# <name> is optional: when exactly one MAIN session is live, it's
+# auto-selected (see lib-common.sh's resolve_name_or_auto) -- pass a name
+# explicitly when zero or several are live. Not available in --dry-run
+# mode (auto-select requires a `sudo -u pi nono ps` call, which --dry-run
+# must never make) -- pass <name> explicitly for a --dry-run.
 #
 # One shell per run: refuses to start if a "<name>-shell" session is
 # already running. `nix run .#stop -- <name>` also refuses to stop/delete
@@ -27,17 +34,17 @@ set -euo pipefail
 
 print_help() {
   cat <<'EOF'
-Usage: shell.sh [--help] [--dry-run] <name>
+Usage: shell.sh [--help] [--dry-run] [<name>]
 
 Opens a separate, interactive bash shell inside a nono sandbox for the
-run at /var/lib/pi/runs/<name>/ (nono session "<name>-shell", sharing
-that run's own XDG_STATE_HOME with its pi session). Uses a per-invocation
-COPY of that run's own profile.json
-(/var/lib/pi/runs/<name>/shell-profile.json, regenerated on every call --
-only its webhook approval URL is rewritten; the run's own profile.json is
-never modified). Starts its own approval helper (as you, the invoking
-user, --ui auto), independent of whether the run's own pi session/helper
-is still alive.
+run (nono session "<name>-shell", sharing the single, shared nono
+XDG_STATE_HOME with every other session -- see IMPLEMENTERS.md's "Single
+nono state dir" section). Uses a per-invocation COPY of that run's own
+profile.json ($SESSIONS_ROOT/<name>/shell-profile.json, regenerated on
+every call -- only its webhook approval URL is rewritten; the run's own
+profile.json is never modified). Starts its own approval helper (as you,
+the invoking user, --ui auto), independent of whether the run's own pi
+session/helper is still alive.
 
 Re-shares (not re-copies) the run's own recorded workdir and every
 --add/--clone extra with `pi` for the lifetime of this shell session
@@ -56,14 +63,19 @@ Positional arguments:
   <name>   The run/session name (as passed to start-agent.sh --name, or
            "pi" if that run used the default). The run must already
            exist with a profile.json -- start it with `nix run
-           .#start-agent` first.
+           .#start-agent` first. Optional: if omitted and exactly one
+           MAIN session is currently live, that one is used
+           automatically. NOT available under --dry-run (auto-select
+           needs a `sudo -u pi nono ps` call, which --dry-run must never
+           make) -- pass <name> explicitly for a --dry-run.
 
 Flags:
   --dry-run    Print the resolved command and exit. No directories are
                created, no approval helper is started, no sudo/nono
                commands run -- this also means the "already running"
                check and the profile.json existence check below are both
-               SKIPPED in --dry-run mode (both require a sudo call).
+               SKIPPED in --dry-run mode (both require a sudo call), and
+               <name> must be given explicitly (see above).
   --help, -h   Show this help and exit.
 
 Approvals over SSH / headless hosts:
@@ -142,23 +154,29 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-if [ -z "$NAME" ]; then
-  echo "error: usage: shell.sh [--dry-run] <name> (run shell.sh --help for details)" >&2
-  exit 1
-fi
-
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
 # shellcheck source=lib-common.sh
 # shellcheck disable=SC1091
 source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack/scripts/lib-common.sh"
 
+NONO_BIN="$(resolve_stack_bin PI_STACK_NONO_BIN nono)"
+STATE_DIR="$(nono_state_dir)"
+
+if [ -z "$NAME" ]; then
+  if [ "$DRY_RUN" = "1" ]; then
+    echo "error: --dry-run requires an explicit <name> -- auto-select needs a 'sudo -u pi nono ps' call, which --dry-run must never make (run shell.sh --help for details)" >&2
+    exit 1
+  fi
+  NAME="$(resolve_name_or_auto "" "$NONO_BIN" "$STATE_DIR")"
+else
+  validate_run_name "$NAME"
+fi
+
 RUN_DIR="$(require_run_dir "$NAME")"
-echo "RUN DIR: ${RUN_DIR}"
-STATE_DIR="$(nono_state_dir_for "$NAME")"
 SESSION_NAME="${NAME}-shell"
 RUN_PROFILE="$RUN_DIR/profile.json"
 SHELL_PROFILE="$RUN_DIR/shell-profile.json"
-AGENT_DIR="$RUN_DIR/pi/agent"
+AGENT_DIR="$FIXED_AGENT_DIR"
 # WORKDIR/SHARED_PATHS: the run's own live-shared workdir and
 # --add/--clone extras, as recorded by start-agent.sh (lib-common.sh's
 # share_write_workdir_path/share_record_paths) -- both require a
@@ -168,7 +186,6 @@ AGENT_DIR="$RUN_DIR/pi/agent"
 WORKDIR=""
 SHARED_PATHS=()
 
-NONO_BIN="$(resolve_stack_bin PI_STACK_NONO_BIN nono)"
 JQ_BIN="$(resolve_stack_bin PI_STACK_JQ_BIN jq)"
 APPROVAL_HELPER_BIN="$(resolve_stack_bin PI_STACK_APPROVAL_HELPER_BIN approval-helper)"
 BASH_BIN="$(resolve_stack_bin PI_STACK_BASH_BIN bash)"

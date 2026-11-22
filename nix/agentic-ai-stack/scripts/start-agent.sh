@@ -7,18 +7,24 @@
 # "Launcher and approval helper" section for the full writeup.
 #
 # High-level flow:
-#   1. Seed/refresh a per-run, `pi`-owned state tree under
-#      /var/lib/pi/runs/<name>/ (fresh PI_CODING_AGENT_DIR), and live-share
-#      the workdir + any --add/--clone extras with `pi` at their real host
-#      paths via ACLs, not a copy (see "Live file sharing" below). This is
-#      idempotent: re-running with the SAME --name merges fresh
-#      config/extensions/skills on top WITHOUT deleting anything `pi`
-#      itself wrote there -- that's what lets `--resume` mean anything.
+#   1. Re-sync the ONE fixed, shared PI_CODING_AGENT_DIR
+#      (/var/lib/pi/.pi/agent -- lib-common.sh's FIXED_AGENT_DIR), and
+#      live-share the workdir + any --add/--clone extras with `pi` at
+#      their real host paths via ACLs, not a copy (see "Live file
+#      sharing" below). This is idempotent and NEVER deletes that
+#      directory first -- every launch only adds/overwrites
+#      config/extensions/skills on top -- that's what lets `--resume`
+#      mean anything, now across EVERY session regardless of --name (the
+#      agent dir is no longer per-run). This session's own transient
+#      bookkeeping (profile.json, shared-paths, workdir-path, etc.) still
+#      lives per-session, but under /tmp (lib-common.sh's SESSIONS_ROOT)
+#      rather than /var/lib/pi/runs -- nothing relies on it surviving a
+#      reboot/tmp sweep.
 #   2. Start the host-side approval helper (outside the sandbox), and read
 #      back its webhook URL.
 #   3. Generate the launch-ready nono profile (scripts/gen-profile.sh).
-#   4. Run `nono run` as `pi` via sudo, with the per-run dir as `pi`'s cwd
-#      (nono's "workdir").
+#   4. Run `nono run` as `pi` via sudo, with the live-shared workdir as
+#      `pi`'s cwd (nono's "workdir").
 #
 # `pi` gets a LIVE, read-write share of the invoking user's workdir and
 # every --add/--clone extra, at their real host paths -- not a copy.
@@ -27,12 +33,13 @@
 # normalized back to the invoking user -- at shutdown (this script's own
 # EXIT trap in foreground mode, the detached wrapper, or `nix run .#stop`).
 #
-# Every write under /var/lib/pi (this script's own per-run state tree,
-# as opposed to the live-shared workdir/--add/--clone paths above) still
-# goes through a `sudo -u pi` invocation (mkdir/tee/cp); every READ of
-# the invoking user's own files (config/agent/ in particular) runs as
-# the invoking user. That split is what lets this work without the
-# invoking user ever needing traversal rights into pi-owned directories.
+# Every write under /var/lib/pi (the fixed agent dir, and this script's
+# own per-session /tmp bookkeeping -- as opposed to the live-shared
+# workdir/--add/--clone paths above) still goes through a `sudo -u pi`
+# invocation (mkdir/tee/cp); every READ of the invoking user's own files
+# (config/agent/ in particular) runs as the invoking user. That split is
+# what lets this work without the invoking user ever needing traversal
+# rights into pi-owned directories.
 set -euo pipefail
 
 # --- PERSONAL_MONOREPO_LOCATION / lib-common.sh ----------------------------
@@ -44,9 +51,10 @@ set -euo pipefail
 # config/agent/ is instead streamed in via a tar pipe (see tar_copy_to_pi
 # below), so it doesn't need to be `pi`-readable in place either.
 #
-# Sources lib-common.sh for STACK_DIR/RUNS_ROOT and the
-# resolve_or_die/resolve_stack_bin/validate_run_name/nono_state_dir_for/
-# resolve_ca_bundle/share_*/git_safe_dir_env helpers.
+# Sources lib-common.sh for STACK_DIR/SESSIONS_ROOT/FIXED_AGENT_DIR and
+# the resolve_or_die/resolve_stack_bin/validate_run_name/nono_state_dir/
+# nono_state_wipe_preserving_audit/resolve_ca_bundle/share_*/
+# git_safe_dir_env helpers.
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
 # shellcheck source=lib-common.sh
 # shellcheck disable=SC1091
@@ -100,12 +108,18 @@ Flags:
   --secret NAME=VALUE        Inject an already-decrypted secret as an env
                              var into the `pi` process (repeatable). Never
                              appears in argv/`ps` -- see "Secrets" below.
-  --name NAME                Session name (nono's own `--name`), and the
-                             per-run state directory name
-                             (/var/lib/pi/runs/NAME/). Default: "pi"
-                             (deliberately NOT timestamp-suffixed -- see
-                             "Idempotent per-run seeding / --resume"
-                             below).
+  --name NAME                Session name ROOT (nono's own `--name` is
+                             actually NAME-<unix-timestamp>, so repeated
+                             launches get distinct nono sessions), and the
+                             per-session /tmp bookkeeping directory name
+                             ($PI_STACK_SESSIONS_ROOT/NAME-<timestamp>/,
+                             default root /tmp/pi-sessions). Default root:
+                             "pi". NOTE: the shared PI_CODING_AGENT_DIR
+                             (/var/lib/pi/.pi/agent, see "Idempotent
+                             per-run seeding / --resume" below) is what
+                             actually makes `--resume` meaningful now --
+                             it is the SAME directory for every --name,
+                             not something this flag selects between.
   --resume                   Forwarded to `pi` itself as `--resume` (pi's
                              own session picker) -- unrelated to nono's own
                              session concept. Mutually exclusive with
@@ -172,15 +186,16 @@ Live file sharing (workdir, --add, --clone):
   git refuses to operate in a directory it doesn't own by default.
 
 Idempotent per-run seeding / --resume:
-  Every launch re-syncs /var/lib/pi/runs/<name>/pi/agent/ from
+  Every launch re-syncs the ONE fixed, shared /var/lib/pi/.pi/agent/
+  (PI_CODING_AGENT_DIR, the same directory regardless of --name) from
   config/agent/ plus the pi-extra-extensions/pi-extra-skills build
   outputs -- but it only ever ADDS/overwrites those specific files, never
-  deletes the run directory first. Re-running with the SAME --name
-  re-shares the same workdir/--add/--clone paths (merged with whatever
-  was already recorded for that name) and reuses the same
-  PI_CODING_AGENT_DIR tree, so anything `pi` itself persists there (its
-  own session history, included) survives across launches -- that's what
-  makes --resume meaningful here.
+  deletes that directory first. So anything `pi` itself persists there
+  (its own session history, included) survives across EVERY launch,
+  whatever --name is given -- that's what makes --resume meaningful.
+  --name only affects the nono session name/this launch's own transient
+  /tmp bookkeeping (its recorded workdir/--add/--clone paths), which are
+  re-shared/merged per --name root as before.
 
 Detached sessions:
   --detached starts TWO things that outlive this launcher process, both
@@ -191,7 +206,8 @@ Detached sessions:
       tmux server). It fails loudly and non-zero if no usable prompter
       can be found -- see "Approvals over SSH / headless hosts" below.
     - a supervisor (runs as `pi`, logging to
-      /var/lib/pi/runs/<name>/supervisor.log) that generates the profile,
+      $PI_STACK_SESSIONS_ROOT/<name>-<timestamp>/supervisor.log, default
+      /tmp/pi-sessions/...) that generates the profile,
       runs `nono run --detached`, then polls `nono ps` until the session
       is gone.
   This launcher process waits briefly to confirm the approval helper
@@ -511,7 +527,7 @@ if [ "$DRY_RUN" = "1" ]; then
   esac
   echo >&2
   echo "Resolved command (would run as the 'pi' user):" >&2
-  nono_run_line="  $NONO_BIN run --profile /var/lib/pi/runs/$SESSION_NAME/profile.json --allow-cwd"
+  nono_run_line="  $NONO_BIN run --profile $SESSIONS_ROOT/$SESSION_NAME/profile.json --allow-cwd"
   [ "$AUDIT_FLAG" = "1" ] && nono_run_line="$nono_run_line --audit-integrity"
   [ "$DETACHED_FLAG" = "1" ] && nono_run_line="$nono_run_line --detached"
   nono_run_line="$nono_run_line --name $SESSION_NAME -- $PI_BIN"
@@ -524,12 +540,38 @@ if [ "$DRY_RUN" = "1" ]; then
   exit 0
 fi
 
-# --- Per-run, pi-owned state tree ------------------------------------------
-RUN_DIR="$RUNS_ROOT/$SESSION_NAME"
-PI_ROOT="$RUN_DIR/pi"
-AGENT_DIR="$PI_ROOT/agent"
+# --- Per-session transient bookkeeping (/tmp) + the ONE fixed, shared,
+# pi-owned agent dir -------------------------------------------------------
+# RUN_DIR: this launch's own transient scratch (profile.json,
+# shared-paths, workdir-path, state/sessions, supervisor files) -- lives
+# under SESSIONS_ROOT (/tmp by default), not relied on to survive a
+# reboot/tmp sweep (a live nono session is always independently
+# discoverable via `nono ps` against the shared NONO_STATE_DIR below).
+# AGENT_DIR: the ONE fixed, persistent PI_CODING_AGENT_DIR shared by every
+# session regardless of --name (lib-common.sh's FIXED_AGENT_DIR) -- never
+# deleted, only ever added/overwritten below, which is what makes
+# `--resume` meaningful now. NONO_STATE_DIR is likewise the ONE shared
+# nono XDG_STATE_HOME every session uses (lib-common.sh's nono_state_dir).
+RUN_DIR="$SESSIONS_ROOT/$SESSION_NAME"
+AGENT_DIR="$FIXED_AGENT_DIR"
 STATE_DIR="$RUN_DIR/state"
-NONO_STATE_DIR="$(nono_state_dir_for "$SESSION_NAME")"
+NONO_STATE_DIR="$(nono_state_dir)"
+
+# Wipe the shared nono state dir before launch, but ONLY if nothing is
+# currently live against it -- a live sibling session's own state must
+# never be torn out from under it just because a new, unrelated session
+# is starting. See lib-common.sh's nono_any_session_running for the
+# "any output from nono ps counts as live" caveat (nono ps's exact
+# "nothing running" output isn't documented in this checkout -- see
+# HANGUPS.md).
+if [ -d "$NONO_STATE_DIR" ]; then
+  if nono_any_session_running "$NONO_BIN" "$NONO_STATE_DIR"; then
+    echo "==> Other session(s) already live against $NONO_STATE_DIR -- not wiping it before this launch." >&2
+  else
+    echo "==> No live sessions -- wiping shared nono state dir $NONO_STATE_DIR before launch (preserving nono/audit)..." >&2
+    nono_state_wipe_preserving_audit "$NONO_STATE_DIR"
+  fi
+fi
 
 # tar_copy_to_pi: streams the CONTENTS of a host directory (or a lone
 # file) owned by the invoking user into a fresh pi-owned destination
@@ -558,7 +600,7 @@ write_as_pi() {
   sudo -u pi tee "$1" <"$2" >/dev/null
 }
 
-echo "==> Seeding per-run state under $RUN_DIR (idempotent -- existing pi/session state is kept)..." >&2
+echo "==> Seeding the shared agent dir $AGENT_DIR and this session's own transient state under $RUN_DIR (idempotent -- existing pi/session state is kept)..." >&2
 sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$STATE_DIR/sessions" "$NONO_STATE_DIR"
 
 # --- Live file sharing: grant, then record what was granted ---------------
@@ -601,23 +643,24 @@ sudo -u pi cp -r --no-preserve=mode "$EXTRA_SKILLS_PATH/." "$AGENT_DIR/skills/"
 echo "    layering config/agent/ (fresh settings.json/AGENTS.md/agents/*)..." >&2
 tar_copy_to_pi "$CONFIG_AGENT_DIR" "$AGENT_DIR"
 if [ -f "$CONFIG_WEB_SEARCH" ]; then
-  write_as_pi "$PI_ROOT/web-search.json" "$CONFIG_WEB_SEARCH"
+  sudo -u pi mkdir -p "$(dirname "$FIXED_WEB_SEARCH_FILE")"
+  write_as_pi "$FIXED_WEB_SEARCH_FILE" "$CONFIG_WEB_SEARCH"
 fi
 
-# Seed this run's auth from the shared, cross-run OAuth store (written by
-# scripts/login.sh) -- /var/lib/pi/auth itself is NEVER granted to any
-# nono session (it sits outside every run's own grants entirely); this is
-# the only path any per-run auth.json ever comes from it, as a per-run
-# COPY, never a shared mount/symlink. pi itself reads/writes auth.json
-# straight out of PI_CODING_AGENT_DIR (AGENT_DIR here), so that's where
+# Seed the shared auth.json from the shared, cross-session OAuth store
+# (written by scripts/login.sh) -- /var/lib/pi/auth itself is NEVER
+# granted to any nono session; this is the only path AGENT_DIR's own
+# auth.json ever comes from it, as a COPY, never a shared mount/symlink.
+# pi itself reads/writes auth.json straight out of PI_CODING_AGENT_DIR
+# (AGENT_DIR here, now the one fixed/shared agent dir), so that's where
 # this seeds to -- NOT STATE_DIR, which pi never looks at for auth.
 # Deliberately runs AFTER the config/agent/ layering above (which never
 # contains an auth.json today, but could in principle) so a seeded token
 # can never be clobbered by it. Never overwrites an existing, already-
-# newer run-local auth.json (e.g. one this run itself refreshed via a
-# more recent `pi` login inside the session) -- `-nt` only copies when
-# the shared source is newer than what's already here, or nothing is
-# here yet.
+# newer auth.json already sitting in AGENT_DIR (e.g. refreshed via a more
+# recent `pi` login inside some session) -- `-nt` only copies when the
+# shared source is newer than what's already here, or nothing is here
+# yet.
 SHARED_AUTH_FILE="/var/lib/pi/auth/auth.json"
 if sudo -u pi test -f "$SHARED_AUTH_FILE"; then
   echo "    seeding shared OAuth auth from $SHARED_AUTH_FILE (if newer)..." >&2
@@ -634,7 +677,16 @@ fi
 # treatment there -- see gen-profile.sh's own "Step 4" comment), since
 # both are now live-shared at their real host path rather than copied
 # into a per-run add-N/clone-N destination.
-EXTRA_GEN_ARGS=()
+#
+# $FIXED_PI_HOME (/var/lib/pi/.pi, covering both AGENT_DIR and
+# FIXED_WEB_SEARCH_FILE) is ALSO granted here, in this shared
+# EXTRA_GEN_ARGS array -- not just in the foreground-only extra --add
+# flags further below -- so both foreground AND --detached sessions
+# actually get access to their own PI_CODING_AGENT_DIR (the old
+# equivalent grant, --add "$RUNS_ROOT", lived ONLY in the foreground
+# branch's gen-profile.sh invocation; detached sessions never got it --
+# see HANGUPS.md).
+EXTRA_GEN_ARGS=(--add "$FIXED_PI_HOME")
 for add_path in "${ADD_PATHS[@]:-}"; do
   [ -n "$add_path" ] || continue
   EXTRA_GEN_ARGS+=(--add "$add_path")
@@ -693,10 +745,14 @@ if [ "$DETACHED_FLAG" != "1" ]; then
 
   echo "==> Generating the nono profile..." >&2
   TMP_PROFILE="$(mktemp)"
-  # Lazily hardcode in the agent directory that pi needs access to
+  # $FIXED_PI_HOME (the shared agent dir) is already in EXTRA_GEN_ARGS,
+  # above -- the remaining hardcoded --add flags below are this stack's
+  # own ad-hoc shell-environment needs (/etc/bashrc, etc-profile,
+  # set-environment) plus /tmp for this session's own transient
+  # bookkeeping (RUN_DIR, under SESSIONS_ROOT).
   "$GEN_PROFILE_SH" --base "$BASE_PROFILE" --out "$TMP_PROFILE" \
     --webhook-url "$WEBHOOK_URL" --workdir "$WORKDIR" --state-dir "$STATE_DIR" \
-    "${EXTRA_GEN_ARGS[@]}" "${READ_ROOT_ARGS[@]}" --add "/var/lib/pi/runs" --add "/tmp" --add "/etc/bashrc" --add "/nix/store/02sjb8kr1hday5s15sk4xh40cpj7p449-etc-profile" --add "/etc/profile" \
+    "${EXTRA_GEN_ARGS[@]}" "${READ_ROOT_ARGS[@]}" --add "/tmp" --add "/etc/bashrc" --add "/nix/store/02sjb8kr1hday5s15sk4xh40cpj7p449-etc-profile" --add "/etc/profile" \
     --add "/nix/store/7j90xhkzr7b6vqyhygx0ky9x130xxp6v-set-environment"
   write_as_pi "$RUN_DIR/profile.json" "$TMP_PROFILE"
   rm -f "$TMP_PROFILE"

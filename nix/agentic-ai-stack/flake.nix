@@ -94,7 +94,10 @@
         # filesystem.read, so it needs no change for this. Currently just
         # coreutils -- the nono-sandboxed `pi` user otherwise has no
         # coreutils, since it isn't in the host system closure.
-        extraPackages = [ pkgs.coreutils pkgs.bash-completion ];
+        extraPackages = [
+          pkgs.coreutils
+          pkgs.bash-completion
+        ];
       in
       {
         packages = {
@@ -173,9 +176,11 @@
             };
           };
 
-          # nix run .#ps -> scripts/ps.sh: lists nono sessions across
-          # every /var/lib/pi/runs/<name>/ run (there is no
-          # single cross-run `nono ps` -- see ps.sh's header comment).
+          # nix run .#ps -> scripts/ps.sh: lists every live nono session --
+          # every session in this stack now shares ONE nono XDG_STATE_HOME
+          # (see lib-common.sh's nono_state_dir and IMPLEMENTERS.md's
+          # "Single nono state dir" section), so this is a single `nono ps`
+          # call, not a loop over per-run state dirs.
           ps = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "pi-sandbox-ps";
@@ -190,8 +195,9 @@
             };
           };
 
-          # nix run .#attach -- <name> -> scripts/attach.sh: attaches to
-          # pi's own TUI session for an existing run.
+          # nix run .#attach [-- <name>] -> scripts/attach.sh: attaches to
+          # pi's own TUI session for an existing run. <name> is optional
+          # when exactly one MAIN session is live (see attach.sh --help).
           attach = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "pi-sandbox-attach";
@@ -206,8 +212,10 @@
             };
           };
 
-          # nix run .#stop -- <name> -> scripts/stop.sh: stops a run and
-          # releases its live-shared paths.
+          # nix run .#stop [-- <name>] -> scripts/stop.sh: stops a run and
+          # releases its live-shared paths. <name> is optional when exactly
+          # one candidate (live session, or leftover crashed-launch
+          # bookkeeping dir) exists (see stop.sh --help).
           stop = flake-utils.lib.mkApp {
             drv = pkgs.writeShellApplication {
               name = "pi-sandbox-stop";
@@ -228,11 +236,13 @@
             };
           };
 
-          # nix run .#shell -- <name> -> scripts/shell.sh: opens a separate,
-          # interactive bash shell inside a nono sandbox for an existing (or
-          # not-yet-started) run, with its own approval helper (`nix run
-          # .#attach` attaches to pi's own TUI PTY instead, which can't serve
-          # this purpose -- see shell.sh's header comment). Modelled on
+          # nix run .#shell [-- <name>] -> scripts/shell.sh: opens a
+          # separate, interactive bash shell inside a nono sandbox for an
+          # existing (or not-yet-started) run, with its own approval helper
+          # (`nix run .#attach` attaches to pi's own TUI PTY instead, which
+          # can't serve this purpose -- see shell.sh's header comment).
+          # <name> is optional when exactly one MAIN session is live (not
+          # available under --dry-run -- see shell.sh --help). Modelled on
           # apps.start-agent's wrapper shape, minus pi itself (this app never
           # runs `pi`, only a plain bash). PI_STACK_BASH_BIN comes from this
           # flake's own nixpkgs (pkgs.bashInteractive, NOT nixpkgs-unstable's

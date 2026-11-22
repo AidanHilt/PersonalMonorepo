@@ -82,9 +82,11 @@ profile, not the agent or the sandboxed `pi` user):
   or reference the upstream nolabs-ai `pi` nono package's profile/package
   names (`nolabs-ai/pi`, `nono pull`, `nono profile init`); none of that
   applies here.
-- `PI_CODING_AGENT_DIR` and the per-run OAuth state live under
-  `/var/lib/pi/runs/<name>/` (see `IMPLEMENTERS.md`'s "Per-run state
-  layout"), not `~/.pi`.
+- `PI_CODING_AGENT_DIR` is the ONE fixed, shared `/var/lib/pi/.pi/agent/`
+  (same directory regardless of session name -- see `IMPLEMENTERS.md`'s
+  "Fixed agent dir" section), not `~/.pi`. This session's own transient
+  bookkeeping (profile.json, etc.) lives under `/tmp/pi-sessions/<name>/`
+  instead.
 - The current workdir and every `--add`'d path are the user's REAL host
   files, shared live (not a copy) -- edits made inside this session
   land directly on the user's own checkout. There is nothing to

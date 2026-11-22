@@ -153,9 +153,9 @@ In `--detached` mode specifically, the approval helper runs as **you**
 `$TMUX` at all; a helper started as `pi` can never reach a tmux server it
 doesn't own. `start-agent.sh --detached` prints the approval helper's own
 log location (a `pi-sandbox-wrapper-<name>.*.log` file under `$TMPDIR`/
-`/tmp`) alongside the supervisor's `/var/lib/pi/runs/<name>/
-supervisor.log` — check both if a detached session's approvals don't
-seem to be happening.
+`/tmp`) alongside the supervisor's `supervisor.log`, under this session's
+own `/tmp/pi-sessions/<name>-<timestamp>/` bookkeeping directory — check
+both if a detached session's approvals don't seem to be happening.
 
 Timeouts: the helper waits up to 55s for you to answer a prompt before
 failing that one request closed (logged, never silently); the nono
@@ -215,27 +215,43 @@ it.
 OAuth: `nix run .#login` runs pi's native login flow inside a minimal
 nono session and copies the resulting `auth.json` to a shared,
 cross-session store (`/var/lib/pi/auth/auth.json`, never itself granted
-to any nono session); every `start-agent.sh` launch seeds a per-run copy
-from it.
+to any nono session); every `start-agent.sh` launch seeds a copy from it
+into the one fixed, shared agent dir
+(`/var/lib/pi/.pi/agent/auth.json`) if newer than what's already there.
 
-Tear down a run: `nix run .#stop -- <name>`.
+Tear down a run: `nix run .#stop [-- <name>]`.
 
 ## Session naming, resuming, and other wrappers
 
-Every `start-agent.sh` launch picks a session name (`--name`, default
-`pi`) and a per-run state directory under `/var/lib/pi/runs/<name>/`.
-Re-running with the same `--name` reuses that state (idempotent seeding —
-see IMPLEMENTERS.md), which is what makes `--resume` (forwarded to `pi`
-itself) meaningful across launches.
+Every `start-agent.sh` launch picks a session name ROOT (`--name`,
+default `pi`; the actual nono session name is always
+`<name>-<unix-timestamp>`) and a **transient**, per-session bookkeeping
+directory under `/tmp/pi-sessions/<name>-<timestamp>/` (override the
+root with `PI_STACK_SESSIONS_ROOT`) — nothing in this stack relies on
+that directory surviving a reboot or a `/tmp` cleaner sweep. What
+actually makes `--resume` (forwarded to `pi` itself) meaningful across
+launches is that **every** session, whatever its `--name`, shares the
+SAME fixed, persistent `PI_CODING_AGENT_DIR` at `/var/lib/pi/.pi/agent/`
+— never deleted, only ever added/overwritten on each launch (idempotent
+seeding — see IMPLEMENTERS.md).
 
 ```sh
-nix run .#ps                     # list sessions across every run
-nix run .#attach -- <name>       # attach to pi's own TUI session
-nix run .#shell -- <name>        # a separate interactive shell into the
+nix run .#ps                     # list every live session
+nix run .#attach [-- <name>]     # attach to pi's own TUI session
+nix run .#shell [-- <name>]      # a separate interactive shell into the
                                   # same run (works even if the run's own
                                   # pi session/approval helper isn't up)
-nix run .#stop -- <name>         # stop a run and release its live shares
+nix run .#stop [-- <name>]       # stop a run and release its live shares
 ```
+
+`<name>` is optional on `attach`/`shell`/`stop`: when exactly one MAIN
+session is live, it's auto-selected; otherwise (zero or several live, or
+— for `stop` only — more than one leftover `/tmp/pi-sessions/<name>`
+bookkeeping directory from a crashed launch when nothing is live) these
+error, listing the candidates, so you can pass `<name>` explicitly (see
+each wrapper's own `--help`). `shell --dry-run` always requires an
+explicit `<name>` (auto-select needs a live `sudo -u pi nono ps` call,
+which `--dry-run` must never make).
 
 `nix run .#attach -- <name>` fails for a foreground (non-`--detached`)
 run, since there's no free PTY to attach a second client to ("Session

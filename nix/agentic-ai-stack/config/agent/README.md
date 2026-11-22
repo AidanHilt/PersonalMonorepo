@@ -1,13 +1,17 @@
 # config/agent/
 
 This directory is a direct, 1:1 mirror of the final `PI_CODING_AGENT_DIR`
-tree the launcher seeds for each run: every file already lives at its
-final relative path (`settings.json`, `AGENTS.md`, `agents/*`,
-`extensions/<name>/config.json`, ...), so `start-agent.sh`/`login.sh` lay
-it onto each run's per-run agent directory with a single recursive copy —
-no per-file translation. It's a sibling of the top-level `config/`, which
-mirrors the rest of `~/.pi/` the same way (e.g. `config/web-search.json`
-mirrors `~/.pi/web-search.json`).
+tree the launcher seeds: every file already lives at its final relative
+path (`settings.json`, `AGENTS.md`, `agents/*`,
+`extensions/<name>/config.json`, ...), so `start-agent.sh` lays it onto
+the one fixed, shared agent directory (`/var/lib/pi/.pi/agent/` — see
+IMPLEMENTERS.md's "Fixed agent dir" section) with a single recursive
+copy — no per-file translation. `login.sh` lays the same directory onto
+its own, separate `/var/lib/pi/login/agent/` instead (its layout is
+unchanged/out of scope — see IMPLEMENTERS.md's "Single nono state dir"
+section). It's a sibling of the top-level `config/`, which mirrors the
+rest of `~/.pi/` the same way (e.g. `config/web-search.json` mirrors
+`~/.pi/web-search.json`, i.e. `/var/lib/pi/.pi/web-search.json`).
 
 **Config only. Never a secret, token, or key — not even a placeholder
 that looks real enough to paste over by accident.**

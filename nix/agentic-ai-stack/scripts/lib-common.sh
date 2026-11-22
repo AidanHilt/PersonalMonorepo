@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # lib-common.sh -- shared helpers for the session-wrapper scripts (ps.sh,
 # attach.sh, stop.sh, login.sh, shell.sh, start-agent.sh): resolve_or_die/
-# resolve_stack_bin/validate_run_name/nono_state_dir_for/resolve_ca_bundle,
+# resolve_stack_bin/validate_run_name/nono_state_dir/resolve_ca_bundle,
 # plus the live-file-sharing primitives (share_path_check, share_grant,
 # share_release and helpers, git_safe_dir_env, and the RUN_DIR/shared-paths
 # + RUN_DIR/workdir-path bookkeeping helpers) used to share -- and later
@@ -20,7 +20,36 @@
 # shellcheck disable=SC2034 # STACK_DIR is used by scripts that `source`
 # this file (login.sh, in particular), not by this file itself.
 STACK_DIR="$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"
-RUNS_ROOT="/var/lib/pi/runs"
+
+# SESSIONS_ROOT: per-session TRANSIENT bookkeeping only (profile.json,
+# shell-profile.json, shared-paths, workdir-path, state/sessions,
+# supervisor.sh/.log, approval-helper-info.json) -- nothing here is relied
+# on surviving a reboot/tmp-cleaner sweep; a session that's still live is
+# always discoverable via `nono ps` against the single shared nono state
+# dir (see nono_state_dir below), never by this directory existing.
+# Overridable via PI_STACK_SESSIONS_ROOT (e.g. for tests). Replaces the
+# old /var/lib/pi/runs -- see IMPLEMENTERS.md's "Per-session state layout"
+# section.
+SESSIONS_ROOT="${PI_STACK_SESSIONS_ROOT:-/tmp/pi-sessions}"
+
+# FIXED_AGENT_DIR / FIXED_PI_HOME: ONE persistent, shared PI_CODING_AGENT_DIR
+# for every start-agent.sh/shell.sh session -- replaces the old per-run
+# <RUNS_ROOT>/<name>/pi/agent tree. Never deleted by any script in this
+# stack (only ever added/overwritten -- see start-agent.sh's seeding
+# step); this is what makes `pi --resume` keep working across launches
+# now that sessions no longer each get their own state tree. Mirrors pi's
+# own default ($HOME/.pi/agent) under the `pi` user's actual home
+# (/var/lib/pi), on the theory that this is the path pi's own code (e.g.
+# the web-search feature -- see HANGUPS.md) most likely assumes a sibling
+# web-search.json lives next to. NOT overridable via env -- this is a
+# flake-owned, fixed location, not a per-launch choice.
+FIXED_PI_HOME="/var/lib/pi/.pi"
+# shellcheck disable=SC2034 # used by scripts that `source` this file
+# (start-agent.sh, shell.sh), not by this file itself.
+FIXED_AGENT_DIR="$FIXED_PI_HOME/agent"
+# shellcheck disable=SC2034 # used by start-agent.sh, not by this file
+# itself.
+FIXED_WEB_SEARCH_FILE="$FIXED_PI_HOME/web-search.json"
 
 # resolve_or_die: resolves $1 to an absolute, symlink-free path via
 # `command -v`, or exits with an error if it isn't found on PATH.
@@ -50,8 +79,8 @@ resolve_stack_bin() {
 }
 
 # validate_run_name: a run/session name must be a plain path-segment-safe
-# token -- rejects anything that could traverse out of $RUNS_ROOT (e.g.
-# "..", "/", or a leading "-" that a tool might misread as a flag).
+# token -- rejects anything that could traverse out of $SESSIONS_ROOT
+# (e.g. "..", "/", or a leading "-" that a tool might misread as a flag).
 validate_run_name() {
   local name="$1"
   if ! [[ "$name" =~ ^[A-Za-z0-9._-]+$ ]]; then
@@ -64,53 +93,145 @@ validate_run_name() {
   fi
 }
 
-# require_run_dir: validates $1 as a run name and prints its run directory
-# on stdout, or exits with an error if that run directory doesn't exist.
+# require_run_dir: validates $1 as a run name and prints its (transient,
+# /tmp-based -- see SESSIONS_ROOT above) bookkeeping directory on stdout,
+# or exits with an error if that directory doesn't exist. NOTE: whether a
+# session is actually LIVE is never determined by this directory's
+# existence -- only by `nono ps` against nono_state_dir (see below) --
+# this is purely for scripts (shell.sh, stop.sh) that need this session's
+# own recorded profile.json/shared-paths/workdir-path.
 require_run_dir() {
   local name="$1" run_dir
   validate_run_name "$name"
-  run_dir="$RUNS_ROOT/$name"
+  run_dir="$SESSIONS_ROOT/$name"
   if [ ! -d "$run_dir" ]; then
-    echo "error: no run named '$name' found under $RUNS_ROOT" >&2
+    echo "error: no run named '$name' found under $SESSIONS_ROOT" >&2
     exit 1
   fi
   printf '%s\n' "$run_dir"
 }
 
-# nono_state_dir_for: validates $1 as a run name and prints the single,
-# canonical path for that run's nono XDG_STATE_HOME --
-# /var/lib/pi/<name>-nono-xdg-state. This is a SIBLING of $RUNS_ROOT (not
-# nested under $RUNS_ROOT/<name>/), per the launcher's own layout --
-# start-agent.sh is the one authority for where this lives (its
-# NONO_STATE_DIR variable), and ps.sh/attach.sh/stop.sh must all agree
-# with it exactly, or `nix run .#ps`/`.#attach`/`.#stop` end up pointed at
-# an empty/wrong XDG_STATE_HOME while the real nono session state sits
-# elsewhere (the bug this function exists to prevent).
-#
-# start-agent.sh now sources this file (see this file's header comment
-# above), so there is exactly one copy of this function for every
-# script in this stack to agree on -- no more need for a "keep two
-# copies in sync" note; see IMPLEMENTERS.md's "scripts/lib-common.sh"
-# section for the drift bug this used to invite before that.
+# nono_state_dir: prints the single, canonical path for the ONE shared
+# nono XDG_STATE_HOME every session in this stack now uses --
+# /var/lib/pi/nono-xdg-state on Linux. There is no per-name suffix any
+# more (see IMPLEMENTERS.md's "Single nono state dir" section) -- every
+# start-agent.sh/shell.sh session, whatever its --name, shares this one
+# directory, and `nono ps` against it lists every live session (main and
+# "<name>-shell") at once. start-agent.sh is the one authority that wipes
+# this dir (only when nothing is live -- see nono_any_session_running),
+# and ps.sh/attach.sh/stop.sh/shell.sh must all agree with it exactly, or
+# they end up pointed at an empty/wrong XDG_STATE_HOME while the real nono
+# session state sits elsewhere (the bug this function exists to prevent).
 #
 # macOS: the state root must NOT live under /var (== /private/var).
 # nono refuses to start when one of the profile's grants overlaps its own
 # protected state root ($XDG_STATE_HOME/nono), and the system_read_macos
 # group grants read on /private/var as a whole ("Refusing to grant
 # '/private/var' ... overlaps protected nono state root"). So on Darwin
-# the per-run state lives under /Users/Shared by default instead.
+# this lives under /Users/Shared by default instead.
 # Override the root on either OS with PI_STACK_NONO_STATE_ROOT. `sudo -u
-# pi mkdir -p` creates the root on first use (/Users/Shared is 1777), and
-# it must stay traversable by the invoking user (nono_session_running
-# tests -d on it), so don't chmod it to 700.
-nono_state_dir_for() {
-  local name="$1" root
-  validate_run_name "$name"
+# pi mkdir -p` creates it on first use (/Users/Shared is 1777), and it
+# must stay traversable by the invoking user (nono_session_running tests
+# -d on it), so don't chmod it to 700.
+nono_state_dir() {
   case "$(uname -s)" in
-  Darwin) root="${PI_STACK_NONO_STATE_ROOT:-/Users/Shared/pi-nono-state}" ;;
-  *) root="${PI_STACK_NONO_STATE_ROOT:-/var/lib/pi}" ;;
+  Darwin) printf '%s\n' "${PI_STACK_NONO_STATE_ROOT:-/Users/Shared/pi-nono-state}" ;;
+  *) printf '%s\n' "${PI_STACK_NONO_STATE_ROOT:-/var/lib/pi/nono-xdg-state}" ;;
   esac
-  printf '%s\n' "$root/${name}-nono-xdg-state"
+}
+
+# nono_state_wipe_preserving_audit STATE_DIR: deletes everything directly
+# under STATE_DIR except the `nono` directory itself, then within `nono/`
+# deletes everything except `audit` -- net effect: keep only
+# STATE_DIR/nono/audit, delete everything else. Shared by start-agent.sh
+# (pre-launch wipe, only when no session at all is live -- see
+# nono_any_session_running) and stop.sh (post-stop wipe, same "preserve
+# audit" rule it always used). A no-op if STATE_DIR doesn't exist; removes
+# STATE_DIR outright if it has no nono/audit subtree to preserve.
+nono_state_wipe_preserving_audit() {
+  local state_dir="${1:?nono_state_wipe_preserving_audit requires a STATE_DIR}"
+  sudo -u pi test -d "$state_dir" || return 0
+  if sudo -u pi test -d "$state_dir/nono/audit"; then
+    sudo -u pi find "$state_dir" -mindepth 1 -maxdepth 1 ! -name nono -exec rm -rf -- {} +
+    sudo -u pi find "$state_dir/nono" -mindepth 1 -maxdepth 1 ! -name audit -exec rm -rf -- {} +
+  else
+    sudo -u pi rm -rf -- "$state_dir"
+  fi
+}
+
+# nono_any_session_running NONO_BIN STATE_DIR: true (0) if `nono ps`
+# against STATE_DIR prints ANY output at all, false otherwise (including
+# when STATE_DIR doesn't exist, or the `nono ps` call itself fails). nono
+# ps's exact "nothing running" output (empty stdout vs. some fixed
+# placeholder line) isn't documented in this checkout -- treating any
+# non-empty output as "something's running" is the conservative choice
+# here (a false positive just skips a wipe that would have been safe; a
+# false negative would wipe out from under a live session) -- see
+# HANGUPS.md.
+nono_any_session_running() {
+  local nono_bin="$1" state_dir="$2" output
+  [ -d "$state_dir" ] || return 1
+  output="$(sudo -u pi env XDG_STATE_HOME="$state_dir" "$nono_bin" ps 2>/dev/null)" || return 1
+  [ -n "$output" ]
+}
+
+# nono_list_live_sessions NONO_BIN STATE_DIR: prints one session name per
+# line from `nono ps`'s output, best-effort -- nono ps's exact output
+# schema isn't documented in this checkout (see HANGUPS.md). Takes the
+# first whitespace-delimited field of every non-empty line and keeps only
+# tokens that look like a session name (same charset validate_run_name
+# accepts, plus the "-shell" suffix this stack appends itself) -- this
+# silently (and harmlessly) drops anything that looks like a table header
+# instead of a session name/row.
+nono_list_live_sessions() {
+  local nono_bin="$1" state_dir="$2"
+  [ -d "$state_dir" ] || return 0
+  sudo -u pi env XDG_STATE_HOME="$state_dir" "$nono_bin" ps 2>/dev/null |
+    awk '{print $2}' | grep -E '^[A-Za-z0-9._-]+$' | grep -v "NAME" || true
+}
+
+# nono_list_live_main_sessions NONO_BIN STATE_DIR: nono_list_live_sessions,
+# minus any "<name>-shell" entries (shell.sh's own session suffix) -- used
+# by attach.sh/shell.sh/stop.sh's no-name auto-select (see
+# resolve_name_or_auto below).
+nono_list_live_main_sessions() {
+  local nono_bin="$1" state_dir="$2"
+  nono_list_live_sessions "$nono_bin" "$state_dir" | grep -v -- '-shell$' || true
+}
+
+# resolve_name_or_auto NAME_ARG NONO_BIN STATE_DIR: if NAME_ARG is
+# non-empty, validates and prints it unchanged. Otherwise lists live MAIN
+# sessions (nono_list_live_main_sessions) and: exactly one -> prints it;
+# zero or several -> prints nothing and returns non-zero after printing a
+# clear, listing error to stderr. Shared by attach.sh/shell.sh/stop.sh so
+# <name> can be omitted when exactly one session is live.
+resolve_name_or_auto() {
+  local name_arg="$1" nono_bin="$2" state_dir="$3"
+  if [ -n "$name_arg" ]; then
+    validate_run_name "$name_arg"
+    printf '%s\n' "$name_arg"
+    return 0
+  fi
+  local -a names=()
+  local line
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    names+=("$line")
+  done < <(nono_list_live_main_sessions "$nono_bin" "$state_dir")
+  case "${#names[@]}" in
+  0)
+    echo "error: no name given and no live session found -- pass a name explicitly" >&2
+    return 1
+    ;;
+  1)
+    printf '%s\n' "${names[0]}"
+    return 0
+    ;;
+  *)
+    echo "error: no name given and ${#names[@]} live sessions found (${names[*]}) -- pass a name explicitly" >&2
+    return 1
+    ;;
+  esac
 }
 
 # resolve_ca_bundle: prints the fully resolved (realpath, all symlinks
@@ -408,7 +529,11 @@ share_release_blocked() {
   local path="$1" self_run="$2" treat_self_main_live="$3"
   local nono_bin run_dir run_name state_dir shared_file is_live
   nono_bin="$(resolve_stack_bin PI_STACK_NONO_BIN nono)"
-  for run_dir in "$RUNS_ROOT"/*/; do
+  # All sessions now share ONE nono XDG_STATE_HOME (see nono_state_dir) --
+  # computed once here rather than per-iteration, unlike the old
+  # per-run nono_state_dir_for(run_name).
+  state_dir="$(nono_state_dir)"
+  for run_dir in "$SESSIONS_ROOT"/*/; do
     [ -d "$run_dir" ] || continue
     run_name="$(basename "$run_dir")"
     shared_file="${run_dir%/}/shared-paths"
@@ -419,7 +544,6 @@ share_release_blocked() {
     if ! share_file_lists_path <(sudo -u pi cat "$shared_file" 2>/dev/null) "$path"; then
       continue
     fi
-    state_dir="$(nono_state_dir_for "$run_name")"
     if [ "$run_name" = "$self_run" ]; then
       is_live=0
       [ "$treat_self_main_live" = "1" ] && nono_session_running "$nono_bin" "$state_dir" "$run_name" && is_live=1
@@ -443,12 +567,14 @@ share_parent_still_needed() {
   local parent="$1" self_run="$2" treat_self_main_live="$3"
   local nono_bin run_dir run_name state_dir shared_file line is_live
   nono_bin="$(resolve_stack_bin PI_STACK_NONO_BIN nono)"
-  for run_dir in "$RUNS_ROOT"/*/; do
+  # All sessions now share ONE nono XDG_STATE_HOME -- see
+  # share_release_blocked's identical comment above.
+  state_dir="$(nono_state_dir)"
+  for run_dir in "$SESSIONS_ROOT"/*/; do
     [ -d "$run_dir" ] || continue
     run_name="$(basename "$run_dir")"
     shared_file="${run_dir%/}/shared-paths"
     sudo -u pi test -f "$shared_file" || continue
-    state_dir="$(nono_state_dir_for "$run_name")"
     is_live=0
     if [ "$run_name" = "$self_run" ]; then
       [ "$treat_self_main_live" = "1" ] && nono_session_running "$nono_bin" "$state_dir" "$run_name" && is_live=1

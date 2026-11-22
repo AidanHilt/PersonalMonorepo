@@ -109,8 +109,10 @@ end up wider than the `pi` tool itself.
    path exactly as given, rather than guessing at a workable Seatbelt
    closure substitute.
 4. Adds read-write grants (`filesystem.allow`) for `--workdir`,
-   `--state-dir` (the per-run `PI_CODING_AGENT_DIR`), every `--add`, and
-   every `--clone`.
+   `--state-dir` (this session's own transient scratch space under
+   `$SESSIONS_ROOT/<name>/state/`, NOT `PI_CODING_AGENT_DIR` — the fixed
+   agent dir is granted separately via its own `--add`, see "Fixed agent
+   dir" below), every `--add`, and every `--clone`.
 5. Every `--read` path that is NOT under `/nix/store` is also appended to
    the `fs_read` array of every `command_policies.commands[].from.
    session.sandbox` that already has one (store paths need not be — those
@@ -203,25 +205,60 @@ resolved command, secrets redacted by name only, performs no directory
 creation/sudo/nono calls).
 
 **Read-as-invoking-user / write-as-`pi` split**: every write under
-`/var/lib/pi` (the launcher's own per-run state tree, as opposed to the
-live-shared workdir/`--add`/`--clone` paths) goes through a narrow
-`sudo -u pi <cmd>` invocation (`mkdir`, `tee`, `tar -xf`, `cp` from a
-world-readable Nix store path); every read of the invoking user's own
-files (`config/agent/` in particular) runs as the invoking user. The
-`tar_copy_to_pi`/`write_as_pi` helpers stream bytes through a pipe rather
-than granting either user direct filesystem access into the other's
-trust domain — this is what lets the launcher work without the invoking
-user needing traversal rights into pi-owned directories.
+`/var/lib/pi` (the fixed agent dir and the launcher's own per-session
+/tmp bookkeeping, as opposed to the live-shared workdir/`--add`/`--clone`
+paths) goes through a narrow `sudo -u pi <cmd>` invocation (`mkdir`,
+`tee`, `tar -xf`, `cp` from a world-readable Nix store path); every read
+of the invoking user's own files (`config/agent/` in particular) runs as
+the invoking user. The `tar_copy_to_pi`/`write_as_pi` helpers stream
+bytes through a pipe rather than granting either user direct filesystem
+access into the other's trust domain — this is what lets the launcher
+work without the invoking user needing traversal rights into pi-owned
+directories.
 
-**Per-run state layout** (`/var/lib/pi/runs/<name>/`, `<name>` defaulting
-to `"pi"`):
+**Fixed agent dir**: every `start-agent.sh`/`shell.sh` session, whatever
+its `--name`, shares the SAME `PI_CODING_AGENT_DIR` at
+`/var/lib/pi/.pi/agent/` (`scripts/lib-common.sh`'s `FIXED_AGENT_DIR`) —
+there is no more per-run `pi/agent/` subtree. `PI_CODING_AGENT_DIR` is
+still `export`ed explicitly by every script that launches `pi` or a
+shell inside the sandbox (`start-agent.sh`, `shell.sh`, the detached
+supervisor), rather than relying on `pi`'s own `$HOME`-relative default,
+since `sudo -u pi` is not guaranteed to reset `$HOME` the way a full
+login shell would. This directory (and its sibling
+`/var/lib/pi/.pi/web-search.json` — see `FIXED_WEB_SEARCH_FILE`, and
+HANGUPS.md for how that sibling location was inferred, since `pi`'s own
+source isn't vendored in this checkout) is NEVER deleted by any script in
+this stack; every launch only adds/overwrites specific paths inside it
+(see "Idempotent seeding / `--resume`" below). It's granted to the
+sandbox via `--add "$FIXED_PI_HOME"` passed to `gen-profile.sh` (folded
+into `EXTRA_GEN_ARGS`, shared by both the foreground and `--detached`
+code paths — the old equivalent grant, `--add "$RUNS_ROOT"`, lived only
+in the foreground branch, so `--detached` sessions never actually had
+access to their own agent dir; see HANGUPS.md).
+
 ```
-pi/agent/            <- PI_CODING_AGENT_DIR
-  extensions/, skills/ <- pi-extra-extensions/pi-extra-skills build output
-  settings.json, AGENTS.md, agents/*, extensions/pi-permission-system/
-                      <- config/agent/ layered on top (extensions/skills
-                         first, config/ on top, never destructively)
-pi/web-search.json    <- config/web-search.json
+/var/lib/pi/.pi/                 <- FIXED_PI_HOME (granted whole, rw)
+  agent/                         <- PI_CODING_AGENT_DIR (FIXED_AGENT_DIR)
+    extensions/, skills/         <- pi-extra-extensions/pi-extra-skills
+                                     build output
+    settings.json, AGENTS.md, agents/*, extensions/pi-permission-system/
+                                 <- config/agent/ layered on top
+                                    (extensions/skills first, config/ on
+                                    top, never destructively)
+    auth.json                   <- seeded from the shared cross-session
+                                    OAuth store (see "Credentials" below)
+  web-search.json                <- config/web-search.json
+```
+
+**Per-session state layout** (`$SESSIONS_ROOT/<name>-<timestamp>/`,
+`SESSIONS_ROOT` defaulting to `/tmp/pi-sessions`, overridable via
+`PI_STACK_SESSIONS_ROOT`; `<name>` defaulting to `"pi"`). This replaces
+the old `/var/lib/pi/runs/<name>/` — everything here is TRANSIENT
+bookkeeping for this one launch, not relied on to survive a reboot or a
+`/tmp` cleaner sweep (a live nono session is always independently
+discoverable via `nono ps` against the shared nono state dir — see
+"Single nono state dir" below — never by this directory existing):
+```
 state/sessions/       <- the gen-profile.sh --state-dir grant (scratch
                          space for this run; NOT where auth.json lives)
 shared-paths          <- one realpath per line (workdir first, then
@@ -236,14 +273,15 @@ supervisor.sh, supervisor.log, approval-helper-info.json
 ```
 
 **Idempotent seeding / `--resume`**: every launch re-syncs
-`pi/agent/{extensions,skills}/` and layers `config/agent/`+
-`config/web-search.json` on top again, but never deletes the run
-directory first — it only adds/overwrites those specific paths. This
-means re-running with the SAME `--name` re-shares the same workdir/
-`--add`/`--clone` paths (merged with whatever was already recorded) and
-reuses the same `PI_CODING_AGENT_DIR` tree, so anything `pi` itself
-writes there (its own session history) survives across launches — that's
-what makes `--resume` meaningful here.
+`agent/{extensions,skills}/` (under the ONE fixed `FIXED_AGENT_DIR`) and
+layers `config/agent/`+`config/web-search.json` on top again, but NEVER
+deletes that directory first — it only adds/overwrites those specific
+paths. Since this is the same directory for every `--name`, anything
+`pi` itself writes there (its own session history, included) survives
+across EVERY launch, whatever `--name` is given — that's what makes
+`--resume` meaningful. `--name` (and its timestamp-suffixed nono session
+name) only selects the transient per-session bookkeeping above and which
+workdir/`--add`/`--clone` paths get re-shared/merged for that name root.
 
 **Live file sharing** (see "Live-share ACLs" below for the mechanism):
 the workdir and every `--add`/`--clone` extra are shared LIVE and
@@ -289,6 +327,58 @@ DIRECTORY (not the bundle file itself) via `--read`, and export
 `SSL_CERT_FILE`/`NIX_SSL_CERT_FILE`/`NODE_EXTRA_CA_CERTS` set to the
 resolved bundle path, threaded through `sudo -u pi --preserve-env`.
 
+## Single nono state dir
+
+Every session this stack starts (every `start-agent.sh` run, and every
+`shell.sh` `"<name>-shell"`) now shares ONE nono `XDG_STATE_HOME`
+(`scripts/lib-common.sh`'s `nono_state_dir`: `/var/lib/pi/nono-xdg-state`
+on Linux, `/Users/Shared/pi-nono-state` on macOS by default — either
+overridable via `PI_STACK_NONO_STATE_ROOT` — macOS still can't live under
+`/var`, see that function's own comment for why). This replaces the old
+per-run `/var/lib/pi/<name>-nono-xdg-state` siblings of `$RUNS_ROOT`. A
+single `nono ps` against this one directory now lists every live session
+at once (see `ps.sh` below), and `attach.sh`/`stop.sh`/`shell.sh` all
+resolve the exact same path.
+
+`login.sh` is the one exception: its own `/var/lib/pi/login/` layout
+(including its own, separate nono state dir) is unchanged and explicitly
+out of scope here — a one-off OAuth login flow isn't meant to show up
+mixed into the same `nono ps` listing as real work sessions. Its Darwin
+branch inlines the same path shape nono_state_dir's Darwin branch uses,
+rather than calling nono_state_dir itself (which no longer takes a name
+argument now that it's shared by everything else).
+
+**Wipe-before-launch / wipe-after-stop**: `start-agent.sh` wipes this
+shared state dir before launching, but ONLY if `nono ps` against it shows
+NO other session already live (`lib-common.sh`'s
+`nono_any_session_running`) — a live sibling session's state must never
+be torn out from under it just because a new, unrelated session is
+starting. `stop.sh` does the same check AFTER a successful `nono stop`
+of its own session, wiping only if nothing else is left live. Both wipes
+preserve `nono/audit` (`lib-common.sh`'s
+`nono_state_wipe_preserving_audit`) exactly as `stop.sh` always did.
+nono's exact `nono ps` "nothing running" output isn't documented in this
+checkout — see HANGUPS.md for the conservative assumption this relies on
+(any non-empty `nono ps` output counts as "something's live").
+
+## Auto-select (`attach`/`shell`/`stop` with no `<name>`)
+
+`attach.sh`, `shell.sh`, and `stop.sh` all accept an OPTIONAL `<name>`
+now. When omitted, `lib-common.sh`'s `resolve_name_or_auto` lists live
+MAIN sessions (`nono_list_live_main_sessions`: best-effort parsing of
+`nono ps`'s output — see HANGUPS.md for why this is best-effort, nono's
+exact output schema isn't documented here — minus any `"<name>-shell"`
+entries) and auto-selects when exactly one is live; zero or several live
+sessions is a hard error listing the candidates, same as passing an
+invalid/ambiguous name today. `shell.sh --dry-run` always requires an
+explicit `<name>` (auto-select needs a live `sudo -u pi nono ps` call,
+which `--dry-run` must never make). `stop.sh` additionally folds in
+leftover `$SESSIONS_ROOT/<name>` bookkeeping directories that have NO
+live session at all (main or shell) — the recovery path for a crashed/
+interrupted launch — into the same "exactly one candidate" rule.
+`ps.sh`, `login.sh`, and `update-pi-extensions.sh`/`gen-kubeconfig.sh`
+take no session name at all and are unaffected.
+
 ## Session wrappers
 
 ### `scripts/lib-common.sh`
@@ -296,43 +386,50 @@ resolved bundle path, threaded through `sudo -u pi --preserve-env`.
 A small, `source`d-only helper shared by every script
 (`start-agent.sh`, `ps.sh`, `attach.sh`, `stop.sh`, `login.sh`,
 `shell.sh`). Provides `resolve_or_die`/`resolve_stack_bin`,
-`RUNS_ROOT=/var/lib/pi/runs`, `validate_run_name` (anchors a run name to
+`SESSIONS_ROOT=/tmp/pi-sessions` (overridable via
+`PI_STACK_SESSIONS_ROOT` — transient, per-session bookkeeping only, see
+"Per-session state layout" above), `FIXED_AGENT_DIR`/`FIXED_PI_HOME`/
+`FIXED_WEB_SEARCH_FILE` (the one shared, persistent agent dir — see
+"Fixed agent dir" above), `validate_run_name` (anchors a run name to
 `^[A-Za-z0-9._-]+$`, rejecting path traversal), `require_run_dir`,
-`nono_state_dir_for` (the single canonical path for a run's nono
-`XDG_STATE_HOME` — `/var/lib/pi/<name>-nono-xdg-state` on Linux,
-`/Users/Shared/pi-nono-state/<name>-nono-xdg-state` on macOS by default,
-a sibling of `$RUNS_ROOT` chosen so it never overlaps nono's own
-protected state root), `resolve_ca_bundle`, `nono_session_running`, and
-the live-file-sharing primitives described below.
+`nono_state_dir` (the single, shared nono `XDG_STATE_HOME` — see "Single
+nono state dir" above), `nono_state_wipe_preserving_audit`,
+`nono_any_session_running`, `nono_list_live_sessions`/
+`nono_list_live_main_sessions`, `resolve_name_or_auto` (see "Auto-select"
+above), `resolve_ca_bundle`, `nono_session_running`, and the
+live-file-sharing primitives described below.
 
 ### `scripts/ps.sh` (`nix run .#ps`)
 
-There is no single, cross-run `nono ps` — every run has its own nono
-`XDG_STATE_HOME`, and nono has no cross-run session registry. `ps.sh`
-loops over every run directory, computes its nono state dir, skips it if
-that doesn't exist, and otherwise runs `nono ps` once per run as `pi`,
-printing a combined, `== run: <name> ==`-labelled table. A non-zero exit
-from `nono ps` for one run is surfaced as a labelled failure line, not
-silently skipped, and the listing continues for the rest.
+Now a single `nono ps` call against the one shared nono state dir (see
+"Single nono state dir" above) — no more looping over per-run state
+directories.
 
-### `scripts/attach.sh <name>` / `scripts/stop.sh <name>`
+### `scripts/attach.sh [<name>]` / `scripts/stop.sh [<name>]`
 
-Both validate `<name>` via `require_run_dir`, then run `nono attach
-<name>` / `nono stop <name>` as `pi`, against that run's own nono
-`XDG_STATE_HOME`.
+`<name>` is optional on both now (see "Auto-select" above); when given
+explicitly it's still validated via `validate_run_name`. Both run `nono
+attach <name>` / `nono stop <name>` as `pi`, against the single shared
+nono `XDG_STATE_HOME` — `attach.sh` deliberately does NOT require a
+`$SESSIONS_ROOT/<name>` bookkeeping directory to exist first (that
+directory is transient /tmp scratch — a live session must stay
+attachable even if it's been cleaned up by the OS in the meantime).
 
 `stop.sh`, on a successful `nono stop`, first releases every live-shared
-path recorded for this run (`share_release`, interactive sudo), then
-deletes everything under the run's nono state directory except
-`nono/audit` (worth keeping; everything else is disposable scratch
-state). This is also the documented recovery path for a crashed/
-interrupted `start-agent.sh` launch whose own teardown never ran.
-`stop.sh` refuses outright, before stopping or deleting anything, if a
-`"<name>-shell"` session is still running — exit the shell first (see
-`shell.sh` below). The approval helper's lifecycle is NOT `stop.sh`'s
-job: it's owned by the launcher process (foreground) or the invoking-
-user wrapper (detached), both of which stop it once `nono stop` makes
-the session they're watching exit.
+path recorded for this run (`share_release`, interactive sudo — skipped
+with a note if `$SESSIONS_ROOT/<name>` doesn't exist, since there's
+nothing recorded to release in that case), then — ONLY if no other
+session is live anywhere, since the nono state dir is now shared — wipes
+its contents except `nono/audit` (worth keeping; everything else is
+disposable scratch state; see "Single nono state dir" above). This is
+also the documented recovery path for a crashed/interrupted
+`start-agent.sh` launch whose own teardown never ran. `stop.sh` refuses
+outright, before stopping or deleting anything, if a `"<name>-shell"`
+session is still running — exit the shell first (see `shell.sh` below).
+The approval helper's lifecycle is NOT `stop.sh`'s job: it's owned by the
+launcher process (foreground) or the invoking-user wrapper (detached),
+both of which stop it once `nono stop` makes the session they're
+watching exit.
 
 ### `scripts/login.sh` (`nix run .#login`)
 
@@ -340,7 +437,9 @@ Runs `pi`'s native OAuth login flow inside a minimal nono session, as
 `pi`, using `profiles/login.base.json`. State lives directly under
 `/var/lib/pi/login/` (`agent/` — wiped and recreated fresh every run,
 since login is a one-off flow, not a `--resume`'able session;
-`nono-xdg-state/`; `profile.json`). No non-interactive `pi` login
+`nono-xdg-state/`; `profile.json`) — this layout is explicitly unchanged
+and out of scope for the fixed-agent-dir/shared-state-dir work above; see
+"Single nono state dir" for why. No non-interactive `pi` login
 subcommand is documented anywhere in this checkout, so the script starts
 `pi` inside the sandbox interactively and expects the user to trigger
 login themselves (e.g. a `/login` command) and then exit the session
@@ -348,21 +447,24 @@ normally; `login.sh` then copies `agent/auth.json` to the shared
 `/var/lib/pi/auth/auth.json` (`install -m 0600`, as `pi`), or logs a
 warning if nothing is there.
 
-### `scripts/shell.sh <name>` (`nix run .#shell -- <name>`)
+### `scripts/shell.sh [<name>]` (`nix run .#shell [-- <name>]`)
 
 Opens a separate, interactive `bash -i` inside its OWN nono session
-(`"<name>-shell"`), reusing the target run's nono `XDG_STATE_HOME` (so
-it's labelled under that run in `nono ps`/`ps.sh`) and a per-invocation
-COPY of that run's own `profile.json` — not a call into `gen-profile.sh`
-— with only its webhook approval URL rewritten. This exists because
-`nono attach` attaches to `pi`'s own TUI PTY and fails outright for a
-foreground run ("Session <name> already has an active attached client").
+(`"<name>-shell"`), sharing the single, shared nono `XDG_STATE_HOME`
+with every other session (so it's labelled alongside them in `nono
+ps`/`ps.sh`) and a per-invocation COPY of that run's own `profile.json`
+— not a call into `gen-profile.sh` — with only its webhook approval URL
+rewritten. This exists because `nono attach` attaches to `pi`'s own TUI
+PTY and fails outright for a foreground run ("Session <name> already has
+an active attached client").
 
-Starts its own approval helper (as the invoking user), so it works
-whether or not the run's own `pi` session is still alive. Refuses to
-start if a `"<name>-shell"` session is already running — one shell per
-run. Requires the target run to already have a `profile.json` (i.e. to
-have been started at least once via `start-agent.sh`). Re-shares the
+`<name>` is optional (see "Auto-select" above), except under `--dry-run`,
+which always requires it explicitly. Starts its own approval helper (as
+the invoking user), so it works whether or not the run's own `pi` session
+is still alive. Refuses to start if a `"<name>-shell"` session is already
+running — one shell per run. Requires the target run to already have a
+`profile.json` under its `$SESSIONS_ROOT/<name>/` bookkeeping dir (i.e.
+to have been started at least once via `start-agent.sh`). Re-shares the
 run's recorded workdir/`--add`/`--clone` paths for the shell's lifetime
 and releases them on exit, but never while the run's own main session is
 still live and also shares that path.
@@ -421,12 +523,12 @@ together:
   ever appearing in argv.
 - OAuth: `nix run .#login` writes `auth.json` to a shared, cross-run
   store at `/var/lib/pi/auth/auth.json`, which is never itself granted to
-  any nono session. Every `start-agent.sh` launch seeds a per-run COPY
-  from it into `PI_CODING_AGENT_DIR/auth.json`, as `pi`, mode `0600`,
-  after that run's `config/agent/` layering — skipped if the run-local
-  file already exists and isn't older than the shared source, so a run
-  that has refreshed its own auth (e.g. via a login performed inside that
-  session) is never clobbered by an older shared copy on restart.
+  any nono session. Every `start-agent.sh` launch seeds a COPY from it
+  into the one fixed, shared `PI_CODING_AGENT_DIR/auth.json`, as `pi`,
+  mode `0600`, after the `config/agent/` layering — skipped if that file
+  already exists there and isn't older than the shared source, so auth
+  refreshed via a login performed inside any session is never clobbered
+  by an older shared copy on the next launch.
 
 ## Configuration bundling
 

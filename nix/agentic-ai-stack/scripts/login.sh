@@ -33,14 +33,23 @@ CONFIG_AGENT_DIR="$STACK_DIR/config/agent"
 
 PI_ROOT="/var/lib/pi/login"
 AGENT_DIR="$PI_ROOT/agent"
+# NOTE: login.sh deliberately keeps its OWN, dedicated nono XDG_STATE_HOME
+# here, rather than lib-common.sh's shared nono_state_dir (used by
+# start-agent.sh/shell.sh/ps.sh/attach.sh/stop.sh for every OTHER
+# session) -- login.sh's own /var/lib/pi/login layout is explicitly out
+# of scope for the single-shared-state-dir change (see HANGUPS.md); a
+# one-off login flow mixed into the same `nono ps` listing as real work
+# sessions wasn't asked for. The Darwin branch below is inlined directly
+# (not lib-common.sh's nono_state_dir_for, which no longer takes a name
+# argument now that it's the single shared dir for everything else) but
+# computes the exact same path shape as before.
+#
 # macOS: nono's state root (and so XDG_STATE_HOME) must NOT live under /var
 # (== /private/var) -- the system_read_macos group grants read on
 # /private/var as a whole, and nono refuses to start when a grant overlaps
-# its own protected state root. lib-common.sh's nono_state_dir_for picks a
-# safe location on Darwin (/Users/Shared/pi-nono-state/ by default, or
-# $PI_STACK_NONO_STATE_ROOT). Linux keeps the original layout below.
+# its own protected state root. Linux keeps the original layout below.
 case "$(uname -s)" in
-Darwin) NONO_STATE_DIR="$(nono_state_dir_for login)" ;;
+Darwin) NONO_STATE_DIR="${PI_STACK_NONO_STATE_ROOT:-/Users/Shared/pi-nono-state}/login-nono-xdg-state" ;;
 *) NONO_STATE_DIR="$PI_ROOT/nono-xdg-state" ;;
 esac
 SHARED_AUTH_DIR="/var/lib/pi/auth"
