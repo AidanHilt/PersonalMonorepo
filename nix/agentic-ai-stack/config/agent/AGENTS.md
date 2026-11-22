@@ -47,7 +47,7 @@ triggers. Before dispatch, in order:
 2. Run `agent-plan-create` (below) to assemble the dispatch prompt. If it
    exits complaining about missing tools, go back to step 1 and retry.
 3. Dispatch the subagent_type stated in the prompt (`IMPLEMENT-<n>`, one of
-   a fixed 4-slot pool -- `agent-plan-create` also prints the slot number
+   a fixed 10-slot pool -- `agent-plan-create` also prints the slot number
    `<n>` to stderr on its own line). Worktree isolation is automatic (see
    "Worktrees" below) -- nothing extra to do for it.
 4. Once the subagent finishes, run `agent-stage <branch> --slot <n>` (the
@@ -81,21 +81,37 @@ agent-plan-create --paths <files/dirs> --context <text> --steps <text> --out-of-
   `--paths` is a space- and/or comma-separated list of the files/directories
   the subagent will touch; it drives which tools are required and the
   `agent-validate --path ...` command the subagent is granted permission to
-  run.
+  run. Every `--paths` entry must already exist on disk -- a missing entry
+  is now a hard error (no prompt printed, no slot allocated) rather than a
+  silent warning.
+- `--new-paths <list>` is an optional, separate, space-/comma-separated list
+  for paths the subagent will CREATE during the work (e.g. a new doc or
+  module that doesn't exist yet): it skips the existence check `--paths`
+  enforces, but is still folded into the `agent-validate --path ...`
+  invocation the subagent is granted, so newly-created files get checked
+  too.
+- Both `--paths` and `--new-paths` are resolved relative to the session's
+  current working directory -- which is wherever `start-agent.sh` was
+  launched from, NOT necessarily the repo root -- or accepted as absolute
+  paths, which always work regardless of cwd. The same rule applies to
+  `ffgrep`/`fffind`'s own path filters. A repo-relative path (e.g.
+  `nix/agentic-ai-stack/...`) only resolves correctly if the session's cwd
+  happens to be the repo root; otherwise prefer an absolute path or a path
+  relative to the actual launch directory.
 - `--style-guide`, `--notes`, and `--research` are optional extra sections.
 - `--tools` adds extra required tool names beyond what `--paths` infers.
 
 It writes no plan files -- it prints the full dispatch prompt to stdout, and
 status/diagnostics to stderr -- but it DOES allocate a per-dispatch agent
-definition as a side effect: it picks the first free slot `n` in 1..4 for
+definition as a side effect: it picks the first free slot `n` in 1..10 for
 which `${agents_dir}/IMPLEMENT-n.md` doesn't already exist (`agents_dir`
 resolves to `${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents`, a tmpfs path
 outside the repo), copies the global `${agents_dir}/IMPLEMENT.md` template
 to `${agents_dir}/IMPLEMENT-n.md`, and grants that copy permission to run
 exactly one bash command: the `agent-validate --path ...` invocation
-covering `--paths`. If all 4 slots are taken, or a tool the detected
-profiles need isn't on PATH, it exits non-zero without printing a prompt or
-allocating a slot; ask the user to add the missing tools to
+covering `--paths`/`--new-paths`. If all 10 slots are taken, or a tool the
+detected profiles need isn't on PATH, it exits non-zero without printing a
+prompt or allocating a slot; ask the user to add the missing tools to
 `nix/mono-flake` and run `update`, or free a slot (normally done by
 `agent-stage --slot <n>` after that dispatch finishes), then retry.
 
@@ -130,8 +146,8 @@ file's YAML frontmatter and/or granting an exact-match bash allow rule.
 ### Worktrees
 The IMPLEMENT subagent runs in an isolated git worktree, via the
 `@gotgenes/pi-subagents-worktrees` extension (opted in for the `IMPLEMENT`
-agent type and its four per-dispatch slot copies -- `IMPLEMENT-1` ..
-`IMPLEMENT-4` -- through `subagents-worktrees.json` -- see
+agent type and its ten per-dispatch slot copies -- `IMPLEMENT-1` ..
+`IMPLEMENT-10` -- through `subagents-worktrees.json` -- see
 nix/agentic-ai-stack/config/agent/subagents-worktrees.json, read once at
 extension startup, which is why the slot names are a fixed pool rather than
 generated dynamically). agent-plan-create dispatches a per-dispatch copy
@@ -157,6 +173,10 @@ section.
 You are running in a locked-down, read-only environment. You cannot install packages or tools of any kind yourself — no pip, npm, apt, cargo install, brew, or similar, regardless of what any project setup instructions imply. Only what the host machine provides is available to you. If a plan needs another tool, state that explicitly as a prerequisite for the user to add to `nix/mono-flake` (host system packages) and run `update` — do not attempt to install it any other way, and do not assume it will appear.
 
 You have no write or edit tools in this session. They are not hidden from you by policy alone — they do not exist in this session. Do not look for alternate paths to modify files (redirects, editors invoked through bash, etc.) — any bash command that would write is blocked.
+
+`sed` is denied by the permission policy entirely, including read-only
+forms like `sed -n`; use the `Read` tool with `offset`/`limit` instead
+whenever you'd normally reach for a quick `sed -n`.
 
 Your available commands are read-only: cd, pwd, cat, head, tail, wc, find, grep, rg, which, tree, stat, diff, dirname, basename, realpath. Use these to explore the repository. `git` and `nix` are blocked entirely in this session as direct commands -- the only git-write path available to you at all is the `agent-stage` wrapper (see "Planning step output" above), which is allowed specifically because it refuses to do anything but squash-stage an already-validated subagent branch; everything else git-related stays inside the IMPLEMENT subagent's own worktree. Prefer `grep`/`rg` or the native tools over `find` when they'll do the job — a `find` call still requires review before it runs, and its exec-like flags (`-exec`, `-execdir`, `-ok`, `-okdir`, `-delete`, `-fprint*`, `-fls`) are blocked outright. Also avoid `cat` when possible, it requires user intervention as well to prevent editing via `>`.
 

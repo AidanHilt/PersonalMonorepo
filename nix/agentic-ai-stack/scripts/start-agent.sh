@@ -223,7 +223,7 @@ Approvals over SSH / headless hosts:
   already set (i.e. you are running this command from inside a tmux
   session). If neither is available, the helper refuses to start at all
   and prints an actionable error -- start tmux first (e.g.
-  `tmux new -s pi`), then run `start-agent.sh`/`login.sh` from inside
+  `tmux new -s pi`), then run `start-agent.sh` from inside
   that tmux session, so approvals show up as a tmux command-prompt
   (y/n/s) you can answer. The helper's own prompt timeout (55s) is kept
   below the 60s `timeout_secs` the nono profiles set for the webhook
@@ -562,8 +562,7 @@ NONO_STATE_DIR="$(nono_state_dir)"
 # never be torn out from under it just because a new, unrelated session
 # is starting. See lib-common.sh's nono_any_session_running for the
 # "any output from nono ps counts as live" caveat (nono ps's exact
-# "nothing running" output isn't documented in this checkout -- see
-# HANGUPS.md).
+# "nothing running" output isn't documented in this checkout).
 if [ -d "$NONO_STATE_DIR" ]; then
   if nono_any_session_running "$NONO_BIN" "$NONO_STATE_DIR"; then
     echo "==> Other session(s) already live against $NONO_STATE_DIR -- not wiping it before this launch." >&2
@@ -647,31 +646,6 @@ if [ -f "$CONFIG_WEB_SEARCH" ]; then
   write_as_pi "$FIXED_WEB_SEARCH_FILE" "$CONFIG_WEB_SEARCH"
 fi
 
-# Seed the shared auth.json from the shared, cross-session OAuth store
-# (written by scripts/login.sh) -- /var/lib/pi/auth itself is NEVER
-# granted to any nono session; this is the only path AGENT_DIR's own
-# auth.json ever comes from it, as a COPY, never a shared mount/symlink.
-# pi itself reads/writes auth.json straight out of PI_CODING_AGENT_DIR
-# (AGENT_DIR here, now the one fixed/shared agent dir), so that's where
-# this seeds to -- NOT STATE_DIR, which pi never looks at for auth.
-# Deliberately runs AFTER the config/agent/ layering above (which never
-# contains an auth.json today, but could in principle) so a seeded token
-# can never be clobbered by it. Never overwrites an existing, already-
-# newer auth.json already sitting in AGENT_DIR (e.g. refreshed via a more
-# recent `pi` login inside some session) -- `-nt` only copies when the
-# shared source is newer than what's already here, or nothing is here
-# yet.
-SHARED_AUTH_FILE="/var/lib/pi/auth/auth.json"
-if sudo -u pi test -f "$SHARED_AUTH_FILE"; then
-  echo "    seeding shared OAuth auth from $SHARED_AUTH_FILE (if newer)..." >&2
-  sudo -u pi sh -c '
-    src="$1"; dst="$2"
-    if [ ! -f "$dst" ] || [ "$src" -nt "$dst" ]; then
-      install -m 0600 "$src" "$dst"
-    fi
-  ' sh "$SHARED_AUTH_FILE" "$AGENT_DIR/auth.json"
-fi
-
 # --workdir is passed separately (below, per mode); --add/--clone extras
 # are both passed to gen-profile.sh as --add (identical read-write grant
 # treatment there -- see gen-profile.sh's own "Step 4" comment), since
@@ -679,14 +653,23 @@ fi
 # into a per-run add-N/clone-N destination.
 #
 # $FIXED_PI_HOME (/var/lib/pi/.pi, covering both AGENT_DIR and
-# FIXED_WEB_SEARCH_FILE) is ALSO granted here, in this shared
-# EXTRA_GEN_ARGS array -- not just in the foreground-only extra --add
-# flags further below -- so both foreground AND --detached sessions
-# actually get access to their own PI_CODING_AGENT_DIR (the old
-# equivalent grant, --add "$RUNS_ROOT", lived ONLY in the foreground
-# branch's gen-profile.sh invocation; detached sessions never got it --
-# see HANGUPS.md).
-EXTRA_GEN_ARGS=(--add "$FIXED_PI_HOME")
+# FIXED_WEB_SEARCH_FILE), /tmp (this session's own transient bookkeeping
+# under SESSIONS_ROOT), and every resolved shell-environment grant
+# (resolve_shell_env_grants -- /etc/profile/-bashrc and whatever they
+# `source`, resolved to their real, symlink-free targets rather than
+# hardcoded, since nix-darwin's versions churn on every nixpkgs bump) are
+# ALL granted here, in this ONE shared EXTRA_GEN_ARGS array used by BOTH
+# the foreground branch below AND the --detached branch's GEN_ARGS_QUOTED
+# further down -- not just a foreground-only extra --add list -- so both
+# foreground AND --detached sessions actually get the same access (the
+# old equivalent grants, --add "$RUNS_ROOT" and the shell-environment
+# --add flags, lived ONLY in the foreground branch's gen-profile.sh
+# invocation; --detached sessions never got them).
+EXTRA_GEN_ARGS=(--add "$FIXED_PI_HOME" --add "/tmp")
+while IFS= read -r shell_env_path; do
+  [ -n "$shell_env_path" ] || continue
+  EXTRA_GEN_ARGS+=(--add "$shell_env_path")
+done < <(resolve_shell_env_grants | awk '!seen[$0]++')
 for add_path in "${ADD_PATHS[@]:-}"; do
   [ -n "$add_path" ] || continue
   EXTRA_GEN_ARGS+=(--add "$add_path")
@@ -745,15 +728,12 @@ if [ "$DETACHED_FLAG" != "1" ]; then
 
   echo "==> Generating the nono profile..." >&2
   TMP_PROFILE="$(mktemp)"
-  # $FIXED_PI_HOME (the shared agent dir) is already in EXTRA_GEN_ARGS,
-  # above -- the remaining hardcoded --add flags below are this stack's
-  # own ad-hoc shell-environment needs (/etc/bashrc, etc-profile,
-  # set-environment) plus /tmp for this session's own transient
-  # bookkeeping (RUN_DIR, under SESSIONS_ROOT).
+  # $FIXED_PI_HOME, /tmp, and every resolved shell-environment grant are
+  # already in EXTRA_GEN_ARGS, above -- shared with the --detached branch
+  # further down, nothing hardcoded or foreground-only left here.
   "$GEN_PROFILE_SH" --base "$BASE_PROFILE" --out "$TMP_PROFILE" \
     --webhook-url "$WEBHOOK_URL" --workdir "$WORKDIR" --state-dir "$STATE_DIR" \
-    "${EXTRA_GEN_ARGS[@]}" "${READ_ROOT_ARGS[@]}" --add "/tmp" --add "/etc/bashrc" --add "/nix/store/02sjb8kr1hday5s15sk4xh40cpj7p449-etc-profile" --add "/etc/profile" \
-    --add "/nix/store/7j90xhkzr7b6vqyhygx0ky9x130xxp6v-set-environment"
+    "${EXTRA_GEN_ARGS[@]}" "${READ_ROOT_ARGS[@]}"
   write_as_pi "$RUN_DIR/profile.json" "$TMP_PROFILE"
   rm -f "$TMP_PROFILE"
 

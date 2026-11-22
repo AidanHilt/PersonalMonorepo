@@ -11,15 +11,14 @@ model; this README is the practical "how do I run it" summary.
 ```
 flake.nix               # packages: nono, pi-coding-agent, pi-extra-extensions,
                          # pi-extra-skills, approval-helper; apps: start-agent,
-                         # attach, ps, stop, shell, login, gen-kubeconfig,
+                         # attach, ps, stop, shell, gen-kubeconfig,
                          # update-pi-extensions
 approval-helper/         # host-side Go process implementing nono's webhook
                          # approval protocol (see "Approvals" below)
 profiles/
   work.base.json         # flake-owned base nono profile for start-agent.sh
-  login.base.json        # minimal variant for login.sh (no workdir/nix daemon)
 scripts/
-  start-agent.sh, attach.sh, ps.sh, stop.sh, shell.sh, login.sh
+  start-agent.sh, attach.sh, ps.sh, stop.sh, shell.sh
   lib-common.sh          # shared helpers (sourced, not run directly)
   gen-profile.sh         # composes a launch-ready profile from a base +
                          # per-launch filesystem grants
@@ -35,9 +34,12 @@ extra-skills.nix          # build-time pinned agent skills bundle
 ## Quickstart
 
 ```sh
-nix run .#login            # if using OAuth; trigger /login once inside
 nix run .#start-agent       # starts one nono-sandboxed pi session
 ```
+
+If using OAuth, trigger `pi`'s own `/login` command once inside that
+session instead of a separate login flow — see "Credentials / secrets"
+below.
 
 ## Giving `pi` something to work on
 
@@ -115,11 +117,11 @@ dispatch/validate/stage mechanics.
 
 ## Approvals over SSH / headless hosts (READ THIS if approvals seem to never show up)
 
-`start-agent.sh`/`login.sh` start a host-side `approval-helper` process
+`start-agent.sh` starts a host-side `approval-helper` process
 outside the sandbox that pops a dialog (or a tmux prompt) every time `pi`
 needs to reach a network host not already on the profile's static
 allowlist. **If you are connected over SSH, you MUST start a `tmux`
-session first and run `nix run .#start-agent`/`nix run .#login` from
+session first and run `nix run .#start-agent` from
 inside it:**
 
 ```sh
@@ -140,8 +142,8 @@ every approval when it can't find a usable UI. Concretely, on Linux:
   server the helper itself ends up running on.
 - If neither applies, the helper refuses to start at all — a loud,
   non-zero failure with an actionable message, both from the helper
-  itself (stderr) and from `start-agent.sh`/`login.sh` (which detect the
-  helper exiting early and stop immediately rather than silently waiting
+  itself (stderr) and from `start-agent.sh` (which detects the
+  helper exiting early and stops immediately rather than silently waiting
   out a timeout). `--ui deny-all` remains available as an explicit,
   intentional opt-in to fail-closed-always, but is never the automatic
   fallback.
@@ -159,7 +161,7 @@ both if a detached session's approvals don't seem to be happening.
 
 Timeouts: the helper waits up to 55s for you to answer a prompt before
 failing that one request closed (logged, never silently); the nono
-profiles (`profiles/work.base.json`, `profiles/login.base.json`) give the
+profile (`profiles/work.base.json`) gives the
 webhook backend itself 60s before giving up on the helper entirely — the
 5s of headroom is intentional, so the helper's own timeout always wins
 and gets logged with a reason.
@@ -170,12 +172,12 @@ Grants from an approval are session-scoped only — there is no
 persistence of dynamic grants across launches. Metadata/link-local hosts
 are always denied outright, without ever asking the helper.
 
-## TLS / CA trust store (`nix run .#login` / `.#start-agent`)
+## TLS / CA trust store (`.#start-agent`)
 
 The nono sandbox has no default CA trust store reachable inside it, which
 breaks TLS verification for anything `pi` talks to over HTTPS (OAuth
 token exchange included) unless a CA bundle is explicitly resolved and
-granted. `scripts/login.sh` and `scripts/start-agent.sh` both do this
+granted. `scripts/start-agent.sh` does this
 automatically on every launch — see `IMPLEMENTERS.md`'s "Credentials"
 section for the full mechanism. If it can't find a usable bundle on its
 own, or you need to point it at a non-default one (e.g. a custom
@@ -183,7 +185,7 @@ corporate CA), set:
 
 ```sh
 export PI_STACK_CA_BUNDLE=/path/to/your/ca-bundle.crt
-nix run .#login
+nix run .#start-agent
 ```
 
 Resolution order (first existing, readable-by-`pi` file wins):
@@ -212,12 +214,16 @@ If both are set for the same name, the `--secret` flag wins. `.env` has
 nothing to hold today (see `.env.example`) — secrets are never read from
 it.
 
-OAuth: `nix run .#login` runs pi's native login flow inside a minimal
-nono session and copies the resulting `auth.json` to a shared,
-cross-session store (`/var/lib/pi/auth/auth.json`, never itself granted
-to any nono session); every `start-agent.sh` launch seeds a copy from it
-into the one fixed, shared agent dir
-(`/var/lib/pi/.pi/agent/auth.json`) if newer than what's already there.
+OAuth: run `nix run .#start-agent` as normal, then trigger `pi`'s own
+`/login` command once inside that session — there is no separate login
+flow or flake app. `auth.json` lands straight in the one fixed, shared
+agent dir (`/var/lib/pi/.pi/agent/auth.json`), which persists across
+every future `start-agent.sh` launch (and every `--name`), so OAuth only
+needs to be done once.
+
+> **Migration note**: `/var/lib/pi/login` and `/var/lib/pi/auth` are
+> artifacts of an old, separate login flow and are no longer used — they
+> can be deleted.
 
 Tear down a run: `nix run .#stop [-- <name>]`.
 
@@ -305,8 +311,8 @@ Like extensions (`extra-extensions.nix`, `extensions/README.md`), skills
 are **build-time flake inputs**, not something `pi` fetches or installs
 at runtime. `extra-skills.nix` pulls in a curated set of third-party
 [SKILL.md](https://github.com/Kyure-A/agent-skills-nix)-style skill
-directories, pinned by `flake.lock` like any other input; `start-agent.sh`/
-`login.sh` build `pi-extra-skills` and copy it into each run's
+directories, pinned by `flake.lock` like any other input; `start-agent.sh`
+builds `pi-extra-skills` and copies it into each run's
 `PI_CODING_AGENT_DIR/skills/` at launch.
 
 Selection/filtering of which skills from each source actually ship is

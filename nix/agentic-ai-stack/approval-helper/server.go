@@ -13,9 +13,9 @@ import (
 
 const (
 	// defaultPromptTimeout must stay comfortably BELOW the
-	// `network.approval_backends.dialog.timeout_secs` value nono profiles
-	// set for the webhook backend (see profiles/work.base.json,
-	// profiles/login.base.json) -- 55s here, 60s there -- so the helper
+	// `network.approval_backends.dialog.timeout_secs` value the nono
+	// profile sets for the webhook backend (see profiles/work.base.json)
+	// -- 55s here, 60s there -- so the helper
 	// always resolves (even to a deny) and logs a reason before nono's own
 	// webhook call times out and gives up waiting on it.
 	defaultPromptTimeout = 55 * time.Second

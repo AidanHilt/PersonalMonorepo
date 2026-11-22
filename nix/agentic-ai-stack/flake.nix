@@ -1,5 +1,5 @@
 {
-  description = "Pi sandbox stack: nono (Landlock/Seatbelt)-based sandboxed Pi coding agent -- work profile, launcher, approval helper, ps/attach/stop/login/shell wrappers, and the nono-sandbox extension/skill";
+  description = "Pi sandbox stack: nono (Landlock/Seatbelt)-based sandboxed Pi coding agent -- work profile, launcher, approval helper, ps/attach/stop/shell wrappers, and the nono-sandbox extension/skill";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
@@ -271,27 +271,6 @@
                 export PI_STACK_EXTRA_PATH="${pkgs.lib.makeBinPath extraPackages}"
               ''
               + builtins.readFile ./scripts/shell.sh;
-            };
-          };
-
-          # nix run .#login -> scripts/login.sh: runs pi's native OAuth
-          # login flow inside a minimal nono session.
-          login = flake-utils.lib.mkApp {
-            drv = pkgs.writeShellApplication {
-              name = "pi-sandbox-login";
-              runtimeInputs = [
-                pkgs.jq
-                pkgs.git
-                self.packages.${system}.approval-helper
-                pkgs.coreutils
-              ];
-              text = ''
-                export PI_STACK_NONO_BIN=${pkgsUnstable.nono}/bin/nono
-                export PI_STACK_PI_BIN=${pkgsUnstable.pi-coding-agent}/bin/pi
-                export PI_STACK_JQ_BIN=${pkgs.jq}/bin/jq
-                export PI_STACK_APPROVAL_HELPER_BIN=${self.packages.${system}.approval-helper}/bin/approval-helper
-              ''
-              + builtins.readFile ./scripts/login.sh;
             };
           };
 

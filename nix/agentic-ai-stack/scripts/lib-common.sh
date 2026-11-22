@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # lib-common.sh -- shared helpers for the session-wrapper scripts (ps.sh,
-# attach.sh, stop.sh, login.sh, shell.sh, start-agent.sh): resolve_or_die/
+# attach.sh, stop.sh, shell.sh, start-agent.sh): resolve_or_die/
 # resolve_stack_bin/validate_run_name/nono_state_dir/resolve_ca_bundle,
 # plus the live-file-sharing primitives (share_path_check, share_grant,
 # share_release and helpers, git_safe_dir_env, and the RUN_DIR/shared-paths
@@ -18,7 +18,7 @@
 
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
 # shellcheck disable=SC2034 # STACK_DIR is used by scripts that `source`
-# this file (login.sh, in particular), not by this file itself.
+# this file, not by this file itself.
 STACK_DIR="$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"
 
 # SESSIONS_ROOT: per-session TRANSIENT bookkeeping only (profile.json,
@@ -40,8 +40,9 @@ SESSIONS_ROOT="${PI_STACK_SESSIONS_ROOT:-/tmp/pi-sessions}"
 # now that sessions no longer each get their own state tree. Mirrors pi's
 # own default ($HOME/.pi/agent) under the `pi` user's actual home
 # (/var/lib/pi), on the theory that this is the path pi's own code (e.g.
-# the web-search feature -- see HANGUPS.md) most likely assumes a sibling
-# web-search.json lives next to. NOT overridable via env -- this is a
+# the web-search feature) most likely assumes a sibling
+# web-search.json lives next to -- an inference, since pi's own source
+# isn't vendored in this checkout. NOT overridable via env -- this is a
 # flake-owned, fixed location, not a per-launch choice.
 FIXED_PI_HOME="/var/lib/pi/.pi"
 # shellcheck disable=SC2034 # used by scripts that `source` this file
@@ -166,8 +167,7 @@ nono_state_wipe_preserving_audit() {
 # placeholder line) isn't documented in this checkout -- treating any
 # non-empty output as "something's running" is the conservative choice
 # here (a false positive just skips a wipe that would have been safe; a
-# false negative would wipe out from under a live session) -- see
-# HANGUPS.md.
+# false negative would wipe out from under a live session).
 nono_any_session_running() {
   local nono_bin="$1" state_dir="$2" output
   [ -d "$state_dir" ] || return 1
@@ -177,7 +177,7 @@ nono_any_session_running() {
 
 # nono_list_live_sessions NONO_BIN STATE_DIR: prints one session name per
 # line from `nono ps`'s output, best-effort -- nono ps's exact output
-# schema isn't documented in this checkout (see HANGUPS.md). Takes the
+# schema isn't documented in this checkout. Takes the
 # first whitespace-delimited field of every non-empty line and keeps only
 # tokens that look like a session name (same charset validate_run_name
 # accepts, plus the "-shell" suffix this stack appends itself) -- this
@@ -276,6 +276,44 @@ resolve_ca_bundle() {
   done
   echo "error: no CA bundle found (checked \$PI_STACK_CA_BUNDLE, \$NIX_SSL_CERT_FILE, \$SSL_CERT_FILE, /etc/ssl/certs/ca-certificates.crt, /etc/pki/tls/certs/ca-bundle.crt, /etc/ssl/cert.pem) -- set PI_STACK_CA_BUNDLE explicitly to the bundle you want granted." >&2
   exit 1
+}
+
+# resolve_shell_env_grants: prints, one per line, the real (symlink-
+# resolved) paths that need to be `--add`ed so a sandboxed shell can read
+# the host's own shell-environment setup (PATH/env setup normally done by
+# a login shell -- see start-agent.sh's/shell.sh's own callers). Resolved
+# at launch time rather than hardcoded, since nix-darwin lays /etc/profile
+# and /etc/bashrc as symlinks (via /etc/static) into content-addressed
+# /nix/store paths (e.g. a `...-etc-profile` derivation) that churn on
+# every `update` -- a hardcoded store path breaks silently the next time
+# nixpkgs is bumped.
+#
+# For each of /etc/profile and /etc/bashrc that exists:
+#   1. Grants the file's own fully-resolved realpath (its /etc/static ->
+#      /nix/store target on nix-darwin; just itself on a plain Linux
+#      distro that doesn't symlink it into the store at all).
+#   2. Best-effort scans its contents for `. <path>`/`source <path>`
+#      lines naming another file that actually exists (nix-darwin's
+#      generated profile/bashrc source a separate, sibling
+#      `...-set-environment` store path this way for early PATH setup),
+#      and grants THAT file's realpath too. This is a plain grep, not a
+#      shell parse -- it can miss an unusual sourcing style, but never
+#      grants a path that doesn't exist.
+# Prints nothing (not an error) if neither file exists. Callers are
+# expected to dedupe the combined output themselves (e.g. `awk
+# '!seen[$0]++'`, the same order-preserving dedupe gen-profile.sh uses).
+resolve_shell_env_grants() {
+  local f real sourced_path
+  for f in /etc/profile /etc/bashrc; do
+    [ -e "$f" ] || continue
+    real="$(realpath -e "$f" 2>/dev/null)" || continue
+    printf '%s\n' "$real"
+    while IFS= read -r sourced_path; do
+      [ -n "$sourced_path" ] || continue
+      [ -e "$sourced_path" ] || continue
+      realpath -e "$sourced_path" 2>/dev/null
+    done < <(grep -oE '(^|[^#[:alnum:]_])(\.|source)[[:space:]]+[^[:space:]"'"'"';]+' "$f" 2>/dev/null | awk '{print $NF}')
+  done
 }
 
 # nono_session_running: returns success (0) if a nono session named $3

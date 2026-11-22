@@ -79,7 +79,7 @@ Flags:
   --help, -h   Show this help and exit.
 
 Approvals over SSH / headless hosts:
-  Same `--ui auto` requirements as start-agent.sh/login.sh: on Linux, a
+  Same `--ui auto` requirements as start-agent.sh: on Linux, a
   desktop dialog is only used when DISPLAY/WAYLAND_DISPLAY is set AND you
   are not in an SSH session; otherwise the helper only uses tmux, and
   only if $TMUX is already set. If neither is available, the helper
@@ -282,7 +282,7 @@ done
 
 # --- Approval helper: this shell gets its OWN helper, independent of the
 # run's own pi session/helper -- started exactly like start-agent.sh's
-# foreground mode / login.sh, as you (the invoking user), so --ui auto's
+# foreground mode, as you (the invoking user), so --ui auto's
 # tmux fallback can reach your terminal. -----------------------------
 INFO_FILE="$(mktemp -u)"
 HELPER_PID=""
@@ -327,7 +327,7 @@ fi
 WEBHOOK_URL="$("$JQ_BIN" -r .url "$INFO_FILE")"
 
 # write_as_pi: pipes $2's contents into a pi-owned file at $1 -- mirrors
-# start-agent.sh's/login.sh's own helper of the same name/shape
+# start-agent.sh's own helper of the same name/shape
 # (duplicated minimally here rather than factored into lib-common.sh,
 # matching their own precedent of keeping this kind of per-script
 # duplication local).

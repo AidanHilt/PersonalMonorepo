@@ -7,8 +7,8 @@ fixed-output npm cache (for npm-sourced extensions) and pinned-rev
 `fetchFromGitHub` (for git-sourced ones).
 
 This directory feeds `../extra-extensions.nix`'s `pi-extra-extensions`
-package, which `scripts/start-agent.sh`/`scripts/login.sh` build
-(`nix build .../#pi-extra-extensions`) and copy into each run's
+package, which `scripts/start-agent.sh` builds
+(`nix build .../#pi-extra-extensions`) and copies into each run's
 `PI_CODING_AGENT_DIR/extensions/` at launch. Its `packagesListFragment`
 output still needs to be merged into `settings.json`'s `packages` array
 by hand where relevant.

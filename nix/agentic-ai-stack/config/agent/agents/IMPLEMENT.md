@@ -18,8 +18,8 @@ permission:
     # prompt -- it does not author checks, run arbitrary project tooling,
     # or explore the shell. That exact-match allow rule is NOT in this
     # base template: agent-plan-create grants it on a per-dispatch COPY of
-    # this file (${agents_dir}/IMPLEMENT-1.md .. IMPLEMENT-4.md, one of a
-    # fixed 4-slot pool; see AGENTS.md's "Worktrees" section), so each
+    # this file (${agents_dir}/IMPLEMENT-1.md .. IMPLEMENT-10.md, one of a
+    # fixed 10-slot pool; see AGENTS.md's "Worktrees" section), so each
     # dispatch only gets permission for its own command. Everything else
     # needs an explicit allow below.
     "sudo *": deny

@@ -79,10 +79,6 @@ end up wider than the `pi` tool itself.
   backend whose URL is the literal placeholder token
   `__APPROVAL_WEBHOOK_URL__`, filled in at launch time by
   `scripts/gen-profile.sh` once the approval helper is running.
-- `profiles/login.base.json` — a minimal sibling for `scripts/login.sh`'s
-  OAuth flow: same groups/`open_urls`/webhook backend, but no
-  `unix_socket` grant (no Nix daemon access for a login session) and no
-  `command_policies` block at all.
 - `scripts/gen-profile.sh` — composes a launch-ready profile from a base
   profile plus per-launch filesystem grants. Never calls `nono` itself —
   it only produces the JSON `nono run --profile <out>` is later given.
@@ -225,16 +221,17 @@ shell inside the sandbox (`start-agent.sh`, `shell.sh`, the detached
 supervisor), rather than relying on `pi`'s own `$HOME`-relative default,
 since `sudo -u pi` is not guaranteed to reset `$HOME` the way a full
 login shell would. This directory (and its sibling
-`/var/lib/pi/.pi/web-search.json` — see `FIXED_WEB_SEARCH_FILE`, and
-HANGUPS.md for how that sibling location was inferred, since `pi`'s own
-source isn't vendored in this checkout) is NEVER deleted by any script in
+`/var/lib/pi/.pi/web-search.json` — see `FIXED_WEB_SEARCH_FILE`; its
+location is an inference from pi's own default ($HOME/.pi/agent and its
+web-search.json sibling), since `pi`'s own source isn't vendored in this
+checkout) is NEVER deleted by any script in
 this stack; every launch only adds/overwrites specific paths inside it
 (see "Idempotent seeding / `--resume`" below). It's granted to the
 sandbox via `--add "$FIXED_PI_HOME"` passed to `gen-profile.sh` (folded
 into `EXTRA_GEN_ARGS`, shared by both the foreground and `--detached`
-code paths — the old equivalent grant, `--add "$RUNS_ROOT"`, lived only
-in the foreground branch, so `--detached` sessions never actually had
-access to their own agent dir; see HANGUPS.md).
+code paths — the old equivalent grant, `--add "$RUNS_ROOT"`, used to live
+only in the foreground branch, so `--detached` sessions never actually
+had access to their own agent dir; this has since been fixed).
 
 ```
 /var/lib/pi/.pi/                 <- FIXED_PI_HOME (granted whole, rw)
@@ -319,7 +316,7 @@ as `pi`:
    user, printing both the wrapper's and the supervisor's log locations.
 
 **CA trust-store handling**: the sandbox has no default CA trust store
-reachable inside it. Both `start-agent.sh` and `login.sh` call
+reachable inside it. `start-agent.sh` calls
 `lib-common.sh`'s `resolve_ca_bundle` to find a host CA bundle
 (`$PI_STACK_CA_BUNDLE` override, then `$NIX_SSL_CERT_FILE`/
 `$SSL_CERT_FILE`, then the usual system paths), grant its PARENT
@@ -340,14 +337,6 @@ single `nono ps` against this one directory now lists every live session
 at once (see `ps.sh` below), and `attach.sh`/`stop.sh`/`shell.sh` all
 resolve the exact same path.
 
-`login.sh` is the one exception: its own `/var/lib/pi/login/` layout
-(including its own, separate nono state dir) is unchanged and explicitly
-out of scope here — a one-off OAuth login flow isn't meant to show up
-mixed into the same `nono ps` listing as real work sessions. Its Darwin
-branch inlines the same path shape nono_state_dir's Darwin branch uses,
-rather than calling nono_state_dir itself (which no longer takes a name
-argument now that it's shared by everything else).
-
 **Wipe-before-launch / wipe-after-stop**: `start-agent.sh` wipes this
 shared state dir before launching, but ONLY if `nono ps` against it shows
 NO other session already live (`lib-common.sh`'s
@@ -358,15 +347,15 @@ of its own session, wiping only if nothing else is left live. Both wipes
 preserve `nono/audit` (`lib-common.sh`'s
 `nono_state_wipe_preserving_audit`) exactly as `stop.sh` always did.
 nono's exact `nono ps` "nothing running" output isn't documented in this
-checkout — see HANGUPS.md for the conservative assumption this relies on
-(any non-empty `nono ps` output counts as "something's live").
+checkout, so this conservatively treats any non-empty `nono ps` output as
+"something's live".
 
 ## Auto-select (`attach`/`shell`/`stop` with no `<name>`)
 
 `attach.sh`, `shell.sh`, and `stop.sh` all accept an OPTIONAL `<name>`
 now. When omitted, `lib-common.sh`'s `resolve_name_or_auto` lists live
 MAIN sessions (`nono_list_live_main_sessions`: best-effort parsing of
-`nono ps`'s output — see HANGUPS.md for why this is best-effort, nono's
+`nono ps`'s output, best-effort since nono's
 exact output schema isn't documented here — minus any `"<name>-shell"`
 entries) and auto-selects when exactly one is live; zero or several live
 sessions is a hard error listing the candidates, same as passing an
@@ -376,7 +365,7 @@ which `--dry-run` must never make). `stop.sh` additionally folds in
 leftover `$SESSIONS_ROOT/<name>` bookkeeping directories that have NO
 live session at all (main or shell) — the recovery path for a crashed/
 interrupted launch — into the same "exactly one candidate" rule.
-`ps.sh`, `login.sh`, and `update-pi-extensions.sh`/`gen-kubeconfig.sh`
+`ps.sh` and `update-pi-extensions.sh`/`gen-kubeconfig.sh`
 take no session name at all and are unaffected.
 
 ## Session wrappers
@@ -384,7 +373,7 @@ take no session name at all and are unaffected.
 ### `scripts/lib-common.sh`
 
 A small, `source`d-only helper shared by every script
-(`start-agent.sh`, `ps.sh`, `attach.sh`, `stop.sh`, `login.sh`,
+(`start-agent.sh`, `ps.sh`, `attach.sh`, `stop.sh`,
 `shell.sh`). Provides `resolve_or_die`/`resolve_stack_bin`,
 `SESSIONS_ROOT=/tmp/pi-sessions` (overridable via
 `PI_STACK_SESSIONS_ROOT` — transient, per-session bookkeeping only, see
@@ -396,7 +385,10 @@ A small, `source`d-only helper shared by every script
 nono state dir" above), `nono_state_wipe_preserving_audit`,
 `nono_any_session_running`, `nono_list_live_sessions`/
 `nono_list_live_main_sessions`, `resolve_name_or_auto` (see "Auto-select"
-above), `resolve_ca_bundle`, `nono_session_running`, and the
+above), `resolve_ca_bundle`, `resolve_shell_env_grants` (resolves
+`start-agent.sh`'s `/etc/profile`/`/etc/bashrc`-and-whatever-they-source
+grants to their real, symlink-free targets at launch time — see
+"Launcher" below), `nono_session_running`, and the
 live-file-sharing primitives described below.
 
 ### `scripts/ps.sh` (`nix run .#ps`)
@@ -430,22 +422,6 @@ The approval helper's lifecycle is NOT `stop.sh`'s job: it's owned by the
 launcher process (foreground) or the invoking-user wrapper (detached),
 both of which stop it once `nono stop` makes the session they're
 watching exit.
-
-### `scripts/login.sh` (`nix run .#login`)
-
-Runs `pi`'s native OAuth login flow inside a minimal nono session, as
-`pi`, using `profiles/login.base.json`. State lives directly under
-`/var/lib/pi/login/` (`agent/` — wiped and recreated fresh every run,
-since login is a one-off flow, not a `--resume`'able session;
-`nono-xdg-state/`; `profile.json`) — this layout is explicitly unchanged
-and out of scope for the fixed-agent-dir/shared-state-dir work above; see
-"Single nono state dir" for why. No non-interactive `pi` login
-subcommand is documented anywhere in this checkout, so the script starts
-`pi` inside the sandbox interactively and expects the user to trigger
-login themselves (e.g. a `/login` command) and then exit the session
-normally; `login.sh` then copies `agent/auth.json` to the shared
-`/var/lib/pi/auth/auth.json` (`install -m 0600`, as `pi`), or logs a
-warning if nothing is there.
 
 ### `scripts/shell.sh [<name>]` (`nix run .#shell [-- <name>]`)
 
@@ -521,22 +497,23 @@ together:
   NAME=VALUE` (repeatable) or `PI_SANDBOX__SECRET__<NAME>` host env vars
   — see "Launcher" above for how they reach the sandboxed process without
   ever appearing in argv.
-- OAuth: `nix run .#login` writes `auth.json` to a shared, cross-run
-  store at `/var/lib/pi/auth/auth.json`, which is never itself granted to
-  any nono session. Every `start-agent.sh` launch seeds a COPY from it
-  into the one fixed, shared `PI_CODING_AGENT_DIR/auth.json`, as `pi`,
-  mode `0600`, after the `config/agent/` layering — skipped if that file
-  already exists there and isn't older than the shared source, so auth
-  refreshed via a login performed inside any session is never clobbered
-  by an older shared copy on the next launch.
+- OAuth: there is no separate login flow or flake app. Run
+  `start-agent.sh` normally and trigger `pi`'s own `/login` command
+  inside that session; `auth.json` is written straight into the one
+  fixed, shared `PI_CODING_AGENT_DIR/auth.json`, which persists across
+  every future `start-agent.sh` launch (and every `--name`) since that
+  directory is never deleted (see "Fixed agent dir" above). An older,
+  now-unused `/var/lib/pi/login`/`/var/lib/pi/auth` cross-session OAuth
+  store from a previous design is no longer written to or read from
+  anywhere in this stack and can be deleted.
 
 ## Configuration bundling
 
 `config/` is a 1:1 mirror of `~/.pi/` — `config/agent/` mirrors
 `~/.pi/agent/` (`settings.json`, `AGENTS.md`, `agents/*`, each
 extension's `config.json`). See [config/agent/README.md](config/agent/README.md)
-for the file-by-file breakdown. Every launch of `start-agent.sh`/
-`login.sh` layers this directory (via a tar-pipe copy, so it never needs
+for the file-by-file breakdown. Every launch of `start-agent.sh`
+layers this directory (via a tar-pipe copy, so it never needs
 to be `pi`-readable in place) onto that run's `PI_CODING_AGENT_DIR`, on
 top of the `pi-extra-extensions`/`pi-extra-skills` build outputs already
 copied there. **Config only, never a secret** — edit the SOURCE under
@@ -560,8 +537,8 @@ substitute for it — see "Threat model" above.
 
 ## Making changes
 
-- **Changing the work/login profile**: edit `profiles/work.base.json`/
-  `profiles/login.base.json` directly (static content) or
+- **Changing the work profile**: edit `profiles/work.base.json`
+  directly (static content) or
   `scripts/gen-profile.sh` (per-launch composition logic).
 - **Adding a permanent egress domain**: add it to `work.base.json`'s
   `network.allow_domain`. For a one-off exception, let the approval
@@ -579,8 +556,10 @@ substitute for it — see "Threat model" above.
 - **The `IMPLEMENT` agent definition and worktrees**: `config/agent/
   agents/IMPLEMENT.md` is the base template for the implementation
   subagent. `config/agent/subagents-worktrees.json` opts `IMPLEMENT` and
-  its per-dispatch `IMPLEMENT-1`..`IMPLEMENT-4` slot copies into isolated
-  git worktrees via `@gotgenes/pi-subagents-worktrees`. See
+  its per-dispatch `IMPLEMENT-1`..`IMPLEMENT-10` slot copies into isolated
+  git worktrees via `@gotgenes/pi-subagents-worktrees`; this slot count
+  must stay in sync with `MAX_SLOTS` in
+  `nix/scripts/scripts/agent/agent-plan-create/run.sh`. See
   `config/agent/AGENTS.md`'s "Worktrees" section for how dispatch/
   validate/stage fits together.
 

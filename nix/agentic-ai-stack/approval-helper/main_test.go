@@ -165,7 +165,7 @@ func TestPromptAndResolve_LogsTimeoutDistinctly(t *testing.T) {
 }
 
 func TestDefaultPromptTimeout_BelowWebhookTimeouts(t *testing.T) {
-	// profiles/work.base.json and profiles/login.base.json set
+	// profiles/work.base.json sets
 	// network.approval_backends.dialog.timeout_secs to 60 -- the helper's
 	// own default prompt timeout must stay comfortably below that so it
 	// always resolves (even to a deny) and logs a reason before nono's own
