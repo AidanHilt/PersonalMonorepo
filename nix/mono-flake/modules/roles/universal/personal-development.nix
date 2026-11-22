@@ -9,7 +9,7 @@
 }:
 
 let
-  platformPackages = if pkgs.stdenv.isDarwin then [] else [ pkgs.ghostty.terminfo ];
+  platformPackages = if pkgs.stdenv.hostPlatform.isDarwin then [] else [ pkgs.ghostty.terminfo ];
 in
 
 {
