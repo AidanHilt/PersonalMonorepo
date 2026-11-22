@@ -333,9 +333,15 @@ emit_build_test_phase() {
   fi
   if [[ ${#NIX_FLAKE_DIRS[@]} -gt 0 ]]; then
     local d
+    # The IMPLEMENT sandbox's nono command policy allows `nix` invocations
+    # by matching the argv PREFIX ['flake', 'check'] -- any flag preceding
+    # the subcommand (e.g. --extra-experimental-features) breaks that
+    # prefix match and falls through to default deny. The host's nix.conf
+    # already has nix-command/flakes enabled, so no such flag is needed
+    # here; keep this invocation flag-free ahead of `flake check`.
     for d in "${NIX_FLAKE_DIRS[@]}"; do
       printf 'run_check BUILD_TEST "nix flake check(%s)" bash -c %s\n' "$d" \
-        "$(printf '%q' "nix --extra-experimental-features 'nix-command flakes' flake check $(printf '%q' "$d")")"
+        "$(printf '%q' "nix flake check $(printf '%q' "$d")")"
     done
   fi
 }

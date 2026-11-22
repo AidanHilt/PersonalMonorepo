@@ -1,7 +1,14 @@
-{ inputs, globals, pkgs, machine-config, lib, ... }:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 {
-  environment.systemPackages = [];
+  environment.systemPackages = [ ];
 
   services.comin = {
     enable = true;

@@ -1,0 +1,282 @@
+{
+  "extends": "default",
+  "meta": {
+    "name": "pi-sandbox-nono-work",
+    "version": "1.0.0",
+    "description": "Flake-owned static base for the nono 'work' profile. NOT launch-ready on its own: __APPROVAL_WEBHOOK_URL__ must be substituted, and scripts/gen-profile.sh must merge in the per-launch closure/workdir/add/clone filesystem grants before this is passed to `nono run --profile`."
+  },
+  "groups": {
+    "include": [
+      "node_runtime",
+      {
+        "name": "user_caches_macos",
+        "when": "macos"
+      },
+      {
+        "name": "user_caches_linux",
+        "when": "linux"
+      },
+      {
+        "name": "linux_sysfs_read",
+        "when": "linux"
+      },
+      "git_config",
+      "unlink_protection"
+    ]
+  },
+  "security": {
+    "signal_mode": "isolated",
+    "capability_elevation": false
+  },
+  "workdir": {
+    "access": "readwrite"
+  },
+  "filesystem": {
+    "allow": [
+      "/tmp"
+    ],
+    "read": [],
+    "unix_socket": [
+      "/nix/var/nix/daemon-socket/socket"
+    ]
+  },
+  "network": {
+    "block": false,
+    "allow_domain": [
+      "pi.dev",
+      "api.anthropic.com",
+      "claude.ai",
+      "claude.com",
+      "platform.claude.com",
+      "auth.openai.com",
+      "github.com",
+      "api.github.com",
+      "raw.githubusercontent.com",
+      "codeload.github.com",
+      "api.exa.ai"
+    ],
+    "approval_backends": {
+      "dialog": {
+        "type": "webhook",
+        "url": "__APPROVAL_WEBHOOK_URL__",
+        "timeout_secs": 60
+      }
+    },
+    "approval_defaults": {
+      "backend": "dialog"
+    }
+  },
+  "open_urls": {
+    "allow_origins": [
+      "https://auth.openai.com",
+      "https://claude.ai",
+      "https://github.com"
+    ],
+    "allow_localhost": true
+  },
+  "allow_launch_services": true,
+  "rollback": {
+    "exclude_patterns": [
+      "node_modules",
+      ".next",
+      "__pycache__",
+      "target",
+      ".pi"
+    ],
+    "exclude_globs": [
+      "*.tmp.[0-9]*.[0-9]*"
+    ]
+  },
+  "environment": {
+    "allow_vars": [
+      "PATH",
+      "HOME",
+      "USER",
+      "TERM",
+      "LANG",
+      "LC_*",
+      "TZ",
+      "PI_*",
+      "PI_SANDBOX__SECRET__*",
+      "SSL_CERT_FILE",
+      "NIX_SSL_CERT_FILE",
+      "NODE_EXTRA_CA_CERTS",
+      "GIT_CONFIG_COUNT",
+      "GIT_CONFIG_KEY_*",
+      "GIT_CONFIG_VALUE_*"
+    ]
+  },
+  "command_policies": {
+    "commands": {
+      "update": {
+        "from": {
+          "session": "deny"
+        }
+      },
+      "nixos-rebuild": {
+        "from": {
+          "session": "deny"
+        }
+      },
+      "darwin-rebuild": {
+        "from": {
+          "session": "deny"
+        }
+      },
+      "home-manager": {
+        "from": {
+          "session": "deny"
+        }
+      },
+      "nix-env": {
+        "from": {
+          "session": "deny"
+        }
+      },
+      "nix-channel": {
+        "from": {
+          "session": "deny"
+        }
+      },
+      "nix": {
+        "from": {
+          "session": {
+            "sandbox": {
+              "unix_socket_bind": [
+                "/nix/var/nix/daemon-socket/socket"
+              ],
+              "fs_read": [
+                "/nix/store",
+                "/nix/var/nix"
+              ],
+              "fs_write": [
+                "$WORKDIR",
+                "$HOME/.cache"
+              ],
+              "network": {
+                "allow_domain": [
+                  "github.com",
+                  "api.github.com",
+                  "codeload.github.com",
+                  "raw.githubusercontent.com",
+                  "cache.nixos.org",
+                  "channels.nixos.org"
+                ]
+              },
+              "environment": {
+                "allow_vars": [
+                  "PATH",
+                  "HOME",
+                  "USER",
+                  "TERM",
+                  "LANG",
+                  "LC_*",
+                  "TZ",
+                  "SSL_CERT_FILE",
+                  "NIX_SSL_CERT_FILE",
+                  "NODE_EXTRA_CA_CERTS",
+                  "GIT_CONFIG_COUNT",
+                  "GIT_CONFIG_KEY_*",
+                  "GIT_CONFIG_VALUE_*"
+                ],
+                "set_vars": {
+                  "NIX_REMOTE": "daemon",
+                  "NIX_CONFIG": "experimental-features = nix-command flakes"
+                }
+              }
+            },
+            "invocation_policy": {
+              "default": "deny",
+              "allow": [
+                {
+                  "argv": {
+                    "prefix": [
+                      "build"
+                    ]
+                  },
+                  "reason": "nix build is read/build-only against the flake closure"
+                },
+                {
+                  "argv": {
+                    "prefix": [
+                      "eval"
+                    ]
+                  },
+                  "reason": "nix eval is read-only"
+                },
+                {
+                  "argv": {
+                    "prefix": [
+                      "develop"
+                    ]
+                  },
+                  "reason": "nix develop is needed for dev shells"
+                },
+                {
+                  "argv": {
+                    "prefix": [
+                      "flake",
+                      "check"
+                    ]
+                  },
+                  "reason": "nix flake check is read-only validation"
+                },
+                {
+                  "argv": {
+                    "prefix": [
+                      "flake",
+                      "show"
+                    ]
+                  },
+                  "reason": "nix flake show is read-only introspection"
+                }
+              ],
+              "deny": [
+                {
+                  "argv": {
+                    "contains": [
+                      "--option"
+                    ]
+                  },
+                  "reason": "arbitrary nix.conf overrides could widen the sandbox or substituters"
+                },
+                {
+                  "argv": {
+                    "contains": [
+                      "--extra-substituters"
+                    ]
+                  },
+                  "reason": "untrusted substituters could supply unverified store content"
+                },
+                {
+                  "argv": {
+                    "contains": [
+                      "--accept-flake-config"
+                    ]
+                  },
+                  "reason": "auto-accepting flake-supplied nix.conf settings is a sandbox escape vector"
+                },
+                {
+                  "argv": {
+                    "prefix": [
+                      "profile"
+                    ]
+                  },
+                  "reason": "nix profile mutates the user environment outside the sandboxed workdir"
+                },
+                {
+                  "argv": {
+                    "prefix": [
+                      "copy"
+                    ]
+                  },
+                  "reason": "nix copy can exfiltrate/import store paths via arbitrary stores"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

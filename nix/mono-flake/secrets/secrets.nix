@@ -20,7 +20,17 @@ let
   lima = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL5abQDR8GPAsf4dCPBTtHJFxGc9jxUkNlLYB2C05dx8 aidan@nixos";
   lima-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAWom5Jkr7Q1GZafiLLZHV2aQyw8DY533mpr/Fy5Nzf8 root@nixos";
 
-  user-machines = [hyperion-user hyperion-system wsl-user wsl-system vm-desktop-system big-boi-desktop-system big-boi-user lima lima-system];
+  user-machines = [
+    hyperion-user
+    hyperion-system
+    wsl-user
+    wsl-system
+    vm-desktop-system
+    big-boi-desktop-system
+    big-boi-user
+    lima
+    lima-system
+  ];
 
   # ===========================
   # Our various server clusters
@@ -30,24 +40,35 @@ let
   laptop-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFIeYzag+0puS2/iB/Dfgj4CFiJFopSet0NgmQGf8nEe noname";
   laptop-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBYPCI2abzSHOfnDK8aZnEGG7v1Kt2xu8rpeW00RpdJl noname";
 
-  laptop-cluster-machines = [laptop-cluster-1-system laptop-cluster-2-system];
+  laptop-cluster-machines = [
+    laptop-cluster-1-system
+    laptop-cluster-2-system
+  ];
 
   # Our main staging cluster, in the form of NixOS machines running on x86 hardware
   staging-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDzecfHCtriWXe8jFday4wS8rFT8C+4dnBsBxRXyv4OV noname";
   staging-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOQM756toRHP3kLR6lH38SghskvIufdClWlgUnlLcQgh noname";
   staging-cluster-3-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG0/JkUIUmRIkrc3wDTNTX/vv0BrDNXeTOeAy2D+pNFI noname";
 
-  staging-cluster-machines = [staging-cluster-1-system staging-cluster-2-system staging-cluster-3-system];
+  staging-cluster-machines = [
+    staging-cluster-1-system
+    staging-cluster-2-system
+    staging-cluster-3-system
+  ];
 
   # Prod cluster! These are x86 machines (for now) running NixOS. Their config should closely match the staging cluster
   laptop-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAwilocb+pCiqq38V2srqTlCcgfQrOaZTBOo+YiEl+M noname";
   optiplex-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICjerdOUN7KvpYel2ab/DwY2UTO6wJ5FV6v4TL+BfR/7 noname";
   gaming-pc-node-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOfwBzV5uvJlEQgNk/uYloYY1sP+IuwZK67Zaj3M713i noname";
 
-  prod-cluster-machines = [laptop-node-system optiplex-node-system gaming-pc-node-system];
+  prod-cluster-machines = [
+    laptop-node-system
+    optiplex-node-system
+    gaming-pc-node-system
+  ];
 
   #External user 1
-  external-user-1-machines = [external-user-1-machine-1-system];
+  external-user-1-machines = [ external-user-1-machine-1-system ];
   external-user-1-machine-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJlk3tURSKdo0EzrOpv26CE91m65pV4Ax01y5ZRF6Rvn noname";
   devbox-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHlTUN203D+zEFtvCviK+aT29+0c+lg3Xvmkcjo0gVAd noname";
 in
@@ -59,7 +80,8 @@ in
   "rclone-config.age".publicKeys = user-machines;
   "kubeconfig.age".publicKeys = user-machines;
 
-  "adguardhome.age".publicKeys = user-machines ++ laptop-cluster-machines ++ staging-cluster-machines ++ prod-cluster-machines;
+  "adguardhome.age".publicKeys =
+    user-machines ++ laptop-cluster-machines ++ staging-cluster-machines ++ prod-cluster-machines;
 
   "rke-config-laptop-cluster.age".publicKeys = user-machines ++ laptop-cluster-machines;
 

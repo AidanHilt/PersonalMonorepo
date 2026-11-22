@@ -14,8 +14,7 @@
       "*.pem": "deny",
       "*serviceaccount*.json": "deny",
       "*id_rsa*": "deny",
-      "*id_ed25519*": "deny",
-      ".git/*": "deny"
+      "*id_ed25519*": "deny"
     },
     "path_read": {
       "/home/pi/.pi/*": "allow",
@@ -34,6 +33,7 @@
     "get_subagent_result": "allow",
     "ffgrep": "allow",
     "fffind": "allow",
+    "fetch_content": "allow",
     "write": "deny",
     "python3": "deny",
     "edit": "deny",

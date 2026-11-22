@@ -9,47 +9,61 @@ show_help() {
   cat <<'EOF'
 Usage:
   agent-plan-create --paths <list> --context <text> --steps <text> --out-of-scope <text> \
-                     [--style-guide <text>] [--notes <text>] [--research <text>] \
-                     [--domains <comma-list>] [--tools <comma-list>]
+                     [--new-paths <list>] [--style-guide <text>] [--notes <text>] \
+                     [--research <text>] [--tools <comma-list>]
   agent-plan-create frontmatter <agent-file.md> key=value [key=value ...] [--allow-bash <cmd>]
 
 Primary mode: assembles a self-contained IMPLEMENT-subagent dispatch prompt
 and prints it to stdout (status/diagnostics go to stderr). It writes no
 plan files, but it DOES allocate a per-dispatch agent definition: it picks
-the first free slot n in 1..4 for which
+the first free slot n in 1..MAX_SLOTS for which
 ${agents_dir}/IMPLEMENT-n.md does not already exist (agents_dir resolves to
 ${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents), copies the global
 ${agents_dir}/IMPLEMENT.md template to ${agents_dir}/IMPLEMENT-n.md, and
 grants that copy permission to run exactly one bash command: the
-`agent-validate --path ...` invocation covering --paths, via an exact-match
-permission.bash allow rule. Pass the printed prompt as the dispatch prompt
-for subagent_type IMPLEMENT-n (stated in the prompt itself); the slot
-number is also printed to stderr on its own line.
+`agent-validate --path ...` invocation covering --paths/--new-paths, via an
+exact-match permission.bash allow rule. Pass the printed prompt as the
+dispatch prompt for subagent_type IMPLEMENT-n (stated in the prompt
+itself); the slot number is also printed to stderr on its own line.
 
   --paths <list>           Required. Space- and/or comma-separated list of
-                            files/directories that will be touched. Used to
+                            files/directories that will be touched. Every
+                            entry is resolved relative to the CURRENT
+                            WORKING DIRECTORY (or used as-is if absolute),
+                            NOT relative to the repo root, then converted
+                            to a repo-relative path. It is a HARD ERROR
+                            (exit non-zero, before any slot is allocated)
+                            for a --paths entry to not exist on disk --
+                            double-check your cwd if you hit this. Used to
                             pick the required tools and to build the
                             `agent-validate --path ...` command the
                             subagent is granted permission to run.
+  --new-paths <list>       Optional. Same comma/space separated syntax as
+                            --paths, also cwd-relative or absolute: paths
+                            the dispatched subagent is expected to CREATE,
+                            so they are not required to exist yet. They
+                            skip --paths' existence check, are converted to
+                            repo-relative paths the same way, and are
+                            appended to the generated `agent-validate
+                            --path ...` command. --paths is still required;
+                            --new-paths alone is not sufficient to dispatch.
   --context <text>         Required. Free text for the "Context" section.
   --steps <text>           Required. Free text for the "Steps" section.
   --out-of-scope <text>    Required. Free text for the "Out of scope" section.
   --style-guide <text>     Optional. Adds a "Style guide" section.
   --notes <text>           Optional. Adds a "Notes" section.
   --research <text>        Optional. Adds a "Research" section.
-  --domains <comma-list>   Optional. Network domains already granted (via
-                            request-domain) by the main agent before
-                            dispatch. Recorded in the prompt; the subagent
-                            must not request additional domains itself.
   --tools <comma-list>     Optional. Extra tool names (besides the ones
-                            inferred from --paths) required on PATH.
+                            inferred from --paths/--new-paths) required on
+                            PATH.
 
 Required-tools handling: the tool list is computed from the file-type
 profiles detected in --paths, plus --tools. Every tool is checked with
 `command -v` in THIS environment (the one the subagent worktree will
 share). If any are missing, they are printed to stderr as a list and the
 command exits non-zero WITHOUT printing a prompt or allocating a slot --
-install them with pkg-install and retry.
+ask the user to add them to nix/mono-flake (host system packages) and run
+update, then retry.
 
 Unlike the old generated-validate.sh flow, `agent-validate` discovers its
 checks AT RUN TIME when the subagent runs it (re-classifying --paths,
@@ -77,7 +91,18 @@ EOF
 # --- shared repo-root guardrail (frontmatter mode only still writes) -----
 
 resolve_agents_dir() {
-  printf '%s/agents\n' "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
+  local dir="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents"
+  local resolved
+
+  # cd -P / pwd -P follow symlinks (e.g. /var -> /private/var) physically.
+  if resolved=$(cd -P -- "$dir" 2>/dev/null && pwd -P); then
+    printf '%s\n' "$resolved"
+  elif resolved=$(cd -P -- "${dir%/agents}" 2>/dev/null && pwd -P); then
+    # agents/ doesn't exist yet: resolve the parent and append.
+    printf '%s/agents\n' "$resolved"
+  else
+    printf '%s\n' "$dir"
+  fi
 }
 
 require_within_repo() {
@@ -103,13 +128,17 @@ require_within_repo() {
 # --- primary mode: assemble dispatch prompt ---------------------------------
 
 run_create() {
-  local paths="" context="" steps="" out_of_scope="" style_guide="" notes=""
-  local research="" domains="" extra_tools=""
+  local paths="" new_paths="" context="" steps="" out_of_scope="" style_guide="" notes=""
+  local research="" extra_tools=""
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
     --paths)
       paths="$2"
+      shift 2
+      ;;
+    --new-paths)
+      new_paths="$2"
       shift 2
       ;;
     --context)
@@ -136,10 +165,6 @@ run_create() {
       research="$2"
       shift 2
       ;;
-    --domains)
-      domains="$2"
-      shift 2
-      ;;
     --tools)
       extra_tools="$2"
       shift 2
@@ -163,6 +188,27 @@ run_create() {
   local repo_root
   if ! repo_root="$(find_repo_root "$(pwd)")"; then
     print_error "Current directory is not inside a git repository (no .git found walking up)"
+    exit 1
+  fi
+
+  # --paths entries are resolved relative to the CURRENT WORKING DIRECTORY
+  # (or taken as-is if absolute) -- see resolve_path -- NOT relative to the
+  # repo root. A planner invoking this from somewhere other than the repo
+  # root can easily pass a path that doesn't actually exist once resolved;
+  # that used to only produce a classify_paths "not found on disk" warning,
+  # which let a broken agent-validate command get generated and dispatched
+  # anyway. Treat it as a hard error instead, before anything (including a
+  # dispatch slot) gets allocated.
+  local missing_paths=() normalized_paths p resolved
+  normalized_paths="${paths//,/ }"
+  for p in $normalized_paths; do
+    [[ -z "$p" ]] && continue
+    resolved="$(resolve_path "$p")"
+    [[ -e "$resolved" ]] || missing_paths+=("$p" "(resolved to $resolved)")
+  done
+  if [[ ${#missing_paths[@]} -gt 0 ]]; then
+    print_error "The following --paths entries do not exist on disk: ${missing_paths[*]}"
+    print_error "--paths entries are resolved relative to the current working directory (or used as-is if absolute), not relative to the repo root -- double-check your cwd, or use --new-paths for paths the subagent is expected to create."
     exit 1
   fi
 
@@ -202,7 +248,7 @@ run_create() {
 
   if [[ ${#missing[@]} -gt 0 ]]; then
     print_error "Missing required tools on PATH: ${missing[*]}"
-    print_error "Install them with pkg-install before dispatching, then retry."
+    print_error "Ask the user to add ${missing[*]} to nix/mono-flake (host system packages) and run update, then retry."
     exit 1
   fi
 
@@ -224,6 +270,25 @@ run_create() {
     exit 1
   fi
 
+  # --new-paths: files/dirs the subagent is expected to CREATE, so they are
+  # not required to exist yet (unlike --paths above) and are never run
+  # through classify_paths/UNKNOWN_PATHS -- there's nothing on disk yet for
+  # it to classify. They're still resolved cwd-relative (or absolute) and
+  # converted to repo-relative the same way, then appended to the
+  # agent-validate --path arguments so agent-validate's own runtime
+  # re-classification (which happens once the subagent has actually created
+  # the files) picks them up.
+  if [[ -n "$new_paths" ]]; then
+    local normalized_new
+    normalized_new="${new_paths//,/ }"
+    for p in $normalized_new; do
+      [[ -z "$p" ]] && continue
+      resolved="$(resolve_path "$p")"
+      rel="$(realpath -m --relative-to="$repo_root" -- "$resolved")"
+      array_contains "$rel" "${ordered_paths[@]+"${ordered_paths[@]}"}" || ordered_paths+=("$rel")
+    done
+  fi
+
   local validate_cmd="agent-validate"
   for p in "${ordered_paths[@]}"; do
     validate_cmd+=" --path $(printf '%q' "$p")"
@@ -240,8 +305,13 @@ run_create() {
     exit 1
   fi
 
+  # MAX_SLOTS must stay in sync with the worktreeAgents list in
+  # nix/agentic-ai-stack/config/agent/subagents-worktrees.json (updated in
+  # a separate, parallel dispatch) -- that's what actually gives each of
+  # IMPLEMENT-1..IMPLEMENT-MAX_SLOTS its own isolated worktree.
+  local MAX_SLOTS=10
   local slot="" n per_dispatch_file
-  for n in 1 2 3 4; do
+  for ((n = 1; n <= MAX_SLOTS; n++)); do
     if [[ ! -e "$agents_dir/IMPLEMENT-$n.md" ]]; then
       slot="$n"
       break
@@ -249,7 +319,7 @@ run_create() {
   done
 
   if [[ -z "$slot" ]]; then
-    print_error "All dispatch slots (IMPLEMENT-1..IMPLEMENT-4) are taken. Wait for one to finish (its agent file is removed on completion by 'agent-stage --slot <n>'), or clean up a stale ${agents_dir}/IMPLEMENT-<n>.md yourself, then retry."
+    print_error "All dispatch slots (IMPLEMENT-1..IMPLEMENT-$MAX_SLOTS) are taken. Wait for one to finish (its agent file is removed on completion by 'agent-stage --slot <n>'), or clean up a stale ${agents_dir}/IMPLEMENT-<n>.md yourself, then retry."
     exit 1
   fi
 
@@ -290,12 +360,10 @@ run_create() {
     fi
 
     printf '\n## Network\n\n'
-    if [[ -n "$domains" ]]; then
-      printf 'The following domains have already been granted via request-domain by the main agent: %s.\n' "$domains"
-    else
-      printf 'No additional network domains have been granted for this task.\n'
-    fi
-    printf 'You may not request additional domains yourself (request-domain is not available to you); if you hit a network need beyond this, stop and report it instead.\n'
+    printf 'Network access from the sandbox is mediated by the user'"'"'s interactive\n'
+    printf 'approval prompts (nono approval). You cannot pre-grant domains yourself; if\n'
+    printf 'you hit a network need, expect an approval prompt, or stop and report it if\n'
+    printf 'denied.\n'
 
     printf '\n## Definition of Done\n\n'
     printf -- '- The plan above is implemented.\n'
@@ -343,12 +411,14 @@ run_frontmatter() {
   local agents_dir
   agents_dir="$(resolve_agents_dir)"
 
+  echo "$agents_dir"
+
   case "$agent_file" in
   "$agents_dir"/*) ;; # Inside the per-dispatch agents dir: not part of any
   # repo (it's the tmpfs ~/.pi/agent/agents tree), so the
   # within-repo guard doesn't apply here.
   *)
-    require_within_repo "$(dirname "$agent_file")" >/dev/null
+    require_within_repo "$(dirname "$agent_file")"
     ;;
   esac
 
@@ -402,6 +472,7 @@ run_frontmatter() {
       # single-line double-quoted key via awk, with the real command value
       # passed through the environment (never interpolated into the awk
       # program text).
+      echo "YQ COMMAND: yq eval -i .permission.bash[\"${placeholder_key}\"] = \"allow\" \"$frontmatter_file\"" >/tmp/command-out.txt
       yq eval -i ".permission.bash[\"${placeholder_key}\"] = \"allow\"" "$frontmatter_file"
 
       if ! grep -q -F -- "$placeholder_key" "$frontmatter_file"; then

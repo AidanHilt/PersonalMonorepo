@@ -1,11 +1,19 @@
 # Note: This file is likely going to be pretty small, although the bigger we can get it, the better
 # This file is going to be imported by ALL machine categories, so you better make sure it's truly universal
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 {
   imports = [
     ./_update.nix
     ./_home-manager.nix
+    ./_pi-user.nix
   ];
 
   nix = {
@@ -13,8 +21,11 @@
     channel.enable = false;
     nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
     settings = {
-      
-      experimental-features = [ "nix-command" "flakes" ];
+
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
       substituters = [
         "https://nix-community.cachix.org"
         "https://cache.nixos.org/"

@@ -1,12 +1,20 @@
-{ config, lib, pkgs, modulesPath, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  modulesPath,
+  ...
+}:
 
 {
-  imports =
-    [
-      (modulesPath + "/profiles/qemu-guest.nix")
-    ];
+  imports = [
+    (modulesPath + "/profiles/qemu-guest.nix")
+  ];
 
-  boot.initrd.availableKernelModules = [ "xhci_pci" "sr_mod" ];
+  boot.initrd.availableKernelModules = [
+    "xhci_pci"
+    "sr_mod"
+  ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ ];
   boot.extraModulePackages = [ ];
