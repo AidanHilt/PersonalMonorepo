@@ -13,6 +13,7 @@ in
 
 {
   imports = [
+    ./_docker.nix
     ./_smb-mount.nix
 
     ./hosts.nix
