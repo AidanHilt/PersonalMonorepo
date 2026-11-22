@@ -59,6 +59,18 @@ let
     preBuild = ''
       controller-gen object paths=./api/...
     '';
+
+    # buildGoModule's internal goModules fixed-output derivation (which
+    # runs `go mod vendor` to produce the vendor directory) inherits this
+    # derivation's preBuild and env. On current nixpkgs, GOFLAGS (including
+    # -mod=vendor) lives in env, so goModules runs with -mod=vendor set --
+    # meaning the preBuild above would run controller-gen before `go mod
+    # vendor` has populated vendor/, failing with "inconsistent vendoring".
+    # Deepcopy generation has nothing to do with dependency vendoring, so
+    # it is cleared here, scoped to just the goModules FOD.
+    overrideModAttrs = _: {
+      preBuild = "";
+    };
   };
 
   ##############################################################################

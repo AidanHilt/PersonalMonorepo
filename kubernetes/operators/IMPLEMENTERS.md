@@ -82,6 +82,16 @@ compile `api/v1alpha1` until you run `controller-gen object` yourself.
 Operators are expected to `.gitignore` their own
 `zz_generated.*.go` files (see `operators/miura/.gitignore`).
 
+`buildGoModule` propagates this derivation's `preBuild` (and `env`) into
+its internal `goModules` fixed-output derivation, which runs `go mod
+vendor`. On current nixpkgs `env` carries `GOFLAGS=-mod=vendor`, so
+without intervention `goModules` would run the `controller-gen object`
+preBuild *before* `go mod vendor` has populated `vendor/`, failing with
+"inconsistent vendoring". `binary` therefore sets `overrideModAttrs = _: {
+preBuild = ""; }` to clear the preBuild just for `goModules`. This doesn't
+change the vendored output or require a `vendorHash` bump — deepcopy
+generation writes into the source tree, not `vendor/`.
+
 ### CRD + RBAC generation
 
 Both run `controller-gen` over hardcoded paths:
