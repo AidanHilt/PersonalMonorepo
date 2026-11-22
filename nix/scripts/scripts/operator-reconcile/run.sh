@@ -68,21 +68,23 @@ sync_operator() {
     return 0
   fi
 
-  printf '%s' "$IMAGE_PATH" >"$IMAGE_STATE_FILE"
-  printf '%s' "$CHART_PATH" >"$CHART_STATE_FILE"
+  local ARCHIVE="${STATE_DIR}/${OPERATOR_NAME}.tar"
+  rm -f "$ARCHIVE"
 
-  print_debug "Loading ${OPERATOR_NAME} image into the local Docker daemon"
-  nix run "${MONOREPO_ROOT}#${OPERATOR_NAME}-image.copyToDockerDaemon"
-
-  local BUILT_IMAGE_TAG
-  if ! BUILT_IMAGE_TAG=$(nix eval --raw "${MONOREPO_ROOT}#packages.${SYSTEM}.${OPERATOR_NAME}-image.imageTag"); then
-    print_error "Could not determine built image tag for ${OPERATOR_NAME}"
+  print_debug "Copying ${OPERATOR_NAME} image out of the Nix store"
+  if ! nix run "${MONOREPO_ROOT}#skopeo-nix2container" -- --insecure-policy copy "nix:${IMAGE_PATH}" "docker-archive:${ARCHIVE}:${OPERATOR_NAME}:${DEV_TAG}"; then
+    rm -f "$ARCHIVE"
+    print_error "Image copy out of the Nix store failed for ${OPERATOR_NAME}"
     return 1
   fi
-  docker tag "${OPERATOR_NAME}:${BUILT_IMAGE_TAG}" "${OPERATOR_NAME}:${DEV_TAG}"
 
   print_debug "Loading ${OPERATOR_NAME} image into kind cluster ${CLUSTER_NAME}"
-  kind load docker-image "${OPERATOR_NAME}:${DEV_TAG}" --name "$CLUSTER_NAME"
+  if ! kind load image-archive "$ARCHIVE" --name "$CLUSTER_NAME"; then
+    rm -f "$ARCHIVE"
+    print_error "kind load image-archive failed for ${OPERATOR_NAME}"
+    return 1
+  fi
+  rm -f "$ARCHIVE"
 
   local NAMESPACE
   NAMESPACE=$(resolve_namespace "$OPERATOR_NAME")
@@ -93,18 +95,30 @@ sync_operator() {
   # image.repository (the bare chart name) won't resolve once the image is
   # inside the kind node. This is a dev-only workaround specific to this
   # loop; it has no bearing on how the chart is otherwise published/used.
-  helm upgrade --install "$OPERATOR_NAME" "$CHART_PATH" \
+  if ! helm upgrade --install "$OPERATOR_NAME" "$CHART_PATH" \
     --namespace "$NAMESPACE" \
     --create-namespace \
     --set-string image.repository="docker.io/library/${OPERATOR_NAME}" \
     --set-string image.tag="$DEV_TAG" \
-    --set-string image.pullPolicy=Never
+    --set-string image.pullPolicy=Never; then
+    print_error "helm upgrade --install failed for ${OPERATOR_NAME}"
+    return 1
+  fi
 
   # kind load overwrites the image content in containerd under the same
   # tag, but a running pod won't notice on its own; force it to pick up
   # the freshly loaded bits.
-  kubectl rollout restart "deployment/${OPERATOR_NAME}-controller-manager" --namespace "$NAMESPACE"
-  kubectl rollout status "deployment/${OPERATOR_NAME}-controller-manager" --namespace "$NAMESPACE" --timeout=60s
+  if ! kubectl rollout restart "deployment/${OPERATOR_NAME}-controller-manager" --namespace "$NAMESPACE"; then
+    print_error "kubectl rollout restart failed for ${OPERATOR_NAME}"
+    return 1
+  fi
+  if ! kubectl rollout status "deployment/${OPERATOR_NAME}-controller-manager" --namespace "$NAMESPACE" --timeout=60s; then
+    print_error "kubectl rollout status failed for ${OPERATOR_NAME}"
+    return 1
+  fi
+
+  printf '%s' "$IMAGE_PATH" >"$IMAGE_STATE_FILE"
+  printf '%s' "$CHART_PATH" >"$CHART_STATE_FILE"
 
   print_status "${OPERATOR_NAME} deployed to namespace ${NAMESPACE}"
 }

@@ -20,9 +20,25 @@ Two files carry all the logic:
   Everything under `operators/` is data; adding an operator means adding
   a directory, not writing Nix.
 
-Supported systems are `x86_64-linux` and `aarch64-linux`, via
+Supported systems for the per-operator packages (`<name>-binary`,
+`<name>-crds`, `<name>-rbac`, `<name>-image`, `<name>-chart`, `default`)
+are `x86_64-linux` and `aarch64-linux` only, via
 `flake-utils.lib.eachSystem`. Inputs: `nixpkgs` (`nixos-unstable`),
 `flake-utils`, `nix2container` (`inputs.nixpkgs.follows = "nixpkgs"`).
+
+`flake.nix` also exposes a `skopeo-nix2container` package — a
+host-native build of nix2container's skopeo fork, which understands a
+`nix:` transport that reads the image JSON an `n2c.buildImage` output
+produces — for the wider system set `x86_64-linux`, `aarch64-linux`,
+`x86_64-darwin`, `aarch64-darwin` (`nix2container.packages.${system}.skopeo-nix2container`,
+merged into the Linux-only output set above via
+`nixpkgs.lib.recursiveUpdate`). It exists so a non-Linux host (e.g. a
+macOS dev machine) can copy a Linux-built operator image out of the Nix
+store without executing any Linux-built binary itself; `operator-reconcile`
+uses it to copy `nix:$IMAGE_PATH` to a `docker-archive:` tarball, which it
+then feeds to `kind load image-archive`. Per-operator outputs themselves
+remain Linux-only — `skopeo-nix2container` is the only cross-system
+output this flake has.
 
 `operators/miura/` is the one operator present today. Its Go module path
 is `miura`, its CRD kind is `Function` (group `miura.io`, short name
