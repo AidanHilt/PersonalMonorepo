@@ -83,6 +83,7 @@ apply_valid_fixtures() {
   for f in "${TEST_DIR}/fixtures/valid"/*; do
     [[ -f "$f" ]] || continue
     base=$(basename "$f")
+    # shellcheck disable=SC2016
     if ! FIXTURE_REPO_URL="$REPO_URL" FIXTURE_REF="$REF" envsubst '$FIXTURE_REPO_URL $FIXTURE_REF' <"$f" |
       yq eval '.metadata.labels."operator-test-reconcile/managed" = "true"' - >"${tmp_dir}/${base}"; then
       rm -rf "$tmp_dir"
@@ -117,6 +118,7 @@ check_invalid_fixtures() {
   for f in "${TEST_DIR}/fixtures/invalid"/*; do
     [[ -f "$f" ]] || continue
     base=$(basename "$f")
+    # shellcheck disable=SC2016
     if FIXTURE_REPO_URL="$REPO_URL" FIXTURE_REF="$REF" envsubst '$FIXTURE_REPO_URL $FIXTURE_REF' <"$f" |
       "${KUBECTL[@]}" apply --namespace "$NAMESPACE" --dry-run=server -f - >/dev/null 2>&1; then
       print_error "FAIL ${base}: accepted by the API server (expected rejection)"
