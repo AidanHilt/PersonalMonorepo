@@ -61,6 +61,14 @@ spec:
           # Chart.yaml) is always Nix-generated.
           image: "{{ .Values.image.repository | default .Chart.Name }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          {{- with .Values.manager.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.manager.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           resources:
             requests:
               cpu: 10m

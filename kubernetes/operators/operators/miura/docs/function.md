@@ -138,6 +138,16 @@ Notes:
 - If `triggers.http` is absent, the generated Knative Service is
   cluster-local (`networking.knative.dev/visibility: cluster-local`)
   and no `VirtualService` is created.
+- `status.url` is always reported as `http://<host><pathPrefix>`: there
+  is no TLS/certificate field anywhere in the `Function` API, so the
+  reconciler has no basis to report `https://` and makes no attempt to
+  guess based on the Gateway.
+- `Routed`'s reasons (`Configured`/`Failed`) and `Ready`'s non-`Paused`
+  reasons (`Ready`/`ComponentNotReady`) are not enumerated as named
+  constants the way `SourceResolved`/`Built`/`Ready`-while-`Paused` are
+  in `api/v1alpha1/function_types.go` — condition `reason` is a
+  free-form string in the Kubernetes condition convention, and these
+  were simply not called out as constants when the types were written.
 - Build is Go-only, built with `ko` — no Dockerfile is used or
   supported.
 - Images are assumed public: miura ships no in-chart registry (no
@@ -216,8 +226,23 @@ changed after creation and are reconciled in place.
   today); other fields (e.g. `build.mainPackage`, `source.path`) may be
   revisited for immutability once reconciliation semantics are better
   understood.
-- Exact mechanics of how `ko` is packaged and invoked inside the build
-  `Job` (image, flags, credentials wiring) are not yet decided.
+- ~~Exact mechanics of how `ko` is packaged and invoked inside the build
+  `Job` (image, flags, credentials wiring) are not yet decided.~~
+  **Resolved**: the build `Job` runs a git-clone init container (the
+  operator-wide `--git-image`, default `alpine/git`) that clones
+  `source.url` and checks out the resolved commit into a shared
+  `emptyDir`, then a main container (the operator-wide `--ko-image`,
+  default `ghcr.io/ko-build/ko`) running `ko build --bare
+  <build.mainPackage>` with its working directory set to
+  `<checkout>/<source.path>`, `KO_DOCKER_REPO` set to
+  `<registry>/<imageRepository-or-default>`, `KO_DEFAULTBASEIMAGE` set to
+  `build.baseImage` (or the operator-wide `--default-base-image`), and
+  `build.env` passed through as plain container env vars. `ko build`
+  pushes by default and prints the resulting `image@digest` to stdout;
+  the container script captures that and writes it to
+  `/dev/termination-log` (`terminationMessagePolicy: File`), which the
+  reconciler reads back from the completed Pod's container status. See
+  miura/IMPLEMENTERS.md "Build Job design" for the full rationale.
 - Hostname/gateway allowlisting: nothing today stops a `Function` in one
   namespace from claiming a `triggers.http.hostname` or
   `triggers.http.gateway` that collides with, or hijacks traffic
@@ -225,7 +250,13 @@ changed after creation and are reconciled in place.
   allowlisting/conflict-detection for hostnames and gateways is
   deferred to the reconciler implementation.
 - Secret key expectations for `source.secretRef` and
-  `build.pushSecretRef` (e.g. which keys hold a username/token vs. an
-  SSH private key, or registry push credentials) are not yet decided or
-  enforced by the CRD schema; the reconciler implementation will need
-  to define and document the exact key names it expects.
+  `build.pushSecretRef` are not enforced by the CRD schema (and likely
+  never will be, since Secret shape isn't something CEL can usefully
+  validate), but as of this round are decided and documented for
+  `build.pushSecretRef`: it is expected to be a
+  `kubernetes.io/dockerconfigjson` Secret, and only its `.dockerconfigjson`
+  key is read (mounted into the build `Job` as `$DOCKER_CONFIG/config.json`,
+  which `ko`/the underlying go-containerregistry keychain reads directly).
+  `source.secretRef` (private repository support) remains undecided — it
+  is out of scope for this round's reconciler, which only resolves and
+  clones public repositories.

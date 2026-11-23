@@ -218,6 +218,21 @@ Nix at build time):
   above (overridable); `chart.version` (used in `Chart.yaml`) is always
   Nix-generated. See "Local dev loop" for how `reconcile-operator`
   overrides these for its own use.
+- Optional `args`/`env` on the manager container, driven by
+  `.Values.manager.args` (a plain string list, e.g.
+  `["--foo=bar"]`) and `.Values.manager.env` (a list of
+  `{name, value}`/`{name, valueFrom}` objects, the standard `corev1.EnvVar`
+  shape) — each rendered with `{{- with ... }}`/`toYaml`/`nindent 12` only
+  when the corresponding values key is set, so an operator that declares
+  neither (every operator except `miura`, today) gets an unchanged
+  `Deployment` with no `args`/`env` keys at all. This is the hook an
+  operator uses to pass operator-wide flags/config into its manager
+  binary without needing its own copy of the Deployment template — see
+  `operators/miura/chart/values.yaml` for a real example (one `--flag=value`
+  entry in `manager.args` per `internal/config` flag) and
+  `operators/miura/IMPLEMENTERS.md` "Operator-wide flags" for the
+  corresponding Go-side flag parsing.
+
 - All names are static (not release-name-prefixed) — an accepted
   trade-off since each operator chart is expected to be installed once
   per cluster. Installing the same chart twice under different release

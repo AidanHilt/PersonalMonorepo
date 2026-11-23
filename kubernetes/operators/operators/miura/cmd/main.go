@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"os"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -10,6 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	miurav1alpha1 "miura/api/v1alpha1"
+	"miura/internal/config"
 	"miura/internal/controller"
 )
 
@@ -26,6 +28,9 @@ func init() {
 func main() {
 	ctrl.SetLogger(zap.New())
 
+	cfg := config.ParseFlags(flag.CommandLine)
+	flag.Parse()
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme: scheme,
 	})
@@ -37,6 +42,7 @@ func main() {
 	if err = (&controller.FunctionReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
+		Config: cfg,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Function")
 		os.Exit(1)
