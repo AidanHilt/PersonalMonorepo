@@ -1,0 +1,16 @@
+# Smallest possible valid Function: an unauthenticated HTTP trigger.
+apiVersion: miura.io/v1alpha1
+kind: Function
+metadata:
+  name: minimal
+spec:
+  source:
+    url: ${FIXTURE_REPO_URL}
+    ref: ${FIXTURE_REF}
+    path: kubernetes/operators/operators/miura/test/functions
+  build:
+    mainPackage: ./cmd/hello
+  triggers:
+    http:
+      auth:
+        mode: None

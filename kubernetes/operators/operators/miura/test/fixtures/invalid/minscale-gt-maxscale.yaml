@@ -1,0 +1,20 @@
+# Violates RuntimeSpec's CEL rule: runtime.minScale must be <=
+# runtime.maxScale when both are set.
+apiVersion: miura.io/v1alpha1
+kind: Function
+metadata:
+  name: minscale-gt-maxscale
+spec:
+  source:
+    url: ${FIXTURE_REPO_URL}
+    ref: ${FIXTURE_REF}
+    path: kubernetes/operators/operators/miura/test/functions
+  build:
+    mainPackage: ./cmd/hello
+  runtime:
+    minScale: 5
+    maxScale: 2
+  triggers:
+    http:
+      auth:
+        mode: None

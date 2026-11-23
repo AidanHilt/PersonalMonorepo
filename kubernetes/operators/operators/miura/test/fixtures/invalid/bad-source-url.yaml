@@ -1,0 +1,17 @@
+# Violates source.url's CEL rule: it must be an https:// or ssh:// URL.
+# Here it uses the plain http:// scheme.
+apiVersion: miura.io/v1alpha1
+kind: Function
+metadata:
+  name: bad-source-url
+spec:
+  source:
+    url: http://github.com/example/bad-source-url
+    ref: ${FIXTURE_REF}
+    path: kubernetes/operators/operators/miura/test/functions
+  build:
+    mainPackage: ./cmd/hello
+  triggers:
+    http:
+      auth:
+        mode: None

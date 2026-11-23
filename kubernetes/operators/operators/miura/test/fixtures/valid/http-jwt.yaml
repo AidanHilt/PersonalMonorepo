@@ -1,0 +1,24 @@
+# HTTP trigger with JWT auth, exercising audiences, requiredGroups and
+# requiredScopes together.
+apiVersion: miura.io/v1alpha1
+kind: Function
+metadata:
+  name: http-jwt
+spec:
+  source:
+    url: ${FIXTURE_REPO_URL}
+    ref: ${FIXTURE_REF}
+    path: kubernetes/operators/operators/miura/test/functions
+  build:
+    mainPackage: ./cmd/hello
+  triggers:
+    http:
+      auth:
+        mode: Jwt
+        jwt:
+          audiences:
+            - http-jwt-fixture
+          requiredGroups:
+            - fixture-admins
+          requiredScopes:
+            - fixture:read

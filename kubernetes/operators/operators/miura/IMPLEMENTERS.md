@@ -91,6 +91,59 @@ gateway, default domain (for `triggers.http.hostname`), default runtime
 resources, default `source.pollInterval`, default `runtime.maxScale`,
 and the build history length cap for `status.builds`.
 
+## Test fixtures
+
+`test/` holds hand-authored material for exercising a running miura
+installation against real `Function` objects — it is not Go unit tests
+for the operator itself, and is out of scope for the Nix discovery in
+[../../IMPLEMENTERS.md](../../IMPLEMENTERS.md) (its `go.mod` is a
+separate, nested Go module; `operators/miura/`'s own module boundary
+stops at `test/functions/go.mod`).
+
+- `test/functions/` — a small, stdlib-only Go module with one `ko`-buildable
+  `main` package per fixture function:
+  - `cmd/hello` — plain HTTP server (the Knative Serving contract: listen
+    on `$PORT`), used by the `minimal` and `http-jwt` fixtures below.
+  - `cmd/event-sink` — logs every CloudEvent it receives; used by the
+    `events` and `events-and-schedule` fixtures.
+  - `cmd/cron-sink` — same behavior as `cmd/event-sink`, used by the
+    `schedule` and `events-and-schedule` fixtures; both share their
+    implementation via `internal/eventlog`.
+  - Building these with `ko` (or any tool that clones `source.url` at
+    `source.ref`) requires the branch under test to actually be pushed to
+    the configured repo URL first — `ko` does not see local, uncommitted,
+    or unpushed changes.
+- `test/fixtures/valid/` — one `Function` per distinct spec shape the CRD
+  supports, each pointing `source` at `test/functions/` above:
+  - `minimal` — HTTP trigger, `auth.mode: None`.
+  - `http-jwt` — HTTP trigger, `auth.mode: Jwt` with `audiences`,
+    `requiredGroups`, and `requiredScopes` all set.
+  - `events` — no HTTP trigger; a single `triggers.events[]` entry with a
+    `filter`.
+  - `schedule` — no HTTP trigger; a single `triggers.schedules[]` entry
+    with `cron`, `data`, and `timezone` all set.
+  - `events-and-schedule` — both `triggers.events[]` and
+    `triggers.schedules[]` set on the same `Function`.
+  - Every fixture's `spec.source.url`/`spec.source.ref` are the literal
+    strings `${FIXTURE_REPO_URL}`/`${FIXTURE_REF}` — placeholders meant to
+    be `envsubst`-rendered by `operator-test-reconcile`
+    (`nix/scripts/scripts/operator-test-reconcile`), not applied as-is.
+- `test/fixtures/invalid/` — one `Function` per CEL/validation rule in
+  `api/v1alpha1/function_types.go`, each crafted to violate exactly that
+  one rule so the API server must reject it: `name-too-long`,
+  `minscale-gt-maxscale`, `no-triggers`, `jwt-mode-without-jwt`,
+  `jwt-block-with-none-mode`, `issuer-without-jwksuri`, `bad-source-url`,
+  `bad-source-path`, `pollinterval-too-short`. These also use the
+  `${FIXTURE_REPO_URL}`/`${FIXTURE_REF}` placeholders wherever `source.url`
+  itself isn't the thing under test.
+- `FunctionRepository` has no fixtures — it isn't implemented yet (see
+  [docs/funcrepo.md](docs/funcrepo.md)).
+
+`operator-test-reconcile` is the generic (operator-agnostic) counterpart
+to `operator-reconcile`: it reads only `operators/<name>/test/fixtures/
+{valid,invalid}`, so it has no miura-specific knowledge beyond the
+fixtures themselves.
+
 ## Gotchas
 
 - `zz_generated.deepcopy.go` under `api/v1alpha1/` is not committed —

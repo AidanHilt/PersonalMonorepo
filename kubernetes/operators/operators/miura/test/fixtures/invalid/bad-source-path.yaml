@@ -1,0 +1,17 @@
+# Violates source.path's CEL rule: it must be a relative path with no
+# ".." segments. Here it attempts to escape the repository.
+apiVersion: miura.io/v1alpha1
+kind: Function
+metadata:
+  name: bad-source-path
+spec:
+  source:
+    url: ${FIXTURE_REPO_URL}
+    ref: ${FIXTURE_REF}
+    path: ../escape
+  build:
+    mainPackage: ./cmd/hello
+  triggers:
+    http:
+      auth:
+        mode: None
