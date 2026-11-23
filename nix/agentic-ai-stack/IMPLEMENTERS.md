@@ -324,6 +324,26 @@ DIRECTORY (not the bundle file itself) via `--read`, and export
 `SSL_CERT_FILE`/`NIX_SSL_CERT_FILE`/`NODE_EXTRA_CA_CERTS` set to the
 resolved bundle path, threaded through `sudo -u pi --preserve-env`.
 
+**Go toolchain env**: `pi`'s `$HOME` is set to the invoking (macOS)
+user's home directory (e.g. `/Users/aidan`), not `pi`'s own
+(`/var/lib/pi`). Go itself has no override for this: it defaults
+`GOCACHE` to `$HOME/Library/Caches/go-build` and `GOPATH` (and so
+`GOMODCACHE`, `$GOPATH/pkg/mod`) to `$HOME/go` on macOS, both of which
+point at a directory `pi` cannot access, so unpatched `go build`/`go
+fmt`/etc. fail outright (`failed to initialize build cache ... mkdir
+/Users/aidan/Library: file exists`). `start-agent.sh` pins both
+explicitly instead: `GOCACHE=/var/lib/pi/Library/Caches` (a dedicated
+path, NOT under `$FIXED_PI_HOME`, so it needs its own `--add` folded
+into `EXTRA_GEN_ARGS` -- see "Fixed agent dir" above for why
+`$FIXED_PI_HOME` itself is granted whole) and `GOPATH=$FIXED_PI_HOME/go`
+(already covered by that grant, so no separate `--add` is needed). Both
+directories are created (`sudo -u pi mkdir -p`) alongside the agent
+dir's own seeding step; both vars are exported and added to
+`PRESERVE_LIST` in the foreground launch path (mirroring
+`SSL_CERT_FILE` et al. above), and exported inside the `--detached`
+branch's `supervisor.sh` heredoc, so both code paths behave
+identically.
+
 ## Single nono state dir
 
 Every session this stack starts (every `start-agent.sh` run, and every

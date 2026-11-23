@@ -66,6 +66,18 @@ GEN_PROFILE_SH="$STACK_DIR/scripts/gen-profile.sh"
 BASE_PROFILE="$STACK_DIR/profiles/work.base.json"
 CONFIG_AGENT_DIR="$STACK_DIR/config/agent"
 CONFIG_WEB_SEARCH="$STACK_DIR/config/web-search.json"
+# GOCACHE/GOPATH: `pi`'s HOME is /Users/aidan (see IMPLEMENTERS.md's "Go
+# toolchain env" section), so Go's own $HOME-relative defaults
+# ($HOME/Library/Caches/go-build, $HOME/go) point at a directory `pi`
+# cannot access on macOS, and `go build`/`go fmt` fail outright
+# ("failed to initialize build cache ... mkdir /Users/aidan/Library:
+# file exists"). Pinned to pi-writable locations instead: GOCACHE under
+# a dedicated, explicitly-granted path (not under $FIXED_PI_HOME, so it
+# needs its own --add, see EXTRA_GEN_ARGS below), GOPATH (and so
+# GOMODCACHE, which defaults to $GOPATH/pkg/mod) under $FIXED_PI_HOME,
+# which is already granted whole.
+GO_CACHE_DIR="/var/lib/pi/Library/Caches"
+GO_PATH_DIR="$FIXED_PI_HOME/go"
 
 PROFILE_FLAG="work"
 AUDIT_FLAG=0
@@ -497,7 +509,7 @@ for root in "${READ_ROOTS[@]}"; do
   READ_ROOT_ARGS+=(--read "$root")
 done
 
-PRESERVE_LIST="$PRESERVE_LIST,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS"
+PRESERVE_LIST="$PRESERVE_LIST,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS,GOCACHE,GOPATH"
 
 if [ "$DRY_RUN" = "1" ]; then
   echo "==> --dry-run: no directories created, no helper started, no sudo/nono/setfacl/chmod commands run." >&2
@@ -600,7 +612,7 @@ write_as_pi() {
 }
 
 echo "==> Seeding the shared agent dir $AGENT_DIR and this session's own transient state under $RUN_DIR (idempotent -- existing pi/session state is kept)..." >&2
-sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$STATE_DIR/sessions" "$NONO_STATE_DIR"
+sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$STATE_DIR/sessions" "$NONO_STATE_DIR" "$GO_CACHE_DIR" "$GO_PATH_DIR"
 
 # --- Live file sharing: grant, then record what was granted ---------------
 # Every path in $SHARE_PATHS was already checked (share_path_check, see
@@ -665,7 +677,10 @@ fi
 # old equivalent grants, --add "$RUNS_ROOT" and the shell-environment
 # --add flags, lived ONLY in the foreground branch's gen-profile.sh
 # invocation; --detached sessions never got them).
-EXTRA_GEN_ARGS=(--add "$FIXED_PI_HOME" --add "/tmp")
+# $GO_CACHE_DIR is granted here too -- it's NOT under $FIXED_PI_HOME (see
+# GO_CACHE_DIR's own comment above for why it lives outside it), so it
+# needs its own --add; $GO_PATH_DIR is already covered by $FIXED_PI_HOME.
+EXTRA_GEN_ARGS=(--add "$FIXED_PI_HOME" --add "/tmp" --add "$GO_CACHE_DIR")
 while IFS= read -r shell_env_path; do
   [ -n "$shell_env_path" ] || continue
   EXTRA_GEN_ARGS+=(--add "$shell_env_path")
@@ -742,6 +757,8 @@ if [ "$DETACHED_FLAG" != "1" ]; then
   export SSL_CERT_FILE="$CA_BUNDLE"
   export NIX_SSL_CERT_FILE="$CA_BUNDLE"
   export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
+  export GOCACHE="$GO_CACHE_DIR"
+  export GOPATH="$GO_PATH_DIR"
 
   NONO_ARGS=(run --profile "$RUN_DIR/profile.json" --allow-cwd)
   [ "$AUDIT_FLAG" = "1" ] && NONO_ARGS+=(--audit-integrity)
@@ -838,6 +855,8 @@ export XDG_STATE_HOME="$NONO_STATE_DIR"
 export SSL_CERT_FILE="$CA_BUNDLE"
 export NIX_SSL_CERT_FILE="$CA_BUNDLE"
 export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
+export GOCACHE="$GO_CACHE_DIR"
+export GOPATH="$GO_PATH_DIR"
 export PATH="${EXTRA_PATH:+$EXTRA_PATH:}\$PATH"
 cd "$WORKDIR"
 "$NONO_BIN" run --profile "$RUN_DIR/profile.json" --allow-cwd$NONO_RUN_EXTRA_FLAGS --detached --name "$SESSION_NAME" -- "$PI_BIN"$PI_RESUME_SUFFIX
