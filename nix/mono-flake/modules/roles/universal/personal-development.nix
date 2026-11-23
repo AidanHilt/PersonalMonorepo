@@ -33,6 +33,7 @@ in
     vault
     watchexec
     weechat
+    yamllint
   ] ++ platformPackages;
 
   age.secrets.github-token = {
