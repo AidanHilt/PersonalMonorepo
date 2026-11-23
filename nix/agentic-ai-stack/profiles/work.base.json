@@ -103,7 +103,9 @@
       "NODE_EXTRA_CA_CERTS",
       "GIT_CONFIG_COUNT",
       "GIT_CONFIG_KEY_*",
-      "GIT_CONFIG_VALUE_*"
+      "GIT_CONFIG_VALUE_*",
+      "GOCACHE",
+      "GOPATH"
     ]
   },
   "command_policies": {
