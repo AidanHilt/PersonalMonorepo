@@ -192,7 +192,7 @@ let
   # Keys here are *owned* by the generated side (see the ownership note
   # below) — chart/values.yaml must never declare image.tag or
   # chart.version.
-  generatedValues = pkgs.writeText "${name}-generated-values.json" (
+  generatedValues = pkgs.writeText "${name}-generated-values.yaml" (
     builtins.toJSON {
       image = {
         tag = imageTag;

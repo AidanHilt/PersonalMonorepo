@@ -6,6 +6,9 @@ hostnames:
 
 gitRevision: project-appocalypse/knative-function-operator
 
+knative:
+  enabled: true
+
 authentik:
   enabled: true
   configuration:
