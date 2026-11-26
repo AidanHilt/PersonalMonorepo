@@ -2,7 +2,7 @@ env: qa-cluster
 
 hostnames:
   - qa-cluster-lb.lan
-  - "172.20.255.200"
+  - "172.18.255.200"
 
 gitRevision: project-appocalypse/knative-function-operator
 
