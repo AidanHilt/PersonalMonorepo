@@ -10,7 +10,7 @@ knative:
   enabled: true
 
 authentik:
-  enabled: true
+  enabled: false
   configuration:
     enabled: true
 
