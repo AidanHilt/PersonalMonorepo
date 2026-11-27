@@ -32,6 +32,24 @@ STACK_DIR="$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"
 # section.
 SESSIONS_ROOT="${PI_STACK_SESSIONS_ROOT:-/tmp/pi-sessions}"
 
+# PI_USER_HOME: the `pi` user's actual home directory -- pi's real, pi-owned
+# /var/lib/pi (see nix/mono-flake's `_pi-user.nix`, which sets
+# `users.users.pi.home` to exactly this on both Linux and nix-darwin).
+# This is what every SANDBOXED process's $HOME must be set to
+# explicitly: `sudo -u pi` does not reset $HOME on its own, so without
+# this the sandboxed `pi`/(shell) process inherits the INVOKING user's
+# home (e.g. /Users/aidan) -- a directory `pi` cannot read, which also
+# makes Nix warn about a home directory it doesn't own. Distinct from
+# FIXED_PI_HOME below, which is pi's own `.pi` state dir WITHIN this
+# home. Host-side work (the launcher's own clone cache, the
+# share_path_check "your entire $HOME" guard, git credentials, ACL
+# handling) must keep using the INVOKING user's $HOME, never this.
+# NOT overridable via env -- pi's home is a flake-owned fact, not a
+# per-launch choice.
+# shellcheck disable=SC2034 # used by scripts that `source` this file
+# (start-agent.sh, shell.sh), not by this file itself.
+PI_USER_HOME="/var/lib/pi"
+
 # FIXED_AGENT_DIR / FIXED_PI_HOME: ONE persistent, shared PI_CODING_AGENT_DIR
 # for every start-agent.sh/shell.sh session -- replaces the old per-run
 # <RUNS_ROOT>/<name>/pi/agent tree. Never deleted by any script in this
@@ -39,11 +57,11 @@ SESSIONS_ROOT="${PI_STACK_SESSIONS_ROOT:-/tmp/pi-sessions}"
 # step); this is what makes `pi --resume` keep working across launches
 # now that sessions no longer each get their own state tree. Mirrors pi's
 # own default ($HOME/.pi/agent) under the `pi` user's actual home
-# (/var/lib/pi), on the theory that this is the path pi's own code (e.g.
-# the web-search feature) most likely assumes a sibling
-# web-search.json lives next to -- an inference, since pi's own source
-# isn't vendored in this checkout. NOT overridable via env -- this is a
-# flake-owned, fixed location, not a per-launch choice.
+# ($PI_USER_HOME, i.e. /var/lib/pi), on the theory that this is the path
+# pi's own code (e.g. the web-search feature) most likely assumes a
+# sibling web-search.json lives next to -- an inference, since pi's own
+# source isn't vendored in this checkout. NOT overridable via env -- this
+# is a flake-owned, fixed location, not a per-launch choice.
 FIXED_PI_HOME="/var/lib/pi/.pi"
 # shellcheck disable=SC2034 # used by scripts that `source` this file
 # (start-agent.sh, shell.sh), not by this file itself.

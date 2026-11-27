@@ -210,6 +210,7 @@ if [ "$DRY_RUN" = "1" ]; then
   echo "  bash:          $BASH_BIN" >&2
   echo "  run dir:       $RUN_DIR" >&2
   echo "  state dir:     $STATE_DIR" >&2
+  echo "  sandbox HOME:  $PI_USER_HOME (the 'pi' user's own home; the invoking user's HOME=$HOME stays host-side only)" >&2
   echo "  session name:  $SESSION_NAME" >&2
   echo "  run profile:   $RUN_PROFILE (must already exist -- start the run with 'nix run .#start-agent' first)" >&2
   echo "  shell profile: $SHELL_PROFILE (a copy of the run profile with only its webhook URL rewritten)" >&2
@@ -220,7 +221,7 @@ if [ "$DRY_RUN" = "1" ]; then
   echo >&2
   echo "Resolved command (would run as the 'pi' user):" >&2
   echo "  sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS,<git safe.directory vars> -- \\" >&2
-  echo "    sh -c \"cd \\\"\$1\\\"; shift; export PATH=\\\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\\\"; exec \\\"\$@\\\"\" sh <recorded workdir> \\" >&2
+  echo "    sh -c \"cd \\\"\$1\\\"; shift; export HOME=\\\"$PI_USER_HOME\\\"; export PATH=\\\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\\\"; exec \\\"\$@\\\"\" sh <recorded workdir> \\" >&2
   echo "    $NONO_BIN run --profile $SHELL_PROFILE --allow-cwd --name $SESSION_NAME -- $BASH_BIN -i" >&2
   exit 0
 fi
@@ -380,7 +381,15 @@ export SSL_CERT_FILE="$CA_BUNDLE"
 export NIX_SSL_CERT_FILE="$CA_BUNDLE"
 export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
 
-echo "==> Starting a bash shell inside nono as 'pi' (session: $SESSION_NAME)..." >&2
+echo "==> Starting a bash shell inside nono as 'pi' (session: $SESSION_NAME, HOME: $PI_USER_HOME)..." >&2
+# HOME is assigned EXPLICITLY to the pi-owned home inside this narrow
+# wrapper (nothing on the invoking-user side exports it, so this shell's
+# own host-side work -- share_path_check's "entire $HOME" guard in
+# particular -- still sees the invoking user's real $HOME). `sudo -u pi`
+# does not reset $HOME on its own, so without this the sandboxed shell
+# would inherit a home directory `pi` can't read. Same wrapper that
+# already pins PATH; see start-agent.sh's foreground launch for the same
+# assignment.
 sudo -u pi --preserve-env="$PRESERVE_LIST" -- \
-  sh -c "cd \"\$1\"; shift; export PATH=\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\"; exec \"\$@\"" sh "$WORKDIR" \
+  sh -c "cd \"\$1\"; shift; export HOME=\"$PI_USER_HOME\"; export PATH=\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\"; exec \"\$@\"" sh "$WORKDIR" \
   "$NONO_BIN" run --profile "$SHELL_PROFILE" --allow-cwd --name "$SESSION_NAME" -- "$BASH_BIN" -i

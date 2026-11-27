@@ -324,24 +324,42 @@ DIRECTORY (not the bundle file itself) via `--read`, and export
 `SSL_CERT_FILE`/`NIX_SSL_CERT_FILE`/`NODE_EXTRA_CA_CERTS` set to the
 resolved bundle path, threaded through `sudo -u pi --preserve-env`.
 
-**Go toolchain env**: `pi`'s `$HOME` is set to the invoking (macOS)
-user's home directory (e.g. `/Users/aidan`), not `pi`'s own
-(`/var/lib/pi`). Go itself has no override for this: it defaults
-`GOCACHE` to `$HOME/Library/Caches/go-build` and `GOPATH` (and so
-`GOMODCACHE`, `$GOPATH/pkg/mod`) to `$HOME/go` on macOS, both of which
-point at a directory `pi` cannot access, so unpatched `go build`/`go
-fmt`/etc. fail outright (`failed to initialize build cache ... mkdir
-/Users/aidan/Library: file exists`). `start-agent.sh` pins both
-explicitly instead: `GOCACHE=/var/lib/pi/Library/Caches` (a dedicated
-path, NOT under `$FIXED_PI_HOME`, so it needs its own `--add` folded
-into `EXTRA_GEN_ARGS` -- see "Fixed agent dir" above for why
-`$FIXED_PI_HOME` itself is granted whole) and `GOPATH=$FIXED_PI_HOME/go`
-(already covered by that grant, so no separate `--add` is needed). Both
-directories are created (`sudo -u pi mkdir -p`) alongside the agent
-dir's own seeding step; both vars are exported and added to
-`PRESERVE_LIST` in the foreground launch path (mirroring
-`SSL_CERT_FILE` et al. above), and exported inside the `--detached`
-branch's `supervisor.sh` heredoc, so both code paths behave
+**Sandbox `HOME` and the Go toolchain env**: every sandboxed process
+(`pi` in `start-agent.sh`, `bash -i` in `shell.sh`, and the `nono run`
+started by the `--detached` branch's `supervisor.sh`) runs with
+`HOME=/var/lib/pi` — the `pi` user's real, pi-owned home
+(`scripts/lib-common.sh`'s `PI_USER_HOME`, as declared by
+nix/mono-flake's `_pi-user.nix`; distinct from `FIXED_PI_HOME` =
+`$PI_USER_HOME/.pi`). It is assigned explicitly, as
+`export HOME="$PI_USER_HOME"` inside the same narrow `sh -c` wrapper
+that already pins `PATH` on the `sudo -u pi` launch (and, for
+`--detached`, inside the generated `supervisor.sh`), **not** exported in
+the launcher's own environment and **not** added to `PRESERVE_LIST`.
+The reason it can't be left implicit: `sudo -u pi` does not reset
+`$HOME` the way a full login shell would, so the sandbox used to inherit
+the INVOKING user's home (e.g. `/Users/aidan`) — a directory `pi` cannot
+read, which also makes Nix warn about a home directory the `pi` user
+doesn't own. The invoking user's own `$HOME` stays strictly host-side:
+the launcher process itself, `--clone`'s cache
+(`$HOME/.cache/pi-sandbox/clones`), `share_path_check`'s "refusing to
+share your entire `$HOME`" guard, git credentials and ACL handling all
+still resolve against it, never against `$PI_USER_HOME`.
+
+`start-agent.sh` additionally pins `GOCACHE`/`GOPATH` explicitly — now
+for determinism rather than because `$HOME` is wrong: Go's own defaults
+(`$HOME/Library/Caches/go-build` and `$HOME/go` on macOS) would land
+under the pi-owned home and be readable, but pinning them means a future
+`HOME` change can never silently relocate the build cache or module
+cache out from under an existing grant. `GOCACHE=/var/lib/pi/Library/
+Caches` (a dedicated path, NOT under `$FIXED_PI_HOME`, so it needs its
+own `--add` folded into `EXTRA_GEN_ARGS` — see "Fixed agent dir" above
+for why `$FIXED_PI_HOME` itself is granted whole) and
+`GOPATH=$FIXED_PI_HOME/go` (already covered by that grant, so no
+separate `--add` is needed). Both directories are created (`sudo -u pi
+mkdir -p`) alongside the agent dir's own seeding step; both vars are
+exported and added to `PRESERVE_LIST` in the foreground launch path
+(mirroring `SSL_CERT_FILE` et al. above), and exported inside the
+`--detached` branch's `supervisor.sh` heredoc, so both code paths behave
 identically.
 
 ## Single nono state dir
@@ -399,7 +417,10 @@ A small, `source`d-only helper shared by every script
 `PI_STACK_SESSIONS_ROOT` — transient, per-session bookkeeping only, see
 "Per-session state layout" above), `FIXED_AGENT_DIR`/`FIXED_PI_HOME`/
 `FIXED_WEB_SEARCH_FILE` (the one shared, persistent agent dir — see
-"Fixed agent dir" above), `validate_run_name` (anchors a run name to
+"Fixed agent dir" above), `PI_USER_HOME` (the `pi` user's actual home,
+`/var/lib/pi`, assigned to the sandboxed process's `HOME` — see
+"Sandbox `HOME` and the Go toolchain env" above), `validate_run_name`
+(anchors a run name to
 `^[A-Za-z0-9._-]+$`, rejecting path traversal), `require_run_dir`,
 `nono_state_dir` (the single, shared nono `XDG_STATE_HOME` — see "Single
 nono state dir" above), `nono_state_wipe_preserving_audit`,

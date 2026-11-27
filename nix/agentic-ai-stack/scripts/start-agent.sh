@@ -51,9 +51,9 @@ set -euo pipefail
 # config/agent/ is instead streamed in via a tar pipe (see tar_copy_to_pi
 # below), so it doesn't need to be `pi`-readable in place either.
 #
-# Sources lib-common.sh for STACK_DIR/SESSIONS_ROOT/FIXED_AGENT_DIR and
-# the resolve_or_die/resolve_stack_bin/validate_run_name/nono_state_dir/
-# nono_state_wipe_preserving_audit/resolve_ca_bundle/share_*/
+# Sources lib-common.sh for STACK_DIR/SESSIONS_ROOT/FIXED_AGENT_DIR/
+# PI_USER_HOME and the resolve_or_die/resolve_stack_bin/validate_run_name/
+# nono_state_dir/nono_state_wipe_preserving_audit/resolve_ca_bundle/share_*/
 # git_safe_dir_env helpers.
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
 # shellcheck source=lib-common.sh
@@ -66,16 +66,22 @@ GEN_PROFILE_SH="$STACK_DIR/scripts/gen-profile.sh"
 BASE_PROFILE="$STACK_DIR/profiles/work.base.json"
 CONFIG_AGENT_DIR="$STACK_DIR/config/agent"
 CONFIG_WEB_SEARCH="$STACK_DIR/config/web-search.json"
-# GOCACHE/GOPATH: `pi`'s HOME is /Users/aidan (see IMPLEMENTERS.md's "Go
-# toolchain env" section), so Go's own $HOME-relative defaults
-# ($HOME/Library/Caches/go-build, $HOME/go) point at a directory `pi`
-# cannot access on macOS, and `go build`/`go fmt` fail outright
-# ("failed to initialize build cache ... mkdir /Users/aidan/Library:
-# file exists"). Pinned to pi-writable locations instead: GOCACHE under
-# a dedicated, explicitly-granted path (not under $FIXED_PI_HOME, so it
+# GOCACHE/GOPATH: kept EXPLICIT (rather than left to Go's own
+# $HOME-relative defaults) so cache/module locations stay deterministic
+# and independent of $HOME -- the sandboxed `pi` process's HOME is now
+# always the pi-owned $PI_USER_HOME (lib-common.sh; assigned explicitly
+# on the `sudo -u pi` launch below, and in the --detached supervisor),
+# which keeps Nix from warning about a home directory it doesn't own and
+# makes Go's defaults pi-readable too, but pinning them anyway means a
+# future HOME change can never silently relocate the build cache or
+# module cache out from under an existing grant. GOCACHE lives under a
+# dedicated, explicitly-granted path (not under $FIXED_PI_HOME, so it
 # needs its own --add, see EXTRA_GEN_ARGS below), GOPATH (and so
 # GOMODCACHE, which defaults to $GOPATH/pkg/mod) under $FIXED_PI_HOME,
-# which is already granted whole.
+# which is already granted whole. Host-side work in this script keeps
+# using the INVOKING user's $HOME (clone cache, share_path_check's own
+# "entire $HOME" guard) -- only the sandboxed process gets
+# $PI_USER_HOME.
 GO_CACHE_DIR="/var/lib/pi/Library/Caches"
 GO_PATH_DIR="$FIXED_PI_HOME/go"
 
@@ -518,6 +524,7 @@ if [ "$DRY_RUN" = "1" ]; then
   echo "  pi:                  $PI_BIN" >&2
   echo "  session name:        $SESSION_NAME" >&2
   echo "  workdir (live-shared): $WORKDIR" >&2
+  echo "  sandbox HOME:        $PI_USER_HOME (the 'pi' user's own home; the invoking user's HOME=$HOME stays host-side only)" >&2
   echo "  read roots:          ${READ_ROOTS[*]}" >&2
   echo "  CA bundle:           $CA_BUNDLE (parent dir $CA_BUNDLE_DIR read-granted)" >&2
   echo "  extra packages:      ${EXTRA_PKGS:-<none>}" >&2
@@ -546,7 +553,7 @@ if [ "$DRY_RUN" = "1" ]; then
   [ "$RESUME_FLAG" = "1" ] && nono_run_line="$nono_run_line --resume"
   {
     echo "  sudo -u pi --preserve-env=$PRESERVE_LIST -- \\"
-    echo "    sh -c \"cd \\\"\$1\\\"; shift; export PATH=\\\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\\\"; exec \\\"\$@\\\"\" sh $WORKDIR \\"
+    echo "    sh -c \"cd \\\"\$1\\\"; shift; export HOME=\\\"$PI_USER_HOME\\\"; export PATH=\\\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\\\"; exec \\\"\$@\\\"\" sh $WORKDIR \\"
     echo "$nono_run_line"
   } >&2
   exit 0
@@ -765,9 +772,17 @@ if [ "$DETACHED_FLAG" != "1" ]; then
   NONO_ARGS+=(--name "$SESSION_NAME" -- "$PI_BIN")
   [ "$RESUME_FLAG" = "1" ] && NONO_ARGS+=(--resume)
 
-  echo "==> Starting nono as 'pi' (session: $SESSION_NAME)..." >&2
+  echo "==> Starting nono as 'pi' (session: $SESSION_NAME, HOME: $PI_USER_HOME)..." >&2
+  # HOME is assigned EXPLICITLY here (not exported in this launcher's own
+  # environment -- host-side code above still needs the invoking user's
+  # $HOME) because `sudo -u pi` does not reset $HOME on its own: without
+  # this, the sandboxed process would inherit the invoking user's home
+  # (e.g. /Users/aidan), which `pi` can't read and which makes Nix warn
+  # about a home directory it doesn't own. Same narrow `sh -c` wrapper
+  # that already pins PATH, so nothing outside the launched process sees
+  # the new value.
   sudo -u pi --preserve-env="$PRESERVE_LIST" -- \
-    sh -c "cd \"\$1\"; shift; export PATH=\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\"; exec \"\$@\"" sh "$WORKDIR" \
+    sh -c "cd \"\$1\"; shift; export HOME=\"$PI_USER_HOME\"; export PATH=\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\"; exec \"\$@\"" sh "$WORKDIR" \
     "$NONO_BIN" "${NONO_ARGS[@]}"
   exit $?
 fi
@@ -857,6 +872,11 @@ export NIX_SSL_CERT_FILE="$CA_BUNDLE"
 export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
 export GOCACHE="$GO_CACHE_DIR"
 export GOPATH="$GO_PATH_DIR"
+# HOME: the pi-owned home, assigned here (this supervisor already runs as
+# $(pi)) rather than inherited from whatever environment the invoking
+# user's wrapper happened to hand $(sudo -u pi) -- see start-agent.sh's
+# foreground launch for why $(sudo -u pi) can't be relied on to do this.
+export HOME="$PI_USER_HOME"
 export PATH="${EXTRA_PATH:+$EXTRA_PATH:}\$PATH"
 cd "$WORKDIR"
 "$NONO_BIN" run --profile "$RUN_DIR/profile.json" --allow-cwd$NONO_RUN_EXTRA_FLAGS --detached --name "$SESSION_NAME" -- "$PI_BIN"$PI_RESUME_SUFFIX
