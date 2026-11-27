@@ -119,6 +119,7 @@ istio:
       chart: base
     istio-gateway:
       chart: gateway
+      syncWave: "-10"
     kiali:
       repo: https://kiali.org/helm-charts
       chart: kiali-operator
