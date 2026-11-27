@@ -202,22 +202,41 @@ compute_tree_sha() {
 # Per-tool version lookups: most tools support --version, but a handful
 # need a different invocation. Falls through to "<tool> --version" for
 # anything not special-cased.
+#
+# Each probe captures the command's COMPLETE combined stdout/stderr before
+# selecting a line, deliberately avoiding "... 2>&1 | head -1". This
+# script runs with pipefail (see the top of the file), so a pipeline into
+# head would let head exit after the first line, the producer would get
+# SIGPIPE, and the pipeline status would become 141 -- misreporting a
+# perfectly good version probe as a failed one and turning a successful
+# run into an artifact error (exit 23). Capturing first and trimming with
+# parameter expansion keeps the probe's own exit status intact.
 tool_version() {
-  local t="$1"
+  local t="$1" probe out rc
   case "$t" in
   go)
-    go version 2>&1 | head -1
+    probe=(go version)
     ;;
   helm)
-    helm version --short 2>&1 | head -1
+    probe=(helm version --short)
     ;;
   kubeconform)
-    kubeconform -v 2>&1 | head -1
+    probe=(kubeconform -v)
     ;;
   *)
-    "$t" --version 2>&1 | head -1
+    probe=("$t" --version)
     ;;
   esac
+  out="$("${probe[@]}" 2>&1)"
+  rc=$?
+  # Emit only the first line either way; on failure also return the probe's
+  # real nonzero status so a failed version command is never read as success
+  # (main's diagnostic still gets the text above).
+  printf '%s\n' "${out%%$'\n'*}"
+  if [[ $rc -ne 0 ]]; then
+    return "$rc"
+  fi
+  return 0
 }
 
 json_string_array() {
