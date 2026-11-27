@@ -324,26 +324,54 @@ DIRECTORY (not the bundle file itself) via `--read`, and export
 `SSL_CERT_FILE`/`NIX_SSL_CERT_FILE`/`NODE_EXTRA_CA_CERTS` set to the
 resolved bundle path, threaded through `sudo -u pi --preserve-env`.
 
-**Sandbox `HOME` and the Go toolchain env**: every sandboxed process
-(`pi` in `start-agent.sh`, `bash -i` in `shell.sh`, and the `nono run`
-started by the `--detached` branch's `supervisor.sh`) runs with
+**Sandbox `HOME` and the Go toolchain env**: every SANDBOXED process
+(`pi` in `start-agent.sh`, `bash -i` in `shell.sh`, and the `pi` process
+the `--detached` branch's `supervisor.sh` launches) runs with
 `HOME=/var/lib/pi` — the `pi` user's real, pi-owned home
 (`scripts/lib-common.sh`'s `PI_USER_HOME`, as declared by
 nix/mono-flake's `_pi-user.nix`; distinct from `FIXED_PI_HOME` =
-`$PI_USER_HOME/.pi`). It is assigned explicitly, as
-`export HOME="$PI_USER_HOME"` inside the same narrow `sh -c` wrapper
-that already pins `PATH` on the `sudo -u pi` launch (and, for
-`--detached`, inside the generated `supervisor.sh`), **not** exported in
-the launcher's own environment and **not** added to `PRESERVE_LIST`.
-The reason it can't be left implicit: `sudo -u pi` does not reset
-`$HOME` the way a full login shell would, so the sandbox used to inherit
-the INVOKING user's home (e.g. `/Users/aidan`) — a directory `pi` cannot
-read, which also makes Nix warn about a home directory the `pi` user
-doesn't own. The invoking user's own `$HOME` stays strictly host-side:
+`$PI_USER_HOME/.pi`). The reason it can't be left implicit: `sudo -u pi`
+does not reset `$HOME` the way a full login shell would, so the sandbox
+would otherwise inherit the INVOKING user's home (e.g. `/Users/aidan`) —
+a directory `pi` cannot read, which also makes Nix warn about a home
+directory the `pi` user doesn't own.
+
+**Which process gets that `HOME` matters — it goes on the payload, never
+on nono.** `nono` itself keeps inheriting the invoking user's `$HOME`;
+`HOME="$PI_USER_HOME"` is assigned only to the PAYLOAD nono launches —
+the inner `sh -c 'export HOME="$PI_USER_HOME"; exec "$@"'` wrapper
+appended after `nono run … --` in `start-agent.sh`'s foreground launch,
+`shell.sh`'s launch, and the generated `--detached` `supervisor.sh`. The
+OUTER `sh -c` wrapper that already pins `PATH` on the `sudo -u pi` launch
+(foreground and `shell.sh`) and the `--detached` supervisor's own
+environment do NOT export `HOME` at all, and `HOME` is never added to
+`PRESERVE_LIST`.
+
+Why: nono **always** protects BOTH its legacy `$HOME/.nono` root AND its
+current `$XDG_STATE_HOME/nono` root (see "Single nono state dir" above).
+Exporting `HOME=/var/lib/pi` before nono starts therefore also creates
+the legacy protected root `/var/lib/pi/.nono` (resolved
+`/private/var/lib/pi/.nono` on macOS), which overlaps
+`system_read_macos`' `/private/var` grant — and nono refuses to
+initialize at all rather than run with a protected root inside an
+allowed one. `allow_parent_of_protected` is NOT an acceptable fix
+because it is a macOS-only knob; the launcher has to stay correct on
+both platforms. Deferring the assignment to the payload leaves nono's
+legacy protected root wherever the invoking user's own `$HOME` already
+puts it (typically `$HOME/.nono`, absent unless they use nono
+themselves), so the macOS overlap never arises. On Linux the same split
+is correct-and-harmless rather than load-bearing: nono's protected roots
+are equally unchanged there (they simply resolve under the invoking
+user's real home), and the sandboxed process still gets the pi-owned
+home it needs — no `allow_parent_of_protected` equivalent is needed
+either way.
+
+The invoking user's own `$HOME` stays strictly host-side and unchanged:
 the launcher process itself, `--clone`'s cache
 (`$HOME/.cache/pi-sandbox/clones`), `share_path_check`'s "refusing to
 share your entire `$HOME`" guard, git credentials and ACL handling all
-still resolve against it, never against `$PI_USER_HOME`.
+still resolve against it, never against `$PI_USER_HOME` — and nono now
+sees exactly the same value those code paths do.
 
 `start-agent.sh` additionally pins `GOCACHE`/`GOPATH` explicitly — now
 for determinism rather than because `$HOME` is wrong: Go's own defaults
@@ -360,7 +388,10 @@ mkdir -p`) alongside the agent dir's own seeding step; both vars are
 exported and added to `PRESERVE_LIST` in the foreground launch path
 (mirroring `SSL_CERT_FILE` et al. above), and exported inside the
 `--detached` branch's `supervisor.sh` heredoc, so both code paths behave
-identically.
+identically. Unlike `HOME`, `GOCACHE`/`GOPATH` stay exported in the
+supervisor's own environment (and are preserved to the payload): they
+only steer Go's cache paths, they say nothing about nono's protected
+roots.
 
 ## Single nono state dir
 
