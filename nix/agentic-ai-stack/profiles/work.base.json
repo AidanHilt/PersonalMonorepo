@@ -45,6 +45,7 @@
     "allow_domain": [
       "pi.dev",
       "ollama.com",
+      "proxy.golang.org",
       "auth.openai.com",
       "github.com",
       "api.github.com",
@@ -153,6 +154,7 @@
               ],
               "network": {
                 "allow_domain": [
+                  "proxy.golang.org",
                   "github.com",
                   "api.github.com",
                   "codeload.github.com",
