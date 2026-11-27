@@ -2,7 +2,7 @@
 description: Implementation agent — executes an approved plan and reports success or failure
 display_name: Implement
 tools: read, grep, find, bash, write, edit, ask_user_question
-model: anthropic/claude-sonnet-5
+model: ollama-cloud/deepseek-v4.1-flash
 thinking: medium
 locked: true
 prompt_mode: replace
@@ -12,7 +12,7 @@ permission:
   edit: allow
   bash:
     # Default-deny: the subagent runs in an isolated worktree (see
-    # @gotgenes/pi-subagents-worktrees, nix/agentic-ai-stack/config/agent/
+    # @gotgene/s/pi-subagents-worktrees, nix/agentic-ai-stack/config/agent/
     # subagents-worktrees.json) and the ONLY command it may run is the
     # exact `agent-validate --path ...` invocation stated in its dispatch
     # prompt -- it does not author checks, run arbitrary project tooling,
