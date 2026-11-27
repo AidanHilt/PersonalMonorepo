@@ -42,12 +42,14 @@ exits non-zero -- it does not leave a half-merged tree behind.
 Prints a summary of the changed files, the branch's commit log, and the
 next step (review the staged changes, then run kommit).
 
-     --slot <n>   Optional. After a successful stage, removes
+     --slot <n>   Optional. After a successful stage, removes the
+                  per-dispatch agent definition
                   ${agents_dir}/IMPLEMENT-<n>.md (agents_dir resolves to
-                  ${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents) -- the
-                  per-dispatch agent definition agent-plan-create allocated
-                  for this dispatch, freeing the slot for reuse. No error
-                  if the file is already absent.
+                  ${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents) AND its
+                  plan file /tmp/pi-agent-plans/IMPLEMENT-<n>.md -- both
+                  allocated by agent-plan-create for this dispatch --
+                  freeing the slot for reuse. No error if either file is
+                  already absent.
      --force      Skip checks 3-4 (missing artifact / tree mismatch) and
                   stage anyway, with a warning.
 EOF
@@ -210,15 +212,26 @@ main() {
   git log --oneline "HEAD..$branch" 2>/dev/null || true
 
   if [[ -n "$slot" ]]; then
-    local agents_dir slot_file
+    local agents_dir slot_file plan_dir plan_file
     agents_dir="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents"
     slot_file="$agents_dir/IMPLEMENT-$slot.md"
+    plan_dir="/tmp/pi-agent-plans"
+    plan_file="$plan_dir/IMPLEMENT-$slot.md"
     if [[ -e "$slot_file" ]]; then
       rm -f -- "$slot_file"
-      print_status "Freed dispatch slot IMPLEMENT-$slot ($slot_file removed)"
+      print_status "Removed per-dispatch agent definition ($slot_file)"
     else
       print_status "Dispatch slot IMPLEMENT-$slot had no agent file to remove ($slot_file)"
     fi
+    # agent-plan-create writes the dispatch plan to a shared /tmp path; drop
+    # it too so a reused slot never inherits a stale plan. Missing is fine.
+    if [[ -e "$plan_file" ]]; then
+      rm -f -- "$plan_file"
+      print_status "Removed dispatch plan file ($plan_file)"
+    else
+      print_status "Dispatch slot IMPLEMENT-$slot had no plan file to remove ($plan_file)"
+    fi
+    print_status "Freed dispatch slot IMPLEMENT-$slot"
   fi
 
   print_status "Next step: review the staged changes, then commit with kommit. agent-stage never commits, deletes the branch, or pushes."

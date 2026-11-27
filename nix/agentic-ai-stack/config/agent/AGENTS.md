@@ -28,14 +28,23 @@ The planning step is not finished until the user has seen the final plan, and ap
 ### Planning step output
 The expected next step after completing the "planning" task is dispatching an
 IMPLEMENT subagent. The ENTIRE plan -- context, steps, style guide,
-out-of-scope, notes, research -- is handed to the subagent IN ITS DISPATCH
-PROMPT, not via any file the subagent reads
-for itself. That prompt is assembled by `agent-plan-create`, which prints it
-to stdout; you pass that stdout as the subagent's dispatch prompt. There is
-no file to place, and nothing for the subagent to go looking for -- if
-something the subagent needs isn't in the prompt or already committed at
-HEAD, it doesn't have it, because its worktree is a detached checkout of HEAD
-that does not see your (or the user's) uncommitted/untracked files.
+out-of-scope, notes, research -- is written by `agent-plan-create` to a fixed
+shared path, `/tmp/pi-agent-plans/IMPLEMENT-<n>.md`, and only that absolute
+path is printed to stdout. You dispatch the allocated `IMPLEMENT-<n>` with a
+short instruction such as:
+
+```
+Read /tmp/pi-agent-plans/IMPLEMENT-<n>.md before doing anything else. It
+contains your complete implementation plan and validation command.
+```
+
+That plan file is the one deliberate exception to "the subagent only sees
+what you put in the prompt or what is committed at HEAD": it lives in
+shared `/tmp`, NOT in the repository, so it is readable from the subagent's
+isolated worktree even though that worktree is a detached checkout of HEAD
+that does not see your (or the user's) uncommitted/untracked files. Anything
+else the subagent needs must still be in the plan file or already committed
+at HEAD.
 
 Dispatching the implementation subagent once a plan is agreed is your (the
 planning agent's) responsibility — it is not a separate step the user
@@ -44,11 +53,12 @@ triggers. Before dispatch, in order:
 1. If the plan's checks need a tool that is missing, ask the user to add it
    to `nix/mono-flake` (host system packages) and run `update` -- do not
    attempt to install it yourself. The subagent cannot do this itself.
-2. Run `agent-plan-create` (below) to assemble the dispatch prompt. If it
+2. Run `agent-plan-create` (below) to write the plan file. If it
    exits complaining about missing tools, go back to step 1 and retry.
-3. Dispatch the subagent_type stated in the prompt (`IMPLEMENT-<n>`, one of
+3. Dispatch the subagent_type stated in the plan file (`IMPLEMENT-<n>`, one of
    a fixed 10-slot pool -- `agent-plan-create` also prints the slot number
-   `<n>` to stderr on its own line). Worktree isolation is automatic (see
+   `<n>` to stderr on its own line) with a short prompt telling it to read the
+   printed plan path first. Worktree isolation is automatic (see
    "Worktrees" below) -- nothing extra to do for it.
 4. Once the subagent finishes, run `agent-stage <branch> --slot <n>` (the
    same `<n>` from step 3) to stage its changes onto the current branch
@@ -82,7 +92,7 @@ agent-plan-create --paths <files/dirs> --context <text> --steps <text> --out-of-
   the subagent will touch; it drives which tools are required and the
   `agent-validate --path ...` command the subagent is granted permission to
   run. Every `--paths` entry must already exist on disk -- a missing entry
-  is now a hard error (no prompt printed, no slot allocated) rather than a
+  is now a hard error (no plan file written, no slot allocated) rather than a
   silent warning.
 - `--new-paths <list>` is an optional, separate, space-/comma-separated list
   for paths the subagent will CREATE during the work (e.g. a new doc or
@@ -101,19 +111,23 @@ agent-plan-create --paths <files/dirs> --context <text> --steps <text> --out-of-
 - `--style-guide`, `--notes`, and `--research` are optional extra sections.
 - `--tools` adds extra required tool names beyond what `--paths` infers.
 
-It writes no plan files -- it prints the full dispatch prompt to stdout, and
-status/diagnostics to stderr -- but it DOES allocate a per-dispatch agent
-definition as a side effect: it picks the first free slot `n` in 1..10 for
+It writes the complete plan to `/tmp/pi-agent-plans/IMPLEMENT-<n>.md` (an
+atomic temp-file-plus-rename, so a reader never sees a partial plan) and
+prints only that absolute path to stdout, with status/diagnostics on stderr.
+It also allocates a per-dispatch agent definition as a side effect: it picks
+the first free slot `n` in 1..10 for
 which `${agents_dir}/IMPLEMENT-n.md` doesn't already exist (`agents_dir`
 resolves to `${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents`, a tmpfs path
 outside the repo), copies the global `${agents_dir}/IMPLEMENT.md` template
 to `${agents_dir}/IMPLEMENT-n.md`, and grants that copy permission to run
 exactly one bash command: the `agent-validate --path ...` invocation
 covering `--paths`/`--new-paths`. If all 10 slots are taken, or a tool the
-detected profiles need isn't on PATH, it exits non-zero without printing a
-prompt or allocating a slot; ask the user to add the missing tools to
+detected profiles need isn't on PATH, it exits non-zero without writing a
+plan file or allocating a slot; ask the user to add the missing tools to
 `nix/mono-flake` and run `update`, or free a slot (normally done by
-`agent-stage --slot <n>` after that dispatch finishes), then retry.
+`agent-stage --slot <n>` after that dispatch finishes), then retry. If
+writing the plan file fails after a slot was allocated, the per-dispatch
+agent definition is removed again so the slot is not leaked.
 
 Unlike the old generated-validate.sh flow, `agent-validate` is a committed
 command installed on PATH outside the worktree (so the subagent cannot
@@ -154,14 +168,17 @@ generated dynamically). agent-plan-create dispatches a per-dispatch copy
 (`IMPLEMENT-n.md`, holding only that dispatch's `agent-validate` allow
 rule), not the bare `IMPLEMENT` type, so parallel dispatches each get their
 own worktree and their own narrow permission. The worktree is a DETACHED
-checkout of HEAD: uncommitted/untracked files do not appear there, so
-everything the subagent needs must either be in the dispatch prompt or
-already committed. On finish, its changes land on a branch named
-`pi-agent-<id>`; if it made no changes, the worktree (and branch) are
-removed instead. The extension deliberately does not merge for you -- that's
-what `agent-stage` is for (see above). `agent-stage --slot <n>` removes
-`${agents_dir}/IMPLEMENT-n.md` after a successful stage, freeing the slot
-for a future dispatch.
+checkout of HEAD: uncommitted/untracked repository files do not appear
+there, so everything the subagent needs must either be in its plan file or
+already committed. The one exception is the plan file itself: since
+`agent-plan-create` writes it to shared `/tmp` (outside the repository), it
+stays readable from inside the detached worktree. On finish, its changes
+land on a branch named `pi-agent-<id>`; if it made no changes, the worktree
+(and branch) are removed instead. The extension deliberately does not merge
+for you -- that's what `agent-stage` is for (see above). `agent-stage --slot
+<n>` removes, after a successful stage, both `${agents_dir}/IMPLEMENT-n.md`
+and `/tmp/pi-agent-plans/IMPLEMENT-n.md`, freeing the slot for a future
+dispatch.
 
 This is a summary -- if `nix/scripts/scripts/agent/agent-plan-create/run.sh`'s own
 `show_help` (or `nix/scripts/scripts/agent/agent-stage/run.sh`'s) has drifted from

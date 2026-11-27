@@ -21,7 +21,8 @@ agent-validate is installed on PATH outside the IMPLEMENT subagent's
 worktree (so the subagent cannot tamper with it); the subagent's permission
 to run it at all comes from an exact-match bash allow rule
 ("agent-validate --path ... [--path ...]") on its own per-dispatch agent
-definition file, written by `agent-plan-create` into the generated prompt.
+definition file, written by `agent-plan-create` into that dispatch's plan
+file (/tmp/pi-agent-plans/IMPLEMENT-<n>.md).
 
 Checks run in a fixed global order -- all FORMAT checks across every
 profile, then all LINT checks, then all BUILD/TEST checks -- against a

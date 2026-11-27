@@ -13,18 +13,30 @@ Usage:
                      [--research <text>] [--tools <comma-list>]
   agent-plan-create frontmatter <agent-file.md> key=value [key=value ...] [--allow-bash <cmd>]
 
-Primary mode: assembles a self-contained IMPLEMENT-subagent dispatch prompt
-and prints it to stdout (status/diagnostics go to stderr). It writes no
-plan files, but it DOES allocate a per-dispatch agent definition: it picks
-the first free slot n in 1..MAX_SLOTS for which
-${agents_dir}/IMPLEMENT-n.md does not already exist (agents_dir resolves to
+Primary mode: writes a self-contained IMPLEMENT-subagent plan file to
+/tmp/pi-agent-plans/IMPLEMENT-<n>.md and prints ONLY that absolute path to
+stdout (status/diagnostics, plus the slot number n on its own line, go to
+stderr). The write is atomic (temporary file in the same directory, then
+rename), so a reader never sees a half-written plan. /tmp is shared with
+the subagent's isolated worktree, so the plan file is readable there even
+though uncommitted repository files are not. Dispatch subagent_type
+IMPLEMENT-n with a short prompt telling it to read the printed path before
+doing anything else, e.g.:
+
+  Read /tmp/pi-agent-plans/IMPLEMENT-<n>.md before doing anything else. It
+  contains your complete implementation plan and validation command.
+
+It also allocates a per-dispatch agent definition: it picks the first free
+slot n in 1..MAX_SLOTS for which ${agents_dir}/IMPLEMENT-n.md does not
+already exist (agents_dir resolves to
 ${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents), copies the global
 ${agents_dir}/IMPLEMENT.md template to ${agents_dir}/IMPLEMENT-n.md, and
 grants that copy permission to run exactly one bash command: the
 `agent-validate --path ...` invocation covering --paths/--new-paths, via an
-exact-match permission.bash allow rule. Pass the printed prompt as the
-dispatch prompt for subagent_type IMPLEMENT-n (stated in the prompt
-itself); the slot number is also printed to stderr on its own line.
+exact-match permission.bash allow rule. If the plan file cannot be written
+after a slot is allocated, that per-dispatch agent definition is removed
+again so the slot is not leaked. `agent-stage --slot <n>` removes both the
+agent definition and the plan file on a successful stage.
 
   --paths <list>           Required. Space- and/or comma-separated list of
                             files/directories that will be touched. Every
@@ -61,7 +73,7 @@ Required-tools handling: the tool list is computed from the file-type
 profiles detected in --paths, plus --tools. Every tool is checked with
 `command -v` in THIS environment (the one the subagent worktree will
 share). If any are missing, they are printed to stderr as a list and the
-command exits non-zero WITHOUT printing a prompt or allocating a slot --
+command exits non-zero WITHOUT writing a plan file or allocating a slot --
 ask the user to add them to nix/mono-flake (host system packages) and run
 update, then retry.
 
@@ -125,7 +137,7 @@ require_within_repo() {
   printf '%s\n' "$repo_root"
 }
 
-# --- primary mode: assemble dispatch prompt ---------------------------------
+# --- primary mode: build the plan file ----------------------------------
 
 run_create() {
   local paths="" new_paths="" context="" steps="" out_of_scope="" style_guide="" notes=""
@@ -319,7 +331,7 @@ run_create() {
   done
 
   if [[ -z "$slot" ]]; then
-    print_error "All dispatch slots (IMPLEMENT-1..IMPLEMENT-$MAX_SLOTS) are taken. Wait for one to finish (its agent file is removed on completion by 'agent-stage --slot <n>'), or clean up a stale ${agents_dir}/IMPLEMENT-<n>.md yourself, then retry."
+    print_error "All dispatch slots (IMPLEMENT-1..IMPLEMENT-$MAX_SLOTS) are taken. Wait for one to finish (its agent file and plan file are removed on completion by 'agent-stage --slot <n>'), or clean up a stale ${agents_dir}/IMPLEMENT-<n>.md yourself, then retry."
     exit 1
   fi
 
@@ -331,15 +343,46 @@ run_create() {
   print_status "Allocated dispatch slot IMPLEMENT-$slot ($per_dispatch_file)"
   printf '%s\n' "$slot" >&2
 
-  # --- assemble the prompt ---------------------------------------------------
+  # --- write the plan file ---------------------------------------------------
 
-  {
+  # The complete plan goes to a fixed, shared path under /tmp (visible from
+  # the subagent's isolated worktree, unlike uncommitted repo files). Only
+  # that path is printed to stdout, so the dispatch prompt itself stays
+  # short. Written to a temp file in the same directory and then renamed, so
+  # a reader never sees a partially written plan.
+  local plan_dir="/tmp/pi-agent-plans"
+  local plan_file="$plan_dir/IMPLEMENT-$slot.md"
+  local plan_tmp=""
+
+  # Failing after the slot is allocated must not leak the slot: drop the
+  # per-dispatch agent definition we just created and any partial plan file.
+  abort_plan_write() {
+    print_error "Failed to write plan file '$plan_file': $1"
+    print_error "Releasing dispatch slot IMPLEMENT-$slot (removing '$per_dispatch_file'); nothing was dispatched."
+    rm -f -- "$per_dispatch_file"
+    if [[ -n "$plan_tmp" ]]; then
+      rm -f -- "$plan_tmp"
+    fi
+    exit 1
+  }
+
+  if ! mkdir -p -- "$plan_dir"; then
+    abort_plan_write "could not create '$plan_dir'"
+  fi
+
+  if ! plan_tmp="$(mktemp "$plan_dir/.IMPLEMENT-$slot.XXXXXX")"; then
+    abort_plan_write "could not create a temporary file in '$plan_dir'"
+  fi
+
+  if ! {
     printf '# Plan\n\n'
     printf '## Dispatch\n\n'
     # shellcheck disable=SC2016
-    printf -- 'Dispatch this prompt to subagent_type `IMPLEMENT-%s`. That subagent has\n' "$slot"
-    printf 'already been granted permission to run exactly one bash command -- the\n'
-    printf 'following, and no other -- as its only validation step:\n\n'
+    printf -- 'You are subagent_type `IMPLEMENT-%s`. Your dispatcher sent a short prompt\n' "$slot"
+    printf 'pointing at this file: read it in full before doing anything else. It IS\n'
+    printf 'your complete plan.\n\n'
+    printf 'That dispatch already granted you permission to run exactly one bash\n'
+    printf 'command -- the following, and no other -- as your only validation step:\n\n'
     # shellcheck disable=SC2016
     printf '```\n%s\n```\n\n' "$validate_cmd"
     # shellcheck disable=SC2016
@@ -371,9 +414,17 @@ run_create() {
     printf -- '- `%s` (the exact command above, run verbatim) exits 0 and `.agent/validated.json` exists.\n' "$validate_cmd"
     # shellcheck disable=SC2016
     printf -- '- Your final report includes the exit code of the last `agent-validate` run, the failure count, and whether the artifact was written.\n'
-  }
+  } >"$plan_tmp"; then
+    abort_plan_write "writing to '$plan_tmp' failed"
+  fi
 
-  print_status "Prompt assembled for subagent_type IMPLEMENT-$slot. Pass this script's stdout as the subagent dispatch prompt."
+  if ! mv -f -- "$plan_tmp" "$plan_file"; then
+    abort_plan_write "could not move '$plan_tmp' into place"
+  fi
+
+  print_status "Plan written to $plan_file (slot IMPLEMENT-$slot)"
+  print_status "Dispatch subagent_type IMPLEMENT-$slot with a short prompt telling it to read that file before doing anything else."
+  printf '%s\n' "$plan_file"
 }
 
 # --- secondary mode: frontmatter merge ------------------------------------

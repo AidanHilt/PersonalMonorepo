@@ -4,7 +4,7 @@ Stages the changes committed by an IMPLEMENT subagent worktree branch
 (`pi-agent-<id>`, created by the `@gotgenes/pi-subagents-worktrees`
 extension) onto the current branch, for human review -- without committing.
 
-See `agent-plan-create`'s prompt generation and
+See `agent-plan-create`'s plan-file generation and
 `nix/agentic-ai-stack/config/agent/AGENTS.md`'s planning workflow for how
 this fits into the overall dispatch -> validate -> stage -> review -> commit
 pipeline; `agent-stage --help` is the detailed reference for this script's
@@ -23,7 +23,10 @@ own flags and exit behavior.
   commit), and strips `.agent/` back out of what gets staged if the squash
   introduced it.
 - `--slot <n>` frees a dispatch slot after a successful stage by removing
-  the per-dispatch `IMPLEMENT-<n>.md` agent-plan-create allocated (see
+  both files `agent-plan-create` allocated for that dispatch: the
+  per-dispatch `IMPLEMENT-<n>.md` agent definition and its plan file
+  `/tmp/pi-agent-plans/IMPLEMENT-<n>.md` (see
   `nix/agentic-ai-stack/config/agent/AGENTS.md`'s "Worktrees" section).
+  Cleanup only ever runs after a successful stage.
 - Never commits, never deletes the branch, never pushes. Committing is the
   user's job (`kommit`).
