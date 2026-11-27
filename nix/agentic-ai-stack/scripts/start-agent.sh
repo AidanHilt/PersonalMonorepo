@@ -865,6 +865,8 @@ TMP_PROFILE="\$(mktemp)"
 cp "\$TMP_PROFILE" "$RUN_DIR/profile.json"
 rm -f "\$TMP_PROFILE"
 
+export HOME="$PI_USER_HOME"
+export PATH="${EXTRA_PATH:+$EXTRA_PATH:}\$PATH"
 export PI_CODING_AGENT_DIR="$AGENT_DIR"
 export XDG_STATE_HOME="$NONO_STATE_DIR"
 export SSL_CERT_FILE="$CA_BUNDLE"
@@ -872,12 +874,6 @@ export NIX_SSL_CERT_FILE="$CA_BUNDLE"
 export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
 export GOCACHE="$GO_CACHE_DIR"
 export GOPATH="$GO_PATH_DIR"
-# HOME: the pi-owned home, assigned here (this supervisor already runs as
-# $(pi)) rather than inherited from whatever environment the invoking
-# user's wrapper happened to hand $(sudo -u pi) -- see start-agent.sh's
-# foreground launch for why $(sudo -u pi) can't be relied on to do this.
-export HOME="$PI_USER_HOME"
-export PATH="${EXTRA_PATH:+$EXTRA_PATH:}\$PATH"
 cd "$WORKDIR"
 "$NONO_BIN" run --profile "$RUN_DIR/profile.json" --allow-cwd$NONO_RUN_EXTRA_FLAGS --detached --name "$SESSION_NAME" -- "$PI_BIN"$PI_RESUME_SUFFIX
 
