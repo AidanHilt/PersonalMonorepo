@@ -36,6 +36,13 @@ discovers and builds every host.
   modules and shared config consumed by per-host `home.nix` files.
 - `lib-internal/` — internal Nix library code used by this flake (see
   below).
+- `packages/` — tools this flake packages itself, as plain
+  `callPackage`-able derivations, for tools nixpkgs doesn't (or doesn't yet)
+  carry. Currently just `helmfmt.nix`, a pinned `stdenv.mkDerivation` over
+  upstream's prebuilt release tarballs (per-system asset/checksum map).
+  Consumers import it with `pkgs.callPackage ../../../packages/<name>.nix { }`
+  rather than through an overlay — `roles/universal/personal-development.nix`
+  installs it as `helmfmtPackage` alongside nixpkgs' `yamlfmt`.
 - `templates/` — scaffolding templates. These back the
   `mono-flake-new-machine` / `mono-flake-copy-machine` /
   `mono-flake-new-module` scripts (see "Making changes"); you shouldn't
