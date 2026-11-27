@@ -67,14 +67,14 @@ end up wider than the `pi` tool itself.
   `user_caches_{macos,linux}`, `linux_sysfs_read`, `git_config`,
   `unlink_protection`; `security.signal_mode = isolated`;
   `capability_elevation = false`; `open_urls` (`auth.openai.com`,
-  `claude.ai`, `github.com`, plus `allow_localhost`); `allow_launch_services`.
+  `github.com`, plus `allow_localhost`); `allow_launch_services`.
   Linux is allow-list only: `filesystem.deny` is never used, since
   Landlock refuses to start with deny-inside-allow — macOS (Seatbelt)
   doesn't have this restriction but the profile stays allow-list-shaped
   on both for consistency. The Nix daemon socket
   (`/nix/var/nix/daemon-socket/socket`) is granted via
   `filesystem.unix_socket`. `network.allow_domain` is a static host
-  whitelist (Anthropic/Claude, GitHub, exa.ai, `auth.openai.com`);
+  whitelist (Ollama Cloud (`ollama.com`), GitHub, exa.ai, `auth.openai.com`);
   `network.approval_backends`/`approval_defaults` configure a `webhook`
   backend whose URL is the literal placeholder token
   `__APPROVAL_WEBHOOK_URL__`, filled in at launch time by

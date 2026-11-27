@@ -44,10 +44,7 @@
     "block": false,
     "allow_domain": [
       "pi.dev",
-      "api.anthropic.com",
-      "claude.ai",
-      "claude.com",
-      "platform.claude.com",
+      "ollama.com",
       "auth.openai.com",
       "github.com",
       "api.github.com",
@@ -69,7 +66,6 @@
   "open_urls": {
     "allow_origins": [
       "https://auth.openai.com",
-      "https://claude.ai",
       "https://github.com"
     ],
     "allow_localhost": true
