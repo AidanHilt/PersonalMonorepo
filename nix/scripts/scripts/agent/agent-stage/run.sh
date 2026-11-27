@@ -4,6 +4,11 @@
 
 set -euo pipefail
 
+# Repository root of the destination worktree, resolved once in main(). Every
+# .agent/ related operation goes through it so agent-stage behaves the same
+# no matter which subdirectory of the worktree it was invoked from.
+REPO_ROOT=""
+
 show_help() {
   cat <<'EOF'
 Usage: agent-stage <branch> [--slot <n>] [--force]
@@ -23,9 +28,13 @@ actually passed:
      unstaged changes) -- agent-stage refuses to stomp on in-progress work.
   3. `.agent/validated.json` must exist on <branch> (read via `git show`,
      no checkout needed).
-  4. The tree_sha recorded in that artifact must match a tree_sha
-     recomputed from the branch's own tree (excluding only `.agent/`,
-     computed via a temporary index -- never the real one).
+  4. The tree_sha recorded in that artifact must match a "source-only"
+     tree_sha recomputed from the branch's own committed tree, excluding
+     only the repository-root `.agent/` (agent-validate's own validation
+     bookkeeping, never part of the source being reviewed). The hash is
+     computed via a temporary index -- never the real one -- so a branch
+     that validated clean matches even though its commit carries
+     `.agent/validated.json`.
 
 Any of checks 3-4 failing is reported with which check failed and exits
 non-zero, UNLESS --force is given, in which case a loud warning is printed
@@ -33,11 +42,18 @@ and staging proceeds anyway.
 
 git and jq must be on PATH for this script to run.
 
-On success: runs `git merge --squash <branch>`, then removes `.agent/` from
-the index and working tree if the squash brought it in (so it never lands
-in what the user commits). If the squash fails or reports conflicts, the
-working tree and index are restored to their prior state and agent-stage
-exits non-zero -- it does not leave a half-merged tree behind.
+On success: runs `git merge --squash <branch>`, then removes the
+repository-root `.agent/` directory from the index and working tree if the
+squash brought it in (so it never lands in what the user commits). If the
+squash fails or reports conflicts, the working tree and index are restored
+to their prior state and agent-stage exits non-zero -- it does not leave a
+half-merged tree behind.
+
+agent-stage may be invoked from any directory inside the destination
+worktree: it resolves the repository root itself (`git rev-parse
+--show-toplevel`) and always hashes and cleans up the ROOT `.agent/`
+directory, so running it from e.g. nix/agentic-ai-stack does not leave
+`.agent/validated.json` staged.
 
 Prints a summary of the changed files, the branch's commit log, and the
 next step (review the staged changes, then run kommit).
@@ -77,24 +93,66 @@ require_clean_worktree() {
   fi
 }
 
-# Computes the tree_sha for an arbitrary commit-ish, excluding only
-# .agent/, via a temporary index -- never touching the real index. Mirrors
-# the same exclusion logic agent-validate itself uses to produce the
-# tree_sha it records in the artifact.
+# Echoes captured git diagnostics to stderr, when there are any.
+print_git_output() {
+  local out="$1"
+  if [[ -n "$out" ]]; then
+    printf '%s\n' "$out" >&2
+  fi
+  return 0
+}
+
+# Computes the "source-only" tree_sha for an arbitrary commit-ish, excluding
+# only the repository-root .agent/ directory, via a temporary index -- never
+# touching the real index. Mirrors the same exclusion logic agent-validate
+# itself uses to produce the tree_sha it records in the artifact, except that
+# it hashes a committed tree rather than the current working tree.
+#
+# Every git call runs against $REPO_ROOT (so .agent/ is always the root
+# bookkeeping directory) and every failure is propagated with its captured
+# diagnostics: silently continuing past a failed `git rm` used to leave
+# .agent/ in the temporary index, so `git write-tree` returned the full
+# branch tree and perfectly valid branches were rejected.
 compute_branch_tree_sha() {
   local commitish="$1"
-  local tmp_index
+  local tmp_index out rc=0
   tmp_index="$(mktemp -u)"
-  GIT_INDEX_FILE="$tmp_index" git read-tree "$commitish" 2>/dev/null
-  GIT_INDEX_FILE="$tmp_index" git rm -r --cached --ignore-unmatch -q .agent >/dev/null 2>&1 || true
-  local sha
-  sha="$(GIT_INDEX_FILE="$tmp_index" git write-tree 2>/dev/null)"
-  local rc=$?
+
+  # Seed the temporary index from the requested commit-ish, so the hash
+  # reflects the branch's committed tree and not the caller's checkout.
+  out="$(GIT_INDEX_FILE="$tmp_index" git -C "$REPO_ROOT" read-tree "$commitish" 2>&1)" || rc=$?
+  if [[ $rc -ne 0 ]]; then
+    print_error "Could not read the tree of '$commitish' into a temporary index (git read-tree exit $rc)"
+    print_git_output "$out"
+    rm -f "$tmp_index"
+    return "$rc"
+  fi
+
+  # --force is required here: with GIT_INDEX_FILE set, plain `git rm --cached`
+  # still compares staged entries against the caller's HEAD and working tree,
+  # so a branch whose .agent/ differs from (or is absent in) the current
+  # checkout makes it fail. --force bypasses those comparisons, and --cached
+  # plus GIT_INDEX_FILE confine the removal to the temporary index, so no
+  # working-tree file is ever deleted. --ignore-unmatch keeps a branch with
+  # no .agent/ at all a success.
+  out="$(GIT_INDEX_FILE="$tmp_index" git -C "$REPO_ROOT" rm -r --force --cached --ignore-unmatch -q -- .agent 2>&1)" || rc=$?
+  if [[ $rc -ne 0 ]]; then
+    print_error "Could not exclude .agent from the temporary index for '$commitish' (git rm exit $rc)"
+    print_git_output "$out"
+    rm -f "$tmp_index"
+    return "$rc"
+  fi
+
+  out="$(GIT_INDEX_FILE="$tmp_index" git -C "$REPO_ROOT" write-tree 2>&1)" || rc=$?
   rm -f "$tmp_index"
   if [[ $rc -ne 0 ]]; then
-    return 1
+    print_error "Could not write a tree for '$commitish' (git write-tree exit $rc)"
+    print_git_output "$out"
+    return "$rc"
   fi
-  printf '%s\n' "$sha"
+
+  printf '%s\n' "$out"
+  return 0
 }
 
 main() {
@@ -136,6 +194,17 @@ main() {
       ;;
     esac
   done
+
+  # Resolve the repository root once, after argument parsing: every .agent/
+  # operation below is rooted here so agent-stage works identically from any
+  # subdirectory of the destination worktree.
+  if ! REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+    REPO_ROOT=""
+  fi
+  if [[ -z "$REPO_ROOT" ]]; then
+    print_error "Not inside a git work tree: agent-stage must be run from somewhere inside the destination worktree."
+    exit 1
+  fi
 
   case "$branch" in
   pi-agent-*) ;;
@@ -183,7 +252,9 @@ main() {
   fi
 
   local pre_agent_tracked=0
-  git ls-files --error-unmatch .agent >/dev/null 2>&1 && pre_agent_tracked=1
+  if git -C "$REPO_ROOT" ls-files --error-unmatch .agent >/dev/null 2>&1; then
+    pre_agent_tracked=1
+  fi
 
   print_status "Staging '$branch' onto the current branch via git merge --squash..."
 
@@ -197,12 +268,14 @@ main() {
   fi
   rm -f /tmp/agent-stage-merge.out
 
-  # Keep .agent/ out of what the user is asked to commit, but only if the
-  # squash actually introduced it (it was not already tracked on the
-  # current branch before this merge).
+  # Keep the root .agent/ out of what the user is asked to commit, but only
+  # if the squash actually introduced it (it was not already tracked on the
+  # current branch before this merge). Both the unstage and the delete are
+  # resolved against $REPO_ROOT: a cwd-relative `.agent` silently missed the
+  # real artifact whenever agent-stage was run from a subdirectory.
   if [[ "$pre_agent_tracked" -eq 0 ]]; then
-    git reset -q -- .agent 2>/dev/null || true
-    rm -rf .agent
+    git -C "$REPO_ROOT" reset -q -- .agent 2>/dev/null || true
+    rm -rf -- "$REPO_ROOT/.agent"
   fi
 
   print_status "Staged changes from '$branch' (squashed, not committed):"

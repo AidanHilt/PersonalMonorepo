@@ -16,12 +16,23 @@ own flags and exit behavior.
   the worktrees extension uses.
 - Before staging, verifies the branch's own `.agent/validated.json`
   artifact (written by a passing `agent-validate` run inside the
-  subagent's worktree) actually matches the branch's tree, so a human
-  never stages code that the subagent itself never finished validating.
-  `--force` skips this at the user's own risk.
+  subagent's worktree) actually matches the branch's "source-only" tree,
+  so a human never stages code that the subagent itself never finished
+  validating. The check recomputes the hash from the branch's *committed*
+  tree with only the repository-root `.agent/` excluded, via a temporary
+  index (never the real one), and propagates any `git read-tree` / `git rm`
+  / `git write-tree` failure with its captured diagnostics instead of
+  silently falling back to the full branch tree. `--force` skips the check
+  at the user's own risk.
 - Uses `git merge --squash` (stages into the working tree and index, no
-  commit), and strips `.agent/` back out of what gets staged if the squash
-  introduced it.
+  commit), and strips the root `.agent/` back out of what gets staged if
+  the squash introduced it.
+- Works from any directory inside the destination worktree: it resolves
+  the repository root once with `git rev-parse --show-toplevel`, so both the
+  hash exclusion and the post-squash unstage/delete always target the root
+  `.agent/` bookkeeping directory. Invoking it from e.g.
+  `nix/agentic-ai-stack` therefore does not stage
+  `.agent/validated.json`.
 - `--slot <n>` frees a dispatch slot after a successful stage by removing
   both files `agent-plan-create` allocated for that dispatch: the
   per-dispatch `IMPLEMENT-<n>.md` agent definition and its plan file
