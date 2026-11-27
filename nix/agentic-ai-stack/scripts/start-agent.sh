@@ -52,9 +52,10 @@ set -euo pipefail
 # below), so it doesn't need to be `pi`-readable in place either.
 #
 # Sources lib-common.sh for STACK_DIR/SESSIONS_ROOT/FIXED_AGENT_DIR/
-# PI_USER_HOME and the resolve_or_die/resolve_stack_bin/validate_run_name/
-# nono_state_dir/nono_state_wipe_preserving_audit/resolve_ca_bundle/share_*/
-# git_safe_dir_env/git_author_identity_env helpers.
+# PI_USER_HOME/NIX_COMMAND_HOME and the resolve_or_die/resolve_stack_bin/
+# validate_run_name/nono_state_dir/nono_state_wipe_preserving_audit/
+# resolve_ca_bundle/share_*/git_safe_dir_env/git_author_identity_env
+# helpers.
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
 # shellcheck source=lib-common.sh
 # shellcheck disable=SC1091
@@ -637,7 +638,13 @@ write_as_pi() {
 }
 
 echo "==> Seeding the shared agent dir $AGENT_DIR and this session's own transient state under $RUN_DIR (idempotent -- existing pi/session state is kept)..." >&2
-sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$STATE_DIR/sessions" "$NONO_STATE_DIR" "$GO_CACHE_DIR" "$GO_PATH_DIR"
+# NIX_COMMAND_HOME is included here even though nothing this launcher runs
+# uses it directly: it is the HOME (and the one exact fs_write grant) of
+# the `nix` command's own mediated sandbox inside the session (see
+# profiles/work.base.json and IMPLEMENTERS.md's "Nix daemon access"). That
+# sandbox inherits none of this session's grants, so the directory has to
+# exist, pi-owned, before `pi` can run `nix` at all.
+sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$STATE_DIR/sessions" "$NONO_STATE_DIR" "$GO_CACHE_DIR" "$GO_PATH_DIR" "$NIX_COMMAND_HOME"
 
 # --- Live file sharing: grant, then record what was granted ---------------
 # Every path in $SHARE_PATHS was already checked (share_path_check, see

@@ -42,14 +42,37 @@ SESSIONS_ROOT="${PI_STACK_SESSIONS_ROOT:-/tmp/pi-sessions}"
 # home (e.g. /Users/aidan) -- a directory `pi` cannot read, which also
 # makes Nix warn about a home directory it doesn't own. Distinct from
 # FIXED_PI_HOME below, which is pi's own `.pi` state dir WITHIN this
-# home. Host-side work (the launcher's own clone cache, the
-# share_path_check "your entire $HOME" guard, git credentials, ACL
-# handling) must keep using the INVOKING user's $HOME, never this.
+# home, and from NIX_COMMAND_HOME below, the dedicated scratch home the
+# `nix` command's mediated sandbox uses instead. Host-side work (the
+# launcher's own clone cache, the share_path_check "your entire $HOME"
+# guard, git credentials, ACL handling) must keep using the INVOKING
+# user's $HOME, never this.
 # NOT overridable via env -- pi's home is a flake-owned fact, not a
 # per-launch choice.
 # shellcheck disable=SC2034 # used by scripts that `source` this file
 # (start-agent.sh, shell.sh), not by this file itself.
 PI_USER_HOME="/var/lib/pi"
+
+# NIX_COMMAND_HOME: the THIRD home in this stack, used ONLY by the `nix`
+# command's own mediated sandbox (`profiles/work.base.json`'s
+# command_policies nix sandbox, via `environment.set_vars.HOME`) -- never
+# exported to `pi`, to `shell.sh`'s bash, or to the `--detached`
+# supervisor. Distinct from PI_USER_HOME (the payload's real home, above)
+# and from the invoking user's inherited HOME (which nono itself keeps).
+# Rationale: a nono COMMAND sandbox does not inherit the session's CWD
+# access, broad profile groups, or filesystem grants -- it starts from a
+# minimal runtime baseline -- so a nix process there can neither stat
+# /var/lib/pi nor getcwd() when working inside an implementation worktree
+# under /tmp. Pointing its HOME at a dedicated, pi-owned scratch dir (and
+# granting exactly that path, see work.base.json) keeps the flake
+# evaluator away from pi's real home (auth state, agent config) while
+# giving it somewhere writable to exist. Created by start-agent.sh
+# alongside its other pi-owned dirs, and re-created by shell.sh so a
+# shell session stays usable after /tmp was cleaned. NOT overridable via
+# env -- a flake-owned path, like PI_USER_HOME.
+# shellcheck disable=SC2034 # used by scripts that `source` this file
+# (start-agent.sh, shell.sh), not by this file itself.
+NIX_COMMAND_HOME="/tmp/pi-nix-home"
 
 # FIXED_AGENT_DIR / FIXED_PI_HOME: ONE persistent, shared PI_CODING_AGENT_DIR
 # for every start-agent.sh/shell.sh session -- replaces the old per-run

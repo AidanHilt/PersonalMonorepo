@@ -146,11 +146,14 @@
               ],
               "fs_read": [
                 "/nix/store",
-                "/nix/var/nix"
+                "/nix/var/nix",
+                "@git:toplevel",
+                "@git:common-dir"
               ],
               "fs_write": [
                 "$WORKDIR",
-                "$HOME/.cache"
+                "/tmp/pi-nix-home",
+                "@git:toplevel"
               ],
               "network": {
                 "allow_domain": [
@@ -180,6 +183,7 @@
                   "GIT_CONFIG_VALUE_*"
                 ],
                 "set_vars": {
+                  "HOME": "/tmp/pi-nix-home",
                   "NIX_REMOTE": "daemon",
                   "NIX_CONFIG": "experimental-features = nix-command flakes"
                 }

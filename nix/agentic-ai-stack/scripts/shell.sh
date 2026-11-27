@@ -229,6 +229,16 @@ if [ "$DRY_RUN" = "1" ]; then
   exit 0
 fi
 
+# NIX_COMMAND_HOME: the HOME (and the one exact fs_write grant) of the
+# `nix` command's own mediated sandbox inside a session -- see
+# profiles/work.base.json and IMPLEMENTERS.md's "Nix daemon access".
+# start-agent.sh creates it too, but its location is under /tmp, so a
+# tmp-cleaner sweep between the main launch and this shell would leave the
+# sandboxed nix command with a HOME that doesn't exist and (worse) a
+# getcwd() it can't resolve. Creating it here keeps a shell session usable
+# on its own; `mkdir -p` is idempotent, so the normal path is a no-op.
+sudo -u pi mkdir -p "$NIX_COMMAND_HOME"
+
 if ! sudo -u pi test -f "$RUN_PROFILE"; then
   echo "error: run '$NAME' has no profile.json -- start it with start-agent first" >&2
   exit 1

@@ -114,7 +114,12 @@ end up wider than the `pi` tool itself.
    session.sandbox` that already has one (store paths need not be — those
    sandboxes already grant `/nix/store` itself, e.g. `work.base.json`'s
    `nix` command policy). Never creates an `fs_read` array, or a
-   `command_policies` block, where one doesn't already exist.
+   `command_policies` block, where one doesn't already exist. This append
+   is additive and order-preserving, so the `nix` policy's dynamic
+   `@git:toplevel`/`@git:common-dir` tokens (`work.base.json`, see "Nix
+   daemon access" below) stay exactly where the base profile put them and
+   are never resolved or reordered here — they are nono-expanded tokens,
+   not paths on disk.
 6. Validates the result with `jq empty` and writes it atomically (a temp
    file in `--out`'s own directory, then `mv -f` over the final path).
 
@@ -135,6 +140,47 @@ rebuild commands entirely (`update`, `nixos-rebuild`, `darwin-rebuild`,
 `home-manager`, `nix profile`, `nix-env`). The untrusted `pi` user is
 what prevents trusted-user-style abuse of these allowances.
 
+**The mediated `nix` sandbox starts from a minimal baseline, not from
+this session.** A nono COMMAND sandbox inherits none of the session's
+CWD access, broad profile groups, or filesystem grants — only what its
+own policy block lists. With the payload `HOME` at `/var/lib/pi` and
+implementation worktrees under `/tmp`, a `nix` process in that minimal
+sandbox could neither stat `$HOME` nor `getcwd()`. Three pieces fix
+that without widening the trust boundary:
+
+- **A dedicated scratch `HOME`.**
+  `command_policies.commands.nix.from.session.sandbox.environment.
+  set_vars.HOME` is `/tmp/pi-nix-home`
+  (`scripts/lib-common.sh`'s `NIX_COMMAND_HOME`) — a THIRD home,
+  distinct from `PI_USER_HOME` (the payload's real home, see "Sandbox
+  `HOME` and the Go toolchain env" below) and from the invoking user's
+  inherited `HOME` (which nono itself keeps). `set_vars` values are
+  static and injected after `allow_vars` filtering, so this is the value
+  the real mediated `nix` process sees. The scratch dir is `sudo -u pi
+  mkdir -p`'d by `start-agent.sh` alongside its other pi-owned
+  directories (and again by `shell.sh`, so a shell session survives a
+  `/tmp` sweep between the main launch and the shell), and is the one
+  exact `fs_write` grant the policy carries for it. Deliberately NOT
+  exported to `pi`, to `shell.sh`'s bash, or to the `--detached`
+  supervisor: only the mediated `nix` process's `HOME` is redirected, so
+  the flake evaluator never gets read access to pi's real home (auth
+  state, agent config) and the rest of the payload keeps the home it
+  needs.
+- **Dynamic worktree grants.** `fs_read` and `fs_write` include
+  `@git:toplevel` (the current checkout root — the linked implementation
+  worktree when applicable), which is what makes `getcwd()` and flake
+  archiving work inside a worktree; `fs_read` additionally includes
+  `@git:common-dir`, so the main repository's Git metadata is readable
+  when `nix` archives a linked worktree. These must stay LITERAL strings
+  in the JSON — nono expands them at mediated-command launch, the same
+  way it already expands `$WORKDIR`. `/tmp` wholesale and any part of
+  `/var/lib/pi` are deliberately NOT granted.
+- **The pre-existing grants.** `/nix/store`, `/nix/var/nix`, `$WORKDIR`,
+  and the daemon socket bind are unchanged. The old `$HOME/.cache`
+  `fs_write` entry is gone: once `HOME` is the scratch dir it pointed
+  nowhere useful, and it made the effective policy depend on whichever
+  home `$HOME` happened to expand against.
+
 **Environment variable filtering**: `work.base.json`'s top-level
 `environment` block (and the `nix` command policy's nested
 `sandbox.environment`) allow-lists `PATH`, `HOME`, `USER`, `TERM`,
@@ -144,7 +190,10 @@ below) through. `GIT_CONFIG_COUNT`/`GIT_CONFIG_KEY_*`/
 `GIT_CONFIG_VALUE_*` and `SSL_CERT_FILE`/`NIX_SSL_CERT_FILE`/
 `NODE_EXTRA_CA_CERTS` are also allow-listed, for `safe.directory`
 registration plus forwarded git author identity, and CA trust
-respectively (see "Credentials" below).
+respectively (see "Credentials" below). `allow_vars` only filters what
+is INHERITED; the `nix` sandbox's `HOME` is overwritten afterwards by
+`set_vars` (see "Nix daemon access" above), which is why `HOME` still
+appears in that block's own `allow_vars`.
 
 ## Launcher and approval helper
 
@@ -412,6 +461,20 @@ identically. Unlike `HOME`, `GOCACHE`/`GOPATH` stay exported in the
 supervisor's own environment (and are preserved to the payload): they
 only steer Go's cache paths, they say nothing about nono's protected
 roots.
+
+A THIRD home exists for the mediated `nix` command only:
+`scripts/lib-common.sh`'s `NIX_COMMAND_HOME` (`/tmp/pi-nix-home`), fed to
+that command sandbox via `work.base.json`'s
+`command_policies.commands.nix.from.session.sandbox.environment.
+set_vars.HOME`. It is neither `PI_USER_HOME` nor the invoking user's
+inherited `HOME`, and it is deliberately NOT exported to `pi`, to
+`shell.sh`'s bash, or to the `--detached` supervisor — only the `nix`
+process nono launches in its own minimal command sandbox gets it. See
+"Nix daemon access" above for why (that sandbox inherits almost nothing
+from the session), and note that its directory is created `sudo -u pi
+mkdir -p` by `start-agent.sh` next to the other pi-owned dirs, and again
+by `shell.sh` so a `/tmp` sweep can't leave the sandboxed `nix` command
+without a `HOME`.
 
 ## Single nono state dir
 
