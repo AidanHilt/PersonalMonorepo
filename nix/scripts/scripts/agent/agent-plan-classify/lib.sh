@@ -332,7 +332,7 @@ emit_build_test_phase() {
     done
   fi
   if [[ ${#NIX_FLAKE_DIRS[@]} -gt 0 ]]; then
-    local d
+    local d flake_path
     # The IMPLEMENT sandbox's nono command policy allows `nix` invocations
     # by matching the argv PREFIX ['flake', 'check'] -- any flag preceding
     # the subcommand (e.g. --extra-experimental-features) breaks that
@@ -340,8 +340,19 @@ emit_build_test_phase() {
     # already has nix-command/flakes enabled, so no such flag is needed
     # here; keep this invocation flag-free ahead of `flake check`.
     for d in "${NIX_FLAKE_DIRS[@]}"; do
+      # Nix parses a schemeless argument like `nix/mono-flake` as an INDIRECT
+      # flake ref: it resolves the implicit default `github:NixOS/nix` and
+      # treats the path as the requested ref (failing with an HTTP 422 on
+      # api.github.com) instead of checking the local directory. An explicit
+      # `./` prefix forces the local-path interpretation. Absolute paths are
+      # already unambiguous local paths, so they are emitted unchanged.
+      if [[ "$d" == /* ]]; then
+        flake_path="$d"
+      else
+        flake_path="./$d"
+      fi
       printf 'run_check BUILD_TEST "nix flake check(%s)" bash -c %s\n' "$d" \
-        "$(printf '%q' "nix flake check $(printf '%q' "$d")")"
+        "$(printf '%q' "nix flake check $(printf '%q' "$flake_path")")"
     done
   fi
 }
