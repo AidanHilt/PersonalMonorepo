@@ -1,7 +1,8 @@
 #!/bin/bash
 # Shared FORMAT-phase check emission for agent-validate. Owns the "what does
 # the formatting phase run?" question so it can evolve independently of path
-# classification.
+# classification: shell (shfmt), Go (go fmt), Nix (nixfmt), Terraform
+# (terraform fmt), plain YAML (yamlfmt) and Helm chart templates (helmfmt).
 #
 # Usage (from a run.sh that also declares "#include agent-plan-classify"):
 #
@@ -20,9 +21,11 @@
 #include agent-plan-classify
 
 # The classified path arrays (BASH_FILES, GO_MODULE_DIRS, NIX_FILES, TF_DIRS,
-# YAML_FILES, HELM_CHART_DIRS) and the quote_list helper are provided by
+# YAML_FILES, HELM_TEMPLATE_FILES) and the quote_list helper are provided by
 # agent-plan-classify -- shellcheck sees this file on its own, so those
-# cross-lib references are not assigned here.
+# cross-lib references are not assigned here. YAML_FILES is plain YAML only,
+# so yamlfmt and yamllint see the same set; Helm chart templates are in
+# HELM_TEMPLATE_FILES and are formatted by helmfmt alone.
 #shellcheck disable=SC2154
 
 # Emits the concrete `run_check FORMAT "name" cmd...` lines for every
@@ -47,9 +50,13 @@ agent_format_emit_phase() {
       printf 'run_check FORMAT "terraform fmt(%s)" terraform fmt %s\n' "$d" "$(quote_list "$d")"
     done
   fi
-  if [[ ${#YAML_FILES[@]} -eq 0 && ${#HELM_CHART_DIRS[@]} -eq 0 ]]; then
-    :
-  else
-    printf '# NOTE: no YAML formatter is available in this stack; YAML/Helm files are linted but not auto-formatted.\n'
+  if [[ ${#YAML_FILES[@]} -gt 0 ]]; then
+    # Normal yamlfmt config discovery applies (repository/global config, then
+    # built-in defaults); only the classified plain-YAML files are passed.
+    printf 'run_check FORMAT "yamlfmt" yamlfmt %s\n' "$(quote_list "${YAML_FILES[@]}")"
+  fi
+  if [[ ${#HELM_TEMPLATE_FILES[@]} -gt 0 ]]; then
+    # Only chart template sources are passed -- never a whole chart directory.
+    printf 'run_check FORMAT "helmfmt" helmfmt --files %s\n' "$(quote_list "${HELM_TEMPLATE_FILES[@]}")"
   fi
 }

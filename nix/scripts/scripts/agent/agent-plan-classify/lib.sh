@@ -2,10 +2,17 @@
 # Shared path-classification + check-emission logic for agent-plan-create
 # (pre-dispatch required-tools check) and agent-validate (actual runtime
 # check execution). Classifies a list of files/directories into file-type
-# "profiles" (bash, go, yaml/helm, nix, terraform, dockerfiles), derives
-# the tools each profile needs, and emits the concrete per-profile
-# FORMAT/LINT/BUILD_TEST commands as `run_check PHASE "name" cmd...` lines
-# of shell text that a caller defining `run_check` can `eval`.
+# "profiles" (bash, go, plain yaml, helm chart templates, helm charts, nix,
+# terraform, dockerfiles), derives the tools each profile needs, and emits the
+# concrete per-profile FORMAT/LINT/BUILD_TEST commands as
+# `run_check PHASE "name" cmd...` lines of shell text that a caller defining
+# `run_check` can `eval`.
+#
+# YAML_FILES holds plain YAML only -- it is exactly what yamlfmt/yamllint are
+# handed, so Helm template sources (.yaml/.yml/.tpl/.gotmpl below a chart's
+# templates/ directory) never appear in it. Those live in
+# HELM_TEMPLATE_FILES, which helmfmt formats, while HELM_CHART_DIRS records
+# the chart roots needing helm lint / kubeconform.
 #
 # Usage (from a run.sh that also declares "#include agent-plan-classify" and
 # "#include printing-and-output"):
@@ -23,6 +30,7 @@
 BASH_FILES=()
 GO_MODULE_DIRS=()
 YAML_FILES=()
+HELM_TEMPLATE_FILES=()
 HELM_CHART_DIRS=()
 NIX_FILES=()
 NIX_FLAKE_DIRS=()
@@ -93,6 +101,19 @@ walk_up_for_marker() {
   done
 }
 
+# Prints the nearest chart root (the directory holding Chart.yaml, found by
+# walking up from the file's own directory) when the file is a Helm template
+# source -- i.e. it sits below that root's templates/ directory. Chart layout
+# is the sole rule: Chart.yaml, values files, crds/ and anything else outside
+# templates/ is plain YAML, never a template source. Returns 1 otherwise.
+#shellcheck disable=SC2329
+find_chart_template_root() {
+  local f="$1" repo_root="$2" chart_root
+  chart_root="$(walk_up_for_marker "$(dirname "$f")" "Chart.yaml" "$repo_root")" || return 1
+  [[ "$f" == "$chart_root"/templates/* ]] || return 1
+  printf '%s\n' "$chart_root"
+}
+
 #shellcheck disable=SC2329
 classify_file() {
   local f="$1" repo_root="$2"
@@ -115,14 +136,34 @@ classify_file() {
     return
     ;;
   Chart.yaml)
+    # Chart.yaml is plain YAML -- so yamlfmt/yamllint cover it -- *and* the
+    # marker that triggers the chart-level helm/kubeconform checks.
+    add_unique YAML_FILES "$f"
     add_unique HELM_CHART_DIRS "$dir"
     return
     ;;
   *.yaml | *.yml)
+    local chart_template_root chart_dir
+    if chart_template_root="$(find_chart_template_root "$f" "$repo_root")"; then
+      # A template source: helmfmt owns it, and yamlfmt/yamllint must never
+      # see it, so it stays out of YAML_FILES entirely.
+      add_unique HELM_TEMPLATE_FILES "$f"
+      add_unique HELM_CHART_DIRS "$chart_template_root"
+      return
+    fi
     add_unique YAML_FILES "$f"
-    local chart_dir
     if chart_dir="$(walk_up_for_marker "$dir" "Chart.yaml" "$repo_root")"; then
       add_unique HELM_CHART_DIRS "$chart_dir"
+    fi
+    return
+    ;;
+  *.tpl | *.gotmpl)
+    local chart_template_root
+    if chart_template_root="$(find_chart_template_root "$f" "$repo_root")"; then
+      add_unique HELM_TEMPLATE_FILES "$f"
+      add_unique HELM_CHART_DIRS "$chart_template_root"
+    else
+      add_unique UNKNOWN_PATHS "$f"
     fi
     return
     ;;
@@ -164,6 +205,7 @@ classify_dir() {
     -name '*.sh' -o -name '*.go' -o -name '*.yaml' -o -name '*.yml' \
     -o -name 'Chart.yaml' -o -name '*.nix' -o -name '*.tf' \
     -o -name 'Dockerfile' -o -name 'Dockerfile.*' -o -name '*.dockerfile' \
+    -o -path '*/templates/*.tpl' -o -path '*/templates/*.gotmpl' \
     \) -print0)
 }
 
@@ -199,7 +241,7 @@ relativize_array() {
 #shellcheck disable=SC2329
 relativize_paths() {
   local repo_root="$1" name
-  for name in BASH_FILES GO_MODULE_DIRS YAML_FILES HELM_CHART_DIRS NIX_FILES NIX_FLAKE_DIRS TF_DIRS DOCKERFILES; do
+  for name in BASH_FILES GO_MODULE_DIRS YAML_FILES HELM_TEMPLATE_FILES HELM_CHART_DIRS NIX_FILES NIX_FLAKE_DIRS TF_DIRS DOCKERFILES; do
     relativize_array "$name" "$repo_root"
   done
 }
@@ -211,7 +253,9 @@ required_tools_for_profiles() {
   local tools=()
   [[ ${#BASH_FILES[@]} -gt 0 ]] && tools+=(shfmt shellcheck bash)
   [[ ${#GO_MODULE_DIRS[@]} -gt 0 ]] && tools+=(go)
+  [[ ${#YAML_FILES[@]} -gt 0 ]] && tools+=(yamlfmt)
   [[ ${#YAML_FILES[@]} -gt 0 || ${#HELM_CHART_DIRS[@]} -gt 0 ]] && tools+=(yamllint)
+  [[ ${#HELM_TEMPLATE_FILES[@]} -gt 0 ]] && tools+=(helmfmt)
   [[ ${#HELM_CHART_DIRS[@]} -gt 0 ]] && tools+=(helm kubeconform)
   [[ ${#NIX_FILES[@]} -gt 0 ]] && tools+=(nixfmt statix)
   [[ ${#NIX_FLAKE_DIRS[@]} -gt 0 ]] && tools+=(nix)
@@ -360,6 +404,7 @@ emit_build_test_phase() {
 #shellcheck disable=SC2329
 any_checks_emitted() {
   [[ ${#BASH_FILES[@]} -gt 0 || ${#GO_MODULE_DIRS[@]} -gt 0 || ${#YAML_FILES[@]} -gt 0 ||
-    ${#HELM_CHART_DIRS[@]} -gt 0 || ${#NIX_FILES[@]} -gt 0 || ${#NIX_FLAKE_DIRS[@]} -gt 0 ||
+    ${#HELM_TEMPLATE_FILES[@]} -gt 0 || ${#HELM_CHART_DIRS[@]} -gt 0 ||
+    ${#NIX_FILES[@]} -gt 0 || ${#NIX_FLAKE_DIRS[@]} -gt 0 ||
     ${#TF_DIRS[@]} -gt 0 || ${#DOCKERFILES[@]} -gt 0 ]]
 }
