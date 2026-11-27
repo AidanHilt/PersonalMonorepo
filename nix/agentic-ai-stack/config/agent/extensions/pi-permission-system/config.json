@@ -19,12 +19,14 @@
     "path_read": {
       "/home/pi/.pi/*": "allow",
       "/home/pi/.cache": "allow",
-      "/tmp/*": "allow"
+      "/tmp/*": "allow",
+      "/private/tmp/*": "allow"
     },
     "path_write": {
       "/home/pi/.pi/*": "deny",
       "/home/pi/.cache": "allow",
-      "/tmp/*": "allow"
+      "/tmp/*": "allow",
+      "/private/tmp/*": "allow"
     },
     "read": "allow",
     "find": "deny",
