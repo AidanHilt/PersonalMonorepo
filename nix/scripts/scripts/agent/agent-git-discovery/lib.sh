@@ -4,9 +4,10 @@
 # This lib knows nothing about check execution, path classification, or
 # dispatch artifacts: it answers exactly one question -- "which
 # repo-relative files currently differ from HEAD, or are untracked?" -- and
-# leaves what to do about them to its caller. It is not yet wired into
-# agent-validate; integration owns CLI behavior, explicit --path
-# overrides, and artifact semantics.
+# leaves what to do about them to its caller. agent-validate is its caller:
+# with no --path it feeds DISCOVERED_PATHS straight into classification, and
+# explicit --path values override discovery entirely (see
+# agent-validate/run.sh for the CLI and artifact semantics).
 #
 # Usage (from a script that also declares "#include agent-git-discovery"):
 #

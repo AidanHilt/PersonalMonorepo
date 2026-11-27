@@ -6,14 +6,17 @@
 #
 # Usage (from a run.sh that also declares "#include agent-plan-classify"):
 #
-#   classify_paths "$raw_paths" "$repo_root"
+#   classify_paths "$repo_root" "${path_args[@]}"
 #   relativize_paths "$repo_root"
 #   eval "$(agent_format_emit_phase)"
 #
 # The emitted commands are literal invocations over the specific files/dirs
 # classify_paths found, not a runtime re-scan -- callers that want checks to
 # cover newly created files must re-run classify_paths/relativize_paths
-# first.
+# first. Formatting is deliberately never suppressed for flake-owned paths:
+# every classified profile keeps its formatter even when its legacy LINT/
+# BUILD_TEST checks are replaced by a flake's own
+# checks.<system>.agent-validate aggregate (see agent-plan-classify).
 #
 # This file never calls "exit" -- callers decide what a failed format check
 # means for them.
@@ -25,7 +28,8 @@
 # agent-plan-classify -- shellcheck sees this file on its own, so those
 # cross-lib references are not assigned here. YAML_FILES is plain YAML only,
 # so yamlfmt and yamllint see the same set; Helm chart templates are in
-# HELM_TEMPLATE_FILES and are formatted by helmfmt alone.
+# HELM_TEMPLATE_FILES and are formatted by helmfmt alone. Flake ownership is
+# irrelevant here: formatters run over flake-owned files too.
 #shellcheck disable=SC2154
 
 # Emits the concrete `run_check FORMAT "name" cmd...` lines for every

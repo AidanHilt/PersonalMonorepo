@@ -1,50 +1,82 @@
 #!/bin/bash
 
 #include printing-and-output
+#include agent-git-discovery
 #include agent-plan-classify
+#include agent-format
 
 set -uo pipefail
 
 show_help() {
   cat <<'EOF'
-Usage: agent-validate --path <p> [--path <p> ...]
+Usage: agent-validate [--path <p> ...] [--warn-missing-flake-checks]
 
-Runs the same FORMAT -> LINT -> BUILD/TEST checks agent-plan-create used to
-generate into a one-shot validate.sh, except agent-validate discovers them
-AT RUN TIME instead of at dispatch time: every --path is re-classified
-(directories are re-expanded) when agent-validate itself runs, so files
-created or changed after dispatch are covered too. Paths are repo-relative
-and resolved against the repo root agent-validate is invoked from (it must
-be run from the top of the git work tree being validated).
+Validates the working tree and must be run from the top of the git work tree
+being validated (the repository root).
+
+Selection. With no --path, agent-validate discovers the files to validate
+itself via Git: tracked changes against HEAD (staged and unstaged) plus
+untracked, non-ignored files, excluding the .agent/ bookkeeping directory.
+Those repo-relative paths are classified directly, so filenames containing
+spaces, tabs, or newlines survive. A real Git failure is reported as an
+error, never as an empty selection. Any explicit --path values override Git
+discovery entirely: each is a repo-relative file or directory and directories
+are re-expanded recursively at run time, so files created after a dispatch
+are covered too. Zero changed files with no --path is a successful no-op --
+no phases run, the artifact is still written with empty "paths"/"results",
+and the failure count is reset like any other successful validation.
+
+Checks. FORMAT (mutating formatters) runs over every classified file,
+including flake-owned ones. Every path inside an affected flake root is
+"flake-owned": its legacy LINT/BUILD_TEST checks (shellcheck, bash -n, go
+vet/build/test, yamllint, statix, terraform validate, hadolint, helm lint,
+helm template|kubeconform) are suppressed, because that flake's own
+checks.<system>.agent-validate aggregate covers them. Legacy checks still run
+for non-flake paths. Before any FORMAT/LINT/BUILD_TEST work, agent-validate
+resolves the current system with Nix and preflights every affected flake for
+checks.<system>.agent-validate (checked/exposed with `nix eval`, not built).
+Missing contracts normally exit 24 after all gaps are listed; with
+--warn-missing-flake-checks the complete gap list is printed, the available
+checks still run, the missing aggregates are skipped, and both the warning
+mode and the gaps are recorded in the artifact. Each existing aggregate is
+then built with exactly
+`nix build <local-flake-dir>#checks.<system>.agent-validate` (an explicit
+`./` prefix for relative local paths) -- there is no generic
+`nix flake check` fallback.
 
 agent-validate is installed on PATH outside the IMPLEMENT subagent's
 worktree (so the subagent cannot tamper with it); the subagent's permission
-to run it at all comes from an exact-match bash allow rule
-("agent-validate --path ... [--path ...]") on its own per-dispatch agent
-definition file, written by `agent-plan-create` into that dispatch's plan
-file (/tmp/pi-agent-plans/IMPLEMENT-<n>.md).
+to run it at all comes from an exact-match bash allow rule ("agent-validate",
+with no arguments) on its own per-dispatch agent definition file, written by
+`agent-plan-create` into that dispatch's plan file
+(/tmp/pi-agent-plans/IMPLEMENT-<n>.md). `--paths`/`--new-paths` are planning
+metadata only; they are not passed to agent-validate at runtime.
 
-Checks run in a fixed global order -- all FORMAT checks across every
-profile, then all LINT checks, then all BUILD/TEST checks -- against a
-failure budget of 10 (tracked in the git dir, so it persists across runs).
-On full success, writes .agent/validated.json (schema_version 2) with:
+Checks run in a fixed global order -- all FORMAT checks across every profile,
+then all LINT checks, then all BUILD/TEST checks -- against a failure budget
+of 10 (tracked in the git dir, so it persists across runs). On full success,
+writes .agent/validated.json (schema_version 3) with:
 "validator" (the resolved path of the agent-validate executable that ran),
 "tree_sha" (of the working tree excluding only .agent/), "timestamp",
-"paths" (the --path arguments given), "results" (per-check pass records),
-and "tool_versions".
+"selection" ("git-discovery" or "explicit-paths"), "warn_missing_flake_checks",
+"missing_flake_checks" (empty unless warning mode skipped gaps; each entry is
+{"flake": <repo-relative flake root>, "check": <attribute path>}),
+"paths" (the explicit --path overrides or the discovered files),
+"results" (per-check pass records), and "tool_versions".
 
 Exit codes: 0 all checks passed and the artifact was written; 10 a check
 failed (counts against the failure budget); 20 a required tool is missing;
 21 a network error; 22 a permission error; 23 an expected artifact value
-could not be computed (the artifact is not written in this case); 99 the
-failure budget is exhausted.
+could not be computed (the artifact is not written in this case); 24 an
+affected flake is missing its checks.<system>.agent-validate contract and
+--warn-missing-flake-checks was not given; 99 the failure budget is exhausted.
 EOF
 }
 
 FAILURE_BUDGET=10
 ARTIFACT=".agent/validated.json"
 RESULTS=()
-PATH_ARGS=()
+FLAKE_CONTRACT_OUTPUT=""
 
 git_dir() { git rev-parse --git-dir 2>/dev/null; }
 
@@ -248,6 +280,35 @@ json_string_array() {
   printf '%s\n' "$@" | jq -R . | jq -s -c .
 }
 
+# Preflights one affected flake's checks.<system>.agent-validate contract
+# without building it: `nix eval` only instantiates the attribute (producing
+# its derivation in the store) and never realises it. Returns 0 when the
+# attribute exists, 1 when Nix reports it as missing, and 2 -- with the full
+# diagnostic in FLAKE_CONTRACT_OUTPUT -- for any other evaluation failure, so
+# an operational Nix problem is never mislabelled as a missing contract.
+#shellcheck disable=SC2329
+check_flake_contract() {
+  local flake_dir="$1" system="$2" flake_path target out rc
+  # Same local-path rule as emit_flake_build_phase: without an explicit ./
+  # prefix Nix reads a schemeless argument as an indirect flake ref.
+  if [[ "$flake_dir" == /* ]]; then
+    flake_path="$flake_dir"
+  else
+    flake_path="./$flake_dir"
+  fi
+  target="${flake_path}#checks.${system}.agent-validate"
+  out="$(nix eval "$target" 2>&1)"
+  rc=$?
+  FLAKE_CONTRACT_OUTPUT="$out"
+  if [[ $rc -eq 0 ]]; then
+    return 0
+  fi
+  if printf '%s' "$out" | grep -qE "does not provide attribute|attribute '[^']*' missing"; then
+    return 1
+  fi
+  return 2
+}
+
 main() {
   # writeShellApplication (the Nix builder for this script) prepends
   # 'set -o errexit' to the built binary, but this file is written
@@ -255,17 +316,14 @@ main() {
   # failing command's exit status via `rc=$?` after a plain assignment
   # (e.g. `out="$("$@" 2>&1)"`), which errexit would instead treat as a
   # fatal error and abort the whole script on, before that capture ever
-  # runs -- silently skipping the documented exit codes (10/20/21/22/99),
+  # runs -- silently skipping the documented exit codes (10/20/21/22/24/99),
   # the FAILED message, and the failure-budget counter. Turn errexit back
   # off here so this script's own explicit exit-code handling is what
   # actually runs; -u and pipefail (set above) are left untouched.
   set +e
 
-  if [[ $# -eq 0 ]]; then
-    print_error "Missing arguments"
-    show_help
-    exit 1
-  fi
+  local warn_missing_flake_checks=0
+  local -a path_args=()
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -274,8 +332,12 @@ main() {
         print_error "--path requires a value"
         exit 1
       }
-      PATH_ARGS+=("$2")
+      path_args+=("$2")
       shift 2
+      ;;
+    --warn-missing-flake-checks)
+      warn_missing_flake_checks=1
+      shift
       ;;
     --help | -h)
       show_help
@@ -288,11 +350,6 @@ main() {
     esac
   done
 
-  if [[ ${#PATH_ARGS[@]} -eq 0 ]]; then
-    print_error "At least one --path is required"
-    exit 1
-  fi
-
   local repo_root
   if ! repo_root="$(find_repo_root "$(pwd)")"; then
     print_error "Current directory is not inside a git repository (no .git found walking up)"
@@ -303,9 +360,29 @@ main() {
     exit 1
   fi
 
-  local raw_paths
-  raw_paths="$(printf '%s,' "${PATH_ARGS[@]}")"
-  classify_paths "$raw_paths" "$repo_root"
+  # --- selection: explicit --path overrides, or Git discovery ---------------
+
+  local selection
+  local -a selected_paths=()
+  if [[ ${#path_args[@]} -eq 0 ]]; then
+    selection="git-discovery"
+    if ! discover_changed_files "$repo_root"; then
+      print_error "Git change discovery failed: ${GIT_DISCOVERY_ERROR:-unknown error}"
+      print_error "Refusing to validate an empty selection that Git did not actually report as empty."
+      exit 1
+    fi
+    selected_paths=("${DISCOVERED_PATHS[@]+"${DISCOVERED_PATHS[@]}"}")
+    if [[ ${#selected_paths[@]} -eq 0 ]]; then
+      print_status "No changed or untracked files found; this run is a no-op."
+    fi
+  else
+    selection="explicit-paths"
+    selected_paths=("${path_args[@]}")
+  fi
+
+  # Classification (and the flake ownership it records) works on the actual
+  # path arguments, never on a comma/whitespace-joined string.
+  classify_paths "$repo_root" "${selected_paths[@]+"${selected_paths[@]}"}"
   relativize_paths "$repo_root"
 
   if [[ ${#UNKNOWN_PATHS[@]} -gt 0 ]]; then
@@ -330,28 +407,90 @@ main() {
     exit 20
   fi
 
-  # --- failure budget check (before doing any work) -------------------------
-
-  local current_failcount
-  current_failcount="$(read_failcount)"
-  if [[ "$current_failcount" -ge "$FAILURE_BUDGET" ]]; then
-    print_error "Failure budget ($FAILURE_BUDGET) already exhausted from prior runs."
-    exit 99
-  fi
-
+  # Any artifact already on disk describes an earlier run; it must not
+  # outlive a run that fails before rewriting it (exit 24 in particular), so
+  # clear it as soon as the required-tool preflight has passed.
   rm -f "$ARTIFACT"
 
-  # --- FORMAT phase (mutating; reformatting itself is not a failure) --------
+  # Reset by the flake preflight below; declared here so the artifact write at
+  # the end can always read them, including on a no-op run.
+  local -a missing_flake_checks=()
+  FLAKE_CHECK_DIRS=()
+  NIX_SYSTEM=""
 
-  eval "$(emit_format_phase)"
+  # --- failure budget check, preflight, and phases ---------------------------
+  #
+  # A zero-file selection (no --path, no changed files) is a successful no-op:
+  # there is nothing to format, lint, or build, no flake contract to require,
+  # and nothing that could fail -- so the failure budget does not gate it and
+  # it still writes the artifact and resets the failure count below, like any
+  # other passing run.
+  if [[ ${#selected_paths[@]} -gt 0 ]]; then
+    # --- failure budget check (before doing any work) -------------------------
 
-  # --- LINT phase -------------------------------------------------------------
+    local current_failcount
+    current_failcount="$(read_failcount)"
+    if [[ "$current_failcount" -ge "$FAILURE_BUDGET" ]]; then
+      print_error "Failure budget ($FAILURE_BUDGET) already exhausted from prior runs."
+      exit 99
+    fi
 
-  eval "$(emit_lint_phase)"
+    # --- flake aggregate preflight (before any FORMAT/LINT/BUILD_TEST work) --
 
-  # --- BUILD/TEST phase --------------------------------------------------------
+    if [[ ${#AFFECTED_FLAKE_DIRS[@]} -gt 0 ]]; then
+      local sys_out sys_rc
+      sys_out="$(nix eval --raw --impure --expr builtins.currentSystem 2>&1)"
+      sys_rc=$?
+      if [[ $sys_rc -ne 0 || -z "$sys_out" ]]; then
+        handle_failure "PREFLIGHT" "nix eval builtins.currentSystem" "$sys_rc" "$sys_out"
+      fi
+      NIX_SYSTEM="$sys_out"
 
-  eval "$(emit_build_test_phase)"
+      local d contract_rc
+      for d in "${AFFECTED_FLAKE_DIRS[@]}"; do
+        check_flake_contract "$d" "$NIX_SYSTEM"
+        contract_rc=$?
+        case "$contract_rc" in
+        0) FLAKE_CHECK_DIRS+=("$d") ;;
+        1) missing_flake_checks+=("$d") ;;
+        *) handle_failure "PREFLIGHT" "nix eval checks($d)" "$contract_rc" "$FLAKE_CONTRACT_OUTPUT" ;;
+        esac
+      done
+
+      if [[ ${#missing_flake_checks[@]} -gt 0 ]]; then
+        if [[ "$warn_missing_flake_checks" -eq 1 ]]; then
+          print_warning "Missing checks.${NIX_SYSTEM}.agent-validate contract in ${#missing_flake_checks[@]} affected flake(s); continuing because --warn-missing-flake-checks was given:"
+          for d in "${missing_flake_checks[@]}"; do
+            print_warning "  ${d}: no checks.${NIX_SYSTEM}.agent-validate"
+          done
+          print_warning "Those flakes' aggregate checks are skipped; only the remaining checks run."
+        else
+          print_error "Missing checks.${NIX_SYSTEM}.agent-validate contract in ${#missing_flake_checks[@]} affected flake(s):"
+          for d in "${missing_flake_checks[@]}"; do
+            print_error "  ${d}: no checks.${NIX_SYSTEM}.agent-validate"
+          done
+          print_error "Add an agent-validate check to each of those flakes, or rerun with --warn-missing-flake-checks to continue without them."
+          exit 24
+        fi
+      fi
+    fi
+
+    # --- FORMAT phase (mutating; reformatting itself is not a failure) -------
+
+    eval "$(agent_format_emit_phase)"
+
+    # --- LINT phase -----------------------------------------------------------
+
+    eval "$(emit_lint_phase)"
+
+    # --- BUILD/TEST phase -----------------------------------------------------
+
+    eval "$(emit_build_test_phase)"
+
+    # One aggregate per affected flake whose contract exists (see
+    # FLAKE_CHECK_DIRS above); no generic `nix flake check` fallback.
+    eval "$(emit_flake_build_phase)"
+  fi
 
   # --- all phases passed: write the artifact ---------------------------------
 
@@ -385,18 +524,33 @@ main() {
   done
 
   local paths_json results_json
-  paths_json="$(json_string_array "${PATH_ARGS[@]}")" || die_artifact "failed to build the paths JSON array"
+  paths_json="$(json_string_array "${selected_paths[@]+"${selected_paths[@]}"}")" || die_artifact "failed to build the paths JSON array"
   results_json="$(
     IFS=,
     echo "${RESULTS[*]+"${RESULTS[*]}"}"
   )"
 
+  local missing_flake_json="[]"
+  if [[ ${#missing_flake_checks[@]} -gt 0 ]]; then
+    missing_flake_json="$(
+      printf '%s\n' "${missing_flake_checks[@]}" |
+        jq -R --arg check "checks.${NIX_SYSTEM}.agent-validate" '{flake: ., check: $check}' |
+        jq -s -c .
+    )" || die_artifact "failed to build the missing_flake_checks JSON array"
+  fi
+
+  local warn_json="false"
+  [[ "$warn_missing_flake_checks" -eq 1 ]] && warn_json="true"
+
   {
     printf '{\n'
-    printf '  "schema_version": 2,\n'
+    printf '  "schema_version": 3,\n'
     printf '  "validator": "%s",\n' "$validator"
     printf '  "tree_sha": "%s",\n' "$tree_sha"
     printf '  "timestamp": "%s",\n' "$ts"
+    printf '  "selection": "%s",\n' "$selection"
+    printf '  "warn_missing_flake_checks": %s,\n' "$warn_json"
+    printf '  "missing_flake_checks": %s,\n' "$missing_flake_json"
     printf '  "paths": %s,\n' "$paths_json"
     printf '  "results": [%s],\n' "$results_json"
     printf '  "tool_versions": %s\n' "$tool_versions_obj"

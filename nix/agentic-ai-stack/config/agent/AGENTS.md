@@ -28,7 +28,8 @@ The planning step is not finished until the user has seen the final plan, and ap
 ### Planning step output
 The expected next step after completing the "planning" task is dispatching an
 IMPLEMENT subagent. The ENTIRE plan -- context, steps, style guide,
-out-of-scope, notes, research -- is written by `agent-plan-create` to a fixed
+out-of-scope, notes, research, plus the recorded `--paths`/`--new-paths`
+planning metadata -- is written by `agent-plan-create` to a fixed
 shared path, `/tmp/pi-agent-plans/IMPLEMENT-<n>.md`, and only that absolute
 path is printed to stdout. You dispatch the allocated `IMPLEMENT-<n>` with a
 short instruction such as:
@@ -89,17 +90,20 @@ agent-plan-create --paths <files/dirs> --context <text> --steps <text> --out-of-
 
 - `--paths`, `--context`, `--steps`, and `--out-of-scope` are all required.
   `--paths` is a space- and/or comma-separated list of the files/directories
-  the subagent will touch; it drives which tools are required and the
-  `agent-validate --path ...` command the subagent is granted permission to
-  run. Every `--paths` entry must already exist on disk -- a missing entry
+  the subagent will touch. It is planning metadata only: it drives the
+  required-tool preflight and is recorded in the generated plan as a
+  repo-relative list (`## Planning paths`). It is NOT turned into
+  `agent-validate` arguments -- the subagent is granted exactly plain
+  `agent-validate`, which discovers the actual changed files itself at run
+  time. Every `--paths` entry must already exist on disk -- a missing entry
   is now a hard error (no plan file written, no slot allocated) rather than a
   silent warning.
 - `--new-paths <list>` is an optional, separate, space-/comma-separated list
   for paths the subagent will CREATE during the work (e.g. a new doc or
   module that doesn't exist yet): it skips the existence check `--paths`
-  enforces, but is still folded into the `agent-validate --path ...`
-  invocation the subagent is granted, so newly-created files get checked
-  too.
+  enforces and is recorded in the plan as a separate expected-to-be-created
+  list. Like `--paths` it is planning metadata, never an `agent-validate`
+  argument; discovery covers newly-created files on its own.
 - Both `--paths` and `--new-paths` are resolved relative to the session's
   current working directory -- which is wherever `start-agent.sh` was
   launched from, NOT necessarily the repo root -- or accepted as absolute
@@ -120,8 +124,9 @@ which `${agents_dir}/IMPLEMENT-n.md` doesn't already exist (`agents_dir`
 resolves to `${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents`, a tmpfs path
 outside the repo), copies the global `${agents_dir}/IMPLEMENT.md` template
 to `${agents_dir}/IMPLEMENT-n.md`, and grants that copy permission to run
-exactly one bash command: the `agent-validate --path ...` invocation
-covering `--paths`/`--new-paths`. If all 10 slots are taken, or a tool the
+exactly one bash command: plain `agent-validate`, with no arguments, through
+an exact-match `permission.bash` allow rule (so the rule is independent of
+the dispatch's expected paths). If all 10 slots are taken, or a tool the
 detected profiles need isn't on PATH, it exits non-zero without writing a
 plan file or allocating a slot; ask the user to add the missing tools to
 `nix/mono-flake` and run `update`, or free a slot (normally done by
@@ -129,24 +134,55 @@ plan file or allocating a slot; ask the user to add the missing tools to
 writing the plan file fails after a slot was allocated, the per-dispatch
 agent definition is removed again so the slot is not leaked.
 
-Unlike the old generated-validate.sh flow, `agent-validate` is a committed
-command installed on PATH outside the worktree (so the subagent cannot
-tamper with it) that discovers its checks AT RUN TIME: it re-classifies
-`--path` (re-expanding directories) when the subagent actually runs it, so
-files the subagent creates during the work are covered too, not just what
-existed at dispatch time. It runs the same three phases in the same fixed
-order -- FORMAT (mutating formatters), LINT (boolean checks), then
-BUILD/TEST -- against the same 10-run failure budget, and on full success
-writes `.agent/validated.json` (schema version, `validator` identifying the
-agent-validate executable that ran, a `tree_sha` of the working tree
-excluding only `.agent/`, the `--path` arguments, per-check results, tool
-versions, and a timestamp). Exit codes: `0` everything passed and the
-artifact was written; `10` a check failed (counts against the failure
-budget); `20` a required tool is missing; `21` a network error; `22` a
-permission error; `23` an expected artifact value (tree_sha, timestamp, or
-a tool version) could not be computed -- agent-validate aborted without
-writing the artifact rather than degrade it silently; `99` the failure
-budget is exhausted. `agent-stage` recomputes that same `tree_sha` from the
+`agent-validate` is a committed command installed on PATH outside the
+worktree (so the subagent cannot tamper with it). The dispatched subagent is
+granted exactly plain `agent-validate`, with no arguments: it discovers the
+files to validate itself through Git (tracked changes against `HEAD` plus
+untracked, non-ignored files, excluding `.agent/`) when it actually runs, so
+files created during the work are covered too, not just what existed at
+dispatch time. Explicit `--path` values are a manual override for that
+discovery -- they win completely, and a directory `--path` is re-expanded
+recursively -- while a real Git failure is always an error, never an empty
+selection. With no changed files and no `--path`, the run is a successful
+no-op: no phases run, but the artifact is still written (empty `paths` and
+`results`) and the failure count is reset.
+
+Checks run in the same fixed order -- FORMAT (mutating formatters), LINT
+(boolean checks), then BUILD/TEST -- against the same 10-run failure budget,
+except that flake-owned paths are validated by their flake instead: any
+selected path at or below a `flake.nix` root (whatever its file type,
+documentation included, or an explicitly given directory) makes that flake an
+"affected flake", and its own `checks.<system>.agent-validate` aggregate
+replaces the legacy per-file LINT/BUILD_TEST checks for those paths
+(shellcheck, `bash -n`, go vet/build/test, yamllint, statix,
+`terraform validate`, hadolint, helm lint, `helm template | kubeconform`).
+FORMAT checks are never suppressed. Before any formatting, agent-validate
+resolves the current system with Nix and preflights every affected flake for
+`checks.<system>.agent-validate` with `nix eval` (checked/exposed without
+being built). Missing contracts are reported together and normally exit `24`
+without running any check; the manual `--warn-missing-flake-checks` flag
+instead prints the complete gap list, runs the checks that do exist, skips the
+missing aggregates, and records both the warning mode and the gaps in the
+artifact. Each existing aggregate is then built with exactly `nix build
+<local-flake-dir>#checks.<system>.agent-validate` -- there is no generic
+`nix flake check` fallback.
+
+On full success it writes `.agent/validated.json` (schema_version 3) with
+`validator` (the agent-validate executable that ran), `tree_sha` (of the
+working tree excluding only `.agent/`), `timestamp`, `selection`
+(`git-discovery` or `explicit-paths`), `warn_missing_flake_checks`,
+`missing_flake_checks` (normally empty; otherwise
+`{"flake": <repo-relative flake root>, "check": <attribute path>}` entries),
+`paths` (the explicit `--path` overrides or the discovered files),
+`results` (per-check pass records), and `tool_versions`. Exit codes: `0`
+everything passed and the artifact was written; `10` a check failed (counts
+against the failure budget); `20` a required tool is missing; `21` a network
+error; `22` a permission error; `23` an expected artifact value (tree_sha,
+timestamp, or a tool version) could not be computed -- agent-validate aborted
+without writing the artifact rather than degrade it silently; `24` an
+affected flake is missing its checks.<system>.agent-validate contract and
+warning mode was not enabled; `99` the failure budget is exhausted.
+`agent-stage` recomputes that same `tree_sha` from the
 branch itself before staging, so a mismatch (or missing artifact) means the
 branch's working tree moved after agent-validate last ran clean -- don't
 take that on faith.
@@ -165,7 +201,7 @@ agent type and its ten per-dispatch slot copies -- `IMPLEMENT-1` ..
 nix/agentic-ai-stack/config/agent/subagents-worktrees.json, read once at
 extension startup, which is why the slot names are a fixed pool rather than
 generated dynamically). agent-plan-create dispatches a per-dispatch copy
-(`IMPLEMENT-n.md`, holding only that dispatch's `agent-validate` allow
+(`IMPLEMENT-n.md`, holding only that dispatch's plain `agent-validate` allow
 rule), not the bare `IMPLEMENT` type, so parallel dispatches each get their
 own worktree and their own narrow permission. The worktree is a DETACHED
 checkout of HEAD: uncommitted/untracked repository files do not appear

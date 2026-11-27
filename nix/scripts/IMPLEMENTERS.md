@@ -331,6 +331,79 @@ is needed. When deps change, update the hash with `nix-update
   `nix develop`, or rebuilding a consuming system. `agent-validate` is
   specific to the agent dispatch workflow, not a general-purpose check.
 
+### Agent dispatch scripts
+
+The `scripts/agent/` group implements the dispatch workflow that plans a
+change (`agent-plan-create`), implements it in an isolated worktree
+(`IMPLEMENT-<n>`), validates it (`agent-validate`), and stages the result
+(`agent-stage`). Only the pieces that matter when changing these scripts:
+
+- **`agent-validate` selection.** With no arguments it discovers the files
+  to validate itself, through `agent-git-discovery`: tracked changes against
+  `HEAD` (staged and unstaged) plus untracked, non-ignored files, excluding
+  `.agent/`. Any explicit `--path` values override that discovery
+  completely, and a directory `--path` is re-expanded recursively at run
+  time. Zero changed files with no `--path` is a successful no-op: no phases
+  run, but a schema-3 artifact is still written with empty `paths`/`results`,
+  and the failure count is reset. Real Git failures are errors, never an
+  empty selection. Keep every filename in an array: Git-discovered paths
+  may contain spaces, tabs, or newlines, so nothing may join them into a
+  string and re-split it (`classify_paths` takes the repo root plus the
+  actual path arguments).
+- **Flake-owned paths and the aggregate contract.** `agent-plan-classify`
+  records `AFFECTED_FLAKE_DIRS` (the nearest enclosing `flake.nix` root of
+  every selected path, independent of file extension, including explicit
+  directory overrides). Any path at or below one of those roots is
+  "flake-owned": its legacy `LINT`/`BUILD_TEST` checks (shellcheck,
+  `bash -n`, go vet/build/test, yamllint, statix, `terraform validate`,
+  hadolint, helm lint, `helm template | kubeconform`) are suppressed,
+  because the flake's own `checks.<system>.agent-validate` aggregate covers
+  them. `FORMAT` checks are never suppressed. `required_tools_for_profiles`
+  mirrors that split: formatters are required for flake-owned files too,
+  `nix` is required for every affected flake, and legacy lint/build tools
+  only when a non-flake path will actually reach them.
+- **Preflight, exit 24, and `--warn-missing-flake-checks`.** Before any
+  formatting, `agent-validate` resolves the current system with
+  `nix eval --raw --impure --expr builtins.currentSystem` and checks each
+  affected flake for `checks.<system>.agent-validate` with `nix eval` (which
+  instantiates the attribute without building it). All missing contracts are
+  reported together and normally exit `24` before any check runs; an
+  operational Nix evaluation failure is a check failure (10/21/22), never a
+  missing attribute. With the manual `--warn-missing-flake-checks` flag the
+  full gap list is printed, the available checks still run, the missing
+  aggregates are skipped, and both the warning mode and the gaps are
+  recorded in the artifact. Each existing aggregate is built with exactly
+  `nix build <local-flake-dir>#checks.<system>.agent-validate` (an explicit
+  `./` prefix for relative local paths, so Nix does not read the argument as
+  an indirect flake ref); there is deliberately no generic
+  `nix flake check` fallback, so a flake without the contract cannot be
+  silently under-validated.
+- **The artifact.** A passing run writes `.agent/validated.json` with
+  `schema_version: 3` plus `validator`, `tree_sha` (the working tree
+  excluding only `.agent/`), `timestamp`, `selection` (`git-discovery` or
+  `explicit-paths`), `warn_missing_flake_checks`, `missing_flake_checks`
+  (`[{"flake": ..., "check": ...}]`, empty normally), `paths` (the explicit
+  overrides or the discovered files), `results`, and `tool_versions`.
+  `agent-stage` only recomputes and compares `tree_sha`, so it stays
+  compatible with new schema versions. A no-op run writes the same artifact
+  with empty `paths`/`results`.
+- **Permissions are per-dispatch and exact-match.** `agent-plan-create`
+  grants a dispatch exactly plain `agent-validate` (no arguments) through an
+  exact-match `permission.bash` allow rule on its own copy of
+  `IMPLEMENT-<n>.md`; discovery of the changed files happens inside
+  agent-validate at run time. `--paths`/`--new-paths` remain required/
+  optional planning metadata: they are resolved relative to the caller's cwd
+  (a missing `--paths` entry is a hard error), drive the required-tool
+  preflight and the tool classification, and are recorded in the generated
+  plan as repo-relative lists. They are never turned into `agent-validate`
+  arguments and no longer appear in the allow rule, so the plan file's
+  `## Planning paths` section is descriptive, not executable.
+- **`agent-format`** owns the `FORMAT` phase (`agent_format_emit_phase`);
+  `agent-plan-classify` owns classification, flake ownership, tool
+  requirements, and the legacy `LINT`/`BUILD_TEST` emitters plus
+  `emit_flake_build_phase`. Neither lib calls `exit`; the caller decides what
+  a failure means.
+
 ## Gotchas
 
 - The `./` rewrite (see "How it works") only rewrites `./` where it
