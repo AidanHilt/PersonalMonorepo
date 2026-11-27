@@ -15,19 +15,19 @@ let
   sources = {
     aarch64-darwin = {
       asset = "Darwin_arm64";
-      hash = "4de4d9425f41c5ac3cb79a745609a1e086d087072eafba48e59424091da77ef4";
+      hash = "sha256-TeTZQl9Bxaw8t5p0Vgmh4IbQhwcur7pI5ZQkCR2nfvQ=";
     };
     x86_64-darwin = {
       asset = "Darwin_x86_64";
-      hash = "fb0531e4844695360c9e0979e538f1eaeea9faeb49bb24e39e90590840cade46";
+      hash = "";
     };
     aarch64-linux = {
       asset = "Linux_arm64";
-      hash = "06bf4a4f78fa4028d3ced7772d5d55718d82a63bb10456c9ec59619a5f96b7e4";
+      hash = "";
     };
     x86_64-linux = {
       asset = "Linux_x86_64";
-      hash = "56d1724e08188bfda84f32eaf447a0fba7f67c60b1423691e94a2ab3783d66b3";
+      hash = "";
     };
   };
 
@@ -47,6 +47,7 @@ stdenv.mkDerivation {
   # The release tarballs ship the binary at the archive root, next to LICENSE
   # and README.md, with no `configure`/`make` step to run.
   dontBuild = true;
+  sourceRoot = ".";
 
   installPhase = ''
     runHook preInstall
