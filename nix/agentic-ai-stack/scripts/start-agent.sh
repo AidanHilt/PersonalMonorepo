@@ -54,7 +54,7 @@ set -euo pipefail
 # Sources lib-common.sh for STACK_DIR/SESSIONS_ROOT/FIXED_AGENT_DIR/
 # PI_USER_HOME and the resolve_or_die/resolve_stack_bin/validate_run_name/
 # nono_state_dir/nono_state_wipe_preserving_audit/resolve_ca_bundle/share_*/
-# git_safe_dir_env helpers.
+# git_safe_dir_env/git_author_identity_env helpers.
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
 # shellcheck source=lib-common.sh
 # shellcheck disable=SC1091
@@ -202,8 +202,12 @@ Live file sharing (workdir, --add, --clone):
   before that teardown runs (e.g. a crash), run `nix run .#stop --
   <name>` afterwards to finish restoring ownership/ACLs. A git repo
   shared this way is also registered as a `safe.directory` for both you
-  and `pi` (via GIT_CONFIG_* env vars, never a written .gitconfig), since
-  git refuses to operate in a directory it doesn't own by default.
+  and `pi`, and your effective author identity for it (user.name/
+  user.email, resolved from that repo's own config plus your git config)
+  is forwarded into the sandbox -- both via GIT_CONFIG_* env vars, never a
+  written .gitconfig -- since git refuses to operate in a directory it
+  doesn't own by default, and the sandboxed `pi` user's own $HOME means
+  your global git config is not readable there.
 
 Idempotent per-run seeding / --resume:
   Every launch re-syncs the ONE fixed, shared /var/lib/pi/.pi/agent/
@@ -417,13 +421,21 @@ done
 # git_safe_dir_env: registers every shared path as a git safe.directory
 # for both the invoking user and `pi` (harmless for paths that aren't
 # git repos at all -- git simply never consults an irrelevant
-# safe.directory entry). The resulting GIT_CONFIG_* vars are threaded
-# through `sudo --preserve-env` below so they reach the `pi` process
-# sudo starts, and profiles/work.base.json allow-lists GIT_CONFIG_COUNT/
-# GIT_CONFIG_KEY_*/GIT_CONFIG_VALUE_* (top-level environment.allow_vars
-# and the nix command's sandboxed environment.allow_vars) so they also
-# reach the sandboxed `pi` process itself.
+# safe.directory entry). git_author_identity_env then forwards this
+# repo's effective author identity (user.name/user.email) the same way,
+# because the sandboxed process runs with the pi user's own $HOME and so
+# cannot see the invoking user's global git config -- without it, a
+# worktree commit inside the sandbox fails with "Author identity
+# unknown". Both fail early here, host-side and before any sudo/nono, if
+# the identity can't be resolved. The resulting GIT_CONFIG_* vars are
+# threaded through `sudo --preserve-env` below so they reach the `pi`
+# process sudo starts (foreground and --detached alike), and
+# profiles/work.base.json allow-lists GIT_CONFIG_COUNT/GIT_CONFIG_KEY_*/
+# GIT_CONFIG_VALUE_* (top-level environment.allow_vars and the nix
+# command's sandboxed environment.allow_vars) so they also reach the
+# sandboxed `pi` process itself.
 git_safe_dir_env "${SHARE_PATHS[@]}"
+git_author_identity_env "$WORKDIR"
 
 # --- Secrets: namespace scan first, then --secret flags (flags win) -------
 # Collected as real exported env vars on THIS process (never as `-e`/argv
@@ -535,6 +547,7 @@ if [ "$DRY_RUN" = "1" ]; then
   echo "  --add (live-shared): ${ADD_PATHS[*]:-<none>}" >&2
   echo "  --clone (live-shared, as --add): ${CLONE_PATHS[*]:-<none>}" >&2
   echo "  secrets (names only, values redacted): ${SECRET_NAMES[*]:-<none>}" >&2
+  echo "  git config (GIT_CONFIG_* env): safe.directory for every shared path, plus the author identity (user.name/user.email) resolved from $WORKDIR" >&2
   echo >&2
   echo "Live-sharing actions that would be run for each of: ${SHARE_PATHS[*]}" >&2
   case "$(uname -s)" in

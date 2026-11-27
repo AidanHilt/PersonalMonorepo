@@ -221,7 +221,8 @@ if [ "$DRY_RUN" = "1" ]; then
   echo "  extra PATH prefix: ${EXTRA_PATH:-<none>}" >&2
   echo >&2
   echo "Resolved command (would run as the 'pi' user):" >&2
-  echo "  sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS,<git safe.directory vars> -- \\" >&2
+  echo "  sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS,<git config vars> -- \\" >&2
+  echo "    (<git config vars> = safe.directory for every shared path, plus the run's repository author identity user.name/user.email -- both resolved from the recorded workdir once it is read, i.e. not in --dry-run)" >&2
   echo "    sh -c \"cd \\\"\$1\\\"; shift; export PATH=\\\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\\\"; exec \\\"\$@\\\"\" sh <recorded workdir> \\" >&2
   echo "    $NONO_BIN run --profile $SHELL_PROFILE --allow-cwd --name $SESSION_NAME -- \\" >&2
   echo "      sh -c \"export HOME=\\\"$PI_USER_HOME\\\"; exec \\\"\$@\\\"\" sh $BASH_BIN -i" >&2
@@ -258,6 +259,23 @@ fi
 for shared_path in "${SHARED_PATHS[@]}"; do
   share_path_check "$shared_path" >/dev/null
 done
+# git_safe_dir_env/git_author_identity_env: register every shared path as
+# a git safe.directory for `pi`, and forward this run's repository author
+# identity (user.name/user.email) the same way -- the sandboxed process
+# runs with the pi user's own $HOME, so the invoking user's global git
+# config is not visible there, and without the identity a commit inside
+# the sandbox fails with "Author identity unknown". Resolved here as the
+# invoking user, before sudo, and threaded through `sudo --preserve-env`
+# below (GIT_CONFIG_* is already allow-listed in the profile). Deliberately
+# BEFORE the grants below, so a missing identity fails without leaving any
+# ACL entry behind.
+git_safe_dir_env "${SHARED_PATHS[@]}"
+git_author_identity_env "$WORKDIR"
+PRESERVE_LIST="PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS"
+for git_safe_dir_var in "${GIT_SAFE_DIR_ENV_VARS[@]:-}"; do
+  [ -n "$git_safe_dir_var" ] || continue
+  PRESERVE_LIST="$PRESERVE_LIST,$git_safe_dir_var"
+done
 # Granted in order; if any grant fails partway through, everything
 # granted so far for this shell session is released again
 # (best-effort, interactive sudo allowed -- this script still owns a
@@ -275,12 +293,6 @@ for shared_path in "${SHARED_PATHS[@]}"; do
     exit 1
   fi
   GRANTED_PATHS+=("$shared_path")
-done
-git_safe_dir_env "${SHARED_PATHS[@]}"
-PRESERVE_LIST="PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS"
-for git_safe_dir_var in "${GIT_SAFE_DIR_ENV_VARS[@]:-}"; do
-  [ -n "$git_safe_dir_var" ] || continue
-  PRESERVE_LIST="$PRESERVE_LIST,$git_safe_dir_var"
 done
 
 # --- Approval helper: this shell gets its OWN helper, independent of the

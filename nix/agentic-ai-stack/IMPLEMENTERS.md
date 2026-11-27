@@ -143,7 +143,8 @@ what prevents trusted-user-style abuse of these allowances.
 below) through. `GIT_CONFIG_COUNT`/`GIT_CONFIG_KEY_*`/
 `GIT_CONFIG_VALUE_*` and `SSL_CERT_FILE`/`NIX_SSL_CERT_FILE`/
 `NODE_EXTRA_CA_CERTS` are also allow-listed, for `safe.directory`
-registration and CA trust respectively (see "Credentials" below).
+registration plus forwarded git author identity, and CA trust
+respectively (see "Credentials" below).
 
 ## Launcher and approval helper
 
@@ -369,9 +370,28 @@ either way.
 The invoking user's own `$HOME` stays strictly host-side and unchanged:
 the launcher process itself, `--clone`'s cache
 (`$HOME/.cache/pi-sandbox/clones`), `share_path_check`'s "refusing to
-share your entire `$HOME`" guard, git credentials and ACL handling all
-still resolve against it, never against `$PI_USER_HOME` — and nono now
-sees exactly the same value those code paths do.
+share your entire `$HOME`" guard, the git author-identity lookup behind
+`git_author_identity_env` (see "Live file sharing" below), git
+credentials and ACL handling all still resolve against it, never against
+`$PI_USER_HOME` — and nono now sees exactly the same value those code
+paths do.
+
+The flip side of a correct payload `HOME` is that the sandbox no longer
+sees the invoking user's global git config, so a `git commit` inside a
+shared worktree failed with "Author identity unknown". Rather than
+writing a gitconfig or minting a separate agent identity, the invoking
+repository's EFFECTIVE `user.name`/`user.email` are resolved host-side
+(`git -C <workdir> config --get ...`, run as the invoking user before
+`sudo`/nono, so repo-local config wins over the user's global config) and
+forwarded into the sandbox payload as `GIT_CONFIG_KEY_i=user.name` /
+`GIT_CONFIG_VALUE_i=<value>` pairs by `git_author_identity_env`, appended
+after the `safe.directory` entries of the same mechanism and threaded
+through the same `PRESERVE_LIST`/`sudo --preserve-env` path (foreground,
+`--detached` and `shell.sh` alike). If either value is missing, the
+launcher fails early with an actionable error (naming the `git -C ...
+config` commands to fix it) instead of letting a later commit fail
+inside the sandbox. Nothing beyond `user.name`/`user.email` is forwarded,
+and no gitconfig (either user's) is ever written.
 
 `start-agent.sh` additionally pins `GOCACHE`/`GOPATH` explicitly — now
 for determinism rather than because `$HOME` is wrong: Go's own defaults
@@ -553,12 +573,23 @@ read-write, at their real host path — not a `pi`-owned copy and not an
   trap, the detached-mode wrapper once its supervisor returns
   (`--noninteractive`), and `stop.sh` (interactive, the recovery path for
   a crashed launch).
-- **`git safe.directory`**: `pi` and the invoking user are different uids
-  sharing the same live path, which trips git's "detected dubious
-  ownership" guard. `git_safe_dir_env` exports `GIT_CONFIG_COUNT`/
-  `GIT_CONFIG_KEY_*`/`GIT_CONFIG_VALUE_*` (one pair per shared path),
-  threaded through the same `sudo --preserve-env` list as everything
-  else — never a written `.gitconfig`.
+- **`git safe.directory` and author identity**: git gets both through
+  `GIT_CONFIG_*` environment variables, never a written `.gitconfig`.
+  `git_safe_dir_env` covers ownership: `pi` and the invoking user are
+  different uids sharing the same live path, which trips git's "detected
+  dubious ownership" guard. `git_author_identity_env` covers identity:
+  every sandboxed process's payload runs with `HOME=/var/lib/pi` (see
+  "Sandbox `HOME` and the Go toolchain env" above), so the invoking
+  user's global config is invisible there and a commit would abort with
+  "Author identity unknown" — the invoking repository's effective
+  `user.name`/`user.email` are resolved host-side and forwarded. Both
+  export `GIT_CONFIG_COUNT`/`GIT_CONFIG_KEY_*`/`GIT_CONFIG_VALUE_*` pairs
+  (appended in that order, so caller-supplied `GIT_CONFIG_*` state is
+  never clobbered and the identity entries win), tracked in
+  `GIT_SAFE_DIR_ENV_VARS` and threaded through the same `sudo
+  --preserve-env` list as everything else. A missing identity is a hard,
+  early error in `start-agent.sh`/`shell.sh`, not a deferred commit
+  failure.
 
 ## Credentials
 

@@ -5,7 +5,6 @@
     "version": "1.0.0",
     "description": "Flake-owned static base for the nono 'work' profile. NOT launch-ready on its own: __APPROVAL_WEBHOOK_URL__ must be substituted, and scripts/gen-profile.sh must merge in the per-launch closure/workdir/add/clone filesystem grants before this is passed to `nono run --profile`."
   },
-  "allow_parent_of_protected": true,
   "groups": {
     "include": [
       "node_runtime",
