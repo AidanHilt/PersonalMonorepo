@@ -17,10 +17,7 @@
       "*id_ed25519*": "deny"
     },
     "path_read": {
-      "/home/pi/.pi/*": "allow",
-      "/home/pi/.cache": "allow",
-      "/tmp/*": "allow",
-      "/private/tmp/*": "allow"
+      "*": "allow"
     },
     "path_write": {
       "/home/pi/.pi/*": "deny",
@@ -73,6 +70,11 @@
       "fff *": "allow",
       "agent-plan-create *": "allow",
       "agent-stage *": "allow",
+      "echo *": "allow",
+      "statix *": "allow",
+      "nixfmt *": "allow",
+      "yamlfmt *": "allow",
+      "helmfmt *": "allow",
       "python3": "deny",
       "git *": "deny",
       "nix *": "deny",
@@ -97,12 +99,10 @@
       "kubectl exec *": "deny",
       "cp *": "deny",
       "rm *": "deny",
-      "mkdir *": "deny",
-      "*echo *---*": "allow"
+      "mkdir *": "deny"
     },
     "external_directory_read": {
-      "/home/pi/.pi/*": "allow",
-      "/tmp/*": "allow"
+      "*": "allow"
     },
     "external_directory_write": {
       "/tmp/*": "allow"
