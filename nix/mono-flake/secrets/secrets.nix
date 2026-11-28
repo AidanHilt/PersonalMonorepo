@@ -36,15 +36,6 @@ let
   # Our various server clusters
   # ===========================
 
-  # A small test cluster we run on NixOS machines running as VMs on our laptop
-  laptop-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFIeYzag+0puS2/iB/Dfgj4CFiJFopSet0NgmQGf8nEe noname";
-  laptop-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBYPCI2abzSHOfnDK8aZnEGG7v1Kt2xu8rpeW00RpdJl noname";
-
-  laptop-cluster-machines = [
-    laptop-cluster-1-system
-    laptop-cluster-2-system
-  ];
-
   # Our main staging cluster, in the form of NixOS machines running on x86 hardware
   staging-cluster-1-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDzecfHCtriWXe8jFday4wS8rFT8C+4dnBsBxRXyv4OV noname";
   staging-cluster-2-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOQM756toRHP3kLR6lH38SghskvIufdClWlgUnlLcQgh noname";
@@ -73,17 +64,14 @@ let
   devbox-system = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHlTUN203D+zEFtvCviK+aT29+0c+lg3Xvmkcjo0gVAd noname";
 in
 {
-  "hosts.age".publicKeys = user-machines ++ laptop-cluster-machines;
+  "hosts.age".publicKeys = user-machines;
 
   "github-config.age".publicKeys = user-machines;
   "smb-mount-config.age".publicKeys = user-machines;
   "rclone-config.age".publicKeys = user-machines;
   "kubeconfig.age".publicKeys = user-machines;
 
-  "adguardhome.age".publicKeys =
-    user-machines ++ laptop-cluster-machines ++ staging-cluster-machines ++ prod-cluster-machines;
-
-  "rke-config-laptop-cluster.age".publicKeys = user-machines ++ laptop-cluster-machines;
+  "adguardhome.age".publicKeys = user-machines ++ staging-cluster-machines ++ prod-cluster-machines;
 
   "rke-config-staging-cluster.age".publicKeys = user-machines ++ staging-cluster-machines;
 

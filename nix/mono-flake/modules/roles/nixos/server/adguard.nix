@@ -8,8 +8,7 @@
 }:
 
 let
-  adGuardEnabled =
-    if machine-config ? adguardhome.enabled then machine-config.adguardhome.enabled else true;
+  adGuardEnabled = machine-config.adguardhome.enabled or true;
 in
 
 {

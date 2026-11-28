@@ -89,11 +89,10 @@ why it matters. Nothing here is fixed by this document — it's a backlog.
 
 ## Secrets / credentials in-repo
 
-- `modules/shared-values/laptop-cluster.nix` and
-  `modules/shared-values/staging-cluster.nix` commit a `mkpasswd`-hashed
+- `modules/shared-values/staging-cluster.nix` commits a `mkpasswd`-hashed
   login password directly in plaintext Nix (not agenix-encrypted).
-  Low-severity (it's a hash, not the password, and these are
-  dev/lab-cluster values files) but worth flagging since it's an
+  Low-severity (it's a hash, not the password, and this is a
+  dev/lab-cluster values file) but worth flagging since it's an
   unencrypted credential in version control.
 - `modules/shared-machine-configs/bootstrap-image.nix` (used by the
   `iso-image-*` hosts) sets `services.openssh.settings.PermitRootLogin =

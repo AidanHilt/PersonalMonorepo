@@ -40,7 +40,7 @@
         pkgs
         machine-config
         ;
-      system = pkgs.system;
+      inherit (pkgs) system;
       lib = inputs.home-manager.lib;
     };
   };

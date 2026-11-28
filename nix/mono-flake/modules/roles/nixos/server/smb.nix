@@ -7,10 +7,6 @@
   ...
 }:
 
-let
-
-in
-
 {
   services.samba = {
     enable = true;

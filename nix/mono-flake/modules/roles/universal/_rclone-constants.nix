@@ -7,36 +7,24 @@
 
 let
   wallpaperDir =
-    if machine-config ? rcloneSync.wallpaperDir then
-      machine-config.rcloneSync.wallpaperDir
-    else
-      "${machine-config.userBase}/${machine-config.username}/Wallpapers";
+    machine-config.rcloneSync.wallpaperDir
+      or "${machine-config.userBase}/${machine-config.username}/Wallpapers";
   keePassDir =
-    if machine-config ? rcloneSync.keePassDir then
-      machine-config.rcloneSync.keePassDir
-    else
-      "${machine-config.userBase}/${machine-config.username}/KeePass";
+    machine-config.rcloneSync.keePassDir
+      or "${machine-config.userBase}/${machine-config.username}/KeePass";
   atilsConfigDir =
-    if machine-config ? rcloneSync.atilsConfigDir then
-      machine-config.rcloneSync.atilsConfigDir
-    else
-      "${machine-config.userBase}/${machine-config.username}/.atils";
+    machine-config.rcloneSync.atilsConfigDir
+      or "${machine-config.userBase}/${machine-config.username}/.atils";
 
   windowsDocumentsDir =
-    if machine-config ? rcloneSync.windowsDocumentsDir then
-      machine-config.rcloneSync.windowsDocumentsDir
-    else
-      "/mnt/d/Users/aidan/Documents";
+    machine-config.rcloneSync.windowsDocumentsDir or "/mnt/d/Users/aidan/Documents";
   windowsHomeDir =
     if machine-config ? rcloneSync.windowsHomeDirDir then
       machine-config.rcloneSync.windowsHomeDir
     else
       "/mnt/d/Users/aidan";
   windowsGHubConfigDir =
-    if machine-config ? rcloneSync.windowsGHubConfigDir then
-      machine-config.rcloneSync.windowsGHubConfigDir
-    else
-      "${windowsHomeDir}/AppData/local/LGHUB";
+    machine-config.rcloneSync.windowsGHubConfigDir or "${windowsHomeDir}/AppData/local/LGHUB";
 
   # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
   syncAtilsConfigDir = pkgs.writeShellScriptBin "sync-atils-config" ''
@@ -98,14 +86,14 @@ let
 in
 
 {
-  wallpaperDir = wallpaperDir;
-  keePassDir = keePassDir;
+  inherit wallpaperDir;
+  inherit keePassDir;
 
-  windowsDocumentsDir = windowsDocumentsDir;
-  windowsHomeDir = windowsHomeDir;
-  windowsGHubConfigDir = windowsGHubConfigDir;
+  inherit windowsDocumentsDir;
+  inherit windowsHomeDir;
+  inherit windowsGHubConfigDir;
 
-  syncAtilsConfigDir = syncAtilsConfigDir;
+  inherit syncAtilsConfigDir;
 
   # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
   syncWallpapers = pkgs.writeShellScriptBin "sync-wallpapers" ''
@@ -127,9 +115,9 @@ in
     rclone sync $WINDOWS_GHUB_CONFIG_DIR drive:GHUB-Windows--drive-skip-gdocs --create-empty-src-dirs --fix-case
   '';
 
-  wsl = wsl;
+  inherit wsl;
 
-  wslScripts = wslScripts;
+  inherit wslScripts;
 
   # TODO(scripts-lib): migrate to scripts.lib.mkScript (nix/scripts flake) so shared libs/#include can be used
   syncDownloadAll =

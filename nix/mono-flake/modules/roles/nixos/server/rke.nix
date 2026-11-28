@@ -8,11 +8,7 @@
 }:
 
 let
-  clusterEndpoint =
-    if machine-config ? k8s.clusterEndpoint then
-      machine-config.k8s.clusterEndpoint
-    else
-      machine-config.networking.loadBalancerIp;
+  clusterEndpoint = machine-config.k8s.clusterEndpoint or machine-config.networking.loadBalancerIp;
 
   #TODO Make it optional to set as primaryNode (default is false)
   rkeConfig =
@@ -77,7 +73,7 @@ in
   }
   // rkeConfig;
 
-  systemd.services.fix-kubeconfig-permissions = pkgs.lib.mkIf (machine-config.k8s.primaryNode) {
+  systemd.services.fix-kubeconfig-permissions = pkgs.lib.mkIf machine-config.k8s.primaryNode {
     description = "Fix kubeconfig permissions";
     after = [ "rke2-server.service" ]; # adjust service name as needed
     wantedBy = [ "multi-user.target" ];

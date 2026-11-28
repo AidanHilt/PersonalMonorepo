@@ -12,22 +12,34 @@
 let
   version = "0.7.0";
 
+  # The per-asset `sha256` values below are upstream's own checksums, copied
+  # verbatim (lowercase hex) from the GitHub release metadata for v0.7.0.
+  # They are converted to SRI here instead of storing the base64 form, so
+  # re-pinning a version is a straight copy of what upstream publishes and
+  # there is no hand-transcribed base64 to get wrong.
+  toSRI =
+    sha256:
+    builtins.convertHash {
+      hash = "sha256:${sha256}";
+      toHashFormat = "sri";
+    };
+
   sources = {
     aarch64-darwin = {
       asset = "Darwin_arm64";
-      hash = "sha256-TeTZQl9Bxaw8t5p0Vgmh4IbQhwcur7pI5ZQkCR2nfvQ=";
+      sha256 = "4de4d9425f41c5ac3cb79a745609a1e086d087072eafba48e59424091da77ef4";
     };
     x86_64-darwin = {
       asset = "Darwin_x86_64";
-      hash = "";
+      sha256 = "fb0531e4844695360c9e0979e538f1eaeea9faeb49bb24e39e90590840cade46";
     };
     aarch64-linux = {
       asset = "Linux_arm64";
-      hash = "";
+      sha256 = "06bf4a4f78fa4028d3ced7772d5d55718d82a63bb10456c9ec59619a5f96b7e4";
     };
     x86_64-linux = {
       asset = "Linux_x86_64";
-      hash = "";
+      sha256 = "56d1724e08188bfda84f32eaf447a0fba7f67c60b1423691e94a2ab3783d66b3";
     };
   };
 
@@ -41,7 +53,7 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     url = "https://github.com/digitalstudium/helmfmt/releases/download/v${version}/helmfmt_${source.asset}.tar.gz";
-    inherit (source) hash;
+    hash = toSRI source.sha256;
   };
 
   # The release tarballs ship the binary at the archive root, next to LICENSE

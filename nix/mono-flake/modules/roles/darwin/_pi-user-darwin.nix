@@ -8,19 +8,21 @@
 { machine-config, ... }:
 
 {
-  users.users.pi = {
-    # nix-darwin's users.users.<name> takes a numeric `gid` directly
-    # rather than a group name. UNVERIFIED on macOS.
-    gid = 10001;
-    isHidden = true;
-  };
+  users = {
+    users.pi = {
+      # nix-darwin's users.users.<name> takes a numeric `gid` directly
+      # rather than a group name. UNVERIFIED on macOS.
+      gid = 10001;
+      isHidden = true;
+    };
 
-  # UNVERIFIED on macOS: nix-darwin's `users.groups.<name>.members` is
-  # assumed to mirror the nixpkgs/NixOS option of the same name (declared
-  # in ../universal/_pi-user.nix), but this has not been built or tested
-  # on a Darwin host.
-  users.knownUsers = [ "pi" ];
-  users.knownGroups = [ "pi" ];
+    # UNVERIFIED on macOS: nix-darwin's `users.groups.<name>.members` is
+    # assumed to mirror the nixpkgs/NixOS option of the same name (declared
+    # in ../universal/_pi-user.nix), but this has not been built or tested
+    # on a Darwin host.
+    knownUsers = [ "pi" ];
+    knownGroups = [ "pi" ];
+  };
 
   # nix-darwin's security.sudo module has no `extraRules` equivalent to
   # NixOS's structured rule list, only this raw sudoers fragment.

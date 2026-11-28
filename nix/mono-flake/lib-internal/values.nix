@@ -5,7 +5,7 @@
 }:
 
 let
-  lib = nixpkgs.lib;
+  inherit (nixpkgs) lib;
 in
 
 {
