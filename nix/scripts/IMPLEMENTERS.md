@@ -61,8 +61,9 @@ both colliding paths.
   `overlays.default`'s `ahilt-scripts.<group>`. A group made up only of
   libs and/or source functions (e.g. `libs/`) emits no bundle/devShell/
   overlay entry — there's nothing runnable to bundle. Group bundles are
-  excluded from `checks` (only individual packages, and lib/source
-  shellcheck checks, run there) and from the overlay's `all`.
+  excluded from `checks` (only individual packages, lib/source
+  shellcheck checks, optional test harnesses and the aggregate run
+  there) and from the overlay's `all`.
   `nix run` does **not** work on a group (a `symlinkJoin` isn't an
   app) — use `nix shell .#<group>` or `nix develop .#<group>` instead.
   Libs are addressed globally by directory name via `#include <name>`,
@@ -70,8 +71,10 @@ both colliding paths.
 - **Flake outputs recap**: `packages.<name>` per script/lib-less package
   (leaf) plus `packages.<group>` per group with packages, plus `all`
   (every leaf, no groups) and `default` (= `all`); `checks` (every leaf
-  package, plus shellcheck of every `lib.sh` and `source.sh` — group
-  bundles excluded); `devShells.<name>` and `devShells.<group>` (that
+  package, plus shellcheck of every `lib.sh` and `source.sh`, plus every
+  optional `<name>-test` harness, plus the `agent-validate` aggregate
+  described below — group bundles excluded); `devShells.<name>` and
+  `devShells.<group>` (that
   one package, or that group's packages) plus `devShells.default`
   (every leaf package plus `go`, `shellcheck`, `nix-update`); and
   `overlays.default`, which exposes every leaf package and every group
@@ -119,7 +122,54 @@ both colliding paths.
   correctly from the built package, while leaving `../foo` (which
   contains `./` but not as a token start) untouched. It also means
   scripts in such directories must avoid any unintended `./` occurring
-  right after one of those characters.
+  right after one of those characters. A sibling `test.sh` deliberately
+  does **not** count as such an extra file, so adding a test harness can
+  never switch the rewrite on and silently change a script's production
+  text (see "Optional `test.sh` harnesses" below).
+- **Optional `test.sh` harnesses**: any leaf directory — a `run.sh`
+  script, a Go package, a `lib.sh`, or a `source.sh` — may additionally
+  contain a `test.sh`. It is *not* one of the classified kinds
+  (`classifyDir` ignores it), so it never changes a leaf's kind, package,
+  group bundle, devShell, or overlay entry; it only opts that leaf into an
+  extra `checks.<name>-test` check (`hasTest` on the discovered entry).
+  The harness text is read verbatim (no `./` rewrite — point at fixtures
+  through `SCRIPT_SOURCE_DIR` instead), assembled with `assembleScript`
+  (so `#include` works, including transitively), substituted with
+  `substitutePackages` (so `${PKG_...}`/`${EXE_...}` placeholders work),
+  and built with `writeShellApplication`, so it is shellchecked at build
+  time like any other script. The check then runs it once, from a
+  writable sandbox working directory with writable `HOME`/`TMPDIR` and no
+  network access, with two environment variables:
+  - `SCRIPT_SOURCE_DIR` — the absolute store path of the leaf's own
+    source directory (always set).
+  - `SCRIPT_PACKAGE` — the built `leaves.<name>` package path for runnable
+    (`run.sh`/Go) leaves, and the empty string for `lib.sh`/`source.sh`
+    leaves, which have no package.
+
+  `touch $out` happens only after the harness exits 0, so a failing
+  assertion fails the check. Tests are opt-in and never mocked: a harness
+  exercises the real assembled code. The one harness so far
+  (`scripts/agent/agent-plan-classify/test.sh`) builds temporary fixture
+  trees with `mktemp -d` and only calls the classification/emission
+  functions — no Nix, Git, `agent-validate`, or project formatter/linter.
+  Native Go `_test.go` discovery is **not** implemented: a Go leaf's
+  tests have to be a `test.sh` harness too.
+- **Check dependency graph**: `leaves.<name>` never references a test;
+  `checks.<name>-test` may reference `leaves.<name>`; and
+  `checks.<system>.agent-validate` references all of them. Tests are never
+  packages, so `packages.all`/`default`, group bundles, `devShells`, and
+  `overlays.default` never include them, and the graph stays acyclic.
+- **`checks.<system>.agent-validate` aggregate**: the flake exposes
+  exactly one aggregate check — a `runCommand` marker with
+  `buildInputs = <every check above>` — so
+  `nix build .#checks.<system>.agent-validate` builds every leaf package,
+  every `lib.sh`/`source.sh` shellcheck, and every optional `test.sh`
+  harness. It shadows the leaf `agent-validate` *package* in `checks`
+  only: that package still lives in `baseChecks` and is built as a
+  dependency of the aggregate, so there is no self-reference. This is the
+  contract `agent-validate` preflights with `nix eval` and then builds
+  with `nix build ./<flake>#checks.<system>.agent-validate` for any change
+  inside `nix/scripts/`; see "Agent dispatch scripts" below.
 - `x86_64-darwin` is excluded from `eachSystem`; scripts are expected to
   work on both Linux and macOS (the other darwin/linux systems).
 - **Runtime dependencies** (`${PKG_<name>}` / `${EXE_<name>}`): a `run.sh`
@@ -262,6 +312,27 @@ starts with `args_description`/`args_example`/`args_parse`; add
 `#include env-checks` and `require_env`/`require_monorepo` calls if the
 script needs environment variables. There is currently no scaffolder for
 Go scripts (see "Go scripts" below).
+
+### Adding a test for a script, lib, or source function
+
+Drop a `test.sh` next to the leaf's classified file — there is no
+scaffolder, and nothing else needs declaring anywhere. The builder
+assembles it exactly like a `run.sh`, so `#include <lib>` works, and
+`${PKG_...}`/`${EXE_...}` placeholders are substituted the same way. It
+is then run once, in a writable sandbox directory with no network, with
+`SCRIPT_SOURCE_DIR` set to the leaf's source store path and
+`SCRIPT_PACKAGE` set to the built package (`run.sh`/Go leaves) or to the
+empty string (`lib.sh`/`source.sh` leaves).
+
+Keep a harness readable and self-contained: small local assertion helpers
+that count failures instead of aborting, `mktemp -d` fixture trees rather
+than committed fixtures, no calls to Nix, Git, `agent-validate`, or any
+project formatter/linter, and a non-zero exit on failure (the check only
+`touch`es its `$out` after a successful run). The check is named
+`<leaf-name>-test` and runs as part of
+`nix build .#checks.<system>.agent-validate`. See
+[`scripts/agent/agent-plan-classify/test.sh`](scripts/agent/agent-plan-classify/test.sh)
+for the only example so far.
 
 ### Naming conventions
 
@@ -419,6 +490,11 @@ change (`agent-plan-create`), implements it in an isolated worktree
 - `nix run .#<group>` does not work — group bundles are `symlinkJoin`s,
   not apps; use `nix shell .#<group>` or `nix develop .#<group>`
   instead. `nix run .#<name>` still works for individual scripts.
+- A `test.sh` on its own never makes a directory a leaf: a directory
+  holding only `test.sh` still classifies as a group (and throws if it is
+  nested). A harness only ever attaches to an already-recognized
+  `run.sh`/Go/`lib.sh`/`source.sh` leaf, and removing that leaf file
+  silently drops the harness with it.
 - `writeShellApplication` only shellchecks at build time and declares no
   runtime dependencies on its own; a script that needs a package should
   declare it inline via `${PKG_<name>}`/`${EXE_<name>}` (see "Runtime

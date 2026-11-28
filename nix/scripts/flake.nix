@@ -51,7 +51,9 @@
       # module / something else), reads its one script file, and rewrites
       # local "./" paths to that directory's store path -- but only if there
       # are other files in the dir worth pointing at, so bare scripts don't
-      # pull in an unnecessary store copy.
+      # pull in an unnecessary store copy. A sibling test.sh is deliberately
+      # NOT such an "extra" file: adding a test harness must never change a
+      # leaf's production text by switching the rewrite on.
       readDirScript =
         dir:
         let
@@ -63,7 +65,7 @@
         else
           let
             text = builtins.readFile (dir + "/${kind}");
-            extras = lib.filterAttrs (n: _: n != kind) entries;
+            extras = lib.filterAttrs (n: _: n != kind && n != "test.sh") entries;
             hasExtras = extras != { };
           in
           {
@@ -108,9 +110,14 @@
         else
           "group";
 
+      # Optional sibling test.sh: both the opt-in marker and the harness source
+      # for a per-leaf "<name>-test" check (see mkScripts). It is deliberately
+      # not one of `scriptKinds`, so it never changes a leaf's kind, package,
+      # group, devShell, or overlay entry -- only whether a test check exists.
       mkEntry = group: dir: name: {
         inherit name dir group;
         kind = classifyDir dir;
+        hasTest = builtins.pathExists (dir + "/test.sh");
       };
 
       # Flat list of { name, dir, group (null | string), kind }.
@@ -509,10 +516,75 @@
               )
             ) sourceEntries
           );
+
+          # Optional per-leaf harness, for every leaf kind. A sibling test.sh is
+          # both the opt-in marker (`hasTest` on the entry) and the harness
+          # source: it is read verbatim (no implicit "./" rewrite -- a harness
+          # points at fixtures through SCRIPT_SOURCE_DIR instead), assembled so
+          # `#include` works, substituted so ${PKG_x}/${EXE_x} placeholders
+          # work, and built with writeShellApplication for shellcheck coverage.
+          # The result is only ever a check: leaves never depend on it (the
+          # dependency direction is leaf package -> optional test -> the
+          # checks.<system>.agent-validate aggregate), and it never becomes a
+          # package, group, overlay entry, or devShell.
+          mkTest =
+            e:
+            let
+              assembled = assembleScript {
+                name = e.name;
+                runText = builtins.readFile (e.dir + "/test.sh");
+              };
+              substituted = substitutePackages {
+                inherit pkgs;
+                name = e.name;
+                text = assembled;
+              };
+              harness = pkgs.writeShellApplication {
+                name = "${e.name}-test";
+                text = substituted.text;
+                runtimeInputs = substituted.packages;
+              };
+              # Only runnable leaves have a package to hand the harness.
+              isRunnable = builtins.elem e.kind [
+                "shell"
+                "go"
+              ];
+              args = {
+                nativeBuildInputs = [ harness ];
+                # The harness's two documented entry points: where its leaf's
+                # sources live (always set), and the built leaf package (only
+                # for runnable kinds -- lib/source leaves have no package).
+                SCRIPT_SOURCE_DIR = "${e.dir}";
+                SCRIPT_PACKAGE = if isRunnable then "${leaves.${e.name}}" else "";
+              };
+            in
+            pkgs.runCommand "${e.name}-test" args ''
+              # A harness builds fixture trees, so it runs from a writable
+              # working directory with a writable HOME/TMPDIR inside the build
+              # sandbox, and must never need the network. $out is only touched
+              # once the harness exited successfully.
+              mkdir -p work/home work/tmp
+              export HOME="$PWD/work/home"
+              export TMPDIR="$PWD/work/tmp"
+              cd "$HOME"
+              ${harness}/bin/${e.name}-test
+              touch $out
+            '';
+
+          testChecks = lib.listToAttrs (
+            map (e: lib.nameValuePair "${e.name}-test" (mkTest e)) (lib.filter (e: e.hasTest) entries)
+          );
         in
         assert checkGlobalUnique;
         {
-          inherit leaves libChecks sourceChecks;
+          # Tests are checks only: they never appear in `packages`, a group
+          # bundle, the overlay, or a devShell.
+          inherit
+            leaves
+            libChecks
+            sourceChecks
+            testChecks
+            ;
           packages = leaves // groups;
         };
 
@@ -533,6 +605,29 @@
             name = "scripts-all";
             paths = builtins.attrValues built.leaves;
           };
+
+          # Every individual leaf package, every lib/source shellcheck, and
+          # every optional test harness. Group bundles (symlinkJoins) are
+          # intentionally excluded, and `baseChecks` is where the original
+          # agent-validate *package* stays under its own name.
+          baseChecks = built.leaves // built.libChecks // built.sourceChecks // built.testChecks;
+
+          # The flake's own checks.<system>.agent-validate aggregate: an empty
+          # marker whose real work is building every check in `baseChecks` via
+          # buildInputs, so `nix build .#checks.<system>.agent-validate` covers
+          # the whole flake (this is the contract agent-validate preflights
+          # before building it for a flake-owned change). It deliberately
+          # shadows only the final `checks.agent-validate` attribute -- the
+          # agent-validate package is still in `baseChecks` and is built as a
+          # dependency here, so nothing is self-referential.
+          aggregateCheck =
+            pkgs.runCommand "agent-validate-checks"
+              {
+                buildInputs = builtins.attrValues baseChecks;
+              }
+              ''
+                touch $out
+              '';
         in
         {
           packages = built.packages // {
@@ -541,8 +636,11 @@
           };
 
           # Group bundles (symlinkJoins) are intentionally excluded here --
-          # only individual packages plus lib/source shellcheck checks run.
-          checks = built.leaves // built.libChecks // built.sourceChecks;
+          # only individual packages, lib/source shellcheck checks, optional
+          # test harnesses, and the aggregate that builds all of them run.
+          checks = baseChecks // {
+            agent-validate = aggregateCheck;
+          };
 
           devShells = builtins.mapAttrs (_: pkg: pkgs.mkShell { packages = [ pkg ]; }) built.packages // {
             default = pkgs.mkShell {
