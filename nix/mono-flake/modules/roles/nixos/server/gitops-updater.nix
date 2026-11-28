@@ -12,15 +12,19 @@
 
   services.comin = {
     enable = true;
-    hostname = machine-config.hostname;
+    inherit (machine-config) hostname;
     repositorySubdir = "nix/mono-flake";
     remotes = [
       {
         name = "origin";
         url = globals.personalMonorepoURL;
-        branches.main.name = "master";
-        branches.testing.name = globals.personalMonorepoBranch;
-        branches.testing.operation = "switch";
+        branches = {
+          main.name = "master";
+          testing = {
+            name = globals.personalMonorepoBranch;
+            operation = "switch";
+          };
+        };
       }
     ];
   };

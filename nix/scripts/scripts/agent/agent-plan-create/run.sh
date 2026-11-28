@@ -13,18 +13,29 @@ Usage:
                      [--research <text>] [--tools <comma-list>]
   agent-plan-create frontmatter <agent-file.md> key=value [key=value ...] [--allow-bash <cmd>]
 
-Primary mode: assembles a self-contained IMPLEMENT-subagent dispatch prompt
-and prints it to stdout (status/diagnostics go to stderr). It writes no
-plan files, but it DOES allocate a per-dispatch agent definition: it picks
-the first free slot n in 1..MAX_SLOTS for which
-${agents_dir}/IMPLEMENT-n.md does not already exist (agents_dir resolves to
+Primary mode: writes a self-contained IMPLEMENT-subagent plan file to
+/tmp/pi-agent-plans/IMPLEMENT-<n>.md and prints ONLY that absolute path to
+stdout (status/diagnostics, plus the slot number n on its own line, go to
+stderr). The write is atomic (temporary file in the same directory, then
+rename), so a reader never sees a half-written plan. /tmp is shared with
+the subagent's isolated worktree, so the plan file is readable there even
+though uncommitted repository files are not. Dispatch subagent_type
+IMPLEMENT-n with a short prompt telling it to read the printed path before
+doing anything else, e.g.:
+
+  Read /tmp/pi-agent-plans/IMPLEMENT-<n>.md before doing anything else. It
+  contains your complete implementation plan and validation command.
+
+It also allocates a per-dispatch agent definition: it picks the first free
+slot n in 1..MAX_SLOTS for which ${agents_dir}/IMPLEMENT-n.md does not
+already exist (agents_dir resolves to
 ${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/agents), copies the global
 ${agents_dir}/IMPLEMENT.md template to ${agents_dir}/IMPLEMENT-n.md, and
-grants that copy permission to run exactly one bash command: the
-`agent-validate --path ...` invocation covering --paths/--new-paths, via an
-exact-match permission.bash allow rule. Pass the printed prompt as the
-dispatch prompt for subagent_type IMPLEMENT-n (stated in the prompt
-itself); the slot number is also printed to stderr on its own line.
+grants that copy permission to run exactly one bash command: plain
+`agent-validate` (no arguments), via an exact-match permission.bash allow
+rule. If the plan file cannot be written after a slot is allocated, that per-dispatch agent definition is removed
+again so the slot is not leaked. `agent-stage --slot <n>` removes both the
+agent definition and the plan file on a successful stage.
 
   --paths <list>           Required. Space- and/or comma-separated list of
                             files/directories that will be touched. Every
@@ -34,18 +45,24 @@ itself); the slot number is also printed to stderr on its own line.
                             to a repo-relative path. It is a HARD ERROR
                             (exit non-zero, before any slot is allocated)
                             for a --paths entry to not exist on disk --
-                            double-check your cwd if you hit this. Used to
-                            pick the required tools and to build the
-                            `agent-validate --path ...` command the
-                            subagent is granted permission to run.
+                            double-check your cwd if you hit this. Planning
+                            metadata only: it picks the required tools and
+                            is recorded as a repo-relative list in the
+                            generated plan. It is NOT turned into
+                            agent-validate arguments -- the dispatched
+                            subagent runs plain `agent-validate`, which
+                            discovers the actual changed files itself at
+                            run time.
   --new-paths <list>       Optional. Same comma/space separated syntax as
                             --paths, also cwd-relative or absolute: paths
                             the dispatched subagent is expected to CREATE,
                             so they are not required to exist yet. They
                             skip --paths' existence check, are converted to
                             repo-relative paths the same way, and are
-                            appended to the generated `agent-validate
-                            --path ...` command. --paths is still required;
+                            recorded in the generated plan as a separate
+                            expected-to-be-created list. Like --paths they
+                            are planning metadata, never agent-validate
+                            arguments. --paths is still required;
                             --new-paths alone is not sufficient to dispatch.
   --context <text>         Required. Free text for the "Context" section.
   --steps <text>           Required. Free text for the "Steps" section.
@@ -61,15 +78,17 @@ Required-tools handling: the tool list is computed from the file-type
 profiles detected in --paths, plus --tools. Every tool is checked with
 `command -v` in THIS environment (the one the subagent worktree will
 share). If any are missing, they are printed to stderr as a list and the
-command exits non-zero WITHOUT printing a prompt or allocating a slot --
+command exits non-zero WITHOUT writing a plan file or allocating a slot --
 ask the user to add them to nix/mono-flake (host system packages) and run
 update, then retry.
 
-Unlike the old generated-validate.sh flow, `agent-validate` discovers its
-checks AT RUN TIME when the subagent runs it (re-classifying --paths,
-including directories, from scratch), so files the subagent creates during
-the work are covered too -- not just the files/dirs that existed at
-dispatch time.
+Unlike the old generated-validate.sh flow, `agent-validate` discovers which
+files to validate AT RUN TIME when the subagent runs it: the dispatched
+subagent is granted exactly plain `agent-validate`, which asks Git for the
+files changed or created since HEAD and validates those. So files the
+subagent creates during the work are covered too -- not just what existed at
+dispatch time -- and the --paths/--new-paths lists never become runtime
+arguments.
 
 Secondary mode ("frontmatter"): merges key=value pairs into the YAML
 frontmatter block of an existing agent .md file, leaving all other
@@ -125,7 +144,7 @@ require_within_repo() {
   printf '%s\n' "$repo_root"
 }
 
-# --- primary mode: assemble dispatch prompt ---------------------------------
+# --- primary mode: build the plan file ----------------------------------
 
 run_create() {
   local paths="" new_paths="" context="" steps="" out_of_scope="" style_guide="" notes=""
@@ -196,12 +215,17 @@ run_create() {
   # repo root. A planner invoking this from somewhere other than the repo
   # root can easily pass a path that doesn't actually exist once resolved;
   # that used to only produce a classify_paths "not found on disk" warning,
-  # which let a broken agent-validate command get generated and dispatched
-  # anyway. Treat it as a hard error instead, before anything (including a
-  # dispatch slot) gets allocated.
-  local missing_paths=() normalized_paths p resolved
-  normalized_paths="${paths//,/ }"
-  for p in $normalized_paths; do
+  # which let a broken tool preflight get generated and dispatched anyway.
+  # Treat it as a hard error instead, before anything (including a dispatch
+  # slot) gets allocated.
+  #
+  # --paths is a planning-time CLI list, so it is split exactly once here,
+  # into an array, and passed to classify_paths verbatim from then on:
+  # classification never rejoins paths into a string and never re-splits one.
+  local -a path_args=()
+  read -r -a path_args <<<"${paths//,/ }"
+  local missing_paths=() p resolved
+  for p in "${path_args[@]+"${path_args[@]}"}"; do
     [[ -z "$p" ]] && continue
     resolved="$(resolve_path "$p")"
     [[ -e "$resolved" ]] || missing_paths+=("$p" "(resolved to $resolved)")
@@ -212,7 +236,7 @@ run_create() {
     exit 1
   fi
 
-  classify_paths "$paths" "$repo_root"
+  classify_paths "$repo_root" "${path_args[@]+"${path_args[@]}"}"
   relativize_paths "$repo_root"
 
   if [[ ${#UNKNOWN_PATHS[@]} -gt 0 ]]; then
@@ -220,7 +244,7 @@ run_create() {
   fi
 
   if ! any_checks_emitted; then
-    print_warning "No recognized file types in --paths; agent-validate will have no checks beyond the artifact write."
+    print_warning "No recognized file types in --paths; the dispatched agent-validate run will have no checks beyond the artifact write unless the actual changes differ."
   fi
 
   local tools_list extra_list all_tools=()
@@ -254,15 +278,20 @@ run_create() {
 
   print_status "Required tools: ${all_tools[*]+"${all_tools[*]}"}"
 
-  # --- build the ordered, repo-relative --path arguments for agent-validate --
+  # --- repo-relative path metadata recorded in the plan --------------------
+  #
+  # These lists are planning metadata only. They selected the required-tool
+  # preflight above and are written into the plan so the dispatch states where
+  # the work is expected to happen; they are NOT turned into agent-validate
+  # arguments. The dispatched subagent runs plain `agent-validate`, which asks
+  # Git for the actual changed files (including ones created during the work).
 
-  local ordered_paths=() normalized p resolved rel
-  normalized="${paths//,/ }"
-  for p in $normalized; do
+  local ordered_paths=() rel
+  for p in "${path_args[@]+"${path_args[@]}"}"; do
     [[ -z "$p" ]] && continue
     resolved="$(resolve_path "$p")"
     rel="$(realpath -m --relative-to="$repo_root" -- "$resolved")"
-    ordered_paths+=("$rel")
+    array_contains "$rel" "${ordered_paths[@]+"${ordered_paths[@]}"}" || ordered_paths+=("$rel")
   done
 
   if [[ ${#ordered_paths[@]} -eq 0 ]]; then
@@ -273,26 +302,25 @@ run_create() {
   # --new-paths: files/dirs the subagent is expected to CREATE, so they are
   # not required to exist yet (unlike --paths above) and are never run
   # through classify_paths/UNKNOWN_PATHS -- there's nothing on disk yet for
-  # it to classify. They're still resolved cwd-relative (or absolute) and
-  # converted to repo-relative the same way, then appended to the
-  # agent-validate --path arguments so agent-validate's own runtime
-  # re-classification (which happens once the subagent has actually created
-  # the files) picks them up.
+  # it to classify. They are still resolved cwd-relative (or absolute) and
+  # converted to repo-relative, then recorded as a separate list in the plan.
+  local -a new_planned_paths=()
   if [[ -n "$new_paths" ]]; then
-    local normalized_new
-    normalized_new="${new_paths//,/ }"
-    for p in $normalized_new; do
+    local -a new_path_args=()
+    read -r -a new_path_args <<<"${new_paths//,/ }"
+    for p in "${new_path_args[@]+"${new_path_args[@]}"}"; do
       [[ -z "$p" ]] && continue
       resolved="$(resolve_path "$p")"
       rel="$(realpath -m --relative-to="$repo_root" -- "$resolved")"
-      array_contains "$rel" "${ordered_paths[@]+"${ordered_paths[@]}"}" || ordered_paths+=("$rel")
+      array_contains "$rel" "${new_planned_paths[@]+"${new_planned_paths[@]}"}" || new_planned_paths+=("$rel")
     done
   fi
 
+  # The per-dispatch allow rule grants exactly this one command: plain
+  # `agent-validate`, with no arguments. Discovery of the changed files is
+  # agent-validate's own job at run time, so the rule stays short, stable, and
+  # independent of the dispatch's expected paths.
   local validate_cmd="agent-validate"
-  for p in "${ordered_paths[@]}"; do
-    validate_cmd+=" --path $(printf '%q' "$p")"
-  done
 
   # --- allocate a dispatch slot and grant it the exact-match allow rule -----
 
@@ -319,7 +347,7 @@ run_create() {
   done
 
   if [[ -z "$slot" ]]; then
-    print_error "All dispatch slots (IMPLEMENT-1..IMPLEMENT-$MAX_SLOTS) are taken. Wait for one to finish (its agent file is removed on completion by 'agent-stage --slot <n>'), or clean up a stale ${agents_dir}/IMPLEMENT-<n>.md yourself, then retry."
+    print_error "All dispatch slots (IMPLEMENT-1..IMPLEMENT-$MAX_SLOTS) are taken. Wait for one to finish (its agent file and plan file are removed on completion by 'agent-stage --slot <n>'), or clean up a stale ${agents_dir}/IMPLEMENT-<n>.md yourself, then retry."
     exit 1
   fi
 
@@ -331,21 +359,78 @@ run_create() {
   print_status "Allocated dispatch slot IMPLEMENT-$slot ($per_dispatch_file)"
   printf '%s\n' "$slot" >&2
 
-  # --- assemble the prompt ---------------------------------------------------
+  # --- write the plan file ---------------------------------------------------
 
-  {
+  # The complete plan goes to a fixed, shared path under /tmp (visible from
+  # the subagent's isolated worktree, unlike uncommitted repo files). Only
+  # that path is printed to stdout, so the dispatch prompt itself stays
+  # short. Written to a temp file in the same directory and then renamed, so
+  # a reader never sees a partially written plan.
+  local plan_dir="/tmp/pi-agent-plans"
+  local plan_file="$plan_dir/IMPLEMENT-$slot.md"
+  local plan_tmp=""
+
+  # Failing after the slot is allocated must not leak the slot: drop the
+  # per-dispatch agent definition we just created and any partial plan file.
+  abort_plan_write() {
+    print_error "Failed to write plan file '$plan_file': $1"
+    print_error "Releasing dispatch slot IMPLEMENT-$slot (removing '$per_dispatch_file'); nothing was dispatched."
+    rm -f -- "$per_dispatch_file"
+    if [[ -n "$plan_tmp" ]]; then
+      rm -f -- "$plan_tmp"
+    fi
+    exit 1
+  }
+
+  if ! mkdir -p -- "$plan_dir"; then
+    abort_plan_write "could not create '$plan_dir'"
+  fi
+
+  if ! plan_tmp="$(mktemp "$plan_dir/.IMPLEMENT-$slot.XXXXXX")"; then
+    abort_plan_write "could not create a temporary file in '$plan_dir'"
+  fi
+
+  if ! {
     printf '# Plan\n\n'
     printf '## Dispatch\n\n'
     # shellcheck disable=SC2016
-    printf -- 'Dispatch this prompt to subagent_type `IMPLEMENT-%s`. That subagent has\n' "$slot"
-    printf 'already been granted permission to run exactly one bash command -- the\n'
-    printf 'following, and no other -- as its only validation step:\n\n'
+    printf -- 'You are subagent_type `IMPLEMENT-%s`. Your dispatcher sent a short prompt\n' "$slot"
+    printf 'pointing at this file: read it in full before doing anything else. It IS\n'
+    printf 'your complete plan.\n\n'
+    printf 'That dispatch already granted you permission to run exactly one bash\n'
+    printf 'command -- the following, and no other -- as your only validation step:\n\n'
     # shellcheck disable=SC2016
     printf '```\n%s\n```\n\n' "$validate_cmd"
+    printf 'Run it verbatim from the worktree root, with no arguments. It discovers the\n'
     # shellcheck disable=SC2016
-    printf 'Run it verbatim from the repo root. It discovers its checks at run time\n'
-    printf 'by re-classifying the --path arguments above (directories are re-expanded),\n'
-    printf 'so files you create during the work are covered too.\n\n'
+    printf 'files to validate itself, via Git (tracked changes against HEAD plus\n'
+    # shellcheck disable=SC2016
+    printf 'untracked files, excluding `.agent/`), so files you create during the work\n'
+    printf 'are covered too. The planning paths below are metadata, never runtime\n'
+    printf 'arguments.\n\n'
+    printf '## Planning paths\n\n'
+    printf 'Planning metadata only: these paths drove the required-tool preflight and\n'
+    printf 'describe where the work is expected to happen. They are NOT passed to\n'
+    # shellcheck disable=SC2016
+    printf '`agent-validate`, which discovers the actual changed files itself. Every\n'
+    printf 'path below is repo-relative -- resolved from the working directory the\n'
+    printf 'dispatcher ran in, which is not necessarily the repo root.\n\n'
+    # shellcheck disable=SC2016
+    printf '`--paths` (expected to be touched):\n\n'
+    for p in "${ordered_paths[@]}"; do
+      # shellcheck disable=SC2016
+      printf -- '- `%s`\n' "$p"
+    done
+    printf '\n'
+    if [[ ${#new_planned_paths[@]} -gt 0 ]]; then
+      # shellcheck disable=SC2016
+      printf '`--new-paths` (expected to be created):\n\n'
+      for p in "${new_planned_paths[@]}"; do
+        # shellcheck disable=SC2016
+        printf -- '- `%s`\n' "$p"
+      done
+      printf '\n'
+    fi
     printf '## Context\n\n%s\n\n' "$context"
     printf '## Steps\n\n%s\n\n' "$steps"
     if [[ -n "$style_guide" ]]; then
@@ -368,12 +453,20 @@ run_create() {
     printf '\n## Definition of Done\n\n'
     printf -- '- The plan above is implemented.\n'
     # shellcheck disable=SC2016
-    printf -- '- `%s` (the exact command above, run verbatim) exits 0 and `.agent/validated.json` exists.\n' "$validate_cmd"
+    printf -- '- `agent-validate` (run verbatim, with no arguments) exits 0 and `.agent/validated.json` exists.\n'
     # shellcheck disable=SC2016
     printf -- '- Your final report includes the exit code of the last `agent-validate` run, the failure count, and whether the artifact was written.\n'
-  }
+  } >"$plan_tmp"; then
+    abort_plan_write "writing to '$plan_tmp' failed"
+  fi
 
-  print_status "Prompt assembled for subagent_type IMPLEMENT-$slot. Pass this script's stdout as the subagent dispatch prompt."
+  if ! mv -f -- "$plan_tmp" "$plan_file"; then
+    abort_plan_write "could not move '$plan_tmp' into place"
+  fi
+
+  print_status "Plan written to $plan_file (slot IMPLEMENT-$slot)"
+  print_status "Dispatch subagent_type IMPLEMENT-$slot with a short prompt telling it to read that file before doing anything else."
+  printf '%s\n' "$plan_file"
 }
 
 # --- secondary mode: frontmatter merge ------------------------------------

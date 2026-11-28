@@ -3,12 +3,13 @@
 # attach.sh, stop.sh, shell.sh, start-agent.sh): resolve_or_die/
 # resolve_stack_bin/validate_run_name/nono_state_dir/resolve_ca_bundle,
 # plus the live-file-sharing primitives (share_path_check, share_grant,
-# share_release and helpers, git_safe_dir_env, and the RUN_DIR/shared-paths
-# + RUN_DIR/workdir-path bookkeeping helpers) used to share -- and later
-# release -- the invoking user's workdir and every --add/--clone extra LIVE
-# at its real host path via ACLs, instead of copying it into a pi-owned
-# location. See each function's own comment below, and IMPLEMENTERS.md's
-# "Live file sharing" section for the full model.
+# share_release and helpers, git_safe_dir_env/git_author_identity_env, and
+# the RUN_DIR/shared-paths + RUN_DIR/workdir-path bookkeeping helpers) used
+# to share -- and later release -- the invoking user's workdir and every
+# --add/--clone extra LIVE at its real host path via ACLs, instead of
+# copying it into a pi-owned location. See each function's own comment
+# below, and IMPLEMENTERS.md's "Live file sharing" section for the full
+# model.
 #
 # Must be `source`d (not executed) by a caller that has already run
 # `set -euo pipefail` and defines PERSONAL_MONOREPO_LOCATION (same
@@ -32,6 +33,47 @@ STACK_DIR="$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"
 # section.
 SESSIONS_ROOT="${PI_STACK_SESSIONS_ROOT:-/tmp/pi-sessions}"
 
+# PI_USER_HOME: the `pi` user's actual home directory -- pi's real, pi-owned
+# /var/lib/pi (see nix/mono-flake's `_pi-user.nix`, which sets
+# `users.users.pi.home` to exactly this on both Linux and nix-darwin).
+# This is what every SANDBOXED process's $HOME must be set to
+# explicitly: `sudo -u pi` does not reset $HOME on its own, so without
+# this the sandboxed `pi`/(shell) process inherits the INVOKING user's
+# home (e.g. /Users/aidan) -- a directory `pi` cannot read, which also
+# makes Nix warn about a home directory it doesn't own. Distinct from
+# FIXED_PI_HOME below, which is pi's own `.pi` state dir WITHIN this
+# home, and from NIX_COMMAND_HOME below, the dedicated scratch home the
+# `nix` command's mediated sandbox uses instead. Host-side work (the
+# launcher's own clone cache, the share_path_check "your entire $HOME"
+# guard, git credentials, ACL handling) must keep using the INVOKING
+# user's $HOME, never this.
+# NOT overridable via env -- pi's home is a flake-owned fact, not a
+# per-launch choice.
+# shellcheck disable=SC2034 # used by scripts that `source` this file
+# (start-agent.sh, shell.sh), not by this file itself.
+PI_USER_HOME="/var/lib/pi"
+
+# NIX_COMMAND_HOME: the THIRD home in this stack, used ONLY by the `nix`
+# command's own mediated sandbox (`profiles/work.base.json`'s
+# command_policies nix sandbox, via `environment.set_vars.HOME`) -- never
+# exported to `pi`, to `shell.sh`'s bash, or to the `--detached`
+# supervisor. Distinct from PI_USER_HOME (the payload's real home, above)
+# and from the invoking user's inherited HOME (which nono itself keeps).
+# Rationale: a nono COMMAND sandbox does not inherit the session's CWD
+# access, broad profile groups, or filesystem grants -- it starts from a
+# minimal runtime baseline -- so a nix process there can neither stat
+# /var/lib/pi nor getcwd() when working inside an implementation worktree
+# under /tmp. Pointing its HOME at a dedicated, pi-owned scratch dir (and
+# granting exactly that path, see work.base.json) keeps the flake
+# evaluator away from pi's real home (auth state, agent config) while
+# giving it somewhere writable to exist. Created by start-agent.sh
+# alongside its other pi-owned dirs, and re-created by shell.sh so a
+# shell session stays usable after /tmp was cleaned. NOT overridable via
+# env -- a flake-owned path, like PI_USER_HOME.
+# shellcheck disable=SC2034 # used by scripts that `source` this file
+# (start-agent.sh, shell.sh), not by this file itself.
+NIX_COMMAND_HOME="/tmp/pi-nix-home"
+
 # FIXED_AGENT_DIR / FIXED_PI_HOME: ONE persistent, shared PI_CODING_AGENT_DIR
 # for every start-agent.sh/shell.sh session -- replaces the old per-run
 # <RUNS_ROOT>/<name>/pi/agent tree. Never deleted by any script in this
@@ -39,11 +81,11 @@ SESSIONS_ROOT="${PI_STACK_SESSIONS_ROOT:-/tmp/pi-sessions}"
 # step); this is what makes `pi --resume` keep working across launches
 # now that sessions no longer each get their own state tree. Mirrors pi's
 # own default ($HOME/.pi/agent) under the `pi` user's actual home
-# (/var/lib/pi), on the theory that this is the path pi's own code (e.g.
-# the web-search feature) most likely assumes a sibling
-# web-search.json lives next to -- an inference, since pi's own source
-# isn't vendored in this checkout. NOT overridable via env -- this is a
-# flake-owned, fixed location, not a per-launch choice.
+# ($PI_USER_HOME, i.e. /var/lib/pi), on the theory that this is the path
+# pi's own code (e.g. the web-search feature) most likely assumes a
+# sibling web-search.json lives next to -- an inference, since pi's own
+# source isn't vendored in this checkout. NOT overridable via env -- this
+# is a flake-owned, fixed location, not a per-launch choice.
 FIXED_PI_HOME="/var/lib/pi/.pi"
 # shellcheck disable=SC2034 # used by scripts that `source` this file
 # (start-agent.sh, shell.sh), not by this file itself.
@@ -790,35 +832,100 @@ share_read_workdir_path() {
   sudo -u pi cat "$run_dir/workdir-path" 2>/dev/null || true
 }
 
-# --- git safe.directory plumbing ---------------------------------------
-# `pi` and the invoking user are different uids sharing the same live
-# path, which trips git's ownership mismatch guard ("detected dubious
-# ownership") on the `pi` side (the path is owned by the invoking user,
-# not `pi`) -- `safe.directory` entries fed in via GIT_CONFIG_* env vars
-# (never a written .gitconfig, which would need its own grant/ownership
-# story) sidestep that without editing either user's actual git config.
+# --- git config plumbing (safe.directory + forwarded author identity) --
+# Two separate problems, both solved the same way: config fed to git via
+# GIT_CONFIG_* environment variables, never a written .gitconfig (which
+# would need its own grant/ownership story), and never by editing either
+# user's actual git config.
+#
+#   1. `pi` and the invoking user are different uids sharing the same live
+#      path, which trips git's ownership mismatch guard ("detected
+#      dubious ownership") on the `pi` side (the path is owned by the
+#      invoking user, not `pi`) -- `safe.directory` entries sidestep that
+#      (git_safe_dir_env).
+#   2. Every sandboxed process runs with HOME=$PI_USER_HOME (see
+#      IMPLEMENTERS.md's "Sandbox HOME and the Go toolchain env"
+#      section), so the INVOKING user's global git config is not visible
+#      inside the sandbox and a commit in a shared worktree would fail
+#      with "Author identity unknown". The invoking repository's effective
+#      user.name/user.email are therefore resolved host-side, as the
+#      invoking user and BEFORE sudo/nono, and forwarded the same way
+#      (git_author_identity_env).
 
-# git_safe_dir_env PATH...: exports GIT_CONFIG_COUNT plus one
-# GIT_CONFIG_KEY_i=safe.directory / GIT_CONFIG_VALUE_i=<path> pair per
-# PATH, starting AFTER any GIT_CONFIG_COUNT already exported on this
-# process (so repeated/combined calls never clobber each other), and
-# exposes every var name it just exported (including GIT_CONFIG_COUNT
-# itself) via the global array GIT_SAFE_DIR_ENV_VARS, so callers can fold
-# them into a `sudo --preserve-env=...` list.
+# GIT_SAFE_DIR_ENV_VARS: every GIT_CONFIG_* variable name exported by the
+# helpers below (deduped), so callers can fold them into a
+# `sudo --preserve-env=...` list. Despite the name (kept for its original,
+# safe.directory-only purpose), it now tracks the identity pairs too.
 GIT_SAFE_DIR_ENV_VARS=()
+
+# _git_env_var_track VAR: appends VAR to GIT_SAFE_DIR_ENV_VARS unless it's
+# already listed -- more than one config pair tracks GIT_CONFIG_COUNT, and
+# a preserve-env list gains nothing from repeating a name.
+_git_env_var_track() {
+  local var="$1" seen
+  for seen in "${GIT_SAFE_DIR_ENV_VARS[@]:-}"; do
+    [ "$seen" = "$var" ] && return 0
+  done
+  GIT_SAFE_DIR_ENV_VARS+=("$var")
+}
+
+# _git_config_env_pair KEY VALUE: exports one GIT_CONFIG_KEY_i=KEY /
+# GIT_CONFIG_VALUE_i=VALUE pair, i being the CURRENT GIT_CONFIG_COUNT -- so
+# successive calls (and any GIT_CONFIG_* state the caller already exported)
+# append instead of clobbering each other -- bumps GIT_CONFIG_COUNT, and
+# tracks every exported name via _git_env_var_track.
+_git_config_env_pair() {
+  local key="$1" value="$2" idx="${GIT_CONFIG_COUNT:-0}"
+  export "GIT_CONFIG_KEY_${idx}=$key"
+  export "GIT_CONFIG_VALUE_${idx}=$value"
+  export GIT_CONFIG_COUNT=$((idx + 1))
+  _git_env_var_track "GIT_CONFIG_KEY_${idx}"
+  _git_env_var_track "GIT_CONFIG_VALUE_${idx}"
+  _git_env_var_track GIT_CONFIG_COUNT
+}
+
+# git_safe_dir_env PATH...: exports one GIT_CONFIG_KEY_i=safe.directory /
+# GIT_CONFIG_VALUE_i=<path> pair per PATH, starting AFTER any
+# GIT_CONFIG_COUNT already exported on this process (so repeated/combined
+# calls never clobber each other), and exposes every var name it exported
+# via the global array GIT_SAFE_DIR_ENV_VARS, so callers can fold them
+# into a `sudo --preserve-env=...` list.
 git_safe_dir_env() {
-  local start_count="${GIT_CONFIG_COUNT:-0}" i=0 idx path
+  local path
   GIT_SAFE_DIR_ENV_VARS=()
   for path in "$@"; do
     [ -n "$path" ] || continue
-    idx=$((start_count + i))
-    export "GIT_CONFIG_KEY_${idx}=safe.directory"
-    export "GIT_CONFIG_VALUE_${idx}=$path"
-    GIT_SAFE_DIR_ENV_VARS+=("GIT_CONFIG_KEY_${idx}" "GIT_CONFIG_VALUE_${idx}")
-    i=$((i + 1))
+    _git_config_env_pair safe.directory "$path"
   done
-  if [ "$i" -gt 0 ]; then
-    export GIT_CONFIG_COUNT=$((start_count + i))
-    GIT_SAFE_DIR_ENV_VARS+=("GIT_CONFIG_COUNT")
+}
+
+# git_author_identity_env REPO_PATH: resolves REPO_PATH's EFFECTIVE git
+# author identity (repo-local user.name/user.email first, then the
+# invoking user's global/system config -- which is only readable because
+# this runs as the invoking user, host-side, before sudo/nono) and exports
+# it as the next GIT_CONFIG_KEY_i/VALUE_i pairs, tracked in
+# GIT_SAFE_DIR_ENV_VARS alongside safe.directory. Must be called AFTER
+# git_safe_dir_env (which resets that array) and after any caller-supplied
+# GIT_CONFIG_* state, so its entries come last and win.
+#
+# Fails early and loudly if either value is missing, instead of letting a
+# later `git commit` inside the sandbox die with "Author identity
+# unknown": with the sandbox's HOME being the pi user's own, the invoking
+# user's ~/.gitconfig simply isn't visible there, so an identity that
+# exists only in global config would never reach the sandbox.
+git_author_identity_env() {
+  local repo="${1:?git_author_identity_env requires a REPO_PATH}"
+  local name email
+  name="$(git -C "$repo" config --get user.name 2>/dev/null || true)"
+  email="$(git -C "$repo" config --get user.email 2>/dev/null || true)"
+  if [ -z "$name" ] || [ -z "$email" ]; then
+    echo "error: cannot resolve a git author identity from $repo (user.name='$name', user.email='$email')." >&2
+    echo "       The sandboxed 'pi' user runs with its own \$HOME, so your global git config is not visible inside the sandbox -- set the identity this repository should use, e.g.:" >&2
+    echo "         git -C '$repo' config user.name 'Your Name'" >&2
+    echo "         git -C '$repo' config user.email 'you@example.com'" >&2
+    echo "       (or set both in your own ~/.gitconfig), then run this again." >&2
+    exit 1
   fi
+  _git_config_env_pair user.name "$name"
+  _git_config_env_pair user.email "$email"
 }

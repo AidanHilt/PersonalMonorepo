@@ -162,6 +162,63 @@ let
   };
 
   ##############################################################################
+  # 3b. go vet
+  #
+  # `vet` is the build-time half of this flake's checks (see flake.nix):
+  # `go vet ./...` over the whole module, run against the same vendored module
+  # graph `crds`/`rbac` above use, so a compile error or a vet diagnostic fails
+  # `nix build .#checks.<system>.agent-validate` — rather than only surfacing
+  # when someone happens to run `go vet` by hand. Like `crds`/`rbac`, it is
+  # wired up here (not in flake.nix) so that adding an operator directory
+  # remains the only step needed to get it checked
+  # (`checks.<system>.${name}-vet` is derived from the operator list).
+  #
+  # It follows the `crds` recipe exactly, for the reasons given in section 3
+  # above: `go vet ./...` needs a `go` binary *and* resolvable module
+  # dependencies on GOPATH, not just a compiler, so this is a plain
+  # stdenv.mkDerivation that copies `binary.goModules` (the vendor directory
+  # buildGoModule produces for `binary`, keyed off the same go.sum /
+  # vendor-hash.nix) into ./vendor, makes it writable, and sets
+  # GOFLAGS=-mod=vendor, GOPROXY=off, and HOME/GOCACHE under $TMPDIR so `go`
+  # resolves dependencies from that vendor copy instead of trying (and
+  # failing, sandboxed) to reach the network or write outside the build
+  # sandbox.
+  #
+  # `controller-gen object` runs first for the same reason `crds` runs it
+  # first: vet type-checks the whole package graph, and the api types only
+  # satisfy runtime.Object (and so type-check) once their generated
+  # DeepCopyObject methods exist. Without it, vet fails while loading packages
+  # instead of reporting actual diagnostics.
+  #
+  # Unlike `crds`/`rbac`, this derivation has no useful output — it exists
+  # only to fail when the operator does not vet cleanly — so `$out` is just
+  # an empty marker directory (the same empty-output-marker trick the checks
+  # aggregate in flake.nix uses).
+  ##############################################################################
+  vet = pkgs.stdenv.mkDerivation {
+    name = "${name}-vet";
+    inherit src;
+    nativeBuildInputs = [
+      pkgs.kubernetes-controller-tools
+      pkgs.go
+    ];
+    buildPhase = ''
+      runHook preBuild
+      cp -r ${binary.goModules} vendor
+      chmod -R u+w vendor
+      export GOFLAGS=-mod=vendor
+      export GOPROXY=off
+      export HOME=$TMPDIR
+      export GOCACHE=$TMPDIR/go-cache
+      controller-gen object paths=./api/...
+      go vet ./...
+      mkdir -p $out
+      runHook postBuild
+    '';
+    dontInstall = true;
+  };
+
+  ##############################################################################
   # 4. Image
   #
   # imageTag is an interim placeholder equal to chartVersion (see "Chart
@@ -271,6 +328,7 @@ in
     binary
     crds
     rbac
+    vet
     image
     chart
     ;

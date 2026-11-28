@@ -45,6 +45,7 @@
     "allow_domain": [
       "pi.dev",
       "ollama.com",
+      "proxy.golang.org",
       "auth.openai.com",
       "github.com",
       "api.github.com",
@@ -145,14 +146,18 @@
               ],
               "fs_read": [
                 "/nix/store",
-                "/nix/var/nix"
+                "/nix/var/nix",
+                "@git:toplevel",
+                "@git:common-dir"
               ],
               "fs_write": [
                 "$WORKDIR",
-                "$HOME/.cache"
+                "/tmp/pi-nix-home",
+                "@git:toplevel"
               ],
               "network": {
                 "allow_domain": [
+                  "proxy.golang.org",
                   "github.com",
                   "api.github.com",
                   "codeload.github.com",
@@ -178,6 +183,7 @@
                   "GIT_CONFIG_VALUE_*"
                 ],
                 "set_vars": {
+                  "HOME": "/tmp/pi-nix-home",
                   "NIX_REMOTE": "daemon",
                   "NIX_CONFIG": "experimental-features = nix-command flakes"
                 }
@@ -227,6 +233,14 @@
                     ]
                   },
                   "reason": "nix flake show is read-only introspection"
+                },
+                {
+                  "argv": {
+                    "prefix": [
+                      "--version"
+                    ]
+                  },
+                  "reason": "nix --version is read-only version reporting required for agent-validate artifacts"
                 }
               ],
               "deny": [

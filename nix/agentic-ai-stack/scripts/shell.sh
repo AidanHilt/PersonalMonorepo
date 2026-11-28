@@ -210,6 +210,8 @@ if [ "$DRY_RUN" = "1" ]; then
   echo "  bash:          $BASH_BIN" >&2
   echo "  run dir:       $RUN_DIR" >&2
   echo "  state dir:     $STATE_DIR" >&2
+  echo "  nono process HOME:  $HOME (inherited untouched -- nono's own environment is never rewritten)" >&2
+  echo "  payload HOME:   $PI_USER_HOME (the 'pi' user's own home; assigned to the bash command nono launches, never to nono itself. The invoking user's HOME=$HOME stays host-side only.)" >&2
   echo "  session name:  $SESSION_NAME" >&2
   echo "  run profile:   $RUN_PROFILE (must already exist -- start the run with 'nix run .#start-agent' first)" >&2
   echo "  shell profile: $SHELL_PROFILE (a copy of the run profile with only its webhook URL rewritten)" >&2
@@ -219,11 +221,23 @@ if [ "$DRY_RUN" = "1" ]; then
   echo "  extra PATH prefix: ${EXTRA_PATH:-<none>}" >&2
   echo >&2
   echo "Resolved command (would run as the 'pi' user):" >&2
-  echo "  sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS,<git safe.directory vars> -- \\" >&2
+  echo "  sudo -u pi --preserve-env=PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS,<git config vars> -- \\" >&2
+  echo "    (<git config vars> = safe.directory for every shared path, plus the run's repository author identity user.name/user.email -- both resolved from the recorded workdir once it is read, i.e. not in --dry-run)" >&2
   echo "    sh -c \"cd \\\"\$1\\\"; shift; export PATH=\\\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\\\"; exec \\\"\$@\\\"\" sh <recorded workdir> \\" >&2
-  echo "    $NONO_BIN run --profile $SHELL_PROFILE --allow-cwd --name $SESSION_NAME -- $BASH_BIN -i" >&2
+  echo "    $NONO_BIN run --profile $SHELL_PROFILE --allow-cwd --name $SESSION_NAME -- \\" >&2
+  echo "      sh -c \"export HOME=\\\"$PI_USER_HOME\\\"; exec \\\"\$@\\\"\" sh $BASH_BIN -i" >&2
   exit 0
 fi
+
+# NIX_COMMAND_HOME: the HOME (and the one exact fs_write grant) of the
+# `nix` command's own mediated sandbox inside a session -- see
+# profiles/work.base.json and IMPLEMENTERS.md's "Nix daemon access".
+# start-agent.sh creates it too, but its location is under /tmp, so a
+# tmp-cleaner sweep between the main launch and this shell would leave the
+# sandboxed nix command with a HOME that doesn't exist and (worse) a
+# getcwd() it can't resolve. Creating it here keeps a shell session usable
+# on its own; `mkdir -p` is idempotent, so the normal path is a no-op.
+sudo -u pi mkdir -p "$NIX_COMMAND_HOME"
 
 if ! sudo -u pi test -f "$RUN_PROFILE"; then
   echo "error: run '$NAME' has no profile.json -- start it with start-agent first" >&2
@@ -255,6 +269,23 @@ fi
 for shared_path in "${SHARED_PATHS[@]}"; do
   share_path_check "$shared_path" >/dev/null
 done
+# git_safe_dir_env/git_author_identity_env: register every shared path as
+# a git safe.directory for `pi`, and forward this run's repository author
+# identity (user.name/user.email) the same way -- the sandboxed process
+# runs with the pi user's own $HOME, so the invoking user's global git
+# config is not visible there, and without the identity a commit inside
+# the sandbox fails with "Author identity unknown". Resolved here as the
+# invoking user, before sudo, and threaded through `sudo --preserve-env`
+# below (GIT_CONFIG_* is already allow-listed in the profile). Deliberately
+# BEFORE the grants below, so a missing identity fails without leaving any
+# ACL entry behind.
+git_safe_dir_env "${SHARED_PATHS[@]}"
+git_author_identity_env "$WORKDIR"
+PRESERVE_LIST="PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS"
+for git_safe_dir_var in "${GIT_SAFE_DIR_ENV_VARS[@]:-}"; do
+  [ -n "$git_safe_dir_var" ] || continue
+  PRESERVE_LIST="$PRESERVE_LIST,$git_safe_dir_var"
+done
 # Granted in order; if any grant fails partway through, everything
 # granted so far for this shell session is released again
 # (best-effort, interactive sudo allowed -- this script still owns a
@@ -272,12 +303,6 @@ for shared_path in "${SHARED_PATHS[@]}"; do
     exit 1
   fi
   GRANTED_PATHS+=("$shared_path")
-done
-git_safe_dir_env "${SHARED_PATHS[@]}"
-PRESERVE_LIST="PI_CODING_AGENT_DIR,XDG_STATE_HOME,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS"
-for git_safe_dir_var in "${GIT_SAFE_DIR_ENV_VARS[@]:-}"; do
-  [ -n "$git_safe_dir_var" ] || continue
-  PRESERVE_LIST="$PRESERVE_LIST,$git_safe_dir_var"
 done
 
 # --- Approval helper: this shell gets its OWN helper, independent of the
@@ -380,7 +405,23 @@ export SSL_CERT_FILE="$CA_BUNDLE"
 export NIX_SSL_CERT_FILE="$CA_BUNDLE"
 export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
 
-echo "==> Starting a bash shell inside nono as 'pi' (session: $SESSION_NAME)..." >&2
+echo "==> Starting a bash shell inside nono as 'pi' (session: $SESSION_NAME, nono HOME: $HOME, payload HOME: $PI_USER_HOME)..." >&2
+# The OUTER wrapper deliberately does NOT touch HOME: nono itself must keep
+# inheriting the invoking user's $HOME. nono protects BOTH its legacy
+# $HOME/.nono root and its current $XDG_STATE_HOME/nono root, so assigning
+# HOME="$PI_USER_HOME" before nono starts would also create the legacy
+# protected root /var/lib/pi/.nono (/private/var/lib/pi/.nono on macOS),
+# which overlaps system_read_macos' /private/var grant and makes nono
+# refuse to initialize. allow_parent_of_protected is not an acceptable fix
+# (macOS-only). The INNER wrapper below therefore assigns HOME only to the
+# bash payload nono launches -- so the sandboxed shell still sees the
+# pi-owned home (`sudo -u pi` does not reset $HOME on its own), while
+# nothing on the invoking-user side exports it either: this script's own
+# host-side work (share_path_check's "entire $HOME" guard in particular)
+# still sees the invoking user's real $HOME. See IMPLEMENTERS.md's
+# "Sandbox HOME and the Go toolchain env" section, and start-agent.sh's
+# foreground launch for the same split.
 sudo -u pi --preserve-env="$PRESERVE_LIST" -- \
   sh -c "cd \"\$1\"; shift; export PATH=\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\"; exec \"\$@\"" sh "$WORKDIR" \
-  "$NONO_BIN" run --profile "$SHELL_PROFILE" --allow-cwd --name "$SESSION_NAME" -- "$BASH_BIN" -i
+  "$NONO_BIN" run --profile "$SHELL_PROFILE" --allow-cwd --name "$SESSION_NAME" -- \
+  sh -c "export HOME=\"$PI_USER_HOME\"; exec \"\$@\"" sh "$BASH_BIN" -i

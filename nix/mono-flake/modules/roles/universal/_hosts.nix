@@ -16,12 +16,6 @@
     "192.168.86.5" = [ "gaming-pc-node.lan" ];
     "192.168.86.6" = [ "laptop-node.lan" ];
 
-    # =====================
-    # 2-node laptop cluster
-    # =====================
-    "192.168.86.20" = [ "laptop-cluster-1.lan" ];
-    "192.168.86.21" = [ "laptop-cluster-2.lan" ];
-
     # =========================
     # 3-node VM staging cluster
     # =========================
@@ -34,8 +28,6 @@
     # =========================
     "192.168.86.22" = [ "*.staging-cluster-node-lb.lan" ];
     "192.168.86.23" = [ "*.staging-cluster-lb.lan" ];
-    "192.168.86.18" = [ "*.laptop-cluster-node-lb.lan" ];
-    "192.168.86.19" = [ "*.laptop-cluster-lb.lan" ];
     "172.20.255.200" = [ "*.qa-cluster-lb.lan" ];
   };
 }

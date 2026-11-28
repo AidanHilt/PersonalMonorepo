@@ -51,10 +51,11 @@ set -euo pipefail
 # config/agent/ is instead streamed in via a tar pipe (see tar_copy_to_pi
 # below), so it doesn't need to be `pi`-readable in place either.
 #
-# Sources lib-common.sh for STACK_DIR/SESSIONS_ROOT/FIXED_AGENT_DIR and
-# the resolve_or_die/resolve_stack_bin/validate_run_name/nono_state_dir/
-# nono_state_wipe_preserving_audit/resolve_ca_bundle/share_*/
-# git_safe_dir_env helpers.
+# Sources lib-common.sh for STACK_DIR/SESSIONS_ROOT/FIXED_AGENT_DIR/
+# PI_USER_HOME/NIX_COMMAND_HOME and the resolve_or_die/resolve_stack_bin/
+# validate_run_name/nono_state_dir/nono_state_wipe_preserving_audit/
+# resolve_ca_bundle/share_*/git_safe_dir_env/git_author_identity_env
+# helpers.
 : "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
 # shellcheck source=lib-common.sh
 # shellcheck disable=SC1091
@@ -66,16 +67,24 @@ GEN_PROFILE_SH="$STACK_DIR/scripts/gen-profile.sh"
 BASE_PROFILE="$STACK_DIR/profiles/work.base.json"
 CONFIG_AGENT_DIR="$STACK_DIR/config/agent"
 CONFIG_WEB_SEARCH="$STACK_DIR/config/web-search.json"
-# GOCACHE/GOPATH: `pi`'s HOME is /Users/aidan (see IMPLEMENTERS.md's "Go
-# toolchain env" section), so Go's own $HOME-relative defaults
-# ($HOME/Library/Caches/go-build, $HOME/go) point at a directory `pi`
-# cannot access on macOS, and `go build`/`go fmt` fail outright
-# ("failed to initialize build cache ... mkdir /Users/aidan/Library:
-# file exists"). Pinned to pi-writable locations instead: GOCACHE under
-# a dedicated, explicitly-granted path (not under $FIXED_PI_HOME, so it
+# GOCACHE/GOPATH: kept EXPLICIT (rather than left to Go's own
+# $HOME-relative defaults) so cache/module locations stay deterministic
+# and independent of $HOME -- the sandboxed `pi` process's HOME is always
+# the pi-owned $PI_USER_HOME (lib-common.sh; assigned to the PAYLOAD nono
+# launches -- see the foreground launch and the --detached supervisor
+# below -- never to the nono process itself, which deliberately keeps
+# inheriting the invoking user's HOME), which keeps Nix from warning
+# about a home directory it doesn't own and makes Go's defaults
+# pi-readable too, but pinning them anyway means a future HOME change can
+# never silently relocate the build cache or module cache out from under
+# an existing grant. GOCACHE lives under a
+# dedicated, explicitly-granted path (not under $FIXED_PI_HOME, so it
 # needs its own --add, see EXTRA_GEN_ARGS below), GOPATH (and so
 # GOMODCACHE, which defaults to $GOPATH/pkg/mod) under $FIXED_PI_HOME,
-# which is already granted whole.
+# which is already granted whole. Host-side work in this script keeps
+# using the INVOKING user's $HOME (clone cache, share_path_check's own
+# "entire $HOME" guard) -- only the sandboxed process gets
+# $PI_USER_HOME.
 GO_CACHE_DIR="/var/lib/pi/Library/Caches"
 GO_PATH_DIR="$FIXED_PI_HOME/go"
 
@@ -194,8 +203,12 @@ Live file sharing (workdir, --add, --clone):
   before that teardown runs (e.g. a crash), run `nix run .#stop --
   <name>` afterwards to finish restoring ownership/ACLs. A git repo
   shared this way is also registered as a `safe.directory` for both you
-  and `pi` (via GIT_CONFIG_* env vars, never a written .gitconfig), since
-  git refuses to operate in a directory it doesn't own by default.
+  and `pi`, and your effective author identity for it (user.name/
+  user.email, resolved from that repo's own config plus your git config)
+  is forwarded into the sandbox -- both via GIT_CONFIG_* env vars, never a
+  written .gitconfig -- since git refuses to operate in a directory it
+  doesn't own by default, and the sandboxed `pi` user's own $HOME means
+  your global git config is not readable there.
 
 Idempotent per-run seeding / --resume:
   Every launch re-syncs the ONE fixed, shared /var/lib/pi/.pi/agent/
@@ -409,13 +422,21 @@ done
 # git_safe_dir_env: registers every shared path as a git safe.directory
 # for both the invoking user and `pi` (harmless for paths that aren't
 # git repos at all -- git simply never consults an irrelevant
-# safe.directory entry). The resulting GIT_CONFIG_* vars are threaded
-# through `sudo --preserve-env` below so they reach the `pi` process
-# sudo starts, and profiles/work.base.json allow-lists GIT_CONFIG_COUNT/
-# GIT_CONFIG_KEY_*/GIT_CONFIG_VALUE_* (top-level environment.allow_vars
-# and the nix command's sandboxed environment.allow_vars) so they also
-# reach the sandboxed `pi` process itself.
+# safe.directory entry). git_author_identity_env then forwards this
+# repo's effective author identity (user.name/user.email) the same way,
+# because the sandboxed process runs with the pi user's own $HOME and so
+# cannot see the invoking user's global git config -- without it, a
+# worktree commit inside the sandbox fails with "Author identity
+# unknown". Both fail early here, host-side and before any sudo/nono, if
+# the identity can't be resolved. The resulting GIT_CONFIG_* vars are
+# threaded through `sudo --preserve-env` below so they reach the `pi`
+# process sudo starts (foreground and --detached alike), and
+# profiles/work.base.json allow-lists GIT_CONFIG_COUNT/GIT_CONFIG_KEY_*/
+# GIT_CONFIG_VALUE_* (top-level environment.allow_vars and the nix
+# command's sandboxed environment.allow_vars) so they also reach the
+# sandboxed `pi` process itself.
 git_safe_dir_env "${SHARE_PATHS[@]}"
+git_author_identity_env "$WORKDIR"
 
 # --- Secrets: namespace scan first, then --secret flags (flags win) -------
 # Collected as real exported env vars on THIS process (never as `-e`/argv
@@ -518,6 +539,8 @@ if [ "$DRY_RUN" = "1" ]; then
   echo "  pi:                  $PI_BIN" >&2
   echo "  session name:        $SESSION_NAME" >&2
   echo "  workdir (live-shared): $WORKDIR" >&2
+  echo "  nono process HOME:   $HOME (inherited untouched -- nono's own environment is never rewritten)" >&2
+  echo "  payload HOME:        $PI_USER_HOME (the 'pi' user's own home; assigned to the command nono launches, never to nono itself. The invoking user's HOME=$HOME stays host-side only.)" >&2
   echo "  read roots:          ${READ_ROOTS[*]}" >&2
   echo "  CA bundle:           $CA_BUNDLE (parent dir $CA_BUNDLE_DIR read-granted)" >&2
   echo "  extra packages:      ${EXTRA_PKGS:-<none>}" >&2
@@ -525,6 +548,7 @@ if [ "$DRY_RUN" = "1" ]; then
   echo "  --add (live-shared): ${ADD_PATHS[*]:-<none>}" >&2
   echo "  --clone (live-shared, as --add): ${CLONE_PATHS[*]:-<none>}" >&2
   echo "  secrets (names only, values redacted): ${SECRET_NAMES[*]:-<none>}" >&2
+  echo "  git config (GIT_CONFIG_* env): safe.directory for every shared path, plus the author identity (user.name/user.email) resolved from $WORKDIR" >&2
   echo >&2
   echo "Live-sharing actions that would be run for each of: ${SHARE_PATHS[*]}" >&2
   case "$(uname -s)" in
@@ -542,12 +566,14 @@ if [ "$DRY_RUN" = "1" ]; then
   nono_run_line="  $NONO_BIN run --profile $SESSIONS_ROOT/$SESSION_NAME/profile.json --allow-cwd"
   [ "$AUDIT_FLAG" = "1" ] && nono_run_line="$nono_run_line --audit-integrity"
   [ "$DETACHED_FLAG" = "1" ] && nono_run_line="$nono_run_line --detached"
-  nono_run_line="$nono_run_line --name $SESSION_NAME -- $PI_BIN"
-  [ "$RESUME_FLAG" = "1" ] && nono_run_line="$nono_run_line --resume"
+  nono_run_line="$nono_run_line --name $SESSION_NAME --"
+  payload_line="sh -c \"export HOME=\\\"$PI_USER_HOME\\\"; exec \\\"\$@\\\"\" sh $PI_BIN"
+  [ "$RESUME_FLAG" = "1" ] && payload_line="$payload_line --resume"
   {
     echo "  sudo -u pi --preserve-env=$PRESERVE_LIST -- \\"
     echo "    sh -c \"cd \\\"\$1\\\"; shift; export PATH=\\\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\\\"; exec \\\"\$@\\\"\" sh $WORKDIR \\"
-    echo "$nono_run_line"
+    echo "    $nono_run_line \\"
+    echo "      $payload_line"
   } >&2
   exit 0
 fi
@@ -612,7 +638,13 @@ write_as_pi() {
 }
 
 echo "==> Seeding the shared agent dir $AGENT_DIR and this session's own transient state under $RUN_DIR (idempotent -- existing pi/session state is kept)..." >&2
-sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$STATE_DIR/sessions" "$NONO_STATE_DIR" "$GO_CACHE_DIR" "$GO_PATH_DIR"
+# NIX_COMMAND_HOME is included here even though nothing this launcher runs
+# uses it directly: it is the HOME (and the one exact fs_write grant) of
+# the `nix` command's own mediated sandbox inside the session (see
+# profiles/work.base.json and IMPLEMENTERS.md's "Nix daemon access"). That
+# sandbox inherits none of this session's grants, so the directory has to
+# exist, pi-owned, before `pi` can run `nix` at all.
+sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$STATE_DIR/sessions" "$NONO_STATE_DIR" "$GO_CACHE_DIR" "$GO_PATH_DIR" "$NIX_COMMAND_HOME"
 
 # --- Live file sharing: grant, then record what was granted ---------------
 # Every path in $SHARE_PATHS was already checked (share_path_check, see
@@ -762,13 +794,30 @@ if [ "$DETACHED_FLAG" != "1" ]; then
 
   NONO_ARGS=(run --profile "$RUN_DIR/profile.json" --allow-cwd)
   [ "$AUDIT_FLAG" = "1" ] && NONO_ARGS+=(--audit-integrity)
-  NONO_ARGS+=(--name "$SESSION_NAME" -- "$PI_BIN")
-  [ "$RESUME_FLAG" = "1" ] && NONO_ARGS+=(--resume)
+  NONO_ARGS+=(--name "$SESSION_NAME" --)
+  # PAYLOAD_ARGS: the command nono itself launches -- a second, inner
+  # `sh -c` wrapper (the OUTER one below only pins cwd + PATH) that
+  # assigns HOME for the payload alone. HOME is deliberately NOT assigned
+  # before nono starts: nono protects BOTH its legacy $HOME/.nono root AND
+  # its current $XDG_STATE_HOME/nono root, so exporting HOME="$PI_USER_HOME"
+  # here would also create the legacy protected root /var/lib/pi/.nono
+  # (resolved /private/var/lib/pi/.nono on macOS), which overlaps
+  # system_read_macos' /private/var grant -- and nono then refuses to
+  # initialize at all. allow_parent_of_protected is not an acceptable fix,
+  # it is macOS-only. See IMPLEMENTERS.md's "Sandbox HOME and the Go
+  # toolchain env" section.
+  PAYLOAD_ARGS=(sh -c "export HOME=\"$PI_USER_HOME\"; exec \"\$@\"" sh "$PI_BIN")
+  [ "$RESUME_FLAG" = "1" ] && PAYLOAD_ARGS+=(--resume)
 
-  echo "==> Starting nono as 'pi' (session: $SESSION_NAME)..." >&2
+  echo "==> Starting nono as 'pi' (session: $SESSION_NAME, nono HOME: $HOME, payload HOME: $PI_USER_HOME)..." >&2
+  # The outer wrapper deliberately does NOT touch HOME: `sudo -u pi` does
+  # not reset $HOME on its own, so nono inherits whatever HOME this
+  # launcher has (the invoking user's -- host-side code above still needs
+  # it, and nono's own protected roots must stay where they already are).
+  # Only the payload's HOME is rewritten, inside PAYLOAD_ARGS above.
   sudo -u pi --preserve-env="$PRESERVE_LIST" -- \
     sh -c "cd \"\$1\"; shift; export PATH=\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\"; exec \"\$@\"" sh "$WORKDIR" \
-    "$NONO_BIN" "${NONO_ARGS[@]}"
+    "$NONO_BIN" "${NONO_ARGS[@]}" "${PAYLOAD_ARGS[@]}"
   exit $?
 fi
 
@@ -850,6 +899,17 @@ TMP_PROFILE="\$(mktemp)"
 cp "\$TMP_PROFILE" "$RUN_DIR/profile.json"
 rm -f "\$TMP_PROFILE"
 
+# NOTE: HOME is deliberately NOT assigned here (unlike
+# PI_CODING_AGENT_DIR/XDG_STATE_HOME/... below). This nono process must
+# keep inheriting the invoking user's HOME, because nono protects BOTH
+# its legacy \$HOME/.nono root and its current \$XDG_STATE_HOME/nono root:
+# exporting HOME="$PI_USER_HOME" here would create the legacy protected
+# root /var/lib/pi/.nono (/private/var/lib/pi/.nono on macOS), which
+# overlaps system_read_macos' /private/var grant and makes nono refuse to
+# initialize. The payload wrapper on the nono command below assigns
+# HOME="$PI_USER_HOME" to the pi process itself only -- see
+# IMPLEMENTERS.md's "Sandbox HOME and the Go toolchain env" section.
+export PATH="${EXTRA_PATH:+$EXTRA_PATH:}\$PATH"
 export PI_CODING_AGENT_DIR="$AGENT_DIR"
 export XDG_STATE_HOME="$NONO_STATE_DIR"
 export SSL_CERT_FILE="$CA_BUNDLE"
@@ -857,9 +917,9 @@ export NIX_SSL_CERT_FILE="$CA_BUNDLE"
 export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
 export GOCACHE="$GO_CACHE_DIR"
 export GOPATH="$GO_PATH_DIR"
-export PATH="${EXTRA_PATH:+$EXTRA_PATH:}\$PATH"
 cd "$WORKDIR"
-"$NONO_BIN" run --profile "$RUN_DIR/profile.json" --allow-cwd$NONO_RUN_EXTRA_FLAGS --detached --name "$SESSION_NAME" -- "$PI_BIN"$PI_RESUME_SUFFIX
+"$NONO_BIN" run --profile "$RUN_DIR/profile.json" --allow-cwd$NONO_RUN_EXTRA_FLAGS --detached --name "$SESSION_NAME" -- \
+  sh -c 'export HOME="$PI_USER_HOME"; exec "\$@"' sh "$PI_BIN"$PI_RESUME_SUFFIX
 
 while "$NONO_BIN" ps 2>/dev/null | grep -q "$SESSION_NAME"; do
   sleep 5

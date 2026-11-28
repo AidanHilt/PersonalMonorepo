@@ -9,7 +9,8 @@ convention and architecture overview, and
 
 ## Overview
 
-`flake.nix` only exposes `nixosConfigurations` and `darwinConfigurations`.
+`flake.nix` exposes `nixosConfigurations`, `darwinConfigurations` and a
+per-system `checks` set (see "Checks" below).
 It computes `systems` as the subset of `inputs.systems` (the
 [nix-systems](https://github.com/nix-systems/default) list) that have a
 `machines/<system>/` directory, builds a `pkgsFor.<system>` package set
@@ -36,6 +37,13 @@ discovers and builds every host.
   modules and shared config consumed by per-host `home.nix` files.
 - `lib-internal/` — internal Nix library code used by this flake (see
   below).
+- `packages/` — tools this flake packages itself, as plain
+  `callPackage`-able derivations, for tools nixpkgs doesn't (or doesn't yet)
+  carry. Currently just `helmfmt.nix`, a pinned `stdenv.mkDerivation` over
+  upstream's prebuilt release tarballs (per-system asset/checksum map).
+  Consumers import it with `pkgs.callPackage ../../../packages/<name>.nix { }`
+  rather than through an overlay — `roles/universal/personal-development.nix`
+  installs it as `helmfmtPackage` alongside nixpkgs' `yamlfmt`.
 - `templates/` — scaffolding templates. These back the
   `mono-flake-new-machine` / `mono-flake-copy-machine` /
   `mono-flake-new-module` scripts (see "Making changes"); you shouldn't
@@ -89,7 +97,7 @@ discovers and builds every host.
 1. The shared values file named by the host's `values.nix`
    `defaultValues` attribute (if set) —
    `modules/shared-values/<defaultValues>.nix` (currently
-   `laptop-cluster`, `prod-cluster`, `staging-cluster`).
+   `prod-cluster`, `staging-cluster`).
 2. `hostname = <host name>` and `userBase` (`/Users` on
    `aarch64-darwin`, `/home` otherwise).
 3. The host's own `machines/<system>/<name>/values.nix`.
@@ -236,8 +244,8 @@ filled in by whoever next has the access to actually build it.
 `secrets/secrets.nix` defines age recipient groups (lists of SSH public
 keys) and, at the bottom, which group can decrypt each `*.age` file:
 per-user/dev machines (`user-machines`), and per-cluster machine groups
-(`laptop-cluster-machines`, `staging-cluster-machines`,
-`prod-cluster-machines`, `external-user-1-machines`) composed into each
+(`staging-cluster-machines`, `prod-cluster-machines`,
+`external-user-1-machines`) composed into each
 secret's `publicKeys` list (e.g. `hosts.age`, `github-config.age`,
 `rclone-config.age`, `kubeconfig.age`, `adguardhome.age`, and one
 `rke-config-<cluster>.age` per cluster).
@@ -277,6 +285,60 @@ secret *file*). Everything else not covered by a script (editing a
 bundle, adjusting `lib-internal/`) is a normal hand-edit — there's no
 generated/derived state in this flake beyond what's described above.
 
+## Checks
+
+`flake.nix` exposes `checks.<system>` for every system that has a
+`machines/<system>/` directory. That is what gives `agent-validate` the
+`checks.<system>.agent-validate` aggregate its flake contract requires: any
+path at or below this flake's root is validated by building that aggregate
+instead of the legacy per-file lint/build checks.
+
+The aggregate is the `agent-validate` **attribute**, pointing at the
+`aggregate-check` **derivation**. The attribute name is fixed by the
+contract; the derivation name is deliberately different (the same convention
+as `nix/scripts` and `nix/agentic-ai-stack`) so it is never confused with the
+`agent-validate` script package from the scripts flake. It is an
+empty-marker `runCommand` whose `buildInputs` are every fixture below, so
+`nix build .#checks.<system>.agent-validate` builds — and thereby validates —
+all of them.
+
+Every fixture is also exposed under its own attribute, so one can be debugged
+directly with `nix build .#checks.<system>.<name>`:
+
+- `host-evaluation` — forces evaluation of EVERY entry in
+  `nixosConfigurations` and `darwinConfigurations` and writes a JSON report
+  (`$out/hosts.json`) keyed by hostname whose values are each host's
+  `config.system.build.toplevel.name`. Reading `.name` is what forces the
+  host's complete module evaluation (option fixpoint, every imported module,
+  every package reference), and a derivation's `name` is a plain string
+  rather than a store path, so no host's toplevel output enters the build
+  graph. In other words: every host is evaluated, no host is built.
+- `statix` — `statix check` over the complete mono-flake Nix source tree, not
+  just the files a change happens to touch, with `templates/` excluded
+  (`--ignore 'templates/*'`): those files are scaffolding containing
+  intentional `{{placeholder}}` syntax and are not standalone valid Nix, so
+  statix cannot parse them.
+- `darwin-install-sh` — `bash -n` plus `shellcheck --shell=bash
+  --severity=error --exclude=SC2296,SC2066,SC1087` on `darwin-install.sh`,
+  which has no other automated coverage. Coverage is deliberately limited:
+  the script is `zsh`, shellcheck has no zsh dialect, and the three excluded
+  codes are artifacts of the zsh-only syntax it actually uses (`${(f)...}`
+  splitting, `"$array[@]"` loops, `${array[@]:0:1}`). Only error-severity
+  findings gate, and warning/style-level bash advice is not enforced —
+  enforcing it would mean rewriting the script for bash (see
+  [IMPROVEMENTS.md](IMPROVEMENTS.md)'s "Darwin install flow").
+- `helmfmt` — `pkgs.callPackage ./packages/helmfmt.nix { }`. `helmfmt` is
+  consumed via `callPackage` rather than an overlay (see "Directory layout"
+  above), so nothing else in this flake realizes it; this fixture is what
+  actually fetches the pinned upstream release tarball, and therefore what
+  verifies its per-system hash.
+
+These are explicit fixtures, not a discovery framework: adding a check means
+adding an attribute to `fixtureChecks` in `flake.nix`. Every fixture touches
+`$out` only on success, so a failing tool fails the check, and the aggregate
+stays lazy/acyclic because `fixtureChecks` never references `checks` or
+`aggregate-check`.
+
 ## Gotchas
 
 - `discovery.getAllHosts` is broken (see "How it works") — don't build
@@ -286,9 +348,9 @@ generated/derived state in this flake beyond what's described above.
   files inline a `home-manager = { ... }` block that duplicates what
   `universal-base.nix` → `_home-manager.nix` already provides for every
   host; harmless (NixOS module merge), but don't copy it into new hosts.
-- `modules/shared-values/{laptop-cluster,staging-cluster}.nix` commit a
+- `modules/shared-values/staging-cluster.nix` commits a
   `mkpasswd`-hashed password in plaintext to the repo (not agenix); keep
-  this in mind if you're basing a new shared-values file on them.
+  this in mind if you're basing a new shared-values file on it.
 - `modules/shared-machine-configs/bootstrap-image.nix` (the ISO image
   config) permits root SSH login with an empty password — intentional
   for an unattended installer image, but don't reuse the module for

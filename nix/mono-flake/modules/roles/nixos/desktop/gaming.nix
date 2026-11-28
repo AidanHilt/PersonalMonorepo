@@ -32,14 +32,24 @@
   hardware.bluetooth.enable = true;
 
   powerManagement.cpuFreqGovernor = "schedutil";
-  services.power-profiles-daemon.enable = false;
 
   boot.kernelModules = [ "xone" ];
 
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    pulse.enable = true;
+  services = {
+    power-profiles-daemon.enable = false;
+
+    pipewire = {
+      enable = true;
+      alsa.enable = true;
+      pulse.enable = true;
+    };
+
+    sunshine = {
+      enable = true;
+      autoStart = true;
+      capSysAdmin = true;
+      openFirewall = true;
+    };
   };
 
   programs.gamemode.enable = true;
@@ -49,12 +59,5 @@
 
   programs.steam = lib.mkIf (pkgs.system == "x86_64-linux") {
     enable = true;
-  };
-
-  services.sunshine = {
-    enable = true;
-    autoStart = true;
-    capSysAdmin = true;
-    openFirewall = true;
   };
 }

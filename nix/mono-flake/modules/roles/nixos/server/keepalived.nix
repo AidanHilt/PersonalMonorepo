@@ -21,7 +21,7 @@ in
     openFirewall = true;
 
     vrrpInstances.adguardhome = {
-      interface = interface;
+      inherit interface;
       priority = 100;
       virtualRouterId = machine-config.networking.virtualRouterId;
       virtualIps = [ { addr = machine-config.networking.loadBalancerIp; } ];

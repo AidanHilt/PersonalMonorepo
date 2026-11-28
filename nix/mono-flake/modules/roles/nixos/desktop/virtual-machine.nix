@@ -15,18 +15,21 @@ let
       {
         # useNetworkd = true;
         # networkmanager.enable = lib.mkForce false;
-        interfaces.br0.useDHCP = false;
+        interfaces = {
+          br0 = {
+            useDHCP = false;
+            ipv4.addresses = [
+              {
+                address = machine-config.networking.address;
+                prefixLength = machine-config.networking.prefixLength;
+              }
+            ];
+          };
 
-        interfaces.${machine-config.networking.mainNetworkInterface} = lib.mkForce {
-          useDHCP = false;
+          ${machine-config.networking.mainNetworkInterface} = lib.mkForce {
+            useDHCP = false;
+          };
         };
-
-        interfaces.br0.ipv4.addresses = [
-          {
-            address = machine-config.networking.address;
-            prefixLength = machine-config.networking.prefixLength;
-          }
-        ];
 
         bridges = {
           "br0" = {

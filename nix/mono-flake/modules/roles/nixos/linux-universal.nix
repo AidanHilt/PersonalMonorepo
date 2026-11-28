@@ -16,24 +16,27 @@
     ../universal/universal-base.nix
   ];
 
-  users.groups."${machine-config.username}" = { };
+  users = {
+    groups."${machine-config.username}" = { };
 
-  users.users."${machine-config.username}" = {
-    group = "${machine-config.username}";
-    extraGroups = [
-      "networkmanager"
-      "wheel"
-      "docker"
-    ];
-    isNormalUser = true;
+    users."${machine-config.username}" = {
+      group = "${machine-config.username}";
+      extraGroups = [
+        "networkmanager"
+        "wheel"
+        "docker"
+      ];
+      isNormalUser = true;
 
-    hashedPassword = pkgs.lib.mkIf (machine-config ? hashedPassword) machine-config.hashedPassword;
+      hashedPassword = pkgs.lib.mkIf (machine-config ? hashedPassword) machine-config.hashedPassword;
+    };
+
+    defaultUserShell = pkgs.zsh;
   };
 
   system.stateVersion = "25.05";
 
   programs.zsh.enable = true;
-  users.defaultUserShell = pkgs.zsh;
 
   services.openssh.enable = true;
 }

@@ -102,12 +102,14 @@ just a place to run `pi` interactively:
    plan's validation will need must be added to `nix/mono-flake` and the
    host rebuilt — there is no runtime package-install path inside the
    sandbox.
-2. The planning agent assembles a self-contained dispatch prompt with
-   `agent-plan-create` and dispatches an `IMPLEMENT-n` subagent, which
-   works in an isolated git worktree and validates its own work with
-   `agent-validate`.
+2. The planning agent writes the full plan with `agent-plan-create` (to
+   `/tmp/pi-agent-plans/IMPLEMENT-<n>.md`, a path shared with the sandboxed
+   worktree) and dispatches an `IMPLEMENT-n` subagent with a short prompt
+   telling it to read that file first. The subagent works in an isolated git
+   worktree and validates its own work with `agent-validate`.
 3. `agent-stage` squash-stages the subagent's validated branch onto the
-   current branch for review, WITHOUT committing.
+   current branch for review, WITHOUT committing; `--slot <n>` also removes
+   that dispatch's per-dispatch agent definition and plan file.
 4. The user reviews the staged diff and commits themselves (`kommit`).
    Planning/dispatch agents never commit.
 

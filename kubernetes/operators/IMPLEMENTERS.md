@@ -42,8 +42,13 @@ output this flake has.
 
 `operators/miura/` is the one operator present today. Its Go module path
 is `miura`, its CRD kind is `Function` (group `miura.io`, short name
-`fn`), and its reconciler is `FunctionReconciler`. The API types are
-implemented; the reconciler is still a stub. See "Gotchas".
+`fn`), and its reconciler is `FunctionReconciler`. The `Function` fold is
+implemented end-to-end for the minimal shape (HTTP trigger, `auth.mode:
+None`) — source resolution, build `Job`, Knative `Service`, Istio
+`VirtualService`. JWT auth, event/schedule triggers and
+`FunctionRepository` are not reconciled yet; see
+`operators/miura/IMPLEMENTERS.md` for the design, and its "Scope of this
+round" for the exact boundary.
 
 ## Directory layout
 
@@ -216,8 +221,8 @@ Nix at build time):
   `limits: {memory: 256Mi}`. `image.repository` is optional and defaults
   to the chart name; `image.tag` is the Nix-generated default described
   above (overridable); `chart.version` (used in `Chart.yaml`) is always
-  Nix-generated. See "Local dev loop" for how `reconcile-operator`
-  overrides these for its own use.
+  Nix-generated. See "Local dev loop" in [README.md](README.md) for how
+  `operator-reconcile` overrides these for its own use.
 - Optional `args`/`env` on the manager container, driven by
   `.Values.manager.args` (a plain string list, e.g.
   `["--foo=bar"]`) and `.Values.manager.env` (a list of
@@ -238,11 +243,86 @@ Nix at build time):
   per cluster. Installing the same chart twice under different release
   names in one cluster will collide on these names.
 
+## Checks
+
+`flake.nix` exposes `checks.<system>`, split into two tiers.
+
+**Linux (`x86_64-linux`, `aarch64-linux`) — the full tier.** `checks` is
+`perOperatorChecks // { statix; agent-validate; }`:
+
+- `<name>-vet` — one `go vet ./...` check per discovered operator
+  (`operators.<name>.vet`, defined in `nix/mk-operator.nix` section
+  "3b. go vet"). It is generated from the same operator list as the packages,
+  so a new operator directory is vetted with no change to `flake.nix` or
+  `nix/mk-operator.nix`. It follows the `crds`/`rbac` recipe exactly: a plain
+  `stdenv.mkDerivation` that copies `binary.goModules` into `./vendor`, sets
+  `GOFLAGS=-mod=vendor`, `GOPROXY=off`, and `HOME`/`GOCACHE` under `$TMPDIR`,
+  runs `controller-gen object paths=./api/...` (required *first* — the api
+  types only type-check once their generated `DeepCopyObject` methods exist,
+  and vet loads the whole package graph), and then `go vet ./...`. Its `$out`
+  is an empty marker directory: it exists only to fail when an operator does
+  not vet cleanly.
+- `statix` — `statix check .` over the whole flake source tree, not just the
+  files a change touches. Every `.nix` file here is standalone and
+  parseable (there are no `templates/`-style placeholders, unlike
+  `nix/mono-flake`), so this fixture deliberately has no `--ignore`.
+- `agent-validate` — the aggregate. An empty-output marker `runCommand`
+  named `aggregate-check` whose `buildInputs` are every per-operator package
+  (`binary`, `crds`, `rbac`, `image`, `chart`), every per-operator `<name>-vet`
+  check, and the `statix` fixture — so `nix build
+  .#checks.<system>.agent-validate` really builds the operators, not just
+  evaluates them. `default` (the image+chart `linkFarm`) is deliberately not
+  a build input: it only links outputs already covered.
+
+The ATTRIBUTE name is fixed by `agent-validate`'s flake contract and must
+stay `agent-validate`; the derivation it points at is deliberately named
+`aggregate-check` so it is never confused with the `agent-validate` **script**
+package from the `nix/scripts` flake (the same convention as
+`nix/mono-flake`, `nix/scripts`, and `nix/agentic-ai-stack`). This aggregate
+is what replaces the legacy per-file lint/build checks for any change at or
+below this flake's root — `agent-validate` still runs its FORMAT phase
+(nixfmt) over those files, but skips the per-file `LINT`/`BUILD_TEST` runs.
+
+Because the aggregate really builds every operator package, it needs
+`operators/<name>/go.sum` and `vendor-hash.nix` to be correct and in sync
+(see "`vendor-hash.nix` handling" above) — a stale vendor hash fails the
+whole check.
+
+**darwin (`x86_64-darwin`, `aarch64-darwin`) — a runnable subset.** The
+second `eachSystem` block (the one that also carries
+`packages.skopeo-nix2container`) adds `checks.<system>` for the two darwin
+systems only: the same `statix` fixture, built from that system's own `pkgs`,
+plus an `agent-validate` attribute pointing at an `aggregate-check` whose
+only build input is that fixture.
+
+Three reasons for the split:
+
+- Everything else in this flake is Linux-only (`binary`/`crds`/`rbac`/
+  `image`/`chart` are built for `x86_64-linux`/`aarch64-linux`), so a darwin
+  aggregate must not reference them — doing so would make the darwin
+  `checks` unbuildable.
+- `agent-validate` preflights `checks.$(nix eval --raw --impure --expr
+  builtins.currentSystem).agent-validate` for every flake it touches and
+  exits 24 when it is absent. The statix fixture is exactly enough to make
+  that preflight satisfiable from a Mac, where the Linux tier cannot run.
+- The gate matters: that `eachSystem` list also covers the two Linux
+  systems, and `recursiveUpdate` gives the second argument precedence, so
+  emitting the darwin tier unconditionally would silently replace the Linux
+  `agent-validate` aggregate with the statix-only one.
+
+Linux-side checks are therefore validated on a Linux host today. A
+`linux-builder` is provisioned for this Mac in `/etc/nix/machines`, but it is
+not wired up in `/etc/nix/nix.conf` (no `builders` line), so `nix build
+.#checks.aarch64-linux.agent-validate` / the `-vet` checks cannot be realised
+here yet. The darwin tier is a liveness check, not equivalent coverage.
+
 ## Making changes
 
 - **Add an operator**: see "Adding a new operator" in
   [README.md](README.md) — no change to `flake.nix` or
-  `nix/mk-operator.nix` is needed.
+  `nix/mk-operator.nix` is needed. The new operator is automatically covered
+  by `checks.<system>.<name>-vet` and by the `agent-validate` aggregate (see
+  "Checks" above).
 - **Change shared chart scaffolding** (ServiceAccount/RBAC
   binding/Deployment shape, resource requests, CRD/RBAC generation
   paths, `Chart.yaml` synthesis, the values merge rule): edit
@@ -262,29 +342,22 @@ Nix at build time):
   excludes the generated file from the source tree. A plain `go
   build`/`go vet` run outside that Nix build will fail to compile
   `api/v1alpha1` until you generate it yourself.
-- **`operators/miura/` does not build without network access.** `go.sum`
-  is empty and `vendor-hash.nix` holds a placeholder
-  `sha256-AAAA...` string — see "Build readiness" in
-  [README.md](README.md) for the exact fix steps.
+- **`go.sum` + `vendor-hash.nix` together are what make a build
+  hermetic.** Both are real for `operators/miura/` today (populated
+  `go.sum`, an actual `sha256-...` in `vendor-hash.nix`), so
+  `buildGoModule`'s `goModules` fixed-output derivation pins the whole
+  dependency set and `binary`, `crds`, `rbac` and `<name>-vet` all build
+  from that vendored tree with `GOPROXY=off` — the only step that can
+  touch the network is `goModules` itself, and only on a cold
+  store/cache. Bumping a dependency means refreshing `go.sum`
+  (`go mod tidy` with network access) and re-pinning `vendorHash` (see
+  "`vendor-hash.nix` handling" above); a wrong hash fails that FOD
+  first, so `crds`/`rbac`/`<name>-vet` — and the `agent-validate`
+  aggregate, see "Checks" above — never run at all.
 - **Missing RBAC markers produce a silently incomplete role.** See "CRD
   + RBAC generation" above — there is no Nix-level check that every
   resource a reconciler touches has a corresponding
   `+kubebuilder:rbac` marker.
-- **`reconcile-operator`'s `--set-string image.tag`/`image.pullPolicy`
-  appear unused by the chart.** `manager.yaml`'s container image is
-  `"{{ .Values.image.repository | default .Chart.Name }}@{{ .Values.image.digest }}"`
-  — it references `image.repository` and `image.digest` only, with no
-  `image.tag` or `image.pullPolicy` field anywhere in the template. But
-  `nix/scripts/scripts/reconcile-operator/run.sh` installs with
-  `--set-string image.tag="$DEV_TAG" --set-string image.pullPolicy=Never`
-  after loading the image into `kind` under the `dev` tag. As written,
-  those two `--set-string` values don't appear to be read by anything
-  in this chart; the Deployment always pins by `image.digest`
-  (unaffected by the dev tag/pull-policy override), and it's the
-  `kind load docker-image` + `kubectl rollout restart` steps that
-  actually get the freshly built image into the running pod. Flagging
-  as observed from reading both files, not independently verified
-  against a live cluster.
 - **Static resource names mean one install per cluster.** See
   "`manager.yaml`" above — the chart was not designed for multiple
   concurrent releases of the same operator in one cluster.
@@ -298,8 +371,10 @@ Nix at build time):
 ## Areas for improvement
 
 - **No `helm lint`/`helm template` flake `checks`, and no CI
-  integration.** Both are absent entirely; validating a chart currently
-  means building it and inspecting it by hand.
+  integration.** The `checks.<system>` aggregate covers the Go side (operator
+  package builds plus `go vet`) and statix, but nothing lints or templates
+  the assembled charts; validating a chart still means building it and
+  inspecting it by hand.
 - **`imageTag`/`chartVersion` are an interim placeholder, not a real
   release scheme.** Every build's image and chart currently share one
   tag/version (`VERSION` file contents, or `shortRev`/`dirtyShortRev` for
@@ -307,10 +382,12 @@ Nix at build time):
   a stable identity to publish against. An auto-incrementing semver
   scheme, plus actual image/chart publishing, is a separate, later piece
   of work; this flake does not push or publish anything today.
-- **Reconciler business logic is a stub.** `FunctionReconciler.Reconcile`
-  in `operators/miura/internal/controller/function_controller.go`
-  always returns `ctrl.Result{}, nil` — the `Function` API types are
-  implemented, but there is no actual reconciliation behavior yet; that
-  is a separate, later change. Worth knowing before relying on `miura`
-  as a functioning operator rather than an API-schema/build-pipeline
-  exercise.
+- **Much of the `Function` spec is accepted by the API but not
+  reconciled.** Only the minimal shape is implemented (see "Overview"
+  above): `triggers.http.auth.mode: Jwt` is validated but no
+  `RequestAuthentication`/`AuthorizationPolicy` is generated,
+  `triggers.events`/`triggers.schedules` generate no `Trigger`/
+  `PingSource`, `source.secretRef` (private repos) is ignored, and the
+  `FunctionRepository` kind exists only in `docs/funcrepo.md`. Worth
+  knowing before relying on `miura` as a fully functioning operator — see
+  `operators/miura/IMPLEMENTERS.md` "Scope of this round".

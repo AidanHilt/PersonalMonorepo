@@ -1,7 +1,7 @@
 {
   "shellPath": "/bin/bash",
   "defaultProvider": "ollama-cloud",
-  "defaultModel": "kimi-k3.1-pro",
+  "defaultModel": "glm-5.3-flash",
   "thinking": {
     "default": "medium"
   },

@@ -114,7 +114,12 @@ end up wider than the `pi` tool itself.
    session.sandbox` that already has one (store paths need not be — those
    sandboxes already grant `/nix/store` itself, e.g. `work.base.json`'s
    `nix` command policy). Never creates an `fs_read` array, or a
-   `command_policies` block, where one doesn't already exist.
+   `command_policies` block, where one doesn't already exist. This append
+   is additive and order-preserving, so the `nix` policy's dynamic
+   `@git:toplevel`/`@git:common-dir` tokens (`work.base.json`, see "Nix
+   daemon access" below) stay exactly where the base profile put them and
+   are never resolved or reordered here — they are nono-expanded tokens,
+   not paths on disk.
 6. Validates the result with `jq empty` and writes it atomically (a temp
    file in `--out`'s own directory, then `mv -f` over the final path).
 
@@ -129,11 +134,57 @@ present in the baseline closure can still run agent-written scripts.
 **Nix daemon access**: the daemon socket plus read access on the store
 paths actually needed. `nix` is mediated via `command_policies`'
 `invocation_policy`: allows `build`, `eval`, `develop`, `flake check`,
-`flake show`; denies `profile`, `copy`, `--option`,
+`flake show`, and `--version`; denies `profile`, `copy`, `--option`,
 `--extra-substituters`, `--accept-flake-config`, and denies system-
 rebuild commands entirely (`update`, `nixos-rebuild`, `darwin-rebuild`,
 `home-manager`, `nix profile`, `nix-env`). The untrusted `pi` user is
-what prevents trusted-user-style abuse of these allowances.
+what prevents trusted-user-style abuse of these allowances. `--version`
+is in that allow list because `agent-validate` records `nix --version` in
+the artifact it writes (`.agent/validated.json`); it reports a version
+string and reads nothing, so it sits at the same trust level as the
+other read-only subcommands (and its allow rule is the exact prefix
+`["--version"]`, not a general escape hatch).
+
+**The mediated `nix` sandbox starts from a minimal baseline, not from
+this session.** A nono COMMAND sandbox inherits none of the session's
+CWD access, broad profile groups, or filesystem grants — only what its
+own policy block lists. With the payload `HOME` at `/var/lib/pi` and
+implementation worktrees under `/tmp`, a `nix` process in that minimal
+sandbox could neither stat `$HOME` nor `getcwd()`. Three pieces fix
+that without widening the trust boundary:
+
+- **A dedicated scratch `HOME`.**
+  `command_policies.commands.nix.from.session.sandbox.environment.
+  set_vars.HOME` is `/tmp/pi-nix-home`
+  (`scripts/lib-common.sh`'s `NIX_COMMAND_HOME`) — a THIRD home,
+  distinct from `PI_USER_HOME` (the payload's real home, see "Sandbox
+  `HOME` and the Go toolchain env" below) and from the invoking user's
+  inherited `HOME` (which nono itself keeps). `set_vars` values are
+  static and injected after `allow_vars` filtering, so this is the value
+  the real mediated `nix` process sees. The scratch dir is `sudo -u pi
+  mkdir -p`'d by `start-agent.sh` alongside its other pi-owned
+  directories (and again by `shell.sh`, so a shell session survives a
+  `/tmp` sweep between the main launch and the shell), and is the one
+  exact `fs_write` grant the policy carries for it. Deliberately NOT
+  exported to `pi`, to `shell.sh`'s bash, or to the `--detached`
+  supervisor: only the mediated `nix` process's `HOME` is redirected, so
+  the flake evaluator never gets read access to pi's real home (auth
+  state, agent config) and the rest of the payload keeps the home it
+  needs.
+- **Dynamic worktree grants.** `fs_read` and `fs_write` include
+  `@git:toplevel` (the current checkout root — the linked implementation
+  worktree when applicable), which is what makes `getcwd()` and flake
+  archiving work inside a worktree; `fs_read` additionally includes
+  `@git:common-dir`, so the main repository's Git metadata is readable
+  when `nix` archives a linked worktree. These must stay LITERAL strings
+  in the JSON — nono expands them at mediated-command launch, the same
+  way it already expands `$WORKDIR`. `/tmp` wholesale and any part of
+  `/var/lib/pi` are deliberately NOT granted.
+- **The pre-existing grants.** `/nix/store`, `/nix/var/nix`, `$WORKDIR`,
+  and the daemon socket bind are unchanged. The old `$HOME/.cache`
+  `fs_write` entry is gone: once `HOME` is the scratch dir it pointed
+  nowhere useful, and it made the effective policy depend on whichever
+  home `$HOME` happened to expand against.
 
 **Environment variable filtering**: `work.base.json`'s top-level
 `environment` block (and the `nix` command policy's nested
@@ -143,7 +194,11 @@ what prevents trusted-user-style abuse of these allowances.
 below) through. `GIT_CONFIG_COUNT`/`GIT_CONFIG_KEY_*`/
 `GIT_CONFIG_VALUE_*` and `SSL_CERT_FILE`/`NIX_SSL_CERT_FILE`/
 `NODE_EXTRA_CA_CERTS` are also allow-listed, for `safe.directory`
-registration and CA trust respectively (see "Credentials" below).
+registration plus forwarded git author identity, and CA trust
+respectively (see "Credentials" below). `allow_vars` only filters what
+is INHERITED; the `nix` sandbox's `HOME` is overwritten afterwards by
+`set_vars` (see "Nix daemon access" above), which is why `HOME` still
+appears in that block's own `allow_vars`.
 
 ## Launcher and approval helper
 
@@ -324,25 +379,107 @@ DIRECTORY (not the bundle file itself) via `--read`, and export
 `SSL_CERT_FILE`/`NIX_SSL_CERT_FILE`/`NODE_EXTRA_CA_CERTS` set to the
 resolved bundle path, threaded through `sudo -u pi --preserve-env`.
 
-**Go toolchain env**: `pi`'s `$HOME` is set to the invoking (macOS)
-user's home directory (e.g. `/Users/aidan`), not `pi`'s own
-(`/var/lib/pi`). Go itself has no override for this: it defaults
-`GOCACHE` to `$HOME/Library/Caches/go-build` and `GOPATH` (and so
-`GOMODCACHE`, `$GOPATH/pkg/mod`) to `$HOME/go` on macOS, both of which
-point at a directory `pi` cannot access, so unpatched `go build`/`go
-fmt`/etc. fail outright (`failed to initialize build cache ... mkdir
-/Users/aidan/Library: file exists`). `start-agent.sh` pins both
-explicitly instead: `GOCACHE=/var/lib/pi/Library/Caches` (a dedicated
-path, NOT under `$FIXED_PI_HOME`, so it needs its own `--add` folded
-into `EXTRA_GEN_ARGS` -- see "Fixed agent dir" above for why
-`$FIXED_PI_HOME` itself is granted whole) and `GOPATH=$FIXED_PI_HOME/go`
-(already covered by that grant, so no separate `--add` is needed). Both
-directories are created (`sudo -u pi mkdir -p`) alongside the agent
-dir's own seeding step; both vars are exported and added to
-`PRESERVE_LIST` in the foreground launch path (mirroring
-`SSL_CERT_FILE` et al. above), and exported inside the `--detached`
-branch's `supervisor.sh` heredoc, so both code paths behave
-identically.
+**Sandbox `HOME` and the Go toolchain env**: every SANDBOXED process
+(`pi` in `start-agent.sh`, `bash -i` in `shell.sh`, and the `pi` process
+the `--detached` branch's `supervisor.sh` launches) runs with
+`HOME=/var/lib/pi` — the `pi` user's real, pi-owned home
+(`scripts/lib-common.sh`'s `PI_USER_HOME`, as declared by
+nix/mono-flake's `_pi-user.nix`; distinct from `FIXED_PI_HOME` =
+`$PI_USER_HOME/.pi`). The reason it can't be left implicit: `sudo -u pi`
+does not reset `$HOME` the way a full login shell would, so the sandbox
+would otherwise inherit the INVOKING user's home (e.g. `/Users/aidan`) —
+a directory `pi` cannot read, which also makes Nix warn about a home
+directory the `pi` user doesn't own.
+
+**Which process gets that `HOME` matters — it goes on the payload, never
+on nono.** `nono` itself keeps inheriting the invoking user's `$HOME`;
+`HOME="$PI_USER_HOME"` is assigned only to the PAYLOAD nono launches —
+the inner `sh -c 'export HOME="$PI_USER_HOME"; exec "$@"'` wrapper
+appended after `nono run … --` in `start-agent.sh`'s foreground launch,
+`shell.sh`'s launch, and the generated `--detached` `supervisor.sh`. The
+OUTER `sh -c` wrapper that already pins `PATH` on the `sudo -u pi` launch
+(foreground and `shell.sh`) and the `--detached` supervisor's own
+environment do NOT export `HOME` at all, and `HOME` is never added to
+`PRESERVE_LIST`.
+
+Why: nono **always** protects BOTH its legacy `$HOME/.nono` root AND its
+current `$XDG_STATE_HOME/nono` root (see "Single nono state dir" above).
+Exporting `HOME=/var/lib/pi` before nono starts therefore also creates
+the legacy protected root `/var/lib/pi/.nono` (resolved
+`/private/var/lib/pi/.nono` on macOS), which overlaps
+`system_read_macos`' `/private/var` grant — and nono refuses to
+initialize at all rather than run with a protected root inside an
+allowed one. `allow_parent_of_protected` is NOT an acceptable fix
+because it is a macOS-only knob; the launcher has to stay correct on
+both platforms. Deferring the assignment to the payload leaves nono's
+legacy protected root wherever the invoking user's own `$HOME` already
+puts it (typically `$HOME/.nono`, absent unless they use nono
+themselves), so the macOS overlap never arises. On Linux the same split
+is correct-and-harmless rather than load-bearing: nono's protected roots
+are equally unchanged there (they simply resolve under the invoking
+user's real home), and the sandboxed process still gets the pi-owned
+home it needs — no `allow_parent_of_protected` equivalent is needed
+either way.
+
+The invoking user's own `$HOME` stays strictly host-side and unchanged:
+the launcher process itself, `--clone`'s cache
+(`$HOME/.cache/pi-sandbox/clones`), `share_path_check`'s "refusing to
+share your entire `$HOME`" guard, the git author-identity lookup behind
+`git_author_identity_env` (see "Live file sharing" below), git
+credentials and ACL handling all still resolve against it, never against
+`$PI_USER_HOME` — and nono now sees exactly the same value those code
+paths do.
+
+The flip side of a correct payload `HOME` is that the sandbox no longer
+sees the invoking user's global git config, so a `git commit` inside a
+shared worktree failed with "Author identity unknown". Rather than
+writing a gitconfig or minting a separate agent identity, the invoking
+repository's EFFECTIVE `user.name`/`user.email` are resolved host-side
+(`git -C <workdir> config --get ...`, run as the invoking user before
+`sudo`/nono, so repo-local config wins over the user's global config) and
+forwarded into the sandbox payload as `GIT_CONFIG_KEY_i=user.name` /
+`GIT_CONFIG_VALUE_i=<value>` pairs by `git_author_identity_env`, appended
+after the `safe.directory` entries of the same mechanism and threaded
+through the same `PRESERVE_LIST`/`sudo --preserve-env` path (foreground,
+`--detached` and `shell.sh` alike). If either value is missing, the
+launcher fails early with an actionable error (naming the `git -C ...
+config` commands to fix it) instead of letting a later commit fail
+inside the sandbox. Nothing beyond `user.name`/`user.email` is forwarded,
+and no gitconfig (either user's) is ever written.
+
+`start-agent.sh` additionally pins `GOCACHE`/`GOPATH` explicitly — now
+for determinism rather than because `$HOME` is wrong: Go's own defaults
+(`$HOME/Library/Caches/go-build` and `$HOME/go` on macOS) would land
+under the pi-owned home and be readable, but pinning them means a future
+`HOME` change can never silently relocate the build cache or module
+cache out from under an existing grant. `GOCACHE=/var/lib/pi/Library/
+Caches` (a dedicated path, NOT under `$FIXED_PI_HOME`, so it needs its
+own `--add` folded into `EXTRA_GEN_ARGS` — see "Fixed agent dir" above
+for why `$FIXED_PI_HOME` itself is granted whole) and
+`GOPATH=$FIXED_PI_HOME/go` (already covered by that grant, so no
+separate `--add` is needed). Both directories are created (`sudo -u pi
+mkdir -p`) alongside the agent dir's own seeding step; both vars are
+exported and added to `PRESERVE_LIST` in the foreground launch path
+(mirroring `SSL_CERT_FILE` et al. above), and exported inside the
+`--detached` branch's `supervisor.sh` heredoc, so both code paths behave
+identically. Unlike `HOME`, `GOCACHE`/`GOPATH` stay exported in the
+supervisor's own environment (and are preserved to the payload): they
+only steer Go's cache paths, they say nothing about nono's protected
+roots.
+
+A THIRD home exists for the mediated `nix` command only:
+`scripts/lib-common.sh`'s `NIX_COMMAND_HOME` (`/tmp/pi-nix-home`), fed to
+that command sandbox via `work.base.json`'s
+`command_policies.commands.nix.from.session.sandbox.environment.
+set_vars.HOME`. It is neither `PI_USER_HOME` nor the invoking user's
+inherited `HOME`, and it is deliberately NOT exported to `pi`, to
+`shell.sh`'s bash, or to the `--detached` supervisor — only the `nix`
+process nono launches in its own minimal command sandbox gets it. See
+"Nix daemon access" above for why (that sandbox inherits almost nothing
+from the session), and note that its directory is created `sudo -u pi
+mkdir -p` by `start-agent.sh` next to the other pi-owned dirs, and again
+by `shell.sh` so a `/tmp` sweep can't leave the sandboxed `nix` command
+without a `HOME`.
 
 ## Single nono state dir
 
@@ -399,7 +536,10 @@ A small, `source`d-only helper shared by every script
 `PI_STACK_SESSIONS_ROOT` — transient, per-session bookkeeping only, see
 "Per-session state layout" above), `FIXED_AGENT_DIR`/`FIXED_PI_HOME`/
 `FIXED_WEB_SEARCH_FILE` (the one shared, persistent agent dir — see
-"Fixed agent dir" above), `validate_run_name` (anchors a run name to
+"Fixed agent dir" above), `PI_USER_HOME` (the `pi` user's actual home,
+`/var/lib/pi`, assigned to the sandboxed process's `HOME` — see
+"Sandbox `HOME` and the Go toolchain env" above), `validate_run_name`
+(anchors a run name to
 `^[A-Za-z0-9._-]+$`, rejecting path traversal), `require_run_dir`,
 `nono_state_dir` (the single, shared nono `XDG_STATE_HOME` — see "Single
 nono state dir" above), `nono_state_wipe_preserving_audit`,
@@ -501,12 +641,23 @@ read-write, at their real host path — not a `pi`-owned copy and not an
   trap, the detached-mode wrapper once its supervisor returns
   (`--noninteractive`), and `stop.sh` (interactive, the recovery path for
   a crashed launch).
-- **`git safe.directory`**: `pi` and the invoking user are different uids
-  sharing the same live path, which trips git's "detected dubious
-  ownership" guard. `git_safe_dir_env` exports `GIT_CONFIG_COUNT`/
-  `GIT_CONFIG_KEY_*`/`GIT_CONFIG_VALUE_*` (one pair per shared path),
-  threaded through the same `sudo --preserve-env` list as everything
-  else — never a written `.gitconfig`.
+- **`git safe.directory` and author identity**: git gets both through
+  `GIT_CONFIG_*` environment variables, never a written `.gitconfig`.
+  `git_safe_dir_env` covers ownership: `pi` and the invoking user are
+  different uids sharing the same live path, which trips git's "detected
+  dubious ownership" guard. `git_author_identity_env` covers identity:
+  every sandboxed process's payload runs with `HOME=/var/lib/pi` (see
+  "Sandbox `HOME` and the Go toolchain env" above), so the invoking
+  user's global config is invisible there and a commit would abort with
+  "Author identity unknown" — the invoking repository's effective
+  `user.name`/`user.email` are resolved host-side and forwarded. Both
+  export `GIT_CONFIG_COUNT`/`GIT_CONFIG_KEY_*`/`GIT_CONFIG_VALUE_*` pairs
+  (appended in that order, so caller-supplied `GIT_CONFIG_*` state is
+  never clobbered and the identity entries win), tracked in
+  `GIT_SAFE_DIR_ENV_VARS` and threaded through the same `sudo
+  --preserve-env` list as everything else. A missing identity is a hard,
+  early error in `start-agent.sh`/`shell.sh`, not a deferred commit
+  failure.
 
 ## Credentials
 
@@ -582,6 +733,73 @@ substitute for it — see "Threat model" above.
   `nix/scripts/scripts/agent/agent-plan-create/run.sh`. See
   `config/agent/AGENTS.md`'s "Worktrees" section for how dispatch/
   validate/stage fits together.
+
+## Checks (`checks.<system>.agent-validate`)
+
+`agent-validate` preflights every affected flake for
+`checks.<system>.agent-validate` and builds exactly that aggregate
+(`nix build <local-flake-dir>#checks.<system>.agent-validate`); without
+the attribute it refuses to validate any path at or below this flake's
+root (exit 24) before running a single check. That ATTRIBUTE name is
+fixed by the contract and must stay `agent-validate`.
+
+The derivation the attribute points at is deliberately named
+`aggregate-check` (see `flake.nix`'s `aggregateCheck`), **not**
+`agent-validate`/`agent-validate-checks`, so it is never confused with
+the `agent-validate` SCRIPT package from the `nix/scripts` flake (also
+wired into `devShells.default` here). They are unrelated things: one is
+this flake's aggregate check derivation, the other is the validator
+binary that preflights and builds it. Naming the derivation
+`agent-validate` in this flake is what to avoid.
+
+`nix build .#checks.<system>.agent-validate` builds `aggregate-check`, an
+empty-output marker whose `buildInputs` are every derivation in
+`packages.<system>` (the `nono`/`pi-coding-agent` aliases and the opt-in
+`pi-extra-extensions`/`pi-extra-skills` bundles included), every
+`apps.<system>.<name>.drv` (see the `mkAppWithDrv` note in `flake.nix` —
+flake-utils' own `mkApp` drops the derivation), and every explicit
+fixture check below. A failure anywhere in the flake therefore fails the
+aggregate. There is deliberately no marker-file test discovery here:
+every fixture is named in `flake.nix`'s `fixtureChecks`.
+
+Fixtures:
+
+- `approval-helper-tests` — `packages.<system>.approval-helper` itself.
+  That package build now runs `go test ./...` (`doCheck` + an explicit
+  `checkPhase` with the normal pre/post hooks), so the existing
+  `approval-helper/main_test.go` coverage of `decide()`, the deny cache,
+  prompt dedupe/timeout handling and prompter selection runs as part of
+  the package. The stdlib-only module needs no network for this. The
+  named check exists so the aggregate cannot silently lose that coverage
+  if the package is ever removed from `packages`.
+- `gen-profile-self-test` — runs the existing
+  `scripts/gen-profile.sh --self-test` hermetically: writable
+  `HOME`/`TMPDIR` inside the build sandbox, and the self-test supplies
+  its own fake closure command (`GEN_PROFILE_CLOSURE_CMD`), so neither
+  `nix` nor `nono` is invoked. `$out` is only touched once the self-test
+  succeeded. Do not rewrite the self-test to fit this check.
+- `work-profile` — runs `scripts/gen-profile.sh` against the REAL
+  `profiles/work.base.json` in its `--os darwin` (no closure lookup) mode.
+  That mode is host-independent and cheap; the Linux closure-merge path
+  is already covered by the self-test above. It then asserts, with `jq`,
+  the invariants that must survive any base-profile edit:
+  - the mediated `nix` sandbox `HOME` is exactly `/tmp/pi-nix-home`;
+  - `@git:toplevel` is still in that sandbox's `fs_read` **and**
+    `fs_write`, and `@git:common-dir` still in its `fs_read` (both must
+    stay literal strings for nono to expand);
+  - no `fs_read`/`fs_write` entry grants `/var/lib/pi` or any descendant;
+  - the `update`, `nixos-rebuild`, `darwin-rebuild`, `home-manager`,
+    `nix-env` and `nix-channel` command policies are still session `deny`;
+  - the `nix` invocation allow list still has the exact prefix
+    `["--version"]` (see "Nix daemon access" above).
+
+  It never invokes `nono`, `sudo`, `agent-validate`, or any host launcher.
+
+Keep new fixtures in `fixtureChecks`, not in `packages`/`apps`: packages
+and apps must stay lazy and must never depend on `checks`, while
+`aggregate-check` depends only on packages, apps, and the fixtures — no
+self-reference, no cycle. The individual fixtures stay exposed for
+debugging (`nix build .#checks.<system>.gen-profile-self-test`, etc.).
 
 ## Improvements (not built)
 
