@@ -1,0 +1,12 @@
+initContainers:
+  - name: wait-for-istiod
+    image: curlimages/curl:8.17.0
+    imagePullPolicy: IfNotPresent
+    command:
+      - sh
+      - -c
+    args:
+      - |
+        until curl -fsS http://istiod.istio-system:15014/ready; do
+          sleep 2
+        done
