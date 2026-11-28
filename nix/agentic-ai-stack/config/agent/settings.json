@@ -1,7 +1,7 @@
 {
   "shellPath": "/bin/bash",
-  "defaultProvider": "anthropic",
-  "defaultModel": "claude-sonnet-5-5",
+  "defaultProvider": "ollama-cloud",
+  "defaultModel": "glm-5.3-flash",
   "thinking": {
     "default": "medium"
   },

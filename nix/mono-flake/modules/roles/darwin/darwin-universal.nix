@@ -1,9 +1,17 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 {
   imports = [
     #./_docker.nix
     ./_guided-setup.nix
+    ./_pi-user-darwin.nix
 
     ../universal/universal-base.nix
   ];
@@ -12,46 +20,49 @@
     defaultbrowser
   ];
 
-  system.stateVersion = 5;
+  system = {
+    stateVersion = 5;
+
+    primaryUser = "${machine-config.username}";
+
+    defaults = {
+      dock = {
+        expose-group-apps = true;
+        show-recents = false;
+      };
+
+      finder = {
+        AppleShowAllExtensions = true;
+        AppleShowAllFiles = true;
+        FXEnableExtensionChangeWarning = false;
+        ShowPathbar = true;
+        ShowStatusBar = true;
+        FXPreferredViewStyle = "icnv";
+      };
+
+      NSGlobalDomain = {
+        "com.apple.swipescrolldirection" = false;
+      };
+
+      screencapture = {
+        location = "/Users/${machine-config.username}/Desktop/screenshots";
+        show-thumbnail = false;
+      };
+
+      trackpad = {
+        Clicking = true;
+        TrackpadRightClick = true;
+      };
+    };
+  };
 
   programs.zsh.enable = true;
 
   security.pam.services.sudo_local.touchIdAuth = true;
 
-  system.primaryUser = "${machine-config.username}";
-
-  users.knownUsers = ["${machine-config.username}"];
-
-  users.users."${machine-config.username}".uid = 501;
-
-  system.defaults = {
-    dock = {
-      expose-group-apps = true;
-      show-recents = false;
-    };
-
-    finder = {
-      AppleShowAllExtensions = true;
-      AppleShowAllFiles = true;
-      FXEnableExtensionChangeWarning = false;
-      ShowPathbar = true;
-      ShowStatusBar = true;
-      FXPreferredViewStyle = "icnv";
-    };
-
-    NSGlobalDomain = {
-      "com.apple.swipescrolldirection" = false;
-    };
-
-    screencapture = {
-      location = "/Users/${machine-config.username}/Desktop/screenshots";
-      show-thumbnail = false;
-    };
-
-    trackpad = {
-      Clicking = true;
-      TrackpadRightClick = true;
-    };
+  users = {
+    knownUsers = [ "${machine-config.username}" ];
+    users."${machine-config.username}".uid = 501;
   };
 
   launchd.user.agents.fix-trackpad = {

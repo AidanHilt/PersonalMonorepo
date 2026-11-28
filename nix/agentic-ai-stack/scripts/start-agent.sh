@@ -1,194 +1,276 @@
 #!/usr/bin/env bash
 # nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#start-agent
 #
-# Acceptance criterion (see scripts/verify-acceptance.sh): a fresh host
-# produces a working pi+proxy stack with no manual steps beyond providing
-# credentials — this script builds/loads images and brings the compose
-# stack up;
-# `nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#stop-agent` tears it down.
+# Brings up one nono-sandboxed `pi` session as the untrusted `pi` user
+# (see nix/mono-flake's `_pi-user-linux.nix`/`_pi-user-darwin.nix` for the
+# NOPASSWD+SETENV sudo rule this relies on). See IMPLEMENTERS.md's
+# "Launcher and approval helper" section for the full writeup.
+#
+# High-level flow:
+#   1. Re-sync the ONE fixed, shared PI_CODING_AGENT_DIR
+#      (/var/lib/pi/.pi/agent -- lib-common.sh's FIXED_AGENT_DIR), and
+#      live-share the workdir + any --add/--clone extras with `pi` at
+#      their real host paths via ACLs, not a copy (see "Live file
+#      sharing" below). This is idempotent and NEVER deletes that
+#      directory first -- every launch only adds/overwrites
+#      config/extensions/skills on top -- that's what lets `--resume`
+#      mean anything, now across EVERY session regardless of --name (the
+#      agent dir is no longer per-run). This session's own transient
+#      bookkeeping (profile.json, shared-paths, workdir-path, etc.) still
+#      lives per-session, but under /tmp (lib-common.sh's SESSIONS_ROOT)
+#      rather than /var/lib/pi/runs -- nothing relies on it surviving a
+#      reboot/tmp sweep.
+#   2. Start the host-side approval helper (outside the sandbox), and read
+#      back its webhook URL.
+#   3. Generate the launch-ready nono profile (scripts/gen-profile.sh).
+#   4. Run `nono run` as `pi` via sudo, with the live-shared workdir as
+#      `pi`'s cwd (nono's "workdir").
+#
+# `pi` gets a LIVE, read-write share of the invoking user's workdir and
+# every --add/--clone extra, at their real host paths -- not a copy.
+# Access is granted live via ACLs (scripts/lib-common.sh's share_grant)
+# and revoked again -- with ownership of anything `pi` left behind
+# normalized back to the invoking user -- at shutdown (this script's own
+# EXIT trap in foreground mode, the detached wrapper, or `nix run .#stop`).
+#
+# Every write under /var/lib/pi (the fixed agent dir, and this script's
+# own per-session /tmp bookkeeping -- as opposed to the live-shared
+# workdir/--add/--clone paths above) still goes through a `sudo -u pi`
+# invocation (mkdir/tee/cp); every READ of the invoking user's own files
+# (config/agent/ in particular) runs as the invoking user. That split is
+# what lets this work without the invoking user ever needing traversal
+# rights into pi-owned directories.
 set -euo pipefail
 
-# --- Kubeconfig: always attempted, never required -------------------------
-# We no longer hard-fail when no kubeconfig is present. If a scoped
-# kubeconfig exists (default path below, or PI_SANDBOX__KUBECONFIG_PATH), we
-# layer compose.kube.yaml on top to mount it read-only into the `pi`
-# container. If it's missing, we warn and continue without k8s access
-# rather than blocking the whole stack on it.
-KUBECONFIG_PATH="${PI_SANDBOX__KUBECONFIG_PATH:-$HOME/.config/pi-sandbox/agent-kubeconfig.yaml}"
-COMPOSE_FILES=(-f compose.yaml)
+# --- PERSONAL_MONOREPO_LOCATION / lib-common.sh ----------------------------
+# gen-profile.sh, profiles/work.base.json, and config/agent/ are all read
+# directly from the checkout (not re-packaged into the Nix store the way
+# this script itself is, via flake.nix's writeShellApplication). gen-profile.sh
+# and work.base.json are read directly off disk by this script (running as
+# the invoking user), so no `pi`-readability is needed for those two.
+# config/agent/ is instead streamed in via a tar pipe (see tar_copy_to_pi
+# below), so it doesn't need to be `pi`-readable in place either.
+#
+# Sources lib-common.sh for STACK_DIR/SESSIONS_ROOT/FIXED_AGENT_DIR/
+# PI_USER_HOME/NIX_COMMAND_HOME and the resolve_or_die/resolve_stack_bin/
+# validate_run_name/nono_state_dir/nono_state_wipe_preserving_audit/
+# resolve_ca_bundle/share_*/git_safe_dir_env/git_author_identity_env
+# helpers.
+: "${PERSONAL_MONOREPO_LOCATION:?PERSONAL_MONOREPO_LOCATION must point at the monorepo checkout}"
+# shellcheck source=lib-common.sh
+# shellcheck disable=SC1091
+source "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack/scripts/lib-common.sh"
+# shellcheck disable=SC2153 # STACK_DIR is set by the lib-common.sh
+# source above, not a misspelling of STATE_DIR (defined much further
+# down in this script).
+GEN_PROFILE_SH="$STACK_DIR/scripts/gen-profile.sh"
+BASE_PROFILE="$STACK_DIR/profiles/work.base.json"
+CONFIG_AGENT_DIR="$STACK_DIR/config/agent"
+CONFIG_WEB_SEARCH="$STACK_DIR/config/web-search.json"
+# GOCACHE/GOPATH: kept EXPLICIT (rather than left to Go's own
+# $HOME-relative defaults) so cache/module locations stay deterministic
+# and independent of $HOME -- the sandboxed `pi` process's HOME is always
+# the pi-owned $PI_USER_HOME (lib-common.sh; assigned to the PAYLOAD nono
+# launches -- see the foreground launch and the --detached supervisor
+# below -- never to the nono process itself, which deliberately keeps
+# inheriting the invoking user's HOME), which keeps Nix from warning
+# about a home directory it doesn't own and makes Go's defaults
+# pi-readable too, but pinning them anyway means a future HOME change can
+# never silently relocate the build cache or module cache out from under
+# an existing grant. GOCACHE lives under a
+# dedicated, explicitly-granted path (not under $FIXED_PI_HOME, so it
+# needs its own --add, see EXTRA_GEN_ARGS below), GOPATH (and so
+# GOMODCACHE, which defaults to $GOPATH/pkg/mod) under $FIXED_PI_HOME,
+# which is already granted whole. Host-side work in this script keeps
+# using the INVOKING user's $HOME (clone cache, share_path_check's own
+# "entire $HOME" guard) -- only the sandboxed process gets
+# $PI_USER_HOME.
+GO_CACHE_DIR="/var/lib/pi/Library/Caches"
+GO_PATH_DIR="$FIXED_PI_HOME/go"
 
-# --- Secrets: arbitrary-name injection, never decrypted here --------------
-# This script performs NO secret retrieval/decryption of its own. It only
-# accepts already-decrypted values via two channels and forwards them into
-# the `pi` container as `-e NAME=VALUE` on `docker compose run`:
-#   1. Repeatable `--secret NAME=VALUE` CLI flags.
-#   2. Host env vars namespaced `PI_SANDBOX__SECRET__<NAME>` (prefix
-#      stripped to get NAME).
-# The namespace scan runs first, then `--secret` flags are appended after
-# it, so a `--secret` flag always wins over a same-named namespaced env var
-# (later `-e` wins when docker encounters a duplicate name).
-SECRET_ENV_ARGS=()
-
-# --- pkg-broker store backend: CLI flag alias for the env var below -------
-# '--host-store' is a plain boolean alias for PI_SANDBOX__PKGBROKER_HOST_STORE=1,
-# parsed here alongside '--secret' so both can be combined in one invocation.
-# Either the flag or the env var being '1' is enough to opt in (OR semantics).
-HOST_STORE_FLAG=0
-
-# --- Session naming / resume: CLI flags for pi's own --name/--resume -----
-# '--name NAME' / '--name=NAME' sets a prefix for this run's session
-# display name; the actual name passed into the container is always
-# "${NAME:-pi}-$(date +%Y%m%d-%H%M%S)" (computed below, once, right before
-# the final `docker compose run`), so re-running with the same --name
-# never collides with a previous session. '--resume' is a plain boolean
-# that instead tells the container to run pi's own built-in interactive
-# session picker (`pi --resume`) against the pi-sessions volume -- no name
-# is set in that case. The two are mutually exclusive (checked once both
-# are fully parsed, below). Neither flag has a matching
-# PI_SANDBOX__PERSIST_*-style env var: both are forwarded into the
-# container purely as `-e PI_SANDBOX__SESSION_NAME=...` /
-# `-e PI_SANDBOX__RESUME=1` on the final `docker compose run`, the same
-# mechanism SECRET_ENV_ARGS uses (see containers/pi/entrypoint.sh for how
-# they're consumed).
+PROFILE_FLAG="work"
+AUDIT_FLAG=0
+DETACHED_FLAG=0
 NAME_FLAG=""
 RESUME_FLAG=0
-
-# --- Persistence: pkg-bin / nix-store / proxy-domains volumes -------------
-# Defaults (see compose.yaml's top-level `volumes:` comment and
-# README.md): pkg-bin=ephemeral, nix-store=persistent, proxy-domains=
-# ephemeral. Only flags that CHANGE a default exist (no --no-persist-pkgs,
-# no --persist-store, no --no-persist-domains) -- but the matching
-# PI_SANDBOX__PERSIST_* env var may express either value. A CLI flag
-# always overrides its env var. "Ephemeral" means this script removes the
-# volume with an explicit `docker volume rm` (never tmpfs, never an
-# `external: true` volume) -- see compose.yaml. pi-auth/pi-sessions are
-# NEVER touched by this logic.
-PERSIST_PKGS_FLAG=""
-PERSIST_STORE_FLAG=""
-PERSIST_DOMAINS_FLAG=""
+DRY_RUN=0
+ADD_PATHS=()
+CLONE_PATHS=()
+SECRET_ARGS=() # "NAME=VALUE" pairs from --secret, applied after the namespace scan
 
 print_help() {
   cat <<'EOF'
 Usage: start-agent.sh [FLAGS]
 
-Brings up the pi+proxy+pkg-broker compose stack (nix run .#start-agent).
+Starts one nono-sandboxed `pi` session as the untrusted `pi` user (nix run
+.#start-agent). See IMPLEMENTERS.md's "Launcher and approval helper"
+section for the full architecture writeup.
 
 Flags:
-  --add PATH               Mount an existing host file/directory into
-                            /workspace (repeatable). See README.md.
-  --clone URL               Clone a URL on the host and mount it into
-                            /workspace (repeatable). See README.md.
-  --secret NAME=VALUE       Inject an already-decrypted secret as an env
-                            var into the pi container (repeatable).
-  --name NAME, --name=NAME Prefix for this run's session display name
-                            (the container gets "NAME-YYYYmmdd-HHMMSS";
-                            default prefix is 'pi'). Mutually exclusive
-                            with --resume.
-  --resume                   Skip naming a new session and instead run
-                            pi's own built-in --resume session picker
-                            inside the container (pi-sessions volume).
-                            Mutually exclusive with --name. Has no
-                            effect if PI_SESSIONS=0 is set on the pi
-                            container (sessions disabled).
-  --host-store               Alias for PI_SANDBOX__PKGBROKER_HOST_STORE=1:
-                            pkg-broker shares the host's real /nix/store +
-                            nix-daemon instead of its own isolated volume.
-  --persist-pkgs             Keep the pkg-bin volume (pkg-broker's
-                            resolved binaries) across runs instead of
-                            removing it on teardown. Default: off
-                            (ephemeral).
-  --no-persist-store         Remove the nix-store volume (pkg-broker's
-                            own nix store) on teardown instead of keeping
-                            it. Default: on (persistent). Mutually
-                            exclusive with --host-store (nix-store is
-                            unused in that mode).
-  --persist-domains          Keep runtime request-domain grants
-                            (dynamic-domains.txt, see domain-gate) across
-                            proxy restarts instead of clearing them on
-                            every start. Default: off (cleared every
-                            start).
-  --help, -h                  Show this help and exit. No docker/sudo/nix
-                            work is performed.
+  --profile work            Which flake-owned nono profile to use. "work"
+                             is the only value today (required to be
+                             spelled out, to leave room for a future debug
+                             profile).
+  --audit                    Pass `--audit-integrity` to `nono run`.
+  --detached                 Pass `--detached` to `nono run`: the session
+                             (and its approval helper) outlive this
+                             launcher process -- see "Detached sessions"
+                             below. Use the `attach`/`ps`/`stop` wrappers
+                             to interact with it.
+  --add PATH                 An existing host file or directory, shared
+                             LIVE (not copied) read-write at its real
+                             host path -- see "Live file sharing" below
+                             for what gets refused and how it's torn
+                             down (repeatable).
+  --clone URL                A URL cloned on the HOST (so host git
+                             credentials/ssh-agent are used, not anything
+                             inside the sandbox) and then handled exactly
+                             like --add (repeatable).
+  --secret NAME=VALUE        Inject an already-decrypted secret as an env
+                             var into the `pi` process (repeatable). Never
+                             appears in argv/`ps` -- see "Secrets" below.
+  --name NAME                Session name ROOT (nono's own `--name` is
+                             actually NAME-<unix-timestamp>, so repeated
+                             launches get distinct nono sessions), and the
+                             per-session /tmp bookkeeping directory name
+                             ($PI_STACK_SESSIONS_ROOT/NAME-<timestamp>/,
+                             default root /tmp/pi-sessions). Default root:
+                             "pi". NOTE: the shared PI_CODING_AGENT_DIR
+                             (/var/lib/pi/.pi/agent, see "Idempotent
+                             per-run seeding / --resume" below) is what
+                             actually makes `--resume` meaningful now --
+                             it is the SAME directory for every --name,
+                             not something this flag selects between.
+  --resume                   Forwarded to `pi` itself as `--resume` (pi's
+                             own session picker) -- unrelated to nono's own
+                             session concept. Mutually exclusive with
+                             --name (matches the old container-era
+                             semantics).
+  --dry-run                  Print the resolved `nono run` command (secret
+                             VALUES redacted, names shown) and the paths
+                             that would be live-shared, and the ACL
+                             actions that would be run for them, then
+                             exit. No directories are created, no
+                             approval helper is started, no sudo/nono/
+                             setfacl/chmod commands run.
+  --help, -h                 Show this help and exit.
 
-Environment variables (a CLI flag above always overrides the matching one):
-  PI_SANDBOX__PERSIST_PKGS=0|1          Same as --persist-pkgs. Default: 0.
-  PI_SANDBOX__PERSIST_STORE=0|1         Inverse of --no-persist-store.
-                                         Default: 1.
-  PI_SANDBOX__PERSIST_DOMAINS=0|1       Same as --persist-domains.
-                                         Default: 0.
-  PI_SANDBOX__PKGBROKER_HOST_STORE=0|1  Same as --host-store.
-  PI_SANDBOX__KUBECONFIG_PATH           Override the default kubeconfig
-                                         path.
-  PI_SANDBOX__SECRET__<NAME>            Same as --secret NAME=VALUE.
-  PERSONAL_MONOREPO_LOCATION             Path to the monorepo checkout.
+Environment variables:
+  PI_SANDBOX__SECRET__<NAME>  Same as --secret NAME=VALUE (scanned first;
+                               a --secret flag with the same NAME wins).
+  PERSONAL_MONOREPO_LOCATION   Path to the monorepo checkout (required).
+  PI_STACK_NONO_BIN, PI_STACK_PI_BIN, PI_STACK_JQ_BIN,
+  PI_STACK_APPROVAL_HELPER_BIN
+                               Absolute store paths for nono/pi/jq/the
+                               approval helper, set automatically by
+                               flake.nix's apps.start-agent wrapper (this
+                               flake provisions nono+pi itself, from
+                               nixpkgs-unstable). Only needed manually if
+                               running this script directly instead of via
+                               'nix run .#start-agent' -- otherwise falls
+                               back to 'command -v' with a warning.
+  PI_STACK_CA_BUNDLE           Explicit override for the host CA bundle
+                               granted (read-only, parent directory) into
+                               the session and exported as SSL_CERT_FILE/
+                               NIX_SSL_CERT_FILE/NODE_EXTRA_CA_CERTS --
+                               see resolve_ca_bundle's own comment above
+                               for the full resolution order (falls back
+                               through NIX_SSL_CERT_FILE, SSL_CERT_FILE,
+                               then the usual system bundle paths).
+  PI_STACK_EXTRA_PKGS,
+  PI_STACK_EXTRA_PATH          Space-separated store paths of flake.nix's
+                               ad-hoc `extraPackages` list (currently just
+                               coreutils) and the corresponding bin/ PATH
+                               (pkgs.lib.makeBinPath), set automatically by
+                               flake.nix's apps.start-agent wrapper. The
+                               packages are read-granted the same way
+                               PI_STACK_PI_BIN is, and the PATH is
+                               prepended onto the sandboxed `pi` process's
+                               PATH. Tolerated unset.
 
-Session naming / resume (no matching env var to set directly -- these are
-computed by this script from --name/--resume and forwarded into the pi
-container as PI_SANDBOX__SESSION_NAME / PI_SANDBOX__RESUME, consumed by
-containers/pi/entrypoint.sh):
-  --name NAME / --name=NAME             Prefix for this run's session name.
-  --resume                               Open pi's built-in session picker
-                                         instead.
+Live file sharing (workdir, --add, --clone):
+  Your current working directory (nono's own "workdir") and every
+  --add/--clone extra are shared LIVE and read-write at their REAL host
+  path -- not copied anywhere -- via ACLs (POSIX ACLs/setfacl on Linux,
+  NFSv4-style ACLs/chmod +a on macOS). A path is refused outright (before anything is granted, for ANY of the paths
+  involved) if it's "/", your entire $HOME, or not owned by you. At
+  shutdown -- this launcher's own exit (foreground), the detached
+  wrapper once the session ends (detached), or `nix run .#stop -- <name>`
+  -- every granted path has `pi`-left-behind file ownership normalized
+  back to you and its ACL entries removed, which requires an interactive
+  `sudo` prompt (unless another still-running session also needs that
+  same path, in which case it's left alone). If a launch is interrupted
+  before that teardown runs (e.g. a crash), run `nix run .#stop --
+  <name>` afterwards to finish restoring ownership/ACLs. A git repo
+  shared this way is also registered as a `safe.directory` for both you
+  and `pi`, and your effective author identity for it (user.name/
+  user.email, resolved from that repo's own config plus your git config)
+  is forwarded into the sandbox -- both via GIT_CONFIG_* env vars, never a
+  written .gitconfig -- since git refuses to operate in a directory it
+  doesn't own by default, and the sandboxed `pi` user's own $HOME means
+  your global git config is not readable there.
 
-See README.md for the full writeup (persistence model, workspace extras,
-secrets, kubeconfig, store backends).
+Idempotent per-run seeding / --resume:
+  Every launch re-syncs the ONE fixed, shared /var/lib/pi/.pi/agent/
+  (PI_CODING_AGENT_DIR, the same directory regardless of --name) from
+  config/agent/ plus the pi-extra-extensions/pi-extra-skills build
+  outputs -- but it only ever ADDS/overwrites those specific files, never
+  deletes that directory first. So anything `pi` itself persists there
+  (its own session history, included) survives across EVERY launch,
+  whatever --name is given -- that's what makes --resume meaningful.
+  --name only affects the nono session name/this launch's own transient
+  /tmp bookkeeping (its recorded workdir/--add/--clone paths), which are
+  re-shared/merged per --name root as before.
+
+Detached sessions:
+  --detached starts TWO things that outlive this launcher process, both
+  via `setsid`:
+    - the approval helper, run as YOU (the invoking user), not `pi` --
+      this is required so it inherits your $TMUX for its `--ui auto`
+      tmux-prompter fallback (a helper run as `pi` could never reach your
+      tmux server). It fails loudly and non-zero if no usable prompter
+      can be found -- see "Approvals over SSH / headless hosts" below.
+    - a supervisor (runs as `pi`, logging to
+      $PI_STACK_SESSIONS_ROOT/<name>-<timestamp>/supervisor.log, default
+      /tmp/pi-sessions/...) that generates the profile,
+      runs `nono run --detached`, then polls `nono ps` until the session
+      is gone.
+  This launcher process waits briefly to confirm the approval helper
+  actually came up (and prints its log location) before returning --
+  i.e. before "detaching" in the user-visible sense -- and exits non-zero
+  with a clear error if it didn't.
+
+Approvals over SSH / headless hosts:
+  The approval helper's `--ui auto` selection NEVER silently falls back to
+  denying every approval any more. On Linux, it only uses a desktop
+  dialog (kdialog) when DISPLAY/WAYLAND_DISPLAY is set AND you are not in
+  an SSH session; otherwise it only uses tmux, and only if $TMUX is
+  already set (i.e. you are running this command from inside a tmux
+  session). If neither is available, the helper refuses to start at all
+  and prints an actionable error -- start tmux first (e.g.
+  `tmux new -s pi`), then run `start-agent.sh` from inside
+  that tmux session, so approvals show up as a tmux command-prompt
+  (y/n/s) you can answer. The helper's own prompt timeout (55s) is kept
+  below the 60s `timeout_secs` the nono profiles set for the webhook
+  backend, so a slow answer still resolves (even to a deny, with a logged
+  reason) before nono itself gives up waiting.
+
+See README.md and IMPLEMENTERS.md for the full writeup.
 EOF
 }
 
-# --- Workspace contents: repeatable --add PATH / --clone URL --------------
-# /workspace has NO default content anymore (no more implicit
-# PERSONAL_MONOREPO_LOCATION bind mount, see compose.yaml). What `pi` sees
-# at /workspace is built up entirely from these two repeatable flags, in the
-# order given:
-#   --add PATH    an existing host file or directory, resolved to an
-#                 absolute realpath.
-#   --clone URL   cloned on the HOST (so host git credentials/ssh-agent/
-#                 credential helpers are used, not anything inside the
-#                 container) into
-#                 ${XDG_CACHE_HOME:-$HOME/.cache}/pi-sandbox/clones/<repo-name>
-#                 (<repo-name> = URL basename, .git suffix stripped). If
-#                 that clone already exists, only `git fetch` runs -- the
-#                 working tree is never touched -- then it's treated
-#                 exactly like `--add <that dir>`.
-# Layout rules (see compose.workspace.yaml / containers/workspace-mounter):
-#   - Zero extras: /workspace is an empty tmpfs (no sidecar is started).
-#   - Exactly one extra, a directory: mounted directly AT /workspace.
-#   - Exactly one extra, a file: rejected -- a lone --add/--clone must
-#     resolve to a directory.
-#   - Two or more extras: /workspace is a neutral root; each extra (file or
-#     directory) appears as a sibling at /workspace/<basename>.
-# Two extras sharing a basename is an error (ambiguous sibling name).
-EXTRAS=() # ordered "name:type:hostpath" entries; type is "dir" or "file"
-
 add_extra() {
-  local hostpath="$1" type="$2" name existing existing_name
-  name="$(basename "$hostpath")"
-  for existing in "${EXTRAS[@]:-}"; do
-    [ -n "$existing" ] || continue
-    existing_name="${existing%%:*}"
-    if [ "$existing_name" = "$name" ]; then
-      echo "error: two --add/--clone extras share the same basename '$name' ($hostpath vs. the earlier one) -- rename/relocate one of them." >&2
-      exit 1
-    fi
-  done
-  EXTRAS+=("$name:$type:$hostpath")
+  local kind="$1" value="$2"
+  if [ "$kind" = add ]; then ADD_PATHS+=("$value"); else CLONE_PATHS+=("$value"); fi
 }
 
 handle_add() {
-  local add_path="${1:?--add requires a PATH argument}" resolved
-  if [ ! -e "$add_path" ]; then
-    echo "error: --add path does not exist: $add_path" >&2
+  local p="${1:?--add requires a PATH argument}"
+  if [ ! -e "$p" ]; then
+    echo "error: --add path does not exist: $p" >&2
     exit 1
   fi
-  resolved="$(realpath "$add_path")"
-  if [ -d "$resolved" ]; then
-    add_extra "$resolved" dir
-  elif [ -f "$resolved" ]; then
-    add_extra "$resolved" file
-  else
-    echo "error: --add path is neither a regular file nor a directory: $resolved" >&2
-    exit 1
-  fi
+  add_extra add "$(realpath "$p")"
 }
 
 handle_clone() {
@@ -203,13 +285,13 @@ handle_clone() {
   mkdir -p "$clones_dir"
   dest="$clones_dir/$repo_name"
   if [ -d "$dest/.git" ]; then
-    echo "==> --clone: $repo_name already cloned at $dest -- fetching only (working tree left untouched)."
+    echo "==> --clone: $repo_name already cloned at $dest -- fetching only." >&2
     git -C "$dest" fetch
   else
-    echo "==> --clone: cloning $url into $dest..."
+    echo "==> --clone: cloning $url into $dest..." >&2
     git clone "$url" "$dest"
   fi
-  add_extra "$dest" dir
+  add_extra clone "$dest"
 }
 
 while [ $# -gt 0 ]; do
@@ -218,26 +300,25 @@ while [ $# -gt 0 ]; do
     print_help
     exit 0
     ;;
-  --host-store)
-    HOST_STORE_FLAG=1
+  --profile)
+    PROFILE_FLAG="${2:?--profile requires an argument}"
+    shift 2
+    ;;
+  --profile=*)
+    PROFILE_FLAG="${1#--profile=}"
     shift
     ;;
-  --persist-pkgs)
-    PERSIST_PKGS_FLAG=1
+  --audit)
+    AUDIT_FLAG=1
     shift
     ;;
-  --no-persist-store)
-    PERSIST_STORE_FLAG=0
-    shift
-    ;;
-  --persist-domains)
-    PERSIST_DOMAINS_FLAG=1
+  --detached)
+    DETACHED_FLAG=1
     shift
     ;;
   --name)
-    shift
-    NAME_FLAG="${1:?--name requires a NAME argument}"
-    shift
+    NAME_FLAG="${2:?--name requires a NAME argument}"
+    shift 2
     ;;
   --name=*)
     NAME_FLAG="${1#--name=}"
@@ -247,34 +328,35 @@ while [ $# -gt 0 ]; do
     RESUME_FLAG=1
     shift
     ;;
+  --dry-run)
+    DRY_RUN=1
+    shift
+    ;;
   --add)
-    shift
-    handle_add "${1:?--add requires a PATH argument}"
-    shift
+    handle_add "${2:?--add requires a PATH argument}"
+    shift 2
     ;;
   --add=*)
     handle_add "${1#--add=}"
     shift
     ;;
   --clone)
-    shift
-    handle_clone "${1:?--clone requires a URL argument}"
-    shift
+    handle_clone "${2:?--clone requires a URL argument}"
+    shift 2
     ;;
   --clone=*)
     handle_clone "${1#--clone=}"
     shift
     ;;
   --secret)
-    shift
-    secret_arg="${1:?--secret requires a NAME=VALUE argument}"
+    secret_arg="${2:?--secret requires a NAME=VALUE argument}"
     secret_name="${secret_arg%%=*}"
     if [ -z "$secret_name" ] || [ "$secret_arg" = "${secret_arg#*=}" ]; then
       echo "error: --secret requires a NAME=VALUE argument with a non-empty NAME (got: $secret_arg)" >&2
       exit 1
     fi
-    SECRET_ENV_ARGS+=(-e "$secret_arg")
-    shift
+    SECRET_ARGS+=("$secret_arg")
+    shift 2
     ;;
   --secret=*)
     secret_arg="${1#--secret=}"
@@ -283,7 +365,7 @@ while [ $# -gt 0 ]; do
       echo "error: --secret requires a NAME=VALUE argument with a non-empty NAME (got: $secret_arg)" >&2
       exit 1
     fi
-    SECRET_ENV_ARGS+=(-e "$secret_arg")
+    SECRET_ARGS+=("$secret_arg")
     shift
     ;;
   *)
@@ -293,306 +375,642 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+if [ "$PROFILE_FLAG" != "work" ]; then
+  echo "error: --profile only supports 'work' in this MVP (got: $PROFILE_FLAG)" >&2
+  exit 1
+fi
 if [ "$RESUME_FLAG" = "1" ] && [ -n "$NAME_FLAG" ]; then
-  echo "error: --resume and --name are mutually exclusive -- --resume runs pi's own session picker instead of starting a newly-named session." >&2
+  echo "error: --resume and --name are mutually exclusive." >&2
   exit 1
 fi
 
-# Computed once, here, and forwarded into the pi container purely as env
-# vars (see containers/pi/entrypoint.sh) -- same -e mechanism as
-# SECRET_ENV_ARGS, appended separately below so secrets-flag precedence
-# semantics (namespace-scan-then-flags) are untouched.
-SESSION_ENV_ARGS=()
-if [ "$RESUME_FLAG" = "1" ]; then
-  echo "==> --resume: this run will open pi's built-in session picker instead of starting a newly-named session."
-  SESSION_ENV_ARGS+=(-e "PI_SANDBOX__RESUME=1")
-else
-  SESSION_NAME="${NAME_FLAG:-pi}-$(date +%Y%m%d-%H%M%S)"
-  echo "==> Session name: $SESSION_NAME"
-  SESSION_ENV_ARGS+=(-e "PI_SANDBOX__SESSION_NAME=$SESSION_NAME")
-fi
+SESSION_NAME_ROOT="${NAME_FLAG:-pi}"
+DATE="$(date +%s)"
+SESSION_NAME="${SESSION_NAME_ROOT}-${DATE}"
+validate_run_name "$SESSION_NAME"
+echo "==> Session name: $SESSION_NAME" >&2
 
-SECRET_NAMESPACE_ARGS=()
-while IFS= read -r var_name; do
+# --- Live file sharing: check every path BEFORE granting anything --------
+# share_path_check runs no sudo/ACL commands (plain realpath/stat), so
+# it's safe to always run (even under --dry-run) -- a refusal here is
+# reported immediately, before any of the slower per-run seeding below
+# even starts. Order matters: the workdir goes first, so it's always the
+# first entry recorded in $RUN_DIR/shared-paths.
+WORKDIR="$(share_path_check "$(pwd)")"
+CHECKED_ADD_PATHS=()
+for add_path in "${ADD_PATHS[@]:-}"; do
+  [ -n "$add_path" ] || continue
+  CHECKED_ADD_PATHS+=("$(share_path_check "$add_path")")
+done
+ADD_PATHS=("${CHECKED_ADD_PATHS[@]:-}")
+CHECKED_CLONE_PATHS=()
+for clone_path in "${CLONE_PATHS[@]:-}"; do
+  [ -n "$clone_path" ] || continue
+  CHECKED_CLONE_PATHS+=("$(share_path_check "$clone_path")")
+done
+CLONE_PATHS=("${CHECKED_CLONE_PATHS[@]:-}")
+SHARE_PATHS=("$WORKDIR")
+for add_path in "${ADD_PATHS[@]:-}"; do
+  [ -n "$add_path" ] || continue
+  SHARE_PATHS+=("$add_path")
+done
+for clone_path in "${CLONE_PATHS[@]:-}"; do
+  [ -n "$clone_path" ] || continue
+  SHARE_PATHS+=("$clone_path")
+done
+
+# git_safe_dir_env: registers every shared path as a git safe.directory
+# for both the invoking user and `pi` (harmless for paths that aren't
+# git repos at all -- git simply never consults an irrelevant
+# safe.directory entry). git_author_identity_env then forwards this
+# repo's effective author identity (user.name/user.email) the same way,
+# because the sandboxed process runs with the pi user's own $HOME and so
+# cannot see the invoking user's global git config -- without it, a
+# worktree commit inside the sandbox fails with "Author identity
+# unknown". Both fail early here, host-side and before any sudo/nono, if
+# the identity can't be resolved. The resulting GIT_CONFIG_* vars are
+# threaded through `sudo --preserve-env` below so they reach the `pi`
+# process sudo starts (foreground and --detached alike), and
+# profiles/work.base.json allow-lists GIT_CONFIG_COUNT/GIT_CONFIG_KEY_*/
+# GIT_CONFIG_VALUE_* (top-level environment.allow_vars and the nix
+# command's sandboxed environment.allow_vars) so they also reach the
+# sandboxed `pi` process itself.
+git_safe_dir_env "${SHARE_PATHS[@]}"
+git_author_identity_env "$WORKDIR"
+
+# --- Secrets: namespace scan first, then --secret flags (flags win) -------
+# Collected as real exported env vars on THIS process (never as `-e`/argv
+# tokens anywhere), then threaded through `sudo --preserve-env=<names>`
+# below -- never via argv, since that is visible via `ps`.
+SECRET_NAMES=()
+# `${!PREFIX@}` instead of `compgen -v`: writeShellApplication's bash is
+# bashNonInteractive (no readline), which has no compgen builtin.
+for var_name in "${!PI_SANDBOX__SECRET__@}"; do
   [ -n "$var_name" ] || continue
   secret_name="${var_name#PI_SANDBOX__SECRET__}"
-  SECRET_NAMESPACE_ARGS+=(-e "${secret_name}=${!var_name}")
-done < <(compgen -v PI_SANDBOX__SECRET__ || true)
+  export "$secret_name=${!var_name}"
+  SECRET_NAMES+=("$secret_name")
+done
 
-# Namespace-discovered values first, explicit --secret flags appended
-# after, so flags take precedence on a NAME collision.
-SECRET_ENV_ARGS=("${SECRET_NAMESPACE_ARGS[@]}" "${SECRET_ENV_ARGS[@]}")
+for secret_arg in "${SECRET_ARGS[@]:-}"; do
+  [ -n "$secret_arg" ] || continue
+  secret_name="${secret_arg%%=*}"
+  secret_value="${secret_arg#*=}"
+  export "$secret_name=$secret_value"
+  SECRET_NAMES+=("$secret_name")
+done
 
-echo "==> Checking for a generated kubeconfig..."
-if [ -f "$KUBECONFIG_PATH" ]; then
-  echo "    found: $KUBECONFIG_PATH — enabling k8s access for this run."
-  COMPOSE_FILES+=(-f compose.kube.yaml)
-else
-  cat >&2 <<EOF
-    WARNING: no kubeconfig found at $KUBECONFIG_PATH.
-    Continuing WITHOUT Kubernetes access for this run.
-    To enable it, generate a scoped, dev/staging-only kubeconfig with:
-      nix run $PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#gen-kubeconfig
-    (or place a pre-generated one at $KUBECONFIG_PATH / set PI_SANDBOX__KUBECONFIG_PATH)
-EOF
-fi
+PRESERVE_LIST="PI_CODING_AGENT_DIR,XDG_STATE_HOME"
+for secret_name in "${SECRET_NAMES[@]:-}"; do
+  [ -n "$secret_name" ] || continue
+  PRESERVE_LIST="$PRESERVE_LIST,$secret_name"
+done
+for git_safe_dir_var in "${GIT_SAFE_DIR_ENV_VARS[@]:-}"; do
+  [ -n "$git_safe_dir_var" ] || continue
+  PRESERVE_LIST="$PRESERVE_LIST,$git_safe_dir_var"
+done
 
-# --- pkg-broker store backend: default isolated volume vs. host-shared ----
-# Mirrors the kubeconfig block above: an opt-in override, layered onto
-# COMPOSE_FILES, rather than something this script decides on its own.
-# Set PI_SANDBOX__PKGBROKER_HOST_STORE=1 (or pass '--host-store') to swap
-# pkg-broker's default, empty 'nix-store' docker volume for the host's real
-# /nix/store +
-# nix-daemon socket (compose.pkgbroker-host-store.yaml -- see
-# containers/pkg-broker/README.md for the trust-boundary tradeoff that
-# override makes). Resolved again, below, once we know which backend is
-# active, to decide what pi's own /nix/store bind mount should point at.
-if [ "$HOST_STORE_FLAG" = "1" ] || [ "${PI_SANDBOX__PKGBROKER_HOST_STORE:-0}" = "1" ]; then
-  PKGBROKER_HOST_STORE=1
-else
-  PKGBROKER_HOST_STORE=0
-fi
-echo "==> Checking pkg-broker store backend..."
-if [ "$PKGBROKER_HOST_STORE" = "1" ]; then
-  echo "    PI_SANDBOX__PKGBROKER_HOST_STORE=1 / --host-store — layering compose.pkgbroker-host-store.yaml (pkg-broker shares the host's real nix store/daemon)."
-  COMPOSE_FILES+=(-f compose.pkgbroker-host-store.yaml)
-else
-  echo "    Using pkg-broker's default, isolated 'nix-store' volume (set PI_SANDBOX__PKGBROKER_HOST_STORE=1 or pass --host-store to share the host's real store instead)."
-  COMPOSE_FILES+=(-f compose.nixstore-overlay.yaml)
-fi
+# --- Resolve tool paths, once -----------------------------------------
+# This stack's own flake wrapper (flake.nix's apps.start-agent) provisions
+# `nono` and `pi` itself (from nixpkgs-unstable, no overlay -- see
+# flake.nix's `nono`/`pi-coding-agent` packages) and exports their
+# absolute store paths as PI_STACK_*_BIN env vars before this script runs,
+# so the normal `nix run .#start-agent` path never touches `command -v`
+# for these at all. `resolve_stack_bin` falls back to `command -v` (with a
+# warning) only if this script is somehow invoked directly, outside the
+# flake wrapper. Resolved to absolute, symlink-free paths and referenced
+# that way everywhere below -- both so `nix-store -qR` (inside
+# gen-profile.sh) gets real store paths, and so the final `sudo -u pi`
+# invocation never depends on whatever (possibly minimal) PATH sudo's
+# `secure_path` gives `pi`.
+NONO_BIN="$(resolve_stack_bin PI_STACK_NONO_BIN nono)"
+PI_BIN="$(resolve_stack_bin PI_STACK_PI_BIN pi)"
+JQ_BIN="$(resolve_stack_bin PI_STACK_JQ_BIN jq)"
+APPROVAL_HELPER_BIN="$(resolve_stack_bin PI_STACK_APPROVAL_HELPER_BIN approval-helper)"
 
-# --- Resolve persistence choices (flag > env var > default) ---------------
-if [ -n "$PERSIST_PKGS_FLAG" ]; then
-  PERSIST_PKGS="$PERSIST_PKGS_FLAG"
-else
-  PERSIST_PKGS="${PI_SANDBOX__PERSIST_PKGS:-0}"
-fi
-if [ -n "$PERSIST_STORE_FLAG" ]; then
-  PERSIST_STORE="$PERSIST_STORE_FLAG"
-else
-  PERSIST_STORE="${PI_SANDBOX__PERSIST_STORE:-1}"
-fi
-if [ -n "$PERSIST_DOMAINS_FLAG" ]; then
-  PERSIST_DOMAINS="$PERSIST_DOMAINS_FLAG"
-else
-  PERSIST_DOMAINS="${PI_SANDBOX__PERSIST_DOMAINS:-0}"
-fi
-
-if [ "$PERSIST_STORE" = "0" ] && [ "$PKGBROKER_HOST_STORE" = "1" ]; then
-  echo "error: --no-persist-store / PI_SANDBOX__PERSIST_STORE=0 is mutually exclusive with --host-store / PI_SANDBOX__PKGBROKER_HOST_STORE=1 (the nix-store volume is unused in host-store mode)." >&2
-  exit 1
-fi
-if [ "$PERSIST_PKGS" = "1" ] && [ "$PERSIST_STORE" = "0" ]; then
-  echo "    WARNING: --persist-pkgs together with --no-persist-store will leave pkg-bin's symlinks dangling after teardown (they point into paths inside the nix-store volume, which will be removed). Consider persisting both or neither." >&2
-fi
-
-export PI_SANDBOX__PERSIST_DOMAINS="$PERSIST_DOMAINS"
-
-echo "==> Persistence: pkg-bin=$([ "$PERSIST_PKGS" = "1" ] && echo persistent || echo ephemeral), nix-store=$([ "$PERSIST_STORE" = "1" ] && echo persistent || echo ephemeral), proxy-domains=$([ "$PERSIST_DOMAINS" = "1" ] && echo persistent || echo ephemeral)"
-
-# Removes any of pkg-bin/nix-store/proxy-domains NOT marked persistent
-# above, resolving their actual (project-name-prefixed) volume names via
-# `docker compose config` rather than hardcoding a project-name prefix.
-# Called twice: once below (before `up`, to clear leftovers from a
-# crashed previous run) and once more from cleanup() after `down`.
-# pi-auth/pi-sessions are never referenced here -- they must never be
-# removed.
-remove_nonpersisted_volumes() {
-  local volumes_json pkg_bin_vol nix_store_vol proxy_domains_vol
-  volumes_json="$(docker compose "${COMPOSE_FILES[@]}" config --format json 2>/dev/null)" || return 0
-  pkg_bin_vol="$(jq -r '.volumes["pkg-bin"].name // empty' <<<"$volumes_json")"
-  nix_store_vol="$(jq -r '.volumes["nix-store"].name // empty' <<<"$volumes_json")"
-  proxy_domains_vol="$(jq -r '.volumes["proxy-domains"].name // empty' <<<"$volumes_json")"
-
-  if [ "$PERSIST_PKGS" != "1" ] && [ -n "$pkg_bin_vol" ]; then
-    echo "    removing non-persisted volume: $pkg_bin_vol (pkg-bin -- pass --persist-pkgs to keep it)"
-    docker volume rm "$pkg_bin_vol" >/dev/null 2>&1 || true
+# --read candidates for gen-profile.sh's Linux exec-ceiling closure --
+# this stack's own tools (pi, the nix/scripts tools). node's own files
+# come from the `node_runtime` nono group instead (see
+# profiles/work.base.json), not from here. agent-validate/
+# agent-plan-create are optional -- only added if found, since a plain
+# interactive `pi` session (this script's only job) doesn't strictly need
+# them the way an IMPLEMENT subagent does.
+READ_ROOTS=("$PI_BIN")
+for optional_tool in agent-validate agent-plan-create; do
+  if tool_path="$(command -v "$optional_tool" 2>/dev/null)"; then
+    READ_ROOTS+=("$(readlink -f "$tool_path")")
   fi
-  if [ "$PERSIST_STORE" != "1" ] && [ -n "$nix_store_vol" ]; then
-    echo "    removing non-persisted volume: $nix_store_vol (nix-store -- omit --no-persist-store to keep it)"
-    docker volume rm "$nix_store_vol" >/dev/null 2>&1 || true
+done
+
+# --- Ad-hoc extra packages (flake.nix's `extraPackages`, currently just
+# coreutils) -- granted read+exec access the same way $PI_BIN is, and
+# joined onto PATH inside the sandboxed `pi` process below. Set by
+# flake.nix's apps.start-agent wrapper; tolerated unset/empty if this
+# script is somehow run directly, outside the flake wrapper (no extra
+# packages granted or added to PATH in that case). See IMPLEMENTERS.md.
+EXTRA_PKGS="${PI_STACK_EXTRA_PKGS:-}"
+for extra_pkg in $EXTRA_PKGS; do
+  [ -n "$extra_pkg" ] || continue
+  READ_ROOTS+=("$extra_pkg")
+done
+EXTRA_PATH="${PI_STACK_EXTRA_PATH:-}"
+
+# CA bundle: the sandbox has no default CA trust store reachable inside
+# it -- see resolve_ca_bundle above. Its PARENT directory (not the bundle
+# file itself) is granted via --read, since it's unverified whether nono
+# profiles accept single-file grants (see IMPLEMENTERS.md).
+CA_MODE=""
+[ "$DRY_RUN" = "1" ] && CA_MODE="dry-run"
+CA_BUNDLE="$(resolve_ca_bundle "$CA_MODE")"
+CA_BUNDLE_DIR="$(dirname "$CA_BUNDLE")"
+READ_ROOTS+=("$CA_BUNDLE_DIR")
+
+READ_ROOT_ARGS=()
+for root in "${READ_ROOTS[@]}"; do
+  READ_ROOT_ARGS+=(--read "$root")
+done
+
+PRESERVE_LIST="$PRESERVE_LIST,SSL_CERT_FILE,NIX_SSL_CERT_FILE,NODE_EXTRA_CA_CERTS,GOCACHE,GOPATH"
+
+if [ "$DRY_RUN" = "1" ]; then
+  echo "==> --dry-run: no directories created, no helper started, no sudo/nono/setfacl/chmod commands run." >&2
+  echo "Resolved (illustrative -- the real webhook URL/profile path are only known once this actually runs):" >&2
+  echo "  nono:                $NONO_BIN" >&2
+  echo "  pi:                  $PI_BIN" >&2
+  echo "  session name:        $SESSION_NAME" >&2
+  echo "  workdir (live-shared): $WORKDIR" >&2
+  echo "  nono process HOME:   $HOME (inherited untouched -- nono's own environment is never rewritten)" >&2
+  echo "  payload HOME:        $PI_USER_HOME (the 'pi' user's own home; assigned to the command nono launches, never to nono itself. The invoking user's HOME=$HOME stays host-side only.)" >&2
+  echo "  read roots:          ${READ_ROOTS[*]}" >&2
+  echo "  CA bundle:           $CA_BUNDLE (parent dir $CA_BUNDLE_DIR read-granted)" >&2
+  echo "  extra packages:      ${EXTRA_PKGS:-<none>}" >&2
+  echo "  extra PATH prefix:   ${EXTRA_PATH:-<none>}" >&2
+  echo "  --add (live-shared): ${ADD_PATHS[*]:-<none>}" >&2
+  echo "  --clone (live-shared, as --add): ${CLONE_PATHS[*]:-<none>}" >&2
+  echo "  secrets (names only, values redacted): ${SECRET_NAMES[*]:-<none>}" >&2
+  echo "  git config (GIT_CONFIG_* env): safe.directory for every shared path, plus the author identity (user.name/user.email) resolved from $WORKDIR" >&2
+  echo >&2
+  echo "Live-sharing actions that would be run for each of: ${SHARE_PATHS[*]}" >&2
+  case "$(uname -s)" in
+  Linux)
+    echo "  setfacl -R -m u:pi:rwX <path>; on directories also: find <path> -type d -exec setfacl -m d:u:pi:rwX {} +; find <path> -type d -exec setfacl -m d:u:$(id -un):rwX {} +" >&2
+    echo "  setfacl -m u:pi:x <each parent dir of <path>, up to (excluding) '/'>" >&2
+    ;;
+  Darwin)
+    echo "  chmod -R +a 'user:pi allow ...' <path>; chmod -R +a 'user:$(id -un) allow ...' <path>" >&2
+    echo "  chmod +a 'user:pi allow search' <each parent dir of <path>, up to (excluding) '/'>" >&2
+    ;;
+  esac
+  echo >&2
+  echo "Resolved command (would run as the 'pi' user):" >&2
+  nono_run_line="  $NONO_BIN run --profile $SESSIONS_ROOT/$SESSION_NAME/profile.json --allow-cwd"
+  [ "$AUDIT_FLAG" = "1" ] && nono_run_line="$nono_run_line --audit-integrity"
+  [ "$DETACHED_FLAG" = "1" ] && nono_run_line="$nono_run_line --detached"
+  nono_run_line="$nono_run_line --name $SESSION_NAME --"
+  payload_line="sh -c \"export HOME=\\\"$PI_USER_HOME\\\"; exec \\\"\$@\\\"\" sh $PI_BIN"
+  [ "$RESUME_FLAG" = "1" ] && payload_line="$payload_line --resume"
+  {
+    echo "  sudo -u pi --preserve-env=$PRESERVE_LIST -- \\"
+    echo "    sh -c \"cd \\\"\$1\\\"; shift; export PATH=\\\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\\\"; exec \\\"\$@\\\"\" sh $WORKDIR \\"
+    echo "    $nono_run_line \\"
+    echo "      $payload_line"
+  } >&2
+  exit 0
+fi
+
+# --- Per-session transient bookkeeping (/tmp) + the ONE fixed, shared,
+# pi-owned agent dir -------------------------------------------------------
+# RUN_DIR: this launch's own transient scratch (profile.json,
+# shared-paths, workdir-path, state/sessions, supervisor files) -- lives
+# under SESSIONS_ROOT (/tmp by default), not relied on to survive a
+# reboot/tmp sweep (a live nono session is always independently
+# discoverable via `nono ps` against the shared NONO_STATE_DIR below).
+# AGENT_DIR: the ONE fixed, persistent PI_CODING_AGENT_DIR shared by every
+# session regardless of --name (lib-common.sh's FIXED_AGENT_DIR) -- never
+# deleted, only ever added/overwritten below, which is what makes
+# `--resume` meaningful now. NONO_STATE_DIR is likewise the ONE shared
+# nono XDG_STATE_HOME every session uses (lib-common.sh's nono_state_dir).
+RUN_DIR="$SESSIONS_ROOT/$SESSION_NAME"
+AGENT_DIR="$FIXED_AGENT_DIR"
+STATE_DIR="$RUN_DIR/state"
+NONO_STATE_DIR="$(nono_state_dir)"
+
+# Wipe the shared nono state dir before launch, but ONLY if nothing is
+# currently live against it -- a live sibling session's own state must
+# never be torn out from under it just because a new, unrelated session
+# is starting. See lib-common.sh's nono_any_session_running for the
+# "any output from nono ps counts as live" caveat (nono ps's exact
+# "nothing running" output isn't documented in this checkout).
+if [ -d "$NONO_STATE_DIR" ]; then
+  if nono_any_session_running "$NONO_BIN" "$NONO_STATE_DIR"; then
+    echo "==> Other session(s) already live against $NONO_STATE_DIR -- not wiping it before this launch." >&2
+  else
+    echo "==> No live sessions -- wiping shared nono state dir $NONO_STATE_DIR before launch (preserving nono/audit)..." >&2
+    nono_state_wipe_preserving_audit "$NONO_STATE_DIR"
   fi
-  if [ "$PERSIST_DOMAINS" != "1" ] && [ -n "$proxy_domains_vol" ]; then
-    echo "    removing non-persisted volume: $proxy_domains_vol (proxy-domains -- pass --persist-domains to keep it)"
-    docker volume rm "$proxy_domains_vol" >/dev/null 2>&1 || true
+fi
+
+# tar_copy_to_pi: streams the CONTENTS of a host directory (or a lone
+# file) owned by the invoking user into a fresh pi-owned destination
+# directory, without ever requiring `pi` to have read access to the
+# source in place, and without requiring the invoking user to have any
+# access into /var/lib/pi beyond running `sudo -u pi`. The source-side tar
+# runs as the invoking user (who already owns/can read these files); only
+# the destination-side tar runs as `pi`.
+tar_copy_to_pi() {
+  local src="$1" dest="$2"
+  sudo -u pi mkdir -p "$dest"
+  if [ -d "$src" ]; then
+    tar -cf - -C "$src" . | sudo -u pi tar -xf - -C "$dest"
+  else
+    tar -cf - -C "$(dirname "$src")" "$(basename "$src")" | sudo -u pi tar -xf - -C "$dest"
   fi
 }
 
-cd "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack"
+# write_as_pi: pipes $2's contents into a pi-owned file at $1 (the
+# invoking user never needs write access into /var/lib/pi for this --
+# only `tee`, running as `pi`, does).
+write_as_pi() {
+  # shellcheck disable=SC2024 # intentional: the invoking user's shell
+  # opens $2 for reading before exec'ing sudo -- `pi` never needs read
+  # access to it, only `tee`'s write to $1 runs as `pi`.
+  sudo -u pi tee "$1" <"$2" >/dev/null
+}
 
-# --- Resolve the workspace layout from the --add/--clone extras above -----
-# Must run from the stack dir (cd above) since the generated extras compose
-# file is written under the same cache root as the other merged-dir state.
-WORKSPACE_MODE="empty"
-if [ "${#EXTRAS[@]}" -eq 1 ]; then
-  IFS=':' read -r _ex_name ex_type _ex_path <<<"${EXTRAS[0]}"
-  if [ "$ex_type" = "file" ]; then
-    echo "error: a single --add/--clone extra must be a directory (got a file). Pass a second extra to use sibling mode, or point --add at its containing directory instead." >&2
+echo "==> Seeding the shared agent dir $AGENT_DIR and this session's own transient state under $RUN_DIR (idempotent -- existing pi/session state is kept)..." >&2
+# NIX_COMMAND_HOME is included here even though nothing this launcher runs
+# uses it directly: it is the HOME (and the one exact fs_write grant) of
+# the `nix` command's own mediated sandbox inside the session (see
+# profiles/work.base.json and IMPLEMENTERS.md's "Nix daemon access"). That
+# sandbox inherits none of this session's grants, so the directory has to
+# exist, pi-owned, before `pi` can run `nix` at all.
+sudo -u pi mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills" "$STATE_DIR/sessions" "$NONO_STATE_DIR" "$GO_CACHE_DIR" "$GO_PATH_DIR" "$NIX_COMMAND_HOME"
+
+# --- Live file sharing: grant, then record what was granted ---------------
+# Every path in $SHARE_PATHS was already checked (share_path_check, see
+# above) before any per-run state was even created. Granted in order
+# (workdir first); if any grant fails partway through, everything
+# granted so far this launch is released again (best-effort,
+# interactive sudo allowed -- this launcher still has a controlling
+# terminal at this point in both foreground and detached mode) before
+# exiting non-zero, so a failed launch never leaves a half-shared
+# workdir/extra behind.
+echo "==> Live-sharing ${#SHARE_PATHS[@]} path(s) with 'pi': ${SHARE_PATHS[*]}" >&2
+GRANTED_PATHS=()
+for share_path in "${SHARE_PATHS[@]}"; do
+  if ! share_grant "$share_path"; then
+    echo "error: failed to live-share $share_path with 'pi' -- rolling back ${#GRANTED_PATHS[@]} already-granted path(s)." >&2
+    for granted_path in "${GRANTED_PATHS[@]:-}"; do
+      [ -n "$granted_path" ] || continue
+      share_release "$granted_path" || true
+    done
     exit 1
   fi
-  WORKSPACE_MODE="single"
-elif [ "${#EXTRAS[@]}" -gt 1 ]; then
-  WORKSPACE_MODE="sibling"
+  GRANTED_PATHS+=("$share_path")
+done
+# Recorded AFTER every grant succeeds (merging -- deduping -- with
+# whatever was already recorded for this run name, e.g. across a
+# `--resume` relaunch), so a run's shared-paths file never lists a path
+# that didn't actually get granted.
+share_record_paths "$RUN_DIR" "${SHARE_PATHS[@]}"
+share_write_workdir_path "$RUN_DIR" "$WORKDIR"
+
+echo "    building pi-extra-extensions/pi-extra-skills..." >&2
+EXTRA_EXT_PATH="$(nix build "$STACK_DIR#pi-extra-extensions" --no-link --print-out-paths)"
+EXTRA_SKILLS_PATH="$(nix build "$STACK_DIR#pi-extra-skills" --no-link --print-out-paths)"
+# Nix store paths are world-readable, so `pi` can read them directly --
+# only the destination write needs to run as `pi`.
+sudo -u pi cp -r --no-preserve=mode "$EXTRA_EXT_PATH/." "$AGENT_DIR/extensions/"
+sudo -u pi cp -r --no-preserve=mode "$EXTRA_SKILLS_PATH/." "$AGENT_DIR/skills/"
+
+echo "    layering config/agent/ (fresh settings.json/AGENTS.md/agents/*)..." >&2
+tar_copy_to_pi "$CONFIG_AGENT_DIR" "$AGENT_DIR"
+if [ -f "$CONFIG_WEB_SEARCH" ]; then
+  sudo -u pi mkdir -p "$(dirname "$FIXED_WEB_SEARCH_FILE")"
+  write_as_pi "$FIXED_WEB_SEARCH_FILE" "$CONFIG_WEB_SEARCH"
 fi
 
-WORKSPACE_MERGED_DIR=""
-if [ "$WORKSPACE_MODE" != "empty" ]; then
-  echo "==> Preparing workspace staging directory (populated by workspace-mounter)..."
-  WORKSPACE_MERGED_DIR="${PI_SANDBOX__WORKSPACE_MERGED_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/pi-sandbox/workspace-merged}"
-  if ! stat "$WORKSPACE_MERGED_DIR" >/dev/null 2>&1 &&
-    grep -q " $WORKSPACE_MERGED_DIR " /proc/self/mountinfo; then
-    echo "Stale mount at $WORKSPACE_MERGED_DIR; clearing (needs sudo)..." >&2
-    sudo umount -l "$WORKSPACE_MERGED_DIR"
-  fi
-  mkdir -p "$WORKSPACE_MERGED_DIR"
+# --workdir is passed separately (below, per mode); --add/--clone extras
+# are both passed to gen-profile.sh as --add (identical read-write grant
+# treatment there -- see gen-profile.sh's own "Step 4" comment), since
+# both are now live-shared at their real host path rather than copied
+# into a per-run add-N/clone-N destination.
+#
+# $FIXED_PI_HOME (/var/lib/pi/.pi, covering both AGENT_DIR and
+# FIXED_WEB_SEARCH_FILE), /tmp (this session's own transient bookkeeping
+# under SESSIONS_ROOT), and every resolved shell-environment grant
+# (resolve_shell_env_grants -- /etc/profile/-bashrc and whatever they
+# `source`, resolved to their real, symlink-free targets rather than
+# hardcoded, since nix-darwin's versions churn on every nixpkgs bump) are
+# ALL granted here, in this ONE shared EXTRA_GEN_ARGS array used by BOTH
+# the foreground branch below AND the --detached branch's GEN_ARGS_QUOTED
+# further down -- not just a foreground-only extra --add list -- so both
+# foreground AND --detached sessions actually get the same access (the
+# old equivalent grants, --add "$RUNS_ROOT" and the shell-environment
+# --add flags, lived ONLY in the foreground branch's gen-profile.sh
+# invocation; --detached sessions never got them).
+# $GO_CACHE_DIR is granted here too -- it's NOT under $FIXED_PI_HOME (see
+# GO_CACHE_DIR's own comment above for why it lives outside it), so it
+# needs its own --add; $GO_PATH_DIR is already covered by $FIXED_PI_HOME.
+EXTRA_GEN_ARGS=(--add "$FIXED_PI_HOME" --add "/tmp" --add "$GO_CACHE_DIR")
+while IFS= read -r shell_env_path; do
+  [ -n "$shell_env_path" ] || continue
+  EXTRA_GEN_ARGS+=(--add "$shell_env_path")
+done < <(resolve_shell_env_grants | awk '!seen[$0]++')
+for add_path in "${ADD_PATHS[@]:-}"; do
+  [ -n "$add_path" ] || continue
+  EXTRA_GEN_ARGS+=(--add "$add_path")
+done
+for clone_path in "${CLONE_PATHS[@]:-}"; do
+  [ -n "$clone_path" ] || continue
+  EXTRA_GEN_ARGS+=(--add "$clone_path")
+done
 
-  # A leftover mount (crashed mounter) would shadow the fresh one.
-  while mountpoint -q "$WORKSPACE_MERGED_DIR"; do
-    echo "    stale mount found at $WORKSPACE_MERGED_DIR -- unmounting (sudo)."
-    sudo umount "$WORKSPACE_MERGED_DIR"
+if [ "$DETACHED_FLAG" != "1" ]; then
+  # --- Foreground mode: approval helper and nono share this process's
+  # lifetime. ---------------------------------------------------------
+  INFO_FILE="$(mktemp -u)"
+  HELPER_PID=""
+  # shellcheck disable=SC2329 # invoked indirectly via `trap ... EXIT` below
+  stop_helper() {
+    if [ -n "$HELPER_PID" ] && kill -0 "$HELPER_PID" 2>/dev/null; then
+      kill "$HELPER_PID" 2>/dev/null || true
+    fi
+    rm -f "$INFO_FILE"
+    # Release every live-shared path recorded for this run (workdir +
+    # every --add/--clone extra) -- interactive sudo is fine here, this
+    # launcher still owns a controlling terminal. --self-run excludes
+    # THIS run from its own "still live elsewhere" check (its own
+    # session is ending right now); a release failure is logged but
+    # doesn't abort the rest of the trap (every remaining path still
+    # gets a release attempt, and the overall EXIT code is unaffected --
+    # `nix run .#stop -- <name>` can always finish the job later).
+    local shared_path
+    while IFS= read -r shared_path; do
+      [ -n "$shared_path" ] || continue
+      share_release "$shared_path" --self-run "$SESSION_NAME" || echo "warning: failed to release live share of $shared_path -- run 'nix run .#stop -- $SESSION_NAME' to finish restoring ownership/ACLs." >&2
+    done < <(share_read_paths "$RUN_DIR")
+  }
+  trap stop_helper EXIT
+
+  "$APPROVAL_HELPER_BIN" --ui auto --info-file "$INFO_FILE" --parent-pid "$$" &
+  HELPER_PID=$!
+  for _ in $(seq 1 50); do
+    [ -s "$INFO_FILE" ] && break
+    # The helper now fails loudly (non-zero exit, no silent deny-all
+    # fallback) when `--ui auto` can't find a usable prompter -- most
+    # commonly over SSH with no tmux session to talk to. Detect that exit
+    # immediately instead of waiting out the whole poll loop first.
+    if ! kill -0 "$HELPER_PID" 2>/dev/null; then
+      echo "error: approval helper (pid $HELPER_PID) exited before writing its startup info file -- see its stderr output above for why. Over SSH/headless, it requires tmux: start tmux first (e.g. 'tmux new -s pi'), then run this command from inside that tmux session (so \$TMUX is set)." >&2
+      exit 1
+    fi
+    sleep 0.1
   done
-
-  # Docker only accepts rshared/rslave binds from a shared (or slave) mount.
-  prop="$(findmnt -n -o PROPAGATION -T "$WORKSPACE_MERGED_DIR" 2>/dev/null || true)"
-  case "$prop" in
-  *shared* | *slave*) ;;
-  *)
-    echo "    WARNING: $WORKSPACE_MERGED_DIR is on a mount with propagation '${prop:-unknown}', not shared." >&2
-    echo "    The merged workspace will not be visible to pi. Fix with: sudo mount --make-rshared /" >&2
-    ;;
-  esac
-
-  export PI_SANDBOX__WORKSPACE_SOURCE="$WORKSPACE_MERGED_DIR"
-  export WORKSPACE_MODE
-  export WORKSPACE_HOST_UID
-  export WORKSPACE_HOST_GID
-
-  WORKSPACE_HOST_UID="$(id -u)"
-  WORKSPACE_HOST_GID="$(id -g)"
-
-  # One bind-mount volume per extra, feeding the workspace-mounter service
-  # (compose.workspace.yaml) -- generated fresh each run since the set of
-  # extras is only known at invocation time, not something a static compose
-  # file can express. WORKSPACE_ITEMS (an ordered "name:type,..." list,
-  # exported below) tells containers/workspace-mounter/mount.sh how to
-  # consume each of these mounted sources by matching index/name.
-  WORKSPACE_EXTRAS_COMPOSE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/pi-sandbox/compose.workspace-extras.generated.yaml"
-  mkdir -p "$(dirname "$WORKSPACE_EXTRAS_COMPOSE_FILE")"
-  {
-    echo "# Auto-generated by start-agent.sh -- do not edit by hand, regenerated"
-    echo "# fresh on every invocation. Adds one bind-mount source volume per"
-    echo "# --add/--clone extra to the workspace-mounter service defined in"
-    echo "# compose.workspace.yaml."
-    echo "services:"
-    echo "  workspace-mounter:"
-    echo "    volumes:"
-    items_str=""
-    for extra in "${EXTRAS[@]}"; do
-      IFS=':' read -r ex_name ex_type ex_path <<<"$extra"
-      if [ -n "$items_str" ]; then items_str+=","; fi
-      items_str+="${ex_name}:${ex_type}"
-      # Directory extras: bind the directory itself. File extras: bind the
-      # file's PARENT directory (mount.sh bindfs-translates that whole
-      # parent internally, then exposes only the one file) -- see
-      # containers/workspace-mounter/mount.sh for why.
-      if [ "$ex_type" = "dir" ]; then
-        host_mount_src="$ex_path"
-      else
-        host_mount_src="$(dirname "$ex_path")"
-      fi
-      printf '      - type: bind\n        source: "%s"\n        target: "/srv/sources/%s"\n' "$host_mount_src" "$ex_name"
-    done
-    # shellcheck disable=SC2034
-    export WORKSPACE_ITEMS="$items_str"
-  } >"$WORKSPACE_EXTRAS_COMPOSE_FILE"
-
-  echo "    layering compose.workspace.yaml + generated extras file (mode=$WORKSPACE_MODE, items=$WORKSPACE_ITEMS)"
-  COMPOSE_FILES+=(-f compose.workspace.yaml -f "$WORKSPACE_EXTRAS_COMPOSE_FILE")
-else
-  echo "==> No --add/--clone extras given -- /workspace will start empty (tmpfs, no workspace-mounter)."
-fi
-
-echo "==> Building and loading pi/proxy/pkg-broker images into the active Docker context..."
-DOCKER_CTX="$(docker context show 2>/dev/null || echo 'default')"
-echo "    Active Docker context: $DOCKER_CTX"
-
-override_flag=()
-if [ -n "${PERSONAL_MONOREPO_LOCATION:-}" ] && [ -d "$PERSONAL_MONOREPO_LOCATION/nix/scripts" ]; then
-  override_flag=(--override-input scripts "path:$PERSONAL_MONOREPO_LOCATION/nix/scripts")
-  echo "==> Using local nix/scripts checkout at $PERSONAL_MONOREPO_LOCATION/nix/scripts"
-fi
-
-nix run "$PERSONAL_MONOREPO_LOCATION/nix/agentic-ai-stack#load" "${override_flag[@]}"
-
-# --- pi's /nix/store source -------------------------------------------------
-# - Host-store mode: pkg-broker shares the host's real /nix, and `nix run
-#   .#load` already realized pi's closure there, so pi just binds the host's
-#   /nix/store read-only.
-# - Default mode: pi's /nix/store is the union of pi's OWN image store and the
-#   shared nix-store volume (what pkg-broker builds). That union is built by
-#   the nix-store-mounter service (compose.nixstore-overlay.yaml), which runs
-#   the pi image with CAP_SYS_ADMIN and publishes the overlay to a host
-#   directory via mount propagation; pi binds that directory (rslave). No
-#   host-side overlay, no `sudo mount`, no reaching into docker volume dirs,
-#   and pkg-broker never sees pi's closure.
-UP_SERVICES=(proxy pkg-broker)
-if [ "$PKGBROKER_HOST_STORE" = "1" ]; then
-  echo "==> pkg-broker host-store override is active -- pi will bind the host's real /nix/store directly."
-  export PI_SANDBOX__NIX_STORE_SOURCE="/nix/store"
-else
-  NIX_STORE_MERGED_DIR="${PI_SANDBOX__NIX_STORE_MERGED_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/pi-sandbox/nix-store-merged}"
-  echo "==> Preparing merged /nix/store directory $NIX_STORE_MERGED_DIR (populated by nix-store-mounter)..."
-  mkdir -p "$NIX_STORE_MERGED_DIR"
-
-  # A leftover overlay (crashed mounter) would be stacked under the new one
-  # and hold stale lower layers, so clear it first.
-  while mountpoint -q "$NIX_STORE_MERGED_DIR"; do
-    echo "    stale mount found at $NIX_STORE_MERGED_DIR -- unmounting (sudo)."
-    sudo umount "$NIX_STORE_MERGED_DIR"
-  done
-
-  # Docker only accepts rshared/rslave binds from a shared (or slave) mount.
-  prop="$(findmnt -n -o PROPAGATION -T "$NIX_STORE_MERGED_DIR" 2>/dev/null || true)"
-  case "$prop" in
-  *shared* | *slave*) ;;
-  *)
-    echo "    WARNING: $NIX_STORE_MERGED_DIR is on a mount with propagation '${prop:-unknown}', not shared." >&2
-    echo "    The overlay will not be visible to pi. Fix with: sudo mount --make-rshared /" >&2
-    ;;
-  esac
-
-  export PI_SANDBOX__NIX_STORE_SOURCE="$NIX_STORE_MERGED_DIR"
-  UP_SERVICES+=(nix-store-mounter)
-fi
-
-if [ -n "$WORKSPACE_MERGED_DIR" ]; then
-  UP_SERVICES+=(workspace-mounter)
-fi
-
-echo "==> Clearing any leftover non-persisted volumes from a previous/crashed run..."
-remove_nonpersisted_volumes
-
-echo "==> Starting docker compose stack (pi + proxy + pkg-broker${NIX_STORE_MERGED_DIR:+ + nix-store-mounter}${WORKSPACE_MERGED_DIR:+ + workspace-mounter})..."
-docker compose "${COMPOSE_FILES[@]}" up -d --wait "${UP_SERVICES[@]}"
-
-cleanup() {
-  echo "==> Session finished — tearing down the compose stack..."
-  docker compose "${COMPOSE_FILES[@]}" down --remove-orphans
-  echo "==> Removing non-persisted volumes..."
-  remove_nonpersisted_volumes
-  if [ -n "${NIX_STORE_MERGED_DIR:-}" ]; then
-    # nix-store-mounter unmounts on SIGTERM; this only catches a killed one.
-    while mountpoint -q "$NIX_STORE_MERGED_DIR" 2>/dev/null; do
-      sudo umount "$NIX_STORE_MERGED_DIR" || break
-    done
+  if [ ! -s "$INFO_FILE" ]; then
+    echo "error: approval helper never wrote its startup info file -- check its stderr output above." >&2
+    exit 1
   fi
-  if [ -n "${WORKSPACE_MERGED_DIR:-}" ]; then
-    # workspace-mounter unmounts on SIGTERM; this only catches a killed one.
-    while mountpoint -q "$WORKSPACE_MERGED_DIR" 2>/dev/null; do
-      sudo umount "$WORKSPACE_MERGED_DIR" || break
-    done
-  fi
-}
-trap cleanup EXIT
+  WEBHOOK_URL="$("$JQ_BIN" -r .url "$INFO_FILE")"
 
-docker compose "${COMPOSE_FILES[@]}" run --rm "${SECRET_ENV_ARGS[@]}" "${SESSION_ENV_ARGS[@]}" pi
+  echo "==> Generating the nono profile..." >&2
+  TMP_PROFILE="$(mktemp)"
+  # $FIXED_PI_HOME, /tmp, and every resolved shell-environment grant are
+  # already in EXTRA_GEN_ARGS, above -- shared with the --detached branch
+  # further down, nothing hardcoded or foreground-only left here.
+  "$GEN_PROFILE_SH" --base "$BASE_PROFILE" --out "$TMP_PROFILE" \
+    --webhook-url "$WEBHOOK_URL" --workdir "$WORKDIR" --state-dir "$STATE_DIR" \
+    "${EXTRA_GEN_ARGS[@]}" "${READ_ROOT_ARGS[@]}"
+  write_as_pi "$RUN_DIR/profile.json" "$TMP_PROFILE"
+  rm -f "$TMP_PROFILE"
+
+  export PI_CODING_AGENT_DIR="$AGENT_DIR"
+  export XDG_STATE_HOME="$NONO_STATE_DIR"
+  export SSL_CERT_FILE="$CA_BUNDLE"
+  export NIX_SSL_CERT_FILE="$CA_BUNDLE"
+  export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
+  export GOCACHE="$GO_CACHE_DIR"
+  export GOPATH="$GO_PATH_DIR"
+
+  NONO_ARGS=(run --profile "$RUN_DIR/profile.json" --allow-cwd)
+  [ "$AUDIT_FLAG" = "1" ] && NONO_ARGS+=(--audit-integrity)
+  NONO_ARGS+=(--name "$SESSION_NAME" --)
+  # PAYLOAD_ARGS: the command nono itself launches -- a second, inner
+  # `sh -c` wrapper (the OUTER one below only pins cwd + PATH) that
+  # assigns HOME for the payload alone. HOME is deliberately NOT assigned
+  # before nono starts: nono protects BOTH its legacy $HOME/.nono root AND
+  # its current $XDG_STATE_HOME/nono root, so exporting HOME="$PI_USER_HOME"
+  # here would also create the legacy protected root /var/lib/pi/.nono
+  # (resolved /private/var/lib/pi/.nono on macOS), which overlaps
+  # system_read_macos' /private/var grant -- and nono then refuses to
+  # initialize at all. allow_parent_of_protected is not an acceptable fix,
+  # it is macOS-only. See IMPLEMENTERS.md's "Sandbox HOME and the Go
+  # toolchain env" section.
+  PAYLOAD_ARGS=(sh -c "export HOME=\"$PI_USER_HOME\"; exec \"\$@\"" sh "$PI_BIN")
+  [ "$RESUME_FLAG" = "1" ] && PAYLOAD_ARGS+=(--resume)
+
+  echo "==> Starting nono as 'pi' (session: $SESSION_NAME, nono HOME: $HOME, payload HOME: $PI_USER_HOME)..." >&2
+  # The outer wrapper deliberately does NOT touch HOME: `sudo -u pi` does
+  # not reset $HOME on its own, so nono inherits whatever HOME this
+  # launcher has (the invoking user's -- host-side code above still needs
+  # it, and nono's own protected roots must stay where they already are).
+  # Only the payload's HOME is rewritten, inside PAYLOAD_ARGS above.
+  sudo -u pi --preserve-env="$PRESERVE_LIST" -- \
+    sh -c "cd \"\$1\"; shift; export PATH=\"${EXTRA_PATH:+$EXTRA_PATH:}\$PATH\"; exec \"\$@\"" sh "$WORKDIR" \
+    "$NONO_BIN" "${NONO_ARGS[@]}" "${PAYLOAD_ARGS[@]}"
+  exit $?
+fi
+
+# --- Detached mode: option A -- the approval helper runs as the INVOKING
+# user, not as `pi` ----------------------------------------------------
+# Why: the helper needs to inherit the invoking user's $TMUX (and run as
+# the user who actually owns that tmux server) for its `--ui auto`
+# tmux-prompter fallback to reach a real terminal at all -- a helper
+# started as `pi` (e.g. a supervisor run entirely via `sudo -u pi`, how
+# this used to work) can never see or reach the invoking user's tmux
+# server, which is exactly why approvals were silently impossible in
+# detached mode before this fix.
+#
+# Lifecycle, three pieces:
+#   1. supervisor.sh (pi-owned, runs as `pi`): unchanged in spirit from
+#      before, EXCEPT it no longer starts or stops the approval helper
+#      itself -- it now takes the already-running helper's webhook URL as
+#      its one argument, generates the profile, runs `nono run
+#      --detached`, and polls `nono ps` until the session is gone. Its own
+#      log still lands at $RUN_DIR/supervisor.log, written as `pi` (the
+#      invoking user still has no write access into the pi-owned run
+#      directory, so that redirect still has to happen INSIDE the sudo'd
+#      process, same as before).
+#   2. wrapper.sh (owned and run by the INVOKING user, detached from this
+#      launcher's terminal via `setsid`): starts the approval helper
+#      itself (inheriting this launcher's environment, including $TMUX),
+#      verifies it came up, then runs `sudo -u pi -- supervisor.sh
+#      <webhook-url>` IN THE FOREGROUND, and once that returns, kills the
+#      helper. The helper's `--parent-pid` points at the wrapper's own
+#      $$ (the wrapper runs as the invoking user throughout its life, so
+#      the helper's liveness poll -- a plain signal-0 check -- actually
+#      works here, unlike pointing it at a `pi`-owned process).
+#   3. This launcher (synchronous, still attached to the terminal):
+#      starts the wrapper (setsid, backgrounded, disowned) and BLOCKS
+#      briefly to confirm the helper actually came up (its info file was
+#      written, and the wrapper/helper processes are still alive) before
+#      returning control to the user -- i.e. before "detaching" in the
+#      user-visible sense. On failure, it prints a clear error (pointing
+#      at the wrapper's own log) and exits non-zero, rather than silently
+#      leaving a broken detached session behind.
+#
+# The helper's --info-file (it contains the bearer token) is written
+# under a small invoking-user-owned, invoking-user-writable scratch
+# directory -- NOT under $RUN_DIR, which is pi-owned and not writable by
+# the invoking user -- and removed by the wrapper once the supervisor
+# returns and the helper has been stopped.
+#
+# Sudo note: the wrapper calls `sudo -u pi` AFTER this launcher has
+# already detached -- if sudo needed an interactive password prompt at
+# that point, it would simply fail (no terminal to prompt on). This
+# relies on the same NOPASSWD+SETENV sudo rule IMPLEMENTERS.md already
+# documents for every other `sudo -u pi` call in this script; the `sudo
+# -v` below is a defensive extra (primes/validates the credential cache
+# while we're still attached) documenting that assumption, not something
+# this flow depends on to function.
+sudo -v
+
+# --- 1. supervisor.sh (pi-owned, runs as `pi`) -------------------------
+SUPERVISOR_SCRIPT="$RUN_DIR/supervisor.sh"
+TMP_SUPERVISOR="$(mktemp)"
+GEN_ARGS_QUOTED="$(printf '%q ' "${EXTRA_GEN_ARGS[@]}" "${READ_ROOT_ARGS[@]}")"
+# Precomputed as plain strings (rather than inline conditionals inside the
+# heredoc below) so the generated script never needs a conditional
+# line-continuation -- much easier to get right than juggling printf/
+# backslash escaping inside an already-escaped heredoc.
+NONO_RUN_EXTRA_FLAGS=""
+[ "$AUDIT_FLAG" = "1" ] && NONO_RUN_EXTRA_FLAGS=" --audit-integrity"
+PI_RESUME_SUFFIX=""
+[ "$RESUME_FLAG" = "1" ] && PI_RESUME_SUFFIX=" --resume"
+cat >"$TMP_SUPERVISOR" <<SUPERVISOR
+#!/usr/bin/env bash
+set -uo pipefail
+WEBHOOK_URL="\${1:?supervisor.sh requires the approval webhook URL as its one argument -- started by wrapper.sh, see start-agent.sh}"
+
+TMP_PROFILE="\$(mktemp)"
+"$GEN_PROFILE_SH" --base "$BASE_PROFILE" --out "\$TMP_PROFILE" \\
+  --webhook-url "\$WEBHOOK_URL" --workdir "$WORKDIR" --state-dir "$STATE_DIR" \\
+  $GEN_ARGS_QUOTED
+cp "\$TMP_PROFILE" "$RUN_DIR/profile.json"
+rm -f "\$TMP_PROFILE"
+
+# NOTE: HOME is deliberately NOT assigned here (unlike
+# PI_CODING_AGENT_DIR/XDG_STATE_HOME/... below). This nono process must
+# keep inheriting the invoking user's HOME, because nono protects BOTH
+# its legacy \$HOME/.nono root and its current \$XDG_STATE_HOME/nono root:
+# exporting HOME="$PI_USER_HOME" here would create the legacy protected
+# root /var/lib/pi/.nono (/private/var/lib/pi/.nono on macOS), which
+# overlaps system_read_macos' /private/var grant and makes nono refuse to
+# initialize. The payload wrapper on the nono command below assigns
+# HOME="$PI_USER_HOME" to the pi process itself only -- see
+# IMPLEMENTERS.md's "Sandbox HOME and the Go toolchain env" section.
+export PATH="${EXTRA_PATH:+$EXTRA_PATH:}\$PATH"
+export PI_CODING_AGENT_DIR="$AGENT_DIR"
+export XDG_STATE_HOME="$NONO_STATE_DIR"
+export SSL_CERT_FILE="$CA_BUNDLE"
+export NIX_SSL_CERT_FILE="$CA_BUNDLE"
+export NODE_EXTRA_CA_CERTS="$CA_BUNDLE"
+export GOCACHE="$GO_CACHE_DIR"
+export GOPATH="$GO_PATH_DIR"
+cd "$WORKDIR"
+"$NONO_BIN" run --profile "$RUN_DIR/profile.json" --allow-cwd$NONO_RUN_EXTRA_FLAGS --detached --name "$SESSION_NAME" -- \
+  sh -c 'export HOME="$PI_USER_HOME"; exec "\$@"' sh "$PI_BIN"$PI_RESUME_SUFFIX
+
+while "$NONO_BIN" ps 2>/dev/null | grep -q "$SESSION_NAME"; do
+  sleep 5
+done
+SUPERVISOR
+write_as_pi "$SUPERVISOR_SCRIPT" "$TMP_SUPERVISOR"
+sudo -u pi chmod +x "$SUPERVISOR_SCRIPT"
+rm -f "$TMP_SUPERVISOR"
+
+# --- 2. wrapper.sh (invoking-user-owned, runs as the invoking user) ----
+# HELPER_STATE_DIR: a fresh, invoking-user-owned, invoking-user-writable
+# scratch dir for the helper's --info-file (contains the bearer token --
+# removed again once the helper is stopped). Deliberately NOT under
+# $RUN_DIR (pi-owned, not writable by the invoking user).
+HELPER_STATE_DIR="$(mktemp -d "${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/pi-sandbox-helper.XXXXXX")"
+HELPER_INFO_FILE="$HELPER_STATE_DIR/approval-helper-info.json"
+WRAPPER_FAIL_MARKER="$HELPER_STATE_DIR/wrapper.failed"
+# WRAPPER_LOG lives OUTSIDE HELPER_STATE_DIR (which gets rm -rf'd by the
+# wrapper once the helper is stopped) so it survives for the user to
+# inspect after the detached session ends.
+WRAPPER_LOG="$(mktemp --suffix=.log "${TMPDIR:-/tmp}/pi-sandbox-wrapper-$SESSION_NAME.XXXXXX")"
+WRAPPER_SCRIPT="$HELPER_STATE_DIR/wrapper.sh"
+
+cat >"$WRAPPER_SCRIPT" <<WRAPPER
+#!/usr/bin/env bash
+set -uo pipefail
+"$APPROVAL_HELPER_BIN" --ui auto --info-file "$HELPER_INFO_FILE" --parent-pid "\$\$" &
+HELPER_PID=\$!
+for _ in \$(seq 1 50); do
+  [ -s "$HELPER_INFO_FILE" ] && break
+  if ! kill -0 "\$HELPER_PID" 2>/dev/null; then
+    echo "approval helper exited before writing its startup info file -- see the lines above for why (over SSH/headless, it requires tmux: start tmux first, then run start-agent.sh from inside that session so \\\$TMUX is set)." >&2
+    touch "$WRAPPER_FAIL_MARKER"
+    exit 1
+  fi
+  sleep 0.1
+done
+if [ ! -s "$HELPER_INFO_FILE" ]; then
+  echo "approval helper never wrote its startup info file within the timeout." >&2
+  kill "\$HELPER_PID" 2>/dev/null || true
+  touch "$WRAPPER_FAIL_MARKER"
+  exit 1
+fi
+WEBHOOK_URL="\$("$JQ_BIN" -r .url "$HELPER_INFO_FILE")"
+
+# The supervisor.log redirect must happen INSIDE the sudo'd process (as
+# \`pi\`): the invoking user (this wrapper) has no write access into
+# \$RUN_DIR to open that file itself before exec'ing sudo.
+sudo -u pi --preserve-env="$PRESERVE_LIST" -- \\
+  bash -c 'exec bash "\$1" "\$2" >"\$3" 2>&1 </dev/null' bash \\
+  "$SUPERVISOR_SCRIPT" "\$WEBHOOK_URL" "$RUN_DIR/supervisor.log"
+
+# Release every live-shared path recorded for this run, now that the
+# supervisor (and so the nono session it started) has exited --
+# --noninteractive, since this wrapper has no controlling terminal to
+# prompt on at this point (it was started via setsid, detached from the
+# launcher). A failure here is logged to this wrapper's own log (not
+# fatal to the wrapper itself) and points at \`nix run .#stop\` to finish
+# the job.
+export PERSONAL_MONOREPO_LOCATION="$PERSONAL_MONOREPO_LOCATION"
+# shellcheck source=lib-common.sh
+# shellcheck disable=SC1091
+source "$STACK_DIR/scripts/lib-common.sh"
+while IFS= read -r shared_path; do
+  [ -n "\$shared_path" ] || continue
+  share_release "\$shared_path" --self-run "$SESSION_NAME" --noninteractive || echo "warning: failed to release live share of \$shared_path -- run 'nix run .#stop -- $SESSION_NAME' to finish restoring ownership/ACLs." >&2
+done < <(share_read_paths "$RUN_DIR")
+
+kill "\$HELPER_PID" 2>/dev/null || true
+rm -rf "$HELPER_STATE_DIR"
+WRAPPER
+chmod +x "$WRAPPER_SCRIPT"
+
+# --- 3. Launch the wrapper, detached, and verify the helper came up
+# before this launcher itself returns -----------------------------------
+echo "==> --detached: starting the approval helper as you (logs: $WRAPPER_LOG) and a supervisor as 'pi' (logs: $RUN_DIR/supervisor.log)..." >&2
+setsid bash "$WRAPPER_SCRIPT" >>"$WRAPPER_LOG" 2>&1 </dev/null &
+WRAPPER_PID=$!
+disown
+
+for _ in $(seq 1 50); do
+  [ -s "$HELPER_INFO_FILE" ] && break
+  if [ -e "$WRAPPER_FAIL_MARKER" ] || ! kill -0 "$WRAPPER_PID" 2>/dev/null; then
+    echo "error: approval helper failed to start for the detached session -- see $WRAPPER_LOG for its stderr output. Over SSH/headless, it requires tmux: start tmux first (e.g. 'tmux new -s pi'), then run start-agent.sh from inside that tmux session (so \$TMUX is set)." >&2
+    exit 1
+  fi
+  sleep 0.1
+done
+if [ ! -s "$HELPER_INFO_FILE" ]; then
+  echo "error: approval helper never wrote its startup info file within the timeout -- see $WRAPPER_LOG." >&2
+  exit 1
+fi
+
+echo "==> Detached session '$SESSION_NAME' starting (supervisor: $RUN_DIR/supervisor.log, approval helper: $WRAPPER_LOG). Use the ps/attach/stop wrappers to interact with it." >&2

@@ -1,46 +1,39 @@
 # extra-extensions.nix
 #
-# Build pipeline for pre-built pi extensions sourced directly from npm
-# and/or git. This is wired into the image build: containers/pi/image.nix
-# copies this derivation's output straight into
-# $out/home/pi/.pi-seed/agent/extensions/.
+# Builds the `pi-extra-extensions` package: pre-built pi extensions sourced
+# directly from npm (extensions/package.json + package-lock.json, via
+# pkgs.buildNpmPackage's fixed-output npm cache) and/or git
+# (extensions/git-extensions.nix, pinned-by-rev fetchFromGitHub). The
+# launcher copies the result into each run's PI_CODING_AGENT_DIR/extensions/
+# at launch (see extensions/README.md for the add-an-extension workflow).
 #
-# npm-sourced extensions resolve through package.json/package-lock.json like
-# any other npm project (via pkgs.buildNpmPackage's fixed-output npm cache),
-# and git-sourced ones are pinned-by-rev fetchFromGitHub fetches.
+# Native binaries: npm packages may ship prebuilt ELF binaries that fail to
+# load under Nix (missing libgcc_s/libstdc++ or ELF interpreter). Patching
+# is OPT-IN per extension via `autoPatchExtensions`, which runs autoPatchelf
+# over that extension's directory and its transitive node_modules closure;
+# see `nativeRuntimeLibs` to supply extra libraries it needs.
 #
-# Native binaries: npm packages may ship prebuilt ELF binaries (.so / .node /
-# executables) built against a conventional glibc layout. On a Nix-built image
-# those fail to load ("cannot open shared object file" for libgcc_s/libstdc++,
-# or a missing ELF interpreter). Patching is OPT-IN per extension: pass the
-# extension names in `autoPatchExtensions` (npm package names as they appear in
-# extensions/package.json, or git repo dir names). For each one, the final step
-# of `extraExtensions` strips and then runs autoPatchelf over that extension's
-# directory AND its transitive dependency closure inside the shared
-# node_modules (native addons are usually hoisted optionalDependencies, not
-# inside the extension's own dir). Nothing else in the output is touched. See
-# `nativeRuntimeLibs` below for how to supply extra libraries.
-#
-# Closure size: the runtime output must never reference the full `nodejs`
-# wrapper (which drags in npm + corepack). npm needs full node at BUILD time,
-# so npmExtensions repoints the patchShebangs'd node_modules scripts at
-# nodejs-slim afterwards, and disallowedReferences makes any regression a build
-# failure. Everything size-related here is pattern-based or driven by
-# package.json, so arbitrary extensions can still be added.
-#
-# See ./extensions/README.md for the day-to-day "how do I add one" workflow,
-# and ./extensions/git-extensions.nix for the git-hash pinning convention
-# (a hand-editable map of "git:github.com/owner/repo@rev" specs to
-# fetchFromGitHub output hashes).
+# Closure size: the output must never reference the full `nodejs` wrapper
+# (which drags in npm + corepack) -- npmExtensions repoints node_modules
+# scripts at nodejs-slim after the npm-requiring build step, and
+# disallowedReferences makes any regression a build failure.
 
-{ pkgs
-, # Extensions to run autoPatchelf on (see "Native binaries" above). Names are
+{
+  pkgs,
+  # Extensions to run autoPatchelf on (see "Native binaries" above). Names are
   # package.json dependency names (e.g. "@ff-labs/pi-fff") or git repo names.
-  autoPatchExtensions ? [ "@ff-labs/pi-fff" ]
+  autoPatchExtensions ? [ "@ff-labs/pi-fff" ],
 }:
 
 let
-  lib = pkgs.lib;
+  inherit (pkgs) lib;
+
+  # autoPatchelf rewrites ELF interpreters/RPATHs, so it only makes sense
+  # (and only works: on Darwin its "dynamic linker" is /usr/lib/dyld, a
+  # Mach-O file, which fails with "ELFError: Magic number does not match")
+  # when building for Linux. On Darwin the npm install already selects
+  # darwin prebuilds, so the whole patching step is skipped.
+  isLinux = pkgs.stdenv.hostPlatform.isLinux;
 
   # ---- npm dependency FOD hash -------------------------------------------
   # Fixed-output hash of the offline npm cache that fetchNpmDeps builds from
@@ -52,7 +45,7 @@ let
   # this must be regenerated). If it ever goes stale the build fails with a
   # fixed-output hash mismatch that prints the correct `got:` value to paste
   # in (or just re-run update-pi-extensions).
-  npmDepsHash = "sha256-2mghuuWIkzuZh8VSufruaxY4VV2QMmOXVrh0UAEPrPQ=";
+  npmDepsHash = "sha256-+b31e4EdAiLZVVl0xz5GzYpj+O7guymkiapypl2YfYs=";
 
   # ---- shared libraries for prebuilt native binaries ----------------------
   # Libraries autoPatchelf may point prebuilt binaries at. glibc itself is
@@ -141,10 +134,10 @@ let
     #   solely to satisfy peerDependencies ranges declared by
     #   @gotgenes/pi-permission-system, pi-lens, etc.) and its entire duplicate
     #   AWS/Google/OpenAI SDK transitive tree -- the real `pi` binary that
-    #   extensions run inside of is supplied natively via pkgs.pi-coding-agent
-    #   in image.nix, not via this npm copy, so no extension should ever
-    #   require() this package at runtime. Verified by inspecting a running
-    #   image's ~/.pi/agent/extensions/node_modules/ tree: @earendil-works,
+    #   extensions run inside of is supplied natively (flake.nix's `pi` package),
+    #   not via this npm copy, so no extension should ever require() this
+    #   package at runtime. Verified by inspecting a running agent's
+    #   ~/.pi/agent/extensions/node_modules/ tree: @earendil-works,
     #   @anthropic-ai, @aws, @aws-sdk, and @google all exist there as empty
     #   directories, confirming @earendil-works/pi-coding-agent and
     #   @earendil-works/pi-ai (and their SDK trees) are correctly omitted.
@@ -158,7 +151,11 @@ let
     #   package.json `libc` field says musl, so the -musl platform variants are
     #   never installed. Older npm ignores unknown config with a warning; the
     #   musl cleanup loop in extraExtensions remains as a fallback either way.
-    npmFlags = [ "--omit=peer" "--omit=dev" "--libc=glibc" ];
+    npmFlags = [
+      "--omit=peer"
+      "--omit=dev"
+      "--libc=glibc"
+    ];
 
     # Copy the npm cache into a writable location at build time. Doesn't
     # affect npmDepsHash; it just lets npm write its own logs (otherwise an
@@ -227,15 +224,16 @@ let
   # `packages` array as "npm:<spec>" entries. Derived straight from
   # package.json's dependencies (name@version), since that's what a user
   # edits day to day.
-  npmExtensionSpecs =
-    lib.mapAttrsToList (name: version: "${name}@${version}")
-      (npmPackageJson.dependencies or { });
+  npmExtensionSpecs = lib.mapAttrsToList (name: version: "${name}@${version}") (
+    npmPackageJson.dependencies or { }
+  );
 
   # ---- git-sourced extensions ---------------------------------------------
   gitExtensions = import ./extensions/git-extensions.nix;
 
   # Parses "git:github.com/owner/repo@rev" -> { owner, repo, rev }.
-  parseGitSpec = spec:
+  parseGitSpec =
+    spec:
     let
       rest = lib.removePrefix "git:github.com/" spec;
       parts = lib.splitString "/" rest;
@@ -248,7 +246,8 @@ let
       rev = builtins.elemAt repoRev 1;
     };
 
-  fetchGitExt = spec: hash:
+  fetchGitExt =
+    spec: hash:
     let
       parsed = parseGitSpec spec;
     in
@@ -269,8 +268,7 @@ let
   # instead of silently patching nothing.
   knownExtensionNames =
     npmExtensionNames ++ map gitExtensionDirName (builtins.attrNames gitExtensions);
-  unknownPatchTargets =
-    lib.filter (n: !(builtins.elem n knownExtensionNames)) autoPatchExtensions;
+  unknownPatchTargets = lib.filter (n: !(builtins.elem n knownExtensionNames)) autoPatchExtensions;
   patchTargets =
     assert lib.assertMsg (unknownPatchTargets == [ ])
       "extra-extensions.nix: autoPatchExtensions names unknown extension(s): ${lib.concatStringsSep ", " unknownPatchTargets}";
@@ -283,10 +281,9 @@ let
   # inside the shared node_modules, so cruft trimming only touches third-party
   # dependencies. Extensions may legitimately ship .d.ts/.map/etc. that they
   # (or pi) load, and we can't know in advance which.
-  pruneDeclaredExtensions =
-    lib.concatMapStringsSep " "
-      (n: ''-path "$out/node_modules/${n}" -prune -o'')
-      npmExtensionNames;
+  pruneDeclaredExtensions = lib.concatMapStringsSep " " (
+    n: ''-path "$out/node_modules/${n}" -prune -o''
+  ) npmExtensionNames;
 
   # ---- combined output -----------------------------------------------------
   # Layout: a shared $out/node_modules/ (the full hoisted dependency tree)
@@ -297,150 +294,169 @@ let
   # $out/node_modules/.pi-package-installed/<name> marker-file scheme. The
   # marker files are dropped here on purpose: it's unverified whether pi's
   # actual extension loader needs/expects that marker convention, and the flat
-  # <name>/ layout matches how containers/pi/image.nix copies this
-  # derivation's output into ~/.pi/agent/extensions/<name>/ directly.
-  extraExtensions = pkgs.runCommand "pi-extra-extensions"
-    {
-      # autoPatchelfHook is used here as a *function provider*: runCommand has
-      # no fixup phase, so the hook doesn't run by itself. Sourcing it via
-      # nativeBuildInputs makes the `autoPatchelf` shell function available,
-      # which the builder calls explicitly at the end. (If a future nixpkgs
-      # stops exposing `autoPatchelf` this way, convert this to
-      # stdenv.mkDerivation with dontUnpack = true and let the hook run in
-      # fixupPhase; add dontStrip/dontPatchShebangs to keep it from touching
-      # node_modules contents.)
-      # jq is used to walk each target's dependency closure.
-      nativeBuildInputs = [ pkgs.autoPatchelfHook pkgs.jq ];
+  # <name>/ layout matches how the launcher copies this derivation's output
+  # into PI_CODING_AGENT_DIR/extensions/<name>/ directly.
+  extraExtensions =
+    pkgs.runCommand "pi-extra-extensions"
+      {
+        # autoPatchelfHook is used here as a *function provider*: runCommand has
+        # no fixup phase, so the hook doesn't run by itself. Sourcing it via
+        # nativeBuildInputs makes the `autoPatchelf` shell function available,
+        # which the builder calls explicitly at the end. (If a future nixpkgs
+        # stops exposing `autoPatchelf` this way, convert this to
+        # stdenv.mkDerivation with dontUnpack = true and let the hook run in
+        # fixupPhase; add dontStrip/dontPatchShebangs to keep it from touching
+        # node_modules contents.)
+        # jq is used to walk each target's dependency closure.
+        nativeBuildInputs = [
+          pkgs.jq
+        ]
+        ++ lib.optionals isLinux [ pkgs.autoPatchelfHook ];
 
-      # Where autoPatchelf looks for the sonames the binaries ask for.
-      buildInputs = nativeRuntimeLibs;
+        # Where autoPatchelf looks for the sonames the binaries ask for.
+        buildInputs = lib.optionals isLinux nativeRuntimeLibs;
 
-      # See ignoreMissingNativeDeps above. Passed through to the hook's
-      # environment; a list of sonames/patterns on current nixpkgs.
-      autoPatchelfIgnoreMissingDeps = ignoreMissingNativeDeps;
+        # See ignoreMissingNativeDeps above. Passed through to the hook's
+        # environment; a list of sonames/patterns on current nixpkgs.
+        autoPatchelfIgnoreMissingDeps = ignoreMissingNativeDeps;
 
-      # Guard against the full nodejs (npm + corepack) re-entering the image
-      # closure via any copied file. npmExtensions already enforces this for
-      # node_modules; this also covers the git-extension sources and anything
-      # else added to this output later.
-      disallowedReferences = [ pkgs.nodejs_24 ];
-    }
-    ''
-      mkdir -p "$out"
-
-      # The full hoisted node_modules tree, shared by every extension. npm
-      # hoists each package's dependencies to the top of node_modules rather
-      # than nesting them inside the package, so copying an extension's own
-      # directory alone (below) leaves its deps behind. Shipping the whole
-      # tree at $out/node_modules means that once a consumer copies $out/. into
-      # ~/.pi/agent/extensions/, Node resolves each extension's require(...) by
-      # walking up from extensions/<name>/ to extensions/node_modules/. (An
-      # extension that bundles its own node_modules/ still wins locally, so
-      # this is purely additive and doesn't disturb other extensions copied
-      # into the same directory.)
-      cp -RL "${npmExtensions}/node_modules" "$out/node_modules"
-
-      # Prebuilt native binaries always ship both -gnu and -musl variants for
-      # a given platform (e.g. @ast-grep/napi-linux-x64-musl,
-      # @ff-labs/fff-bin-linux-arm64-musl, @yuuang/ffi-rs-linux-x64-musl); the
-      # image is glibc-based, so the musl copies never load and are pure
-      # dead weight. Strip the whole naming convention (node_modules/@*/*-musl)
-      # rather than an explicit list, so any future musl variant pulled in by
-      # a lockfile bump is caught too. (--libc=glibc in npmFlags should already
-      # have prevented these; this is the fallback.) ignoreMissingNativeDeps
-      # above is kept regardless, in case anything still probes for the removed
-      # sonames.
-      chmod -R u+w "$out/node_modules"
-      shopt -s nullglob
-      for d in "$out"/node_modules/@*/*-musl; do
-        rm -rf -- "$d"
-      done
-      shopt -u nullglob
-
-      # Drop source maps, type declarations and tsbuildinfo from third-party
-      # dependencies (never loaded at runtime). Declared extensions' own
-      # directories are skipped (see pruneDeclaredExtensions). Deliberately NOT
-      # removing *.md (pi packages ship skills/prompt templates as markdown) or
-      # *.ts (pi loads extension TypeScript directly). -exec rather than
-      # -delete, because -delete implies -depth and breaks -prune. Done before
-      # the flat per-extension copies below, so they inherit the trim.
-      find "$out/node_modules" \
-        ${pruneDeclaredExtensions} \
-        -type f \( -name '*.map' -o -name '*.d.ts' -o -name '*.d.mts' \
-                   -o -name '*.d.cts' -o -name '*.tsbuildinfo' \) \
-        -exec rm -f {} +
-
-      # Each declared npm extension, surfaced flat at $out/<dir>/ where pi
-      # discovers extensions -- <dir> is the package basename with any npm
-      # scope stripped (see npmExtensionDirName), matching the flat layout the
-      # git extensions already load under. The full scoped package still lives
-      # inside the shared $out/node_modules/ for dependency resolution.
-      ${lib.concatStringsSep "\n" (map (name:
-        let dir = npmExtensionDirName name; in ''
-        mkdir -p "$out/${dir}"
-        cp -RL "${npmExtensions}/node_modules/${name}/." "$out/${dir}/"
-      '') npmExtensionNames)}
-
-      # Git-sourced extensions: source only. A git checkout ships no
-      # node_modules, so a git extension's own npm dependencies are installed
-      # ONLY if they're also declared in extensions/package.json (so they land
-      # in the shared node_modules above). Otherwise it will fail at load time
-      # with "Cannot find module '<dep>'".
-      ${lib.concatStringsSep "\n" (lib.mapAttrsToList
-        (spec: drv:
-          let name = gitExtensionDirName spec; in
-          ''
-            mkdir -p "$out/${name}"
-            cp -RL "${drv}/." "$out/${name}/"
-          '')
-        gitExtFetched)}
-
-      # Make prebuilt native binaries loadable on Nix -- only for the extensions
-      # named in autoPatchExtensions. For each: patch its flattened dir, then
-      # walk package.json dependencies + optionalDependencies through the shared
-      # node_modules (hoisted native addons live there, not in the extension's
-      # own dir) and patch every package reached. Packages that aren't installed
-      # (other-arch/OS optional deps) are skipped. `cp -RL` leaves the store
-      # copies read-only, so chmod just the selected dirs before patchelf runs.
-      # An unsatisfied library fails the build loudly; see nativeRuntimeLibs.
-      patchDirs=()
-      seenPkgs=" "
-      walkDeps() {
-        local pkg="$1" pj dep
-        case "$seenPkgs" in *" $pkg "*) return 0;; esac
-        seenPkgs="$seenPkgs$pkg "
-        pj="$out/node_modules/$pkg/package.json"
-        [ -f "$pj" ] || return 0
-        patchDirs+=("$out/node_modules/$pkg")
-        for dep in $(jq -r '((.dependencies // {}) + (.optionalDependencies // {})) | keys[]' "$pj"); do
-          walkDeps "$dep"
-        done
+        # Guard against the full nodejs (npm + corepack) re-entering the image
+        # closure via any copied file. npmExtensions already enforces this for
+        # node_modules; this also covers the git-extension sources and anything
+        # else added to this output later.
+        disallowedReferences = [ pkgs.nodejs_24 ];
       }
-      ${lib.concatStringsSep "\n" (lib.zipListsWith (name: dir: ''
-        patchDirs+=("$out/${dir}")
-        walkDeps "${name}"
-      '') patchTargets patchTargetDirs)}
+      ''
+        mkdir -p "$out"
 
-      if [ "''${#patchDirs[@]}" -gt 0 ]; then
-        chmod -R u+w "''${patchDirs[@]}"
+        # The full hoisted node_modules tree, shared by every extension. npm
+        # hoists each package's dependencies to the top of node_modules rather
+        # than nesting them inside the package, so copying an extension's own
+        # directory alone (below) leaves its deps behind. Shipping the whole
+        # tree at $out/node_modules means that once a consumer copies $out/. into
+        # ~/.pi/agent/extensions/, Node resolves each extension's require(...) by
+        # walking up from extensions/<name>/ to extensions/node_modules/. (An
+        # extension that bundles its own node_modules/ still wins locally, so
+        # this is purely additive and doesn't disturb other extensions copied
+        # into the same directory.)
+        cp -RL "${npmExtensions}/node_modules" "$out/node_modules"
 
-        # Strip prebuilt ELF binaries/addons (they usually ship unstripped,
-        # often tens of MB of symbols). Must happen BEFORE autoPatchelf so
-        # patchelf's edits are not undone. runCommand has no fixup phase, so
-        # nothing strips for us. Only real ELF files are touched (magic-byte
-        # check), so scripts and data files are left alone.
-        elfmagic="$(printf '\177ELF')"
-        while IFS= read -r -d "" f; do
-          if [ "$(head -c4 "$f" 2>/dev/null)" = "$elfmagic" ]; then
-            strip --strip-unneeded "$f" 2>/dev/null || true
-          fi
-        done < <(find "''${patchDirs[@]}" -type f \
-                   \( -name '*.node' -o -name '*.so' -o -name '*.so.*' -o -perm -u+x \) \
-                   -print0)
+        # Prebuilt native binaries always ship both -gnu and -musl variants for
+        # a given platform (e.g. @ast-grep/napi-linux-x64-musl,
+        # @ff-labs/fff-bin-linux-arm64-musl, @yuuang/ffi-rs-linux-x64-musl); the
+        # image is glibc-based, so the musl copies never load and are pure
+        # dead weight. Strip the whole naming convention (node_modules/@*/*-musl)
+        # rather than an explicit list, so any future musl variant pulled in by
+        # a lockfile bump is caught too. (--libc=glibc in npmFlags should already
+        # have prevented these; this is the fallback.) ignoreMissingNativeDeps
+        # above is kept regardless, in case anything still probes for the removed
+        # sonames.
+        chmod -R u+w "$out/node_modules"
+        shopt -s nullglob
+        for d in "$out"/node_modules/@*/*-musl; do
+          rm -rf -- "$d"
+        done
+        shopt -u nullglob
 
-        autoPatchelf "''${patchDirs[@]}"
-      fi
-    '';
+        # Drop source maps, type declarations and tsbuildinfo from third-party
+        # dependencies (never loaded at runtime). Declared extensions' own
+        # directories are skipped (see pruneDeclaredExtensions). Deliberately NOT
+        # removing *.md (pi packages ship skills/prompt templates as markdown) or
+        # *.ts (pi loads extension TypeScript directly). -exec rather than
+        # -delete, because -delete implies -depth and breaks -prune. Done before
+        # the flat per-extension copies below, so they inherit the trim.
+        find "$out/node_modules" \
+          ${pruneDeclaredExtensions} \
+          -type f \( -name '*.map' -o -name '*.d.ts' -o -name '*.d.mts' \
+                     -o -name '*.d.cts' -o -name '*.tsbuildinfo' \) \
+          -exec rm -f {} +
+
+        # Each declared npm extension, surfaced flat at $out/<dir>/ where pi
+        # discovers extensions -- <dir> is the package basename with any npm
+        # scope stripped (see npmExtensionDirName), matching the flat layout the
+        # git extensions already load under. The full scoped package still lives
+        # inside the shared $out/node_modules/ for dependency resolution.
+        ${lib.concatStringsSep "\n" (
+          map (
+            name:
+            let
+              dir = npmExtensionDirName name;
+            in
+            ''
+              mkdir -p "$out/${dir}"
+              cp -RL "${npmExtensions}/node_modules/${name}/." "$out/${dir}/"
+            ''
+          ) npmExtensionNames
+        )}
+
+        # Git-sourced extensions: source only. A git checkout ships no
+        # node_modules, so a git extension's own npm dependencies are installed
+        # ONLY if they're also declared in extensions/package.json (so they land
+        # in the shared node_modules above). Otherwise it will fail at load time
+        # with "Cannot find module '<dep>'".
+        ${lib.concatStringsSep "\n" (
+          lib.mapAttrsToList (
+            spec: drv:
+            let
+              name = gitExtensionDirName spec;
+            in
+            ''
+              mkdir -p "$out/${name}"
+              cp -RL "${drv}/." "$out/${name}/"
+            ''
+          ) gitExtFetched
+        )}
+
+        # Make prebuilt native binaries loadable on Nix -- only for the extensions
+        # named in autoPatchExtensions. For each: patch its flattened dir, then
+        # walk package.json dependencies + optionalDependencies through the shared
+        # node_modules (hoisted native addons live there, not in the extension's
+        # own dir) and patch every package reached. Packages that aren't installed
+        # (other-arch/OS optional deps) are skipped. `cp -RL` leaves the store
+        # copies read-only, so chmod just the selected dirs before patchelf runs.
+        # An unsatisfied library fails the build loudly; see nativeRuntimeLibs.
+        ${lib.optionalString isLinux ''
+        patchDirs=()
+        seenPkgs=" "
+        walkDeps() {
+          local pkg="$1" pj dep
+          case "$seenPkgs" in *" $pkg "*) return 0;; esac
+          seenPkgs="$seenPkgs$pkg "
+          pj="$out/node_modules/$pkg/package.json"
+          [ -f "$pj" ] || return 0
+          patchDirs+=("$out/node_modules/$pkg")
+          for dep in $(jq -r '((.dependencies // {}) + (.optionalDependencies // {})) | keys[]' "$pj"); do
+            walkDeps "$dep"
+          done
+        }
+        ${lib.concatStringsSep "\n" (
+          lib.zipListsWith (name: dir: ''
+            patchDirs+=("$out/${dir}")
+            walkDeps "${name}"
+          '') patchTargets patchTargetDirs
+        )}
+
+        if [ "''${#patchDirs[@]}" -gt 0 ]; then
+          chmod -R u+w "''${patchDirs[@]}"
+
+          # Strip prebuilt ELF binaries/addons (they usually ship unstripped,
+          # often tens of MB of symbols). Must happen BEFORE autoPatchelf so
+          # patchelf's edits are not undone. runCommand has no fixup phase, so
+          # nothing strips for us. Only real ELF files are touched (magic-byte
+          # check), so scripts and data files are left alone.
+          elfmagic="$(printf '\177ELF')"
+          while IFS= read -r -d "" f; do
+            if [ "$(head -c4 "$f" 2>/dev/null)" = "$elfmagic" ]; then
+              strip --strip-unneeded "$f" 2>/dev/null || true
+            fi
+          done < <(find "''${patchDirs[@]}" -type f \
+                     \( -name '*.node' -o -name '*.so' -o -name '*.so.*' -o -perm -u+x \) \
+                     -print0)
+
+          autoPatchelf "''${patchDirs[@]}"
+        fi
+        ''}
+      '';
 
   # The full list of spec strings a user needs to merge by hand into their
   # own settings.json's `packages` array (see module header comment).
@@ -450,8 +466,7 @@ let
   # sketch's full settings.json step was out of scope; a plain Nix list is
   # enough to inspect/copy from by hand.)
   packagesListFragment =
-    map (spec: "npm:${spec}") npmExtensionSpecs
-    ++ builtins.attrNames gitExtensions;
+    map (spec: "npm:${spec}") npmExtensionSpecs ++ builtins.attrNames gitExtensions;
 
 in
 extraExtensions // { inherit packagesListFragment; }

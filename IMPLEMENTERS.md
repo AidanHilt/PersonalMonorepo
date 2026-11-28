@@ -47,6 +47,7 @@ nearest component `IMPLEMENTERS.md` to the code you're touching.
 | `nix/custom-images` | [nix/custom-images/IMPLEMENTERS.md](nix/custom-images/IMPLEMENTERS.md) |
 | `kubernetes/helm-charts` | [kubernetes/helm-charts/IMPLEMENTERS.md](kubernetes/helm-charts/IMPLEMENTERS.md) |
 | `kubernetes/argocd` | [kubernetes/argocd/IMPLEMENTERS.md](kubernetes/argocd/IMPLEMENTERS.md) |
+| `kubernetes/operators` | [kubernetes/operators/IMPLEMENTERS.md](kubernetes/operators/IMPLEMENTERS.md) |
 | `terragrunt` | [terragrunt/IMPLEMENTERS.md](terragrunt/IMPLEMENTERS.md) |
 | `nix/agentic-ai-stack` | [nix/agentic-ai-stack/IMPLEMENTERS.md](nix/agentic-ai-stack/IMPLEMENTERS.md) |
 | `windows-setup` | has its own `README.md`; in scope but minimal. |

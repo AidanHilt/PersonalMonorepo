@@ -1,0 +1,18 @@
+# Violates source.pollInterval's CEL rule: it must be 0 or at least 30s.
+# Here it is 10s.
+apiVersion: miura.io/v1alpha1
+kind: Function
+metadata:
+  name: pollinterval-too-short
+spec:
+  source:
+    url: ${FIXTURE_REPO_URL}
+    ref: ${FIXTURE_REF}
+    path: kubernetes/operators/operators/miura/test/functions
+    pollInterval: 10s
+  build:
+    mainPackage: ./cmd/hello
+  triggers:
+    http:
+      auth:
+        mode: None

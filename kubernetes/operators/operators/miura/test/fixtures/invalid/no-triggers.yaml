@@ -1,0 +1,14 @@
+# Violates the triggers-level CEL rule: at least one of triggers.http,
+# triggers.events, triggers.schedules must be set.
+apiVersion: miura.io/v1alpha1
+kind: Function
+metadata:
+  name: no-triggers
+spec:
+  source:
+    url: ${FIXTURE_REPO_URL}
+    ref: ${FIXTURE_REF}
+    path: kubernetes/operators/operators/miura/test/functions
+  build:
+    mainPackage: ./cmd/hello
+  triggers: {}

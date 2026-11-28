@@ -1,0 +1,21 @@
+# Violates JWTAuthSpec's CEL rule: issuer and jwksUri must both be set or
+# both unset. Here issuer is set but jwksUri is not.
+apiVersion: miura.io/v1alpha1
+kind: Function
+metadata:
+  name: issuer-without-jwksuri
+spec:
+  source:
+    url: ${FIXTURE_REPO_URL}
+    ref: ${FIXTURE_REF}
+    path: kubernetes/operators/operators/miura/test/functions
+  build:
+    mainPackage: ./cmd/hello
+  triggers:
+    http:
+      auth:
+        mode: Jwt
+        jwt:
+          audiences:
+            - issuer-without-jwksuri-fixture
+          issuer: https://issuer.example.com

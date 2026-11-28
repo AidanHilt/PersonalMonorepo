@@ -1,9 +1,9 @@
 # Personal Monorepo
-This monorepo contains most of my personal projects, many of which focus on running a kubernetes cluster at home with rigorous IaC and GitOps standards. This document provides an overview of the projects in the repository, and serves as a table of contents for these projects' own READMEs and IMPLEMENTERS files. 
+This monorepo contains most of my personal projects, many of which focus on running a kubernetes cluster at home with rigorous IaC and GitOps standards. This document provides an overview of the projects in the repository, and serves as a table of contents for these projects' own READMEs and IMPLEMENTERS files.
 
 ## Documentation Conventions
 
-READMEs describe how to *use* a project. IMPLEMENTERS.md describes how to *modify or read* it. Commits follow conventional commits (via the kommit CLI in nix/scripts). 
+READMEs describe how to *use* a project. IMPLEMENTERS.md describes how to *modify or read* it. Commits follow conventional commits (via the kommit CLI in nix/scripts).
 
 ## Projects
 
@@ -24,4 +24,4 @@ READMEs describe how to *use* a project. IMPLEMENTERS.md describes how to *modif
 ## For contributors and agents
 
 If you're modifying or reading source rather than just using a project, see
-[IMPLEMENTERS.md](IMPLEMENTERS.md). 
+[IMPLEMENTERS.md](IMPLEMENTERS.md).

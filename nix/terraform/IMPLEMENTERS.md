@@ -124,10 +124,67 @@ selectively applied per cluster with `-var <env>=true`.
 - **New files**: `git add` them. Nix flakes only see files tracked (or at
   least staged) by git; an untracked new `lib/*.nix` or `modules/*/infra.nix`
   silently won't be picked up.
-- **Formatting/linting**: `nixfmt` (formatting) and `statix` (lint) run
-  across this directory as part of `agent-validate --path nix/terraform`;
-  keep both clean. There's no project-specific override beyond what those
-  tools apply by default.
+- **Formatting/linting**: `nixfmt` (formatting) still runs in
+  `agent-validate`'s FORMAT phase, and `statix` (lint) now runs as a flake
+  check -- it is one of the fixtures in the `checks.<system>.agent-validate`
+  aggregate described in "Checks" below, which replaces `agent-validate`'s
+  legacy per-file lint/build runs for everything under this directory. Keep
+  both clean. There's no project-specific override beyond what those tools
+  apply by default.
+
+## Checks
+
+`flake.nix` exposes `checks.<system>`, which is what gives `agent-validate`
+the `checks.<system>.agent-validate` aggregate its flake contract requires:
+any path at or below this flake's root is validated by building that
+aggregate instead of the legacy per-file lint/build checks.
+
+The aggregate is the `agent-validate` **attribute**, pointing at the
+`aggregate-check` **derivation**. The attribute name is fixed by the
+contract; the derivation name is deliberately different (the same convention
+as `nix/mono-flake`, `nix/scripts`, and `nix/agentic-ai-stack`) so it is never
+confused with the `agent-validate` script package from the scripts flake. It
+is an empty-marker `runCommand` (`touch $out`) whose real work is in
+`buildInputs`, so `nix build .#checks.<system>.agent-validate` builds -- and
+thereby validates -- everything that tier covers. The graph stays lazy and
+acyclic: no fixture or module package ever references `checks` or an
+aggregate.
+
+There are **two tiers**, because everything this flake *packages* is
+`aarch64-linux`-only, while `agent-validate` preflights
+`checks.<currentSystem>.agent-validate` against whatever host it runs on:
+
+- `checks.aarch64-linux` -- the full check set. The aggregate's
+  `buildInputs` are every module package (i.e. every entry of
+  `packages.aarch64-linux`) plus the `statix` fixture. Building a module
+  package is what forces that module's complete terranix evaluation, Helm
+  value `loadMergedValues` IFD included, so this tier is the one that
+  actually validates the generated Terraform. It needs a real `aarch64-linux`
+  builder.
+- `checks.aarch64-darwin` -- a deliberately small, locally runnable subset for
+  the `currentSystem` preflight on this repo's Darwin dev machines: the same
+  `statix` fixture, built from `nixpkgs.legacyPackages.aarch64-darwin`, and an
+  `aggregate-check` whose only `buildInput` is that single fixture. It must
+  **never** reference a module package or anything else from the
+  `aarch64-linux` package set: such a dependency would leave the Darwin
+  aggregate unbuildable *and*, because the modules evaluate Helm values
+  through IFD, unevaluatable locally as well.
+
+Both tiers also expose the `statix` fixture under its own attribute, so it can
+be debugged directly with `nix build .#checks.<system>.statix`. The fixture is
+`statix check .` from this directory's own source (`cd ${./.}`), following
+`nix/mono-flake`'s shape -- there is no `templates/`-style exclusion to make
+here, because every `.nix` file in this directory is standalone valid Nix.
+Adding a check means adding an attribute to the tier in `flake.nix`; there is
+no discovery framework.
+
+**Linux-side checks cannot currently be realized from a Mac.** The
+`linux-builder` remote builder is provisioned in `/etc/nix/machines`, but it
+is not wired into `/etc/nix/nix.conf` (there is no `builders` line), so
+`nix build .#checks.aarch64-linux.agent-validate` cannot be built from this
+repo's Darwin dev machines as configured. Run that tier on a Linux host (or
+after wiring the builder in); on a Darwin host `agent-validate` only ever
+exercises the Darwin tier.
 
 ## Gotchas
 

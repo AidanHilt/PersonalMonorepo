@@ -13,7 +13,6 @@ configuration:
   # If left unset, will use the value of gitRevision above
   configurationRevision: ""
 
-
 audiobookshelf:
   enabled: false
   gitPath: kubernetes/helm-charts/applications/audiobookshelf
@@ -120,6 +119,7 @@ istio:
       chart: base
     istio-gateway:
       chart: gateway
+      syncWave: "-10"
     kiali:
       repo: https://kiali.org/helm-charts
       chart: kiali-operator
@@ -129,6 +129,7 @@ istio:
       useDefaultGitRevision: true
       gitPath: kubernetes/helm-charts/k8s-resources/istio-ingress-config
       destinationNamespace: ""
+      syncWave: "-10"
       # Generates a mirror of the enabled status and hostname config as the config for this app
       followMasterConfig: true
 it-tools:

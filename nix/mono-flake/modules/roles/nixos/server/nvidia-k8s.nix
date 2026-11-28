@@ -1,4 +1,11 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 {
   hardware.nvidia-container-toolkit = {
@@ -19,7 +26,10 @@
       plugins = {
         "io.containerd.grpc.v1.cri" = {
           cni = lib.mkForce {
-            bin_dirs = ["/opt/cni/bin" "${pkgs.cni-plugins}/bin"];
+            bin_dirs = [
+              "/opt/cni/bin"
+              "${pkgs.cni-plugins}/bin"
+            ];
             conf_dir = "/etc/cni/net.d";
           };
           containerd = {

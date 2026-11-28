@@ -331,7 +331,7 @@ print_plan() {
   echo ""
   print_status "Target branch: $TARGET_BRANCH"
   echo ""
-  echo "=== Category A: flake-style github:aidanhilt/PersonalMonorepo/<ref> URLs ==="
+  echo "=== Category A: flake-style github:aidanhilt/PersonalMonorepo/project-appocalypse/knative-function-operator URLs ==="
   if [[ "${#PA_FILE[@]}" -eq 0 ]]; then
     echo "  (no changes needed)"
   else

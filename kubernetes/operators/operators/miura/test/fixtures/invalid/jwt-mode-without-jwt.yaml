@@ -1,0 +1,17 @@
+# Violates the triggers.http.auth-level CEL rule: jwt must be set if and
+# only if mode == Jwt. Here mode is Jwt but jwt is unset.
+apiVersion: miura.io/v1alpha1
+kind: Function
+metadata:
+  name: jwt-mode-without-jwt
+spec:
+  source:
+    url: ${FIXTURE_REPO_URL}
+    ref: ${FIXTURE_REF}
+    path: kubernetes/operators/operators/miura/test/functions
+  build:
+    mainPackage: ./cmd/hello
+  triggers:
+    http:
+      auth:
+        mode: Jwt

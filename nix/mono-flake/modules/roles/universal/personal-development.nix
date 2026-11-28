@@ -1,19 +1,49 @@
-{ inputs, globals, pkgs, machine-config, lib, config, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  config,
+  ...
+}:
+
+let
+  platformPackages = if pkgs.stdenv.hostPlatform.isDarwin then [ ] else [ pkgs.ghostty.terminfo ];
+
+  # Local package (see ../../../packages/helmfmt.nix) rather than an overlay,
+  # since this role is its only consumer.
+  helmfmtPackage = pkgs.callPackage ../../../packages/helmfmt.nix { };
+in
 
 {
   environment.interactiveShellInit = inputs.scripts.interactiveShellInit;
 
-  environment.systemPackages = with pkgs; [
-    inputs.scripts.packages.${pkgs.system}.all
-    act
-    agenix
-    cocogitto
-    nss
-    python3
-    syncthing
-    openbao
-    weechat
-  ];
+  environment.systemPackages =
+    with pkgs;
+    [
+      inputs.scripts.packages.${pkgs.system}.all
+
+      act
+      agenix
+      cocogitto
+      coreutils
+      dotenvx
+      go
+      helmfmtPackage
+      kubebuilder
+      nodejs_24
+      nss
+      openbao
+      python3
+      syncthing
+      vault
+      watchexec
+      weechat
+      yamlfmt
+      yamllint
+    ]
+    ++ platformPackages;
 
   age.secrets.github-token = {
     file = ../../../secrets/github-config.age;

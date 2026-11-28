@@ -55,16 +55,16 @@
     "personalMonorepo": {
       "flake": false,
       "locked": {
-        "lastModified": 1785466514,
-        "narHash": "sha256-gG4PxwkQm5zVzRL360RxLnkX9TsnGTiRn+FR+BMlnmY=",
+        "lastModified": 1792865369,
+        "narHash": "sha256-tf77fjbeHT7AanDPNV/MUQrDExC2GojWFdMsc2GRD+o=",
         "owner": "aidanhilt",
         "repo": "PersonalMonorepo",
-        "rev": "0ae4f1bfcf101208ca1012a35d0fa2c8e4ea4db9",
+        "rev": "c94b9392b2d7d5ecf7b0007f0139a58df5662a4d",
         "type": "github"
       },
       "original": {
         "owner": "aidanhilt",
-        "ref": "project-rockhard/pki",
+        "ref": "project-appocalypse/knative-function-operator",
         "repo": "PersonalMonorepo",
         "type": "github"
       }

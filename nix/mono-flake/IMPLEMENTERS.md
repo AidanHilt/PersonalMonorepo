@@ -9,7 +9,8 @@ convention and architecture overview, and
 
 ## Overview
 
-`flake.nix` only exposes `nixosConfigurations` and `darwinConfigurations`.
+`flake.nix` exposes `nixosConfigurations`, `darwinConfigurations` and a
+per-system `checks` set (see "Checks" below).
 It computes `systems` as the subset of `inputs.systems` (the
 [nix-systems](https://github.com/nix-systems/default) list) that have a
 `machines/<system>/` directory, builds a `pkgsFor.<system>` package set
@@ -36,6 +37,13 @@ discovers and builds every host.
   modules and shared config consumed by per-host `home.nix` files.
 - `lib-internal/` — internal Nix library code used by this flake (see
   below).
+- `packages/` — tools this flake packages itself, as plain
+  `callPackage`-able derivations, for tools nixpkgs doesn't (or doesn't yet)
+  carry. Currently just `helmfmt.nix`, a pinned `stdenv.mkDerivation` over
+  upstream's prebuilt release tarballs (per-system asset/checksum map).
+  Consumers import it with `pkgs.callPackage ../../../packages/<name>.nix { }`
+  rather than through an overlay — `roles/universal/personal-development.nix`
+  installs it as `helmfmtPackage` alongside nixpkgs' `yamlfmt`.
 - `templates/` — scaffolding templates. These back the
   `mono-flake-new-machine` / `mono-flake-copy-machine` /
   `mono-flake-new-module` scripts (see "Making changes"); you shouldn't
@@ -65,8 +73,20 @@ discovers and builds every host.
   `aarch64-darwin`) additionally get the `wsl`, `disko` and `nixos-lima`
   modules, whether or not the host actually uses them.
 - `specialArgs` passed to every host module: `machine-config` (see
-  below), `inputs`, `globals`, and `machineDir = "<system>/<name>"` (used
-  only by `_home-manager.nix`, to resolve `machines/<machineDir>/home.nix`).
+  below), `inputs`, `globals`, `machineDir = "<system>/<name>"` (used
+  only by `_home-manager.nix`, to resolve `machines/<machineDir>/home.nix`),
+  and one `pkgs-<name>` entry per `flake.nix` `extraPkgsInputs` entry (see
+  "Overlays and pinned inputs" below) — e.g. `pkgs-unstable`, so any
+  NixOS/darwin module can take it as an argument without re-declaring the
+  input itself. `mkSystem` also sets `home-manager.extraSpecialArgs` to the
+  same `pkgs-<name>` attrs inline, since home-manager modules read their
+  special args from `home-manager.extraSpecialArgs`, not from the host's own
+  `specialArgs` above — this is a third place `extraSpecialArgs` gets
+  assembled, alongside `_home-manager.nix` and the duplicated inline
+  home-manager blocks in the `staging-cluster-*` machine configs (see
+  "Duplicated config" in [IMPROVEMENTS.md](IMPROVEMENTS.md)); all three merge
+  harmlessly as plain attrsets, which is why it's kept inline in
+  `builders.nix` rather than threaded through the other two.
 
 ### Values / `machine-config` merge
 
@@ -77,7 +97,7 @@ discovers and builds every host.
 1. The shared values file named by the host's `values.nix`
    `defaultValues` attribute (if set) —
    `modules/shared-values/<defaultValues>.nix` (currently
-   `laptop-cluster`, `prod-cluster`, `staging-cluster`).
+   `prod-cluster`, `staging-cluster`).
 2. `hostname = <host name>` and `userBase` (`/Users` on
    `aarch64-darwin`, `/home` otherwise).
 3. The host's own `machines/<system>/<name>/values.nix`.
@@ -127,19 +147,78 @@ Set by `modules/roles/universal/_personal-monorepo-constants.nix`
 this doc require it (via the `nix/scripts` `env-checks` lib's
 `require_monorepo`).
 
+### The `pi` user
+
+The `pi` user/group (uid/gid 10001, home `/var/lib/pi`) is a dedicated,
+**untrusted** user that the `nix/agentic-ai-stack-nono` agent sandbox runs
+as — see that project's `PLAN.md`, section 2 ("Isolation user"), for why.
+It's defined across three files rather than one, because NixOS modules
+cannot select *option names* based on `pkgs` (`pkgs` itself derives from
+`config`, so branching an option's existence on
+`pkgs.stdenv.hostPlatform.isLinux`/`isDarwin` inside a single shared
+module is a recursion bug, not just a style choice — an earlier version
+of this module did exactly that and triggered infinite recursion on
+evaluation):
+
+- `modules/roles/universal/_pi-user.nix` (imported by `universal-base.nix`,
+  so every NixOS and nix-darwin host gets it) declares only the options
+  that exist identically on both platforms: `users.groups.pi`,
+  `users.users.pi`'s common attrs (`uid`, `home`, `description`, `shell`),
+  and `environment.systemPackages = [ pkgs.nono ]`.
+- `modules/roles/nixos/_pi-user-linux.nix` (imported only by
+  `linux-universal.nix`) adds the NixOS-only options:
+  `users.users.pi.group`/`isSystemUser`, `systemd.tmpfiles.rules`
+  (provisions `/var/lib/pi`), and `security.sudo.extraRules` (the
+  `NOPASSWD`+`SETENV` rule letting `machine-config.username` run
+  `sudo -u pi` without a password, with `PI_SANDBOX__SECRET__*` env vars
+  surviving the call).
+- `modules/roles/darwin/_pi-user-darwin.nix` (imported only by
+  `darwin-universal.nix`) adds the nix-darwin-only options:
+  `users.users.pi.gid`/`isHidden`, `users.knownUsers`/`knownGroups`,
+  `security.sudo.extraConfig` (the raw sudoers-fragment equivalent of the
+  NixOS rule above, since nix-darwin's `security.sudo` module has no
+  structured `extraRules`), and `system.activationScripts.piHome` (the
+  nix-darwin equivalent of `systemd.tmpfiles`, since darwin has no
+  tmpfiles). This whole file is **unverified** — it has not been built or
+  run on an actual Darwin host.
+
+`machine-config.username` is made a member of the `pi` group via
+`users.groups.pi.members` (not per-user `extraGroups`), so adding a new
+host doesn't require repeating the membership by hand — this replaced a
+hand-rolled `users.groups.pi` + `extraGroups` pair that used to live
+directly in `machines/x86_64-linux/big-boi-desktop/configuration.nix` and
+`machines/aarch64-linux/devbox/configuration.nix`. `pi` is deliberately
+kept out of `nix.settings.trusted-users`, has no password/SSH keys/wheel
+membership, and is reached only via `sudo -u pi` from
+`machine-config.username`.
+
 ### Overlays and pinned inputs
 
 `lib-internal/packages.nix`'s `genPkgsFor` applies, per system:
-`baseOverlays` (nur, agenix, nix-vscode-extensions, nix-cachyos-kernel),
-any `platformOverlays.<system>` from `flake.nix` (currently just a
-`nodejs_22` override on `aarch64-darwin`), and a fixed `patches` overlay
-that re-hashes two `grub2` patches and disables `aiohttp`'s test suite
-(`doCheck = false`, with a block of commented-out `disabledTests` left in
-place). These look like temporary pins against specific nixpkgs
-revisions rather than permanent policy — see
-[IMPROVEMENTS.md](IMPROVEMENTS.md) before assuming they're still needed.
-`config.permittedInsecurePackages` also hardcodes two exact `lima`
+`baseOverlays` (nur, agenix, nix-vscode-extensions, nix-cachyos-kernel,
+`overlays/nono.nix`) and any `platformOverlays.<system>` from `flake.nix`
+(currently just a `nodejs_22` override on `aarch64-darwin`). Both
+`genPkgsFor` and `genExtraPkgsFor` (below) share config (allowUnfree, nvidia
+licensing, `permittedInsecurePackages`) via a common `mkPkgs` helper;
+`config.permittedInsecurePackages` hardcodes two exact `lima`
 package-version strings.
+
+`flake.nix`'s `extraPkgsInputs` is the single place new, unoverlaid package
+sets get declared — currently just `unstable = inputs.nixpkgs-unstable`.
+`genExtraPkgsFor` builds each entry for every system (no overlays applied),
+returning `{ <system>.<name> = pkgs; }`; `builders.nix`'s `mkSystem` then
+threads each one into `specialArgs` (and `home-manager.extraSpecialArgs`) as
+`pkgs-<name>` — see "Discovery and `mkSystem`" above. Adding another extra
+package set (e.g. a second nixpkgs checkout, or a different flake entirely)
+is just another `extraPkgsInputs` entry; no other file needs to change.
+
+`lib-internal/packages.nix` previously also applied a fixed `patches`
+overlay that re-hashed two `grub2` patches and disabled `aiohttp`'s test
+suite (`doCheck = false`). Both were temporary pins against a specific
+nixpkgs revision; they were removed once `nixpkgs` moved to a revision that
+already carries the grub2 patches' exact hashes (and the aiohttp override
+was confirmed unneeded by a trial build) — see
+[IMPROVEMENTS.md](IMPROVEMENTS.md).
 
 `flake.nix`'s `inputs.scripts` is pinned to the
 `project-lockstep/release-mgmt` branch of this repo (not `main`), and
@@ -148,13 +227,25 @@ resulting inconsistency with `globals.personalMonorepoBranch`.
 `kernel70Nixpkgs` and `nix-cachyos-kernel` are pinned to bare commit
 SHAs rather than branches/tags.
 
+`overlays/nono.nix` builds `pkgs.nono` (the Landlock/Seatbelt sandbox used
+by `nix/agentic-ai-stack-nono`) from source via `rustPlatform.buildRustPackage`,
+pinned to a `nolabs-ai/nono` git tag, because nixpkgs lags far behind
+upstream's releases and upstream's own flake `#prebuilt` output was found
+to ship a stale hash for x86_64-linux. Its `src.hash`/`cargoHash` are
+hand-computed and **must be re-verified on every version bump** — see the
+comment at the top of that file for the fake-hash-then-rebuild procedure.
+Its first version bump (to 0.81.0, done alongside the `pi` user work above)
+could not be completed in a sandboxed environment with no general network
+or build access; both hashes are still placeholders there and must be
+filled in by whoever next has the access to actually build it.
+
 ## Secrets
 
 `secrets/secrets.nix` defines age recipient groups (lists of SSH public
 keys) and, at the bottom, which group can decrypt each `*.age` file:
 per-user/dev machines (`user-machines`), and per-cluster machine groups
-(`laptop-cluster-machines`, `staging-cluster-machines`,
-`prod-cluster-machines`, `external-user-1-machines`) composed into each
+(`staging-cluster-machines`, `prod-cluster-machines`,
+`external-user-1-machines`) composed into each
 secret's `publicKeys` list (e.g. `hosts.age`, `github-config.age`,
 `rclone-config.age`, `kubeconfig.age`, `adguardhome.age`, and one
 `rke-config-<cluster>.age` per cluster).
@@ -194,6 +285,60 @@ secret *file*). Everything else not covered by a script (editing a
 bundle, adjusting `lib-internal/`) is a normal hand-edit — there's no
 generated/derived state in this flake beyond what's described above.
 
+## Checks
+
+`flake.nix` exposes `checks.<system>` for every system that has a
+`machines/<system>/` directory. That is what gives `agent-validate` the
+`checks.<system>.agent-validate` aggregate its flake contract requires: any
+path at or below this flake's root is validated by building that aggregate
+instead of the legacy per-file lint/build checks.
+
+The aggregate is the `agent-validate` **attribute**, pointing at the
+`aggregate-check` **derivation**. The attribute name is fixed by the
+contract; the derivation name is deliberately different (the same convention
+as `nix/scripts` and `nix/agentic-ai-stack`) so it is never confused with the
+`agent-validate` script package from the scripts flake. It is an
+empty-marker `runCommand` whose `buildInputs` are every fixture below, so
+`nix build .#checks.<system>.agent-validate` builds — and thereby validates —
+all of them.
+
+Every fixture is also exposed under its own attribute, so one can be debugged
+directly with `nix build .#checks.<system>.<name>`:
+
+- `host-evaluation` — forces evaluation of EVERY entry in
+  `nixosConfigurations` and `darwinConfigurations` and writes a JSON report
+  (`$out/hosts.json`) keyed by hostname whose values are each host's
+  `config.system.build.toplevel.name`. Reading `.name` is what forces the
+  host's complete module evaluation (option fixpoint, every imported module,
+  every package reference), and a derivation's `name` is a plain string
+  rather than a store path, so no host's toplevel output enters the build
+  graph. In other words: every host is evaluated, no host is built.
+- `statix` — `statix check` over the complete mono-flake Nix source tree, not
+  just the files a change happens to touch, with `templates/` excluded
+  (`--ignore 'templates/*'`): those files are scaffolding containing
+  intentional `{{placeholder}}` syntax and are not standalone valid Nix, so
+  statix cannot parse them.
+- `darwin-install-sh` — `bash -n` plus `shellcheck --shell=bash
+  --severity=error --exclude=SC2296,SC2066,SC1087` on `darwin-install.sh`,
+  which has no other automated coverage. Coverage is deliberately limited:
+  the script is `zsh`, shellcheck has no zsh dialect, and the three excluded
+  codes are artifacts of the zsh-only syntax it actually uses (`${(f)...}`
+  splitting, `"$array[@]"` loops, `${array[@]:0:1}`). Only error-severity
+  findings gate, and warning/style-level bash advice is not enforced —
+  enforcing it would mean rewriting the script for bash (see
+  [IMPROVEMENTS.md](IMPROVEMENTS.md)'s "Darwin install flow").
+- `helmfmt` — `pkgs.callPackage ./packages/helmfmt.nix { }`. `helmfmt` is
+  consumed via `callPackage` rather than an overlay (see "Directory layout"
+  above), so nothing else in this flake realizes it; this fixture is what
+  actually fetches the pinned upstream release tarball, and therefore what
+  verifies its per-system hash.
+
+These are explicit fixtures, not a discovery framework: adding a check means
+adding an attribute to `fixtureChecks` in `flake.nix`. Every fixture touches
+`$out` only on success, so a failing tool fails the check, and the aggregate
+stays lazy/acyclic because `fixtureChecks` never references `checks` or
+`aggregate-check`.
+
 ## Gotchas
 
 - `discovery.getAllHosts` is broken (see "How it works") — don't build
@@ -203,9 +348,9 @@ generated/derived state in this flake beyond what's described above.
   files inline a `home-manager = { ... }` block that duplicates what
   `universal-base.nix` → `_home-manager.nix` already provides for every
   host; harmless (NixOS module merge), but don't copy it into new hosts.
-- `modules/shared-values/{laptop-cluster,staging-cluster}.nix` commit a
+- `modules/shared-values/staging-cluster.nix` commits a
   `mkpasswd`-hashed password in plaintext to the repo (not agenix); keep
-  this in mind if you're basing a new shared-values file on them.
+  this in mind if you're basing a new shared-values file on it.
 - `modules/shared-machine-configs/bootstrap-image.nix` (the ISO image
   config) permits root SSH login with an empty password — intentional
   for an unattended installer image, but don't reuse the module for

@@ -17,7 +17,7 @@ context-activate-context() {
       echo "  --name, -n  Name of the context to activate"
       echo "  --help, -h     Show this help message"
       echo
-      exit 0
+      return
       ;;
     *)
       echo "Error: Unknown option $1"
@@ -28,7 +28,7 @@ context-activate-context() {
       echo "  --name, -n  Name of the context to activate"
       echo "  --help, -h     Show this help message"
       echo
-      exit 1
+      return
       ;;
     esac
   done

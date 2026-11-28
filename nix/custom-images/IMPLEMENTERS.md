@@ -95,6 +95,62 @@ Both workflows strip the known `-<system>` suffix off each per-arch
 and refuse to publish if the `x86_64-linux` and `aarch64-linux` versions
 disagree once that suffix is stripped.
 
+## Checks
+
+`flake.nix` exposes `checks.<system>` for every system it knows about, in
+two tiers. That is what satisfies `agent-validate`'s flake contract: any
+path at or below this flake's root is validated by building
+`checks.<system>.agent-validate` instead of the legacy per-file lint/build
+checks (`nixfmt` still runs in `agent-validate`'s `FORMAT` phase). Without
+the attribute for the host's `builtins.currentSystem`, `agent-validate`
+exits 24 before running anything — so a new system added to `linuxSystems`
+or `darwinSystems` needs a `checks` entry in the same change.
+
+Both tiers use the same naming convention: the aggregate is the
+`agent-validate` **attribute**, pointing at the `aggregate-check`
+**derivation**. The attribute name is fixed by the contract; the derivation
+name is deliberately different (the same convention as `nix/mono-flake`,
+`nix/scripts` and `nix/agentic-ai-stack`) so it is never confused with the
+`agent-validate` script package from the scripts flake.
+
+### Linux systems (`x86_64-linux`, `aarch64-linux`) — full checks
+
+These are the systems images are actually built for (`linuxSystems`).
+`aggregate-check` is an empty-marker `runCommand` whose `buildInputs` are
+every image package plus the `statix` fixture, so
+`nix build .#checks.<system>.agent-validate` performs a **real**
+nix2container build of every image in `images/` and runs `statix` -- it is
+not an evaluation-only check. That makes this aggregate considerably
+heavier than a lint-only one; that is deliberate, since it is the only
+automated proof that every image still builds. `all`/`default` are
+`symlinkJoin`s of the same per-image packages and are excluded from
+`buildInputs` on purpose.
+
+This tier only builds on a Linux host. The repo's `linux-builder` is
+provisioned (`/etc/nix/machines`) but not wired into `nix.conf` (there is no
+`builders` line), so a macOS host cannot realise it — full Linux validation
+has to run on a Linux machine.
+
+### darwin systems (`x86_64-darwin`, `aarch64-darwin`) — statix only
+
+There are no darwin images (see "Gotchas" for why the flake has no macOS
+build path), so this tier is a runnable subset whose only job is to keep the
+contract satisfiable on the macOS host: `checks.<system>.agent-validate`
+points at an `aggregate-check` whose sole `buildInput` is that system's
+`statix` fixture, built from `nixpkgs.legacyPackages.<system>`. It must
+never reference an image package — those do not evaluate or build on
+darwin, and the point of this tier is that it stays locally runnable.
+
+### Fixtures
+
+Each fixture is also exposed under its own attribute, so one can be
+debugged directly with `nix build .#checks.<system>.<name>`:
+
+- `statix` — `statix check` over the whole flake directory (`flake.nix`,
+  `images/*/default.nix`, `images/*/values.nix`), not just the files a
+  change happens to touch. Present in both tiers.
+- `agent-validate` — the per-tier `aggregate-check` aggregate above.
+
 ## Making changes
 
 ### Adding or changing an image

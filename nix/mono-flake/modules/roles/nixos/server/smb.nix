@@ -1,8 +1,11 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
-
-let
-
-in
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 {
   services.samba = {

@@ -1,0 +1,18 @@
+# No HTTP trigger: driven entirely by a Knative Broker/Trigger with an
+# attribute filter.
+apiVersion: miura.io/v1alpha1
+kind: Function
+metadata:
+  name: events
+spec:
+  source:
+    url: ${FIXTURE_REPO_URL}
+    ref: ${FIXTURE_REF}
+    path: kubernetes/operators/operators/miura/test/functions
+  build:
+    mainPackage: ./cmd/event-sink
+  triggers:
+    events:
+      - broker: default
+        filter:
+          type: io.miura.fixture.event

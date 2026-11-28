@@ -14,18 +14,16 @@
       "*.pem": "deny",
       "*serviceaccount*.json": "deny",
       "*id_rsa*": "deny",
-      "*id_ed25519*": "deny",
-      ".git/*": "deny"
+      "*id_ed25519*": "deny"
     },
     "path_read": {
-      "/home/pi/.pi/*": "allow",
-      "/home/pi/.cache": "allow",
-      "/tmp/*": "allow"
+      "*": "allow"
     },
     "path_write": {
       "/home/pi/.pi/*": "deny",
       "/home/pi/.cache": "allow",
-      "/tmp/*": "allow"
+      "/tmp/*": "allow",
+      "/private/tmp/*": "allow"
     },
     "read": "allow",
     "find": "deny",
@@ -34,6 +32,7 @@
     "get_subagent_result": "allow",
     "ffgrep": "allow",
     "fffind": "allow",
+    "fetch_content": "allow",
     "write": "deny",
     "python3": "deny",
     "edit": "deny",
@@ -71,6 +70,11 @@
       "fff *": "allow",
       "agent-plan-create *": "allow",
       "agent-stage *": "allow",
+      "echo *": "allow",
+      "statix *": "allow",
+      "nixfmt *": "allow",
+      "yamlfmt *": "allow",
+      "helmfmt *": "allow",
       "python3": "deny",
       "git *": "deny",
       "nix *": "deny",
@@ -95,12 +99,10 @@
       "kubectl exec *": "deny",
       "cp *": "deny",
       "rm *": "deny",
-      "mkdir *": "deny",
-      "*echo *---*": "allow"
+      "mkdir *": "deny"
     },
     "external_directory_read": {
-      "/home/pi/.pi/*": "allow",
-      "/tmp/*": "allow"
+      "*": "allow"
     },
     "external_directory_write": {
       "/tmp/*": "allow"

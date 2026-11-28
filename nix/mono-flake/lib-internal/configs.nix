@@ -1,7 +1,11 @@
-{ nixpkgs, darwin, inputs }:
+{
+  nixpkgs,
+  darwin,
+  inputs,
+}:
 
 let
-  lib = nixpkgs.lib;
+  inherit (nixpkgs) lib;
 
   builders = import ./builders.nix { inherit nixpkgs darwin inputs; };
   discovery = import ./discovery.nix { inherit nixpkgs darwin inputs; };
@@ -9,27 +13,40 @@ in
 
 {
   # Build all configurations for the flake
-  buildAllConfigs = {
-    systems,
-    machinesDir,
-    pkgsFor,
-    inputs,
-    globals ? {},
-    overlays ? [],
-    platformOverlays ? {}
-  }:
+  buildAllConfigs =
+    {
+      systems,
+      machinesDir,
+      pkgsFor,
+      extraPkgsFor ? { },
+      inputs,
+      globals ? { },
+      overlays ? [ ],
+      platformOverlays ? { },
+    }:
     let
       # Get all hosts by system
-      hostsBySystem = lib.genAttrs systems (system:
-        if builtins.pathExists (machinesDir + "/${system}")
-        then discovery.getConfigsForSystem system machinesDir
-        else {}
+      hostsBySystem = lib.genAttrs systems (
+        system:
+        if builtins.pathExists (machinesDir + "/${system}") then
+          discovery.getConfigsForSystem system machinesDir
+        else
+          { }
       );
 
       # Build configurations for each system
-      configsBySystem = lib.mapAttrs (system: hosts:
+      configsBySystem = lib.mapAttrs (
+        system: hosts:
         builders.mkSystemsForArch {
-          inherit system hosts pkgsFor machinesDir inputs globals;
+          inherit
+            system
+            hosts
+            pkgsFor
+            extraPkgsFor
+            machinesDir
+            inputs
+            globals
+            ;
         }
       ) hostsBySystem;
 
@@ -37,8 +54,10 @@ in
       darwinSystems = lib.filter (s: lib.hasSuffix "darwin" s) systems;
       nixosSystems = lib.filter (s: !lib.hasSuffix "darwin" s) systems;
 
-      darwinConfigs = lib.foldl' (acc: system: acc // (configsBySystem.${system} or {})) {} darwinSystems;
-      nixosConfigs = lib.foldl' (acc: system: acc // (configsBySystem.${system} or {})) {} nixosSystems;
+      darwinConfigs = lib.foldl' (
+        acc: system: acc // (configsBySystem.${system} or { })
+      ) { } darwinSystems;
+      nixosConfigs = lib.foldl' (acc: system: acc // (configsBySystem.${system} or { })) { } nixosSystems;
     in
     {
       nixosConfigurations = nixosConfigs;

@@ -2,12 +2,13 @@
 
 set -euo pipefail
 
-MONOREPO_BRANCH=""
+MONOREPO_BRANCH="${MONOREPO_BRANCH:-}"
 
-if [[ ! -v MONOREPO_BRANCH ]]; then
-  if [[ -v PERSONAL_MONOREPO_LOCATION ]]; then
+if [[ -z "$MONOREPO_BRANCH" ]]; then
+  if [[ -v PERSONAL_MONOREPO_LOCATION && -n "$PERSONAL_MONOREPO_LOCATION" ]]; then
     MONOREPO_BRANCH=$(git -C "$PERSONAL_MONOREPO_LOCATION" branch --show-current)
-  else
+  fi
+  if [[ -z "$MONOREPO_BRANCH" ]]; then
     MONOREPO_BRANCH="main"
   fi
 fi

@@ -1,0 +1,18 @@
+# No HTTP trigger: driven entirely by a cron schedule, exercising cron,
+# data and timezone together.
+apiVersion: miura.io/v1alpha1
+kind: Function
+metadata:
+  name: schedule
+spec:
+  source:
+    url: ${FIXTURE_REPO_URL}
+    ref: ${FIXTURE_REF}
+    path: kubernetes/operators/operators/miura/test/functions
+  build:
+    mainPackage: ./cmd/cron-sink
+  triggers:
+    schedules:
+      - cron: "0 2 * * *"
+        data: '{"fixture":"schedule"}'
+        timezone: America/New_York

@@ -1,4 +1,11 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 {
   imports = [
@@ -6,7 +13,5 @@
     ../../../modules/roles/darwin/work.nix
 
     ../../../modules/roles/universal/development-machine.nix
-
-    ../../../modules/scripts/aws/default.nix
   ];
 }

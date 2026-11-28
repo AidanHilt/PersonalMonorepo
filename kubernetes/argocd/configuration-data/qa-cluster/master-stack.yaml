@@ -1,35 +1,28 @@
 env: qa-cluster
-
 hostnames:
   - qa-cluster-lb.lan
   - "172.18.255.200"
-
-gitRevision: project-rockhard/pki
-
-authentik:
+gitRevision: project-appocalypse/knative-function-operator
+knative:
   enabled: true
+authentik:
+  enabled: false
   configuration:
     enabled: true
-
 bentopdf:
   enabled: true
-
 prowlarr:
   enabled: true
   configuration:
     enabled: true
-
 cert-manager:
   enabled: true
-
 seaweedfs:
   enabled: false
   configuration:
     enabled: true
-
 homepage:
   enabled: false
-
 hashi-vault:
   enabled: true
   configuration:
@@ -38,14 +31,12 @@ hashi-vault:
     vault-secrets-operator:
       configuration:
         enabled: true
-
 metallb:
   enabled: true
   dependentApps:
     metallb-config:
       configuration:
         enabled: true
-
 istio:
   enabled: true
   configuration:
@@ -53,11 +44,9 @@ istio:
   dependentApps:
     kiali:
       enabled: false
-
 kyverno:
   enabled: true
   configuration:
     enabled: true
-
 postgres:
   enabled: true

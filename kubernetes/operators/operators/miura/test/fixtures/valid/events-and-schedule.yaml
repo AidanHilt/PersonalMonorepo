@@ -1,0 +1,21 @@
+# No HTTP trigger: both an event trigger and a schedule trigger set at
+# once, exercising a Function with multiple non-HTTP trigger kinds.
+apiVersion: miura.io/v1alpha1
+kind: Function
+metadata:
+  name: events-and-schedule
+spec:
+  source:
+    url: ${FIXTURE_REPO_URL}
+    ref: ${FIXTURE_REF}
+    path: kubernetes/operators/operators/miura/test/functions
+  build:
+    mainPackage: ./cmd/event-sink
+  triggers:
+    events:
+      - broker: default
+        filter:
+          type: io.miura.fixture.event
+    schedules:
+      - cron: "*/15 * * * *"
+        data: '{"fixture":"events-and-schedule"}'

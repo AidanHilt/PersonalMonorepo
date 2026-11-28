@@ -1,4 +1,11 @@
-{ inputs, globals, pkgs, machine-config, lib, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  machine-config,
+  lib,
+  ...
+}:
 
 let
   interface = machine-config.networking.mainNetworkInterface or "enp0s1";
@@ -14,10 +21,10 @@ in
     openFirewall = true;
 
     vrrpInstances.adguardhome = {
-      interface = interface;
+      inherit interface;
       priority = 100;
       virtualRouterId = machine-config.networking.virtualRouterId;
-      virtualIps = [{ addr = machine-config.networking.loadBalancerIp; }];
+      virtualIps = [ { addr = machine-config.networking.loadBalancerIp; } ];
     };
   };
 }

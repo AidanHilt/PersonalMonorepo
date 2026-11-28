@@ -1,0 +1,17 @@
+# Violates the root-level CEL rule: metadata.name must be at most 40
+# characters. This name is 41.
+apiVersion: miura.io/v1alpha1
+kind: Function
+metadata:
+  name: this-function-name-is-way-too-long-oopsie1
+spec:
+  source:
+    url: ${FIXTURE_REPO_URL}
+    ref: ${FIXTURE_REF}
+    path: kubernetes/operators/operators/miura/test/functions
+  build:
+    mainPackage: ./cmd/hello
+  triggers:
+    http:
+      auth:
+        mode: None

@@ -1,0 +1,63 @@
+# Opt-in override: bridges `pi`'s isolated `internal` network to a local
+# `kind` dev cluster (see nix/mono-flake/modules/roles/universal/
+# kubernetes-admin.nix's `cluster-setup`/`cluster-teardown`, which pin the
+# cluster name to "qa-cluster", kubeconfig context "kind-qa-cluster").
+#
+# `pi` has no direct route to the host's 127.0.0.1:<port> kind API address
+# (it only sits on the `internal` compose network -- see compose.yaml) and
+# must NOT join kind's own `kind` docker network directly: that network has
+# a real route to the outside world, which would bypass the egress proxy
+# entirely. Instead, `kind-gateway` -- a narrow `socat` TCP forwarder sidecar
+# that speaks ONLY port 6443 -- sits on both `internal` and `kind`, forwarding
+# :6443 to qa-cluster-control-plane:6443. The kubeconfig `cluster-setup`
+# generates (via `nix run .#gen-kubeconfig -- kind-qa-cluster --yes --server
+# https://kind-gateway:6443 --tls-server-name kubernetes`) points at
+# `kind-gateway` by that service name, with `tls-server-name: kubernetes` (a
+# SAN already present on kind's apiserver cert) so TLS verification succeeds
+# despite the server address not matching the cert's usual name.
+#
+# Layered by start-agent.sh automatically when both a scoped kubeconfig is
+# found AND the `kind` docker network exists (i.e. a local kind cluster is
+# actually up) -- see scripts/start-agent.sh. Apply it by hand with:
+#
+#   docker compose -f compose.yaml -f compose.kube.yaml \
+#     -f compose.kind.yaml up -d
+#
+# `kind`'s docker network is created/owned by `kind` itself (name is always
+# "kind" regardless of cluster name) -- declared `external: true` here so
+# Compose only attaches to it, never creates or removes it.
+
+---
+networks:
+  kind:
+    external: true
+    name: kind
+
+services:
+  kind-gateway:
+    image: pi-sandbox/kind-gateway:dev
+    networks:
+      - internal
+      - kind
+    # Only forwards TCP :6443 -- no other port, no other protocol, no
+    # other destination.
+    command:
+      - "TCP-LISTEN:6443,fork,reuseaddr"
+      - "TCP:qa-cluster-control-plane:6443"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  pi:
+    depends_on:
+      - kind-gateway
+    environment:
+      # Restates compose.yaml's base NO_PROXY ("proxy,pkg-broker") plus
+      # kind-gateway, so traffic to the forwarder sidecar is never routed
+      # through the egress proxy (which has no route to it anyway --
+      # kind-gateway is internal-only, not on `external`).
+      NO_PROXY: "proxy,pkg-broker,kind-gateway"

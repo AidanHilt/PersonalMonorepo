@@ -1,4 +1,12 @@
-{ inputs, globals, pkgs, lib, system, machine-config, ...}:
+{
+  inputs,
+  globals,
+  pkgs,
+  lib,
+  system,
+  machine-config,
+  ...
+}:
 
 {
   imports = [

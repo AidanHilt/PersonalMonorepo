@@ -13,6 +13,7 @@ in
 
 {
   imports = [
+    ./_docker.nix
     ./_smb-mount.nix
 
     ./hosts.nix
@@ -29,6 +30,7 @@ in
 
     pre-commit
     socat
+    sshuttle
   ];
 
   homebrew = {
@@ -44,6 +46,7 @@ in
       "prismlauncher"
       "crystalfetch"
       "dupeguru"
+      "remanager"
       "the-unarchiver"
       "ollama-app"
       "utm"

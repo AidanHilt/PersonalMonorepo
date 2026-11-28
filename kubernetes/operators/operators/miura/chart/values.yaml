@@ -1,0 +1,24 @@
+# Hand-authored values merged with the Nix-generated ones by
+# mk-operator.nix (see ../../../IMPLEMENTERS.md "Chart assembly"). Must
+# never declare image.tag or chart.version — those keys are Nix-owned.
+#
+# manager.args/manager.env are read by ../../../nix/templates/manager.yaml
+# to configure the operator-wide defaults documented in
+# ../IMPLEMENTERS.md and ../docs/function.md. The values below are
+# placeholders: a real install is expected to override at least
+# default-registry (and usually default-push-secret/default-domain) via
+# --set-string/-f at install time, since there is no single correct
+# default for a registry, push secret, or domain across environments.
+manager:
+  args:
+    - --default-registry=ghcr.io/CHANGEME
+    - --default-push-secret=miura-push-secret
+    - --default-domain=apps.example.internal
+    - --default-gateway-name=knative-ingress-gateway
+    - --default-gateway-namespace=istio-system
+    - --default-poll-interval=5m
+    - --default-base-image=cgr.dev/chainguard/static:latest
+    - --ko-image=ghcr.io/ko-build/ko:latest
+    - --git-image=alpine/git:latest
+    - --default-max-scale=10
+    - --build-history-limit=5

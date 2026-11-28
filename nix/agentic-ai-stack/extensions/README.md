@@ -6,11 +6,12 @@ npm or an arbitrary git repo/rev, resolved via `pkgs.buildNpmPackage`'s
 fixed-output npm cache (for npm-sourced extensions) and pinned-rev
 `fetchFromGitHub` (for git-sourced ones).
 
-This directory **is wired into the main image build**
-(`containers/pi/image.nix`): it copies `../extra-extensions.nix`'s output
-directly into `$out/home/pi/.pi-seed/agent/extensions/`. Its
-`packagesListFragment` output still needs to be merged into `settings.json`'s
-`packages` array by hand where relevant.
+This directory feeds `../extra-extensions.nix`'s `pi-extra-extensions`
+package, which `scripts/start-agent.sh` builds
+(`nix build .../#pi-extra-extensions`) and copies into each run's
+`PI_CODING_AGENT_DIR/extensions/` at launch. Its `packagesListFragment`
+output still needs to be merged into `settings.json`'s `packages` array
+by hand where relevant.
 
 ## Files here
 
