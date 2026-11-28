@@ -42,9 +42,6 @@ istio:
   configuration:
     enabled: true
   dependentApps:
-    istio-gateway:
-      configuration:
-        enabled: true
     kiali:
       enabled: false
 kyverno:
