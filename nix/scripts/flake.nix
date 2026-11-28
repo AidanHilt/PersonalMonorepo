@@ -616,12 +616,18 @@
           # marker whose real work is building every check in `baseChecks` via
           # buildInputs, so `nix build .#checks.<system>.agent-validate` covers
           # the whole flake (this is the contract agent-validate preflights
-          # before building it for a flake-owned change). It deliberately
-          # shadows only the final `checks.agent-validate` attribute -- the
-          # agent-validate package is still in `baseChecks` and is built as a
-          # dependency here, so nothing is self-referential.
+          # before building it for a flake-owned change).
+          #
+          # That ATTRIBUTE name is fixed by the contract and must stay
+          # `agent-validate`. The derivation it points at is deliberately named
+          # `aggregate-check` instead, so it is never confused with the
+          # `agent-validate` SCRIPT package that also lives in `baseChecks` via
+          # `leaves` and is built as a dependency here -- naming the derivation
+          # `agent-validate` too is exactly what creates that confusion (and
+          # what makes `nix flake show` look self-referential). See
+          # nix/agentic-ai-stack/flake.nix for the same convention.
           aggregateCheck =
-            pkgs.runCommand "agent-validate-checks"
+            pkgs.runCommand "aggregate-check"
               {
                 buildInputs = builtins.attrValues baseChecks;
               }
@@ -639,7 +645,7 @@
           # only individual packages, lib/source shellcheck checks, optional
           # test harnesses, and the aggregate that builds all of them run.
           checks = baseChecks // {
-            aggregate-check = aggregateCheck;
+            agent-validate = aggregateCheck;
           };
 
           devShells = builtins.mapAttrs (_: pkg: pkgs.mkShell { packages = [ pkg ]; }) built.packages // {
