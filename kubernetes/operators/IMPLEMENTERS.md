@@ -238,11 +238,86 @@ Nix at build time):
   per cluster. Installing the same chart twice under different release
   names in one cluster will collide on these names.
 
+## Checks
+
+`flake.nix` exposes `checks.<system>`, split into two tiers.
+
+**Linux (`x86_64-linux`, `aarch64-linux`) — the full tier.** `checks` is
+`perOperatorChecks // { statix; agent-validate; }`:
+
+- `<name>-vet` — one `go vet ./...` check per discovered operator
+  (`operators.<name>.vet`, defined in `nix/mk-operator.nix` section
+  "3b. go vet"). It is generated from the same operator list as the packages,
+  so a new operator directory is vetted with no change to `flake.nix` or
+  `nix/mk-operator.nix`. It follows the `crds`/`rbac` recipe exactly: a plain
+  `stdenv.mkDerivation` that copies `binary.goModules` into `./vendor`, sets
+  `GOFLAGS=-mod=vendor`, `GOPROXY=off`, and `HOME`/`GOCACHE` under `$TMPDIR`,
+  runs `controller-gen object paths=./api/...` (required *first* — the api
+  types only type-check once their generated `DeepCopyObject` methods exist,
+  and vet loads the whole package graph), and then `go vet ./...`. Its `$out`
+  is an empty marker directory: it exists only to fail when an operator does
+  not vet cleanly.
+- `statix` — `statix check .` over the whole flake source tree, not just the
+  files a change touches. Every `.nix` file here is standalone and
+  parseable (there are no `templates/`-style placeholders, unlike
+  `nix/mono-flake`), so this fixture deliberately has no `--ignore`.
+- `agent-validate` — the aggregate. An empty-output marker `runCommand`
+  named `aggregate-check` whose `buildInputs` are every per-operator package
+  (`binary`, `crds`, `rbac`, `image`, `chart`), every per-operator `<name>-vet`
+  check, and the `statix` fixture — so `nix build
+  .#checks.<system>.agent-validate` really builds the operators, not just
+  evaluates them. `default` (the image+chart `linkFarm`) is deliberately not
+  a build input: it only links outputs already covered.
+
+The ATTRIBUTE name is fixed by `agent-validate`'s flake contract and must
+stay `agent-validate`; the derivation it points at is deliberately named
+`aggregate-check` so it is never confused with the `agent-validate` **script**
+package from the `nix/scripts` flake (the same convention as
+`nix/mono-flake`, `nix/scripts`, and `nix/agentic-ai-stack`). This aggregate
+is what replaces the legacy per-file lint/build checks for any change at or
+below this flake's root — `agent-validate` still runs its FORMAT phase
+(nixfmt) over those files, but skips the per-file `LINT`/`BUILD_TEST` runs.
+
+Because the aggregate really builds every operator package, it needs
+`operators/<name>/go.sum` and `vendor-hash.nix` to be correct and in sync
+(see "`vendor-hash.nix` handling" above) — a stale vendor hash fails the
+whole check.
+
+**darwin (`x86_64-darwin`, `aarch64-darwin`) — a runnable subset.** The
+second `eachSystem` block (the one that also carries
+`packages.skopeo-nix2container`) adds `checks.<system>` for the two darwin
+systems only: the same `statix` fixture, built from that system's own `pkgs`,
+plus an `agent-validate` attribute pointing at an `aggregate-check` whose
+only build input is that fixture.
+
+Three reasons for the split:
+
+- Everything else in this flake is Linux-only (`binary`/`crds`/`rbac`/
+  `image`/`chart` are built for `x86_64-linux`/`aarch64-linux`), so a darwin
+  aggregate must not reference them — doing so would make the darwin
+  `checks` unbuildable.
+- `agent-validate` preflights `checks.$(nix eval --raw --impure --expr
+  builtins.currentSystem).agent-validate` for every flake it touches and
+  exits 24 when it is absent. The statix fixture is exactly enough to make
+  that preflight satisfiable from a Mac, where the Linux tier cannot run.
+- The gate matters: that `eachSystem` list also covers the two Linux
+  systems, and `recursiveUpdate` gives the second argument precedence, so
+  emitting the darwin tier unconditionally would silently replace the Linux
+  `agent-validate` aggregate with the statix-only one.
+
+Linux-side checks are therefore validated on a Linux host today. A
+`linux-builder` is provisioned for this Mac in `/etc/nix/machines`, but it is
+not wired up in `/etc/nix/nix.conf` (no `builders` line), so `nix build
+.#checks.aarch64-linux.agent-validate` / the `-vet` checks cannot be realised
+here yet. The darwin tier is a liveness check, not equivalent coverage.
+
 ## Making changes
 
 - **Add an operator**: see "Adding a new operator" in
   [README.md](README.md) — no change to `flake.nix` or
-  `nix/mk-operator.nix` is needed.
+  `nix/mk-operator.nix` is needed. The new operator is automatically covered
+  by `checks.<system>.<name>-vet` and by the `agent-validate` aggregate (see
+  "Checks" above).
 - **Change shared chart scaffolding** (ServiceAccount/RBAC
   binding/Deployment shape, resource requests, CRD/RBAC generation
   paths, `Chart.yaml` synthesis, the values merge rule): edit
@@ -298,8 +373,10 @@ Nix at build time):
 ## Areas for improvement
 
 - **No `helm lint`/`helm template` flake `checks`, and no CI
-  integration.** Both are absent entirely; validating a chart currently
-  means building it and inspecting it by hand.
+  integration.** The `checks.<system>` aggregate covers the Go side (operator
+  package builds plus `go vet`) and statix, but nothing lints or templates
+  the assembled charts; validating a chart still means building it and
+  inspecting it by hand.
 - **`imageTag`/`chartVersion` are an interim placeholder, not a real
   release scheme.** Every build's image and chart currently share one
   tag/version (`VERSION` file contents, or `shortRev`/`dirtyShortRev` for
