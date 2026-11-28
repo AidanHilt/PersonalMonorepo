@@ -233,6 +233,14 @@
                     ]
                   },
                   "reason": "nix flake show is read-only introspection"
+                },
+                {
+                  "argv": {
+                    "prefix": [
+                      "--version"
+                    ]
+                  },
+                  "reason": "nix --version is read-only version reporting required for agent-validate artifacts"
                 }
               ],
               "deny": [

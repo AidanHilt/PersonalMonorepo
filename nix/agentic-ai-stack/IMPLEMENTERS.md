@@ -134,11 +134,16 @@ present in the baseline closure can still run agent-written scripts.
 **Nix daemon access**: the daemon socket plus read access on the store
 paths actually needed. `nix` is mediated via `command_policies`'
 `invocation_policy`: allows `build`, `eval`, `develop`, `flake check`,
-`flake show`; denies `profile`, `copy`, `--option`,
+`flake show`, and `--version`; denies `profile`, `copy`, `--option`,
 `--extra-substituters`, `--accept-flake-config`, and denies system-
 rebuild commands entirely (`update`, `nixos-rebuild`, `darwin-rebuild`,
 `home-manager`, `nix profile`, `nix-env`). The untrusted `pi` user is
-what prevents trusted-user-style abuse of these allowances.
+what prevents trusted-user-style abuse of these allowances. `--version`
+is in that allow list because `agent-validate` records `nix --version` in
+the artifact it writes (`.agent/validated.json`); it reports a version
+string and reads nothing, so it sits at the same trust level as the
+other read-only subcommands (and its allow rule is the exact prefix
+`["--version"]`, not a general escape hatch).
 
 **The mediated `nix` sandbox starts from a minimal baseline, not from
 this session.** A nono COMMAND sandbox inherits none of the session's
@@ -728,6 +733,73 @@ substitute for it — see "Threat model" above.
   `nix/scripts/scripts/agent/agent-plan-create/run.sh`. See
   `config/agent/AGENTS.md`'s "Worktrees" section for how dispatch/
   validate/stage fits together.
+
+## Checks (`checks.<system>.agent-validate`)
+
+`agent-validate` preflights every affected flake for
+`checks.<system>.agent-validate` and builds exactly that aggregate
+(`nix build <local-flake-dir>#checks.<system>.agent-validate`); without
+the attribute it refuses to validate any path at or below this flake's
+root (exit 24) before running a single check. That ATTRIBUTE name is
+fixed by the contract and must stay `agent-validate`.
+
+The derivation the attribute points at is deliberately named
+`aggregate-check` (see `flake.nix`'s `aggregateCheck`), **not**
+`agent-validate`/`agent-validate-checks`, so it is never confused with
+the `agent-validate` SCRIPT package from the `nix/scripts` flake (also
+wired into `devShells.default` here). They are unrelated things: one is
+this flake's aggregate check derivation, the other is the validator
+binary that preflights and builds it. Naming the derivation
+`agent-validate` in this flake is what to avoid.
+
+`nix build .#checks.<system>.agent-validate` builds `aggregate-check`, an
+empty-output marker whose `buildInputs` are every derivation in
+`packages.<system>` (the `nono`/`pi-coding-agent` aliases and the opt-in
+`pi-extra-extensions`/`pi-extra-skills` bundles included), every
+`apps.<system>.<name>.drv` (see the `mkAppWithDrv` note in `flake.nix` —
+flake-utils' own `mkApp` drops the derivation), and every explicit
+fixture check below. A failure anywhere in the flake therefore fails the
+aggregate. There is deliberately no marker-file test discovery here:
+every fixture is named in `flake.nix`'s `fixtureChecks`.
+
+Fixtures:
+
+- `approval-helper-tests` — `packages.<system>.approval-helper` itself.
+  That package build now runs `go test ./...` (`doCheck` + an explicit
+  `checkPhase` with the normal pre/post hooks), so the existing
+  `approval-helper/main_test.go` coverage of `decide()`, the deny cache,
+  prompt dedupe/timeout handling and prompter selection runs as part of
+  the package. The stdlib-only module needs no network for this. The
+  named check exists so the aggregate cannot silently lose that coverage
+  if the package is ever removed from `packages`.
+- `gen-profile-self-test` — runs the existing
+  `scripts/gen-profile.sh --self-test` hermetically: writable
+  `HOME`/`TMPDIR` inside the build sandbox, and the self-test supplies
+  its own fake closure command (`GEN_PROFILE_CLOSURE_CMD`), so neither
+  `nix` nor `nono` is invoked. `$out` is only touched once the self-test
+  succeeded. Do not rewrite the self-test to fit this check.
+- `work-profile` — runs `scripts/gen-profile.sh` against the REAL
+  `profiles/work.base.json` in its `--os darwin` (no closure lookup) mode.
+  That mode is host-independent and cheap; the Linux closure-merge path
+  is already covered by the self-test above. It then asserts, with `jq`,
+  the invariants that must survive any base-profile edit:
+  - the mediated `nix` sandbox `HOME` is exactly `/tmp/pi-nix-home`;
+  - `@git:toplevel` is still in that sandbox's `fs_read` **and**
+    `fs_write`, and `@git:common-dir` still in its `fs_read` (both must
+    stay literal strings for nono to expand);
+  - no `fs_read`/`fs_write` entry grants `/var/lib/pi` or any descendant;
+  - the `update`, `nixos-rebuild`, `darwin-rebuild`, `home-manager`,
+    `nix-env` and `nix-channel` command policies are still session `deny`;
+  - the `nix` invocation allow list still has the exact prefix
+    `["--version"]` (see "Nix daemon access" above).
+
+  It never invokes `nono`, `sudo`, `agent-validate`, or any host launcher.
+
+Keep new fixtures in `fixtureChecks`, not in `packages`/`apps`: packages
+and apps must stay lazy and must never depend on `checks`, while
+`aggregate-check` depends only on packages, apps, and the fixtures — no
+self-reference, no cycle. The individual fixtures stay exposed for
+debugging (`nix build .#checks.<system>.gen-profile-self-test`, etc.).
 
 ## Improvements (not built)
 
