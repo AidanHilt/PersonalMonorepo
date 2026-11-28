@@ -639,7 +639,7 @@
           # only individual packages, lib/source shellcheck checks, optional
           # test harnesses, and the aggregate that builds all of them run.
           checks = baseChecks // {
-            agent-validate = aggregateCheck;
+            aggregate-check = aggregateCheck;
           };
 
           devShells = builtins.mapAttrs (_: pkg: pkgs.mkShell { packages = [ pkg ]; }) built.packages // {
